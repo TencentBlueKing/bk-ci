@@ -5,5 +5,6 @@ data class WorkspaceNotifyListData(
     val ip: String,
     val title: String,
     val desc: String,
-    val createTime: String
+    val createTime: String,
+    val operator: String? = ""
 )

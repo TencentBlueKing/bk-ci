@@ -11,6 +11,7 @@ import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.service.ExperienceOuterService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.annotation.AnnotationUtils
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.ResourceInfo
@@ -42,7 +43,7 @@ class OuterLoginFilter @Autowired constructor(
                 }
                 // 路径过滤
                 val resourceMethod = resourceInfo!!.resourceMethod
-                if (resourceMethod.annotations.filterIsInstance<AllowOuter>().isEmpty()) {
+                if (AnnotationUtils.findAnnotation(resourceMethod, AllowOuter::class.java) == null) {
                     logger.warn(
                         "this method is not allowed by outer , class:{} , method:{}",
                         resourceMethod.declaringClass,

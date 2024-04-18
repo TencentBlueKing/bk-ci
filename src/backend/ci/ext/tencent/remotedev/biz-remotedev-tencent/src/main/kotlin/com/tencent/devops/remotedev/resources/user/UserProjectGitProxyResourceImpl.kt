@@ -52,7 +52,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         data: LinktgitData
-    ): Result<Map<Long, Pair<String, Boolean>>> {
+    ): Result<Map<String, Boolean>> {
         return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data.codeUrls))
     }
 

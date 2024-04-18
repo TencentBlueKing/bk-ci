@@ -14,6 +14,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -21,9 +22,10 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
-import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -43,22 +45,57 @@ class ServiceRemoteDevResourceImpl(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val notifyControl: NotifyControl,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val workspaceLoginService: WorkspaceLoginService
 ) : ServiceRemoteDevResource {
     private val executor = Executors.newCachedThreadPool()
+
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
 
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
+        val data = permissionService.checkAndGetUser1Password(URLDecoder.decode(ticket, "UTF-8"))
+        val result = (data.userId == userId)
+        if (!result) {
+            return Result(false)
+        }
+        try {
+            workspaceLoginService.addUserLogin(data.userId, data.workspaceName)
+        } catch (e: Exception) {
+            logger.error("validateUserTicket error", e)
+        }
+        return Result(true)
+    }
+
+    override fun getProjectWorkspace(
+        projectId: String?,
+        ip: String?,
+        businessLineName: String?,
+        ownerName: String?
+    ): Result<List<WeSecProjectWorkspace>> {
         return Result(
-            permissionService.checkAndGetUser1Password(URLDecoder.decode(ticket, "UTF-8")).userId == userId
+            workspaceService.getProjectWorkspaceList4WeSec(
+                projectId = projectId,
+                ip = ip,
+                businessLineName = businessLineName,
+                ownerName = ownerName,
+                hasDepartmentsInfo = null,
+                hasCurrentUser = true
+            )
         )
     }
 
-    override fun getProjectWorkspace(projectId: String?, ip: String?): Result<List<WeSecProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4WeSec(projectId, ip))
+    override fun getProjectWorkspaceIp(ip: String): Result<WeSecProjectWorkspace?> {
+        return Result(
+            workspaceService.getProjectWorkspaceList4WeSec(
+                projectId = null,
+                ip = ip,
+                hasDepartmentsInfo = true,
+                hasCurrentUser = true
+            ).randomOrNull()
+        )
     }
 
     override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
@@ -99,7 +136,8 @@ class ServiceRemoteDevResourceImpl(
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = operator,
                 projectCode = data.projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
+                enable = null
             )
         }
         cgsData.forEach { cgs ->
@@ -183,5 +221,9 @@ class ServiceRemoteDevResourceImpl(
             notifyData = notifyData
         )
         return Result(true)
+    }
+
+    override fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>> {
+        return Result(windowsResourceConfigService.getAllType(true, null))
     }
 }

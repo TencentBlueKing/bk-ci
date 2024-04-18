@@ -50,7 +50,7 @@ import com.tencent.devops.project.pojo.ITEM_BK_SERVICE_REDIS_KEY
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
-import com.tencent.devops.store.api.ServiceItemRelResource
+import com.tencent.devops.store.api.extservice.ServiceItemRelResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_NOT_EXIST
 import javax.annotation.PostConstruct

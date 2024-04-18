@@ -95,14 +95,6 @@ class DcContainerShutdownHandler @Autowired constructor(
             if (!persistence) {
                 stopContainer(this, buildContainerPools)
             }
-
-            logger.info("[$buildLogKey delete buildContainerPoolNo.")
-            buildContainerPoolNoDao.deleteDevCloudBuildLastContainerPoolNo(
-                dslContext = dslContext,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                executeCount = executeCount ?: 1
-            )
         }
     }
 
@@ -225,6 +217,14 @@ class DcContainerShutdownHandler @Autowired constructor(
                     status = ContainerBuildStatus.IDLE.status
                 )
             }
+
+            logger.info("[$buildLogKey delete buildContainerPoolNo.")
+            buildContainerPoolNoDao.deleteDevCloudBuildLastContainerPoolNo(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount ?: 1
+            )
         }
     }
 }

@@ -107,34 +107,22 @@ class ProjectUserRefreshService @Autowired constructor(
             try {
                 Thread.sleep(5)
                 try {
-                    val tofDeptInfo = tofService.getDeptFromTof(null, it.userId!!, "", false)
+                    val tofDeptInfo = tofService.getDeptFromTof(
+                        operator = null,
+                        userId = it.userId!!,
+                        bkTicket = "",
+                        userCache = false
+                    )
                     if (tofDeptInfo == null) {
                         projectUserDao.delete(dslContext, it.userId!!)
                         logger.info("user ${it.userId} is level office, delete t_user info")
-                    } else if (
-                        isUserInfoChange(
+                    } else if (isUserInfoChange(
                             tofDeptInfo = tofDeptInfo,
                             dbUserRecord = it
                         )
                     ) {
-                        logger.info(
-                            "${it.userId} cent id is diff, " +
-                                "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
-                                "local ${it.centerId} ${it.centerName}"
-                        )
-                        userDao.update(
-                            userId = it.userId!!,
-                            groupId = tofDeptInfo.groupId.toInt(),
-                            groupName = tofDeptInfo.groupName,
-                            bgId = tofDeptInfo.bgId.toInt(),
-                            bgName = tofDeptInfo.bgName,
-                            centerId = tofDeptInfo.centerId.toInt(),
-                            centerName = tofDeptInfo.centerName,
-                            deptId = tofDeptInfo.deptId.toInt(),
-                            deptName = tofDeptInfo.deptName,
-                            dslContext = dslContext,
-                            name = it.name!!
-                        )
+                        logger.info("The user organization changes|${it.userId}|$tofDeptInfo|$it")
+                        userDao.update(dslContext, tofDeptInfo)
                     }
                 } catch (oe: OperationException) {
                     logger.warn("getUserDept fail: ${it.userId}|$oe")
@@ -154,18 +142,10 @@ class ProjectUserRefreshService @Autowired constructor(
             return null
         }
         val staffInfo = tofService.getStaffInfo(userId)
+        tofDeptInfo.name = staffInfo.chineseName
         userDao.create(
             dslContext = dslContext,
-            groupId = tofDeptInfo.groupId.toInt(),
-            groupName = tofDeptInfo.groupName,
-            bgId = tofDeptInfo.bgId.toInt(),
-            bgName = tofDeptInfo.bgName,
-            centerId = tofDeptInfo.centerId.toInt(),
-            centerName = tofDeptInfo.centerName,
-            deptId = tofDeptInfo.deptId.toInt(),
-            deptName = tofDeptInfo.deptName,
-            name = staffInfo.chineseName,
-            userId = userId
+            userDeptDetail = tofDeptInfo
         )
         return tofDeptInfo
     }
@@ -185,18 +165,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 )) {
                 logger.info("user info diff, bk:$userInfo, tof :$deptInfo")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
-                projectUserDao.update(
-                    userId = userId,
-                    groupId = deptInfo.groupId.toInt(),
-                    groupName = deptInfo.groupName,
-                    bgId = deptInfo.bgId.toInt(),
-                    bgName = deptInfo.bgName,
-                    centerId = deptInfo.centerId.toInt(),
-                    centerName = deptInfo.centerName,
-                    deptId = deptInfo.deptId.toInt(),
-                    deptName = deptInfo.deptName,
-                    dslContext = dslContext
-                )
+                projectUserDao.update(dslContext, deptInfo)
                 return deptInfo
             }
         } catch (e: OperationException) {
@@ -333,16 +302,20 @@ class ProjectUserRefreshService @Autowired constructor(
 
         userDao.create(
             dslContext = dslContext,
-            userId = userInfo.userId,
-            name = userInfo.userId,
-            bgId = userInfo.bgId,
-            bgName = userInfo.bgName,
-            deptId = userInfo.deptId ?: 0,
-            deptName = userInfo.deptName ?: "",
-            centerId = userInfo.centerId ?: 0,
-            centerName = userInfo.centerName ?: "",
-            groupId = userInfo.groupId ?: 0,
-            groupName = userInfo.groupName ?: "",
+            userDeptDetail = UserDeptDetail(
+                userId = userInfo.userId,
+                name = userInfo.userId,
+                bgId = userInfo.bgId.toString(),
+                bgName = userInfo.bgName,
+                businessLineId = userInfo.businessLineId,
+                businessLineName = userInfo.businessLineName,
+                deptId = "${userInfo.deptId ?: 0}",
+                deptName = userInfo.deptName ?: "",
+                centerId = "${userInfo.centerId ?: 0}",
+                centerName = userInfo.centerName ?: "",
+                groupId = "${userInfo.groupId ?: 0}",
+                groupName = userInfo.groupName ?: ""
+            ),
             publicAccount = true
         )
         return true
@@ -359,7 +332,9 @@ class ProjectUserRefreshService @Autowired constructor(
             tofDeptInfo.centerId != dbUserRecord.centerId ||
             tofDeptInfo.centerName != dbUserRecord.centerName ||
             tofDeptInfo.groupId != dbUserRecord.groupId ||
-            tofDeptInfo.groupName != dbUserRecord.groupName
+            tofDeptInfo.groupName != dbUserRecord.groupName ||
+            tofDeptInfo.businessLineId != dbUserRecord.businessLineId ||
+            tofDeptInfo.businessLineName != dbUserRecord.businessLineName
     }
 
     companion object {

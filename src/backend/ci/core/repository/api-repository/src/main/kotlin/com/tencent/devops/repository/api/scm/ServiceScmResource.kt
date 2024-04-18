@@ -36,7 +36,7 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -415,8 +415,8 @@ interface ServiceScmResource {
 
     @Operation(summary = "获取会话信息")
     @POST
-    @Path("getGitSession")
-    fun getSession(
+    @Path("getLoginSession")
+    fun getLoginSession(
         reposSessionRequest: RepoSessionRequest
-    ): Result<GitSession?>
+    ): Result<LoginSession?>
 }

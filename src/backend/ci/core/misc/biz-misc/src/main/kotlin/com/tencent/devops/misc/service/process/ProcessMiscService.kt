@@ -27,11 +27,13 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.misc.dao.process.ProcessDao
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -39,6 +41,8 @@ import java.time.LocalDateTime
 @Service
 class ProcessMiscService @Autowired constructor(
     private val dslContext: DSLContext,
+    @Qualifier(ARCHIVE_SHARDING_DSL_CONTEXT)
+    private val archiveShardingDslContext: DSLContext,
     private val processDao: ProcessDao
 ) {
 
@@ -50,10 +54,11 @@ class ProcessMiscService @Autowired constructor(
         isCompletelyDelete: Boolean,
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
-        geTimeFlag: Boolean? = null
+        geTimeFlag: Boolean? = null,
+        archiveFlag: Boolean? = null
     ): List<String>? {
         val historyBuildIdRecords = processDao.getHistoryBuildIdList(
-            dslContext = dslContext,
+            dslContext = generateQueryDslContext(archiveFlag),
             projectId = projectId,
             pipelineId = pipelineId,
             totalHandleNum = totalHandleNum,
@@ -83,15 +88,27 @@ class ProcessMiscService @Autowired constructor(
     fun getPipelineIdListByProjectId(
         projectId: String,
         minId: Long,
-        limit: Long
+        limit: Long,
+        archiveFlag: Boolean? = null,
+        gapDays: Long? = null
     ): List<String>? {
         val pipelineIdRecords = processDao.getPipelineIdListByProjectId(
-            dslContext = dslContext,
+            dslContext = generateQueryDslContext(archiveFlag),
             projectId = projectId,
             minId = minId,
-            limit = limit
+            limit = limit,
+            gapDays = gapDays
         )
         return generateIdList(pipelineIdRecords)
+    }
+
+    private fun generateQueryDslContext(archiveFlag: Boolean?): DSLContext {
+        val queryDslContext = if (archiveFlag == true) {
+            archiveShardingDslContext
+        } else {
+            dslContext
+        }
+        return queryDslContext
     }
 
     private fun generateIdList(records: Result<out Record>?): MutableList<String>? {
@@ -106,12 +123,16 @@ class ProcessMiscService @Autowired constructor(
         }
     }
 
-    fun getMinPipelineInfoIdByProjectId(projectId: String): Long {
-        return processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
+    fun getMinPipelineInfoIdByProjectId(projectId: String, archiveFlag: Boolean? = null): Long {
+        return processDao.getMinPipelineInfoIdByProjectId(generateQueryDslContext(archiveFlag), projectId)
     }
 
-    fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String): Long {
-        return processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId)?.id ?: 0L
+    fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String, archiveFlag: Boolean? = null): Long {
+        return processDao.getPipelineInfoByPipelineId(
+            dslContext = generateQueryDslContext(archiveFlag),
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.id ?: 0L
     }
 
     fun getMaxPipelineBuildNum(
@@ -123,9 +144,10 @@ class ProcessMiscService @Autowired constructor(
 
     fun getMinPipelineBuildNum(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean? = null
     ): Long {
-        return processDao.getMinPipelineBuildNum(dslContext, projectId, pipelineId)
+        return processDao.getMinPipelineBuildNum(generateQueryDslContext(archiveFlag), projectId, pipelineId)
     }
 
     fun getTotalBuildCount(
@@ -133,10 +155,11 @@ class ProcessMiscService @Autowired constructor(
         pipelineId: String,
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
-        geTimeFlag: Boolean? = null
+        geTimeFlag: Boolean? = null,
+        archiveFlag: Boolean? = null
     ): Long {
         return processDao.getTotalBuildCount(
-            dslContext = dslContext,
+            dslContext = generateQueryDslContext(archiveFlag),
             projectId = projectId,
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,

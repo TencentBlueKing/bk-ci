@@ -244,7 +244,7 @@ class PipelineContainerService @Autowired constructor(
         )
     }
 
-    fun cleanContainersInMatrixGroup(
+    private fun cleanContainersInMatrixGroup(
         transactionContext: DSLContext?,
         projectId: String,
         pipelineId: String,
@@ -326,7 +326,8 @@ class PipelineContainerService @Autowired constructor(
                 if (ElementUtils.getTaskAddFlag(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable()
+                        containerEnableFlag = container.isContainerEnable(),
+                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {
                     val taskVar = atomElement.initTaskVar()
@@ -357,6 +358,7 @@ class PipelineContainerService @Autowired constructor(
                 }
             }
         }
+        container.startVMTaskSeq = startVMTaskSeq
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         supplyVMTask(
             projectId = projectId,
@@ -438,7 +440,8 @@ class PipelineContainerService @Autowired constructor(
                 if (retryFlag && ElementUtils.getTaskAddFlag(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable()
+                        containerEnableFlag = container.isContainerEnable(),
+                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {
                     taskBuildRecords.add(
@@ -446,7 +449,7 @@ class PipelineContainerService @Autowired constructor(
                             projectId = context.projectId, pipelineId = context.pipelineId,
                             buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
                             taskId = atomElement.id!!, classType = atomElement.getClassType(),
-                            atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
+                            atomCode = atomElement.getAtomCode(), executeCount = context.executeCount,
                             resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
                             taskVar = atomElement.initTaskVar(), timestamps = mapOf(),
                             elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
@@ -552,9 +555,21 @@ class PipelineContainerService @Autowired constructor(
                 needStartVM = true
             }
         }
+        container.startVMTaskSeq = startVMTaskSeq
 
         // 构建矩阵没有对应的重试插件，单独增加重试记录
-        if (container.matrixGroupFlag == true) {
+        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
+            container.retryFreshMatrixOption()
+            cleanContainersInMatrixGroup(
+                transactionContext = dslContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                matrixGroupId = container.id!!
+            )
+            // 去掉要重试的矩阵内部数据
+            updateExistsTask.removeIf { it.containerId == container.id }
+            updateExistsContainer.removeIf { it.first.matrixGroupId == container.id }
             needUpdateContainer = true
         }
 
@@ -575,6 +590,11 @@ class PipelineContainerService @Autowired constructor(
                 executeCount = context.executeCount
             )
         }
+        logger.info(
+            "prepareBuildContainerTasks|buildId=${context.buildId}|matrixGroupFlag=${container.matrixGroupFlag}|" +
+                "needUpdateContainer=$needUpdateContainer|needStartVM=$needStartVM|" +
+                "startVMTaskSeq=${container.startVMTaskSeq}"
+        )
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
             if (lastTimeBuildContainers.isNotEmpty()) {

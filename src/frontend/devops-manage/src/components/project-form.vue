@@ -2,17 +2,17 @@
 import http from '@/http/api';
 import { Message, Popover } from 'bkui-vue';
 import {
-EditLine,
+  EditLine,
 } from 'bkui-vue/lib/icon';
 import {
-computed,
-getCurrentInstance,
-nextTick,
-onBeforeUnmount,
-onMounted,
-ref,
-shallowRef,
-watch,
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
@@ -537,7 +537,11 @@ onBeforeUnmount(() => {
       >
       </bk-select>
     </bk-form-item>
-    <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
+    <bk-form-item
+      :label="t('项目性质')"
+      property="authSecrecy"
+      :required="true"
+    >
       <bk-radio-group
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
@@ -563,7 +567,7 @@ onBeforeUnmount(() => {
         v-for="(subjectScope, index) in projectData.subjectScopes"
         :key="index"
       >
-        {{ subjectScope.name }}
+        {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
       </bk-tag>
       <EditLine
         class="edit-line ml5"

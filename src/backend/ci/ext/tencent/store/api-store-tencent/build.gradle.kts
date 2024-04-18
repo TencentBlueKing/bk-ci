@@ -29,6 +29,8 @@ dependencies {
     api(project(":core:store:api-store"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-codecc"))
+    api(project(":core:misc:api-image"))
+    api(project(":ext:tencent:dispatch:api-dispatch-tencent"))
 }
 
 plugins {

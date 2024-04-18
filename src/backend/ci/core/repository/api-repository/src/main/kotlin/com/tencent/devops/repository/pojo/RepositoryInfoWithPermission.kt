@@ -61,5 +61,7 @@ data class RepositoryInfoWithPermission(
     @get:Schema(title = "svn的protocal类型（http|ssh）", required = false)
     val svnType: String? = null,
     @get:Schema(title = "授权身份", required = true)
-    val authIdentity: String? = null
+    val authIdentity: String? = null,
+    @get:Schema(title = "插件仓库", required = true)
+    val atom: Boolean? = false
 )

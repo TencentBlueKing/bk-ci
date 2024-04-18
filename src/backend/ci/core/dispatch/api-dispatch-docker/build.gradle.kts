@@ -28,7 +28,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
-    api(project(":core:store:api-store-image"))
+    api(project(":core:store:api-store"))
 }
 
 plugins {

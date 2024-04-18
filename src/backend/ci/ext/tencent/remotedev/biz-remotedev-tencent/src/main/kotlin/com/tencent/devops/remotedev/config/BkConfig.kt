@@ -41,4 +41,10 @@ class BkConfig {
     val itsmHost: String = ""
     @Value("\${bkitsm.tgitLinkServiceId:#{null}}")
     val tgitLinkServiceId: Int? = null
+
+    // bkvision配置
+    @Value("\${bkvision.url:}")
+    val bkvisionUrl: String = ""
+    @Value("\${bkvision.shareId:}")
+    val bkvisionShareId: String = ""
 }

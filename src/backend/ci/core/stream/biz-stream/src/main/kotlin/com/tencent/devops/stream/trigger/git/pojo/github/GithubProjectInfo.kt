@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.sdk.github.pojo.GithubRepo
+import com.tencent.devops.repository.sdk.github.pojo.GithubRepo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 
 data class GithubProjectInfo(

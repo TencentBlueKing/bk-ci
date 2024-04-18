@@ -185,14 +185,12 @@ class PermissionService @Autowired constructor(
         userId: String,
         projectCode: String
     ): Boolean {
-//        return kotlin.runCatching {
-//            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-//                projectCode = projectCode,
-//                userId = userId
-//            ).data
-//        }.getOrNull() ?: false
-        // todo 待所有项目迁移到rbac。再做权限判断。
-        return true
+        return kotlin.runCatching {
+            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                projectCode = projectCode,
+                userId = userId
+            ).data
+        }.getOrNull() ?: false
     }
 
     private fun initRedisUser(params: UserOnePassword): String {

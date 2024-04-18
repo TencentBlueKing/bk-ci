@@ -416,7 +416,7 @@ export default {
         {
           resourceType: this.resourceType,
           projectId: this.projectCode,
-          resourceName: keyWords
+          resourceName: encodeURI(keyWords)
         },
         {
           page,

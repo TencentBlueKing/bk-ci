@@ -2,8 +2,8 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.GetTreeRequest
-import com.tencent.devops.common.sdk.github.response.GetTreeResponse
+import com.tencent.devops.repository.sdk.github.request.GetTreeRequest
+import com.tencent.devops.repository.sdk.github.response.GetTreeResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter

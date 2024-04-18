@@ -124,6 +124,7 @@ class TaskDaemon(
             containerId = buildVariables.containerHashId,
             elementVersion = buildTask.elementVersion,
             success = isSuccess,
+            executeCount = buildTask.executeCount,
             buildResult = buildResult,
             message = errorMessage?.let {
                 CommonUtils.interceptStringInLength(

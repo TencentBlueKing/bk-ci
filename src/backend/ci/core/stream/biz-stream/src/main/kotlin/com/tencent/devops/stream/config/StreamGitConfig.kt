@@ -42,6 +42,9 @@ class StreamGitConfig {
     @Value("\${git.gitUrl:#{null}}")
     val gitUrl: String? = null
 
+    @Value("\${git.defaultAtomProjectGroupName:#{null}}")
+    val defaultAtomProjectGroupName: String? = null
+
     /* github config */
     @Value("\${github.signSecret:}")
     val signSecret: String = ""

@@ -30,15 +30,17 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
+import com.tencent.devops.remotedev.pojo.image.UpdateImageNameInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -88,4 +90,18 @@ interface UserProjectWorkspaceImageResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<StandardVmImage>>
+
+    @Operation(summary = "修改镜像名称")
+    @PUT
+    @Path("/updateName")
+    fun updateImageName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "修改镜像名称信息", required = true)
+        data: UpdateImageNameInfo
+    ): Result<Boolean>
 }

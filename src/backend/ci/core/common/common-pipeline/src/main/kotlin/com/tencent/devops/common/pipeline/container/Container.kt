@@ -61,6 +61,7 @@ interface Container {
     var containPostTaskFlag: Boolean? // 是否包含post任务
     val matrixGroupFlag: Boolean? // 是否为构建矩阵组
     var timeCost: BuildRecordTimeCost? // 耗时结果
+    var startVMTaskSeq: Int? // 开机任务序号
 
     /**
      * 重置所有状态数据

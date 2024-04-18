@@ -67,13 +67,14 @@ class WorkspaceCheckJob @Autowired constructor(
     fun stopInactiveWorkspace() {
         logger.info("=========>> Stop inactive workspace <<=========")
         // 无心跳工作空间休眠
-        checkInactiveWorkspace()
+        checkLinuxInactiveWorkspace()
+        /*暂时取消个人云桌面控制*/
         // 计算用户 win-gpu 可用时长
-        computeAllUserWinUsageTime()
+//        computeAllUserWinUsageTime()
         // win-gpu 无可用时长休眠
-        checkUnavailableWorkspace()
+//        checkUnavailableWorkspace()
         // win-gpu 提醒
-        notifyWinBeforeSleep()
+//        notifyWinBeforeSleep()
     }
 
     private fun notifyWinBeforeSleep() {
@@ -120,7 +121,7 @@ class WorkspaceCheckJob @Autowired constructor(
         }
     }
 
-    private fun checkInactiveWorkspace() {
+    private fun checkLinuxInactiveWorkspace() {
         val redisLock = RedisLock(redisOperation, stopJobLockKeyH + bkTag.getLocalTag(), 3600L)
         try {
             val lockSuccess = redisLock.tryLock()
@@ -148,9 +149,9 @@ class WorkspaceCheckJob @Autowired constructor(
                         // 针对已经休眠或销毁的容器，删除上报心跳记录。
                         if (it is ErrorCodeException &&
                             (
-                                    it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
-                                            it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
-                                    )
+                                it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
+                                    it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
+                                )
                         ) {
                             redisHeartBeat.deleteWorkspaceHeartbeat(ADMIN_NAME, workspaceName)
                         }
@@ -177,7 +178,9 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Clear idle workspace get lock.")
-                deleteControl.deleteInactivityWorkspace()
+                deleteControl.deleteLinuxInactivityWorkspace()
+                /*暂时去掉个人win的控制*/
+//                deleteControl.deleteWinInactivityWorkspace()
             }
         } catch (e: Throwable) {
             logger.error("Clear idle workspace failed", e)
@@ -200,7 +203,9 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("send idle workspace notify get lock.")
-                workspaceService.sendInactivityWorkspaceNotify()
+                workspaceService.sendLinuxInactivityWorkspaceNotify()
+                /*暂时去掉个人win的控制*/
+//                workspaceService.sendWinInactivityWorkspaceNotify()
             }
         } catch (e: Throwable) {
             logger.error("send idle workspace notify failed", e)
@@ -229,9 +234,10 @@ class WorkspaceCheckJob @Autowired constructor(
                 }.onFailure {
                     logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
                 }
-                // 云桌面通知-关机超过14天时自动销毁
+
+                // 关机超过14天时自动销毁
                 kotlin.runCatching {
-                    deleteControl.autoDeleteWhenSleep7Day(false, readyDeleteWorkspace)
+                    deleteControl.autoDeleteWhenSleep14Day(false, readyDeleteWorkspace)
                     if (readyDeleteWorkspace.isNotEmpty()) {
                         logger.info("read to notify system manager|$readyDeleteWorkspace")
                         OkhttpUtils.doPost(
@@ -288,6 +294,18 @@ class WorkspaceCheckJob @Autowired constructor(
                     workspaceService.notifyWinNotLogin3Day()
                 }.onFailure {
                     logger.warn("notifyWinNotLogin3Day fail ${it.message}", it)
+                }
+                // 未达到云桌面4星活跃：自然月（排除法定节假日）内小于 5 天达到日活标准的云桌面，并邮件提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWhenNot4StarActive()
+                }.onFailure {
+                    logger.warn("notifyWhenNot4StarActive fail ${it.message}", it)
+                }
+                // 云桌面连续14天活跃度不足10小时通知
+                kotlin.runCatching {
+                    workspaceService.notifyWhenNotActiveIn14Days()
+                }.onFailure {
+                    logger.warn("notifyWhenNotActiveIn14Days fail ${it.message}", it)
                 }
             }
         } catch (e: Throwable) {

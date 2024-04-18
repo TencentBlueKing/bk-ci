@@ -54,7 +54,7 @@ data class BuildRecordTask(
     @get:Schema(title = "任务ID", required = true)
     val taskId: String,
     @get:Schema(title = "任务序号", required = true)
-    val taskSeq: Int,
+    var taskSeq: Int,
     @get:Schema(title = "执行次数", required = true)
     val executeCount: Int,
     @get:Schema(title = "执行变量", required = true)

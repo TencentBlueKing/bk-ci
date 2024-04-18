@@ -35,12 +35,13 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.repository.github.service.GithubUserService
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
+import com.tencent.devops.repository.service.ScmUrlProxyService
 import com.tencent.devops.scm.config.GitConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -58,7 +59,8 @@ class GithubOAuthService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
     private val githubTokenService: GithubTokenService,
-    private val githubUserService: GithubUserService
+    private val githubUserService: GithubUserService,
+    private val scmUrlProxyService: ScmUrlProxyService
 ) {
 
     fun getGithubOauth(
@@ -186,8 +188,9 @@ class GithubOAuthService @Autowired constructor(
         val url = "$GITHUB_URL/login/oauth/access_token" +
             "?client_id=$clientId&client_secret=$secret&code=$code"
 
+        val proxyUrl = scmUrlProxyService.getProxyUrl(url)
         val request = Request.Builder()
-            .url(url)
+            .url(proxyUrl)
             .header("Accept", "application/json")
             .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
             .build()

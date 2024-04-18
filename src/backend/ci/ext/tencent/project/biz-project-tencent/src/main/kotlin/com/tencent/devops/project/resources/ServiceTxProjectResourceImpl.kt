@@ -34,7 +34,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -63,7 +63,8 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 @Suppress("TooManyFunctions", "LongParameterList")
 class ServiceTxProjectResourceImpl @Autowired constructor(
-    private val bsAuthPermissionApi: AuthPermissionApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectLocalService: ProjectLocalService,
     private val projectService: ProjectService,
@@ -78,10 +79,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
         return Result(
-            bsAuthPermissionApi.addResourcePermissionForUsers(
+            authPermissionApi.addResourcePermissionForUsers(
                 userId = userId,
                 projectCode = addManagerRequest.projectCode,
-                serviceCode = BSPipelineAuthServiceCode(),
+                serviceCode = pipelineAuthServiceCode,
                 permission = AuthPermission.MANAGE,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT,
                 resourceCode = "*",
@@ -297,8 +298,20 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         }
     }
 
-    override fun createGitCIProject(gitProjectId: Long, userId: String, gitProjectName: String?): Result<ProjectVO> {
-        return Result(projectLocalService.createGitCIProject(userId, gitProjectId, gitProjectName))
+    override fun createGitCIProject(
+        gitProjectId: Long,
+        userId: String,
+        gitProjectName: String?,
+        productId: Int?
+    ): Result<ProjectVO> {
+        return Result(
+            projectLocalService.createGitCIProject(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                gitProjectName = gitProjectName,
+                productId = productId
+            )
+        )
     }
 
     override fun createProjectUser(
@@ -386,14 +399,31 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateRemotedev(userId: String, projectCode: String, addcloudDesktopNum: Int): Result<Boolean> {
-        return Result(remoteDevService.updateRemoteDevInfo(projectCode, addcloudDesktopNum))
+    override fun updateRemotedev(
+        userId: String,
+        projectCode: String,
+        addcloudDesktopNum: Int?,
+        enable: Boolean?
+    ): Result<Boolean> {
+        return Result(remoteDevService.updateRemoteDevInfo(userId, projectCode, addcloudDesktopNum, enable))
     }
 
     override fun setExtSystemTagByProject(
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): com.tencent.devops.common.api.pojo.Result<Boolean> {
         return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
+    }
+
+    override fun batchUpdateProjectProductId(
+        userId: String,
+        productId: Int,
+        projectIds: List<String>
+    ): Result<Boolean> {
+        return Result(projectTxService.batchUpdateProjectProductId(projectIds, productId))
+    }
+
+    override fun projectEnableRemotedev(projectCode: String?): Result<Map<String, String>> {
+        return Result(remoteDevService.fetchRemoteDevProject(projectCode))
     }
 
     companion object {

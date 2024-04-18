@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -86,5 +86,14 @@ interface TxOpAtomResource {
         @Parameter(description = "项目组代码", required = false)
         @QueryParam("groupCode")
         groupCode: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "刷新插件代码库关联工蜂CI项目的运营归属")
+    @GET
+    @Path("/refresh/ci/project/product")
+    fun refreshAtomCodeRepoGitCIProjectProduct(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
     ): Result<Boolean>
 }

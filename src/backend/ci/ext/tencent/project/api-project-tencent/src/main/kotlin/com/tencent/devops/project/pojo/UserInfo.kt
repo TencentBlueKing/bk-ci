@@ -39,6 +39,10 @@ data class UserInfo(
     val bgId: Int,
     @get:Schema(title = "Bg名称")
     val bgName: String,
+    @get:Schema(title = "业务线名称")
+    val businessLineName: String? = null,
+    @get:Schema(title = "业务线ID")
+    val businessLineId: String? = null,
     @get:Schema(title = "部门Id")
     val deptId: Int?,
     @get:Schema(title = "部门名称")

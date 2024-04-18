@@ -66,4 +66,19 @@ interface OpNotifyMessageResource {
         @Parameter(description = "通过条件对项目进行邮件通知", required = true)
         sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Pair<Int, List<String>>>
+
+    @Operation(summary = "项目所属组织架构变更通知")
+    @POST
+    @Path("/sendEmailForProjectOrganizationChange/")
+    fun sendEmailForProjectOrganizationChange(): Result<Boolean>
+
+    @Operation(summary = "项目所属OBS运营产品变更通知")
+    @POST
+    @Path("/sendEmailForProjectProductChange/")
+    fun sendEmailForProjectProductChange(): Result<Boolean>
+
+    @Operation(summary = "检查项目组织架构是否正确")
+    @POST
+    @Path("/sendEmailForVerifyProjectOrganization/")
+    fun sendEmailForVerifyProjectOrganization(): Result<Boolean>
 }

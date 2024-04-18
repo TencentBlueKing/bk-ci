@@ -90,6 +90,7 @@ class JobQuotaService constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
+                queueTimeoutMinutes = queueTimeoutMinutes ?: 10,
                 jobType = jobType,
                 demoteQueueRouteKeySuffix = demoteQueueRouteKeySuffix,
                 startupEvent = startupEvent
@@ -105,10 +106,12 @@ class JobQuotaService constructor(
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
+        queueTimeoutMinutes: Int,
         jobType: JobQuotaVmType,
         demoteQueueRouteKeySuffix: String,
         startupEvent: IPipelineEvent
     ) {
+        val maxJobRetry = queueTimeoutMinutes * 60 * 1000 / RETRY_DELTA
         val dispatchService = SpringContextUtil.getBean(DispatchService::class.java)
 
         if (startupEvent.retryTime < RETRY_TIME) {
@@ -150,7 +153,7 @@ class JobQuotaService constructor(
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
             dispatchService.redispatch(startupEvent)
-        } else {
+        } else if (startupEvent.retryTime < maxJobRetry) {
             logger.info("$logPrefix DemoteQueue job quota excess. delay: " +
                     "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
 
@@ -171,6 +174,9 @@ class JobQuotaService constructor(
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
             dispatchService.redispatch(startupEvent)
+        } else {
+            logger.info("$logPrefix DemoteQueue Job Maximum number of retries reached. " +
+                    "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
         }
     }
 

@@ -32,6 +32,7 @@ import com.tencent.devops.process.engine.service.ProjectPipelineCallBackUrlGener
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
 import java.net.URLEncoder
 
 @Service
@@ -69,6 +70,21 @@ class TxProjectPipelineCallBackUrlGeneratorImpl : ProjectPipelineCallBackUrlGene
             url.contains("$gatewayIDCProxy/proxy-devnet?url=") -> {
                 val encodeUrl = URLEncoder.encode(url.removePrefix("$gatewayIDCProxy/proxy-devnet?url="), "UTF-8")
                 "$gatewayIDCProxy/proxy-devnet?url=$encodeUrl"
+            }
+            else -> {
+                url
+            }
+        }
+    }
+
+    override fun decodeCallbackUrl(url: String): String {
+        // 如果url中有网关代理,那么传过来的url已经解码，需要再编码才能与数据库的相同
+        return when {
+            url.contains("$gatewayIDCProxy/proxy-oss?url=") -> {
+                URLDecoder.decode(url.removePrefix("$gatewayIDCProxy/proxy-oss?url="), "UTF-8")
+            }
+            url.contains("$gatewayIDCProxy/proxy-devnet?url=") -> {
+                URLDecoder.decode(url.removePrefix("$gatewayIDCProxy/proxy-devnet?url="), "UTF-8")
             }
             else -> {
                 url

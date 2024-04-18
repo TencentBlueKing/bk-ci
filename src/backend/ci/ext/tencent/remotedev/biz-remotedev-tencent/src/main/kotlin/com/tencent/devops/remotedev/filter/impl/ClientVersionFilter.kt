@@ -108,7 +108,7 @@ class ClientVersionFilter constructor(
                 userIds = mutableSetOf(user),
                 notifyTemplateCode = CLIENT_VERSION_WARNING_NOTIFY,
                 notifyType = mutableSetOf(RemoteDevNotifyType.CLIENT_PUSH, RemoteDevNotifyType.EMAIL),
-                bodyParams = mapOf(
+                bodyParams = mutableMapOf(
                     "version" to version
                 )
             )

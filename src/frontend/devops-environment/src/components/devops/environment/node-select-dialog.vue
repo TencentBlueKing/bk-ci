@@ -7,11 +7,11 @@
             <div class="node-list-header">
                 <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
-                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }}
+                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlerConf.curTotalCount }}
                         </span>{{ $t('environment.nodes') }}
                     </span>
                     <span class="selected-node-prompt">
-                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }}
+                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlerConf.selectedNodeCount }}
                         </span>{{ $t('environment.nodes') }}
                     </span>
                 </div>
@@ -42,19 +42,26 @@
                 </div>
             </div>
             <div class="node-select-table">
-                <bk-table :data="visibleRowList" class="node-table-message">
+                <bk-table
+                    :data="visibleRowList"
+                    class="node-table-message"
+                    :pagination="pagination"
+                    height="100%"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handlePageLimitChange"
+                >
                     <bk-table-column width="60" :render-header="renderHeader">
                         <template slot-scope="{ row }">
                             <bk-checkbox :true-value="true" :false-value="false" :disabled="row.isEixtEnvNode"
                                 v-model="row.isChecked"></bk-checkbox>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="IP" prop="ip"></bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName" width="160">
+                    <bk-table-column label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName" show-overflow-tooltip width="160">
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name"></bk-table-column>
+                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name" show-overflow-tooltip></bk-table-column>
                     <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
-                        prop="createdUser" width="200">
+                        prop="createdUser" width="200" show-overflow-tooltip>
                         <template slot-scope="{ row }">
                             <div v-if="isShowOperateChange(row)">
                                 <div class="edit-operator" v-if="isCurrentUser(row)">
@@ -88,31 +95,34 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')" prop="nodeStatus">
+                    <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
                         <template slot-scope="{ row }">
-                            <span>{{ $t('environment.nodeStatusMap')[row.nodeStatus] }}</span>
+                            <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
+                            <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
+                            <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
+                            {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
                         </template>
                     </bk-table-column>
-                    <bk-table-column :min-width="82"
+                    <!-- <bk-table-column :min-width="82"
                         :label="$t(`environment.nodeInfo.${hasConstruct ? 'gateway' : 'gseAgentStatus'}`)">
                         <template slot-scope="{ row }">
                             <span v-if="['THIRDPARTY','DEVCLOUD'].includes(row.nodeType)">{{ row.gateway }}</span>
                             <span v-else>
                                 <span class="node-agstatus normal-status-node" v-if="row.nodeType === 'BCSVM'" :class="{
                                     'refresh-status-node': !row.agentStatus,
-                                    'over-content': selectHandlercConf.curDisplayCount > 6
+                                    'over-content': selectHandlerConf.curDisplayCount > 6
                                 }">{{ row.agentStatus ? $t('environment.nodeInfo.normal') :
                                     $t('environment.nodeInfo.refreshing') }}
                                 </span>
                                 <span class="node-agstatus normal-status-node" v-else :class="{
                                     'abnormal-status-node': !row.agentStatus,
-                                    'over-content': selectHandlercConf.curDisplayCount > 6
+                                    'over-content': selectHandlerConf.curDisplayCount > 6
                                 }">{{ row.agentStatus ? $t('environment.nodeInfo.normal') :
                                     $t('environment.nodeInfo.abnormal') }}
                                 </span>
                             </span>
                         </template>
-                    </bk-table-column>
+                    </bk-table-column> -->
                 </bk-table>
             </div>
         </div>
@@ -127,12 +137,16 @@
 </template>
 
 <script>
+    import StatusIcon from '@/components/status-icon.vue'
     export default {
+        components: {
+            StatusIcon
+        },
         props: {
             nodeSelectConf: Object,
             loading: Object,
             curUserInfo: Object,
-            selectHandlercConf: Object,
+            selectHandlerConf: Object,
             rowList: Array,
             confirmFn: Function,
             toggleAllSelect: Function,
@@ -151,7 +165,14 @@
             return {
                 isSearchFooter: false,
                 inputValue: '',
-                searchKeyList: []
+                searchKeyList: [],
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
             }
         },
         computed: {
@@ -167,10 +188,10 @@
                 })
             },
             visibleRowList () {
-                return this.rowList.filter(row => row.isDisplay)
-            },
-            isAllSelected () {
-                return this.selectHandlercConf.allNodeSelected
+                const list = this.rowList.filter(row => row.isDisplay)
+                this.pagination.count = list.length
+                const { current, limit } = this.pagination
+                return list.splice(limit * (current - 1), limit * current)
             }
 
         },
@@ -288,12 +309,19 @@
                 return <bk-checkbox
                         true-value={true}
                         false-value={false}
-                        v-model={this.isAllSelected}
+                        v-model={this.selectHandlerConf.allNodeSelected}
                         onChange={this.allSelectChange}
                         />
             },
-            allSelectChange () {
-                this.toggleAllSelect(!this.isAllSelected)
+            allSelectChange (value) {
+                this.toggleAllSelect(value)
+            },
+            handlePageChange (page) {
+                this.pagination.current = page
+            },
+            handlePageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
             }
         }
     }
@@ -308,12 +336,16 @@
   }
 
   .node-select-table {
-    height: 294px;
+    height: 400px;
     margin: 0;
     border: none;
     overflow: auto;
   }
-
+  .node-table-message {
+    &::before {
+        height: 0;
+    }
+  }
   .node-select-wrapper {
 
     .bk-dialog-tool {
@@ -323,6 +355,7 @@
     .bk-dialog-body {
       padding-left: 0;
       padding-right: 0;
+      padding-bottom: 0;
     }
 
     .node-list-header {

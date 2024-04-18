@@ -206,6 +206,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132039",
         formatErrorMessage = "request devcloud {0} error {1}"
+    ),
+    REQ_BKVISION_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132040",
+        formatErrorMessage = "request bkvision {0} error {1}"
     );
 
     fun getErrorMessage(): String {

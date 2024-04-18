@@ -79,7 +79,9 @@ data class TriggerContainer(
     @get:Schema(title = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
     @get:Schema(title = "各项耗时", required = true)
-    override var timeCost: BuildRecordTimeCost? = null
+    override var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "开机任务序号", required = false, readOnly = true)
+    override var startVMTaskSeq: Int? = null
 ) : Container {
     companion object {
         const val classType = "trigger"

@@ -106,4 +106,17 @@ class ImageManageDao {
                 .execute()
         }
     }
+
+    fun updateImageName(
+        dslContext: DSLContext,
+        id: Long,
+        imageName: String
+    ) {
+        with(TProjectImages.T_PROJECT_IMAGES) {
+            dslContext.update(this)
+                .set(IMAGE_NAME, imageName)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }

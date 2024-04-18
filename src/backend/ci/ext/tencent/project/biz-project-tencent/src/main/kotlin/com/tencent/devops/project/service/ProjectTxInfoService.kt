@@ -122,4 +122,13 @@ class ProjectTxInfoService @Autowired constructor(
         )
         return true
     }
+
+    fun batchUpdateProjectProductId(englishNames: List<String>, productId: Int): Boolean {
+        projectDao.batchUpdateProductId(
+            dslContext = dslContext,
+            englishNames = englishNames,
+            productId = productId
+        )
+        return true
+    }
 }

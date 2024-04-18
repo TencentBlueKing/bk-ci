@@ -53,10 +53,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun enableCallbackByUrl(projectId: String, url: String): Result<Boolean> {
-        if (projectId.isEmpty()) {
-            throw ParamBlankException("Invalid projectId")
-        }
+    override fun enableCallbackByUrl(projectId: String?, url: String): Result<Boolean> {
         if (url.isEmpty()) {
             throw ParamBlankException("Invalid url")
         }
@@ -83,6 +80,17 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
             logger.warn("OpPipelineCallbackResource：enableCallback failed | $e ")
         }
         logger.info("OpPipelineCallbackResource:end enableCallback-----------")
+        return Result(true)
+    }
+
+    override fun disableCallbackByIds(projectId: String, callbackIds: String): Result<Boolean> {
+        if (projectId.isEmpty()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (callbackIds.isEmpty()) {
+            throw ParamBlankException("Invalid callbackIds")
+        }
+        projectPipelineCallBackService.batchDisable(projectId = projectId, callbackIds = callbackIds)
         return Result(true)
     }
 

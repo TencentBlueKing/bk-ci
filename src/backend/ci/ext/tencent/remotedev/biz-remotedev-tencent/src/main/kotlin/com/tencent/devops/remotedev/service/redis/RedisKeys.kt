@@ -24,6 +24,8 @@ object RedisKeys {
     const val REDIS_CLIENT_VERSION_CHECK = "remotedev:clientVersionCheck" // 是否校验蓝盾客户端版本
     const val REDIS_WORKING_ON_WEEKEND_DAY = "remotedev:holiday:workingDays" // 调休上班时间
     const val REDIS_HOLIDAY = "remotedev:holiday:holidays" // 休假时间
+    const val REDIS_WORKSPACE_AUTO_DELETE_WHITE_LIST_PROJECT = "remotedev:autoDeleteWhiteListProject" // 云桌面自动销毁白名单
+    const val REDIS_WINDOWS_HIGH_END_MODEL = "remotedev:windowsHighEndModel" // 云桌面高配机型白名单
 
     // redis必填项
     const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"

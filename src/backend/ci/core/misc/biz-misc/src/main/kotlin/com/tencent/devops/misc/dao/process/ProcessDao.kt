@@ -104,12 +104,16 @@ class ProcessDao {
         dslContext: DSLContext,
         projectId: String,
         minId: Long,
-        limit: Long
+        limit: Long,
+        gapDays: Long? = null
     ): Result<out Record>? {
         with(TPipelineInfo.T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(ID.ge(minId))
+            if (gapDays != null) {
+                conditions.add(UPDATE_TIME.lt(LocalDateTime.now().minusDays(gapDays)))
+            }
             return dslContext.select(PIPELINE_ID).from(this)
                 .where(conditions)
                 .orderBy(ID.asc())
