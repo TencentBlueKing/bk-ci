@@ -28,6 +28,7 @@
 package com.tencent.devops.project.util
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.util.HttpRetryUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -130,13 +131,16 @@ object OkHttpUtils {
             val response = HttpRetryUtils.retry(retryCount) {
                 httpClient.newCall(request).execute()
             }
+            val responseBody = response.body?.let {
+                JsonUtil.toJson(it, false)
+            } ?: ""
             if (response.isSuccessful) {
-                logger.info(("success to send callback request|url[$url]|content[${response.body.toString()}]"))
+                logger.info(("success to send callback request|url[$url]|content[$responseBody]"))
                 successAction.invoke(response)
             } else {
                 throw RuntimeException(
                     "exception occurred in callback interface|code[${response.code}]" +
-                            "|content[${response.body.toString()}]"
+                            "|content[$responseBody]"
                 )
             }
         } catch (ignored: Exception) {
