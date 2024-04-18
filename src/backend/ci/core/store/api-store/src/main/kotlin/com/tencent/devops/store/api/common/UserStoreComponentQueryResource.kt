@@ -225,6 +225,10 @@ interface UserStoreComponentQueryResource {
         @QueryParam("recommendFlag")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)
         recommendFlag: Boolean?,
+        @Parameter(description = "是否已在该项目安装 true：是，false：否", required = false)
+        @QueryParam("installed")
+        @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)
+        installed: Boolean? = null,
         @Parameter(description = "是否需要更新标识 true：需要，false：不需要", required = false)
         @QueryParam("updateFlag")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)

@@ -39,6 +39,8 @@ class ApigwStoreComponentResourceV4Impl @Autowired constructor(private val clien
     ApigwStoreComponentResourceV4 {
 
     override fun getComponentPkgDownloadUrl(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         storeType: StoreTypeEnum,
