@@ -15,6 +15,8 @@ data class EnvironmentCreateBasicBody(
     val userId: String,
     @JsonProperty("appName")
     val appName: String,
+    @JsonProperty("gameId")
+    val gameId: String,
     @JsonProperty("pipelineId")
     val pipelineId: String?,
     @JsonProperty("zoneId")

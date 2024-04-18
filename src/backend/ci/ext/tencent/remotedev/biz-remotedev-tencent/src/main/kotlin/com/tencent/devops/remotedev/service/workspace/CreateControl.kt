@@ -323,6 +323,7 @@ class CreateControl @Autowired constructor(
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId, WorkspaceOwnerType.PROJECT)
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = generateWorkspaceName(projectId)
@@ -383,7 +384,9 @@ class CreateControl @Autowired constructor(
                     projectId = projectId,
                     mountType = mountType,
                     ownerType = ws.ownerType,
-                    delayMills = i * 2000
+                    delayMills = i * 2000,
+                    appName = gameId.first,
+                    gameId = gameId.second
                 )
             )
         }
@@ -541,7 +544,13 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            val detail = workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType, event)
+            val detail = workspaceCommon.getOrSaveWorkspaceDetail(
+                workspaceName = event.workspaceName,
+                projectId = ws.projectId,
+                mountType = event.mountType,
+                event = event,
+                ownerType = ws.ownerType
+            )
 
             if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
@@ -668,6 +677,7 @@ class CreateControl @Autowired constructor(
             oldWs != null -> oldWs.ownerType
             else -> checkNotNull(ownerType)
         }
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId, checkOwnerType)
         val workspaceName = when (checkOwnerType) {
             WorkspaceOwnerType.PROJECT -> generateWorkspaceName(projectId)
             // 异常处理对个人云桌面来说，会直接复用旧workspaceName
@@ -760,7 +770,9 @@ class CreateControl @Autowired constructor(
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,
-                delayMills = 2000
+                delayMills = 2000,
+                appName = gameId.first,
+                gameId = gameId.second
             )
         )
         return true
@@ -913,6 +925,8 @@ class CreateControl @Autowired constructor(
         }
 
         val bizId = MDC.get(TraceTag.BIZID)
+
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId, workspace.ownerType)
         // 发送给k8s
         dispatcher.dispatch(
             WorkspaceCreateEvent(
@@ -928,7 +942,9 @@ class CreateControl @Autowired constructor(
                 bkTicket = bkTicket,
                 projectId = projectId,
                 mountType = mountType,
-                ownerType = workspace.ownerType
+                ownerType = workspace.ownerType,
+                appName = gameId.first,
+                gameId = gameId.second
             )
         )
 
@@ -1002,6 +1018,7 @@ class CreateControl @Autowired constructor(
             doPreparing(workspace)
 
             val bizId = MDC.get(TraceTag.BIZID)
+            val gameId = workspaceCommon.getGameIdAndAppId(projectId, workspace.ownerType)
             // 发送给k8s
             dispatcher.dispatch(
                 WorkspaceCreateEvent(
@@ -1018,7 +1035,9 @@ class CreateControl @Autowired constructor(
                     settingEnvs = emptyMap(),
                     projectId = projectId,
                     mountType = mountType,
-                    ownerType = WorkspaceOwnerType.PERSONAL
+                    ownerType = WorkspaceOwnerType.PERSONAL,
+                    appName = gameId.first,
+                    gameId = gameId.second
                 )
             )
             res.add(workspace)

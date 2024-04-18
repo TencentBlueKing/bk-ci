@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WhiteListDao
 import com.tencent.devops.remotedev.pojo.WhiteList
@@ -104,7 +103,6 @@ class WhiteListService @Autowired constructor(
                 ) {
                     logger.info("whiteListUser($user) in the gpu whiteList has add.(not override)")
                 }
-                client.get(ServiceStartCloudResource::class).createStartCloudUser(user)
             }
         }
 
