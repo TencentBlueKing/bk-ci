@@ -87,8 +87,7 @@ export default {
                         viewId
                     })
                 } else {
-                    this.$router.push({
-                        ...this.$route,
+                    this.$router.replace({
                         query: queryParams
                     })
                     const { page, count, records } = await this.requestAllPipelinesListByFilter({

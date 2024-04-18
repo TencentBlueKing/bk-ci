@@ -33,20 +33,8 @@ const createRouter = (store, isInIframe) => {
         mode: 'history',
         routes: pipelines
     })
-
     router.beforeEach((to, from, next) => {
         next()
-    })
-
-    router.afterEach(route => {
-        const { header = '', icon = '', to } = route.meta
-        store.commit('devops/updateHeaderHook', {
-            icon,
-            text: header,
-            routeInfo: {
-                name: to
-            }
-        })
     })
     return router
 }
