@@ -191,7 +191,7 @@
                 </div>
             </bk-table-column>
             <bk-table-column v-if="allRenderColumnMap.creator" :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
-            <bk-table-column v-if="allRenderColumnMap.created" :width="tableWidthMap.created" :label="$t('created')" prop="createTime">
+            <bk-table-column v-if="allRenderColumnMap.createTime" :width="tableWidthMap.createTime" :label="$t('created')" sortable="custom" prop="createTime">
                 <template slot-scope="props">
                     {{ prettyDateTimeFormat(props.row.createTime) }}
                 </template>
@@ -423,7 +423,6 @@
 
         watch: {
             '$route.params.viewId': function (viewId) {
-                this.$refs?.pipelineTable?.clearSort?.()
                 this.requestList({
                     viewId,
                     page: 1
@@ -437,7 +436,7 @@
                 }
             },
             filterParams: function (filterMap, oldFilterMap) {
-                if (!isShallowEqual(filterMap, oldFilterMap)) {
+                if (!isShallowEqual(filterMap, oldFilterMap) && Object.keys(filterMap).length > 0) {
                     this.requestList({
                         ...filterMap,
                         page: 1
@@ -485,7 +484,7 @@
                     label: this.$t('creator')
                 },
                 {
-                    id: 'created',
+                    id: 'createTime',
                     label: this.$t('created')
                 },
                 {
@@ -506,7 +505,7 @@
                     { id: 'lastExecTime' },
                     { id: 'lastModify' },
                     { id: 'creator' },
-                    { id: 'created' },
+                    { id: 'createTime' },
                     { id: 'operate' }
                 ]
             }
@@ -525,7 +524,6 @@
                 updateTime: 154,
                 lastModifyUser: '',
                 latestExec: 484,
-                created: 154,
                 pipelineId: 120
             }
             this.requestList()
@@ -568,10 +566,22 @@
             handlePageLimitChange (limit) {
                 localStorage.setItem(PIPELINE_TABLE_LIMIT_CACHE, JSON.stringify(limit))
                 this.pagination.limit = limit
+                this.$router.replace({
+                    query: {
+                        ...this.$route.query,
+                        pageSize: limit
+                    }
+                })
                 this.$nextTick(this.requestList)
             },
             handlePageChange (page) {
                 this.pagination.current = page
+                this.$router.replace({
+                    query: {
+                        ...this.$route.query,
+                        page
+                    }
+                })
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
@@ -580,11 +590,10 @@
                     const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
                     localStorage.setItem('pipelineSortType', sortType)
                     localStorage.setItem('pipelineSortCollation', collation)
-                    this.$router.push({
-                        ...this.$route,
+                    this.$router.replace({
                         query: {
                             ...this.$route.query,
-                            sortType: sortType,
+                            sortType,
                             collation
                         }
                     })

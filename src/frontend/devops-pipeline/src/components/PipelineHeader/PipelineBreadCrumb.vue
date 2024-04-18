@@ -46,7 +46,7 @@
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
                     to: {
-                        name: 'pipelineListEntry'
+                        name: 'PipelineManageList'
                     }
                 }, this.$route.name === 'pipelineImportEdit'
                     ? {
