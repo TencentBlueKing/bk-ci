@@ -31,10 +31,68 @@
 package command
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
+	"syscall"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
+
+const createNewConsole = 0x00000010
+
+func StartProcess(command string, args []string, workDir string, envMap map[string]string, runUser string) (int, error) {
+	cmd, err := StartProcessCmd(command, args, workDir, envMap, runUser)
+	if err != nil {
+		return -1, err
+	}
+	return cmd.Process.Pid, nil
+}
+
+func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
+	cmd := exec.Command(command)
+
+	// TODO: #10179 读取环境变量判断是否使用 newConsole
+	if true {
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			CreationFlags:    createNewConsole,
+			NoInheritHandles: true,
+		}
+	}
+
+	if len(args) > 0 {
+		cmd.Args = append(cmd.Args, args...)
+	}
+
+	if workDir != "" {
+		cmd.Dir = workDir
+	}
+
+	cmd.Env = os.Environ()
+	if envMap != nil {
+		for k, v := range envMap {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+
+	err := setUser(cmd, runUser)
+	if err != nil {
+		logs.Error("set user failed: ", err.Error())
+		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
+	}
+
+	logs.Info("cmd.Path: ", cmd.Path)
+	logs.Info("cmd.Args: ", cmd.Args)
+	logs.Info("cmd.workDir: ", cmd.Dir)
+	logs.Info("runUser: ", runUser)
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return cmd, nil
+}
 
 func setUser(_ *exec.Cmd, runUser string) error {
 	logs.Info("set user(windows): ", runUser)

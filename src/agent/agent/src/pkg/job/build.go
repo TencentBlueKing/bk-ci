@@ -44,7 +44,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
@@ -60,8 +59,6 @@ var BuildTotalManager *BuildTotalManagerType
 func init() {
 	BuildTotalManager = new(BuildTotalManagerType)
 }
-
-const buildIntervalInSeconds = 5
 
 // AgentStartup 上报构建机启动
 func AgentStartup() (agentStatus string, err error) {
@@ -224,50 +221,11 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.MakeTmpDirErrorEnum))
 		return tmpMkErr
 	}
-	if systemutil.IsWindows() {
-		startCmd := config.GetJava()
-		agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
-		errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
-		args := []string{
-			"-Djava.io.tmpdir=" + tmpDir,
-			"-Ddevops.agent.error.file=" + errorMsgFile,
-			"-Dbuild.type=AGENT",
-			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
-			"-Xmx2g", // #5806 兼容性问题，必须独立一行
-			"-jar",
-			config.BuildAgentJarPath(),
-			getEncodedBuildInfo(buildInfo)}
-		pid, err := command.StartProcess(startCmd, args, workDir, goEnv, runUser)
-		if err != nil {
-			errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
-			logs.Error(errMsg)
-			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
-			return err
-		}
-		// 添加需要构建结束后删除的文件
-		buildInfo.ToDelTmpFiles = []string{errorMsgFile}
 
-		GBuildManager.AddBuild(pid, buildInfo)
-		logs.Info(fmt.Sprintf("[%s]|Job#_%s|Build started, pid:%d ", buildInfo.BuildId, buildInfo.VmSeqId, pid))
-		return nil
-	} else {
-		startScriptFile, err := writeStartBuildAgentScript(buildInfo, tmpDir)
-		if err != nil {
-			errMsg := i18n.Localize("CreateStartScriptFailed", map[string]interface{}{"err": err.Error()})
-			logs.Error(errMsg)
-			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.PrepareScriptCreateErrorEnum))
-			return err
-		}
-		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)
-		if err != nil {
-			errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
-			logs.Error(errMsg)
-			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
-			return err
-		}
-		GBuildManager.AddBuild(pid, buildInfo)
-		logs.Info(fmt.Sprintf("[%s]|Job#_%s|Build started, pid:%d ", buildInfo.BuildId, buildInfo.VmSeqId, pid))
+	if err := doBuild(buildInfo, tmpDir, workDir, goEnv, runUser); err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -277,71 +235,6 @@ func getEncodedBuildInfo(buildInfo *api.ThirdPartyBuildInfo) string {
 	codedBuildInfo := base64.StdEncoding.EncodeToString(strBuildInfo)
 	logs.Info("base64: ", codedBuildInfo)
 	return codedBuildInfo
-}
-
-func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir string) (string, error) {
-	logs.Info("write start build agent script to file")
-	// 套娃，多加一层脚本，使用exec新起进程，这样才会读取 .bash_profile
-	prepareScriptFile := fmt.Sprintf(
-		"%s/devops_agent_prepare_start_%s_%s_%s.sh",
-		systemutil.GetWorkDir(), buildInfo.ProjectId, buildInfo.BuildId, buildInfo.VmSeqId)
-	scriptFile := fmt.Sprintf(
-		"%s/devops_agent_start_%s_%s_%s.sh",
-		systemutil.GetWorkDir(), buildInfo.ProjectId, buildInfo.BuildId, buildInfo.VmSeqId)
-
-	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
-	buildInfo.ToDelTmpFiles = []string{
-		scriptFile, prepareScriptFile, errorMsgFile,
-	}
-
-	logs.Info("start agent script: ", scriptFile)
-	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
-	lines := []string{
-		"#!" + getCurrentShell(),
-		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
-		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s "+
-			"-Ddevops.agent.error.file=%s "+
-			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s %s",
-			config.GetJava(), scriptFile, prepareScriptFile,
-			errorMsgFile,
-			agentLogPrefix, tmpDir, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
-	}
-	scriptContent := strings.Join(lines, "\n")
-
-	err := exitcode.WriteFileWithCheck(scriptFile, []byte(scriptContent), os.ModePerm)
-	defer func() {
-		_ = systemutil.Chmod(scriptFile, os.ModePerm)
-		_ = systemutil.Chmod(prepareScriptFile, os.ModePerm)
-	}()
-	if err != nil {
-		return "", err
-	} else {
-		prepareScriptContent := strings.Join(getShellLines(scriptFile), "\n")
-		err := exitcode.WriteFileWithCheck(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
-		if err != nil {
-			return "", err
-		} else {
-			return prepareScriptFile, nil
-		}
-	}
-}
-
-// getShellLines 根据不同的shell的参数要求，这里可能需要不同的参数或者参数顺序
-func getShellLines(scriptFile string) (newLines []string) {
-	shell := getCurrentShell()
-	switch shell {
-	case "/bin/tcsh":
-		newLines = []string{
-			"#!" + shell,
-			"exec " + shell + " " + scriptFile + " -l",
-		}
-	default:
-		newLines = []string{
-			"#!" + shell,
-			"exec " + shell + " -l " + scriptFile,
-		}
-	}
-	return newLines
 }
 
 func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
@@ -428,15 +321,38 @@ func removeFileThan7Days(dir string, f fs.DirEntry) {
 	}
 }
 
-func getCurrentShell() (shell string) {
-	if config.GAgentConfig.DetectShell {
-		shell = os.Getenv("SHELL")
-		if strings.TrimSpace(shell) == "" {
-			shell = "/bin/bash"
-		}
-	} else {
-		shell = "/bin/bash"
+const (
+	errorMsgFileSuffix           = "build_msg.log"
+	prepareStartScriptFilePrefix = "devops_agent_prepare_start"
+	prepareStartScriptFileSuffix = ".sh"
+	startScriptFilePrefix        = "devops_agent_start"
+	startScriptFileSuffix        = ".sh"
+)
+
+// getWorkerErrorMsgFile 获取worker执行错误信息的日志文件
+func getWorkerErrorMsgFile(buildId, vmSeqId string) string {
+	return fmt.Sprintf("%s/build_tmp/%s_%s_%s",
+		systemutil.GetWorkDir(), buildId, vmSeqId, errorMsgFileSuffix)
+}
+
+// getUnixWorkerPrepareStartScriptFile 获取unix系统，主要是darwin和linux的prepare start script文件
+func getUnixWorkerPrepareStartScriptFile(projectId, buildId, vmSeqId string) string {
+	return fmt.Sprintf("%s/%s_%s_%s_%s%s",
+		systemutil.GetWorkDir(), prepareStartScriptFilePrefix, projectId, buildId, vmSeqId, prepareStartScriptFileSuffix)
+}
+
+// getUnixWorkerStartScriptFile 获取unix系统，主要是darwin和linux的prepare start script文件
+func getUnixWorkerStartScriptFile(projectId, buildId, vmSeqId string) string {
+	return fmt.Sprintf("%s/%s_%s_%s_%s%s",
+		systemutil.GetWorkDir(), startScriptFilePrefix, projectId, buildId, vmSeqId, startScriptFileSuffix)
+}
+
+// 校验当前是否有正在跑的任务
+func CheckRunningJob() bool {
+	if GBuildManager.GetPreInstancesCount() > 0 ||
+		GBuildManager.GetInstanceCount() > 0 ||
+		GBuildDockerManager.GetInstanceCount() > 0 {
+		return true
 	}
-	logs.Info("current shell: ", shell)
-	return
+	return false
 }
