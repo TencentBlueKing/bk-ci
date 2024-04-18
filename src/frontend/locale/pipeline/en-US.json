@@ -1509,5 +1509,6 @@
   "alreadyReleasedTips": "Pipeline unchanged, no release necessary",
   "newVersion": "New Version",
   "editDraft": "Edit Draft",
-  "thinkthink": "Thinking again"
+  "thinkthink": "Thinking again",
+  "editCurDraft": "Edit Draft"
 }

@@ -479,7 +479,6 @@
 
                     cacheViewId(this.$route.params.projectId, viewId)
                     this.$router.push({
-                        name: 'PipelineManageList',
                         params: {
                             ...this.$route.params,
                             viewId

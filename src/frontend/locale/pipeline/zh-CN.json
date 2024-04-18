@@ -1510,5 +1510,6 @@
   "alreadyReleasedTips": "流水线未变更，无需发布",
   "newVersion": "新建版本",
   "editDraft": "编辑原草稿",
-  "thinkthink": "再想想"
+  "thinkthink": "再想想",
+  "editCurDraft": "编辑草稿"
 }

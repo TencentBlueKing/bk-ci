@@ -16,17 +16,18 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import { getCacheViewId } from '@/utils/util'
 
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
 const CreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/CreatePipeline.vue')
+
+const pipelineListEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList')
 const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
 const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
 const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
-const AddPipeline = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/AddPipeline')
 const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
 
-const pipelineListEntry = () => import(/* webpackChunkName: "pipelineListEntry" */'../views/PipelineList')
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
 const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
@@ -75,7 +76,7 @@ const routes = [
         component: pipelines,
         name: 'pipelineRoot',
         redirect: {
-            name: 'pipelineListEntry'
+            name: 'PipelineManageList'
         },
         children: [
             {
@@ -95,10 +96,6 @@ const routes = [
             {
                 path: 'list',
                 component: pipelineListEntry,
-                name: 'pipelineListEntry',
-                redirect: {
-                    name: 'PipelineManageList'
-                },
                 children: [
                     {
                         path: 'group',
@@ -121,31 +118,39 @@ const routes = [
                         component: pipelinesAudit
                     },
                     {
-                        path: 'new',
-                        name: 'addPipeline',
-                        component: AddPipeline
-                    },
-                    {
                         path: 'listAuth/:id/:groupName',
                         name: 'PipelineListAuth',
                         component: PipelineListAuth
                     },
                     {
-                        path: ':viewId',
+                        path: '',
                         component: pipelinesNewList,
                         children: [
-                            {
-                                path: '',
-                                name: 'PipelineManageList',
-                                component: PipelineManageList,
-                                meta: {
-                                    webSocket: true
-                                }
-                            },
                             {
                                 path: 'patch',
                                 name: 'patchManageList',
                                 component: PatchManageList
+                            },
+                            {
+                                path: ':viewId',
+                                name: 'PipelineManageList',
+                                component: PipelineManageList,
+                                meta: {
+                                    webSocket: true
+                                },
+                                beforeEnter (to, from, next) {
+                                    if (!to.params.viewId) {
+                                        next({
+                                            ...to,
+                                            params: {
+                                                ...to.params,
+                                                viewId: getCacheViewId(to.params.projectId)
+                                            }
+                                        })
+                                    } else {
+                                        next()
+                                    }
+                                }
                             }
                         ]
                     }

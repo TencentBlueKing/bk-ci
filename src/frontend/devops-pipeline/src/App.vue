@@ -9,8 +9,7 @@
 </template>
 
 <script>
-    import { mapState, mapMutations } from 'vuex'
-    import { getCacheViewId } from '@/utils/util'
+    import { mapMutations, mapState } from 'vuex'
 
     export default {
         name: 'App',
@@ -69,7 +68,6 @@
             ]),
             goHome (projectId) {
                 const params = projectId ? { projectId } : {}
-                const viewId = getCacheViewId(projectId)
                 this.updatePipelineActionState({
                     activePipeline: null,
                     isConfirmShow: false,
@@ -80,13 +78,12 @@
                     addToDialogShow: false,
                     isDisableDialogShow: false
                 })
-                this.$router.replace({
-                    name: 'PipelineManageList',
-                    params: {
-                        ...params,
-                        viewId
-                    }
-                })
+                if (this.$route.name !== 'PipelineManageList') {
+                    this.$router.replace({
+                        name: 'PipelineManageList',
+                        params
+                    })
+                }
             },
             reflashCurrentPage (projectId) {
                 const params = Object.assign({}, this.$route.params, { projectId })

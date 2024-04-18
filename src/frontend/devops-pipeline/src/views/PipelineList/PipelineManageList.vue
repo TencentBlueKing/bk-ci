@@ -190,7 +190,6 @@
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-    import { getCacheViewId } from '@/utils/util'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -309,29 +308,22 @@
             currentSortIconName () {
                 return this.getSortIconName(this.$route.query.sortType)
             }
-
         },
         watch: {
             '$route.params.projectId': function () {
                 this.filters = {}
                 this.$nextTick(() => {
-                    if (!this.isAllPipelineView) {
-                        this.goList()
-                    } else {
-                        this.$refs.pipelineBox?.requestList?.({
-                            page: 1,
-                            pageSize: 50
-                        })
-                    }
+                    this.goList()
                     this.checkHasCreatePermission()
                     this.handleCloseEditCount()
                     this.templatePopupShow = false
                 })
             },
-            '$route.params.viewId': function () {
+            '$route.params.viewId' () {
                 this.filters = {}
             }
         },
+        
         created () {
             this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
             this.goList()
@@ -363,21 +355,9 @@
                 return 'sort'
             },
             goList () {
-                if (!this.$route.params.viewId) {
-                    const viewId = getCacheViewId(this.$route.params.projectId)
-                    this.$router.replace({
-                        name: 'PipelineManageList',
-                        params: {
-                            ...this.$route.params,
-                            viewId
-                        }
-                    })
-                } else {
-                    this.$refs.pipelineBox?.requestList?.({
-                        page: 1,
-                        pageSize: 50
-                    })
-                }
+                this.$refs.pipelineBox?.requestList?.({
+                    page: 1
+                })
             },
             goPatchManage () {
                 this.$router.push({
@@ -415,10 +395,12 @@
                 }
                 localStorage.setItem('pipelineSortType', sortType)
                 localStorage.setItem('pipelineSortCollation', newSortQuery.collation)
-
-                this.$router.push({
-                    ...this.$route,
-                    query: newSortQuery
+                this.$router.replace({
+                    query: {
+                        ...(this.$route.query ?? {}),
+                        sortType,
+                        collation: newSortQuery.collation
+                    }
                 })
             },
 
