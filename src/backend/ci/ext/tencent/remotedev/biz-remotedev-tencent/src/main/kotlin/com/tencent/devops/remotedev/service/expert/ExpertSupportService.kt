@@ -14,6 +14,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -45,7 +46,8 @@ class ExpertSupportService @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisOperation: RedisOperation,
-    private val workspaceDao: WorkspaceDao
+    private val workspaceDao: WorkspaceDao,
+    private val remoteDevSettingDao: RemoteDevSettingDao
 ) {
     @Value("\${expertsupport.rtxtemplate:#{null}}")
     val rtxTemplate: String? = null
@@ -104,6 +106,14 @@ class ExpertSupportService @Autowired constructor(
             city = data.city,
             machineType = data.machineType
         )
+        val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
+            .mapValues {
+                if (it.value.first.isNotBlank()) {
+                    "${it.value.first}@${it.value.second}"
+                } else {
+                    it.key
+                }
+            }
         // 发送企业微信群消息
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
@@ -116,7 +126,7 @@ class ExpertSupportService @Autowired constructor(
                     "projectId" to data.projectId,
                     "workspaceName" to data.workspaceName,
                     "hostIp" to data.hostIp,
-                    "userId" to data.creator,
+                    "userId" to (taiUserCN[data.creator] ?: data.creator),
                     "content" to data.content,
                     "url" to jumpUrl.toString(),
                     "machineType" to data.machineType,

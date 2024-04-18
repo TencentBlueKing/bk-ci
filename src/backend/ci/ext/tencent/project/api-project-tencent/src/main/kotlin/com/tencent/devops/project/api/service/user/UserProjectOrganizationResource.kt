@@ -39,6 +39,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_PROJECT_ORGANIZATION", description = "蓝盾项目列表组织架构接口")
@@ -58,6 +59,9 @@ interface UserProjectOrganizationResource {
         type: OrganizationType,
         @Parameter(description = "ID")
         @PathParam("id")
-        id: Int
+        id: Int,
+        @Parameter(description = "是否排除部门以下组织", required = false)
+        @QueryParam("excludeBelowTheDept")
+        excludeBelowTheDept: Boolean?
     ): Result<List<OrganizationInfo>>
 }

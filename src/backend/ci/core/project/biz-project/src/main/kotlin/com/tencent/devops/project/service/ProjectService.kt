@@ -51,8 +51,8 @@ import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
 @Suppress("ALL")
 interface ProjectService {
@@ -251,6 +251,8 @@ interface ProjectService {
 
     fun getOperationalProducts(): List<OperationalProductVO>
 
+    fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO>
+
     fun updateProjectProductId(
         englishName: String,
         productName: String? = null,
@@ -269,4 +271,13 @@ interface ProjectService {
     fun getProjectListByProductId(
         productId: Int
     ): List<ProjectBaseInfo>
+
+    fun getExistedEnglishName(
+        englishNameList: List<String>
+    ): List<String>?
+
+    fun remindUserOfRelatedProduct(
+        userId: String,
+        englishName: String
+    ): Boolean
 }

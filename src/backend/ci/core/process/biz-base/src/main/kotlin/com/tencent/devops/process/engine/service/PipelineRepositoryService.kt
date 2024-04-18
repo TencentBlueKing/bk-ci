@@ -52,7 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
+import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -475,13 +475,11 @@ class PipelineRepositoryService constructor(
                     "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
-        MatrixContextUtils.schemaCheck(
-            JsonUtil.toJson(
-                MatrixPipelineInfo(
-                    include = option.includeCaseStr,
-                    exclude = option.excludeCaseStr,
-                    strategy = option.strategyStr
-                ).toMatrixConvert()
+        MatrixYamlCheckUtils.checkYaml(
+            MatrixPipelineInfo(
+                include = option.includeCaseStr,
+                exclude = option.excludeCaseStr,
+                strategy = option.strategyStr
             )
         )
     }

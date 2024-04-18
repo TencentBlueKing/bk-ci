@@ -81,11 +81,13 @@ class WorkspaceDao {
                     this,
                     WORKSPACE_NAME,
                     WIN_CONFIG_ID,
-                    IMAGE_ID
+                    IMAGE_ID,
+                    ZONE_ID
                 ).values(
                     workspace.workspaceName,
                     workspace.winConfigId,
-                    workspace.imageId
+                    workspace.imageId,
+                    workspace.zoneId
                 ).execute()
             }
         }
@@ -363,7 +365,7 @@ class WorkspaceDao {
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null,
-        notDeleted: Boolean ? = false
+        notDeleted: Boolean? = false
     ): List<WorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
@@ -454,31 +456,40 @@ class WorkspaceDao {
 
     fun fetchWorkspaceWithOwner(
         dslContext: DSLContext,
-        status: WorkspaceStatus? = null,
+        status: List<WorkspaceStatus>? = null,
+        notStatus: List<WorkspaceStatus>? = listOf(
+            WorkspaceStatus.DELETED,
+            WorkspaceStatus.PREPARING,
+            WorkspaceStatus.DELIVERING_FAILED
+        ),
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
         ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null,
-        workspaceName: String? = null
+        workspaceName: String? = null,
+        businessLineName: String? = null,
+        ownerName: String? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
-        conditions.add(
-            t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)
-                .and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
-                .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal))
-        )
+
+        notStatus?.let {
+            conditions.add(t1.STATUS.notIn(notStatus.map { it.ordinal }))
+        }
 
         status?.let {
-            conditions.add(t1.STATUS.eq(it.ordinal))
+            conditions.add(t1.STATUS.`in`(status.map { it.ordinal }))
         }
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
         }
         workspaceName?.let {
             conditions.add(t1.NAME.eq(it))
+        }
+        businessLineName?.let {
+            conditions.add(t1.CREATOR_DEPT_NAME.eq(businessLineName).or(t1.BUSINESS_LINE_NAME.eq(businessLineName)))
         }
 
         if (!projectIds.isNullOrEmpty()) {
@@ -511,6 +522,13 @@ class WorkspaceDao {
                     it.and(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name).or(t2.ASSIGN_TYPE.isNull))
                 }
             }
+            .let {
+                if (!ownerName.isNullOrBlank()) {
+                    it.and(t2.SHARED_USER.eq(ownerName))
+                } else {
+                    it
+                }
+            }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
                 dslContext.selectDistinct(
@@ -537,10 +555,14 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
-        ips: Set<String>? = null
+        ips: Set<String>? = null,
+        owners: Set<String>? = null,
+        workspaceNames: Set<String>? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t2")
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+
         val conditions = mutableListOf<Condition>()
         conditions.add(
             t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)
@@ -553,6 +575,9 @@ class WorkspaceDao {
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
         }
+        workspaceNames?.let {
+            conditions.add(t1.NAME.`in`(workspaceNames))
+        }
 
         if (!projectIds.isNullOrEmpty()) {
             if (projectIds.size == 1) {
@@ -563,15 +588,23 @@ class WorkspaceDao {
         }
 
         if (!ips.isNullOrEmpty()) {
-            val ipsCond = t2.HOST_IP.like("%.${ips.first()}")
-            ips.drop(1).forEach { ip ->
-                ipsCond.or(t2.HOST_IP.like("%.$ip"))
-            }
-            conditions.add(ipsCond)
+            conditions.add(t2.HOST_IP.likeRegex(ips.joinToString("|")))
+        }
+
+        if (!owners.isNullOrEmpty()) {
+            conditions.add(
+                t1.NAME.`in`(
+                    DSL.selectDistinct(shared.WORKSPACE_NAME).from(shared).where(
+                        shared.SHARED_USER.`in`(
+                            owners
+                        ).and(shared.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+                    )
+                )
+            )
         }
 
         return dslContext.selectDistinct(
-            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME
+            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.WIN_CONFIG_ID
         )
             .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
@@ -658,11 +691,11 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .let {
-                    i -> if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
+                .let { i ->
+                    if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
                 }
-                .let {
-                    i -> if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
+                .let { i ->
+                    if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
                 }
                 .where(NAME.eq(workspaceName))
                 .execute()
@@ -820,21 +853,28 @@ class WorkspaceDao {
         }
     }
 
-    fun fetchWorkspaceIpByNames(
+    fun fetchWorkspaces(
         dslContext: DSLContext,
         workspaceNames: Set<String>
+    ): List<WorkspaceRecord> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(NAME.`in`(workspaceNames))
+                .fetch(workspaceMapper)
+        }
+    }
+
+    fun fetchAllUsedWindows(
+        dslContext: DSLContext
     ): List<String> {
-        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
-            dslContext.select(
-                JooqUtils.jsonExtract(
-                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-                    t2 = "\$.hostIP",
-                    lower = false,
-                    removeDoubleQuotes = true
-                ).`as`("IP")
-            ).from(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-                .where(WORKSPACE_NAME.`in`(workspaceNames))
-                .fetch { it["IP"] as String? }
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(NAME).from(this)
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .and(STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal))
+                .and(STATUS.notEqual(WorkspaceStatus.DELIVERING.ordinal))
+                .and(STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
+                .fetch(NAME)
         }
     }
 

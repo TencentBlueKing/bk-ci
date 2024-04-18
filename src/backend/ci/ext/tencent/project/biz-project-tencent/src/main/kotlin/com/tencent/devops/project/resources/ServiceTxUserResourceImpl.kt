@@ -30,7 +30,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.FetchRemoteDevData
@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTxUserResourceImpl @Autowired constructor(
-    val projectServiceCode: BSProjectServiceCodec,
+    val projectServiceCode: ProjectAuthServiceCode,
     val authProjectApi: AuthProjectApi,
     val tofService: TOFService,
     val projectUserService: ProjectUserService

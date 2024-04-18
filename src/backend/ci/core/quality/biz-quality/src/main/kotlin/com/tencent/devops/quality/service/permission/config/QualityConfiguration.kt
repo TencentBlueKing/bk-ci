@@ -38,7 +38,6 @@ import com.tencent.devops.quality.service.QualityPermissionService
 import com.tencent.devops.quality.service.permission.SampleQualityPermissionServiceImpl
 import com.tencent.devops.quality.service.StreamQualityPermissionServiceImpl
 import com.tencent.devops.quality.service.permission.RbacQualityPermissionServiceImpl
-import com.tencent.devops.quality.service.permission.V3QualityPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -69,24 +68,6 @@ class QualityConfiguration {
         qualityRuleDao = qualityRuleDao,
         groupDao = groupDao,
         dslContext = dslContext
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
-    fun v3QualityPermissionServiceImpl(
-        authPermissionApi: AuthPermissionApi,
-        authResourceApi: AuthResourceApi,
-        qualityAuthServiceCode: QualityAuthServiceCode,
-        groupDao: QualityNotifyGroupDao,
-        qualityRuleDao: QualityRuleDao,
-        dslContext: DSLContext
-    ): QualityPermissionService = V3QualityPermissionServiceImpl(
-        authPermissionApi = authPermissionApi,
-        authResourceApi = authResourceApi,
-        qualityAuthServiceCode = qualityAuthServiceCode,
-        dslContext = dslContext,
-        groupDao = groupDao,
-        qualityRuleDao = qualityRuleDao
     )
 
     @Bean

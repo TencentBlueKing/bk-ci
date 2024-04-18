@@ -29,26 +29,23 @@ package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
@@ -62,27 +59,25 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.AuthProjectForList
-import com.tencent.devops.project.pojo.ObsBaseDictDTO
-import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
-import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectOperation
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectExtService
-import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -101,20 +96,19 @@ import java.io.File
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
-    private val bkRepoClient: BkRepoClient,
-    private val projectPaasCCService: ProjectPaasCCService,
     private val authProjectApi: AuthProjectApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val config: CommonConfig,
     private val projectDispatcher: ProjectDispatcher,
     private val managerService: ManagerService,
     private val tokenService: ClientTokenService,
-    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val bkAccessTokenApi: BkAccessTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
     private val profile: Profile,
     private val organizationService: ProjectExtOrganizationService,
+    private val projectOperationalProductService: ProjectOperationalProductService,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
@@ -165,12 +159,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.devx:#{null}}")
     private var devxTag: String = ""
-
-    @Value("\${obs.url:#{null}}")
-    private var obsUrl: String = ""
-
-    @Value("\${obs.token:#{null}}")
-    private var obsToken: String = ""
 
     override fun getByEnglishName(
         userId: String,
@@ -261,14 +249,7 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): List<String> {
-        val iamV0List = projectDao.list(
-            dslContext = dslContext,
-            englishNameList = getV0UserProject(userId, accessToken).toSet(),
-            routerTag = AuthSystemType.RBAC_AUTH_TYPE.value
-        ).map { it.englishName }
-        logger.info("$userId V0 project: $iamV0List")
         val projectList = mutableSetOf<String>()
-        projectList.addAll(iamV0List)
         // 请求v3以及rbac的项目
         val iamList = getIamUserProject(userId!!)
         logger.info("$userId iam project: $iamList")
@@ -323,7 +304,7 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         return authProjectApi.validateUserProjectPermission(
             user = userId,
-            serviceCode = bsPipelineAuthServiceCode,
+            serviceCode = pipelineAuthServiceCode,
             permission = permission,
             projectCode = projectCode
         )
@@ -433,40 +414,6 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
-        val token = if (accessToken.isNullOrEmpty()) {
-            bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
-        } else {
-            accessToken
-        }
-        val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
-        logger.info("Start to get auth projects - ($url)")
-        val request = Request.Builder().url(url).get().build()
-        val responseContent = request(
-            request, I18nUtil.getCodeLanMessage(
-            messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-            language = I18nUtil.getLanguage(userId)
-        )
-        )
-        val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
-        if (result.isNotOk()) {
-            logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            )
-        }
-        if (result.data == null) {
-            return emptyList()
-        }
-
-        return result.data!!.map {
-            it.project_code
-        }
-    }
-
     private fun getIamUserProject(userId: String): List<String> {
         if (rbacTag.isBlank()) {
             return emptyList()
@@ -544,34 +491,11 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
-        return try {
-            val obsBaseDictDTO = ObsBaseDictDTO(
-                jsonrpc = "2.0",
-                id = "0",
-                method = "getObsBaseDict",
-                params = mapOf(
-                    "DeptId" to "2",
-                    "StaffName" to "xx",
-                    "DictType" to "4"
-                )
-            )
-            val requestBody = objectMapper.writeValueAsString(obsBaseDictDTO)
-            OkhttpUtils.doPost(
-                url = "${config.devopsHostGateway}$obsUrl",
-                jsonParam = requestBody,
-                headers = mapOf("Authorization" to "Bearer $obsToken")
-            ).use {
-                if (!it.isSuccessful) {
-                    logger.warn("request obs products failed,response:($it)")
-                    throw RemoteServiceException("request failed, response:($it)")
-                }
-                val responseStr = it.body!!.string()
-                objectMapper.readValue(responseStr, ObsOperationalProductResponse::class.java)
-            }.result.data
-        } catch (ignore: Exception) {
-            logger.warn("get obs products fail!${ignore.message}")
-            emptyList()
-        }
+        return projectOperationalProductService.listAllProducts()
+    }
+
+    override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
+        return projectOperationalProductService.listProductByBgName(bgName) ?: emptyList()
     }
 
     override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
@@ -580,13 +504,72 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun remindUserOfRelatedProduct(userId: String, englishName: String): Boolean {
+        val projectInfo = getByEnglishName(englishName) ?: return false
+        // 1、判断项目是否是preci项目
+        if (projectInfo.channelCode != ProjectChannelCode.PREBUILD.name) {
+            return false
+        }
+        // 2、判断项目是否未关联OBS产品
+        if (projectInfo.productId != null) {
+            return false
+        }
+        // 3、判断用户是否是管理员
+        return verifyUserProjectPermission(
+            userId = userId,
+            projectId = englishName,
+            accessToken = null,
+            permission = AuthPermission.MANAGE
+        )
+    }
+
     override fun validateProjectRelateProduct(
-        userId: String,
-        enabled: Boolean,
-        productId: Int?
+        projectProductValidateDTO: ProjectProductValidateDTO
     ) {
-        // 启用项目时，若未关联OBS产品，需要抛异常
-        if (enabled && productId == null) {
+        with(projectProductValidateDTO) {
+            when (projectOperation) {
+                ProjectOperation.ENABLE -> validateProductIdNotNull()
+                ProjectOperation.CREATE -> {
+                    if (channelCode == ProjectChannelCode.BS) {
+                        validateProductIdNotNull()
+                        validateProductExists()
+                    }
+                }
+                ProjectOperation.UPDATE -> {
+                    validateProductIdNotNull()
+                    validateProductExists()
+                }
+                else -> {}
+            }
+        }
+    }
+
+    override fun validateProjectOrganization(
+        projectChannel: ProjectChannelCode?,
+        bgId: Long,
+        bgName: String,
+        deptId: Long?,
+        deptName: String?
+    ) {
+        // 创建项目时，仅对BS渠道进行校验
+        if (projectChannel != null && projectChannel != ProjectChannelCode.BS)
+            return
+        if (bgId == 0L || bgName.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_ORGANIZATION_CAN_NOT_TO_BE_EMPTY,
+                defaultMessage = "project bgId or bgName cannot be empty!"
+            )
+        }
+        if (deptId == null || deptId == 0L || deptName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_ORGANIZATION_CAN_NOT_TO_BE_EMPTY,
+                defaultMessage = "project deptId or deptName cannot be empty!"
+            )
+        }
+    }
+
+    private fun ProjectProductValidateDTO.validateProductIdNotNull() {
+        if (productId == null) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT,
                 defaultMessage = MessageUtil.getMessageByLocale(
@@ -595,6 +578,17 @@ class TxProjectServiceImpl @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun ProjectProductValidateDTO.validateProductExists() {
+        val products = getOperationalProducts()
+        products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
+            defaultMessage = MessageUtil.getMessageByLocale(
+                messageCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     companion object {

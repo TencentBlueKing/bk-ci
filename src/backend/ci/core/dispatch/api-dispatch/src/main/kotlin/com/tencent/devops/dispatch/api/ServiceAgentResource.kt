@@ -28,10 +28,10 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path

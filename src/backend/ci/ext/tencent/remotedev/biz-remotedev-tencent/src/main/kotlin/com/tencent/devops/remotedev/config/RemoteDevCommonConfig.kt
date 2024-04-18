@@ -40,4 +40,28 @@ class RemoteDevCommonConfig {
     // 用户bcs工作空间镜像registry地址
     @Value("\${workspace.image.bcsRegistryHost:#{null}}")
     val bcsWorkspaceImageRegistryHost: String? = null
+
+    @Value("\${startCloud.appId}")
+    val appId: String = ""
+
+    @Value("\${startCloud.appKey}")
+    val appKey: String = ""
+
+    @Value("\${startCloud.apiUrl}")
+    val apiUrl: String = ""
+
+    @Value("\${startCloud.bkciAppName}")
+    val bkciAppName: String = "IEG_BKCI"
+
+    @Value("\${startCloud.bkciCurLaunchId}")
+    val bkciCurLaunchId: Long = 980007L
+
+    @Value("\${startCloud.contentProviderName}")
+    val contentProviderName: String = ""
+
+    @Value("\${startCloud.devcouldAppName}")
+    val devcouldAppName: String = "DEVCLOUD_PERSONAL_CGS"
+
+    @Value("\${startCloud.devcouldCurLaunchId}")
+    val devcouldCurLaunchId: Long = 980120L
 }

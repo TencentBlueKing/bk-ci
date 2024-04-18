@@ -122,8 +122,8 @@ class StartCloudInterfaceService @Autowired constructor(
             status = workspaceStatus.status,
             hostIP = workspaceStatus.hostIP,
             environmentIP = workspaceStatus.environmentIP,
-            clusterId = workspaceStatus.clusterId,
-            namespace = workspaceStatus.namespace,
+            clusterId = workspaceStatus.clusterId ?: "",
+            namespace = workspaceStatus.namespace ?: "",
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true

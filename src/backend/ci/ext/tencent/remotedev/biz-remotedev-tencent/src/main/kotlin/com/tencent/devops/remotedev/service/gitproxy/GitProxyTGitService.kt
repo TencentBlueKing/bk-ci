@@ -77,22 +77,34 @@ class GitProxyTGitService @Autowired constructor(
 
         val result = mutableMapOf<Long, Pair<String, Boolean>>()
 
-        // 过滤 svn 项目，目前 SVN项目只能从根组创建项目，所以项目组的分割后俩项目的分割后三
+        // 过滤 svn 项目，目前 SVN项目只能从根组创建项目，所以项目组的分割后俩，项目的分割后三
         val svnProjectUrls = urls.filter {
             it.startsWith(tSvnUrl.removeHttpPrefix())
         }.toSet()
+        val noGroupSvnUrls = svnProjectUrls.filter { it.split("/").filter { s -> s.isNotBlank() }.size == 3 }
         if (svnProjectUrls.isNotEmpty()) {
-            val noGroup = svnProjectUrls.all { it.split("/").filter { s -> s.isNotBlank() }.size == 3 }
-            filterUrlPermission(svnProjectUrls, token.accessToken, result, TGitProjectType.SVN, noGroup)
+            filterUrlPermission(
+                projectUrls = svnProjectUrls,
+                token = token.accessToken,
+                result = result,
+                type = TGitProjectType.SVN,
+                noGroup = (noGroupSvnUrls.size == svnProjectUrls.size)
+            )
         }
 
         // 过滤 git 项目，git的项目结尾有.git不然都按项目组算
         val gitProjectUrls = urls.filter {
             it.startsWith(tGitUrl.removeHttpPrefix())
         }.toSet()
+        val noGroupGitUrls = gitProjectUrls.filter { it.endsWith(".git") }
         if (gitProjectUrls.isNotEmpty()) {
-            val noGroup = gitProjectUrls.all { it.endsWith(".git") }
-            filterUrlPermission(gitProjectUrls, token.accessToken, result, TGitProjectType.GIT, noGroup)
+            filterUrlPermission(
+                projectUrls = gitProjectUrls,
+                token = token.accessToken,
+                result = result,
+                type = TGitProjectType.GIT,
+                noGroup = (gitProjectUrls.size == noGroupGitUrls.size)
+            )
         }
 
         // 说明没有一个成功的
@@ -129,7 +141,9 @@ class GitProxyTGitService @Autowired constructor(
         // 过滤下成功的和不成功的
         val sucUrls = result.values.map { it.first }.toSet()
         val allResult = mutableMapOf<String, Boolean>()
-        allResult.putAll(urls.subtract(sucUrls).associateWith { false })
+        // url需要先把组去掉，不然永远都会过滤到组
+        val realUrls = noGroupGitUrls + noGroupSvnUrls
+        allResult.putAll(realUrls.subtract(sucUrls).associateWith { false })
         allResult.putAll(result.values.associate { it.first to it.second })
 
         return allResult

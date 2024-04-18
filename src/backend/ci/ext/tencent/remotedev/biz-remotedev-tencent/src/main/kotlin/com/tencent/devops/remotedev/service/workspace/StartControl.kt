@@ -117,7 +117,7 @@ class StartControl @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
         // 启动云桌面时增加一个判断是否项目成员，避免成员已经剔除了还可以打开。
-        permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
+        permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

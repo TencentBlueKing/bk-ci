@@ -132,7 +132,8 @@ object TXStreamDispatchUtils {
                     envName = poolName,
                     workspace = workspace,
                     agentType = AgentType.NAME,
-                    dockerInfo = null
+                    dockerInfo = null,
+                    reusedInfo = null
                 )
             }
 
@@ -159,7 +160,8 @@ object TXStreamDispatchUtils {
                 envName = poolName,
                 workspace = workspace,
                 agentType = AgentType.NAME,
-                dockerInfo = dockerInfo
+                dockerInfo = dockerInfo,
+                reusedInfo = null
             )
         }
 
@@ -220,7 +222,8 @@ object TXStreamDispatchUtils {
                         displayName = "",
                         workspace = "",
                         agentType = AgentType.ID,
-                        dockerInfo = null
+                        dockerInfo = null,
+                        reusedInfo = null
                     )
                 }
 

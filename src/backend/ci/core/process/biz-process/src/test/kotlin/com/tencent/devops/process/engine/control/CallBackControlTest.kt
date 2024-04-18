@@ -37,8 +37,10 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
+import com.tencent.devops.process.engine.service.ProjectPipelineCallBackUrlGenerator
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
@@ -52,13 +54,17 @@ class CallBackControlTest : TestBase() {
     private val projectPipelineCallBackService: ProjectPipelineCallBackService = mockk()
     private val client: Client = mockk()
     private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry = mockk()
+    private val meterRegistry: MeterRegistry = mockk()
+    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator = mockk()
 
     private val callBackControl = CallBackControl(
         pipelineBuildDetailService = pipelineBuildDetailService,
         pipelineRepositoryService = pipelineRepositoryService,
         projectPipelineCallBackService = projectPipelineCallBackService,
         client = client,
-        callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+        callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
+        meterRegistry = meterRegistry,
+        projectPipelineCallBackUrlGenerator = projectPipelineCallBackUrlGenerator
     )
 
     private val testUrl = "https://mock/callback"

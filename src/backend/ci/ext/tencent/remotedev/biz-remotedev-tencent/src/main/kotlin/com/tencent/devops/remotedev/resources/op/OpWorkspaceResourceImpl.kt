@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
 import com.tencent.devops.remotedev.cron.WorkspaceCheckJob
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -78,9 +79,16 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         oldWorkspaceName: String?,
         projectId: String?,
+        ownerType: WorkspaceOwnerType?,
         uid: String
     ): Result<Boolean> {
-        val res = createControl.createWinWorkspaceByVm(userId, oldWorkspaceName, projectId, uid)
+        val res = createControl.createWinWorkspaceByVm(
+            userId = userId,
+            oldWorkspaceName = oldWorkspaceName,
+            projectCode = projectId,
+            ownerType = ownerType,
+            uid = uid
+        )
         return Result(res)
     }
 
@@ -97,7 +105,6 @@ class OpWorkspaceResourceImpl @Autowired constructor(
                 logger.info("read to delete not use workspace")
                 deleteControl.autoDeleteWhenNotAssign(true)
                 deleteControl.autoDeleteWhenSleep14Day(true)
-                deleteControl.autoDeleteWhenNot4StarActive(true)
             }
 
             "sleep" -> {

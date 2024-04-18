@@ -30,7 +30,7 @@ package com.tencent.devops.prebuild.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.prebuild.pojo.ide.IdeDirInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.api.WebIDEResource
 import com.tencent.devops.prebuild.pojo.IDEAgentReq
 import com.tencent.devops.prebuild.pojo.IDEInfo

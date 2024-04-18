@@ -15,8 +15,7 @@ Popover,
 } from 'bkui-vue';
 import {
 ref,
-watch,
-computed,
+watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -43,10 +42,7 @@ const exceptionObj = ref({
 });
 const showFailedEnableDialog = ref(false);
 const showDisableProjectDialog = ref(false);
-const isRbac = computed(() => {
-  return authProvider.value === 'rbac'
-})
-const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '');
+
 const projectList: any[] = [];
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -180,18 +176,17 @@ const handleToApprovalDetails = (applyId: any) => {
   window.open(`/console/permission/my-apply/${applyId}`, '_blank');
 };
 
-const fetchOperationalList = async () => {
+const fetchOperationalList = async (bgName) => {
   isLoading.value = true;
-  await http.getOperationalList().then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-    isLoading.value = false;
-  });
-};
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  isLoading.value = false;
+}
 
 const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
 
@@ -359,7 +354,7 @@ watch(() => projectData.value.approvalStatus, (status) => {
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
-  await fetchOperationalList();
+  await fetchOperationalList(projectData.value.bgName);
 });
 </script>
 
@@ -455,7 +450,7 @@ onMounted(async () => {
                     <div>{{ projectData.afterAuthSecrecy ? t('保密项目') : t('私有项目') }}</div>
                   </div>
                 </bk-form-item>
-                <bk-form-item v-if="isRbac" :label="t('项目最大可授权人员范围')" property="subjectScopes">
+                <bk-form-item :label="t('项目最大可授权人员范围')" property="subjectScopes">
                   <span class="item-value">
                     <bk-tag
                       v-for="(subjectScope, index) in projectData.subjectScopes"
