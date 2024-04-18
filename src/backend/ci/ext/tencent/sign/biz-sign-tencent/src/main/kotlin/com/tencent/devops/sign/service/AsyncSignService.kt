@@ -30,6 +30,7 @@ package com.tencent.devops.sign.service
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignHistory
 import com.tencent.devops.sign.jmx.SignBean
@@ -84,7 +85,6 @@ class AsyncSignService(
         taskExecuteCount: Int
     ) {
         val start = LocalDateTime.now()
-        var status = 0
         try {
             signExecutorService.execute {
                 logger.info("[$resignId] asyncSign start")
@@ -94,7 +94,6 @@ class AsyncSignService(
                     ipaFile = ipaFile,
                     taskExecuteCount = taskExecuteCount
                 )
-                if (success) status = 1
                 logger.info("[$resignId] asyncSign finished with success:$success")
                 signBean.signTaskFinish(
                     elapse = LocalDateTime.now().timestampmilli() - start.timestampmilli(),
@@ -123,7 +122,7 @@ class AsyncSignService(
             logger.error("[$resignId] asyncSign failed: $ignore")
         } finally {
             signInfoService.getSignInfo(resignId)?.let { history ->
-                metricsUpload(history, start, status, ipaSignInfo, resignId)
+                metricsUpload(history, start, ipaSignInfo, resignId)
             }
         }
     }
@@ -131,10 +130,20 @@ class AsyncSignService(
     private fun metricsUpload(
         history: SignHistory,
         start: LocalDateTime,
-        status: Int,
         ipaSignInfo: IpaSignInfo,
         resignId: String
     ) {
+        val status = EnumResignStatus.parse(history.status)
+        val resultStatus = if (status == EnumResignStatus.SUCCESS) {
+            // 已成功
+            1
+        } else if (history.uploadFinishTime == null) {
+            // 上传ipa失败
+            0
+        } else if (history.zipFinishTime != null && history.archiveFinishTime == null) {
+            // 归档ipa失败
+            0
+        } else 1
         val uploadCost = history.uploadFinishTime?.let { after ->
             history.createTime?.let { before ->
                 after - before
@@ -160,7 +169,7 @@ class AsyncSignService(
                 after - before
             }
         } ?: 0
-        OkhttpUtils.doPost(
+        val response = OkhttpUtils.doPost(
             url = bkMonitorUrl ?: "",
             jsonParam = """
                         {
@@ -170,7 +179,6 @@ class AsyncSignService(
                                 "metrics": {
                                     "create_at": ${start.timestampmilli()},
                                     "finish_at": ${LocalDateTime.now().timestampmilli()},
-                                    "status": $status,
                                     "upload_cost": $uploadCost,
                                     "unzip_cost": $unzipCost,
                                     "sign_cost": $resignCost,
@@ -182,13 +190,15 @@ class AsyncSignService(
                                     "user_id": "${ipaSignInfo.userId}",
                                     "file_name": "${ipaSignInfo.fileName}",
                                     "sign_id": "$resignId",
-                                    "project_id": "${ipaSignInfo.projectId}"
+                                    "project_id": "${ipaSignInfo.projectId}",
+                                    "status": $resultStatus
                                 },
                                 "timestamp": ${LocalDateTime.now().timestamp()}
                             }]
                         }
                     """.trimIndent()
         )
+        logger.info("bkmonitor metrics upload result: $response")
     }
 
     override fun destroy() {
