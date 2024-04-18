@@ -28,6 +28,7 @@
 package com.tencent.devops.sign.service
 
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignHistory
@@ -183,7 +184,7 @@ class AsyncSignService(
                                     "sign_id": "$resignId",
                                     "project_id": "${ipaSignInfo.projectId}"
                                 },
-                                "timestamp": 1713424877774
+                                "timestamp": ${LocalDateTime.now().timestamp()}
                             }]
                         }
                     """.trimIndent()
