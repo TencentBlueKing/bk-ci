@@ -1,5 +1,8 @@
 package com.tencent.devops.openapi.api.apigw.desktop
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -12,6 +15,7 @@ import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -30,12 +34,19 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/desktop/store/components")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface ApigwDeskTopStoreComponentResource {
 
     @Operation(summary = "获取研发商店首页组件的数据", tags = ["v4_app_desktop_store_component_main_page"])
     @Path("/types/{storeType}/component/main/page/list")
     @GET
     fun getMainPageComponents(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -58,6 +69,12 @@ interface ApigwDeskTopStoreComponentResource {
     @GET
     @Suppress("LongParameterList")
     fun queryComponents(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -91,6 +108,10 @@ interface ApigwDeskTopStoreComponentResource {
         @QueryParam("recommendFlag")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)
         recommendFlag: Boolean?,
+        @Parameter(description = "是否已在该项目安装 true：是，false：否", required = false)
+        @QueryParam("installed")
+        @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)
+        installed: Boolean? = null,
         @Parameter(description = "是否需要更新标识 true：需要，false：不需要", required = false)
         @QueryParam("updateFlag")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)
@@ -115,6 +136,12 @@ interface ApigwDeskTopStoreComponentResource {
     @GET
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
     fun getComponentDetailInfoById(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -132,6 +159,12 @@ interface ApigwDeskTopStoreComponentResource {
     @POST
     @Path("/types/{storeType}/component/install")
     fun installComponent(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -143,6 +176,12 @@ interface ApigwDeskTopStoreComponentResource {
     @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/component/uninstall")
     @DELETE
     fun uninstallComponent(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -160,4 +199,39 @@ interface ApigwDeskTopStoreComponentResource {
         @Parameter(description = "卸载组件请求包体", required = true)
         unInstallReq: UnInstallReq
     ): Result<Boolean>
+
+    @Operation(summary = "获取组件包文件下载链接", tags = ["v4_app_store_component_downloadUrl_get"])
+    @GET
+    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/pkg/download/url/get")
+    fun getComponentPkgDownloadUrl(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户Id", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目代码", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectCode: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件标识", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "组件版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "操作系统名称", required = false)
+        @QueryParam("osName")
+        osName: String? = null,
+        @Parameter(description = "操作系统架构", required = false)
+        @QueryParam("osArch")
+        osArch: String? = null
+    ): Result<String>
 }

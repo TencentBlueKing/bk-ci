@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ReflectUtil
@@ -202,7 +203,8 @@ class DevxSpecBusServiceImpl @Autowired constructor(
                 storePkgEnvInfos.add(storePkgEnvInfo)
             }
         } else {
-            storePkgEnvInfos.add(StorePkgEnvInfo(defaultFlag = true))
+            // 云研发软件暂只支持windows
+            storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
         }
         return storePkgEnvInfos
     }

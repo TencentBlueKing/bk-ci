@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw.desktop
 
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -13,18 +14,16 @@ import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
-import org.slf4j.LoggerFactory
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val client: Client) :
     ApigwDeskTopStoreComponentResource {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ApigwDeskTopStoreComponentResourceImpl::class.java)
-    }
-
     override fun getMainPageComponents(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         storeType: String,
         page: Int,
@@ -39,6 +38,8 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
     }
 
     override fun queryComponents(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         storeType: String,
         projectCode: String?,
@@ -48,6 +49,7 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
         score: Int?,
         rdType: RdTypeEnum?,
         recommendFlag: Boolean?,
+        installed: Boolean?,
         updateFlag: Boolean?,
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
@@ -64,6 +66,7 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
             score = score,
             rdType = rdType,
             recommendFlag = recommendFlag,
+            installed = installed,
             updateFlag = updateFlag,
             queryProjectComponentFlag = queryProjectComponentFlag,
             sortType = sortType,
@@ -73,6 +76,8 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
     }
 
     override fun getComponentDetailInfoById(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         storeType: String,
         storeId: String
@@ -80,11 +85,18 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
         return client.get(ServiceStoreComponentResource::class).getComponentDetailInfoById(userId, storeType, storeId)
     }
 
-    override fun installComponent(userId: String, installStoreReq: InstallStoreReq): Result<Boolean> {
+    override fun installComponent(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installStoreReq: InstallStoreReq
+    ): Result<Boolean> {
         return client.get(ServiceStoreComponentResource::class).installComponent(userId, installStoreReq)
     }
 
     override fun uninstallComponent(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectCode: String,
         storeType: String,
@@ -97,6 +109,28 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
             storeType = storeType,
             storeCode = storeCode,
             unInstallReq = unInstallReq
+        )
+    }
+
+    override fun getComponentPkgDownloadUrl(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectCode: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): Result<String> {
+        return client.get(ServiceArchiveComponentPkgResource::class).getComponentPkgDownloadUrl(
+            userId = userId,
+            projectId = projectCode,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            osName = osName,
+            osArch = osArch
         )
     }
 }
