@@ -138,9 +138,6 @@ interface ServiceStoreComponentResource {
         @QueryParam("updateFlag")
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)
         updateFlag: Boolean?,
-        @QueryParam("installedFlag")
-        @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = false)
-        installedFlag: Boolean?,
         @Parameter(description = "是否查询项目下组件标识", required = true)
         @QueryParam("queryProjectComponentFlag")
         queryProjectComponentFlag: Boolean = false,

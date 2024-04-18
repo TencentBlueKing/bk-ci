@@ -159,7 +159,7 @@ class MarketStoreQueryDao {
     ): MutableList<Condition> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val conditions = setStoreVisibleCondition(tStoreBase, storeType)
+        val conditions = setStoreVisibleCondition(tStoreBase, storeType, storeInfoQuery.queryProjectComponentFlag)
         val queryProjectComponentFlag = storeInfoQuery.queryProjectComponentFlag
         val classifyId = storeInfoQuery.classifyId
         val labelId = storeInfoQuery.labelId
@@ -238,10 +238,24 @@ class MarketStoreQueryDao {
             .where(conditions)
     }
 
-    fun setStoreVisibleCondition(tStoreBase: TStoreBase, storeType: StoreTypeEnum): MutableList<Condition> {
+    fun setStoreVisibleCondition(
+        tStoreBase: TStoreBase,
+        storeType: StoreTypeEnum,
+        queryProjectComponentFlag: Boolean
+    ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name)) // 已发布的
+        if (queryProjectComponentFlag) {
+            conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
+        } else {
+            conditions.add(
+                tStoreBase.STATUS.`in`(listOf(
+                    StoreStatusEnum.RELEASED.name,
+                    StoreStatusEnum.TESTED.name,
+                    StoreStatusEnum.AUDITING.name
+                ))
+            )
+        }
         conditions.add(tStoreBase.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
     }

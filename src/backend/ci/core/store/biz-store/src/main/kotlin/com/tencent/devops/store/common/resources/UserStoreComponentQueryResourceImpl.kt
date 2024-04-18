@@ -137,8 +137,8 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         score: Int?,
         rdType: RdTypeEnum?,
         recommendFlag: Boolean?,
+        installed: Boolean?,
         updateFlag: Boolean?,
-        installedFlag: Boolean?,
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
         page: Int,
@@ -161,7 +161,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                     sortType = sortType,
                     page = page,
                     pageSize = pageSize,
-                    installedFlag = installedFlag,
+                    installed = installed,
                     updateFlag = updateFlag
                 ),
                 urlProtocolTrim = true
