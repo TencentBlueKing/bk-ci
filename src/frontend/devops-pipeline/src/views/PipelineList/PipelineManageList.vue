@@ -10,7 +10,7 @@
                 <span>{{currentViewName}}</span>
             </h5>
             <header class="pipeline-list-main-header">
-                <div>
+                <div class="pipeline-list-main-header-left-area">
                     <bk-dropdown-menu trigger="click">
                         <bk-button
                             v-perm="{
@@ -361,7 +361,10 @@
             },
             goPatchManage () {
                 this.$router.push({
-                    name: 'patchManageList'
+                    params: {
+                        ...this.$route.params,
+                        type: 'patch'
+                    }
                 })
             },
             getLs (key) {
