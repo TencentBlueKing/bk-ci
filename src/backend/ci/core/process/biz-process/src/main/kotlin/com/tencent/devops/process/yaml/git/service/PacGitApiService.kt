@@ -141,6 +141,7 @@ interface PacGitApiService {
      * 提交yaml文件
      */
     fun pushYamlFile(
+        userId: String,
         cred: PacGitCred,
         gitProjectId: String,
         defaultBranch: String,

@@ -288,6 +288,7 @@ class TGitApiService @Autowired constructor(
 
     @Suppress("ComplexMethod")
     override fun pushYamlFile(
+        userId: String,
         cred: PacGitCred,
         gitProjectId: String,
         defaultBranch: String,
@@ -305,14 +306,31 @@ class TGitApiService @Autowired constructor(
         } else {
             versionName!!
         }
-        createBranch(token, gitProjectId, defaultBranch, branchName, cred)
+        createBranch(
+            userId = userId,
+            token = token,
+            gitProjectId = gitProjectId,
+            defaultBranch = defaultBranch,
+            branchName = branchName,
+            cred = cred
+        )
 
         // 2. 判断文件是否存在
-        val fileExists = createFile(gitProjectId, filePath, token, branchName, cred, content, commitMessage)
+        val fileExists = createFile(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            token = token,
+            branchName = branchName,
+            cred = cred,
+            content = content,
+            commitMessage = commitMessage
+        )
         val mrUrl = if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
             targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
             createYamlMergeRequest(
+                userId = userId,
                 fileExists = fileExists,
                 pipelineName = pipelineName,
                 token = token,
@@ -348,6 +366,7 @@ class TGitApiService @Autowired constructor(
     }
 
     private fun createFile(
+        userId: String,
         gitProjectId: String,
         filePath: String,
         token: String,
@@ -395,6 +414,22 @@ class TGitApiService @Autowired constructor(
                 )
             }
             return fileExists
+        } catch (exception: RemoteServiceException) {
+            when (exception.httpStatus) {
+                403 ->
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_FILE_NO_PERMISSION,
+                        params = arrayOf(userId, gitProjectId)
+                    )
+                500 ->
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TGIT_SERVER_EXCEPTION
+                    )
+            }
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_FILE,
+                params = arrayOf(exception.message ?: "")
+            )
         } catch (exception: Exception) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_FILE,
@@ -404,6 +439,7 @@ class TGitApiService @Autowired constructor(
     }
 
     private fun createBranch(
+        userId: String,
         token: String,
         gitProjectId: String,
         defaultBranch: String,
@@ -448,7 +484,23 @@ class TGitApiService @Autowired constructor(
                     ).data
                 }
             }
-        } catch (exception: Exception) {
+        } catch (exception: RemoteServiceException) {
+            when (exception.httpStatus) {
+                403 ->
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_BRANCH_NO_PERMISSION,
+                        params = arrayOf(userId, gitProjectId)
+                    )
+                500 ->
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TGIT_SERVER_EXCEPTION
+                    )
+            }
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_BRANCH,
+                params = arrayOf(exception.message ?: "")
+            )
+        }  catch (exception: Exception) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_BRANCH,
                 params = arrayOf(exception.message ?: "")
@@ -457,6 +509,7 @@ class TGitApiService @Autowired constructor(
     }
 
     private fun createYamlMergeRequest(
+        userId: String,
         fileExists: Boolean,
         pipelineName: String,
         token: String,
@@ -512,7 +565,23 @@ class TGitApiService @Autowired constructor(
                 retry = ApiRequestRetryInfo(true)
             ) ?: return null
             return "${projectInfo.homepage}/merge_requests/$mrNumber"
-        } catch (exception: Exception) {
+        } catch (exception: RemoteServiceException) {
+            when (exception.httpStatus) {
+                403 ->
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_MERGE_REQUEST_NO_PERMISSION,
+                        params = arrayOf(userId, gitProjectId)
+                    )
+                500 ->
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TGIT_SERVER_EXCEPTION
+                    )
+            }
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_MERGE_REQUEST,
+                params = arrayOf(exception.message ?: "")
+            )
+        }  catch (exception: Exception) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_MERGE_REQUEST,
                 params = arrayOf(exception.message ?: "")
