@@ -706,8 +706,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
                         yamlFlag = null,
                         installed = installed,
-                        updateFlag = if (installed == true) {
-                            StoreUtils.isGreaterVersion(version, installedInfoMap!![storeCode]!!)
+                        updateFlag = if (installed == true && installedInfoMap?.get(storeCode) != null) {
+                            StoreUtils.isGreaterVersion(version, installedInfoMap[storeCode]!!)
                         } else null,
                         dailyStatisticList = getRecentDailyStatisticList(storeCode, storeTypeEnum),
                         honorInfos = storeHonorInfoMap[storeCode],
