@@ -11,6 +11,7 @@
                     v-bk-tooltips="{
                         content: disabledCopyTips,
                         placement: 'top-end',
+                        delay: [300, 0],
                         disabled: !disabledCopyTips
                     }"
                     class="bk-icon icon-copy"
