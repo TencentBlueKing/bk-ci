@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.0-rc.6](#v210-rc6)
+   - [Changelog since v2.1.0-rc.5](#changelog-since-v210-rc5)
+
 - [v2.1.0](#v210)
    - [Changelog since v2.0.0](#changelog-since-v200)
 
@@ -25,6 +28,31 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.0-rc.6
+## Changelog since v2.1.0-rc.5
+#### 新增
+- [新增] Docker构建机支持拓展资源调度 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10162)
+- [新增] 运营产品和组织架构联动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10213)
+- [新增] 创建/编辑项目的 openapi ，增加组织架构必填限制 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10209)
+- [新增] 私有构建机支持项目内复用互斥 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10082)
+- [新增] 环境管理-节点支持按照关键字搜索 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10208)
+- [新增] PreCI/Stream项目提醒关联运营产品 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10206)
+- [新增] 工蜂svn webhook查询接口增加分页参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10189)
+- [新增] 支持插件开发者设置默认的超时时间和默认的失败时的策略 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10019)
+
+#### 优化
+- [优化] 研发商店通用化接口封装 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10123)
+
+#### 修复
+- [修复] stream 构建历史页面，刷新后展示首页数据 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10226)
+- [修复] 流水线编辑接口不需要修改权限资源 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10218)
+- [修复] 国际化信息进行占位参数替换处理时对信息中非占位符的{ }字符操作异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10176)
+- [修复] 环境管理节点列表ws推送导致的列表刷新，用户行为添加的参数未带上 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10205)
+- [修复] Job配额超限轮训prepareTimeout后未能及时中断流水线 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10200)
+- [修复] 文件下载异常提示信息优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10202)
+- [修复] 权限管理url参数转译问题修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10114)
+- [修复] stream 流水线下，刷新页面加载了全量的列表 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10152)
+- [修复] 修复申请权限跳转特殊符号转义问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10188)
 # v2.1.0
 ## Changelog since v2.0.0
 #### 新增
