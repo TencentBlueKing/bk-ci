@@ -465,7 +465,7 @@ class WorkspaceJoinDao {
         owners: Set<String>?
     ): Set<String> {
         val tables = mutableListOf(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-        if (size.isNullOrEmpty()) {
+        if (!size.isNullOrEmpty()) {
             tables.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
         }
         if (!owners.isNullOrEmpty()) {
