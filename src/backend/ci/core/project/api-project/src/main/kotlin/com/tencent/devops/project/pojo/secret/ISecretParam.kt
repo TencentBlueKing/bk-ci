@@ -34,10 +34,8 @@ import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = BcsSecretParam::class, name = BcsSecretParam.classType),
     JsonSubTypes.Type(value = BkrepoProjectSecretParam::class, name = BkrepoProjectSecretParam.classType),
     JsonSubTypes.Type(value = BkrepoModelSecretParam::class, name = BkrepoModelSecretParam.classType),
-    JsonSubTypes.Type(value = BlueWhaleSecretParam::class, name = BlueWhaleSecretParam.classType),
     JsonSubTypes.Type(value = DefaultSecretParam::class, name = DefaultSecretParam.classType),
     JsonSubTypes.Type(value = PassCCSecretParam::class, name = PassCCSecretParam.classType)
 )
