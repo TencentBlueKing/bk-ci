@@ -57,7 +57,6 @@ import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -79,8 +78,6 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
     private val storeVersionLogDao: StoreVersionLogDao,
     private val storeCommonService: StoreCommonService
 ) : StoreBaseUpdateService {
-
-    private val logger = LoggerFactory.getLogger(StoreBaseUpdateServiceImpl::class.java)
 
     override fun doStoreI18nConversion(storeUpdateRequest: StoreUpdateRequest) {
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
