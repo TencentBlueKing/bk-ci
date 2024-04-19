@@ -82,12 +82,13 @@
                     addToDialogShow: false,
                     isDisableDialogShow: false
                 })
-                if (this.$route.name !== 'PipelineManageList') {
-                    this.$router.replace({
-                        name: 'PipelineManageList',
-                        params
-                    })
-                }
+                this.$router.replace({
+                    name: 'PipelineManageList',
+                    params: {
+                        ...this.$route.params,
+                        ...params
+                    }
+                })
             },
             reflashCurrentPage (projectId) {
                 const params = Object.assign({}, this.$route.params, { projectId })
