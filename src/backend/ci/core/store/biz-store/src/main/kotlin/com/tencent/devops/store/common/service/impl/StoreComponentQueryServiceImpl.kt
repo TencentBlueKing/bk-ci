@@ -675,6 +675,15 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     val statistic = storeStatisticData[storeCode]
                     val version = record[tStoreBase.VERSION]
                     val installed = projectCode?.let { installedInfoMap?.contains(storeCode) }
+                    val updateFlag = if (installed == true && installedInfoMap?.get(storeCode) != null) {
+                        StoreUtils.isGreaterVersion(version, installedInfoMap[storeCode]!!)
+                    } else null
+                    if (storeInfoQuery.installed == true && installed != true) {
+                        return@forEach
+                    }
+                    if (storeInfoQuery.updateFlag == true && updateFlag != true) {
+                        return@forEach
+                    }
                     val marketItem =MarketItem(
                         id = storeId,
                         name = record[tStoreBase.NAME],
@@ -706,9 +715,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
                         yamlFlag = null,
                         installed = installed,
-                        updateFlag = if (installed == true && installedInfoMap?.get(storeCode) != null) {
-                            StoreUtils.isGreaterVersion(version, installedInfoMap[storeCode]!!)
-                        } else null,
+                        updateFlag = updateFlag,
                         dailyStatisticList = getRecentDailyStatisticList(storeCode, storeTypeEnum),
                         honorInfos = storeHonorInfoMap[storeCode],
                         indexInfos = storeIndexInfosMap[storeCode],

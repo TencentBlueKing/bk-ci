@@ -95,5 +95,5 @@ interface StoreProjectService {
      * 获取项目下已安装的组件信息
      * @return key:storeCode,value:version
      */
-    fun getInstalledComponent(projectCode: String, storeType: Byte): Map<String, String>?
+    fun getInstalledComponent(projectCode: String, storeType: Byte): Map<String, String?>?
 }

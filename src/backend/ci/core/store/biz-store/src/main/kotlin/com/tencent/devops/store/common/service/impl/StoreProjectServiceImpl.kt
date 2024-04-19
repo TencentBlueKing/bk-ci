@@ -315,7 +315,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getInstalledComponent(projectCode: String, storeType: Byte): Map<String, String>? {
+    override fun getInstalledComponent(projectCode: String, storeType: Byte): Map<String, String?>? {
         return storeProjectRelDao.getInstalledComponent(
             dslContext = dslContext,
             projectCode = projectCode,
