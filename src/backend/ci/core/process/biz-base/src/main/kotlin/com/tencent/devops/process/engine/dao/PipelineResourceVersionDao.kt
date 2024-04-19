@@ -161,7 +161,10 @@ class PipelineResourceVersionDao {
                 where.and(VERSION.eq(version))
             } else {
                 // 非新的逻辑请求则保持旧逻辑
-                if (includeDraft != true) where.and(STATUS.ne(VersionStatus.COMMITTING.name))
+                if (includeDraft != true) where.and(
+                    STATUS.ne(VersionStatus.COMMITTING.name)
+                        .or(STATUS.isNull)
+                )
                 where.orderBy(VERSION.desc()).limit(1)
             }
             where.fetchAny(0, String::class.java)
@@ -182,7 +185,10 @@ class PipelineResourceVersionDao {
                 query.and(VERSION.eq(version))
             } else {
                 // 非新的逻辑请求则保持旧逻辑
-                if (includeDraft != true) query.and(STATUS.ne(VersionStatus.COMMITTING.name))
+                if (includeDraft != true) query.and(
+                    STATUS.ne(VersionStatus.COMMITTING.name)
+                        .or(STATUS.isNull)
+                )
                 query.orderBy(VERSION.desc()).limit(1)
             }
             return query.fetchAny(mapper)
@@ -353,8 +359,10 @@ class PipelineResourceVersionDao {
                         .or(BRANCH_ACTION.isNull)
                 )
             if (includeDraft == false) {
-                query.and(STATUS.notEqual(VersionStatus.COMMITTING.name))
-                    .or(STATUS.isNull)
+                query.and(
+                    STATUS.ne(VersionStatus.COMMITTING.name)
+                        .or(STATUS.isNull)
+                )
             }
             excludeVersion?.let {
                 query.and(VERSION.notEqual(excludeVersion))
@@ -411,6 +419,7 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        includeDraft: Boolean?,
         versionName: String?,
         creator: String?,
         description: String?
@@ -427,6 +436,10 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
+            if (includeDraft == false) {
+                query.and(STATUS.notEqual(VersionStatus.COMMITTING.name))
+                    .or(STATUS.isNull)
+            }
             versionName?.let {
                 query.and(
                     VERSION.like("%$versionName%")

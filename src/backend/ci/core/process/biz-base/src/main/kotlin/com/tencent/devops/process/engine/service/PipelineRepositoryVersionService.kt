@@ -190,6 +190,7 @@ class PipelineRepositoryVersionService(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            includeDraft = includeDraft,
             versionName = versionName,
             creator = creator,
             description = description
