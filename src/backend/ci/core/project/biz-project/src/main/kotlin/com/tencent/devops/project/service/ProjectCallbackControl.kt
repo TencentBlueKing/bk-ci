@@ -104,7 +104,7 @@ class ProjectCallbackControl @Autowired constructor(
                 secretRequestParam = secretRequestParam,
                 requestBody = requestBody,
                 failAction = { exception -> secretTokenService.requestFail(exception) },
-                successAction = {response ->  secretTokenService.requestSuccess(response) }
+                successAction = {responseBody ->  secretTokenService.requestSuccess(responseBody) }
             )
         }
     }
@@ -113,7 +113,7 @@ class ProjectCallbackControl @Autowired constructor(
         secretRequestParam: SecretRequestParam,
         requestBody: String,
         failAction: ((exception: Exception) -> Unit) = { },
-        successAction: ((response: Response) -> Unit) = { }
+        successAction: ((responseBody: String) -> Unit) = { }
     ) {
         with(secretRequestParam) {
             OkHttpUtils.sendRequest(

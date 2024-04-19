@@ -118,7 +118,7 @@ object OkHttpUtils {
         params: Map<String, String>? = null,
         retryCount: Int = MAX_RETRY_COUNT,
         failAction: ((exception: Exception) -> Unit) = { },
-        successAction: ((response: Response) -> Unit) = { }
+        successAction: ((responseBody: String) -> Unit) = { }
     ) {
         val request = buildRequest(
             method = method,
@@ -136,7 +136,7 @@ object OkHttpUtils {
             } ?: ""
             if (response.isSuccessful) {
                 logger.info(("success to send callback request|url[$url]|content[$responseBody]"))
-                successAction.invoke(response)
+                successAction.invoke(responseBody)
             } else {
                 throw RuntimeException(
                     "exception occurred in callback interface|code[${response.code}]" +

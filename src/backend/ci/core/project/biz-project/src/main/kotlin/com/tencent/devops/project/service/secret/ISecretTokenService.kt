@@ -56,5 +56,5 @@ interface ISecretTokenService<T> {
     /**
      * 请求成功回调动作
      */
-    fun requestSuccess(response: Response) = Unit
+    fun requestSuccess(responseBody: String) = Unit
 }
