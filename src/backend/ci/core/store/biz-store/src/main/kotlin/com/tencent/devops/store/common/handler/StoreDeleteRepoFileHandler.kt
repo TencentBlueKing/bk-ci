@@ -27,8 +27,6 @@
 
 package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.handler.Handler
@@ -51,10 +49,10 @@ class StoreDeleteRepoFileHandler(
     override fun execute(handlerRequest: StoreDeleteRequest) {
         // 清理仓库组件关联文件
         val bkStoreContext = handlerRequest.bkStoreContext
-        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
-            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
-            storeCode = handlerRequest.storeCode,
-            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
-        )
+//        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
+//            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
+//            storeCode = handlerRequest.storeCode,
+//            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
+//        )
     }
 }

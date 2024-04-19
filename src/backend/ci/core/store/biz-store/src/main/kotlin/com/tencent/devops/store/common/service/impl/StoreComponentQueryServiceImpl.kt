@@ -684,6 +684,10 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     if (storeInfoQuery.updateFlag == true && updateFlag != true) {
                         return@forEach
                     }
+                    val osList = mutableListOf<String>()
+                    storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId)?.forEach {
+                        it.osName?.let { osName -> osList.add(osName) }
+                    }
                     val marketItem =MarketItem(
                         id = storeId,
                         name = record[tStoreBase.NAME],
@@ -696,7 +700,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         categoryInfoMap[record[tStoreBase.ID]]?.joinToString(",") { it.categoryCode },
                         logoUrl = record[tStoreBase.LOGO_URL]?.let { convertLogoUrl(it, urlProtocolTrim) },
                         publisher = record[tStoreBase.PUBLISHER],
-                        os = storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId)?.map { it.osName },
+                        os = if (osList.isEmpty()) null else osList,
                         downloads = statistic?.downloads ?: 0,
                         score = statistic?.score ?: 0.toDouble(),
                         summary = record[tStoreBase.SUMMARY],
