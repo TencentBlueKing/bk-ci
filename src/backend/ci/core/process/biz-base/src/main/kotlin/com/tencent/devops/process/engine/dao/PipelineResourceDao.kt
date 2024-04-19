@@ -251,11 +251,11 @@ class PipelineResourceDao {
         override fun map(record: TPipelineResourceRecord?): PipelineResourceVersion? {
             return record?.let {
                 val versionNum = (record.versionNum ?: record.version ?: 1)
-                val versionName = record.versionName.let { name ->
-                    if (name == "init") "V$versionNum($name)" else null
+                val versionName = record.versionName.takeIf {
+                    name -> name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
-                ) ?: ""
+                ) ?: "V$versionNum(${record.versionName}"
                 PipelineResourceVersion(
                     projectId = record.projectId,
                     pipelineId = record.pipelineId,
