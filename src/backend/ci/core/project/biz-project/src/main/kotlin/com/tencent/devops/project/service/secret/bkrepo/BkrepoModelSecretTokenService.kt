@@ -31,18 +31,15 @@ import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
-import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
 import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoModelSecretParam
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 
 class BkrepoModelSecretTokenService : BkrepoSecretTokenCommonService<BkrepoModelSecretParam> {
     override fun getSecretRequestParam(
         userId: String,
         projectId: String,
-        projectEventType: ProjectEventType,
         secretParam: BkrepoModelSecretParam
     ): SecretRequestParam {
         return SecretRequestParam(

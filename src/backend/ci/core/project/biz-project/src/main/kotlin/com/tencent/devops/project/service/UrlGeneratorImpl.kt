@@ -32,5 +32,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class UrlGeneratorImpl : UrlGenerator {
-    override fun generate(gatewayType: GatewayType, url: String) = url
+    override fun encode(gatewayType: GatewayType, url: String) = url
+
+    override fun decode(gatewayType: GatewayType, url: String) = url
 }

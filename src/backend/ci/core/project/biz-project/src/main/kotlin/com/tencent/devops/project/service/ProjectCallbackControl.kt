@@ -50,13 +50,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 import java.time.LocalDateTime
 import javax.annotation.PostConstruct
 
 @Service
 class ProjectCallbackControl @Autowired constructor(
     val projectCallbackDao: ProjectCallbackDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val urlGenerator: UrlGenerator
 ) {
 
     @Value("\${project.callback.secretParam.aes-key}")
@@ -88,7 +90,6 @@ class ProjectCallbackControl @Autowired constructor(
             val secretRequestParam = secretTokenService.getSecretRequestParam(
                 userId = secretParam.userId,
                 projectId = callbackData.projectId,
-                projectEventType = projectEventType,
                 secretParam = secretParam
             )
             // 2.获取请求体
@@ -96,11 +97,17 @@ class ProjectCallbackControl @Autowired constructor(
                 secretParam = secretParam,
                 projectCallbackData = callbackData
             )
+            // 3.处理url占位符
+            secretRequestParam.url = formatUrl(
+                url = secretRequestParam.url,
+                projectId = callbackData.projectId,
+                projectEventType = projectEventType.name
+            )
             logger.info(
-                "start send project callback|eventType[${it.event}]|url[${it.callbackUrl}]|" +
+                "start send project callback|eventType[${it.event}]|url[${secretRequestParam.url}]|" +
                         "secretType[${it.secretType}]"
             )
-            // 3.发请求
+            // 4.发请求
             send(
                 secretRequestParam = secretRequestParam,
                 requestBody = requestBody,
@@ -142,8 +149,25 @@ class ProjectCallbackControl @Autowired constructor(
         return targetHeaders
     }
 
+    /**
+     * 如果url中包含占位符，则进行替换
+     * {projectId} -> 蓝盾项目Id
+     * {eventType} -> 项目事件类型
+     */
+    private fun formatUrl(url: String, projectId: String, projectEventType: String): String {
+        val encodeProjectId = URLEncoder.encode(URL_PLACEHOLDER_PROJECT_ID, "UTF-8")
+        val encodeEventType = URLEncoder.encode(URL_PLACEHOLDER_EVENT_TYPE, "UTF-8")
+        return url
+            .replaceAfter(URL_PLACEHOLDER_PROJECT_ID, projectId)
+            .replaceAfter(URL_PLACEHOLDER_EVENT_TYPE, projectEventType)
+            .replaceAfter(encodeProjectId, projectId)
+            .replaceAfter(encodeEventType, projectEventType)
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(ProjectCallbackControl::class.java)
         const val CALLBACK_FLAG = "devops_project"
+        const val URL_PLACEHOLDER_PROJECT_ID = "{projectId}"
+        const val URL_PLACEHOLDER_EVENT_TYPE = "{eventType}"
     }
 }

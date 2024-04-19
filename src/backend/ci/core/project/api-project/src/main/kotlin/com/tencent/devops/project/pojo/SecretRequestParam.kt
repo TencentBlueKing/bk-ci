@@ -36,7 +36,7 @@ data class SecretRequestParam(
     @get:Schema(title = "URL参数", required = true)
     val params: Map<String, String>? = null,
     @get:Schema(title = "回调链接", required = true)
-    val url: String,
+    var url: String,
     @get:Schema(title = "鉴权类型", required = true)
     val secretType: String
 )
