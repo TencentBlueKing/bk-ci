@@ -568,11 +568,11 @@ class PipelineResourceVersionDao {
                 val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
-                val versionName = record.versionName.let { name ->
-                    if (name == "init") "V$versionNum($name)" else null
+                val versionName = record.versionName.takeIf {
+                    name -> name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
-                ) ?: ""
+                ) ?: "V$versionNum(${record.versionName}"
                 PipelineResourceVersion(
                     projectId = record.projectId,
                     pipelineId = record.pipelineId,
@@ -612,11 +612,11 @@ class PipelineResourceVersionDao {
                 val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
-                val versionName = record.versionName.let { name ->
-                    if (name == "init") "V$versionNum($name)" else null
+                val versionName = record.versionName.takeIf {
+                    name -> name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
-                ) ?: ""
+                ) ?: "V$versionNum(${record.versionName}"
                 PipelineVersionSimple(
                     pipelineId = record.pipelineId,
                     creator = record.creator ?: "unknown",
