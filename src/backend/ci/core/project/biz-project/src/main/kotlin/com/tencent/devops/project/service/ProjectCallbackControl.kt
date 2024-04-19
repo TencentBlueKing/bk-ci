@@ -57,8 +57,7 @@ import javax.annotation.PostConstruct
 @Service
 class ProjectCallbackControl @Autowired constructor(
     val projectCallbackDao: ProjectCallbackDao,
-    val dslContext: DSLContext,
-    val urlGenerator: UrlGenerator
+    val dslContext: DSLContext
 ) {
 
     @Value("\${project.callback.secretParam.aes-key}")
