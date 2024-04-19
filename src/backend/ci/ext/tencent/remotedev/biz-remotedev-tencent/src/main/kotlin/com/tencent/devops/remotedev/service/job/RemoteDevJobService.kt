@@ -326,6 +326,7 @@ class RemoteDevJobService @Autowired constructor(
                     errMsg = build.errorInfoList?.joinToString(";"),
                     endTime = LocalDateTime.now()
                 )
+                return@execute
             }
             remoteDevJobExecRecordDao.updateStatus(
                 dslContext = dslContext,
