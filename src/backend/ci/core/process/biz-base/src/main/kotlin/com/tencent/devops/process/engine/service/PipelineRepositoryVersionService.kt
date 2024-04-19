@@ -129,6 +129,10 @@ class PipelineRepositoryVersionService(
             pipelineId = pipelineId,
             version = version,
             includeDraft = includeDraft
+        ) ?: pipelineResourceDao.getReleaseVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
         ) ?: return null
         return PipelineVersionWithInfo(
             createTime = pipelineInfo.createTime,
