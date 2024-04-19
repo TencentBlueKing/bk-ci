@@ -48,7 +48,7 @@ class SampleProjectEventListener @Autowired constructor(
                 event = ProjectEventType.CREATE,
                 createInfo = event.projectInfo,
                 userId = event.userId,
-                projectId = event.projectId
+                projectId = event.projectInfo.englishName
             )
         )
     }
@@ -60,7 +60,7 @@ class SampleProjectEventListener @Autowired constructor(
                 event = ProjectEventType.UPDATE,
                 updateInfo = event.projectInfo,
                 userId = event.userId,
-                projectId = event.projectId
+                projectId = event.projectInfo.englishName
             )
         )
     }
