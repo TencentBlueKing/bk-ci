@@ -212,7 +212,7 @@ class PipelineRepositoryVersionService(
         )
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
         if (result.isEmpty() && includeDraft != false &&
-            pipelineInfo.latestVersionStatus?.isNotReleased() == false
+            pipelineInfo.latestVersionStatus?.isNotReleased() != true
         ) {
             pipelineResourceDao.getReleaseVersionResource(
                 dslContext, projectId, pipelineId
