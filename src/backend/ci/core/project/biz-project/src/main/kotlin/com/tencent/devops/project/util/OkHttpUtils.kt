@@ -132,7 +132,7 @@ object OkHttpUtils {
                 httpClient.newCall(request).execute()
             }
             val responseBody = response.body?.let {
-                JsonUtil.toJson(it, false)
+                JsonUtil.toJson(it.string(), false)
             } ?: ""
             if (response.isSuccessful) {
                 logger.info(("success to send callback request|url[$url]|content[$responseBody]"))
