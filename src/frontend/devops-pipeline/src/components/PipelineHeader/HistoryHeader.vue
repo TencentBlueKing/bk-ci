@@ -312,9 +312,10 @@
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
-                console.log('handleVersionChange', this.pipelineHistoryViewAble, versionId, version?.status)
+                console.log('handleVersionChange', this.pipelineHistoryViewAble, versionId)
                 this.$router.replace({
-                    name: !this.pipelineHistoryViewAble ? 'pipelinesEdit' : this.$route.params.name,
+                    name: !this.pipelineHistoryViewAble ? 'pipelinesEdit' : this.$route.name,
+                    query: this.$route.query,
                     params: {
                         ...this.$route.params,
                         version: versionId,

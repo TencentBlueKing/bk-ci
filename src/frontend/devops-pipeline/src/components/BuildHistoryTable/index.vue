@@ -547,7 +547,7 @@
                 }
             },
             pagination () {
-                const { query: { pageSize, page }, count } = this.historyPageStatus
+                const { count, pageSize, page } = this.historyPageStatus
                 return {
                     limit: pageSize,
                     current: page,

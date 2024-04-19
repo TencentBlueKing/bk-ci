@@ -78,16 +78,15 @@ const mutations = {
 
 const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
-        if ((newStatus.query || newStatus.searchKey) && !newStatus.queryStr) {
+        if ((newStatus.query || newStatus.searchKey || newStatus.page || newStatus.pageSize) && !newStatus.queryStr) {
             const newQuery = newStatus.query ?? state.historyPageStatus.query
             const newSearchKey = newStatus.searchKey ?? state.historyPageStatus.searchKey
             newStatus.queryStr = generateQueryString({
+                page: newStatus.page ?? state.historyPageStatus.page,
+                pageSize: newStatus.pageSize ?? state.historyPageStatus.pageSize,
                 ...state.historyPageStatus.query,
                 ...newQuery,
-                ...flatSearchKey([
-                    ...newSearchKey,
-                    ...state.historyPageStatus.searchKey
-                ])
+                ...flatSearchKey(newSearchKey)
             })
         }
         commit('updateHistoryPageStatus', newStatus)

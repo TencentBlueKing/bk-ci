@@ -206,6 +206,7 @@
                         })
                     } else {
                         this.$router.replace({
+                            ...this.$route,
                             params: {
                                 ...this.$route.params,
                                 version: this.pipelineInfo?.releaseVersion
