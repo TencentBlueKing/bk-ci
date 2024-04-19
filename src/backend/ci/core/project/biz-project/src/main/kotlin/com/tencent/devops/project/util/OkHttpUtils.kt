@@ -131,9 +131,7 @@ object OkHttpUtils {
             val response = HttpRetryUtils.retry(retryCount) {
                 httpClient.newCall(request).execute()
             }
-            val responseBody = response.body?.let {
-                JsonUtil.toJson(it.string(), false)
-            } ?: ""
+            val responseBody = response.body?.string() ?: ""
             if (response.isSuccessful) {
                 logger.info(("success to send callback request|url[$url]|content[$responseBody]"))
                 successAction.invoke(responseBody)
