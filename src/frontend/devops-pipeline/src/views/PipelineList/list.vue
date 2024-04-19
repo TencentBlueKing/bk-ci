@@ -107,6 +107,7 @@
                     margin-left: 100px;
                     .search-pipeline-input {
                         flex: 1;
+                        width: 0;
                         background: white;
                         ::placeholder {
                             color: #c4c6cc;
