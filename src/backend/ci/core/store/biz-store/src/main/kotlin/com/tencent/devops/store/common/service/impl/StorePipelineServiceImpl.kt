@@ -68,7 +68,6 @@ import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
