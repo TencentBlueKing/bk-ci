@@ -166,11 +166,13 @@ class MarketStoreQueryDao {
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         // 缩减查询范围
         if (queryProjectComponentFlag || !classifyId.isNullOrBlank() || !labelId.isNullOrBlank()) {
-            conditions.add(tStoreBase.STORE_CODE.`in`(getStoreCodesByCondition(
+            conditions.add(
+                tStoreBase.STORE_CODE.`in`(getStoreCodesByCondition(
                 dslContext = dslContext,
                 storeType = storeType.type.toByte(),
                 storeInfoQuery = storeInfoQuery
-            )))
+                ))
+            )
         }
         storeInfoQuery.recommendFlag?.let {
             conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
@@ -206,36 +208,34 @@ class MarketStoreQueryDao {
         val tStoreLabelRel = TStoreLabelRel.T_STORE_LABEL_REL
         val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
         val tClassify = TClassify.T_CLASSIFY
-
+        val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
         val conditions = mutableListOf<Condition>().apply {
             add(tStoreBase.STORE_TYPE.eq(storeType))
 
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))
+                    selectJoinStep.leftJoin(tStoreProjectRel).on(tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE))
                 }
             }
 
             storeInfoQuery.classifyId?.let {
                 add(tClassify.ID.eq(it))
+                selectJoinStep.leftJoin(tClassify).on(tStoreBase.CLASSIFY_ID.eq(tClassify.ID))
             }
 
             storeInfoQuery.labelId?.let {
                 add(tStoreLabelRel.LABEL_ID.eq(it))
+                selectJoinStep.leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
             }
 
             storeInfoQuery.categoryId?.let {
                 add(tStoreCategoryRel.CATEGORY_ID.eq(it))
+                selectJoinStep.leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
             }
         }
 
-        return dslContext.select(tStoreBase.STORE_CODE)
-            .from(tStoreBase)
-            .leftJoin(tStoreProjectRel).on(tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE))
-            .leftJoin(tClassify).on(tStoreBase.CLASSIFY_ID.eq(tClassify.ID))
-            .leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
-            .leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
-            .where(conditions)
+        return selectJoinStep.where(conditions)
     }
 
     fun setStoreVisibleCondition(

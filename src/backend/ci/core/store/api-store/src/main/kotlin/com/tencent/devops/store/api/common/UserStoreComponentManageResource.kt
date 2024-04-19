@@ -74,7 +74,7 @@ interface UserStoreComponentManageResource {
 
     @Operation(summary = "安装组件到项目")
     @POST
-    @Path("/types/{storeType}/component/install")
+    @Path("/component/install")
     fun installComponent(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
