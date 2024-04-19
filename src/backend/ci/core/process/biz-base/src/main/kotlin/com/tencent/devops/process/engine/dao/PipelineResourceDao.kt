@@ -29,12 +29,16 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
+import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
+import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -93,32 +97,11 @@ class PipelineResourceDao {
         pipelineId: String
     ): PipelineResourceVersion? {
         with(T_PIPELINE_RESOURCE) {
-            val record = dslContext.selectFrom(this)
+            return  dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(VERSION.desc()).limit(1)
-                .fetchAny() ?: return null
-            return PipelineResourceVersion(
-                projectId = record.projectId,
-                pipelineId = record.pipelineId,
-                version = record.version,
-                model = record.model?.let { str ->
-                    try {
-                        JsonUtil.to(str, Model::class.java)
-                    } catch (ignore: Exception) {
-                        logger.warn("get process($pipelineId) model fail", ignore)
-                        null
-                    }
-                } ?: return null,
-                yaml = record.yaml,
-                creator = record.creator ?: "unknown",
-                versionName = record.versionName,
-                createTime = record.createTime,
-                updateTime = null,
-                versionNum = record.versionNum,
-                pipelineVersion = record.pipelineVersion,
-                triggerVersion = record.triggerVersion,
-                settingVersion = record.settingVersion
-            )
+                .fetchAny(mapper)
+
         }
     }
 
@@ -264,7 +247,43 @@ class PipelineResourceDao {
         }
     }
 
+    class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceRecord, PipelineResourceVersion> {
+        override fun map(record: TPipelineResourceRecord?): PipelineResourceVersion? {
+            return record?.let {
+                val versionNum = (record.versionNum ?: record.version ?: 1)
+                val versionName = record.versionName.let { name ->
+                    if (name == "init") "V$versionNum($name)" else null
+                } ?: PipelineVersionUtils.getVersionName(
+                    versionNum, record.version, record.triggerVersion, record.settingVersion
+                ) ?: ""
+                PipelineResourceVersion(
+                    projectId = record.projectId,
+                    pipelineId = record.pipelineId,
+                    version = record.version,
+                    status = VersionStatus.RELEASED,
+                    model = record.model?.let { str ->
+                        try {
+                            JsonUtil.to(str, Model::class.java)
+                        } catch (ignore: Exception) {
+                            null
+                        }
+                    } ?: return null,
+                    yaml = record.yaml,
+                    creator = record.creator ?: "unknown",
+                    versionName = versionName,
+                    createTime = record.createTime,
+                    updateTime = null,
+                    versionNum = record.versionNum,
+                    pipelineVersion = record.pipelineVersion,
+                    triggerVersion = record.triggerVersion,
+                    settingVersion = record.settingVersion
+                )
+            }
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineResourceDao::class.java)
+        private val mapper = PipelineResourceVersionJooqMapper()
     }
 }
