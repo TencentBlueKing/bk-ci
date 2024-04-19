@@ -27,8 +27,27 @@
 
 package com.tencent.devops.dispatch.docker.service
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 
-interface ExtDockerResourceOptionsService {
-    fun getDockerResourceConfigList(userId: String, projectId: String, buildType: String): UserDockerResourceOptionsVO?
+class ExtDockerResourceServiceImpl : ExtDockerResourceService {
+
+    override fun getDockerResourceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String
+    ): UserDockerResourceOptionsVO? {
+        return null
+    }
+
+    override fun startExtDocker(
+        event: PipelineAgentStartupEvent,
+        containerPool: Pool,
+        dockerRoutingType: DockerRoutingType,
+        demoteFlag: Boolean
+    ) {
+        return
+    }
 }
