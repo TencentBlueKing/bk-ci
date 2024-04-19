@@ -53,7 +53,11 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(ExtServiceHandleBuildResultService::class.java)
 
-    override fun handleStoreBuildResult(storeBuildResultRequest: StoreBuildResultRequest): Result<Boolean> {
+    override fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
+        storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val serviceId = storeBuildResultRequest.storeId
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)

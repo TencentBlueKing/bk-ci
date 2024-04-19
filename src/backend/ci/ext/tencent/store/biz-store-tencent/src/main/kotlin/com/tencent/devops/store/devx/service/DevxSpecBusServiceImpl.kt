@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
@@ -47,9 +48,10 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
@@ -57,7 +59,6 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -70,6 +71,7 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
@@ -80,13 +82,22 @@ class DevxSpecBusServiceImpl @Autowired constructor(
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
     private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
-    private val storeCommonService: StoreCommonService
+    private val storeCommonService: StoreCommonService,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : StoreSpecBusService {
+
+    companion object {
+        private const val KEY_OS_RUN_INFO = "osRunInfo"
+    }
+
+    @Value("\${store.devx.sign:windows.supportFileTypes:exe}")
+    val windowsSupportFileTypes: String = "exe"
 
     override fun doStoreI18nConversionSpecBus(storeUpdateRequest: StoreUpdateRequest) {
         // 云开发暂无需做国际化转换
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun doCheckStoreUpdateParamSpecBus(storeUpdateRequest: StoreUpdateRequest) {
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
         val extBaseInfo = storeBaseUpdateRequest.extBaseInfo
@@ -136,10 +147,26 @@ class DevxSpecBusServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(storeId)
         )
+        val baseEnvRecords = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+            dslContext = dslContext,
+            storeId = storeId
+        )
+        val osRunInfos = mutableSetOf<String>()
+        baseEnvRecords?.forEach { baseEnvRecord ->
+            val osName = baseEnvRecord.osName
+            val pkgPath = baseEnvRecord.pkgPath
+            val fileType = pkgPath.substringAfterLast(".")
+            if (osName == OSType.WINDOWS.name.lowercase() && windowsSupportFileTypes.split(",").contains(fileType)) {
+                // 暂时只支持签windows操作系统的exe软件包
+                osRunInfos.add("$osName=$pkgPath")
+            }
+        }
         return mutableMapOf(
             KEY_STORE_CODE to baseRecord.storeCode,
             KEY_STORE_TYPE to StoreTypeEnum.getStoreType(baseRecord.storeType.toInt()),
-            KEY_VERSION to baseRecord.version
+            KEY_VERSION to baseRecord.version,
+            KEY_PROJECT_ID to storeInnerPipelineConfig.innerPipelineProject,
+            KEY_OS_RUN_INFO to JsonUtil.toJson(osRunInfos)
         )
     }
 
