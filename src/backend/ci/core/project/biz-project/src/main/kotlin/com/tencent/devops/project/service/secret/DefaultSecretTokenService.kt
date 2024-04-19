@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.secret
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallBackDefaultRequest
 import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
@@ -38,6 +39,7 @@ class DefaultSecretTokenService : ISecretTokenService<DefaultSecretParam> {
     override fun getSecretRequestParam(
         userId: String,
         projectId: String,
+        projectEventType: ProjectEventType,
         secretParam: DefaultSecretParam
     ): SecretRequestParam = with(secretParam) {
         SecretRequestParam(

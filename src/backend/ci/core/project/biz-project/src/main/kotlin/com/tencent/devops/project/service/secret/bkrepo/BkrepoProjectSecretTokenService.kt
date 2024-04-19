@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.secret.bkrepo
 
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
 import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
@@ -39,6 +40,7 @@ class BkrepoProjectSecretTokenService : BkrepoSecretTokenCommonService<BkrepoPro
     override fun getSecretRequestParam(
         userId: String,
         projectId: String,
+        projectEventType: ProjectEventType,
         secretParam: BkrepoProjectSecretParam
     ): SecretRequestParam {
         return SecretRequestParam(

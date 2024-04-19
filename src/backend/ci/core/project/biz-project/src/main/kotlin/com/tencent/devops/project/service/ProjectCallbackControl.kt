@@ -74,11 +74,11 @@ class ProjectCallbackControl @Autowired constructor(
         SecretTokenServiceFactory.register(DefaultSecretParam::class.java, DefaultSecretTokenService())
     }
 
-    fun callBackProjectEvent(eventType: ProjectEventType, callbackData: ProjectCallbackData) {
+    fun callBackProjectEvent(projectEventType: ProjectEventType, callbackData: ProjectCallbackData) {
         // 查询事件相关的回调记录
         val callBackList = projectCallbackDao.get(
             dslContext = dslContext,
-            event = eventType.name,
+            event = projectEventType.name,
             url = null
         )
         callBackList.map {
@@ -88,6 +88,7 @@ class ProjectCallbackControl @Autowired constructor(
             val secretRequestParam = secretTokenService.getSecretRequestParam(
                 userId = secretParam.userId,
                 projectId = callbackData.projectId,
+                projectEventType = projectEventType,
                 secretParam = secretParam
             )
             // 2.获取请求体

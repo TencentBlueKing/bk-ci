@@ -43,7 +43,7 @@ class SampleProjectEventListener @Autowired constructor(
 
     override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
         projectCallbackControl.callBackProjectEvent(
-            eventType = ProjectEventType.CREATE,
+            projectEventType = ProjectEventType.CREATE,
             callbackData = ProjectCallbackData(
                 event = ProjectEventType.CREATE,
                 createInfo = event.projectInfo,
@@ -55,7 +55,7 @@ class SampleProjectEventListener @Autowired constructor(
 
     override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
         projectCallbackControl.callBackProjectEvent(
-            eventType = ProjectEventType.UPDATE,
+            projectEventType = ProjectEventType.UPDATE,
             callbackData = ProjectCallbackData(
                 event = ProjectEventType.UPDATE,
                 updateInfo = event.projectInfo,
@@ -67,7 +67,7 @@ class SampleProjectEventListener @Autowired constructor(
 
     override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent)  {
         projectCallbackControl.callBackProjectEvent(
-            eventType = ProjectEventType.UPDATE_LOGO,
+            projectEventType = ProjectEventType.UPDATE_LOGO,
             callbackData = ProjectCallbackData(
                 event = ProjectEventType.UPDATE_LOGO,
                 updateLogo = ProjectUpdateLogoInfo(
@@ -82,7 +82,7 @@ class SampleProjectEventListener @Autowired constructor(
 
     override fun onReceiveProjectEnable(event: ProjectEnableStatusBroadCastEvent) {
         projectCallbackControl.callBackProjectEvent(
-            eventType = ProjectEventType.ENABLE,
+            projectEventType = ProjectEventType.ENABLE,
             callbackData = ProjectCallbackData(
                 event = ProjectEventType.ENABLE,
                 enabled = event.enabled,

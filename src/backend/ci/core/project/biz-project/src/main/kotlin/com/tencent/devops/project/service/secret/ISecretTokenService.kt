@@ -27,9 +27,9 @@
 
 package com.tencent.devops.project.service.secret
 
+import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
-import okhttp3.Response
 import java.lang.Exception
 
 interface ISecretTokenService<T> {
@@ -39,7 +39,12 @@ interface ISecretTokenService<T> {
      * @param projectId 蓝盾项目ID
      * @param secretParam 回调参数
      */
-    fun getSecretRequestParam(userId: String, projectId: String, secretParam: T): SecretRequestParam
+    fun getSecretRequestParam(
+        userId: String,
+        projectId: String,
+        projectEventType: ProjectEventType,
+        secretParam: T
+    ): SecretRequestParam
 
     /**
      * 获取请求体内容
