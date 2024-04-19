@@ -116,5 +116,7 @@ data class Workspace(
     @get:Schema(title = "当前用户在此工作空间分配的人员类型")
     val assignType: WorkspaceShared.AssignType = WorkspaceShared.AssignType.OWNER,
     @get:Schema(title = "windows资源配置id")
-    val winConfigId: Int? = null
+    val winConfigId: Int? = null,
+    @get:Schema(title = "区域")
+    val zoneId: String? = null
 ) : IWorkspace

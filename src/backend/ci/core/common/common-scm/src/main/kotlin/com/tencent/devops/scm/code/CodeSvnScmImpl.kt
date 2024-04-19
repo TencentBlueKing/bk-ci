@@ -153,19 +153,21 @@ class CodeSvnScmImpl constructor(
 
     override fun addWebHook(hookUrl: String) {
         val relProjectName = getRelProjectName()
+        val subDirPath = getSubDirPath(relProjectName)
         logger.info(
             "[$hookUrl|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] " +
-                    "|AddWebHookSVN|repo=$relProjectName"
+                    "|AddWebHookSVN|repo=$relProjectName|subDirPath=$subDirPath"
         )
         try {
-            addWebhookByToken(hookUrl, relProjectName)
+            addWebhookByToken(hookUrl, relProjectName, subDirPath)
         } catch (ignored: ScmException) {
             // 工蜂迁移svn项目后，svn项目名与原有git项目名相同，导致项目名冲突，为此在工蜂在svn组名后添加[_svn]后缀，但在复制svn路径时可能
             // 缺少[_svn]，如实际路径为[bk_ci_svn/ci],但复制路径为[bk_ci/ci]，所以当报项目不存在时，组名处增加[_svn]后缀后重试
             tryAddSuffixToGroupName(
                 projectName = relProjectName,
                 hookUrl = hookUrl,
-                ignored = ignored
+                ignored = ignored,
+                subDirPath = subDirPath
             )
         }
     }
@@ -293,13 +295,12 @@ class CodeSvnScmImpl constructor(
     /**
      * 基于私人令牌添加svn仓库的webhook
      */
-    private fun addWebhookByToken(hookUrl: String, projectName: String) {
+    private fun addWebhookByToken(hookUrl: String, projectName: String, subDirPath: String) {
         val hooks = svnApi.getWebhooks(
             host = svnConfig.webhookApiUrl,
             projectName = projectName,
             token = token!!
         )
-        val subDirPath = getSubDirPath(projectName)
         val existHook = if (hooks.isEmpty()) {
             null
         } else {
@@ -340,7 +341,8 @@ class CodeSvnScmImpl constructor(
     private fun tryAddSuffixToGroupName(
         projectName: String,
         hookUrl: String,
-        ignored: Exception
+        ignored: Exception,
+        subDirPath: String
     ) {
         try {
             if (ignored.message != I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST)) {
@@ -352,10 +354,11 @@ class CodeSvnScmImpl constructor(
                 }
                 projectNameArr[0] = projectNameArr[0].plus(SVN_PROJECT_NAME_SUFFIX)
                 val newProjectName = projectNameArr.joinToString("/")
-                logger.info("retry addWebHookSVN|new projectName=$newProjectName")
+                logger.info("retry addWebHookSVN|new projectName=$newProjectName|subDirPath=$subDirPath")
                 addWebhookByToken(
                     hookUrl = hookUrl,
-                    projectName = newProjectName
+                    projectName = newProjectName,
+                    subDirPath = subDirPath
                 )
             }
         } catch (ignored: Exception) {

@@ -25,17 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.remotedev.pojo.windows
 
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import io.swagger.v3.oas.annotations.media.Schema
 
-class ExtDockerResourceOptionsServiceImpl : ExtDockerResourceOptionsService {
-
-    override fun getDockerResourceConfigList(
-        userId: String,
-        projectId: String,
-        buildType: String
-    ): UserDockerResourceOptionsVO? {
-        return null
-    }
-}
+@Schema(title = "WINDOWS GPU资源配置表")
+data class WindowsDevCouldCallback(
+    @get:Schema(title = "工作空间名称")
+    val workspaceName: String,
+    @get:Schema(title = "状态")
+    val status: WorkspaceStatus,
+    @get:Schema(title = "行为")
+    val action: WorkspaceAction
+)

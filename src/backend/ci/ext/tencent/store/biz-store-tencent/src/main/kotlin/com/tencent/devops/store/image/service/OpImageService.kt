@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode.BK_HISTORY_DATA_MIGRATE_PASS
+import com.tencent.devops.store.constant.StoreConstants.BK_HISTORY_DATA_MIGRATE_PASS
 import com.tencent.devops.store.image.dao.Constants
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG

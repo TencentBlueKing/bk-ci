@@ -3,6 +3,8 @@ package com.tencent.devops.remotedev.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -119,9 +122,12 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
         @QueryParam("oldWorkspaceName")
         oldWorkspaceName: String?,
-        @Parameter(description = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
+        @Parameter(description = "项目ID，可以为空，如果oldWorkspaceName=null 必填", required = true)
         @QueryParam("projectId")
         projectId: String?,
+        @Parameter(description = "工作空间类型，可以为空，如果oldWorkspaceName=null 必填", required = true)
+        @QueryParam("ownerType")
+        ownerType: WorkspaceOwnerType?,
         @Parameter(description = "机器uid", required = true)
         @QueryParam("uid")
         uid: String
@@ -156,4 +162,39 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/resourceType/list")
     fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>>
+
+    @Operation(summary = "创建windows工作空间")
+    @POST
+    @Path("/personal_win_workspace")
+    fun createPersonalWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "创建内容", required = true)
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean>
+
+    @Operation(summary = "删除windows工作空间")
+    @DELETE
+    @Path("/personal_win_workspace")
+    fun deletePersonalWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间")
+    @GET
+    @Path("/personal_win_workspace")
+    fun getPersonalWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
 }

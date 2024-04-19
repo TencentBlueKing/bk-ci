@@ -111,7 +111,14 @@ class BuildVariableService @Autowired constructor(
         return pipelineBuildVarDao.getVarsWithType(commonDslContext, projectId, buildId)
     }
 
-    fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
+    fun setVariable(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        varValue: Any,
+        readOnly: Boolean? = null
+    ) {
         val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
         saveVariable(
             dslContext = commonDslContext,
@@ -119,7 +126,8 @@ class BuildVariableService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             name = realVarName,
-            value = varValue
+            value = varValue,
+            readOnly = readOnly
         )
     }
 
@@ -176,7 +184,8 @@ class BuildVariableService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         name: String,
-        value: Any
+        value: Any,
+        readOnly: Boolean? = null
     ) {
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
@@ -189,7 +198,8 @@ class BuildVariableService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     name = name,
-                    value = value
+                    value = value,
+                    readOnly = readOnly
                 )
             } else {
                 pipelineBuildVarDao.update(
@@ -290,5 +300,20 @@ class BuildVariableService @Autowired constructor(
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
         }
+    }
+
+    // #10082 查询Agent复用互斥使用的AgentId
+    fun fetchAgentReuseMutexVar(
+        projectId: String,
+        buildId: String,
+        likeStr: String
+    ): Set<String> {
+        return pipelineBuildVarDao.fetchVarByLikeKey(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            readOnly = true,
+            likeStr = likeStr
+        )
     }
 }

@@ -25,22 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.store.pojo.atom.enums
 
-import io.swagger.v3.oas.annotations.media.Schema
-
-@Schema(title = "团队工作空间信息-创建")
-data class ProjectWorkspaceCreate(
-    @get:Schema(title = "云桌面 配置")
-    val windowsType: String,
-    @get:Schema(title = "云桌面 地域")
-    val windowsZone: String,
-    @get:Schema(title = "基础镜像Id")
-    val baseImageId: Int,
-    @get:Schema(title = "创建实例的数量")
-    val count: Int,
-    @get:Schema(title = "自定义镜像路径")
-    val imageCosFile: String = "",
-    @get:Schema(title = "镜像id")
-    val imageId: String = ""
-)
+enum class AtomRetryPolicyEnum {
+    AUTO_RETRY, // 自动重试
+    MANUALLY_RETRY // 手动重试
+}

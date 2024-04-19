@@ -59,31 +59,38 @@ class StartCloudInterfaceService @Autowired constructor(
     private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
     @Value("\${startCloud.appName}")
-    val appName: String = "IEG_BKCI"
+    val contentProviderName: String = "IEG_BKCI"
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudInterfaceService::class.java)
     }
 
-    fun createStartCloudUser(userId: String): Boolean {
-        kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
-            logger.warn("create user failed.|${it.message}")
-            if (it is BuildFailureException &&
-                it.errorCode == ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode
-            ) {
-                throw it
-            }
+    fun createStartCloudUser(userId: String, gameId: String?): Boolean {
+        kotlin.runCatching {
+            workspaceClient.createUser(
+                userId,
+                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(gameId))
+            )
         }
+            .onFailure {
+                logger.warn("create user failed.|${it.message}")
+                if (it is BuildFailureException &&
+                    it.errorCode == ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode
+                ) {
+                    throw it
+                }
+            }
         return true
     }
 
     fun shareWorkspace(
         userId: String,
         cgsId: String,
-        receivers: List<String>
+        receivers: List<String>,
+        gameId: String?
     ): String {
         receivers.forEach {
-            createStartCloudUser(it)
+            createStartCloudUser(it, gameId)
         }
         return workspaceClient.shareWorkspace(
             userId,
@@ -115,8 +122,8 @@ class StartCloudInterfaceService @Autowired constructor(
             status = workspaceStatus.status,
             hostIP = workspaceStatus.hostIP,
             environmentIP = workspaceStatus.environmentIP,
-            clusterId = workspaceStatus.clusterId,
-            namespace = workspaceStatus.namespace,
+            clusterId = workspaceStatus.clusterId ?: "",
+            namespace = workspaceStatus.namespace ?: "",
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true

@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
@@ -96,6 +97,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.TopoNode
 import com.tencent.devops.environment.pojo.job.jobresp.VariableServer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service("JobService")
 class JobService @Autowired constructor(
@@ -111,7 +113,13 @@ class JobService @Autowired constructor(
         val allHostList: List<Host>? = scriptExecuteReq.executeTarget?.let {
             parseHashListService.getAllHostList(projectId, it)
         }
-        if (!allHostList.isNullOrEmpty()) {
+        if (allHostList.isNullOrEmpty()) {
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                "Host is empty."
+            )
+        }
+        if (allHostList.isNotEmpty()) {
             permissionManageService.isUserHasAllPermission(userId, projectId, allHostList)
         }
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
@@ -123,16 +131,17 @@ class JobService @Autowired constructor(
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
-                hostIdList = allHostList?.filter { it.bkHostId != null }?.map {
+                hostIdList = allHostList.filter { it.bkHostId != null }.map {
                     it.bkHostId ?: 0L
                 },
-                ipList = allHostList?.filter { it.bkHostId == null }?.map {
+                ipList = allHostList.filter { it.bkHostId == null }.map {
                     JobCloudIpInfo(
                         bkCloudId = it.bkCloudId,
                         ip = it.ip
                     )
                 }
             ),
+            taskName = scriptExecuteReq.taskName,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
         ApigwJobCloudApi.setJobOperationName(::executeScript.name)
@@ -163,12 +172,27 @@ class JobService @Autowired constructor(
         val allExecuteTargetHostList: List<Host> = parseHashListService.getAllHostList(
             projectId, fileDistributeReq.executeTarget
         )
-        permissionManageService.isUserHasAllPermission(userId, projectId, allExecuteTargetHostList)
         val allFileSourceHostList: MutableList<Host> = mutableListOf()
         fileDistributeReq.fileSourceList.map { fileSource ->
-            allFileSourceHostList.plus(parseHashListService.getAllHostList(projectId, fileSource.sourceFileServer))
+            val fileSourceHostList = parseHashListService.getAllHostList(projectId, fileSource.sourceFileServer)
+            for (fileSourceHost in fileSourceHostList) {
+                allFileSourceHostList.add(fileSourceHost)
+            }
         }
-        permissionManageService.isUserHasAllPermission(userId, projectId, allFileSourceHostList)
+        if (allExecuteTargetHostList.isEmpty()) {
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                "Execute target host is empty."
+            )
+        }
+        if (allFileSourceHostList.isEmpty()) {
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                "File source host is empty."
+            )
+        }
+        val allHostList = allExecuteTargetHostList.plus(allFileSourceHostList)
+        permissionManageService.isUserHasAllPermission(userId, projectId, allHostList)
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 val fileSourceHostList: List<Host> = parseHashListService.getAllHostList(
@@ -199,6 +223,7 @@ class JobService @Autowired constructor(
             accountAlias = fileDistributeReq.accountAlias,
             accountId = fileDistributeReq.accountId,
             timeout = fileDistributeReq.timeout,
+            taskName = fileDistributeReq.taskName,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
         ApigwJobCloudApi.setJobOperationName(::distributeFile.name)

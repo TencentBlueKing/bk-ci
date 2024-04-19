@@ -446,7 +446,7 @@
     // import emptyNode from './empty_node'
     import '@blueking/search-select/dist/styles/index.css'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
-
+    const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
     export default {
         components: {
             // emptyNode,
@@ -563,7 +563,8 @@
                 pagination: {
                     current: 1,
                     count: 0,
-                    limit: 10
+                    limit: Number(localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) || 10,
+                    limitList: [10, 50, 100, 200]
                 },
                 requestParams: {},
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
@@ -590,6 +591,11 @@
             },
             filterData () {
                 const data = [
+                    {
+                        name: this.$t('environment.关键字'),
+                        id: 'keywords',
+                        default: true
+                    },
                     {
                         name: 'IP',
                         id: 'nodeIp',
@@ -752,7 +758,7 @@
             /**
              * 节点列表
              */
-            async requestList (params = {}) {
+            async requestList (params = this.requestParams) {
                 try {
                     this.tableLoading = true
                     const res = await this.$store.dispatch('environment/requestNodeList', {
@@ -1306,6 +1312,7 @@
             },
             
             handlePageLimitChange (limit) {
+                localStorage.setItem(ENV_NODE_TABLE_LIMIT_CACHE, limit)
                 this.pagination.current = 1
                 this.pagination.limit = limit
                 this.requestList(this.requestParams)

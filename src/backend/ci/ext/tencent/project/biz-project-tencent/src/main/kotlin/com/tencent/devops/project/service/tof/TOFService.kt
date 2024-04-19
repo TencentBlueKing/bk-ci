@@ -139,7 +139,8 @@ class TOFService @Autowired constructor(
     fun getOrganizationInfo(
         userId: String? = null,
         type: OrganizationType,
-        id: Int
+        id: Int,
+        excludeBelowTheDept: Boolean = false
     ): List<OrganizationInfo> {
         validate()
         var childDeptInfos = getChildDeptInfos(
@@ -147,7 +148,7 @@ class TOFService @Autowired constructor(
             type = type,
             id = id
         )
-        if (type == OrganizationType.dept) {
+        if (type == OrganizationType.dept && excludeBelowTheDept) {
             // 获取部门时，将部门级以下的过滤掉
             childDeptInfos = childDeptInfos.filterNot { OrganizationType.isBelowTheDept(it.TypeId) }
         }

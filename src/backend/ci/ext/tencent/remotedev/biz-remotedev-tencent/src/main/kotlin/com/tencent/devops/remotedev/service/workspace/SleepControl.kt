@@ -114,7 +114,7 @@ class SleepControl @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)
         }
         RedisCallLimit(
             redisOperation,
@@ -136,6 +136,7 @@ class SleepControl @Autowired constructor(
             )
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -144,7 +145,8 @@ class SleepControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.STOP,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 
@@ -246,6 +248,7 @@ class SleepControl @Autowired constructor(
             )
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -253,7 +256,8 @@ class SleepControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.STOP,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 

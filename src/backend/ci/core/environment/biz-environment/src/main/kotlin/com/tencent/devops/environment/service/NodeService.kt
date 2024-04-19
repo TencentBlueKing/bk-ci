@@ -41,7 +41,6 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
@@ -86,8 +85,6 @@ class NodeService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val nodeWebsocketService: NodeWebsocketService,
-    private val webSocketDispatcher: WebSocketDispatcher,
     private val slaveGatewayDao: SlaveGatewayDao
 ) {
     companion object {
@@ -137,9 +134,6 @@ class NodeService @Autowired constructor(
             existNodeIdList.forEach {
                 environmentPermissionService.deleteNode(projectId, it)
             }
-            webSocketDispatcher.dispatch(
-                nodeWebsocketService.buildDetailMessage(projectId, userId)
-            )
         }
     }
 
@@ -178,13 +172,22 @@ class NodeService @Autowired constructor(
         nodeIp: String?,
         displayName: String?,
         createdUser: String?,
-        lastModifiedUser: String?
+        lastModifiedUser: String?,
+        keywords: String?
     ): Page<NodeWithPermission> {
         val nodeRecordList =
             if (-1 != page) {
                 val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
                 nodeDao.listNodesWithPageLimitAndSearchCondition(
-                    dslContext, projectId, sqlLimit.limit, sqlLimit.offset, nodeIp, displayName, createdUser, lastModifiedUser
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    limit = sqlLimit.limit,
+                    offset = sqlLimit.offset,
+                    nodeIp = nodeIp,
+                    displayName = displayName,
+                    createdUser = createdUser,
+                    lastModifiedUser = lastModifiedUser,
+                    keywords = keywords
                 )
             } else {
                 nodeDao.listNodes(dslContext, projectId)
@@ -192,7 +195,15 @@ class NodeService @Autowired constructor(
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
-        val count = nodeDao.countForAuth(dslContext, projectId).toLong()
+        val count = nodeDao.countForAuthWithSearchCondition(
+            dslContext = dslContext,
+            projectId = projectId,
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            lastModifiedUser = lastModifiedUser,
+            keywords = keywords
+        ).toLong()
         return Page(
             page = page ?: 1,
             pageSize = pageSize ?: 20,
@@ -249,7 +260,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = it.nodeStatus,
@@ -345,7 +356,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
@@ -402,7 +413,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
@@ -526,9 +537,6 @@ class NodeService @Autowired constructor(
             if (nodeInDb.displayName != displayName) {
                 environmentPermissionService.updateNode(userId, projectId, nodeId, displayName)
             }
-            webSocketDispatcher.dispatch(
-                nodeWebsocketService.buildDetailMessage(projectId, userId)
-            )
         }
     }
 
@@ -553,8 +561,8 @@ class NodeService @Autowired constructor(
         val count = nodeDao.countForAuth(dslContext, projectId)
         return Page(
             count = count.toLong(),
-            page = offset!!,
-            pageSize = limit!!,
+            page = offset,
+            pageSize = limit,
             records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
@@ -574,8 +582,8 @@ class NodeService @Autowired constructor(
         )
         return Page(
             count = count.toLong(),
-            page = offset!!,
-            pageSize = limit!!,
+            page = offset,
+            pageSize = limit,
             records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
@@ -590,7 +598,7 @@ class NodeService @Autowired constructor(
             NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = it.nodeStatus,

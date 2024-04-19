@@ -8,7 +8,7 @@ data class OpUpdateCCHostData(
 )
 
 enum class OpOpUpdateCCHostDataAction {
-    ADD, DELETE
+    DELETE, UPDATE
 }
 
 enum class OpOpUpdateCCHostDataScope {

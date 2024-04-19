@@ -25,10 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface ExtDockerResourceOptionsService {
-    fun getDockerResourceConfigList(userId: String, projectId: String, buildType: String): UserDockerResourceOptionsVO?
-}
+@Schema(title = "windows 工作空间信息-创建")
+data class WindowsWorkspaceCreate(
+    @get:Schema(title = "云桌面 配置")
+    val windowsType: String,
+    @get:Schema(title = "云桌面 地域")
+    val windowsZone: String,
+    @get:Schema(title = "基础镜像Id")
+    val baseImageId: Int = 0,
+    @get:Schema(title = "创建实例的数量")
+    val count: Int = 1,
+    @get:Schema(title = "自定义镜像路径")
+    val imageCosFile: String = "",
+    @get:Schema(title = "镜像id")
+    val imageId: String = "",
+    @get:Schema(title = "指定工作空间，优先级比count高。")
+    val assignNames: List<String> = emptyList()
+)
