@@ -232,7 +232,6 @@
                 this.$emit('query')
             },
             updateSearchKey (searchKey) {
-                debugger
                 this.setHistoryPageStatus({
                     searchKey
                 })
