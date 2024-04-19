@@ -31,6 +31,4 @@ import com.tencent.devops.common.client.pojo.enums.GatewayType
 
 interface UrlGenerator {
     fun encode(gatewayType: GatewayType, url: String): String
-
-    fun decode(url: String): String
 }
