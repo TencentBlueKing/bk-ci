@@ -42,5 +42,7 @@ data class WindowsWorkspaceCreate(
     @get:Schema(title = "自定义镜像路径")
     val imageCosFile: String = "",
     @get:Schema(title = "镜像id")
-    val imageId: String = ""
+    val imageId: String = "",
+    @get:Schema(title = "指定工作空间，优先级比count高。")
+    val assignNames: List<String> = emptyList()
 )

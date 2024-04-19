@@ -29,11 +29,17 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
+import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -41,8 +47,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class HttpCallBackService @Autowired constructor() {
-    @Value("\${remoteDev.devCloudCallback:}")
-    private val devCloudCallback: String = ""
+    @Value("\${remoteDev.devCloudCallback.url:}")
+    private val url: String = ""
+
+    @Value("\${remoteDev.devCloudCallback.appId:}")
+    private val appId: String = ""
+
+    @Value("\${remoteDev.devCloudCallback.token:}")
+    private val token: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(HttpCallBackService::class.java)
@@ -59,18 +71,33 @@ class HttpCallBackService @Autowired constructor() {
     }
 
     private fun callOtherPlatformCallback(callback: WindowsDevCouldCallback) {
-        if (devCloudCallback.isBlank()) return
+        if (url.isBlank()) return
         val jsonString = JsonUtil.toJson(callback)
         val requestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
         val sendRequest = Request.Builder()
-            .url(devCloudCallback)
+            .url(url)
             .post(requestBody)
+            .headers(devCloudHeader())
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("call back fail.|$devCloudCallback|$jsonString|$responseContent")
+                logger.warn("call back fail.|$url|$jsonString|$responseContent")
             }
         }
+    }
+
+    private fun devCloudHeader(): Headers {
+        val timestamp = LocalDateTime.now().timestamp().toString()
+        val randomString = RandomStringUtils.randomAlphanumeric(8)
+        val userId = "landun"
+        val encKey = DigestUtils.md5Hex("$token$timestamp$randomString")
+        return mapOf(
+            "APPID" to appId,
+            "USERID" to userId,
+            "RANDOM" to randomString,
+            "TIMESTP" to timestamp,
+            "ENCKEY" to encKey
+        ).toHeaders()
     }
 }

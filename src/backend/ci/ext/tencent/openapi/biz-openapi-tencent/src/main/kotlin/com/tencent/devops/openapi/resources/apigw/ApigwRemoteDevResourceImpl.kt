@@ -119,6 +119,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         notifyData: WorkspaceNotifyData
     ): Result<Boolean> {
         logger.info("notify workspace|notifyData|$notifyData")
+        if (notifyData.projectId.isNullOrEmpty() && notifyData.ip.isNullOrEmpty() && notifyData.owner.isNullOrEmpty()) {
+            return Result(false)
+        }
         return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
             operator = operator,
             notifyData = notifyData
@@ -162,7 +165,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
         logger.info("createPersonalWorkspace $userId|$data")
         return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
     }
