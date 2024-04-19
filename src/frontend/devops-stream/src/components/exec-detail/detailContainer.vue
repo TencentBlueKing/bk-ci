@@ -108,7 +108,7 @@
                 overflow: hidden;
             }
             .log-head {
-                background-color: #242A36;
+                background-color: #2E2E2E;
                 line-height: 48px;
                 padding: 5px 20px;
                 border-bottom: 1px solid;
