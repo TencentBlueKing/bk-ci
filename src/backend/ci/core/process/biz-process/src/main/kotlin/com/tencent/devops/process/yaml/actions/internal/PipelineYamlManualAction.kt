@@ -157,6 +157,7 @@ class PipelineYamlManualAction : BaseAction {
         versionName: String?
     ): PacGitPushResult {
         return api.pushYamlFile(
+            userId = event().userId,
             cred = this.getGitCred(),
             gitProjectId = getGitProjectIdOrName(),
             defaultBranch = data.eventCommon.branch,
