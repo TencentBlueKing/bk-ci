@@ -75,6 +75,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
+        logger.info("op assignWorkspace|$userId|$data")
         // 分配之前先同步下最新的数据
         workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)

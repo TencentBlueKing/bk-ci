@@ -237,7 +237,8 @@ class ExpertSupportService @Autowired constructor(
                     expiration = LocalDateTime.now().plusHours(1)
                 )
             ),
-            mountType = WorkspaceMountType.START
+            mountType = WorkspaceMountType.START,
+            ownerType = record.ownerType
         )
 
         // 添加认领人信息
