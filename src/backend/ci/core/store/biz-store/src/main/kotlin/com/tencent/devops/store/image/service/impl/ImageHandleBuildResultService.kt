@@ -50,7 +50,11 @@ class ImageHandleBuildResultService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(ImageHandleBuildResultService::class.java)
 
-    override fun handleStoreBuildResult(storeBuildResultRequest: StoreBuildResultRequest): Result<Boolean> {
+    override fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
+        storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val imageId = storeBuildResultRequest.storeId
         val imageRecord = imageDao.getImage(dslContext, imageId)
