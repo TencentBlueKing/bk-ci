@@ -29,13 +29,17 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.model.store.tables.TStoreBaseFeature
+import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -92,6 +96,19 @@ class StoreBaseQueryDao {
                 .where(conditions)
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getLatestComponentByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStoreBaseRecord? {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .and(LATEST_FLAG.eq(true))
                 .fetchOne()
         }
     }
@@ -167,6 +184,195 @@ class StoreBaseQueryDao {
                 conditions.add(STATUS.eq(status.name))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countReleaseStoreByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeTepe: StoreTypeEnum,
+        version: String? = null
+    ): Int {
+        with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeTepe.type.toByte()))
+            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
+            if (version != null) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
+            return dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getComponentIds(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): MutableList<String> {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun getMyComponents(
+        dslContext: DSLContext,
+        userId: String,
+        storeType: StoreTypeEnum,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<out Record>? {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val conditions = generateGetMyComponentConditions(
+            userId = userId,
+            storeName = name,
+            storeType = storeType
+        )
+        val baseStep = dslContext.select(
+            tStoreBase.ID,
+            tStoreBase.STORE_CODE,
+            tStoreBase.NAME,
+            tStoreBase.LOGO_URL,
+            tStoreBase.VERSION,
+            tStoreBase.STATUS,
+            tStoreBase.CREATOR,
+            tStoreBase.CREATE_TIME,
+            tStoreBase.MODIFIER,
+            tStoreBase.UPDATE_TIME
+        )
+            .from(tStoreBase)
+            .where(conditions)
+            .groupBy(tStoreBase.ID)
+            .orderBy(tStoreBase.UPDATE_TIME.desc())
+        return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+    }
+
+    fun countMyComponents(
+        dslContext: DSLContext,
+        userId: String,
+        storeType: StoreTypeEnum,
+        name: String?
+    ): Int {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val conditions = generateGetMyComponentConditions(
+            userId = userId,
+            storeName = name,
+            storeType = storeType
+        )
+        return dslContext.selectCount()
+            .from(tStoreBase)
+            .where(conditions)
+            .fetchOne(0, Int::class.java) ?: 0
+    }
+
+    private fun generateGetMyComponentConditions(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeName: String?
+    ): MutableList<Condition> {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
+        if (null != storeName) {
+            conditions.add(tStoreBase.NAME.contains(storeName))
+        }
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
+        conditions.add(existsUserComponents(userId, storeType, tStoreBase))
+        return conditions
+    }
+
+    fun existsUserComponents(
+        userId: String,
+        storeType: StoreTypeEnum,
+        tStoreBase: TStoreBase
+    ): Condition {
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
+        return DSL.exists(
+            DSL.select(tStoreMember.STORE_CODE)
+                .from(tStoreMember)
+                .where(tStoreMember.USERNAME.eq(userId))
+                .and(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
+                .and(tStoreMember.STORE_CODE.eq(tStoreBase.STORE_CODE))
+        )
+    }
+
+    fun countReleaseComponentByCode(dslContext: DSLContext, storeCode: String, version: String? = null): Int {
+        with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
+            if (version != null) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
+            return dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): Int {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.selectCount().from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getComponentsByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TStoreBaseRecord> {
+        return with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .orderBy(CREATE_TIME.desc())
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+    fun getStoreBaseInfoByConditions(
+        dslContext: DSLContext,
+        storeCodeList: List<String>,
+        storeType: StoreTypeEnum,
+        storeStatusList: List<String>? = null
+    ): Result<out Record> {
+        with(TStoreBase.T_STORE_BASE) {
+            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.`in`(storeCodeList))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            if (storeStatusList != null) {
+                conditions.add(STATUS.`in`(storeStatusList))
+            }
+            return dslContext.select(
+                this.ID,
+                this.STORE_CODE,
+                this.NAME,
+                this.STORE_TYPE,
+                this.VERSION,
+                tStoreBaseFeature.PUBLIC_FLAG,
+                this.STATUS,
+                this.LOGO_URL,
+                this.PUBLISHER,
+                this.CLASSIFY_ID,
+            )
+                .from(this)
+                .join(tStoreBaseFeature)
+                .on(
+                    this.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                        .and(this.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                )
+                .where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 }

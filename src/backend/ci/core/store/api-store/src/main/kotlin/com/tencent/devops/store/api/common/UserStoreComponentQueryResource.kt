@@ -214,6 +214,10 @@ interface UserStoreComponentQueryResource {
         @QueryParam("labelId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         labelId: String?,
+        @Parameter(description = "范畴ID", required = false)
+        @QueryParam("categoryId")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
+        categoryId: String?,
         @Parameter(description = "评分", required = false)
         @QueryParam("score")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)

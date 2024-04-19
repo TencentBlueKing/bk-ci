@@ -27,29 +27,40 @@
 
 package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "组件基本信息")
-data class StoreBaseInfo(
-    @get:Schema(title = "组件Id", required = true)
-    val storeId: String,
-    @get:Schema(title = "组件代码", required = true)
-    val storeCode: String,
-    @get:Schema(title = "组件名称", required = true)
-    val storeName: String,
+@Schema(title = "研发商店-查询组件条件")
+data class StoreInfoQuery(
     @get:Schema(title = "组件类型", required = true)
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "组件版本号", required = true)
-    val version: String,
-    @get:Schema(title = "是否为公共组件", required = true)
-    val publicFlag: Boolean,
-    @get:Schema(title = "状态", required = true)
-    val status: String = "",
-    @get:Schema(title = "logo地址")
-    val logoUrl: String? = null,
-    @get:Schema(title = "发布者")
-    val publisher: String,
-    @get:Schema(title = "分类ID")
-    val classifyId: String
+    val storeType: String,
+    @get:Schema(title = "项目代码", required = false)
+    val projectCode: String?,
+    @get:Schema(title = "搜索关键字", required = false)
+    val keyword: String?,
+    @get:Schema(title = "分类ID", required = false)
+    val classifyId: String?,
+    @get:Schema(title = "标签ID", required = false)
+    val labelId: String?,
+    @get:Schema(title = "范畴ID", required = false)
+    val categoryId: String?,
+    @get:Schema(title = "评分", required = false)
+    val score: Int?,
+    @get:Schema(title = "研发来源类型", required = false)
+    val rdType: RdTypeEnum?,
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean?,
+    @get:Schema(title = "是否查询项目下组件标识", required = true)
+    val queryProjectComponentFlag: Boolean,
+    @get:Schema(title = "是否已安装", required = false)
+    val installed: Boolean?,
+    @get:Schema(title = "是否需要更新标识 true：需要，false：不需要", required = false)
+    val updateFlag: Boolean?,
+    @get:Schema(title = "排序", required = false)
+    val sortType: StoreSortTypeEnum?,
+    @get:Schema(title = "页码", required = true)
+    val page: Int,
+    @get:Schema(title = "每页数量", required = true)
+    val pageSize: Int
 )

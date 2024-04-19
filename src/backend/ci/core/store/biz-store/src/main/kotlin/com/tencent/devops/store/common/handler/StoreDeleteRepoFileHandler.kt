@@ -25,26 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.common.handler
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
+import org.springframework.stereotype.Service
 
-@Schema(title = "研发商店-组件基本信息修改请求报文体")
-data class StoreBaseInfoUpdateRequest(
-    @get:Schema(title = "组件名称", required = false)
-    val name: String? = null,
-    @get:Schema(title = "所属分类代码", required = false)
-    val classifyCode: String? = null,
-    @get:Schema(title = "组件简介", required = false)
-    val summary: String? = null,
-    @get:Schema(title = "组件描述", required = false)
-    val description: String? = null,
-    @get:Schema(title = "组件logo", required = false)
-    val logoUrl: String? = null,
-    @get:Schema(title = "发布者", required = false)
-    val publisher: String? = null,
-    @get:Schema(title = "原子标签列表", required = false)
-    val labelIdList: ArrayList<String>? = null,
-    @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null
-)
+@Service
+class StoreDeleteRepoFileHandler(
+    private val client: Client
+) : Handler<StoreDeleteRequest> {
+
+    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
+
+        return when (handlerRequest.storeType) {
+            StoreTypeEnum.ATOM.name -> true
+            else -> false
+        }
+    }
+
+    override fun execute(handlerRequest: StoreDeleteRequest) {
+        // 清理仓库组件关联文件
+        val bkStoreContext = handlerRequest.bkStoreContext
+//        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
+//            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
+//            storeCode = handlerRequest.storeCode,
+//            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
+//        )
+    }
+}

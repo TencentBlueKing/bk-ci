@@ -25,26 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.common.dao
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.model.store.tables.TStoreBaseExt
+import com.tencent.devops.model.store.tables.records.TStoreBaseExtRecord
+import com.tencent.devops.store.pojo.common.publication.StoreBaseExtDataPO
+import java.time.LocalDateTime
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.jooq.util.mysql.MySQLDSL
+import org.springframework.stereotype.Repository
 
-@Schema(title = "研发商店-组件基本信息修改请求报文体")
-data class StoreBaseInfoUpdateRequest(
-    @get:Schema(title = "组件名称", required = false)
-    val name: String? = null,
-    @get:Schema(title = "所属分类代码", required = false)
-    val classifyCode: String? = null,
-    @get:Schema(title = "组件简介", required = false)
-    val summary: String? = null,
-    @get:Schema(title = "组件描述", required = false)
-    val description: String? = null,
-    @get:Schema(title = "组件logo", required = false)
-    val logoUrl: String? = null,
-    @get:Schema(title = "发布者", required = false)
-    val publisher: String? = null,
-    @get:Schema(title = "原子标签列表", required = false)
-    val labelIdList: ArrayList<String>? = null,
-    @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null
-)
+@Repository
+class StoreBaseExtQueryDao {
+
+    fun getBaseExtByIds(dslContext: DSLContext, storeIds: List<String>): Result<TStoreBaseExtRecord> {
+        with(TStoreBaseExt.T_STORE_BASE_EXT) {
+            return dslContext.selectFrom(this)
+                .where(STORE_ID.`in`(storeIds))
+                .fetch()
+        }
+    }
+}

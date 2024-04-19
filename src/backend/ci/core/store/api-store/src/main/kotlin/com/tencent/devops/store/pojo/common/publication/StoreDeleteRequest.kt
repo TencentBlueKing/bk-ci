@@ -25,26 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.store.pojo.common.handler.HandlerRequest
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "研发商店-组件基本信息修改请求报文体")
-data class StoreBaseInfoUpdateRequest(
-    @get:Schema(title = "组件名称", required = false)
-    val name: String? = null,
-    @get:Schema(title = "所属分类代码", required = false)
-    val classifyCode: String? = null,
-    @get:Schema(title = "组件简介", required = false)
-    val summary: String? = null,
-    @get:Schema(title = "组件描述", required = false)
-    val description: String? = null,
-    @get:Schema(title = "组件logo", required = false)
-    val logoUrl: String? = null,
-    @get:Schema(title = "发布者", required = false)
-    val publisher: String? = null,
-    @get:Schema(title = "原子标签列表", required = false)
-    val labelIdList: ArrayList<String>? = null,
-    @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null
-)
+@Schema(title = "工作台-删除组件请求报文体")
+data class StoreDeleteRequest(
+    @get:Schema(title = "组件代码", required = true)
+    val storeCode: String,
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: String
+) : HandlerRequest()

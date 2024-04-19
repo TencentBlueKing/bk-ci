@@ -25,44 +25,52 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TStoreLabelRel
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-enum class StoreStatusEnum {
-    INIT, // 初始化
-    COMMITTING, // 提交中
-    BUILDING, // 构建中
-    BUILD_FAIL, // 构建失败
-    CHECKING, // 验证中
-    CHECK_FAIL, // 验证失败
-    TESTING, // 测试中
-    AUDITING, // 审核中
-    AUDIT_REJECT, // 审核驳回
-    RELEASED, // 已发布
-    GROUNDING_SUSPENSION, // 上架中止
-    UNDERCARRIAGING, // 下架中
-    UNDERCARRIAGED, // 已下架
-    TESTED; // 测试结束(仅分支测试使用)
+@Repository
+class StoreLabelDao {
 
-    fun getI18n(language: String): String {
-        return MessageUtil.getMessageByLocale(
-            messageCode = "STORE_BASE_STATUS_${this.name}",
-            language = language
-        )
+    fun deleteByStoreId(dslContext: DSLContext, storeId: String) {
+        with(TStoreLabelRel.T_STORE_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(STORE_ID.eq(storeId))
+                .execute()
+        }
     }
 
-    companion object {
+    fun batchDeleteByStoreId(dslContext: DSLContext, storeIds: List<String>) {
+        with(TStoreLabelRel.T_STORE_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(STORE_ID.`in`(storeIds))
+                .execute()
+        }
+    }
 
-        fun getProcessingStatusList(): List<String> {
-            return listOf(
-                INIT.name,
-                COMMITTING.name,
-                BUILDING.name,
-                BUILD_FAIL.name,
-                TESTING.name,
-                AUDITING.name
-            )
+    fun batchAdd(dslContext: DSLContext, userId: String, storeId: String, labelIdList: List<String>) {
+        with(TStoreLabelRel.T_STORE_LABEL_REL) {
+            val addStep = labelIdList.map {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    STORE_ID,
+                    LABEL_ID,
+                    CREATOR,
+                    MODIFIER
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        storeId,
+                        it,
+                        userId,
+                        userId
+                    )
+            }
+            dslContext.batch(addStep).execute()
         }
     }
 }

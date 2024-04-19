@@ -25,26 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.common.resources
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.UserStoreCommentReplyResource
+import com.tencent.devops.store.common.service.StoreCommentReplyService
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "研发商店-组件基本信息修改请求报文体")
-data class StoreBaseInfoUpdateRequest(
-    @get:Schema(title = "组件名称", required = false)
-    val name: String? = null,
-    @get:Schema(title = "所属分类代码", required = false)
-    val classifyCode: String? = null,
-    @get:Schema(title = "组件简介", required = false)
-    val summary: String? = null,
-    @get:Schema(title = "组件描述", required = false)
-    val description: String? = null,
-    @get:Schema(title = "组件logo", required = false)
-    val logoUrl: String? = null,
-    @get:Schema(title = "发布者", required = false)
-    val publisher: String? = null,
-    @get:Schema(title = "原子标签列表", required = false)
-    val labelIdList: ArrayList<String>? = null,
-    @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null
-)
+@RestResource
+class UserStoreCommentReplyResourceImpl @Autowired constructor(
+    private val storeCommentReplyService: StoreCommentReplyService
+) : UserStoreCommentReplyResource {
+
+    override fun getStoreCommentReplyListByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
+        return storeCommentReplyService.getStoreCommentReplysByCommentId(commentId)
+    }
+
+    override fun addStoreCommentReply(
+        userId: String,
+        commentId: String,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ): Result<StoreCommentReplyInfo?> {
+        return storeCommentReplyService.addStoreCommentReply(userId, commentId, storeCommentReplyRequest)
+    }
+}

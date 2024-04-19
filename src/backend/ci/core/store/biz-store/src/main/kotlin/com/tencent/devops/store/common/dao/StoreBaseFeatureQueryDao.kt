@@ -47,4 +47,29 @@ class StoreBaseFeatureQueryDao {
                 .fetchOne()
         }
     }
+
+    fun getComponentFeatureDataByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStoreBaseFeatureRecord? {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun isPublic(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            return dslContext.select(PUBLIC_FLAG).from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne(0, Boolean::class.java)!!
+        }
+    }
 }

@@ -25,26 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.common.handler
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.handler.HandlerChain
+import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 
-@Schema(title = "研发商店-组件基本信息修改请求报文体")
-data class StoreBaseInfoUpdateRequest(
-    @get:Schema(title = "组件名称", required = false)
-    val name: String? = null,
-    @get:Schema(title = "所属分类代码", required = false)
-    val classifyCode: String? = null,
-    @get:Schema(title = "组件简介", required = false)
-    val summary: String? = null,
-    @get:Schema(title = "组件描述", required = false)
-    val description: String? = null,
-    @get:Schema(title = "组件logo", required = false)
-    val logoUrl: String? = null,
-    @get:Schema(title = "发布者", required = false)
-    val publisher: String? = null,
-    @get:Schema(title = "原子标签列表", required = false)
-    val labelIdList: ArrayList<String>? = null,
-    @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null
-)
+class StoreDeleteHandlerChain(private val handlerList: MutableList<Handler<StoreDeleteRequest>>) :
+    HandlerChain<StoreDeleteRequest> {
+
+    override fun nextHandler(handlerRequest: StoreDeleteRequest): Handler<StoreDeleteRequest>? {
+        return handlerList.removeFirstOrNull()
+    }
+}

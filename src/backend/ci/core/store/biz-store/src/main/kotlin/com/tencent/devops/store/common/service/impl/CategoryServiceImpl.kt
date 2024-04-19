@@ -32,18 +32,21 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.TCategory
+import com.tencent.devops.model.store.tables.records.TCategoryRecord
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.CategoryDao
 import com.tencent.devops.store.common.service.CategoryService
-import com.tencent.devops.store.pojo.common.category.Category
-import com.tencent.devops.store.pojo.common.category.CategoryRequest
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ID
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_TYPE
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.category.Category
+import com.tencent.devops.store.pojo.common.category.CategoryRequest
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.time.LocalDateTime
@@ -73,17 +76,8 @@ class CategoryServiceImpl @Autowired constructor(
      * @param type
      */
     override fun getAllCategory(type: Byte): Result<List<Category>?> {
-        val atomCategoryList = categoryDao.getAllCategory(dslContext, type)?.map {
-            val category = categoryDao.convert(it)
-            val businessConfig = businessConfigDao.listFeatureConfig(
-                dslContext = dslContext,
-                business = BusinessEnum.CATEGORY.name,
-                businessValue = category.categoryCode
-            )
-            businessConfig?.forEach { config ->
-                category.settings[config.feature] = config.configValue ?: ""
-            }
-            category
+        val atomCategoryList = categoryDao.getAllCategory(dslContext, type)?.let {
+            getCategoryList(it)
         }
         return Result(atomCategoryList)
     }
@@ -208,5 +202,52 @@ class CategoryServiceImpl @Autowired constructor(
                 updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
             )
         )
+    }
+
+    private fun getCategoryList(records: List<TCategoryRecord>): List<Category> {
+        return records.map {
+            val category = categoryDao.convert(it)
+            val businessConfig = businessConfigDao.listFeatureConfig(
+                dslContext = dslContext,
+                business = BusinessEnum.CATEGORY.name,
+                businessValue = category.categoryCode
+            )
+            businessConfig?.forEach { config ->
+                category.settings[config.feature] = config.configValue ?: ""
+            }
+            category
+        }
+    }
+
+    override fun getByRelStoreId(storeId: String): List<Category> {
+        val records = categoryDao.getByStoreId(dslContext, storeId)
+        return getCategoryList(records)
+    }
+
+    override fun getByRelStoreIds(storeIds: List<String>): Map<String, List<Category>> {
+        val storeCategoryMap = mutableMapOf<String, MutableList<Category>>()
+        val tCategory = TCategory.T_CATEGORY
+        categoryDao.batchQueryByStoreIds(dslContext, storeIds)?.forEach {
+            val categoryLanName = I18nUtil.getCodeLanMessage(
+            messageCode =
+            "${StoreTypeEnum.getStoreType(it[tCategory.TYPE].toInt())}.category.${it[tCategory.CATEGORY_CODE]}",
+            defaultMessage = it[tCategory.CATEGORY_NAME]
+        )
+            val category = Category(
+                id = it[tCategory.ID],
+                categoryCode = it[tCategory.CATEGORY_CODE],
+                categoryName = categoryLanName,
+                iconUrl = it[tCategory.ICON_URL],
+                categoryType = StoreTypeEnum.getStoreType(it[tCategory.TYPE].toInt()),
+                createTime = it[tCategory.CREATE_TIME].timestampmilli(),
+                updateTime = it[tCategory.UPDATE_TIME].timestampmilli()
+            )
+            val storeId = it[KEY_STORE_ID] as String
+            if (storeCategoryMap[storeId] == null) {
+                storeCategoryMap[storeId] = mutableListOf()
+            }
+            storeCategoryMap[storeId]?.add(category)
+        }
+        return storeCategoryMap
     }
 }

@@ -71,7 +71,7 @@ object StoreMessageCode {
     const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 研发商店：从[{0}]分支拉取插件配置文件[quality.json失败,请确认是否OAUTH授权、文件是否正确上传代码库等
     const val USER_ATOM_USED = "2120020" // 研发商店：插件{0}已被项目{1}下的流水线使用，不可以卸载
     const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 研发商店：插件卸载原因{0}已被使用，不能删除。建议禁用
-    const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：插件{0}已发布到商店，请先下架再删除
+    const val USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：组件{0}已发布到商店，请先下架再删除
     const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 研发商店：插件{0}已安装到其他项目下使用，请勿移除
     const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
     const val USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT = "2120025" // 你的项目[{0}]不允许使用插件[{1}]，请检查插件是否被正确安装
@@ -158,4 +158,18 @@ object StoreMessageCode {
     const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件[{0}]的[{1}]版本发布未结束，请稍后再试
     const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
     const val STORE_PROJECT_COMPONENT_NO_PERMISSION= "2120931" // 研发商店：项目[{0}]没有组件[{1}]的使用权限，请先安装组件
+    const val STORE_INSTALL_VALIDATE_FAIL = "2120932" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
+    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120933" // 研发商店：组件仓库文件删除失败
+
+    const val BK_OTHER = "bkOther" // 其他
+    const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job
+    const val BK_IMAGE_STORE_ONLINE = "bkImageStoreOnline" // 容器镜像商店上线，历史镜像数据自动生成
+    const val BK_OLD_VERSION_BUILD_IMAGE = "bkOldVersionBuildImage" // 旧版的构建镜像，通过拷贝为构建镜像入口生成
+    const val BK_AUTOMATICALLY_CONVERTED = "bkAutomaticallyConverted" // 已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
+    const val BK_COPY_FOR_BUILD_IMAGE = "bkCopyForBuildImage" // 旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
+    const val BK_AFTER_IMAGE_STORE_ONLINE = "bkAfterImageStoreOnline" // 容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
+    const val BK_PROJECT_MANAGER_CAN_OPERATION = "bkProjectManagerCanOperation" // 项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
+    const val BK_HISTORY_DATA_MIGRATE_PASS = "bkHistoryDataMigratePass" // historyData数据迁移自动通过
+    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
+    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
 }
