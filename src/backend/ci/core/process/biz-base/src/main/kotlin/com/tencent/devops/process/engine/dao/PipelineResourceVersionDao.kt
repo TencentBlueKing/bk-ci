@@ -354,6 +354,7 @@ class PipelineResourceVersionDao {
                 )
             if (includeDraft == false) {
                 query.and(STATUS.notEqual(VersionStatus.COMMITTING.name))
+                    .or(STATUS.isNull)
             }
             excludeVersion?.let {
                 query.and(VERSION.notEqual(excludeVersion))
