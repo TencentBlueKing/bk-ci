@@ -186,7 +186,7 @@ class EsbAgentClient {
                             name = it["SvrName"] as String,
                             operator = it["SvrOperator"] as String,
                             bakOperator = bakOperator,
-                            ip = lanIPs[0],
+                            ip = it["SvrIp"] as String,
                             displayIp = lanIPs.joinToString(";"),
                             osName = osName,
                             agentStatus = false,
