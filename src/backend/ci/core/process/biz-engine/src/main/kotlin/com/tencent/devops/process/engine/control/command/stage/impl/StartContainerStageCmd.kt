@@ -110,6 +110,7 @@ class StartContainerStageCmd(
 
     private fun sendStageStartCallback(commandContext: StageContext) {
         pipelineEventDispatcher.dispatch(
+            // stage 启动
             PipelineBuildStatusBroadCastEvent(
                 source = "StartContainerStageCmd",
                 projectId = commandContext.stage.projectId,
@@ -117,7 +118,9 @@ class StartContainerStageCmd(
                 userId = commandContext.event.userId,
                 buildId = commandContext.stage.buildId,
                 actionType = ActionType.START,
-                stageId = commandContext.stage.stageId
+                stageId = commandContext.stage.stageId,
+                executeCount = commandContext.executeCount,
+                buildStatus = commandContext.buildStatus.name
             )
         )
     }
