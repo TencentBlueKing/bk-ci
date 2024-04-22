@@ -991,7 +991,7 @@ class CreateControl @Autowired constructor(
         windowsGpuCheck(userId, workspaceNames.size)
         workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
         val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
-        if (workspaceNames.size - resourceCount > 0) {
+        if (cgsId == null && workspaceNames.size - resourceCount > 0) {
             createCheckWhenWinNotAlready(windowsZone, windowsConfig, workspaceNames.size - resourceCount)
         }
         val res = mutableListOf<Workspace>()
