@@ -365,7 +365,7 @@ class WorkspaceDao {
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null,
-        notDeleted: Boolean ? = false
+        notDeleted: Boolean? = false
     ): List<WorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
@@ -687,12 +687,10 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .let {
-                        i ->
+                .let { i ->
                     if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
                 }
-                .let {
-                        i ->
+                .let { i ->
                     if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
                 }
                 .where(NAME.eq(workspaceName))
