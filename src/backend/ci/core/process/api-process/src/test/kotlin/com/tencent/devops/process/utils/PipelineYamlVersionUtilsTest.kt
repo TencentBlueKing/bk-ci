@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class PipelineVersionUtilsTest {
+class PipelineYamlVersionUtilsTest {
 
     @Test
     fun getVersions() {

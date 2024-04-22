@@ -500,7 +500,7 @@ class TGitApiService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_BRANCH,
                 params = arrayOf(exception.message ?: "")
             )
-        }  catch (exception: Exception) {
+        } catch (exception: Exception) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_BRANCH,
                 params = arrayOf(exception.message ?: "")
@@ -581,7 +581,7 @@ class TGitApiService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_MERGE_REQUEST,
                 params = arrayOf(exception.message ?: "")
             )
-        }  catch (exception: Exception) {
+        } catch (exception: Exception) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_MERGE_REQUEST,
                 params = arrayOf(exception.message ?: "")

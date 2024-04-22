@@ -535,7 +535,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 model = model,
                 signPipelineVersion = version,
                 frequencyLimit = false,
-                versionName = resource.versionName
+                versionName = resource.versionName,
+                yamlVersion = resource.yamlVersion
             )
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,

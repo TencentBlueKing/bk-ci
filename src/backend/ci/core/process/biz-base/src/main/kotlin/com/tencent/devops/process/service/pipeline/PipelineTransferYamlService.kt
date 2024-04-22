@@ -61,7 +61,7 @@ import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWra
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.transfer.schema.CodeSchemaCheck
-import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
@@ -114,6 +114,8 @@ class PipelineTransferYamlService @Autowired constructor(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
+        // #8161 蓝盾PAC默认使用V3版本的YAML语言
+        val defaultVersion = YamlVersion.V3_0
         try {
             if (aspects.isEmpty()) {
                 PipelineTransferAspectLoader.initByDefaultTriggerOn(
@@ -134,7 +136,7 @@ class PipelineTransferYamlService @Autowired constructor(
                             userId = userId,
                             model = data.modelAndSetting!!.model,
                             setting = data.modelAndSetting!!.setting,
-                            version = YamlVersion.Version.V3_0,
+                            version = defaultVersion,
                             aspectWrapper = PipelineTransferAspectWrapper(aspects)
                         )
                     )
@@ -148,7 +150,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     watcher.start("step_2|mergeYaml")
                     watcher.stop()
                     logger.info(watcher.toString())
-                    return TransferResponse(newYaml = newYaml)
+                    return TransferResponse(yamlVersionTag = defaultVersion.tag, newYaml = newYaml)
                 }
 
                 TransferActionType.FULL_YAML2MODEL -> {
@@ -165,7 +167,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         )
                     }
                     val pYml = TransferMapper.getObjectMapper()
-                        .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
+                        .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYamlParser>() {})
                     watcher.start("step_2|parse template")
                     pYml.replaceTemplate { templateFilter ->
                         YamlTemplate(
@@ -176,8 +178,9 @@ class PipelineTransferYamlService @Autowired constructor(
                             nowRepo = null,
                             repo = null,
                             resourcePoolMapExt = null,
+                            // TODO #8161 兼容是怎么做的？是不是可以干掉
                             conf = YamlTemplateConf(
-                                useOldParametersExpression = false // todo
+                                useOldParametersExpression = false
                             )
                         ).replace()
                     }
@@ -194,7 +197,11 @@ class PipelineTransferYamlService @Autowired constructor(
                     val setting = modelTransfer.yaml2Setting(input)
 
                     logger.info(watcher.toString())
-                    return TransferResponse(modelAndSetting = PipelineModelAndSetting(model, setting))
+                    // TODO #8161 增加判断YAML版本
+                    return TransferResponse(
+                        yamlVersionTag = input.yaml.version,
+                        modelAndSetting = PipelineModelAndSetting(model, setting)
+                    )
                 }
             }
         } finally {

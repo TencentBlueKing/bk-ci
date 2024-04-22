@@ -45,9 +45,9 @@ import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.PacNotices
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYaml
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlI
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlParser
+import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
+import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
@@ -110,7 +110,7 @@ class YamlTemplate<T>(
     )
     fun replace(
         parameters: Map<String, Any?>? = null
-    ): PreScriptBuildYamlI {
+    ): PreScriptBuildYamlIParser {
         // 针对远程库进行打平替换时，根文件没有被替换Parameters
         val newYamlObject = if (repo != null) {
 //            val template = parseTemplateParameters(
@@ -165,7 +165,7 @@ class YamlTemplate<T>(
 
     private fun replaceExtends(
         extend: Extends,
-        preYamlObject: PreScriptBuildYamlI,
+        preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
         val toPath = TemplatePath(extend.template, extend.ref)
@@ -236,7 +236,7 @@ class YamlTemplate<T>(
             )
         }
         // notices只用做一次模板替换没有嵌套模板
-        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYaml) {
+        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYamlParser) {
             val notices = mutableListOf<GitNotices>()
             val temNotices =
                 YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
@@ -247,7 +247,7 @@ class YamlTemplate<T>(
         }
 
         // notices只用做一次模板替换没有嵌套模板
-        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYamlV3) {
+        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYamlV3Parser) {
             val notices = mutableListOf<PacNotices>()
             val temNotices =
                 YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
@@ -270,22 +270,22 @@ class YamlTemplate<T>(
 
     private fun replaceTriggerOn(
         triggerOn: Any,
-        preYamlObject: PreScriptBuildYamlI,
+        preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
-        if (preYamlObject.yamlVersion() != YamlVersion.Version.V3_0) return
+        if (preYamlObject.yamlVersion() != YamlVersion.V3_0) return
         val triggerOnV3s = when (triggerOn) {
             // 简写方式
             is Map<*, *> -> listOf(JsonUtil.anyTo(triggerOn, object : TypeReference<PreTriggerOnV3>() {}))
             is List<*> -> JsonUtil.anyTo(triggerOn, object : TypeReference<List<PreTriggerOnV3>>() {})
             else -> null
         }
-        (preYamlObject as PreScriptBuildYamlV3).triggerOn = triggerOnV3s
+        (preYamlObject as PreScriptBuildYamlV3Parser).triggerOn = triggerOnV3s
     }
 
     private fun replaceVariables(
         variables: Map<String, Any>,
-        preYamlObject: PreScriptBuildYamlI,
+        preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
         val variableMap = mutableMapOf<String, Variable>()
@@ -306,7 +306,7 @@ class YamlTemplate<T>(
 
     private fun replaceStages(
         stages: List<Map<String, Any>>,
-        preYamlObject: PreScriptBuildYamlI,
+        preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
         val stageList = mutableListOf<PreStage>()
@@ -318,7 +318,7 @@ class YamlTemplate<T>(
 
     private fun replaceJobs(
         jobs: Map<String, Any>,
-        preYamlObject: PreScriptBuildYamlI,
+        preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
         val jobMap = LinkedHashMap<String, PreJob>()
@@ -335,7 +335,7 @@ class YamlTemplate<T>(
 
     private fun replaceSteps(
         steps: List<Map<String, Any>>,
-        preYamlObject: PreScriptBuildYamlI,
+        preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
         val stepList = mutableListOf<PreStep>()
@@ -347,7 +347,7 @@ class YamlTemplate<T>(
 
     private fun replaceFinally(
         finally: Map<String, Any>,
-        preYamlObject: PreScriptBuildYamlI,
+        preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
         // finally: 与jobs: 的结构相同

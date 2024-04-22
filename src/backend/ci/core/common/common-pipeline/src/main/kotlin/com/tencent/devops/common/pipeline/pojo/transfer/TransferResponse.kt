@@ -34,6 +34,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class TransferResponse(
     @get:Schema(title = "modelAndSetting")
     val modelAndSetting: PipelineModelAndSetting? = null,
+    @get:Schema(title = "当前yaml的版本标识")
+    val yamlVersionTag: String? = null,
     @get:Schema(title = "当前yaml内容")
     val newYaml: String? = null,
     @get:Schema(title = "定位")

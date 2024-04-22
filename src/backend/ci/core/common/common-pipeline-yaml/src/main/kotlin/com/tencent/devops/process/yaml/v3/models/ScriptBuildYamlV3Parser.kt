@@ -29,39 +29,32 @@ package com.tencent.devops.process.yaml.v3.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
+import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.pojo.YamlVersionParser
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v3.models.stage.Stage
 
 /**
  * model
  *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(stream,prebuild等)异常
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreScriptBuildYamlV3(
-    override var version: String?,
-    override var name: String?,
-    override var label: List<String>? = null,
-    @JsonProperty("on")
-    var triggerOn: List<PreTriggerOnV3>?,
-    override var variables: Map<String, Variable>? = null,
-    override var stages: List<PreStage>? = null,
-    override var jobs: LinkedHashMap<String, PreJob>? = null,
-    override var steps: List<PreStep>? = null,
-    override var extends: Extends? = null,
-    override var resources: Resources?,
-    var notices: List<PacNotices>?,
-    override var finally: LinkedHashMap<String, PreJob>? = null,
-    override val concurrency: Concurrency? = null,
-    override val disablePipeline: Boolean? = null,
-    override val recommendedVersion: RecommendedVersion? = null,
-    override val customBuildNum: String? = null
-) : PreScriptBuildYamlI {
-    override fun yamlVersion() = YamlVersion.Version.V3_0
+data class ScriptBuildYamlV3Parser(
+    val version: String?,
+    val name: String?,
+    val label: List<String>?,
+    val triggerOn: List<TriggerOn>?,
+    val variables: Map<String, Variable>?,
+    val stages: List<Stage>,
+    val extends: Extends?,
+    val resource: Resources?,
+    val notices: List<GitNotices>?,
+    var finally: List<Job>?,
+    val concurrency: Concurrency?
+) : YamlVersionParser {
+    override fun yamlVersion() = YamlVersion.V3_0
 }

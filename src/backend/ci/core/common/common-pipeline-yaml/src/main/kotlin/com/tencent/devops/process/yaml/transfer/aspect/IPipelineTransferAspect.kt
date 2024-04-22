@@ -5,7 +5,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -38,5 +38,5 @@ interface PipelineTransferJoinPoint {
     fun yamlStep(): YamlV3Step?
     fun yamlPreStep(): PreStep?
     fun yamlTriggerOn(): TriggerOn?
-    fun yaml(): IPreTemplateScriptBuildYaml?
+    fun yaml(): IPreTemplateScriptBuildYamlParser?
 }

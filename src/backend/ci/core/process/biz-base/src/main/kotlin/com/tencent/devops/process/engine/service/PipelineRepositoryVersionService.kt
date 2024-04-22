@@ -231,6 +231,7 @@ class PipelineRepositoryVersionService(
                             triggerVersion = 0,
                             settingVersion = 0
                         ) ?: "",
+                        yamlVersion = record.yamlVersion,
                         referFlag = record.referFlag,
                         referCount = record.referCount,
                         versionNum = record.versionNum ?: record.version,

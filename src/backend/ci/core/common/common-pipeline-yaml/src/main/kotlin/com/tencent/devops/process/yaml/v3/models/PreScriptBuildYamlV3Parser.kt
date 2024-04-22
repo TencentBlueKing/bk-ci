@@ -32,31 +32,10 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
-
-/**
- * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
- * 注：PreScriptBuildYaml 新增的字段需要在这里新增
- */
-interface PreScriptBuildYamlI : YamlVersion {
-    var version: String?
-    var name: String?
-    var label: List<String>?
-    var variables: Map<String, Variable>?
-    var stages: List<PreStage>?
-    var jobs: LinkedHashMap<String, PreJob>?
-    var steps: List<PreStep>?
-    var extends: Extends?
-    var resources: Resources?
-    var finally: LinkedHashMap<String, PreJob>?
-    val concurrency: Concurrency?
-    val disablePipeline: Boolean?
-    val recommendedVersion: RecommendedVersion?
-    val customBuildNum: String?
-}
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 
 /**
  * model
@@ -65,24 +44,24 @@ interface PreScriptBuildYamlI : YamlVersion {
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreScriptBuildYaml(
+data class PreScriptBuildYamlV3Parser(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
     @JsonProperty("on")
-    var triggerOn: PreTriggerOn?,
+    var triggerOn: List<PreTriggerOnV3>?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
     override var jobs: LinkedHashMap<String, PreJob>? = null,
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
-    var notices: List<GitNotices>?,
+    var notices: List<PacNotices>?,
     override var finally: LinkedHashMap<String, PreJob>? = null,
     override val concurrency: Concurrency? = null,
     override val disablePipeline: Boolean? = null,
     override val recommendedVersion: RecommendedVersion? = null,
     override val customBuildNum: String? = null
-) : PreScriptBuildYamlI {
-    override fun yamlVersion() = YamlVersion.Version.V2_0
+) : PreScriptBuildYamlIParser {
+    override fun yamlVersion() = YamlVersion.V3_0
 }

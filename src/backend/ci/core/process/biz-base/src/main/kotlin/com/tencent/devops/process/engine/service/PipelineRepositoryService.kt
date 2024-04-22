@@ -116,6 +116,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -270,6 +271,9 @@ class PipelineRepositoryService constructor(
             }
         }
 
+        // TODO #8161 增加判断YAML版本
+        val yamlVersion = null
+
         return if (!create) {
             val pipelineSetting = setting
                 ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
@@ -279,6 +283,7 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 model = model,
                 yamlStr = yamlStr,
+                yamlVersion = yamlVersion,
                 canManualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
@@ -299,6 +304,7 @@ class PipelineRepositoryService constructor(
                 model = model,
                 customSetting = setting,
                 yamlStr = yamlStr,
+                yamlVersion = yamlVersion,
                 userId = userId,
                 channelCode = channelCode,
                 canManualStartup = canManualStartup,
@@ -615,6 +621,7 @@ class PipelineRepositoryService constructor(
         model: Model,
         customSetting: PipelineSetting?,
         yamlStr: String?,
+        yamlVersion: YamlVersion?,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
@@ -782,23 +789,28 @@ class PipelineRepositoryService constructor(
                         versionNum, pipelineVersion, triggerVersion, settingVersion
                     )
                 }
-                val yaml = yamlStr ?: try {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.FULL_MODEL2YAML,
-                        data = TransferBody(
-                            modelAndSetting = PipelineModelAndSetting(
-                                model = model,
-                                setting = newSetting
+                val (yaml, realYamlVersion) = if (yamlStr.isNullOrBlank()) {
+                    try {
+                        val result = transferService.transfer(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = null,
+                            actionType = TransferActionType.FULL_MODEL2YAML,
+                            data = TransferBody(
+                                modelAndSetting = PipelineModelAndSetting(
+                                    model = model,
+                                    setting = newSetting
+                                )
                             )
                         )
-                    ).newYaml ?: ""
-                } catch (ignore: Throwable) {
-                    // 旧流水线可能无法转换，用空YAML代替
-                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
-                    null
+                        Pair(result.newYaml ?: "", result.yamlVersionTag?.let { YamlVersion.parse(it) })
+                    } catch (ignore: Throwable) {
+                        // 旧流水线可能无法转换，用空YAML代替
+                        logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
+                        Pair(null, null)
+                    }
+                } else {
+                    Pair(yamlStr, yamlVersion)
                 }
                 pipelineResourceDao.create(
                     dslContext = transactionContext,
@@ -808,6 +820,7 @@ class PipelineRepositoryService constructor(
                     version = 1,
                     model = model,
                     yamlStr = yaml,
+                    yamlVersion = realYamlVersion?.tag,
                     versionName = versionName,
                     versionNum = versionNum,
                     pipelineVersion = pipelineVersion,
@@ -823,6 +836,7 @@ class PipelineRepositoryService constructor(
                     version = 1,
                     model = model,
                     yaml = yaml,
+                    yamlVersion = realYamlVersion?.tag,
                     baseVersion = baseVersion,
                     versionName = versionName ?: "",
                     versionNum = versionNum,
@@ -875,6 +889,7 @@ class PipelineRepositoryService constructor(
         userId: String,
         model: Model,
         yamlStr: String?,
+        yamlVersion: YamlVersion?,
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
@@ -925,7 +940,8 @@ class PipelineRepositoryService constructor(
                         creator = userId,
                         version = releaseResource.version,
                         model = releaseResource.model,
-                        yaml = null,
+                        yamlVersion = releaseResource.yamlVersion,
+                        yaml = releaseResource.yaml,
                         baseVersion = baseVersion,
                         versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
                             releaseResource.version, releaseResource.version, 0, 0
@@ -1126,6 +1142,7 @@ class PipelineRepositoryService constructor(
                             version = version,
                             model = model,
                             yamlStr = yamlStr,
+                            yamlVersion = yamlVersion?.tag,
                             versionName = versionName,
                             versionNum = versionNum,
                             pipelineVersion = pipelineVersion,
@@ -1151,6 +1168,7 @@ class PipelineRepositoryService constructor(
                     version = version,
                     model = model,
                     yaml = yamlStr,
+                    yamlVersion = yamlVersion?.tag,
                     versionName = versionName,
                     versionNum = versionNum,
                     pipelineVersion = pipelineVersion,
@@ -1415,6 +1433,7 @@ class PipelineRepositoryService constructor(
                 model = newDraft.model,
                 baseVersion = targetVersion.version.takeIf { ignoreBase != true },
                 yaml = newDraft.yaml,
+                yamlVersion = newDraft.yamlVersion,
                 versionNum = null,
                 pipelineVersion = newDraft.pipelineVersion,
                 triggerVersion = newDraft.triggerVersion,

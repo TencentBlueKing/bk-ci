@@ -58,6 +58,7 @@ class PipelineResourceDao {
         versionName: String?,
         model: Model,
         yamlStr: String?,
+        yamlVersion: String?,
         versionNum: Int?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
@@ -74,6 +75,7 @@ class PipelineResourceDao {
                 .set(VERSION_NAME, versionName)
                 .set(MODEL, modelString)
                 .set(YAML, yamlStr)
+                .set(YAML_VERSION, yamlVersion)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -81,6 +83,8 @@ class PipelineResourceDao {
                 .set(SETTING_VERSION, settingVersion)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
+                .set(YAML, yamlStr)
+                .set(YAML_VERSION, yamlVersion)
                 .set(CREATOR, creator)
                 .set(VERSION_NUM, versionNum)
                 .set(VERSION_NAME, versionName)
@@ -97,11 +101,10 @@ class PipelineResourceDao {
         pipelineId: String
     ): PipelineResourceVersion? {
         with(T_PIPELINE_RESOURCE) {
-            return  dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(VERSION.desc()).limit(1)
                 .fetchAny(mapper)
-
         }
     }
 
@@ -269,6 +272,7 @@ class PipelineResourceDao {
                         }
                     } ?: return null,
                     yaml = record.yaml,
+                    yamlVersion = record.yamlVersion,
                     creator = record.creator ?: "unknown",
                     versionName = versionName,
                     createTime = record.createTime,

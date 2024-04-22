@@ -94,12 +94,12 @@ class CodeSchemaCheck @Autowired constructor(
         // 解析锚点
         val yamlJson = TransferMapper.getObjectMapper().readTree(loadYaml)
         when (yamlJson.version()) {
-            YamlVersion.Version.V2 -> {
-                check(yamlJson, YamlVersion.Version.V2_0, templateType, isCiFile)
+            YamlVersion.V2_0.tag -> {
+                check(yamlJson, YamlVersion.V2_0, templateType, isCiFile)
             }
 
-            YamlVersion.Version.V3 -> {
-                check(yamlJson, YamlVersion.Version.V3_0, templateType, isCiFile)
+            YamlVersion.V3_0.tag -> {
+                check(yamlJson, YamlVersion.V3_0, templateType, isCiFile)
             }
 
             else -> throw PipelineTransferException(
@@ -111,7 +111,7 @@ class CodeSchemaCheck @Autowired constructor(
 
     private fun check(
         yamlJson: JsonNode,
-        version: YamlVersion.Version,
+        version: YamlVersion,
         templateType: TemplateType? = null,
         isCiFile: Boolean
     ) {
@@ -147,14 +147,14 @@ class CodeSchemaCheck @Autowired constructor(
         return objectMapperFactory.get().writeValueAsString(bean)!!
     }
 
-    private fun getSchema(file: String, version: YamlVersion.Version): JsonSchema {
+    private fun getSchema(file: String, version: YamlVersion): JsonSchema {
         val str = schemaRedisFiles.get(
             "$REDIS_STREAM_YAML_SCHEMA:${version.name}:$file"
         )?.ifBlank { null } ?: return getSchemaFromGit(file, version)
         return schemaFactory.getSchema(str)
     }
 
-    private fun getSchemaFromGit(file: String, version: YamlVersion.Version): JsonSchema {
+    private fun getSchemaFromGit(file: String, version: YamlVersion): JsonSchema {
         val path = "schema/${version.name}/$file.json"
         if (schemaMap[path] != null) {
             return schemaMap[path]!!

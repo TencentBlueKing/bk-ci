@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.pojo.YamlVersionParser
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
@@ -43,7 +44,7 @@ import com.tencent.devops.process.yaml.v3.models.stage.Stage
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ScriptBuildYaml(
+data class ScriptBuildYamlParser(
     val version: String?,
     val name: String?,
     val label: List<String>?,
@@ -56,6 +57,6 @@ data class ScriptBuildYaml(
     val notices: List<GitNotices>?,
     var finally: List<Job>?,
     val concurrency: Concurrency?
-) : YamlVersion {
-    override fun yamlVersion() = YamlVersion.Version.V2_0
+) : YamlVersionParser {
+    override fun yamlVersion() = YamlVersion.V2_0
 }

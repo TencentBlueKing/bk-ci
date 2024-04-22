@@ -119,6 +119,7 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         isMobile: Boolean,
         model: Model,
+        yamlVersion: String?,
         signPipelineVersion: Int? = null, // 指定的版本
         frequencyLimit: Boolean = true,
         buildNo: Int? = null,
@@ -212,7 +213,8 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 debug = debug ?: false,
-                versionName = versionName
+                versionName = versionName,
+                yamlVersion = yamlVersion
             )
 
             val interceptResult = pipelineInterceptorChain.filter(

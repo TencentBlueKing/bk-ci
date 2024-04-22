@@ -44,7 +44,7 @@ import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTemplateScriptBuildYamlV3(
+data class PreTemplateScriptBuildYamlV3Parser(
     override var version: String?,
     override val name: String?,
     override val desc: String?,
@@ -66,16 +66,16 @@ data class PreTemplateScriptBuildYamlV3(
     override var recommendedVersion: RecommendedVersion? = null,
     @JsonProperty("custom-build-num")
     override var customBuildNum: String? = null
-) : IPreTemplateScriptBuildYaml, ITemplateFilter {
+) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
 
     init {
-        version = YamlVersion.Version.V3
+        version = YamlVersion.V3_0.tag
     }
 
-    override fun yamlVersion() = YamlVersion.Version.V3_0
+    override fun yamlVersion() = YamlVersion.V3_0
 
-    override fun initPreScriptBuildYamlI(): PreScriptBuildYamlI {
-        return PreScriptBuildYamlV3(
+    override fun initPreScriptBuildYamlI(): PreScriptBuildYamlIParser {
+        return PreScriptBuildYamlV3Parser(
             version = version,
             name = name,
             label = label,
@@ -88,13 +88,13 @@ data class PreTemplateScriptBuildYamlV3(
     }
 
     @JsonIgnore
-    lateinit var preYaml: PreScriptBuildYamlV3
+    lateinit var preYaml: PreScriptBuildYamlV3Parser
 
     @JsonIgnore
     val transferData: YamlTransferData = YamlTransferData()
 
-    override fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI) {
-        preYaml = f(this) as PreScriptBuildYamlV3
+    override fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser) {
+        preYaml = f(this) as PreScriptBuildYamlV3Parser
     }
 
     override fun formatVariables(): Map<String, Variable> {

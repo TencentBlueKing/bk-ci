@@ -60,7 +60,7 @@ import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
-import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
@@ -125,7 +125,7 @@ class StageTransfer @Autowired(required = false) constructor(
         return Stage(listOf(triggerContainer), id = stageId, name = stageId)
     }
 
-    private fun makeVariables(yaml: IPreTemplateScriptBuildYaml): Map<String, Variable> {
+    private fun makeVariables(yaml: IPreTemplateScriptBuildYamlParser): Map<String, Variable> {
         val variable = yaml.formatVariables()
         if (yaml.recommendedVersion == null || yaml.recommendedVersion?.enabled == false) return variable
         return with(yaml.recommendedVersion) {

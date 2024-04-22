@@ -63,6 +63,7 @@ class PipelineResourceVersionDao {
         model: Model,
         baseVersion: Int?,
         yaml: String?,
+        yamlVersion: String?,
         versionNum: Int?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
@@ -80,6 +81,7 @@ class PipelineResourceVersionDao {
             versionName = versionName,
             modelStr = JsonUtil.toJson(model, formatted = false),
             yamlStr = yaml,
+            yamlVersion = yamlVersion,
             baseVersion = baseVersion,
             versionNum = versionNum,
             pipelineVersion = pipelineVersion,
@@ -101,6 +103,7 @@ class PipelineResourceVersionDao {
         modelStr: String,
         baseVersion: Int?,
         yamlStr: String?,
+        yamlVersion: String?,
         versionNum: Int?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
@@ -117,6 +120,7 @@ class PipelineResourceVersionDao {
                 .set(VERSION_NAME, versionName)
                 .set(MODEL, modelStr)
                 .set(YAML, yamlStr)
+                .set(YAML_VERSION, yamlVersion)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(VERSION_NUM, versionNum)
@@ -130,6 +134,7 @@ class PipelineResourceVersionDao {
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelStr)
                 .set(YAML, yamlStr)
+                .set(YAML_VERSION, yamlVersion)
                 .set(CREATOR, creator)
                 .set(VERSION_NUM, versionNum)
                 .set(VERSION_NAME, versionName)
@@ -585,6 +590,7 @@ class PipelineResourceVersionDao {
                         }
                     } ?: return null,
                     yaml = record.yaml,
+                    yamlVersion = record.yamlVersion,
                     creator = record.creator,
                     versionName = versionName,
                     createTime = record.createTime,
@@ -633,7 +639,8 @@ class PipelineResourceVersionDao {
                     status = status,
                     debugBuildId = record.debugBuildId,
                     baseVersion = record.baseVersion,
-                    description = record.description
+                    description = record.description,
+                    yamlVersion = record.yamlVersion
                 )
             }
         }

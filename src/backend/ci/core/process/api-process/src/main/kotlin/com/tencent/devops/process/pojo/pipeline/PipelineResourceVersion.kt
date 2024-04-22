@@ -46,6 +46,8 @@ data class PipelineResourceVersion(
     val model: Model,
     @get:Schema(title = "YAML编排内容", required = false)
     var yaml: String?,
+    @get:Schema(title = "YAML编排版本", required = false)
+    var yamlVersion: String?,
     @get:Schema(title = "创建者", required = true)
     val creator: String,
     @get:Schema(title = "版本名称", required = true)

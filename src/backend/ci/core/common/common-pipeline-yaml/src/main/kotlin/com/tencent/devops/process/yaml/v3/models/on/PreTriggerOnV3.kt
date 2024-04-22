@@ -55,5 +55,5 @@ data class PreTriggerOnV3(
     override val openapi: String? = null,
     override val remote: Any? = null
 ) : IPreTriggerOn {
-    override fun yamlVersion() = YamlVersion.Version.V3_0
+    override fun yamlVersion() = YamlVersion.V3_0
 }

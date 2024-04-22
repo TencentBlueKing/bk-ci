@@ -36,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.pojo.YamlVersionParser
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
@@ -46,13 +47,13 @@ import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.EXISTING_PROPERTY,
     property = "version",
-    defaultImpl = PreTemplateScriptBuildYaml::class
+    defaultImpl = PreTemplateScriptBuildYamlParser::class
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlV3::class, name = YamlVersion.Version.V3),
-    JsonSubTypes.Type(value = PreTemplateScriptBuildYaml::class, name = YamlVersion.Version.V2)
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlV3Parser::class, name = YamlVersion.V3),
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlParser::class, name = YamlVersion.V2)
 )
-interface IPreTemplateScriptBuildYaml : YamlVersion {
+interface IPreTemplateScriptBuildYamlParser : YamlVersionParser {
     val version: String?
     val name: String?
     val desc: String?
@@ -63,7 +64,7 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
     var recommendedVersion: RecommendedVersion?
     var customBuildNum: String?
 
-    fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI)
+    fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser)
 
     fun formatVariables(): Map<String, Variable>
 
@@ -85,13 +86,13 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.EXISTING_PROPERTY,
     property = "version",
-    defaultImpl = PreTemplateScriptBuildYaml::class
+    defaultImpl = PreTemplateScriptBuildYamlParser::class
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlV3::class, name = YamlVersion.Version.V3),
-    JsonSubTypes.Type(value = PreTemplateScriptBuildYaml::class, name = YamlVersion.Version.V2)
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlV3Parser::class, name = YamlVersion.V3),
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlParser::class, name = YamlVersion.V2)
 )
-interface ITemplateFilter : YamlVersion {
+interface ITemplateFilter : YamlVersionParser {
     var variables: Map<String, Any>?
     var stages: ArrayList<Map<String, Any>>?
     val jobs: LinkedHashMap<String, Any>?
@@ -100,7 +101,7 @@ interface ITemplateFilter : YamlVersion {
     var resources: Resources?
     var finally: LinkedHashMap<String, Any>?
 
-    fun initPreScriptBuildYamlI(): PreScriptBuildYamlI
+    fun initPreScriptBuildYamlI(): PreScriptBuildYamlIParser
 }
 
 /**
@@ -110,7 +111,7 @@ interface ITemplateFilter : YamlVersion {
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTemplateScriptBuildYaml(
+data class PreTemplateScriptBuildYamlParser(
     override var version: String?,
     override val name: String?,
     override val desc: String?,
@@ -132,16 +133,16 @@ data class PreTemplateScriptBuildYaml(
     override var recommendedVersion: RecommendedVersion? = null,
     @JsonProperty("custom-build-num")
     override var customBuildNum: String? = null
-) : IPreTemplateScriptBuildYaml, ITemplateFilter {
+) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
 
     init {
-        version = YamlVersion.Version.V2
+        version = YamlVersion.V2_0.tag
     }
 
-    override fun yamlVersion() = YamlVersion.Version.V2_0
+    override fun yamlVersion() = YamlVersion.V2_0
 
-    override fun initPreScriptBuildYamlI(): PreScriptBuildYamlI {
-        return PreScriptBuildYaml(
+    override fun initPreScriptBuildYamlI(): PreScriptBuildYamlIParser {
+        return PreScriptBuildYamlParser(
             version = version,
             name = name,
             label = label,
@@ -153,10 +154,10 @@ data class PreTemplateScriptBuildYaml(
     }
 
     @JsonIgnore
-    lateinit var preYaml: PreScriptBuildYaml
+    lateinit var preYaml: PreScriptBuildYamlParser
 
-    override fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI) {
-        preYaml = f(this) as PreScriptBuildYaml
+    override fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser) {
+        preYaml = f(this) as PreScriptBuildYamlParser
     }
 
     override fun formatVariables(): Map<String, Variable> {
