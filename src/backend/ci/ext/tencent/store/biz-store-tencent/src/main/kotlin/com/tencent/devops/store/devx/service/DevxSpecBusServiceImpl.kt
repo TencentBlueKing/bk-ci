@@ -90,7 +90,7 @@ class DevxSpecBusServiceImpl @Autowired constructor(
         private const val KEY_OS_RUN_INFO = "osRunInfo"
     }
 
-    @Value("\${store.devx.sign:windows.supportFileTypes:exe}")
+    @Value("\${store.devx.sign.windows.supportFileTypes:exe}")
     val windowsSupportFileTypes: String = "exe"
 
     override fun doStoreI18nConversionSpecBus(storeUpdateRequest: StoreUpdateRequest) {
@@ -151,14 +151,17 @@ class DevxSpecBusServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeId = storeId
         )
-        val osRunInfos = mutableSetOf<String>()
+        var osRunInfos: MutableSet<String>? = null
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
             val pkgPath = baseEnvRecord.pkgPath
             val fileType = pkgPath.substringAfterLast(".")
             if (osName == OSType.WINDOWS.name.lowercase() && windowsSupportFileTypes.split(",").contains(fileType)) {
+                if (osRunInfos == null) {
+                    osRunInfos = mutableSetOf()
+                }
                 // 暂时只支持签windows操作系统的exe软件包
-                osRunInfos.add("$osName=$pkgPath")
+                osRunInfos?.add("$osName=$pkgPath")
             }
         }
         return mutableMapOf(
@@ -166,7 +169,7 @@ class DevxSpecBusServiceImpl @Autowired constructor(
             KEY_STORE_TYPE to StoreTypeEnum.getStoreType(baseRecord.storeType.toInt()),
             KEY_VERSION to baseRecord.version,
             KEY_PROJECT_ID to storeInnerPipelineConfig.innerPipelineProject,
-            KEY_OS_RUN_INFO to JsonUtil.toJson(osRunInfos)
+            KEY_OS_RUN_INFO to if (!osRunInfos.isNullOrEmpty()) JsonUtil.toJson(osRunInfos!!) else "[]"
         )
     }
 
