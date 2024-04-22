@@ -3,14 +3,14 @@
         <template v-for="(obj, key) in atomPropsModel">
             <template v-if="obj.type === 'group'">
                 <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :handle-change="handleMethods" :key="key" v-bind="obj">
-                    <template v-for="i in obj.children">
+                    <template v-for="(i, index) in obj.children">
                         <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
                             <component
                                 :is="i.component"
                                 :name="i.key"
                                 v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
                                 :handle-change="i.key === 'eventType' ? handleBlockEnable : handleMethods"
-                                :value="element[i.key]"
+                                :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
                                 v-bind="i">
                             </component>
                         </form-field>
@@ -62,43 +62,57 @@
             }
         },
         created () {
-            this.enableThirdFilter = this.element.enableThirdFilter || false
-            if (this.element.eventType === 'MERGE_REQUEST') {
-                this.atomPropsModel.webhookQueue.hidden = false
-            } else {
-                this.atomPropsModel.block.hidden = true
-                this.atomPropsModel.webhookQueue.hidden = true
-            }
-            if (!this.element.repositoryType) {
-                this.handleUpdateElement('repositoryType', 'ID')
-            }
-            this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
-        },
-        methods: {
-            handleBlockEnable (name, value) {
-                if (value === 'MERGE_REQUEST') {
-                    this.atomPropsModel.block.hidden = false
+            if (!this.atomPropsModel.userSettings) {
+                this.enableThirdFilter = this.element.enableThirdFilter || false
+                if (this.element.eventType === 'MERGE_REQUEST') {
                     this.atomPropsModel.webhookQueue.hidden = false
                 } else {
                     this.atomPropsModel.block.hidden = true
                     this.atomPropsModel.webhookQueue.hidden = true
                 }
+                if (!this.element.repositoryType) {
+                    this.handleUpdateElement('repositoryType', 'ID')
+                }
+                this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
+            }
+        },
+        methods: {
+            handleBlockEnable (name, value) {
+                if (!this.atomPropsModel.userSettings) {
+                    if (value === 'MERGE_REQUEST') {
+                        this.atomPropsModel.block.hidden = false
+                        this.atomPropsModel.webhookQueue.hidden = false
+                    } else {
+                        this.atomPropsModel.block.hidden = true
+                        this.atomPropsModel.webhookQueue.hidden = true
+                    }
+                }
                 this.handleUpdateElement(name, value)
             },
             handleMethods (name, value) {
-                if (name === 'repositoryType') {
-                    this.handleChooseCodelibType(name, value)
-                } else {
+                // 兼容逻辑，后续该需求上线后可删除
+                if (this.atomPropsModel.userSettings) {
                     this.handleUpdateElement(name, value)
+                } else {
+                    if (name === 'repositoryType') {
+                        this.handleChooseCodelibType(name, value)
+                    } else {
+                        this.handleUpdateElement(name, value)
+                    }
                 }
             },
             handleChooseCodelibType (name, value) {
-                if (value === 'ID') {
-                    this.atomPropsModel.repositoryHashId.hidden = false
-                    this.atomPropsModel.repositoryName.hidden = true
-                } else if (value === 'NAME') {
-                    this.atomPropsModel.repositoryHashId.hidden = true
-                    this.atomPropsModel.repositoryName.hidden = false
+                if (!this.atomPropsModel.userSettings) {
+                    if (value === 'ID') {
+                        this.atomPropsModel.repositoryHashId.hidden = false
+                        this.atomPropsModel.repositoryName.hidden = true
+                    } else if (value === 'NAME') {
+                        this.atomPropsModel.repositoryHashId.hidden = true
+                        this.atomPropsModel.repositoryName.hidden = false
+                    } else if (value === 'SELF') {
+                        this.atomPropsModel.repositoryHashId.hidden = true
+                        this.atomPropsModel.repositoryName.hidden = true
+                    }
                 }
                 this.handleUpdateElement(name, value)
             },
