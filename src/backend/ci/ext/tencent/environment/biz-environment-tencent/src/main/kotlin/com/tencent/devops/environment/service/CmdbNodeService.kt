@@ -362,7 +362,7 @@ class CmdbNodeService @Autowired constructor(
             )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            cmdbNodeDao.batchAddNode(context, toAddNodeList)
+            cmdbNodeDao.batchInsertNode(context, toAddNodeList)
             val insertedNodeList = cmdbNodeDao.listServerNodesByIps(
                 dslContext = context,
                 projectId = projectId,
@@ -383,7 +383,7 @@ class CmdbNodeService @Autowired constructor(
                 "agent status from esb: ${ComputeTimeUtils.calculateDuration(time3, time4)}s, " +
                 "agent versions from nodeman/job: ${ComputeTimeUtils.calculateDuration(time4, time5)}s, " +
                 "toAddNodeList: ${ComputeTimeUtils.calculateDuration(time5, time6)}s, " +
-                "batchAddNode: ${ComputeTimeUtils.calculateDuration(time6, time7)}s, "
+                "batchInsertNode: ${ComputeTimeUtils.calculateDuration(time6, time7)}s, "
         )
         return AddCmdbNodesRes(
             nodeStatus = true,
