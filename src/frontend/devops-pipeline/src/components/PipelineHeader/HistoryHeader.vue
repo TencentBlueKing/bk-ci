@@ -159,6 +159,7 @@
                 isOutdatedVersion: 'atom/isOutdatedVersion',
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
                 pipelineHistoryViewAble: 'atom/pipelineHistoryViewAble',
+                onlyBranchPipeline: 'atom/onlyBranchPipeline',
                 pacEnabled: 'atom/pacEnabled'
             }),
             showRollback () {
