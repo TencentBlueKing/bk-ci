@@ -48,6 +48,7 @@ class ProjectCallbackDao {
         dslContext: DSLContext,
         event: String,
         url: String,
+        method: String,
         secretType: String,
         secretParam: String
     ) {
@@ -56,11 +57,13 @@ class ProjectCallbackDao {
                 this,
                 EVENT,
                 CALLBACK_URL,
+                METHOD,
                 SECRET_TYPE,
                 SECRET_PARAM
             ).values(
                 event,
                 url,
+                method,
                 secretType,
                 secretParam
             ).execute()

@@ -44,7 +44,6 @@ import com.tencent.devops.project.service.secret.SecretTokenServiceFactory
 import com.tencent.devops.project.service.secret.bkrepo.BkrepoModelSecretTokenService
 import com.tencent.devops.project.service.secret.bkrepo.BkrepoProjectSecretTokenService
 import com.tencent.devops.project.util.OkHttpUtils
-import okhttp3.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -110,6 +109,7 @@ class ProjectCallbackControl @Autowired constructor(
             send(
                 secretRequestParam = secretRequestParam,
                 requestBody = requestBody,
+                method = secretParam.method,
                 failAction = { exception -> secretTokenService.requestFail(exception) },
                 successAction = {responseBody ->  secretTokenService.requestSuccess(responseBody) }
             )
@@ -119,12 +119,13 @@ class ProjectCallbackControl @Autowired constructor(
     private fun send(
         secretRequestParam: SecretRequestParam,
         requestBody: String,
+        method: String,
         failAction: ((exception: Exception) -> Unit) = { },
         successAction: ((responseBody: String) -> Unit) = { }
     ) {
         with(secretRequestParam) {
             OkHttpUtils.sendRequest(
-                method = "POST",
+                method = method,
                 url = url,
                 headers = insertCommonHeader(header),
                 params = params,

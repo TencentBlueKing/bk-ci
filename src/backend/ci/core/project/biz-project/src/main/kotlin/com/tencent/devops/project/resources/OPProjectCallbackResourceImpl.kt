@@ -64,6 +64,7 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
             dslContext = dslContext,
             event = event.name,
             url = secretParam.url,
+            method = secretParam.method,
             secretParam = JsonUtil.toJson(secretParam.encode(aesKey), false),
             secretType = secretParam.getSecretType()
         )

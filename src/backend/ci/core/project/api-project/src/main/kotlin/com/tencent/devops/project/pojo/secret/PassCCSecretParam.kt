@@ -32,7 +32,8 @@ import com.tencent.devops.project.util.SecretParamEncryptUtil
 data class PassCCSecretParam(
     var authorizationToken: String,
     override var url: String,
-    override val userId: String
+    override val userId: String,
+    override val method: String
 ) : ISecretParam {
 
     override fun getSecretType() = classType

@@ -44,6 +44,8 @@ interface ISecretParam {
 
     val userId: String
 
+    val method: String
+
     fun getSecretType(): String
 
     fun encode(aesKey: String): ISecretParam

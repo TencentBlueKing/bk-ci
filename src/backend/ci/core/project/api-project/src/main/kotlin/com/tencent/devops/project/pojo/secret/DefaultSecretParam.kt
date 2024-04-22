@@ -31,7 +31,8 @@ data class DefaultSecretParam(
     val headers: Map<String, String>,
     val params: Map<String, String>,
     override var url: String,
-    override val userId: String
+    override val userId: String,
+    override val method: String
 ) : ISecretParam {
 
     override fun getSecretType() = classType
