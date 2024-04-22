@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -185,14 +186,14 @@ class ModelTransfer @Autowired constructor(
         modelInput.aspectWrapper.setModel4Model(modelInput.model, PipelineTransferAspectWrapper.AspectType.BEFORE)
         val label = prepareYamlLabels(modelInput.userId, modelInput.setting).ifEmpty { null }
         val yaml = when (modelInput.version) {
-            YamlVersion.V2_0 -> PreTemplateScriptBuildYamlParser(
-                version = "v2.0",
-                name = modelInput.setting.pipelineName,
-                desc = modelInput.setting.desc.ifEmpty { null },
-                label = label,
-                resources = modelInput.model.resources,
-                notices = makeNoticesV2(modelInput.setting)
-            )
+//            YamlVersion.V2_0 -> PreTemplateScriptBuildYamlParser(
+//                version = "v2.0",
+//                name = modelInput.setting.pipelineName,
+//                desc = modelInput.setting.desc.ifEmpty { null },
+//                label = label,
+//                resources = modelInput.model.resources,
+//                notices = makeNoticesV2(modelInput.setting)
+//            )
             YamlVersion.V3_0 -> PreTemplateScriptBuildYamlV3Parser(
                 version = "v3.0",
                 name = modelInput.setting.pipelineName,
@@ -201,6 +202,12 @@ class ModelTransfer @Autowired constructor(
                 resources = modelInput.model.resources,
                 notices = makeNoticesV3(modelInput.setting)
             )
+            else -> {
+                throw PipelineTransferException(
+                    YAML_NOT_VALID,
+                    arrayOf("only support v3")
+                )
+            }
         }
         if (modelInput.model.template != null) {
             yaml.extends = Extends(

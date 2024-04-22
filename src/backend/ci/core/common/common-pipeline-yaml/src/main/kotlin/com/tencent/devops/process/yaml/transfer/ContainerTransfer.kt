@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -50,14 +49,12 @@ import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.yaml.creator.ModelCommon
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_JOB_MAX_QUEUE_MINUTES
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_QUEUE_LENGTH
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
-import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.job.Container3
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
@@ -358,55 +355,35 @@ class ContainerTransfer @Autowired(required = false) constructor(
 
         val dependOnName = job.dependOn?.joinToString(",")
 
-        return if (!job.ifField.isNullOrBlank()) {
-            var customVariables: List<NameAndValue>? = null
-            if (finalStage) {
-                JobControlOption(
-                    timeout = timeout,
-                    timeoutVar = timeoutVar,
-                    runCondition = when (job.ifField) {
-                        IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
-                        IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
-                        IfType.CANCELLED.name, IfType.CANCELED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
-                        else -> JobRunCondition.STAGE_RUNNING
-                    },
-                    dependOnType = DependOnType.NAME,
-                    dependOnName = dependOnName,
-                    prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
-                    continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED
-                )
-            } else {
-                val runCondition = ModelCommon.revertCustomVariableMatch(job.ifField)?.let {
-                    customVariables = it
-                    JobRunCondition.CUSTOM_VARIABLE_MATCH
-                } ?: ModelCommon.revertCustomVariableNotMatch(job.ifField)?.let {
-                    customVariables = it
-                    JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
-                } ?: kotlin.run {
-                    if (!job.ifField.isNullOrBlank()) JobRunCondition.CUSTOM_CONDITION_MATCH else null
-                } ?: JobRunCondition.STAGE_RUNNING
-                JobControlOption(
-                    enable = jobEnable,
-                    timeout = timeout,
-                    timeoutVar = timeoutVar,
-                    runCondition = runCondition,
-                    customCondition = if (runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
-                        ModelCreateUtil.removeIfBrackets(job.ifField)
-                    } else {
-                        null
-                    },
-                    dependOnType = DependOnType.NAME,
-                    dependOnName = dependOnName,
-                    prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
-                    continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED,
-                    customVariables = customVariables
-                )
-            }
+        return if (finalStage) {
+            JobControlOption(
+                timeout = timeout,
+                timeoutVar = timeoutVar,
+                runCondition = when (job.ifField) {
+                    IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
+                    IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
+                    IfType.CANCELLED.name, IfType.CANCELED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                    else -> JobRunCondition.STAGE_RUNNING
+                },
+                dependOnType = DependOnType.NAME,
+                dependOnName = dependOnName,
+                prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
+                continueWhenFailed = job.continueOnError ?: DEFAULT_CONTINUE_WHEN_FAILED
+            )
         } else {
+            val runCondition = kotlin.run {
+                if (!job.ifField.isNullOrBlank()) JobRunCondition.CUSTOM_CONDITION_MATCH else null
+            } ?: JobRunCondition.STAGE_RUNNING
             JobControlOption(
                 enable = jobEnable,
                 timeout = timeout,
                 timeoutVar = timeoutVar,
+                runCondition = runCondition,
+                customCondition = if (runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                    job.ifField
+                } else {
+                    null
+                },
                 dependOnType = DependOnType.NAME,
                 dependOnName = dependOnName,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,

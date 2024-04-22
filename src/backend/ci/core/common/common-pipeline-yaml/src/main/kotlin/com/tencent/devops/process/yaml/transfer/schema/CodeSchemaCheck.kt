@@ -13,9 +13,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.process.yaml.transfer.TransferMapper
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import java.io.FileNotFoundException
 import java.nio.charset.Charset
@@ -94,9 +94,9 @@ class CodeSchemaCheck @Autowired constructor(
         // 解析锚点
         val yamlJson = TransferMapper.getObjectMapper().readTree(loadYaml)
         when (yamlJson.version()) {
-            YamlVersion.V2_0.tag -> {
-                check(yamlJson, YamlVersion.V2_0, templateType, isCiFile)
-            }
+//            YamlVersion.V2_0.tag -> {
+//                check(yamlJson, YamlVersion.V2_0, templateType, isCiFile)
+//            }
 
             YamlVersion.V3_0.tag -> {
                 check(yamlJson, YamlVersion.V3_0, templateType, isCiFile)
@@ -104,7 +104,7 @@ class CodeSchemaCheck @Autowired constructor(
 
             else -> throw PipelineTransferException(
                 YAML_NOT_VALID,
-                arrayOf("version not valid.")
+                arrayOf("yaml version(${yamlJson.version()}) not valid, only support v3.0")
             )
         }
     }
