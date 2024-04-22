@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
@@ -63,6 +64,7 @@ class StoreCategoryRelDao {
             tCategory.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
         ).from(tCategory).join(tStoreCategoryRel).on(tCategory.ID.eq(tStoreCategoryRel.CATEGORY_ID))
             .where(tStoreCategoryRel.STORE_ID.`in`(storeIds))
+            .skipCheck()
             .fetch()
     }
 
