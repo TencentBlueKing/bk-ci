@@ -987,9 +987,10 @@ class WorkspaceService @Autowired constructor(
         } else {
             workspace.createUserId
         }
+        val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
-            curLaunchId = detail.curLaunchId!!,
+            curLaunchId = gameId.second.toInt(),
             regionId = detail.regionId,
             projectId = workspace.projectId,
             name = workspace.workspaceName,
