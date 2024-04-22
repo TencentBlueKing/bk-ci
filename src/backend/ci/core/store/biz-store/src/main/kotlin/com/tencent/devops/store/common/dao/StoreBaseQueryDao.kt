@@ -298,26 +298,6 @@ class StoreBaseQueryDao {
         )
     }
 
-    fun countReleaseComponentByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        version: String? = null
-    ): Int {
-        with(TStoreBase.T_STORE_BASE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_CODE.eq(storeCode))
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte())
-            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
-            if (version != null) {
-                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
-            }
-            return dslContext.selectCount(ID).from(this)
-                .where(conditions)
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
     fun countByCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): Int {
         with(TStoreBase.T_STORE_BASE) {
             return dslContext.selectCount().from(this)

@@ -217,7 +217,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         records?.forEach {
             val storeCode = it[tStoreBase.STORE_CODE] as String
             var releaseFlag = false // 是否有处于上架状态的组件版本
-            val releaseStoreNum = storeBaseQueryDao.countReleaseComponentByCode(dslContext, storeCode)
+            val releaseStoreNum = storeBaseQueryDao.countReleaseStoreByCode(dslContext, storeCode)
             if (releaseStoreNum > 0) {
                 releaseFlag = true
             }
