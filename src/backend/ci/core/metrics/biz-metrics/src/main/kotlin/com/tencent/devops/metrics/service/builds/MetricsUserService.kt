@@ -76,15 +76,19 @@ class MetricsUserService @Autowired constructor(
 
         override fun run() {
             while (true) {
-                delayArray.addFirst(mutableListOf())
-                val ready = delayArray.removeLast()
-                ready.forEach { (key, metrics) ->
-                    metrics.meters.forEach { meter ->
-                        registry.remove(meter)
-                    }
-                    local.remove(key)
-                }
+                kotlin.runCatching { execute() }
                 Thread.sleep(SLEEP)
+            }
+        }
+
+        private fun execute() {
+            delayArray.addFirst(mutableListOf())
+            val ready = delayArray.removeLast()
+            ready.forEach { (key, metrics) ->
+                metrics.meters.forEach { meter ->
+                    registry.remove(meter)
+                }
+                local.remove(key)
             }
         }
     }
