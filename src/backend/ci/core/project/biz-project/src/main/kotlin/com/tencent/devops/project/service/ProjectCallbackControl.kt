@@ -99,7 +99,8 @@ class ProjectCallbackControl @Autowired constructor(
             secretRequestParam.url = formatUrl(
                 url = secretRequestParam.url,
                 projectId = callbackData.projectId,
-                projectEventType = projectEventType.name
+                projectEventType = projectEventType.name,
+                projectEnglishName = callbackData.projectEnglishName
             )
             logger.info(
                 "start send project callback|eventType[${it.event}]|url[${secretRequestParam.url}]|" +
@@ -151,23 +152,33 @@ class ProjectCallbackControl @Autowired constructor(
 
     /**
      * 如果url中包含占位符，则进行替换
-     * {projectId} -> 蓝盾项目Id
+     * {projectId} -> 蓝盾项目Id,32位字符
      * {eventType} -> 项目事件类型
+     * {englishName} -> 蓝盾项目英文名
      */
-    private fun formatUrl(url: String, projectId: String, projectEventType: String): String {
+    private fun formatUrl(
+        url: String,
+        projectId: String,
+        projectEventType: String,
+        projectEnglishName: String
+    ): String {
         val encodeProjectId = URLEncoder.encode(URL_PLACEHOLDER_PROJECT_ID, "UTF-8")
+        val encodeProjectEnglishName = URLEncoder.encode(URL_PLACEHOLDER_PROJECT_ID, "UTF-8")
         val encodeEventType = URLEncoder.encode(URL_PLACEHOLDER_EVENT_TYPE, "UTF-8")
         return url
-            .replace(URL_PLACEHOLDER_PROJECT_ID, projectId)
-            .replace(URL_PLACEHOLDER_EVENT_TYPE, projectEventType)
             .replace(encodeProjectId, projectId)
             .replace(encodeEventType, projectEventType)
+            .replace(encodeProjectEnglishName, projectEnglishName)
+            .replace(URL_PLACEHOLDER_PROJECT_ID, projectId)
+            .replace(URL_PLACEHOLDER_EVENT_TYPE, projectEventType)
+            .replace(URL_PLACEHOLDER_ENGLISH_NAME, projectEnglishName)
     }
 
     companion object {
         val logger = LoggerFactory.getLogger(ProjectCallbackControl::class.java)
         const val CALLBACK_FLAG = "devops_project"
         const val URL_PLACEHOLDER_PROJECT_ID = "{projectId}"
+        const val URL_PLACEHOLDER_ENGLISH_NAME = "{projectEnglishName}"
         const val URL_PLACEHOLDER_EVENT_TYPE = "{eventType}"
     }
 }

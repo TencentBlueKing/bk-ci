@@ -33,6 +33,7 @@ class ProjectCallbackData(
     val event: ProjectEventType,
     val userId: String,
     val projectId: String,
+    val projectEnglishName: String,
     val updateInfo: ProjectUpdateInfo? = null,
     val createInfo: ProjectCreateInfo? = null,
     val updateLogo: ProjectUpdateLogoInfo? = null,

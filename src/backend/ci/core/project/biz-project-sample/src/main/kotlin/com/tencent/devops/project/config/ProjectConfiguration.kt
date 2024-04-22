@@ -27,9 +27,11 @@
 
 package com.tencent.devops.project.config
 
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.SampleProjectEventListener
 import com.tencent.devops.project.service.ProjectCallbackControl
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -47,8 +49,12 @@ class ProjectConfiguration {
     @Bean
     @ConditionalOnMissingBean(ProjectEventListener::class)
     fun projectEventListener(
-        @Autowired projectCallbackControl: ProjectCallbackControl
+        @Autowired projectCallbackControl: ProjectCallbackControl,
+        @Autowired dslContext: DSLContext,
+        @Autowired projectDao: ProjectDao
     ): ProjectEventListener = SampleProjectEventListener(
-        projectCallbackControl = projectCallbackControl
+        projectCallbackControl = projectCallbackControl,
+        dslContext = dslContext,
+        projectDao = projectDao
     )
 }

@@ -27,6 +27,9 @@
 
 package com.tencent.devops.project.listener
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
@@ -35,10 +38,13 @@ import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.service.ProjectCallbackControl
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 class SampleProjectEventListener @Autowired constructor(
-    val projectCallbackControl: ProjectCallbackControl
+    val projectCallbackControl: ProjectCallbackControl,
+    private val projectDao: ProjectDao,
+    private val dslContext: DSLContext
 ) : ProjectEventListener {
 
     override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
@@ -48,7 +54,8 @@ class SampleProjectEventListener @Autowired constructor(
                 event = ProjectEventType.CREATE,
                 createInfo = event.projectInfo,
                 userId = event.userId,
-                projectId = event.projectInfo.englishName
+                projectId = event.projectId,
+                projectEnglishName = event.projectInfo.englishName
             )
         )
     }
@@ -60,12 +67,18 @@ class SampleProjectEventListener @Autowired constructor(
                 event = ProjectEventType.UPDATE,
                 updateInfo = event.projectInfo,
                 userId = event.userId,
-                projectId = event.projectInfo.englishName
+                projectId = event.projectId,
+                projectEnglishName = event.projectInfo.englishName
             )
         )
     }
 
     override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent)  {
+        val projectInfo = projectDao.get(dslContext, event.projectId) ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            params = arrayOf(event.projectId),
+            defaultMessage = "project - ${event.projectId} is not exist!"
+        )
         projectCallbackControl.callBackProjectEvent(
             projectEventType = ProjectEventType.UPDATE_LOGO,
             callbackData = ProjectCallbackData(
@@ -75,19 +88,28 @@ class SampleProjectEventListener @Autowired constructor(
                     updator = event.userId
                 ),
                 userId = event.userId,
-                projectId = event.projectId
+                projectId = event.projectId,
+                projectEnglishName = projectInfo.englishName
             )
         )
     }
 
     override fun onReceiveProjectEnable(event: ProjectEnableStatusBroadCastEvent) {
+        // 此处的projectId为项目的英文名
+        // 参考：com.tencent.devops.project.service.impl.AbsProjectServiceImpl.updateUsableStatus
+        val projectInfo = projectDao.getByEnglishName(dslContext, event.projectId) ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            params = arrayOf(event.projectId),
+            defaultMessage = "project ${event.projectId} is not exist"
+        )
         projectCallbackControl.callBackProjectEvent(
             projectEventType = ProjectEventType.ENABLE,
             callbackData = ProjectCallbackData(
                 event = ProjectEventType.ENABLE,
                 enabled = event.enabled,
                 userId = event.userId,
-                projectId = event.projectId
+                projectId = projectInfo.englishName,
+                projectEnglishName = event.projectId
             )
         )
     }
