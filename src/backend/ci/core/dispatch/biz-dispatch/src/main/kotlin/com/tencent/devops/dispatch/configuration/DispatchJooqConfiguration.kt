@@ -55,10 +55,10 @@ import javax.sql.DataSource
 @Configuration
 @Import(DispatchDataSourceConfig::class, DBBaseConfiguration::class)
 @ConditionalOnMissingClass("com.tencent.devops.multijar.MultijarDslContextConfiguration")
-class DispatchDslContextConfiguration {
+class DispatchJooqConfiguration {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(DispatchDslContextConfiguration::class.java)
+        private val LOG = LoggerFactory.getLogger(DispatchJooqConfiguration::class.java)
     }
 
     @Bean
@@ -83,7 +83,7 @@ class DispatchDslContextConfiguration {
             }
 
             if ((packageName.startsWith("com.tencent.devops.dispatch."))) {
-                val configuration = configurationMap["dispatchJooqConfiguration"]
+                val configuration = configurationMap["jooqConfiguration"]
                     ?: throw NoSuchBeanDefinitionException("no dispatchJooqConfiguration")
                 LOG.info("dslContext_init|dispatchJooqConfiguration|${declaringClass.name}")
                 return DSL.using(configuration)
@@ -93,7 +93,7 @@ class DispatchDslContextConfiguration {
     }
 
     @Bean
-    fun dispatchJooqConfiguration(
+    fun jooqConfiguration(
         @Qualifier("dispatchDataSource")
         dispatchWindowsDataSource: DataSource,
         @Qualifier("bkJooqExecuteListenerProvider")
