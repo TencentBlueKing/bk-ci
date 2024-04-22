@@ -264,12 +264,14 @@ class MetricsUserService @Autowired constructor(
                         metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildStatusKey }?.run {
                             registry.remove(this)
                         }
-                        registerBuildStatusGauge(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            status = status,
-                            description = "build status metrics for $buildId"
+                        metrics.meters.add(
+                            registerBuildStatusGauge(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                status = status,
+                                description = "build status metrics for $buildId"
+                            )
                         )
                         metricsCacheService.removeCache(key)
                     }
@@ -282,14 +284,16 @@ class MetricsUserService @Autowired constructor(
                         metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildStepStatusKey }?.run {
                             registry.remove(this)
                         }
-                        registerBuildStepStatusGauge(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            jobId = jobId!!,
-                            stepId = stepId!!,
-                            status = status,
-                            description = "step status metrics for $buildId|$stepId"
+                        metrics.meters.add(
+                            registerBuildStepStatusGauge(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                jobId = jobId!!,
+                                stepId = stepId!!,
+                                status = status,
+                                description = "step status metrics for $buildId|$stepId"
+                            )
                         )
                         metricsCacheService.removeCache(key)
                     }
