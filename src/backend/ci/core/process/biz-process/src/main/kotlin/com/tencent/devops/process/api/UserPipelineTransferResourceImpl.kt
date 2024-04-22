@@ -43,6 +43,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineTransferResource
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.TransferResponseResult
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,7 +60,7 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
         pipelineId: String?,
         actionType: TransferActionType,
         data: TransferBody
-    ): Result<TransferResponse> {
+    ): Result<TransferResponseResult> {
         if (pipelineId != null) {
             val permission = AuthPermission.VIEW
             pipelinePermissionService.validPipelinePermission(
@@ -90,7 +91,7 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
             )
             TransferResponse(yamlSupported = false, yamlInvalidMsg = elementMsg)
         }
-        return Result(response)
+        return Result(TransferResponseResult(response))
     }
 
     override fun modelTaskTransfer(

@@ -44,6 +44,8 @@ data class PipelineVersionSimple(
     val version: Int,
     @get:Schema(title = "流水线版本名称", required = true)
     val versionName: String,
+    @get:Schema(title = "YAML编排版本", required = false)
+    var yamlVersion: String?,
     @get:Schema(title = "是否还有构建记录引用该版本标识", required = false)
     val referFlag: Boolean? = null,
     @get:Schema(title = "关联构建记录总数", required = false)

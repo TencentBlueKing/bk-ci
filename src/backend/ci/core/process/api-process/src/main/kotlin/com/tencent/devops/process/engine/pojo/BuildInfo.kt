@@ -42,6 +42,7 @@ data class BuildInfo(
     val buildId: String,
     val version: Int,
     val versionName: String?,
+    val yamlVersion: String?,
     val buildNum: Int,
     val trigger: String,
     var status: BuildStatus,

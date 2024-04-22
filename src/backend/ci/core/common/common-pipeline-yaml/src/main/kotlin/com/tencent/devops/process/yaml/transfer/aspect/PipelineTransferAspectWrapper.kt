@@ -5,7 +5,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -140,7 +140,7 @@ class PipelineTransferAspectWrapper {
        * AspectType.BEFORE: yaml -> moel before Yaml
        * AspectType.AFTER: model -> yaml after Yaml
        */
-    fun setYaml4Yaml(yaml: IPreTemplateScriptBuildYaml? = null, aspectType: AspectType) {
+    fun setYaml4Yaml(yaml: IPreTemplateScriptBuildYamlParser? = null, aspectType: AspectType) {
         pipelineTransferJoinPoint.yaml = yaml
         clzName = IPipelineTransferAspectModel::class.jvmName
         when (aspectType) {

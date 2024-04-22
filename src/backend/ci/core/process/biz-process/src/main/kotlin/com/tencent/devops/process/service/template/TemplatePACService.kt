@@ -96,7 +96,7 @@ class TemplatePACService @Autowired constructor(
                 data = TransferBody(
                     PipelineModelAndSetting(model, setting)
                 )
-            ).newYaml
+            ).yamlWithVersion?.yamlStr
             Triple(true, yml, null)
         } catch (e: Throwable) {
             // 旧流水线可能无法转换，用空YAML代替

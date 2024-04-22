@@ -140,7 +140,7 @@ class StageControl @Autowired constructor(
             containsMatrix = false
         )
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
-        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
+        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, buildInfo)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
             event = this,

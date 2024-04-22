@@ -99,6 +99,7 @@ data class StartBuildContext(
     val buildId: String,
     val resourceVersion: Int,
     val versionName: String?,
+    val yamlVersion: String?,
     val actionType: ActionType,
     val executeCount: Int = 1,
     val stageRetry: Boolean,
@@ -233,6 +234,7 @@ data class StartBuildContext(
             buildId: String,
             resourceVersion: Int,
             versionName: String?,
+            yamlVersion: String?,
             model: Model,
             debug: Boolean,
             pipelineSetting: PipelineSetting? = null,
@@ -305,7 +307,8 @@ data class StartBuildContext(
                 pipelineSetting = pipelineSetting,
                 pipelineParamMap = pipelineParamMap,
                 debug = debug,
-                debugModel = model
+                debugModel = model,
+                yamlVersion = yamlVersion
             )
         }
 
@@ -397,7 +400,8 @@ data class StartBuildContext(
             concurrencyGroup = null,
             pipelineSetting = null,
             debug = debug,
-            debugModel = null
+            debugModel = null,
+            yamlVersion = null
         )
 
         private const val CONTEXT_PREFIX = "variables."

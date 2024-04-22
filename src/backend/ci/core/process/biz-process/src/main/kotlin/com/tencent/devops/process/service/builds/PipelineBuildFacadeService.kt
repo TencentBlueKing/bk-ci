@@ -569,6 +569,7 @@ class PipelineBuildFacadeService(
                 isMobile = isMobile,
                 model = model,
                 signPipelineVersion = buildInfo.version,
+                yamlVersion = buildInfo.yamlVersion,
                 frequencyLimit = true,
                 handlePostFlag = false,
                 webHookStartParam = webHookStartParam
@@ -681,7 +682,8 @@ class PipelineBuildFacadeService(
                 triggerReviewers = triggerReviewers,
                 signPipelineVersion = version,
                 debug = debug,
-                versionName = resource.versionName
+                versionName = resource.versionName,
+                yamlVersion = resource.yamlVersion
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -783,7 +785,8 @@ class PipelineBuildFacadeService(
                 model = model,
                 signPipelineVersion = null,
                 frequencyLimit = false,
-                versionName = resource.versionName
+                versionName = resource.versionName,
+                yamlVersion = resource.yamlVersion
             ).id
         } finally {
             logger.info("Timer| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
@@ -861,7 +864,8 @@ class PipelineBuildFacadeService(
                 frequencyLimit = false,
                 startValues = startValues,
                 triggerReviewers = triggerReviewers,
-                versionName = resource.versionName
+                versionName = resource.versionName,
+                yamlVersion = resource.yamlVersion
             ).id
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(

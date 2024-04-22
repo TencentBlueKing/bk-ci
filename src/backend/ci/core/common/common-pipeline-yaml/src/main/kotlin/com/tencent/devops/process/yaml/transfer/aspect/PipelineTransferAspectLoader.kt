@@ -2,7 +2,7 @@ package com.tencent.devops.process.yaml.transfer.aspect
 
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
@@ -66,10 +66,10 @@ object PipelineTransferAspectLoader {
             object : IPipelineTransferAspectModel {
                 override fun after(jp: PipelineTransferJoinPoint) {
                     if (jp.yaml() != null &&
-                        jp.yaml() is PreTemplateScriptBuildYamlV3 &&
+                        jp.yaml() is PreTemplateScriptBuildYamlV3Parser &&
                         pools.isNotEmpty()
                     ) {
-                        val v3 = jp.yaml() as PreTemplateScriptBuildYamlV3
+                        val v3 = jp.yaml() as PreTemplateScriptBuildYamlV3Parser
                         v3.resources = Resources(
                             repositories = v3.resources?.repositories,
                             pools = v3.resources?.pools?.plus(pools) ?: pools

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.pojo.YamlVersionParser
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MANUAL_RULE
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
 import io.swagger.v3.oas.annotations.media.Schema
@@ -59,9 +60,9 @@ data class TriggerOn(
     @get:Schema(title = "repo-name")
     var repoName: String? = null
 ) {
-    fun toPre(version: YamlVersion.Version) = when (version) {
-        YamlVersion.Version.V2_0 -> toPreV2()
-        YamlVersion.Version.V3_0 -> toPreV3()
+    fun toPre(version: YamlVersion) = when (version) {
+        YamlVersion.V2_0 -> toPreV2()
+        YamlVersion.V3_0 -> toPreV3()
     }
 
     private fun toPreV2() = PreTriggerOn(
@@ -106,7 +107,7 @@ data class TriggerOn(
     }
 }
 
-interface IPreTriggerOn : YamlVersion {
+interface IPreTriggerOn : YamlVersionParser {
     val push: Any?
     val tag: Any?
     val mr: Any?
@@ -139,5 +140,5 @@ data class PreTriggerOn(
     override val openapi: String? = null,
     override val remote: Any? = null
 ) : IPreTriggerOn {
-    override fun yamlVersion() = YamlVersion.Version.V2_0
+    override fun yamlVersion() = YamlVersion.V2_0
 }

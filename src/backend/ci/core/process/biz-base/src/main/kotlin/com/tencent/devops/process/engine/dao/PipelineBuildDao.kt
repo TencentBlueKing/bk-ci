@@ -101,7 +101,8 @@ class PipelineBuildDao {
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
-                        VERSION_NAME
+                        VERSION_NAME,
+                        YAML_VERSION
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -152,6 +153,7 @@ class PipelineBuildDao {
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
+                        YAML_VERSION,
                         RESOURCE_MODEL
                     ).values(
                         startBuildContext.buildId,
@@ -175,6 +177,7 @@ class PipelineBuildDao {
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
+                        startBuildContext.yamlVersion,
                         startBuildContext.debugModel?.let { self -> JsonUtil.toJson(self, formatted = false) }
                     ).execute()
                 }
@@ -1709,6 +1712,7 @@ class PipelineBuildDao {
                     buildId = t.buildId,
                     version = t.version,
                     versionName = t.versionName,
+                    yamlVersion = t.yamlVersion,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
                     status = BuildStatus.values()[t.status],
@@ -1770,6 +1774,7 @@ class PipelineBuildDao {
                     buildId = t.buildId,
                     version = t.version,
                     versionName = null,
+                    yamlVersion = t.yamlVersion,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
                     status = BuildStatus.values()[t.status],

@@ -44,11 +44,11 @@ import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.models.Concurrency
 import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
-import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlParser
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
@@ -181,11 +181,11 @@ class ModelTransfer @Autowired constructor(
         return model
     }
 
-    fun model2yaml(modelInput: ModelTransferInput): IPreTemplateScriptBuildYaml {
+    fun model2yaml(modelInput: ModelTransferInput): IPreTemplateScriptBuildYamlParser {
         modelInput.aspectWrapper.setModel4Model(modelInput.model, PipelineTransferAspectWrapper.AspectType.BEFORE)
         val label = prepareYamlLabels(modelInput.userId, modelInput.setting).ifEmpty { null }
         val yaml = when (modelInput.version) {
-            YamlVersion.Version.V2_0 -> PreTemplateScriptBuildYaml(
+            YamlVersion.V2_0 -> PreTemplateScriptBuildYamlParser(
                 version = "v2.0",
                 name = modelInput.setting.pipelineName,
                 desc = modelInput.setting.desc.ifEmpty { null },
@@ -193,8 +193,7 @@ class ModelTransfer @Autowired constructor(
                 resources = modelInput.model.resources,
                 notices = makeNoticesV2(modelInput.setting)
             )
-
-            YamlVersion.Version.V3_0 -> PreTemplateScriptBuildYamlV3(
+            YamlVersion.V3_0 -> PreTemplateScriptBuildYamlV3Parser(
                 version = "v3.0",
                 name = modelInput.setting.pipelineName,
                 desc = modelInput.setting.desc.ifEmpty { null },
@@ -214,12 +213,11 @@ class ModelTransfer @Autowired constructor(
 
         val triggerOn = makeTriggerOn(modelInput)
         when (modelInput.version) {
-            YamlVersion.Version.V2_0 -> {
-                (yaml as PreTemplateScriptBuildYaml).triggerOn = triggerOn.firstOrNull() as PreTriggerOn?
+            YamlVersion.V2_0 -> {
+                (yaml as PreTemplateScriptBuildYamlParser).triggerOn = triggerOn.firstOrNull() as PreTriggerOn?
             }
-
-            YamlVersion.Version.V3_0 -> {
-                (yaml as PreTemplateScriptBuildYamlV3).triggerOn =
+            YamlVersion.V3_0 -> {
+                (yaml as PreTemplateScriptBuildYamlV3Parser).triggerOn =
                     triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it }
             }
         }
@@ -324,7 +322,7 @@ class ModelTransfer @Autowired constructor(
             triggers, modelInput.setting.projectId, modelInput.aspectWrapper
         )
         when (modelInput.version) {
-            YamlVersion.Version.V2_0 -> {
+            YamlVersion.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
                 if (scmTrigger[modelInput.defaultScmType] != null &&
                     scmTrigger[modelInput.defaultScmType]!!.size == 1
@@ -346,7 +344,7 @@ class ModelTransfer @Autowired constructor(
                 return emptyList()
             }
 
-            YamlVersion.Version.V3_0 -> {
+            YamlVersion.V3_0 -> {
                 val trigger = mutableListOf<IPreTriggerOn>()
                 val triggerV3 = mutableListOf<IPreTriggerOn>()
                 scmTrigger.map { on ->
@@ -385,7 +383,7 @@ class ModelTransfer @Autowired constructor(
     private fun preparePipelineLabels(
         userId: String,
         projectCode: String,
-        yaml: IPreTemplateScriptBuildYaml
+        yaml: IPreTemplateScriptBuildYamlParser
     ): List<String> {
         val ymlLabel = yaml.label ?: return emptyList()
         val labels = mutableListOf<String>()

@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
@@ -72,6 +73,7 @@ import org.springframework.stereotype.Service
 class ContainerControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
@@ -136,7 +138,12 @@ class ContainerControl @Autowired constructor(
     }
 
     private fun PipelineBuildContainer.execute(watcher: Watcher, event: PipelineBuildContainerEvent) {
-
+        // 已经结束的构建，不再受理，抛弃消息
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+        if (buildInfo == null || buildInfo.status.isFinish()) {
+            LOG.info("ENGINE|$buildId|${event.source}|CONTAINER_REPEAT_EVENT|$containerId|${buildInfo?.status}")
+            return
+        }
         watcher.start("init_context")
         val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 //        val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
@@ -169,7 +176,7 @@ class ContainerControl @Autowired constructor(
             stageId = stageId,
             onlyMatrixGroup = true
         )
-        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
+        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, buildInfo)
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态

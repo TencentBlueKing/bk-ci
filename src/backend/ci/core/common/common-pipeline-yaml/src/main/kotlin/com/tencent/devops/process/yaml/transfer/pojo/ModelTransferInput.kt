@@ -10,7 +10,7 @@ data class ModelTransferInput(
     val userId: String,
     var model: Model,
     val setting: PipelineSetting,
-    val version: YamlVersion.Version,
+    val version: YamlVersion,
     val aspectWrapper: PipelineTransferAspectWrapper,
     val defaultScmType: ScmType = ScmType.CODE_GIT
 )

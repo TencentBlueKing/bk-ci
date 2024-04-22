@@ -61,7 +61,7 @@ import com.tencent.devops.process.yaml.v3.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v3.models.PreRepositoryHook
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlI
+import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
 import com.tencent.devops.process.yaml.v3.models.YamlTransferData
 import com.tencent.devops.process.yaml.v3.models.YmlName
@@ -296,7 +296,7 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun formatStage(preScriptBuildYaml: PreScriptBuildYamlI, transferData: YamlTransferData? = null): List<Stage> {
+    fun formatStage(preScriptBuildYaml: PreScriptBuildYamlIParser, transferData: YamlTransferData? = null): List<Stage> {
         return when {
             preScriptBuildYaml.steps != null -> {
                 val jobId = randomString(jobNamespace)

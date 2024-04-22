@@ -610,9 +610,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 signPipelineId = pipelineId,
                 userId = creator,
                 channelCode = channelCode,
-                description = null,
-                yamlStr = null,
-                baseVersion = null,
                 create = false
             ).version
             pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(

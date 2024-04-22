@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PositionBody
 import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
+import com.tencent.devops.process.pojo.TransferResponseResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -74,7 +74,7 @@ interface UserPipelineTransferResource {
         @QueryParam("actionType")
         actionType: TransferActionType,
         data: TransferBody
-    ): Result<TransferResponse>
+    ): Result<TransferResponseResult>
 
     @Operation(summary = "task转yaml格式")
     @POST

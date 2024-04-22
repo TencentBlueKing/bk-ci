@@ -25,35 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.process.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.pipeline.pojo.transfer.Resources
-import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v3.models.job.Job
-import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.Stage
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
+import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ScriptBuildYamlV3(
-    val version: String?,
-    val name: String?,
-    val label: List<String>?,
-    val triggerOn: List<TriggerOn>?,
-    val variables: Map<String, Variable>?,
-    val stages: List<Stage>,
-    val extends: Extends?,
-    val resource: Resources?,
-    val notices: List<GitNotices>?,
-    var finally: List<Job>?,
-    val concurrency: Concurrency?
-) : YamlVersion {
-    override fun yamlVersion() = YamlVersion.Version.V3_0
+@Schema(title = "流水线互转-Response-result")
+data class TransferResponseResult(
+    @get:Schema(title = "modelAndSetting")
+    val modelAndSetting: PipelineModelAndSetting? = null,
+    @get:Schema(title = "当前yaml内容")
+    val newYaml: String? = null,
+    @get:Schema(title = "定位")
+    val mark: TransferMark? = null,
+    @get:Schema(title = "互转报错信息")
+    val error: String? = null,
+    @get:Schema(title = "是否支持YAML解析", required = true)
+    val yamlSupported: Boolean = true,
+    @get:Schema(title = "YAML解析异常信息")
+    val yamlInvalidMsg: String? = null
+) {
+    constructor(transfer: TransferResponse): this(
+        modelAndSetting = transfer.modelAndSetting,
+        newYaml = transfer.yamlWithVersion?.yamlStr,
+        mark = transfer.mark,
+        error = transfer.error,
+        yamlSupported = transfer.yamlSupported,
+        yamlInvalidMsg = transfer.yamlInvalidMsg
+    )
 }

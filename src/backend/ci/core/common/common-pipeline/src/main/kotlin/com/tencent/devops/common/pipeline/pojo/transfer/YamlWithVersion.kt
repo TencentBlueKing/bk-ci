@@ -25,37 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.common.pipeline.pojo.transfer
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.pojo.transfer.Resources
-import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v3.models.job.Job
-import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.Stage
+import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ScriptBuildYaml(
-    val version: String?,
-    val name: String?,
-    val label: List<String>?,
-    @JsonProperty("on")
-    val triggerOn: TriggerOn?,
-    val variables: Map<String, Variable>?,
-    val stages: List<Stage>,
-    val extends: Extends?,
-    val resource: Resources?,
-    val notices: List<GitNotices>?,
-    var finally: List<Job>?,
-    val concurrency: Concurrency?
-) : YamlVersion {
-    override fun yamlVersion() = YamlVersion.Version.V2_0
-}
+@Schema(title = "通过解析后的YAML对象")
+data class YamlWithVersion(
+    @get:Schema(title = "当前yaml内容")
+    val yamlStr: String?,
+    @get:Schema(title = "当前yaml的版本标识")
+    val versionTag: String? = null
+)

@@ -186,7 +186,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
-        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(projectId, buildInfo.pipelineId)
+        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
+            projectId, buildInfo.pipelineId, buildId, buildInfo
+        )
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
 
@@ -495,7 +497,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
             return claim(
                 task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId,
-                asCodeEnabled = pipelineAsCodeService.asCodeEnabled(task.projectId, task.pipelineId) == true
+                asCodeEnabled = pipelineAsCodeService.asCodeEnabled(
+                    task.projectId, task.pipelineId, buildId, buildInfo
+                ) == true
             )
         } finally {
             containerIdLock.unlock()
