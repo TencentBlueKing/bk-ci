@@ -51,5 +51,5 @@ data class ListComponentsQuery(
     @get:Schema(title = "页码", required = true)
     val page: Int,
     @get:Schema(title = "每页数量", required = true)
-    val pageSize: Int,
+    val pageSize: Int
 )
