@@ -209,21 +209,7 @@ class GitProxyTGitService @Autowired constructor(
         val result = mutableMapOf<Long, Boolean>()
 
         // 获取项目下正在跑的所有机器IP
-        val ips = workspaceJoinDao.limitFetchProjectWorkspace(
-            dslContext = dslContext,
-            null,
-            queryType = QueryType.WEB,
-            search = WorkspaceSearch(
-                projectId = listOf(projectId),
-                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
-                onFuzzyMatch = false
-            )
-        )?.filter { !it.hostName.isNullOrBlank() }?.map {
-            it.hostName?.split(".")?.let { host ->
-                host.subList(1, host.size).joinToString(separator = ".")
-            }!!
-        }?.toSet() ?: emptySet()
-
+        val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
         // 获取项目下正在跑的所有机器的用户
         val users = fetchProjectOwnerUser(projectId)
 
