@@ -125,7 +125,8 @@ class PipelineBuildDao {
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
-                        startBuildContext.versionName
+                        startBuildContext.versionName,
+                        startBuildContext.yamlVersion
                     ).execute()
                 }
             } else {
