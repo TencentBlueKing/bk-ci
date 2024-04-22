@@ -28,11 +28,14 @@
 package com.tencent.devops.store.devx.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
-import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
-import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,13 +46,11 @@ import org.springframework.stereotype.Service
 @Service("DEVX_MANAGEMENT_EXTRA_SERVICE")
 class DevxManagementExtraServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
-    private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
-    private val storeCommonService: StoreCommonService
+    private val storeProjectRelDao: StoreProjectRelDao,
+    private val authProjectApi: AuthProjectApi
 ) : StoreManagementExtraService {
 
-    override fun doComponentDeleteCheck(): Result<Boolean> {
+    override fun doComponentDeleteCheck(storeCode: String): Result<Boolean> {
         return Result(true)
     }
 
@@ -63,6 +64,21 @@ class DevxManagementExtraServiceImpl @Autowired constructor(
         storeType: String,
         storeCode: String
     ): Result<Boolean> {
+        // 用户是否有权限卸载
+        val isInstaller = storeProjectRelDao.isInstaller(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        logger.info("uninstallComponentParamCheck, isInstaller=$isInstaller")
+        if (!(hasManagerPermission(projectCode, userId) || isInstaller)) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.PROJECT_NO_PERMISSION,
+                params = arrayOf(projectCode, atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
+        }
         return Result(true)
+    }
+
+    private fun hasManagerPermission(projectCode: String, userId: String): Boolean {
+        return authProjectApi.getProjectUsers(pipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)
+            .contains(userId)
     }
 }
