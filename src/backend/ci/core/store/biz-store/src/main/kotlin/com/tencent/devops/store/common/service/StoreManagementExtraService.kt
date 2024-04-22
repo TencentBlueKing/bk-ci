@@ -36,7 +36,7 @@ interface StoreManagementExtraService {
     /**
      * 检查组件是否可以删除
      */
-    fun doComponentDeleteCheck(): Result<Boolean>
+    fun doComponentDeleteCheck(storeCode: String): Result<Boolean>
 
     /**
      * 删除组件仓库文件

@@ -104,7 +104,7 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
                 params = arrayOf(storeCode)
             )
         }
-        getStoreManagementExtraService(storeType).doComponentDeleteCheck()
+        getStoreManagementExtraService(storeType).doComponentDeleteCheck(storeCode)
     }
 
     override fun deleteComponentRepoFile(handlerRequest: StoreDeleteRequest) {
