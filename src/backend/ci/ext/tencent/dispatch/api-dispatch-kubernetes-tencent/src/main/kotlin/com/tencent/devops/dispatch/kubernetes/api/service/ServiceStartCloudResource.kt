@@ -97,7 +97,7 @@ interface ServiceStartCloudResource {
     @Path("/windows/pool/config")
     fun getCgsConfig(): Result<CgsResourceConfig>
 
-    @Operation(summary = "根据cgsId确认是否云桌面已有使用中的记录")
+    @Operation(summary = "共享云桌面")
     @POST
     @Path("/workspace/share")
     fun shareWorkspace(

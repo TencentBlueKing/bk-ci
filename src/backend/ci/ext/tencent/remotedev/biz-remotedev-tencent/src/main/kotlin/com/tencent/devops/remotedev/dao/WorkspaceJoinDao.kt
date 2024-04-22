@@ -323,6 +323,28 @@ class WorkspaceJoinDao {
             .toSet()
     }
 
+    // 获取正在运行的 workspace 的用户
+    fun fetchProjectSharedUser(
+        dslContext: DSLContext,
+        projectId: String
+    ): Set<String> {
+        return dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
+            .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
+            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .and(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            )
+            .fetch().distinct()
+            .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] ?: "" }
+            .filter { it.isNotBlank() }
+            .toSet()
+    }
+
     class TWorkspaceFieldJooqMapper : RecordMapper<Record, WorkspaceRecord> {
         override fun map(record: Record?): WorkspaceRecord? {
             if (record == null) {
@@ -443,7 +465,7 @@ class WorkspaceJoinDao {
         owners: Set<String>?
     ): Set<String> {
         val tables = mutableListOf(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-        if (size.isNullOrEmpty()) {
+        if (!size.isNullOrEmpty()) {
             tables.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
         }
         if (!owners.isNullOrEmpty()) {
