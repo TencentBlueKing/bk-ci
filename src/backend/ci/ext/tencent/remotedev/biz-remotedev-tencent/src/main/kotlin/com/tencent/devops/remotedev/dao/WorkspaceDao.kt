@@ -688,10 +688,12 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .let {
-                    i -> if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
+                        i ->
+                    if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
                 }
                 .let {
-                    i -> if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
+                        i ->
+                    if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
                 }
                 .where(NAME.eq(workspaceName))
                 .execute()
@@ -1008,6 +1010,24 @@ class WorkspaceDao {
                 .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                 .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.eq(cgsId))
         )
+    }
+
+    // 获取正常状态的 workspace ip
+    fun fetchProjectIp(
+        dslContext: DSLContext,
+        projectId: String
+    ): Set<String> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(
+                    STATUS.notIn(
+                        WorkspaceStatus.PREPARING.ordinal,
+                        WorkspaceStatus.DELETED.ordinal,
+                        WorkspaceStatus.DELIVERING_FAILED.ordinal
+                    )
+                ).fetch().map { it.hostName }.filter { !it.isNullOrBlank() }.toSet()
+        }
     }
 
     companion object {

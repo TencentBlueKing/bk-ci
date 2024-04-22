@@ -291,9 +291,9 @@ class WorkspaceJoinDao {
         search.owner?.ifEmpty { null }?.let { owners ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
-                        )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
+                    )
                     .or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
                             WorkspaceShared.AssignType.OWNER.name
@@ -305,12 +305,12 @@ class WorkspaceJoinDao {
                     )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-                        ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
-                    )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
+                    ).or(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+                )
             }
             conditions.add(sql)
         }
@@ -319,26 +319,26 @@ class WorkspaceJoinDao {
         search.viewers?.ifEmpty { null }?.let { viewers ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
-                        ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
-                            .and(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                    .likeRegex(viewers.joinToString("|"))
-                            )
-                    )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
+                    ).or(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
+                        .and(
+                            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                .likeRegex(viewers.joinToString("|"))
+                        )
+                )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
-                        ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
                     ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
-                    )
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
+                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                ).or(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                )
             }
             conditions.add(sql)
         }
@@ -518,9 +518,10 @@ class WorkspaceJoinDao {
     // 获取正在运行的 workspace 的用户
     fun fetchProjectSharedUser(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        onlyOwner: Boolean
     ): Set<String> {
-        return dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
+        val dsl = dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
             .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
             .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
             .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
@@ -531,7 +532,10 @@ class WorkspaceJoinDao {
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
             )
-            .fetch().distinct()
+        if (onlyOwner) {
+            dsl.and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+        }
+        return dsl.fetch().distinct()
             .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] ?: "" }
             .filter { it.isNotBlank() }
             .toSet()
