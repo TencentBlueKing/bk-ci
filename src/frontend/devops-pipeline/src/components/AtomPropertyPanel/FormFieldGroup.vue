@@ -1,6 +1,10 @@
 <script>
+    import Logo from '@/components/Logo'
     export default {
         name: 'form-field-group',
+        components: {
+            Logo
+        },
         props: {
             label: {
                 type: String,
@@ -27,15 +31,26 @@
             },
             handleChange: {
                 type: Function
+            },
+            docs: {
+                type: String,
+                default: ''
+            },
+            docsLink: {
+                type: String,
+                default: ''
             }
         },
         methods: {
             handleChangeSwitch (val) {
                 this.handleChange(this.name, val)
+            },
+            handleToDocs () {
+                window.open(this.docsLink, '_blank')
             }
         },
         render (h) {
-            const { $slots, label, desc, value, topDivider, showSwitch, handleChangeSwitch } = this
+            const { $slots, label, desc, value, topDivider, showSwitch, handleChangeSwitch, docsLink, docs, handleToDocs } = this
             return (
                 <div class="form-field bk-form-item">
                     {
@@ -57,6 +72,12 @@
                     }
                     {
                         showSwitch && <bk-switcher value={value} theme="primary" onChange={handleChangeSwitch}></bk-switcher>
+                    }
+                    {
+                        docsLink && <span class="bk-form-group-docs-link" onClick={handleToDocs}>
+                            <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
+                            {docs}
+                        </span>
                     }
                     <div class="bk-form-group-content">
                         {$slots.default}
@@ -86,6 +107,12 @@
         position: relative;
         top: 6px;
         margin: 0 10px
+    }
+    .bk-form-group-docs-link {
+        float: right;
+        line-height: 32px;
+        cursor: pointer;
+        color: #3c96ff;
     }
     .top-border-divider {
         height: 1px;
