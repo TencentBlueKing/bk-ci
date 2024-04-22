@@ -769,9 +769,6 @@ class WorkspaceCommon @Autowired constructor(
         if (projectId.isNullOrBlank() || ownerType == WorkspaceOwnerType.PERSONAL) {
             return config.devcouldAppName to config.devcouldCurLaunchId
         }
-        // 先上devcloud 后上gameId改造。由于有依赖，在这个拆分gameId改造。上gameId改造时去掉此处限制逻辑
-        return config.bkciAppName to config.bkciCurLaunchId
-        // 去掉上面return
         return projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it } ?: kotlin.run {
             remotedevProjectService.migrateOldData(projectId)
             checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
