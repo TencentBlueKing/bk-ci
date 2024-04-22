@@ -29,8 +29,8 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 class PipelineAsCodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineBuildDao: PipelineBuildDao
 ) {
 
     fun asCodeEnabled(
@@ -61,8 +61,8 @@ class PipelineAsCodeService @Autowired constructor(
         val settings = pipelineSettingDao.getPipelineAsCodeSettings(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
         )
-        val info = buildInfo ?: pipelineRuntimeService.getBuildInfo(
-            projectId = projectId, pipelineId = pipelineId, buildId = buildId
+        val info = buildInfo ?: pipelineBuildDao.getBuildInfo(
+            dslContext, projectId, pipelineId, buildId
         )
         // TODO Stream暂时保持继续采用流水线级的配置
         if (projectId.startsWith("git_")) {
