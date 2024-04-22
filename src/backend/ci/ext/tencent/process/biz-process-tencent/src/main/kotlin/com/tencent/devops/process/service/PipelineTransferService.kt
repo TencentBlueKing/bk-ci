@@ -145,7 +145,7 @@ class PipelineTransferService @Autowired constructor(
                                         channelCode = pipeline.channelCode,
                                         create = false,
                                         baseVersion = null,
-                                        yamlStr = null
+                                        yaml = null
                                     )
 
                                     pipelineTransferHistoryDao.save(
@@ -354,7 +354,7 @@ class PipelineTransferService @Autowired constructor(
                                     channelCode = pipelineInfo.channelCode,
                                     create = false,
                                     baseVersion = null,
-                                    yamlStr = null
+                                    yaml = null
                                 )
 
                                 pipelineTransferHistoryDao.save(
