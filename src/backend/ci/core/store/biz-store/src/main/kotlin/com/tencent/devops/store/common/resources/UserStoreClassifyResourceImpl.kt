@@ -30,11 +30,16 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreClassifyResource
+import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.pojo.common.classify.Classify
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStoreClassifyResourceImpl : UserStoreClassifyResource {
+class UserStoreClassifyResourceImpl  @Autowired constructor(
+    private val classfiyService: ClassifyService
+) : UserStoreClassifyResource {
     override fun getClassifyList(storeType: String): Result<List<Classify>> {
-        TODO("Not yet implemented")
+        return classfiyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte())
     }
 }
