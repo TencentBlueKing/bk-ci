@@ -46,7 +46,7 @@
                 {{ $t("diff") }}
             </VersionDiffEntry>
             <RollbackEntry
-                v-if="showRollback"
+                v-if="showRollback && isReleasePipeline"
                 :text="false"
                 :has-permission="canEdit"
                 :version="currentVersion"
@@ -60,7 +60,7 @@
                 {{ operateName }}
             </RollbackEntry>
             <bk-button
-                v-else
+                v-else-if="!onlyBranchPipeline"
                 theme="primary"
                 outline
                 v-perm="{
