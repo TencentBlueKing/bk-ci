@@ -25,25 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db-base"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api("net.coobird:thumbnailator")
-    api(project(":core:artifactory:model-artifactory"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:artifactory:biz-artifactory")) {
-        exclude(module = "common-db")
-    }
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:artifactory:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.support.api.service
+
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Tag(name = "SERVICE_FILE", description = "文件管理")
+@Path("/service/file")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
+interface ServiceFileResource {
+
+    @Operation(summary = "上传文件")
+    @POST
+    @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadFile(
+        @Parameter(description = "userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }

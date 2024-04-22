@@ -25,25 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db-base"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api("net.coobird:thumbnailator")
-    api(project(":core:artifactory:model-artifactory"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:artifactory:biz-artifactory")) {
-        exclude(module = "common-db")
+package com.tencent.devops.experience.dao
+
+import com.tencent.devops.model.experience.tables.TToken
+import com.tencent.devops.model.experience.tables.records.TTokenRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+class ExperienceTokenDao {
+    fun create(dslContext: DSLContext, experienceId: Long, userId: String, token: String, expireTime: LocalDateTime): Long {
+        val now = LocalDateTime.now()
+        with(TToken.T_TOKEN) {
+            val record = dslContext.insertInto(this,
+                    EXPERIENCE_ID,
+                    USER_ID,
+                    TOKEN,
+                    EXPIRE_TIME,
+                    CREATE_TIME,
+                    UPDATE_TIME
+            ).values(
+                    experienceId,
+                    userId,
+                    token,
+                    expireTime,
+                    now,
+                    now)
+                    .returning(ID)
+                    .fetchOne()!!
+            return record.id
+        }
     }
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:artifactory:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:auth:api-auth"))
+
+    fun getOrNull(dslContext: DSLContext, token: String): TTokenRecord? {
+        with(TToken.T_TOKEN) {
+            return dslContext.selectFrom(this)
+                    .where(TOKEN.eq(token))
+                    .fetchOne()
+        }
+    }
 }

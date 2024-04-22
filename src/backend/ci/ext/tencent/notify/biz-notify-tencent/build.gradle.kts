@@ -27,7 +27,7 @@
 
 dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
+    api(project(":ext:tencent:misc:api-support-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":core:common:common-db"))
     api(project(":ext:tencent:common:common-notify-tencent"))

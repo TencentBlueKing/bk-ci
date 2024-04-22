@@ -24,26 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.api.service
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db-base"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api("net.coobird:thumbnailator")
-    api(project(":core:artifactory:model-artifactory"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:artifactory:biz-artifactory")) {
-        exclude(module = "common-db")
-    }
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:artifactory:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:auth:api-auth"))
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryData
+import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryParam
+import com.tencent.devops.lambda.pojo.bkdata.BkDataResult
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Tag(name = "SERVICE_LAMBDA_BKDATA", description = "服务-lambda-数据平台")
+@Path("/service/lambda/bkdata")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
+interface ServiceBkDataResource {
+
+    @Operation(summary = "查询数据平台数据")
+    @POST
+    @Path("/data/query")
+    fun queryData(
+        @Parameter(description = "数据平台查询接口参数", required = true)
+        bkDataQueryParam: BkDataQueryParam
+    ): BkDataResult<BkDataQueryData>
 }

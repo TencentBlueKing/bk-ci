@@ -25,25 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db-base"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api("net.coobird:thumbnailator")
-    api(project(":core:artifactory:model-artifactory"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":core:artifactory:biz-artifactory")) {
-        exclude(module = "common-db")
-    }
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:artifactory:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.support.api.service
+
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Tag(name = "SERVICE_IMAGE_MANAGE", description = "图片管理")
+@Path("/service/image/manage")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
+interface ServiceImageManageResource {
+
+    @Operation(summary = "压缩图片")
+    @POST
+    @Path("/compress")
+    fun compressImage(
+        @Parameter(description = "网络图片路径", required = true)
+        @QueryParam("imageUrl")
+        imageUrl: String,
+        @Parameter(description = "压缩宽度", required = true)
+        @QueryParam("compressWidth")
+        compressWidth: Int,
+        @Parameter(description = "压缩高度", required = true)
+        @QueryParam("compressHeight")
+        compressHeight: Int
+    ): Result<String>
 }
