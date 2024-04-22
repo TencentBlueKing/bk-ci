@@ -1,43 +1,36 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
-            <form-field v-if="!obj.hidden && rely(obj, element)" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component
-                    :is="obj.component"
-                    :name="key"
-                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
-                    :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
-                    :value="element[key]"
-                    v-bind="obj">
-                </component>
-            </form-field>
-        </template>
-        <form-field v-if="Object.keys(customTriggerControlModel).length">
-            <accordion show-checkbox :show-content="enableThirdFilter" key="customTriggerControl" :is-version="true">
-                <header class="var-header" style="height: 16px;" slot="header">
-                    <span>
-                        {{ $t('editPage.customTriggerControl') }}
-                        <i class="bk-icon icon-info-circle ml5" v-bk-tooltips="$t('editPage.customTriggerControlTips')"></i>
-                        <a class="title-link" target="blink" :href="customTriggerDocsLink">{{ $t('editPage.customTriggerLinkDesc') }}</a>
-                    </span>
-                    <input class="accordion-checkbox" :disabled="disabled" :checked="enableThirdFilter" type="checkbox" @click.stop @change="toggleEnableThirdFilter" />
-                </header>
-                <div slot="content" class="bk-form bk-form-vertical" v-if="enableThirdFilter">
-                    <template v-for="(obj, key) in customTriggerControlModel">
-                        <form-field :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+            <template v-if="obj.type === 'group'">
+                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :handle-change="handleMethods" :key="key" v-bind="obj">
+                    <template v-for="i in obj.children">
+                        <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
                             <component
-                                :is="obj.component"
-                                :name="key"
-                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
-                                :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
-                                :value="element[key]"
-                                v-bind="obj">
+                                :is="i.component"
+                                :name="i.key"
+                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
+                                :handle-change="i.key === 'eventType' ? handleBlockEnable : handleMethods"
+                                :value="element[i.key]"
+                                v-bind="i">
                             </component>
                         </form-field>
                     </template>
-                </div>
-            </accordion>
-        </form-field>
+                </form-field-group>
+            </template>
+            <template v-else>
+                <form-field v-if="!obj.hidden && rely(obj, element)" :key="key" v-bind="obj" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                        :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
+                        :value="element[key]"
+                        :element="element"
+                        v-bind="obj">
+                    </component>
+                </form-field>
+            </template>
+        </template>
     </div>
 </template>
 
@@ -49,7 +42,6 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                customTriggerControlModel: {},
                 enableThirdFilter: false,
                 customTriggerDocsLink: 'https://github.com/Tencent/bk-ci/issues/7743#issue-1391717634'
             }
@@ -71,14 +63,6 @@
         },
         created () {
             this.enableThirdFilter = this.element.enableThirdFilter || false
-            this.customTriggerControlModel = {}
-            const { thirdUrl, thirdSecretToken } = this.atomPropsModel
-            if (thirdUrl && thirdSecretToken) {
-                this.customTriggerControlModel.thirdUrl = thirdUrl
-                this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
-                this.atomPropsModel.thirdUrl.hidden = true
-                this.atomPropsModel.thirdSecretToken.hidden = true
-            }
             if (this.element.eventType === 'MERGE_REQUEST') {
                 this.atomPropsModel.webhookQueue.hidden = false
             } else {

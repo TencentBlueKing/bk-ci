@@ -49,6 +49,10 @@ import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
+import FormFieldGroup from './FormFieldGroup'
+import StaffInput from '@/components/atomFormField/StaffInput'
+import CompositeInput from '@/components/atomFormField/CompositeInput'
+import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
 
 const atomMixin = {
     props: {
@@ -93,7 +97,11 @@ const atomMixin = {
         QualitygateTips,
         AutoComplete,
         DevopsSelect,
-        AtomMarkdown
+        AtomMarkdown,
+        StaffInput,
+        FormFieldGroup,
+        CompositeInput,
+        ConditionalInputSelector
     },
     computed: {
         ...mapGetters('atom', [
