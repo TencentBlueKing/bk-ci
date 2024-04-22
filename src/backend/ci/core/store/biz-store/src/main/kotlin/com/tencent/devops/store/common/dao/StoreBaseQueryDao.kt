@@ -327,8 +327,8 @@ class StoreBaseQueryDao {
         pageSize: Int
     ): Result<out Record>? {
         val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyComponentConditions(
-            dslContext = dslContext,
             userId = userId,
             storeName = name,
             storeType = storeType
@@ -346,8 +346,9 @@ class StoreBaseQueryDao {
             tStoreBase.UPDATE_TIME
         )
             .from(tStoreBase)
+            .join(tStoreMember)
+            .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
-            .groupBy(tStoreBase.ID)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
         return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
     }
@@ -359,21 +360,22 @@ class StoreBaseQueryDao {
         name: String?
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyComponentConditions(
-            dslContext = dslContext,
             userId = userId,
             storeName = name,
             storeType = storeType
         )
         return dslContext.selectCount()
             .from(tStoreBase)
+            .join(tStoreMember)
+            .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
             .fetchOne(0, Int::class.java) ?: 0
     }
 
     private fun generateGetMyComponentConditions(
         userId: String,
-        dslContext: DSLContext,
         storeType: StoreTypeEnum,
         storeName: String?
     ): MutableList<Condition> {
@@ -385,15 +387,8 @@ class StoreBaseQueryDao {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }
         conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        conditions.add(
-            tStoreBase.STORE_CODE.`in`(
-                dslContext.select(tStoreMember.STORE_CODE)
-                    .from(tStoreMember)
-                    .where(tStoreMember.USERNAME.eq(userId))
-                    .and(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
-                    .and(tStoreMember.STORE_CODE.eq(tStoreBase.STORE_CODE))
-            )
-        )
+        conditions.add(tStoreMember.USERNAME.eq(userId))
+        conditions.add(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
         return conditions
     }
 
