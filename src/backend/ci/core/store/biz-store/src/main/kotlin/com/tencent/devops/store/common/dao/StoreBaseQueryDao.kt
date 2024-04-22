@@ -30,15 +30,20 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
+import com.tencent.devops.model.store.tables.TStoreCategoryRel
+import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.ListComponentsQuery
+import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.SelectJoinStep
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -213,6 +218,104 @@ class StoreBaseQueryDao {
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .fetchInto(String::class.java)
         }
+    }
+
+    fun countComponents(
+        dslContext: DSLContext,
+        listComponentsQuery: ListComponentsQuery,
+        classifyId: String?,
+        categoryIds: List<String>?,
+        labelIds: List<String>?
+    ): Int {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val baseStep = dslContext.selectCount().from(tStoreBase)
+        val conditions = generateListComponentsConditions(
+            listComponentsQuery = listComponentsQuery,
+            classifyId = classifyId,
+            categoryIds = categoryIds,
+            labelIds = labelIds,
+            baseStep = baseStep
+        )
+        return baseStep.where(conditions).fetchOne(0, Int::class.java) ?: 0
+    }
+
+    fun listComponents(
+        dslContext: DSLContext,
+        listComponentsQuery: ListComponentsQuery,
+        classifyId: String?,
+        categoryIds: List<String>?,
+        labelIds: List<String>?
+    ): Result<out Record> {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val sortType = listComponentsQuery.sortType
+        val baseStep = dslContext.select(
+            tStoreBase.ID,
+            tStoreBase.STORE_CODE,
+            tStoreBase.NAME,
+            tStoreBase.LOGO_URL,
+            tStoreBase.VERSION,
+            tStoreBase.STATUS,
+            tStoreBase.CREATOR,
+            tStoreBase.CREATE_TIME,
+            tStoreBase.MODIFIER,
+            tStoreBase.UPDATE_TIME
+        ).from(tStoreBase)
+        val conditions = generateListComponentsConditions(
+            listComponentsQuery = listComponentsQuery,
+            classifyId = classifyId,
+            categoryIds = categoryIds,
+            labelIds = labelIds,
+            baseStep = baseStep
+        )
+        if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
+            baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name))
+        } else {
+            baseStep.where(conditions)
+        }
+        return baseStep.limit(
+            (listComponentsQuery.page - 1) * listComponentsQuery.pageSize,
+            listComponentsQuery.pageSize
+        ).fetch()
+    }
+
+    private fun generateListComponentsConditions(
+        listComponentsQuery: ListComponentsQuery,
+        classifyId: String?,
+        categoryIds: List<String>?,
+        labelIds: List<String>?,
+        baseStep: SelectJoinStep<out Record>
+    ): MutableList<Condition> {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+        val storeType = StoreTypeEnum.valueOf(listComponentsQuery.storeType)
+        val name = listComponentsQuery.name
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
+        listComponentsQuery.type?.let {
+            conditions.add(tStoreBaseFeature.TYPE.eq(it))
+        }
+        if (null != name) {
+            conditions.add(tStoreBase.NAME.contains(name))
+        }
+        listComponentsQuery.processFlag?.let {
+            val processingStatusList = StoreStatusEnum.getProcessingStatusList()
+            conditions.add(tStoreBase.STATUS.`in`(processingStatusList))
+        }
+        classifyId?.let {
+            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
+        }
+        categoryIds?.let {
+            val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
+            conditions.add(tStoreCategoryRel.CATEGORY_ID.`in`(it))
+            baseStep.leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
+        }
+        labelIds?.let {
+            val tStoreLabelRel = TStoreLabelRel.T_STORE_LABEL_REL
+            conditions.add(tStoreLabelRel.LABEL_ID.`in`(it))
+            baseStep.leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
+        }
+        return conditions
     }
 
     fun getMyComponents(

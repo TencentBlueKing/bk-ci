@@ -87,7 +87,7 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
         logger.info("delete component ,params:[$userId, $storeCode, $storeType]")
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())
-        if (!isOwner) {
+        if (!isOwner && handlerRequest.checkPermissionFlag) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION,
                 params = arrayOf(storeCode)

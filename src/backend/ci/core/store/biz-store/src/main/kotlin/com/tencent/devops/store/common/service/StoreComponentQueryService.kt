@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.ListComponentsQuery
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
@@ -51,6 +52,11 @@ interface StoreComponentQueryService {
         pageSize: Int
     ): Page<MyStoreComponent>?
 
+    fun listComponents(
+        userId: String,
+        listComponentsQuery: ListComponentsQuery
+    ): Page<MyStoreComponent>?
+
     /**
      * 根据组件标识获取组件版本列表
      */
@@ -59,7 +65,8 @@ interface StoreComponentQueryService {
         storeType: String,
         storeCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        checkPermissionFlag: Boolean = true
     ): Page<StoreDeskVersionItem>
 
     /**

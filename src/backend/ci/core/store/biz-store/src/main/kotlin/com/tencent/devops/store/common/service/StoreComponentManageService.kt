@@ -16,7 +16,8 @@ interface StoreComponentManageService {
         userId: String,
         storeType: String,
         storeCode: String,
-        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest,
+        checkPermissionFlag: Boolean = true
     ): Result<Boolean>
 
     /**

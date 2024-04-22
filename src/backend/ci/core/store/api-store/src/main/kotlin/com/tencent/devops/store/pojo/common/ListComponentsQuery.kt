@@ -25,17 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
+import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "工作台-删除组件请求报文体")
-data class StoreDeleteRequest(
-    @get:Schema(title = "组件代码", required = true)
-    val storeCode: String,
+@Schema(title = "研发商店-查询组件条件")
+data class ListComponentsQuery(
     @get:Schema(title = "组件类型", required = true)
     val storeType: String,
-    @get:Schema(title = "", required = false)
-    val checkPermissionFlag: Boolean = true
-) : HandlerRequest()
+    @get:Schema(title = "类型", required = false)
+    val type: String?,
+    @get:Schema(title = "store组件名称", required = false)
+    val name: String?,
+    @get:Schema(title = "是否处于流程中", required = false)
+    val processFlag: Boolean? = null,
+    @get:Schema(title = "分类", required = false)
+    val classifyCode: String? = null,
+    @get:Schema(title = "应用范畴，多个用逗号分隔", required = false)
+    val categoryCodes: String?,
+    @get:Schema(title = "功能标签，多个用逗号分隔", required = false)
+    val labelCodes: String?,
+    @get:Schema(title = "排序", required = false)
+    val sortType: StoreSortTypeEnum?,
+    @get:Schema(title = "页码", required = true)
+    val page: Int,
+    @get:Schema(title = "每页数量", required = true)
+    val pageSize: Int,
+)

@@ -96,11 +96,12 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest,
+        checkPermissionFlag: Boolean
     ): Result<Boolean> {
         logger.info("updateComponentBaseInfo params:[$userId|$storeCode|$storeType|$storeBaseInfoUpdateRequest]")
         // 校验当前用户是否拥有更新组件基本信息权限
-        if (!storeMemberDao.isStoreAdmin(
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
