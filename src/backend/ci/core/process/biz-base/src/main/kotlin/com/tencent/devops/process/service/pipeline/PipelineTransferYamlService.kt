@@ -178,7 +178,7 @@ class PipelineTransferYamlService @Autowired constructor(
                             nowRepo = null,
                             repo = null,
                             resourcePoolMapExt = null,
-                            // TODO #8161 兼容是怎么做的？是不是可以干掉
+                            // TODO #8161 留给模板时再考虑
                             conf = YamlTemplateConf(
                                 useOldParametersExpression = false
                             )
@@ -197,7 +197,6 @@ class PipelineTransferYamlService @Autowired constructor(
                     val setting = modelTransfer.yaml2Setting(input)
 
                     logger.info(watcher.toString())
-                    // TODO #8161 增加判断YAML版本
                     return TransferResponse(
                         yamlVersionTag = input.yaml.version,
                         modelAndSetting = PipelineModelAndSetting(model, setting)

@@ -75,11 +75,11 @@ import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -324,9 +324,19 @@ class PipelineVersionFacadeService @Autowired constructor(
             Pair(VersionStatus.DRAFT_RELEASE, null)
         }
         if (enabled) {
-            if (draftVersion.yaml.isNullOrBlank()) throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY
-            )
+            if (draftVersion.yaml.isNullOrBlank()) {
+                transferService.transfer(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    actionType = TransferActionType.FULL_MODEL2YAML,
+                    data = TransferBody(PipelineModelAndSetting(draftVersion.model, targetSettings))
+                )
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY
+                )
+            }
+
             if (request.yamlInfo == null) throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
                 params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
