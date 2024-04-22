@@ -60,7 +60,7 @@
                 {{ operateName }}
             </RollbackEntry>
             <bk-button
-                v-else-if="!onlyBranchPipeline"
+                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === pipelineInfo?.releaseVersion"
                 theme="primary"
                 outline
                 v-perm="{
@@ -163,7 +163,7 @@
                 pacEnabled: 'atom/pacEnabled'
             }),
             showRollback () {
-                return (!this.isActiveDraftVersion && !this.isReleaseVersion) || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
+                return this.isReleaseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : undefined
