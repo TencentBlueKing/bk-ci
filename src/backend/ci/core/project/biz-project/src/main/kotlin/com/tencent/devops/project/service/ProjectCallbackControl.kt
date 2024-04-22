@@ -157,10 +157,10 @@ class ProjectCallbackControl @Autowired constructor(
         val encodeProjectId = URLEncoder.encode(URL_PLACEHOLDER_PROJECT_ID, "UTF-8")
         val encodeEventType = URLEncoder.encode(URL_PLACEHOLDER_EVENT_TYPE, "UTF-8")
         return url
-            .replaceAfter(URL_PLACEHOLDER_PROJECT_ID, projectId)
-            .replaceAfter(URL_PLACEHOLDER_EVENT_TYPE, projectEventType)
-            .replaceAfter(encodeProjectId, projectId)
-            .replaceAfter(encodeEventType, projectEventType)
+            .replace(URL_PLACEHOLDER_PROJECT_ID, projectId)
+            .replace(URL_PLACEHOLDER_EVENT_TYPE, projectEventType)
+            .replace(encodeProjectId, projectId)
+            .replace(encodeEventType, projectEventType)
     }
 
     companion object {
