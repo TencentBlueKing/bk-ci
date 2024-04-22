@@ -292,6 +292,8 @@
                     } else {
                         next(true)
                     }
+                } else {
+                    next(true)
                 }
             },
             addLeaveListenr () {
