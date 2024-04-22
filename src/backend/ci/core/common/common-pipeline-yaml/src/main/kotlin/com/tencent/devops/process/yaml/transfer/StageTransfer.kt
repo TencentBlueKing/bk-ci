@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml.transfer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -58,7 +57,11 @@ import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
-import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.v3.check.PreFlow
+import com.tencent.devops.process.yaml.v3.check.PreStageCheck
+import com.tencent.devops.process.yaml.v3.check.PreStageReviews
+import com.tencent.devops.process.yaml.v3.check.ReviewVariable
+import com.tencent.devops.process.yaml.v3.check.StageCheck
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
@@ -69,11 +72,6 @@ import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
-import com.tencent.devops.process.yaml.v3.check.PreFlow
-import com.tencent.devops.process.yaml.v3.check.PreStageCheck
-import com.tencent.devops.process.yaml.v3.check.PreStageReviews
-import com.tencent.devops.process.yaml.v3.check.ReviewVariable
-import com.tencent.devops.process.yaml.v3.check.StageCheck
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -233,26 +231,18 @@ class StageTransfer @Autowired(required = false) constructor(
         val stageEnable = if (stage.enable != null) stage.enable!! else true
 
         // 根据if设置stageController
-        val stageControlOption = if (!finalStage && !stage.ifField.isNullOrBlank()) {
-            var customVariables: List<NameAndValue>? = null
-            val runCondition = ModelCommon.revertCustomVariableMatch(stage.ifField)?.let {
-                customVariables = it
-                StageRunCondition.CUSTOM_VARIABLE_MATCH
-            } ?: ModelCommon.revertCustomVariableNotMatch(stage.ifField)?.let {
-                customVariables = it
-                StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
-            } ?: kotlin.run {
+        val stageControlOption = if (!finalStage) {
+            val runCondition = kotlin.run {
                 if (!stage.ifField.isNullOrBlank()) StageRunCondition.CUSTOM_CONDITION_MATCH else null
             } ?: StageRunCondition.AFTER_LAST_FINISHED
             StageControlOption(
                 enable = stageEnable,
                 runCondition = runCondition,
                 customCondition = if (runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
-                    ModelCreateUtil.removeIfBrackets(stage.ifField)
+                    stage.ifField
                 } else {
                     null
-                },
-                customVariables = customVariables
+                }
             )
         } else StageControlOption(
             enable = stageEnable
