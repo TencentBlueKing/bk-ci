@@ -28,15 +28,18 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
+import com.tencent.devops.model.store.tables.records.TCategoryRecord
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ID
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_TYPE
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
@@ -105,6 +108,52 @@ class StoreCategoryRelDao {
                     )
             }
             dslContext.batch(addStep).execute()
+        }
+    }
+
+    fun getByStoreId(dslContext: DSLContext, storeId: String): List<TCategoryRecord> {
+        val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
+        with(TCategory.T_CATEGORY) {
+            return dslContext.select(
+                ID,
+                CATEGORY_CODE,
+                CATEGORY_NAME,
+                ICON_URL,
+                TYPE,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATOR,
+                MODIFIER
+            )
+                .from(this)
+                .join(tStoreCategoryRel)
+                .on(ID.eq(tStoreCategoryRel.CATEGORY_ID))
+                .where(tStoreCategoryRel.STORE_ID.eq(storeId))
+                .fetchInto(TCategoryRecord::class.java)
+        }
+    }
+
+    fun batchQueryByStoreIds(dslContext: DSLContext, storeIds: List<String>): Result<out Record>? {
+        val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
+        with(TCategory.T_CATEGORY) {
+            return dslContext.select(
+                ID,
+                tStoreCategoryRel.STORE_ID.`as`(KEY_STORE_ID),
+                CATEGORY_CODE,
+                CATEGORY_NAME,
+                ICON_URL,
+                TYPE,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATOR,
+                MODIFIER
+            )
+                .from(this)
+                .join(tStoreCategoryRel)
+                .on(ID.eq(tStoreCategoryRel.CATEGORY_ID))
+                .where(tStoreCategoryRel.STORE_ID.`in`(storeIds))
+                .skipCheck()
+                .fetch()
         }
     }
 }

@@ -636,7 +636,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             val results = mutableListOf<MarketItem>()
 
             // 调用拆分出的getStoreInfos函数获取商品信息
-            val (count, storeInfos) = getStoreInfos(storeInfoQuery)
+            var (count, storeInfos) = getStoreInfos(storeInfoQuery)
             try {
                 val storeCodeList = mutableListOf<String>()
                 val storeIds = mutableListOf<String>()
@@ -679,9 +679,11 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         StoreUtils.isGreaterVersion(version, installedInfoMap[storeCode]!!)
                     } else null
                     if (storeInfoQuery.installed == true && installed != true) {
+                        count -= 1
                         return@forEach
                     }
                     if (storeInfoQuery.updateFlag == true && updateFlag != true) {
+                        count -= 1
                         return@forEach
                     }
                     val osList = mutableListOf<String>()

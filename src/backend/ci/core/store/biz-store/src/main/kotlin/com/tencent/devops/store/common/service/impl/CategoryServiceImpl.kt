@@ -36,6 +36,7 @@ import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.records.TCategoryRecord
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.CategoryDao
+import com.tencent.devops.store.common.dao.StoreCategoryRelDao
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
@@ -66,6 +67,7 @@ import org.springframework.stereotype.Service
 class CategoryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val categoryDao: CategoryDao,
+    private val storeCategoryRelDao: StoreCategoryRelDao,
     private val businessConfigDao: BusinessConfigDao
 ) : CategoryService {
 
@@ -220,14 +222,14 @@ class CategoryServiceImpl @Autowired constructor(
     }
 
     override fun getByRelStoreId(storeId: String): List<Category> {
-        val records = categoryDao.getByStoreId(dslContext, storeId)
+        val records = storeCategoryRelDao.getByStoreId(dslContext, storeId)
         return getCategoryList(records)
     }
 
     override fun getByRelStoreIds(storeIds: List<String>): Map<String, List<Category>> {
         val storeCategoryMap = mutableMapOf<String, MutableList<Category>>()
         val tCategory = TCategory.T_CATEGORY
-        categoryDao.batchQueryByStoreIds(dslContext, storeIds)?.forEach {
+        storeCategoryRelDao.batchQueryByStoreIds(dslContext, storeIds)?.forEach {
             val categoryLanName = I18nUtil.getCodeLanMessage(
             messageCode =
             "${StoreTypeEnum.getStoreType(it[tCategory.TYPE].toInt())}.category.${it[tCategory.CATEGORY_CODE]}",

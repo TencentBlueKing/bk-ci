@@ -39,7 +39,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -226,6 +225,7 @@ class StoreBaseQueryDao {
     ): Result<out Record>? {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val conditions = generateGetMyComponentConditions(
+            dslContext = dslContext,
             userId = userId,
             storeName = name,
             storeType = storeType
@@ -257,6 +257,7 @@ class StoreBaseQueryDao {
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val conditions = generateGetMyComponentConditions(
+            dslContext = dslContext,
             userId = userId,
             storeName = name,
             storeType = storeType
@@ -269,33 +270,28 @@ class StoreBaseQueryDao {
 
     private fun generateGetMyComponentConditions(
         userId: String,
+        dslContext: DSLContext,
         storeType: StoreTypeEnum,
         storeName: String?
     ): MutableList<Condition> {
         val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }
         conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        conditions.add(existsUserComponents(userId, storeType, tStoreBase))
-        return conditions
-    }
-
-    fun existsUserComponents(
-        userId: String,
-        storeType: StoreTypeEnum,
-        tStoreBase: TStoreBase
-    ): Condition {
-        val tStoreMember = TStoreMember.T_STORE_MEMBER
-        return DSL.exists(
-            DSL.select(tStoreMember.STORE_CODE)
-                .from(tStoreMember)
-                .where(tStoreMember.USERNAME.eq(userId))
-                .and(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
-                .and(tStoreMember.STORE_CODE.eq(tStoreBase.STORE_CODE))
+        conditions.add(
+            tStoreBase.STORE_CODE.`in`(
+                dslContext.select(tStoreMember.STORE_CODE)
+                    .from(tStoreMember)
+                    .where(tStoreMember.USERNAME.eq(userId))
+                    .and(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
+                    .and(tStoreMember.STORE_CODE.eq(tStoreBase.STORE_CODE))
+            )
         )
+        return conditions
     }
 
     fun countByCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): Int {
