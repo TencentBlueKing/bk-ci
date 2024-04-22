@@ -1,13 +1,18 @@
 package com.tencent.devops.remotedev.service.client
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusReqBody
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusRespData
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudNoDataResp
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudResp
+import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterReq
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -57,6 +62,7 @@ class StartCloudClient @Autowired constructor(
 
         val resp = doRequest(request).resolveResponse<StartCloudResp<List<StartCloudComputerStatusRespData>>>()
         if (resp.code != 0) {
+            logger.warn("request /computer/status error ${resp.code}|${resp.message}")
             throw RemoteServiceException(
                 errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
                 errorCode = resp.code
@@ -88,6 +94,7 @@ class StartCloudClient @Autowired constructor(
 
         val resp = doRequest(request).resolveResponse<StartCloudResp<StartCloudAppCreateRespData>>()
         if (resp.code != 0) {
+            logger.warn("request /app/create error ${resp.code}|${resp.message}")
             throw RemoteServiceException(
                 errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
                 errorCode = resp.code
@@ -97,7 +104,29 @@ class StartCloudClient @Autowired constructor(
         return resp.data?.appId
     }
 
-    fun genStartApiHeaders(
+    fun messageRegister(
+        req: StartMessageRegisterReq
+    ) {
+        val url = "$apiUrl/openapi/message/register"
+        val body = JsonUtil.toJson(req, false)
+        logger.debug("messageRegister request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(genStartApiHeaders(body).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = doRequest(request).resolveResponse<StartCloudNoDataResp>()
+        if (resp.code != 0) {
+            logger.warn("request /message/register error ${resp.code}|${resp.message}")
+            throw RemoteServiceException(
+                errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
+                errorCode = resp.code
+            )
+        }
+    }
+
+    private fun genStartApiHeaders(
         body: String
     ): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
@@ -138,40 +167,3 @@ class StartCloudClient @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StartCloudClient::class.java)
     }
 }
-
-data class StartCloudComputerStatusReqBody(
-    val appName: String,
-    val cgsIds: Set<String>?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudResp<T>(
-    val code: Int,
-    val data: T?,
-    val message: String?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudComputerStatusRespData(
-    val cgsId: String,
-    val state: Int,
-    val message: String?,
-    val userInfos: List<StartCloudComputerStatusUserInfo>?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudComputerStatusUserInfo(
-    val account: String
-)
-
-data class StartCloudAppCreateReq(
-    val contentProviderName: String,
-    val appName: String,
-    val detail: String
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudAppCreateRespData(
-    @JsonProperty("AppId")
-    val appId: Long
-)

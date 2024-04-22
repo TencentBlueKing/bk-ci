@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.auth.DEVX_HEADER_NGGW_CLIENT_ADDRESS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -42,4 +44,26 @@ interface ApigwDeskTopResource {
         @BkField(minLength = 32, maxLength = 32, required = true, message = "need token")
         devxGwToken: String
     ): Result<WeSecProjectWorkspace?>
+
+    // TODO: story_117027293 新增添加通知给云桌面，需要校验发送请求的IP所指定的接受用户和IP所属项目为同一项目用户
+    @Operation(summary = "给云桌面发送消息")
+    @POST
+    @Path("/message/register")
+    fun messageRegister(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "IP", required = false)
+        @HeaderParam(DEVX_HEADER_NGGW_CLIENT_ADDRESS)
+        @BkField(patternStyle = BkStyleEnum.IP_STYLE, required = true, message = "need ipv4")
+        desktopIP: String,
+        @Parameter(description = "devx token", required = false)
+        @HeaderParam(DEVX_HEADER_GW_TOKEN)
+        @BkField(minLength = 32, maxLength = 32, required = true, message = "need token")
+        devxGwToken: String,
+        data: WorkspaceDesktopNotifyData
+    ): Result<Boolean>
 }
