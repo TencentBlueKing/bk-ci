@@ -55,7 +55,6 @@ import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.RunAtomParam
 import com.tencent.devops.common.pipeline.utils.TransferUtil
-import com.tencent.devops.process.yaml.creator.ModelCommon
 import com.tencent.devops.process.yaml.creator.ModelCreateException
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -63,7 +62,6 @@ import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
-import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -318,7 +316,6 @@ class ElementTransfer @Autowired(required = false) constructor(
         agentSelector: String?,
         jobRunsOnType: JobRunsOnType? = null
     ): Element {
-        var customVariables: List<NameAndValue>? = null
         val runCondition = when {
             step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
             IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
@@ -331,19 +328,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                 RunCondition.PRE_TASK_FAILED_ONLY
 
             else -> {
-                ModelCommon.revertCustomVariableMatch(step.ifFiled)?.let {
-                    customVariables = it
-                    RunCondition.CUSTOM_VARIABLE_MATCH
-                } ?: ModelCommon.revertCustomVariableNotMatch(step.ifFiled)?.let {
-                    customVariables = it
-                    RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
-                } ?: RunCondition.CUSTOM_CONDITION_MATCH
+                RunCondition.CUSTOM_CONDITION_MATCH
             }
-        }
-        val customCondition = if (step.ifFiled.isNullOrBlank()) {
-            step.ifFiled
-        } else {
-            ModelCreateUtil.removeIfBrackets(step.ifFiled)
         }
         val continueOnError = Step.ContinueOnErrorType.parse(step.continueOnError)
         val additionalOptions = ElementAdditionalOptions(
@@ -357,8 +343,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             enableCustomEnv = false,
             customEnv = getElementEnv(step.env),
             runCondition = runCondition,
-            customCondition = if (customVariables == null) customCondition else null,
-            customVariables = customVariables,
+            customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) step.ifFiled else null,
             manualRetry = step.manualRetry ?: false,
             subscriptionPauseUser = userId
         )
