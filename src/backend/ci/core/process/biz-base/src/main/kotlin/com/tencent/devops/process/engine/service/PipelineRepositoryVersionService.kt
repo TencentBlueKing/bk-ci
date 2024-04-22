@@ -129,6 +129,10 @@ class PipelineRepositoryVersionService(
             pipelineId = pipelineId,
             version = version,
             includeDraft = includeDraft
+        ) ?: pipelineResourceDao.getReleaseVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
         ) ?: return null
         return PipelineVersionWithInfo(
             createTime = pipelineInfo.createTime,
@@ -211,9 +215,7 @@ class PipelineRepositoryVersionService(
             )
         )
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
-        if (result.isEmpty() && includeDraft != false &&
-            pipelineInfo.latestVersionStatus?.isNotReleased() == false
-        ) {
+        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true) {
             pipelineResourceDao.getReleaseVersionResource(
                 dslContext, projectId, pipelineId
             )?.let { record ->
