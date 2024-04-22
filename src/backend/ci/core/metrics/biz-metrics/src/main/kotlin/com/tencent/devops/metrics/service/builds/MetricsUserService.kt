@@ -39,8 +39,8 @@ import io.micrometer.core.instrument.Meter
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.LinkedList
+import java.util.concurrent.ConcurrentMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,10 +56,37 @@ class MetricsUserService @Autowired constructor(
     private val local = MapMaker()
         .concurrencyLevel(10)
         .makeMap<String, MetricsLocalPO>()
-    private val executor = Executors.newSingleThreadScheduledExecutor()
+    val delayArray: LinkedList<MutableList<Pair<String, MetricsLocalPO>>> =
+        LinkedList(MutableList(DELAY_LIMIT) { mutableListOf() })
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(MetricsUserService::class.java)
+        const val DELAY_LIMIT = 5
+    }
+
+    class DeleteDelayProcess(
+        private val delayArray: LinkedList<MutableList<Pair<String, MetricsLocalPO>>>,
+        private val registry: PrometheusMeterRegistry,
+        private val local: ConcurrentMap<String, MetricsLocalPO>
+    ) : Runnable {
+
+        companion object {
+            const val SLEEP = 60000L
+        }
+
+        override fun run() {
+            while (true) {
+                delayArray.addFirst(mutableListOf())
+                val ready = delayArray.removeLast()
+                ready.forEach { (key, metrics) ->
+                    metrics.meters.forEach { meter ->
+                        registry.remove(meter)
+                    }
+                    local.remove(key)
+                }
+                Thread.sleep(SLEEP)
+            }
+        }
     }
 
     fun init() {
@@ -67,6 +94,7 @@ class MetricsUserService @Autowired constructor(
         metricsCacheService.removeFunction = this::metricsRemove
         metricsCacheService.updateFunction = this::metricsUpdate
         metricsCacheService.init()
+        Thread(DeleteDelayProcess(delayArray, registry, local)).start()
     }
 
     fun execute(event: PipelineBuildStatusBroadCastEvent) {
@@ -217,12 +245,7 @@ class MetricsUserService @Autowired constructor(
         logger.debug("metricsRemove|key={}|value={}|metrics={}", key, value, metrics)
         if (metrics != null) {
             // 异步删除
-            executor.schedule({
-                metrics.meters.forEach { meter ->
-                    registry.remove(meter)
-                }
-                local.remove(key)
-            }, 5, TimeUnit.MINUTES)
+            delayArray.first.add(key to metrics)
         }
     }
 
