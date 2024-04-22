@@ -30,6 +30,7 @@ package com.tencent.devops.store.devx.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -47,7 +48,8 @@ import org.springframework.stereotype.Service
 class DevxManagementExtraServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeProjectRelDao: StoreProjectRelDao,
-    private val authProjectApi: AuthProjectApi
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : StoreManagementExtraService {
 
     override fun doComponentDeleteCheck(storeCode: String): Result<Boolean> {
@@ -65,12 +67,16 @@ class DevxManagementExtraServiceImpl @Autowired constructor(
         storeCode: String
     ): Result<Boolean> {
         // 用户是否有权限卸载
-        val isInstaller = storeProjectRelDao.isInstaller(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        logger.info("uninstallComponentParamCheck, isInstaller=$isInstaller")
+        val isInstaller = storeProjectRelDao.isInstaller(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType).type.toByte()
+        )
         if (!(hasManagerPermission(projectCode, userId) || isInstaller)) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.PROJECT_NO_PERMISSION,
-                params = arrayOf(projectCode, atomCode),
+                params = arrayOf(projectCode, storeCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
