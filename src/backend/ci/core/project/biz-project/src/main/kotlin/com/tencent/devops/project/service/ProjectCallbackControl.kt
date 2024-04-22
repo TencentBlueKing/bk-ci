@@ -163,7 +163,7 @@ class ProjectCallbackControl @Autowired constructor(
         projectEnglishName: String
     ): String {
         val encodeProjectId = URLEncoder.encode(URL_PLACEHOLDER_PROJECT_ID, "UTF-8")
-        val encodeProjectEnglishName = URLEncoder.encode(URL_PLACEHOLDER_PROJECT_ID, "UTF-8")
+        val encodeProjectEnglishName = URLEncoder.encode(URL_PLACEHOLDER_ENGLISH_NAME, "UTF-8")
         val encodeEventType = URLEncoder.encode(URL_PLACEHOLDER_EVENT_TYPE, "UTF-8")
         return url
             .replace(encodeProjectId, projectId)
