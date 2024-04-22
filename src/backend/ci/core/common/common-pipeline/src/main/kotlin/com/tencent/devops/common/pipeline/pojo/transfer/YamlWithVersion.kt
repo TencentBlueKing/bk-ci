@@ -27,21 +27,12 @@
 
 package com.tencent.devops.common.pipeline.pojo.transfer
 
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线互转-Response")
-data class TransferResponse(
-    @get:Schema(title = "modelAndSetting")
-    val modelAndSetting: PipelineModelAndSetting? = null,
+@Schema(title = "通过解析后的YAML对象")
+data class YamlWithVersion(
+    @get:Schema(title = "当前yaml的版本标识")
+    val yamlVersionTag: String? = null,
     @get:Schema(title = "当前yaml内容")
-    val newYaml: YamlWithVersion? = null,
-    @get:Schema(title = "定位")
-    val mark: TransferMark? = null,
-    @get:Schema(title = "互转报错信息")
-    val error: String? = null,
-    @get:Schema(title = "是否支持YAML解析", required = true)
-    val yamlSupported: Boolean = true,
-    @get:Schema(title = "YAML解析异常信息")
-    val yamlInvalidMsg: String? = null
+    val yaml: String? = null
 )
