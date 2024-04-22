@@ -624,7 +624,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             model = transferResult.modelAndSetting?.model
             setting = transferResult.modelAndSetting?.setting
             newYaml = modelAndYaml.yaml
-            newYamlVersion = transferResult.yamlVersionTag?.let { YamlVersion.parse(it) }
+            newYamlVersion = transferResult.yamlWithVersion?.yamlVersionTag?.let { YamlVersion.parse(it) }
         } else {
             // MODEL形式的保存需要兼容旧数据
             newYaml = try {
@@ -644,7 +644,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                             )?.yaml
                         } ?: ""
                     )
-                ).newYaml
+                ).yamlWithVersion?.yaml
             } catch (ignore: Throwable) {
                 // 旧流水线可能无法转换，用空YAML代替
                 logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")

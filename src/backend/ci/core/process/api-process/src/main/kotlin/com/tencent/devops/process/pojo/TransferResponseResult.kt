@@ -25,17 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.transfer
+package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线互转-Response")
-data class TransferResponse(
+@Schema(title = "流水线互转-Response-result")
+data class TransferResponseResult(
     @get:Schema(title = "modelAndSetting")
     val modelAndSetting: PipelineModelAndSetting? = null,
     @get:Schema(title = "当前yaml内容")
-    val yamlWithVersion: YamlWithVersion? = null,
+    val newYaml: String? = null,
     @get:Schema(title = "定位")
     val mark: TransferMark? = null,
     @get:Schema(title = "互转报错信息")
@@ -44,4 +46,13 @@ data class TransferResponse(
     val yamlSupported: Boolean = true,
     @get:Schema(title = "YAML解析异常信息")
     val yamlInvalidMsg: String? = null
-)
+) {
+    constructor(transfer: TransferResponse): this(
+        modelAndSetting = transfer.modelAndSetting,
+        newYaml = transfer.yamlWithVersion?.yaml,
+        mark = transfer.mark,
+        error = transfer.error,
+        yamlSupported = transfer.yamlSupported,
+        yamlInvalidMsg = transfer.yamlInvalidMsg
+    )
+}

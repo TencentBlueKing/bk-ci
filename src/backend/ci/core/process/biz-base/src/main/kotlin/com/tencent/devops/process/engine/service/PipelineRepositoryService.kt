@@ -803,7 +803,9 @@ class PipelineRepositoryService constructor(
                                 )
                             )
                         )
-                        Pair(result.newYaml ?: "", result.yamlVersionTag?.let { YamlVersion.parse(it) })
+                        Pair(
+                            result.yamlWithVersion?.yaml ?: "",
+                            result.yamlWithVersion?.yamlVersionTag?.let { YamlVersion.parse(it) })
                     } catch (ignore: Throwable) {
                         // 旧流水线可能无法转换，用空YAML代替
                         logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
