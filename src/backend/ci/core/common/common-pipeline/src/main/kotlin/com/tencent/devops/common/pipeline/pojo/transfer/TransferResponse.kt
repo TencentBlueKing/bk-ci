@@ -35,7 +35,7 @@ data class TransferResponse(
     @get:Schema(title = "modelAndSetting")
     val modelAndSetting: PipelineModelAndSetting? = null,
     @get:Schema(title = "当前yaml内容")
-    val newYaml: YamlWithVersion? = null,
+    val yamlWithVersion: YamlWithVersion? = null,
     @get:Schema(title = "定位")
     val mark: TransferMark? = null,
     @get:Schema(title = "互转报错信息")

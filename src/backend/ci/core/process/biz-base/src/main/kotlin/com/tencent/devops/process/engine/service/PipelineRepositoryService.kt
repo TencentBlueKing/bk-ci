@@ -54,15 +54,12 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -117,7 +114,6 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -792,8 +788,8 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    yamlStr = yaml?.yaml,
-                    yamlVersion = yaml?.yamlVersionTag,
+                    yamlStr = yaml?.yamlStr,
+                    yamlVersion = yaml?.versionTag,
                     versionName = versionName,
                     versionNum = versionNum,
                     pipelineVersion = pipelineVersion,
@@ -808,8 +804,8 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    yamlStr = yaml?.yaml,
-                    yamlVersion = yaml?.yamlVersionTag,
+                    yamlStr = yaml?.yamlStr,
+                    yamlVersion = yaml?.versionTag,
                     baseVersion = baseVersion,
                     versionName = versionName ?: "",
                     versionNum = versionNum,
@@ -1113,8 +1109,8 @@ class PipelineRepositoryService constructor(
                             creator = userId,
                             version = version,
                             model = model,
-                            yamlStr = yaml?.yaml,
-                            yamlVersion = yaml?.yamlVersionTag,
+                            yamlStr = yaml?.yamlStr,
+                            yamlVersion = yaml?.versionTag,
                             versionName = versionName,
                             versionNum = versionNum,
                             pipelineVersion = pipelineVersion,
@@ -1139,8 +1135,8 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = version,
                     model = model,
-                    yamlStr = yaml?.yaml,
-                    yamlVersion = yaml?.yamlVersionTag,
+                    yamlStr = yaml?.yamlStr,
+                    yamlVersion = yaml?.versionTag,
                     versionName = versionName,
                     versionNum = versionNum,
                     pipelineVersion = pipelineVersion,

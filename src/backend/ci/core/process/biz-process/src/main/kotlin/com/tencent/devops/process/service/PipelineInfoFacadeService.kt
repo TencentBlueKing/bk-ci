@@ -742,7 +742,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
                 )
             }
-            Pair(result.modelAndSetting!!, result.newYaml!!)
+            Pair(result.modelAndSetting!!, result.yamlWithVersion!!)
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
             logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yaml", ignore)

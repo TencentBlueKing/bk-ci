@@ -49,10 +49,7 @@ class PipelineAsCodeService @Autowired constructor(
         buildId: String,
         buildInfo: BuildInfo?
     ): Boolean? {
-        val info = buildInfo ?: pipelineRuntimeService.getBuildInfo(
-            projectId = projectId, pipelineId = pipelineId, buildId = buildId
-        )
-        return info?.let { info.yamlVersion == YamlVersion.V3_0.tag }
+        return getPipelineAsCodeSettings(projectId, pipelineId, buildId, buildInfo)?.enable
     }
 
     fun getPipelineAsCodeSettings(
@@ -67,6 +64,10 @@ class PipelineAsCodeService @Autowired constructor(
         val info = buildInfo ?: pipelineRuntimeService.getBuildInfo(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId
         )
+        // TODO Stream暂时保持继续采用流水线级的配置
+        if (projectId.startsWith("git_")) {
+            return settings
+        }
         return settings?.copy(enable = info?.yamlVersion == YamlVersion.V3_0.tag)
     }
 }

@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -150,7 +151,9 @@ class PipelineTransferYamlService @Autowired constructor(
                     watcher.start("step_2|mergeYaml")
                     watcher.stop()
                     logger.info(watcher.toString())
-                    return TransferResponse(yamlVersionTag = defaultVersion.tag, newYaml = newYaml)
+                    return TransferResponse(
+                        yamlWithVersion = YamlWithVersion(yamlStr = newYaml, versionTag = defaultVersion.tag)
+                    )
                 }
 
                 TransferActionType.FULL_YAML2MODEL -> {
@@ -198,7 +201,9 @@ class PipelineTransferYamlService @Autowired constructor(
 
                     logger.info(watcher.toString())
                     return TransferResponse(
-                        yamlVersionTag = input.yaml.version,
+                        yamlWithVersion = YamlWithVersion(
+                            yamlStr = data.oldYaml, versionTag = input.yaml.version
+                        ),
                         modelAndSetting = PipelineModelAndSetting(model, setting)
                     )
                 }
@@ -260,7 +265,7 @@ class PipelineTransferYamlService @Autowired constructor(
             pipelineId = pipelineId,
             actionType = TransferActionType.FULL_MODEL2YAML,
             data = TransferBody(modelAndSetting)
-        ).newYaml ?: return PreviewResponse("")
+        ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
         try {
             TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
                 if (key in pipeline_key) pipelineIndex.add(value)

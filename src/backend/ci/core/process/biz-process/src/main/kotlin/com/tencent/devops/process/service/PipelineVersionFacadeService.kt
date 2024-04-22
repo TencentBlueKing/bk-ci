@@ -74,7 +74,6 @@ import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
@@ -410,9 +409,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
-            yaml = YamlWithVersion(
-                yamlVersionTag = draftVersion.yamlVersion, yaml = draftVersion.yaml
-            ),
+            yaml = YamlWithVersion(versionTag = draftVersion.yamlVersion, yamlStr = draftVersion.yaml),
             baseVersion = draftVersion.baseVersion
         )
         // 添加标签
@@ -625,7 +622,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             model = transferResult.modelAndSetting?.model
             setting = transferResult.modelAndSetting?.setting
-            newYaml = transferResult.newYaml
+            newYaml = transferResult.yamlWithVersion
         } else {
             // MODEL形式的保存需要兼容旧数据
             try {
@@ -646,7 +643,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                         } ?: ""
                     )
                 )
-                newYaml = result.newYaml
+                newYaml = result.yamlWithVersion
             } catch (ignore: Throwable) {
                 // 旧流水线可能无法转换，用空YAML代替
                 logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")
