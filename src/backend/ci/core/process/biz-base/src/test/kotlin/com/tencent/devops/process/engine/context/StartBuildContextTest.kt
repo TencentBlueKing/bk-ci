@@ -126,7 +126,8 @@ class StartBuildContextTest : TestBase() {
             pipelineParamMap = pipelineParamMap,
             currentBuildNo = null,
             triggerReviewers = null,
-            debug = true
+            debug = true,
+            yamlVersion = "v3.0"
         )
     }
 
