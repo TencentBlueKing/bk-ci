@@ -65,6 +65,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineViewType
@@ -284,7 +285,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         model: Model,
         channelCode: ChannelCode,
         setting: PipelineSetting? = null,
-        yaml: String? = null,
+        yaml: YamlWithVersion? = null,
         checkPermission: Boolean = true,
         fixPipelineId: String? = null,
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
@@ -430,7 +431,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     branchName = branchName,
                     templateId = templateId,
                     description = description,
-                    yamlStr = yaml,
+                    yaml = yaml,
                     baseVersion = null
                 )
                 pipelineId = result.pipelineId
@@ -555,7 +556,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         } else {
             VersionStatus.BRANCH
         }
-        val newResource = transferModelAndSetting(
+        val (newResource, yamlWithVersion) = transferModelAndSetting(
             userId = userId,
             projectId = projectId,
             yaml = yaml,
@@ -582,7 +583,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model = newResource.model.copy(name = pipelineName),
             setting = newSetting,
             channelCode = ChannelCode.BS,
-            yaml = yaml,
+            yaml = yamlWithVersion,
             versionStatus = versionStatus,
             branchName = branchName,
             description = description
@@ -605,7 +606,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         } else {
             VersionStatus.BRANCH
         }
-        val newResource = transferModelAndSetting(
+        val (newResource, yamlWithVersion) = transferModelAndSetting(
             userId = userId,
             projectId = projectId,
             yaml = yaml,
@@ -637,7 +638,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             model = newResource.model.copy(name = pipelineName),
             channelCode = ChannelCode.BS,
-            yaml = yaml,
+            yaml = yamlWithVersion,
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
@@ -725,7 +726,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean,
         branchName: String,
         aspects: LinkedList<IPipelineTransferAspect>? = null
-    ): PipelineModelAndSetting {
+    ): Pair<PipelineModelAndSetting, YamlWithVersion> {
         return try {
             val result = transferService.transfer(
                 userId = userId,
@@ -741,7 +742,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
                 )
             }
-            result.modelAndSetting!!
+            Pair(result.modelAndSetting!!, result.newYaml!!)
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
             logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yaml", ignore)
@@ -958,7 +959,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
-        yaml: String?,
+        yaml: YamlWithVersion?,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true,
@@ -1068,7 +1069,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 versionStatus = versionStatus,
                 branchName = branchName,
                 description = description,
-                yamlStr = yaml,
+                yaml = yaml,
                 baseVersion = baseVersion
             )
             if (checkPermission) {

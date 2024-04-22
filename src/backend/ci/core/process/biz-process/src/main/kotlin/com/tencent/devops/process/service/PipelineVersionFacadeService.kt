@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -409,7 +410,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
-            yamlStr = draftVersion.yaml,
+            yaml = YamlWithVersion(
+                yamlVersionTag = draftVersion.yamlVersion, yaml = draftVersion.yaml
+            ),
             baseVersion = draftVersion.baseVersion
         )
         // 添加标签
@@ -607,8 +610,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val versionStatus = VersionStatus.COMMITTING
         var model: Model? = null
         var setting: PipelineSetting? = null
-        var newYaml: String? = null
-        var newYamlVersion: YamlVersion? = null
+        var newYaml: YamlWithVersion? = null
         if (modelAndYaml.storageType == PipelineStorageType.YAML) {
             // YAML形式的保存需要所有插件都为支持转换的市场插件
             val transferResult = transferService.transfer(
@@ -623,12 +625,11 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             model = transferResult.modelAndSetting?.model
             setting = transferResult.modelAndSetting?.setting
-            newYaml = modelAndYaml.yaml
-            newYamlVersion = transferResult.yamlVersionTag?.let { YamlVersion.parse(it) }
+            newYaml = transferResult.newYaml
         } else {
             // MODEL形式的保存需要兼容旧数据
-            newYaml = try {
-                transferService.transfer(
+            try {
+                val result = transferService.transfer(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -644,15 +645,15 @@ class PipelineVersionFacadeService @Autowired constructor(
                             )?.yaml
                         } ?: ""
                     )
-                ).newYaml
+                )
+                newYaml = result.newYaml
             } catch (ignore: Throwable) {
                 // 旧流水线可能无法转换，用空YAML代替
                 logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")
-                null
+                newYaml = null
             }
             model = modelAndYaml.modelAndSetting.model
             setting = modelAndYaml.modelAndSetting.setting
-            newYamlVersion = null // 保持无标识状态
         }
         return if (pipelineId.isNullOrBlank()) {
             // 新建流水线产生草稿
