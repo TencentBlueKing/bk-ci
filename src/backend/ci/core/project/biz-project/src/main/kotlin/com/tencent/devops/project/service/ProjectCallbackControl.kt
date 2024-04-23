@@ -82,9 +82,9 @@ class ProjectCallbackControl @Autowired constructor(
             dslContext = dslContext,
             event = projectEventType.name,
             url = null,
-            ignoreTypes = if (projectEventType == ProjectEventType.CREATE){
+            ignoreTypes = if (projectEventType == ProjectEventType.CREATE) {
                 setOf(PaasCCSecretParam.classType)
-            }else{
+            } else {
                 emptySet()
             }
         )
@@ -119,7 +119,7 @@ class ProjectCallbackControl @Autowired constructor(
                 requestBody = requestBody,
                 method = secretParam.method,
                 failAction = { exception -> secretTokenService.requestFail(exception) },
-                successAction = {responseBody ->  secretTokenService.requestSuccess(responseBody) }
+                successAction = { responseBody -> secretTokenService.requestSuccess(responseBody) }
             )
         }
     }
