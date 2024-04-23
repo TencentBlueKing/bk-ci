@@ -110,7 +110,8 @@ class BuildVariableService @Autowired constructor(
         buildId: String,
         varName: String,
         varValue: Any,
-        readOnly: Boolean? = null
+        readOnly: Boolean? = null,
+        rewriteReadOnly: Boolean? = null
     ) {
         val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
         saveVariable(
@@ -120,7 +121,8 @@ class BuildVariableService @Autowired constructor(
             buildId = buildId,
             name = realVarName,
             value = varValue,
-            readOnly = readOnly
+            readOnly = readOnly,
+            rewriteReadOnly = rewriteReadOnly
         )
     }
 
@@ -178,7 +180,8 @@ class BuildVariableService @Autowired constructor(
         pipelineId: String,
         name: String,
         value: Any,
-        readOnly: Boolean? = null
+        readOnly: Boolean? = null,
+        rewriteReadOnly: Boolean? = null
     ) {
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
@@ -200,7 +203,8 @@ class BuildVariableService @Autowired constructor(
                     projectId = projectId,
                     buildId = buildId,
                     name = name,
-                    value = value
+                    value = value,
+                    rewriteReadOnly = rewriteReadOnly
                 )
             }
         } finally {
