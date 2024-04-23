@@ -60,6 +60,8 @@ enum class StoreStatusEnum {
                 COMMITTING.name,
                 BUILDING.name,
                 BUILD_FAIL.name,
+                CHECKING.name,
+                CHECK_FAIL.name,
                 TESTING.name,
                 AUDITING.name
             )

@@ -66,6 +66,7 @@ class StoreCategoryRelDao {
             tCategory.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
         ).from(tCategory).join(tStoreCategoryRel).on(tCategory.ID.eq(tStoreCategoryRel.CATEGORY_ID))
             .where(tStoreCategoryRel.STORE_ID.`in`(storeIds))
+            .skipCheck()
             .fetch()
     }
 
@@ -129,6 +130,7 @@ class StoreCategoryRelDao {
                 .join(tStoreCategoryRel)
                 .on(ID.eq(tStoreCategoryRel.CATEGORY_ID))
                 .where(tStoreCategoryRel.STORE_ID.eq(storeId))
+                .skipCheck()
                 .fetchInto(TCategoryRecord::class.java)
         }
     }

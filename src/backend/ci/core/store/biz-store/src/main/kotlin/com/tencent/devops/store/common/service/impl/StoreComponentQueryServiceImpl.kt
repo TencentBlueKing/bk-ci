@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
@@ -35,6 +36,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonSchemaUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -283,15 +286,14 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val storeComponentList = mutableListOf<MyStoreComponent>()
         val languageMap =
             storeBaseEnvQueryDao.batchQueryStoreLanguage(dslContext, storeIds).intoMap({ it.value1() }, { it.value2() })
+        // 获取组件的流程信息
         val processingStoreRecords = storeBaseQueryDao.getStoreBaseInfoByConditions(
             dslContext = dslContext,
             storeType = storeType,
             storeCodeList = storeCodes,
             storeStatusList = StoreStatusEnum.getProcessingStatusList()
         )
-
         val processingVersionInfoMap = mutableMapOf<String, MutableList<StoreBaseInfo>>()
-
         processingStoreRecords.forEach { processingAtomRecord ->
             val version = processingAtomRecord[tStoreBase.VERSION] as String
             if (version == INIT_VERSION || version.isBlank()) {
@@ -312,6 +314,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             )
             processingVersionInfoMap.getOrPut(storeCode) { mutableListOf() }.add(storeBaseInfo)
         }
+        // 根据项目Code获取对应的名称
         val projectMap =
             client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         records.forEach {
@@ -441,7 +444,18 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, storeCode, storeType)
 
         val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
-        val extData = baseExtRecords.associateBy({ it.fieldName }, { it.fieldValue })
+        val extData = baseExtRecords.associateBy(
+            { it.fieldName },
+            {
+                when {
+                    JsonSchemaUtil.isJsonArray(it.fieldValue) -> {JsonUtil.to(it.fieldValue, List::class.java)}
+                    JsonSchemaUtil.isJsonObject(it.fieldValue) -> {
+                        JsonUtil.to(it.fieldValue, object : TypeReference<Map<String, Any>>() {})
+                    }
+                    else -> it.fieldValue
+                }
+            }
+        )
         val htmlTemplateVersion = extData[KEY_HTML_TEMPLATE_VERSION]
         val initProjectCode =
             if (htmlTemplateVersion != null && htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
