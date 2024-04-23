@@ -28,16 +28,16 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SimpleProjectExtService @Autowired constructor(
-    private val client: Client
+    private val projectDispatcher: ProjectDispatcher
 ) : ProjectExtService {
     override fun createExtProjectInfo(
         userId: String,
@@ -47,7 +47,14 @@ class SimpleProjectExtService @Autowired constructor(
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
     ) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
+        // 工蜂CI项目不会添加paas项目，但也需要广播
+        projectDispatcher.dispatch(
+            ProjectCreateBroadCastEvent(
+                userId = userId,
+                projectId = authProjectId,
+                projectInfo = projectCreateInfo
+            )
+        )
     }
 
     override fun createOldAuthProject(
