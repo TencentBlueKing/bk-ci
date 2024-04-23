@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -79,9 +80,10 @@ class PipelineResVersionDao {
                 VERSION,
                 VERSION_NAME,
                 MODEL,
+                REFER_FLAG,
                 CREATOR,
                 CREATE_TIME
-            ).values(projectId, pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
+            ).values(projectId, pipelineId, version, versionName, modelString, false, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)
@@ -142,28 +144,43 @@ class PipelineResVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        queryUnknownRelatedFlag: Boolean? = null,
+        maxQueryVersion: Int? = null,
         offset: Int,
         limit: Int
     ): List<PipelineVersionSimple> {
         val list = mutableListOf<PipelineVersionSimple>()
         with(T_PIPELINE_RESOURCE_VERSION) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            if (queryUnknownRelatedFlag == true) {
+                conditions.add(REFER_FLAG.isNull)
+            } else if (queryUnknownRelatedFlag == false) {
+                conditions.add(REFER_FLAG.isNotNull)
+            }
+            maxQueryVersion?.let {
+                conditions.add(VERSION.le(maxQueryVersion))
+            }
             val result = dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION, REFER_FLAG, REFER_COUNT)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .where(conditions)
                 .orderBy(VERSION.desc())
                 .limit(limit).offset(offset)
                 .fetch()
 
             result.forEach {
-                list.add(PipelineVersionSimple(
-                    pipelineId = pipelineId,
-                    creator = it[CREATOR] ?: "unknown",
-                    createTime = it.get(CREATE_TIME)?.timestampmilli() ?: 0,
-                    version = it[VERSION] ?: 1,
-                    versionName = it[VERSION_NAME] ?: "init",
-                    referFlag = it[REFER_FLAG],
-                    referCount = it[REFER_COUNT]
-                ))
+                list.add(
+                    PipelineVersionSimple(
+                        pipelineId = pipelineId,
+                        creator = it[CREATOR] ?: "unknown",
+                        createTime = it.get(CREATE_TIME)?.timestampmilli() ?: 0,
+                        version = it[VERSION] ?: 1,
+                        versionName = it[VERSION_NAME] ?: "init",
+                        referFlag = it[REFER_FLAG],
+                        referCount = it[REFER_COUNT]
+                    )
+                )
             }
         }
         return list
@@ -212,7 +229,7 @@ class PipelineResVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int,
+        versions: List<Int>,
         referCount: Int,
         referFlag: Boolean? = null
     ) {
@@ -220,7 +237,8 @@ class PipelineResVersionDao {
             val baseStep = dslContext.update(this)
                 .set(REFER_COUNT, referCount)
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
-            baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version))).execute()
+            baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
+                .execute()
         }
     }
 }

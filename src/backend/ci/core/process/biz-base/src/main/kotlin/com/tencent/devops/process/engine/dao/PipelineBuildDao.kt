@@ -53,6 +53,7 @@ import org.jooq.DatePart
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectConditionStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -1015,6 +1016,25 @@ class PipelineBuildDao {
             dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun batchCountBuildNumByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: Set<Int>
+    ): List<Record2<Int, Int>> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(VERSION.`in`(versions))
+            dslContext.select(VERSION, DSL.count())
+                .from(this)
+                .where(conditions)
+                .groupBy(VERSION)
+                .fetch()
         }
     }
 }

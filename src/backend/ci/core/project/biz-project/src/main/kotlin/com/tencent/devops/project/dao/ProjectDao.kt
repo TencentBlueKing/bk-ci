@@ -186,6 +186,7 @@ class ProjectDao {
                             .or(ROUTER_TAG.like("%devx%"))
                     )
                 }
+                channelCode?.let { conditions.add(CHANNEL.eq(channelCode)) }
             }
         }
         return conditions
