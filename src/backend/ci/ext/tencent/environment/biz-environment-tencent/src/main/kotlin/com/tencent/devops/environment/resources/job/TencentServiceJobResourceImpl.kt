@@ -205,6 +205,11 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         tencentStockDataUpdateService.addNodesToCCOnce()
     }
 
+    override fun writeServerId(userId: String) {
+        if (userId.isBlank()) throw ParamBlankException("userId is blank.")
+        tencentStockDataUpdateService.writeServerIdOnce()
+    }
+
     private fun checkParamBlank(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("userId is blank.")

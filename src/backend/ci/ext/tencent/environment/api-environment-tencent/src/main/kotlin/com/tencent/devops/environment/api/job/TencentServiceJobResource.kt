@@ -289,4 +289,13 @@ interface TencentServiceJobResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
+
+    @Operation(summary = "给存量部署节点写入机器server_id")
+    @POST
+    @Path("/stock_data_update/write_server_id")
+    fun writeServerId(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+    )
 }
