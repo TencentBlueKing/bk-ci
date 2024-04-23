@@ -205,7 +205,11 @@
         height: 100%;
         overflow: hidden;
         .info-header {
+            .header-text {
+                display: inline-block;
+            }
             .icon-edit {
+                display: inline-block;
                 margin-left: 6px;
                 cursor: pointer;
             }
