@@ -31,7 +31,6 @@ import com.tencent.devops.project.pojo.secret.ISecretParam
 import com.tencent.devops.project.util.SecretParamEncryptUtil
 
 data class BkrepoModelSecretParam(
-    val pipelineSecret: String,
     val bkRepoName: String,
     var storageCredentialsKey: String,
     val display: Boolean,
@@ -46,12 +45,20 @@ data class BkrepoModelSecretParam(
     override fun getSecretType() = classType
 
     override fun encode(aesKey: String): ISecretParam {
-        this.storageCredentialsKey = SecretParamEncryptUtil.encryptCredential(aesKey, storageCredentialsKey)!!
+        this.storageCredentialsKey = if (storageCredentialsKey.isNotBlank()) {
+            SecretParamEncryptUtil.encryptCredential(aesKey, storageCredentialsKey)!!
+        } else {
+            ""
+        }
         return this
     }
 
     override fun decode(aesKey: String): ISecretParam {
-        this.storageCredentialsKey = SecretParamEncryptUtil.decryptCredential(aesKey, storageCredentialsKey)!!
+        this.storageCredentialsKey = if (storageCredentialsKey.isNotBlank()) {
+            SecretParamEncryptUtil.decryptCredential(aesKey, storageCredentialsKey)!!
+        } else {
+            ""
+        }
         return this
     }
 
