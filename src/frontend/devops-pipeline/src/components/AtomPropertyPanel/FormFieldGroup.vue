@@ -75,7 +75,7 @@
                     }
                     {
                         docsLink && <span class="bk-form-group-docs-link" onClick={handleToDocs}>
-                            <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
+                            <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;right:2px;" />
                             {docs}
                         </span>
                     }
