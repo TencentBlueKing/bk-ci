@@ -44,9 +44,9 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -347,5 +347,29 @@ interface UserProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
+    ): Result<List<OperationalProductVO>>
+
+    @GET
+    @Path("/{english_name}/remindUserOfRelatedProduct")
+    @Operation(summary = "提醒用户关联运营产品")
+    fun remindUserOfRelatedProduct(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目英文名称", required = true)
+        @PathParam("english_name")
+        englishName: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/product/getOperationalProductsByBgName/{bgName}")
+    @Operation(summary = "根据BG查询运营产品")
+    fun getOperationalProductsByBgName(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "bg名称", required = true)
+        @PathParam("bgName")
+        bgName: String
     ): Result<List<OperationalProductVO>>
 }

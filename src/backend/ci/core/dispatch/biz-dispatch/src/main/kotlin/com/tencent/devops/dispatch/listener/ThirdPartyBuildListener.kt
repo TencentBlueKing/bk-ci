@@ -62,7 +62,7 @@ class ThirdPartyBuildListener @Autowired constructor(
             // 重试构建消息
             retry(
                 sleepTimeInMS = 5000,
-                retryTimes = (6 * (dispatchMessage.event.queueTimeoutMinutes ?: 10)),
+                retryTimes = (12 * (dispatchMessage.event.queueTimeoutMinutes ?: 10)),
                 errorMessage = e.message
             )
         }

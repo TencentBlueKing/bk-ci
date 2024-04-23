@@ -1072,9 +1072,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 yaml = yaml,
                 baseVersion = baseVersion
             )
-            if (checkPermission) {
-                pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
-            }
             // 审计
             ActionAuditContext.current()
                 .addInstanceInfo(pipelineId, model.name, existModel, model)
@@ -1142,7 +1139,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             setting = setting,
-            checkPermission = false,
+            checkPermission = checkPermission,
             dispatchPipelineUpdateEvent = false
         )
         val pipelineResult = editPipeline(

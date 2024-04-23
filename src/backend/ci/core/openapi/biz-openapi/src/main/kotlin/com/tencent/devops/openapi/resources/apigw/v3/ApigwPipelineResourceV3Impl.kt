@@ -62,7 +62,8 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         return client.get(ServicePipelineResource::class).status(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 

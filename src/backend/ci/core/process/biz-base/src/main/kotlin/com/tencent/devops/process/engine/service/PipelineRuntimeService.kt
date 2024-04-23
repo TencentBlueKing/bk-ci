@@ -83,6 +83,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
+import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -135,15 +136,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -668,6 +669,8 @@ class PipelineRuntimeService @Autowired constructor(
 //        var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         var afterRetryStage = false
+        // #10082 针对构建容器的第三方构建机组装复用互斥信息
+        val agentReuseMutexTree = AgentReuseMutexTree(mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
@@ -748,6 +751,9 @@ class PipelineRuntimeService @Autowired constructor(
                         )
                         return@nextContainer
                     }
+
+                    // #10082 针对构建容器的第三方构建机组装复用互斥信息
+                    agentReuseMutexTree.addNode(container, index)
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
@@ -864,7 +870,13 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 )
             }
+
+            // #10082 针对构建容器的第三方构建机组装复用互斥信息
+            agentReuseMutexTree.checkVirtualRootAndResetJobType()
         }
+
+        // #10082 使用互斥树节点重新回写Control和Container
+        agentReuseMutexTree.rewriteModel(buildContainersWithDetail, fullModel, buildTaskList)
 
         context.pipelineParamMap[PIPELINE_START_TASK_ID] =
             BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)

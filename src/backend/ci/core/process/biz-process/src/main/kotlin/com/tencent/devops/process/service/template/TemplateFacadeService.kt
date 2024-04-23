@@ -121,6 +121,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
@@ -173,6 +174,7 @@ class TemplateFacadeService @Autowired constructor(
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val paramService: ParamFacadeService,
     private val modelCheckPlugin: ModelCheckPlugin,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val templateCommonService: TemplateCommonService,
     private val templateSettingService: TemplateSettingService
 ) {
@@ -1834,7 +1836,34 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateInstanceUpdate.pipelineId,
                     templateName = templateInstanceUpdate.pipelineName
                 )
-                templateSettingService.saveTemplatePipelineSetting(userId, setting)
+                pipelineSettingFacadeService.saveSetting(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = templateInstanceUpdate.pipelineId,
+                    setting = setting,
+                    checkPermission = true,
+                    dispatchPipelineUpdateEvent = false
+                )
+            } else {
+                // 不应用模板设置但是修改了流水线名称,需要重命名流水线
+                val setting = pipelineSettingDao.getSetting(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = templateInstanceUpdate.pipelineId
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
+                )
+                if (setting.pipelineName != templateInstanceUpdate.pipelineName) {
+                    setting.pipelineName = templateInstanceUpdate.pipelineName
+                    pipelineSettingFacadeService.saveSetting(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = templateInstanceUpdate.pipelineId,
+                        setting = setting,
+                        checkPermission = true,
+                        dispatchPipelineUpdateEvent = false
+                    )
+                }
             }
         }
     }

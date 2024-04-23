@@ -411,6 +411,12 @@
                 yamlErrorMessage: ''
             }
         },
+        
+        beforeRouteEnter (to, from, next) {
+            next((vm) => {
+                vm.initBuildData()
+            })
+        },
 
         computed: {
             ...mapState(['curPipeline', 'projectId', 'projectInfo', 'permission']),
@@ -448,6 +454,7 @@
             curPipeline: {
                 handler (newVal, oldVal) {
                     if (Object.keys(oldVal).length) this.cleanFilterData()
+                    if (!Object.keys(oldVal).length) return
                     this.initBuildData()
                 }
             }
@@ -631,7 +638,7 @@
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
-                    pipelineId: this.curPipeline.pipelineId,
+                    pipelineId: this.curPipeline.pipelineId || this.$route.params.pipelineId,
                     ...this.filterData,
                 }
                 return pipelines.getPipelineBuildList(this.projectId, params).then((res = {}) => {
