@@ -32,22 +32,45 @@ package com.tencent.devops.remotedev.pojo
  */
 @Suppress("ALL")
 enum class WorkspaceStatus {
-    PREPARING, // 0
-    RUNNING, // 1
-    STOPPED, // 2
-    SLEEP, // 3
-    DELETED, // 4
-    EXCEPTION, // 5
-    STARTING, // 6
-    SLEEPING, // 7
-    DELETING, // 8
+    PREPARING, // 0 准备中
+    RUNNING, // 1 运行中
+    STOPPED, // 2 已休眠
+    SLEEP, // 3 已休眠
+    DELETED, // 4 已销毁
+    EXCEPTION, // 5 异常
+    STARTING, // 6 启动中
+    SLEEPING, // 7 休眠中
+    DELETING, // 8 销毁中
     DELIVERING, // 9 交付中
     DISTRIBUTING, // 10 待分配
     DELIVERING_FAILED, // 11 交付失败
     STOPPING, // 12 关机中
     RESTARTING, // 13 重启中
     MAKING_IMAGE, // 14 制作镜像中
-    REBUILDING; // 14 重装系统中
+    REBUILDING; // 15 重装系统中
+
+    enum class Types {
+        USING {
+            override fun status() = setOf(
+                PREPARING,
+                RUNNING,
+                STOPPED,
+                SLEEP,
+                EXCEPTION,
+                STARTING,
+                SLEEPING,
+                DELIVERING,
+                DISTRIBUTING,
+                DELIVERING_FAILED,
+                STOPPING,
+                RESTARTING,
+                MAKING_IMAGE,
+                REBUILDING
+            )
+        };
+
+        abstract fun status(): Set<WorkspaceStatus>
+    }
 
     fun checkRunning() = this == RUNNING
 
@@ -67,6 +90,7 @@ enum class WorkspaceStatus {
 
     fun checkInUse() = !checkDeleted() && !checkException()
     fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING
+
     /**
      * 当正在做某事时，不能新建任务去执行
      */

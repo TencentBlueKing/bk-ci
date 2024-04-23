@@ -86,6 +86,8 @@ class RemoteDevSettingDao {
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(USER_NAME, userInfo.value?.accountName ?: "")
+                .set(COMPANY_NAME, userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: "")
                 .execute()
         }
     }

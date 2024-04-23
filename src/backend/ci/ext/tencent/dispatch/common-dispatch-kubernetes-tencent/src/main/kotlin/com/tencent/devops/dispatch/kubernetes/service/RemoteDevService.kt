@@ -212,27 +212,8 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun makeWorkspaceImageWithBackEvent(event: WorkspaceOperateEvent, backEvent: RemoteDevUpdateEvent) {
-        // 先检测工作空间状态
-        val environmentInfoRspData = remoteDevServiceFactory.loadRemoteDevService(event.mountType).getWorkspaceInfo(
-            userId = event.userId,
-            workspaceName = event.workspaceName
-        )
-
-        var workspaceRunning = false
-        if (environmentInfoRspData.status == EnvStatusEnum.running ||
-            environmentInfoRspData.status == EnvStatusEnum.startFailed ||
-            environmentInfoRspData.status == EnvStatusEnum.stopFailed ||
-            environmentInfoRspData.status == EnvStatusEnum.abnormalAfterRunning
-        ) {
-            // 制作镜像前先关机
-            stopWorkspace(event)
-
-            // 标识这是一次开机制作镜像
-            workspaceRunning = true
-        }
-
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
+            .makeWorkspaceImage(event.userId, event)
         val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId, event.type)
 
@@ -248,11 +229,6 @@ class RemoteDevService @Autowired constructor(
                 status = EnvStatusEnum.stopped,
                 dslContext = dslContext
             )
-
-            // 如果是开机制作镜像，镜像制作完成后要开机
-            if (workspaceRunning) {
-                startWorkspace(event)
-            }
 
             backEvent.status = true
             backEvent.workspaceImageInfo = WorkspaceImageInfo(
@@ -441,7 +417,7 @@ class RemoteDevService @Autowired constructor(
 
     fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .deleteWorkspace(event.userId, event.workspaceName)
+            .deleteWorkspace(event.userId, event)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId, event.type)
 

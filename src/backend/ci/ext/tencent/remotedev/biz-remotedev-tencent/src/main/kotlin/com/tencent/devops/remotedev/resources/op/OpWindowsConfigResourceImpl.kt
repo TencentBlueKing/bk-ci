@@ -76,4 +76,8 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
     override fun addProjectTotalQuota(userId: String, projectId: String, quota: Int): Result<Boolean> {
         return Result(windowsResourceConfigService.addProjectTotalQuota(userId, projectId, quota))
     }
+
+    override fun addProjectRemotedevManager(userId: String, projectId: String, user: String): Result<Boolean> {
+        return Result(windowsResourceConfigService.addProjectRemotedevManager(userId, projectId, user))
+    }
 }

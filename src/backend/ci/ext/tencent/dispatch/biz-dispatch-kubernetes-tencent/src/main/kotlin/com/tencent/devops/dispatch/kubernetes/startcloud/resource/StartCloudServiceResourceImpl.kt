@@ -49,8 +49,8 @@ class StartCloudServiceResourceImpl @Autowired constructor(
     private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) : ServiceStartCloudResource {
 
-    override fun createStartCloudUser(user: String): Result<Boolean> {
-        return Result(startCloudInterfaceService.createStartCloudUser(user))
+    override fun createStartCloudUser(user: String, gameId: String?): Result<Boolean> {
+        return Result(startCloudInterfaceService.createStartCloudUser(user, gameId))
     }
 
     override fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>> {
@@ -75,9 +75,10 @@ class StartCloudServiceResourceImpl @Autowired constructor(
     override fun shareWorkspace(
         operator: String,
         cgsId: String,
+        gameId: String?,
         receivers: List<String>
     ): Result<String> {
-        return Result(startCloudInterfaceService.shareWorkspace(operator, cgsId, receivers))
+        return Result(startCloudInterfaceService.shareWorkspace(operator, cgsId, receivers, gameId))
     }
 
     override fun unShareWorkspace(operator: String, resourceId: String, receivers: List<String>): Result<Boolean> {

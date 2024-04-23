@@ -47,5 +47,7 @@ enum class EnvStatusEnum {
     stopping,
     stopFailed,
     abnormalAfterReady,
-    abnormalAfterRunning
+    abnormalAfterRunning,
+    restarting,
+    rebuilding
 }

@@ -55,6 +55,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -229,18 +230,18 @@ class BcsRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): String {
-        val environmentUid = getEnvironmentUid(workspaceName)
+    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
+        val environmentUid = getEnvironmentUid(event.workspaceName)
         val resp = workspaceBcsClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             environmentAction = EnvironmentAction.DELETE
         )
 
         // 更新db状态
         dispatchWorkspaceDao.updateWorkspaceStatus(
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             status = EnvStatusEnum.deleted,
             dslContext = dslContext
         )
@@ -248,7 +249,7 @@ class BcsRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
+    override fun makeWorkspaceImage(userId: String, event: WorkspaceOperateEvent): String {
         TODO("Not yet implemented")
     }
 
@@ -267,7 +268,13 @@ class BcsRemoteDevService @Autowired constructor(
             }
             kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class)
-                    .createWinWorkspaceByVm(oldWs.userId, oldWs.workspaceName, null, taskStatus.uid)
+                    .createWinWorkspaceByVm(
+                        userId = oldWs.userId,
+                        oldWorkspaceName = oldWs.workspaceName,
+                        projectId = null,
+                        ownerType = null,
+                        uid = taskStatus.uid
+                    )
             }.onFailure {
                 logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
             }
@@ -282,9 +289,9 @@ class BcsRemoteDevService @Autowired constructor(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
             environmentIP = environmentStatus.environmentIP,
-            clusterId = environmentStatus.clusterId,
-            namespace = environmentStatus.namespace,
-            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            clusterId = environmentStatus.clusterId ?: "",
+            namespace = environmentStatus.namespace ?: "",
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId ?: "", workspaceName),
             ready = podInfo?.ready ?: false,
             started = podInfo?.started ?: false
         )

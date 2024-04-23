@@ -27,4 +27,5 @@
 
 dependencies {
     api(project(":ext:tencent:artifactory:biz-artifactory-tencent"))
+    api(project(":ext:tencent:artifactory:biz-experience-tencent"))
 }
