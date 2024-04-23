@@ -410,7 +410,7 @@
         right: 0;
         top: 50px;
         z-index: 500;
-        .bk-breadcrumb-item-inner {
+        .bk-breadcrumb-item {
             max-width: 300px !important;
             display: block;
             white-space: nowrap;
