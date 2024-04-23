@@ -141,6 +141,12 @@ class StageControl @Autowired constructor(
         )
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, buildInfo)
+        // #10082 过滤Agent复用互斥的endJob信息
+        val mutexJobs = containers.filter {
+            it.controlOption.agentReuseMutex?.endJob == true &&
+                    it.controlOption.agentReuseMutex?.reUseJobId != null
+        }.groupBy { it.controlOption.agentReuseMutex?.reUseJobId!! }
+            .mapValues { (_, jobs) -> jobs.size }.ifEmpty { null }?.toMutableMap()
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
             event = this,
@@ -152,6 +158,7 @@ class StageControl @Autowired constructor(
             pipelineAsCodeEnabled = pipelineAsCodeEnabled,
             executeCount = executeCount,
             previousStageStatus = addPreviousStageStatus(stage),
+            agentReuseMutexEndJob = mutexJobs,
             debug = buildInfo.debug
         )
         watcher.stop()

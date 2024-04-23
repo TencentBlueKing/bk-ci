@@ -343,6 +343,12 @@ object ProcessMessageCode {
     const val ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION = "2101241" // 工蜂仓库({0})不存在或没有权限访问
     const val ERROR_TGIT_SERVER_EXCEPTION = "2101242" // 工蜂服务异常
 
+    const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
+    // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
@@ -516,6 +522,10 @@ object ProcessMessageCode {
     const val BK_QUALITY_IN = "bkQualityIn" // 质量红线(准入)
     const val BK_QUALITY_OUT = "bkQualityOut" // 质量红线(准出)
     const val BK_BUILD_FINISHED_AND_DENY_PAUSE = "bkBuildFinishedAndDenyPause" // 构建已结束，禁止暂停请求
+
+    // TODO: AgentReuseMutex
+    const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
+    const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
     const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
     const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
 }
