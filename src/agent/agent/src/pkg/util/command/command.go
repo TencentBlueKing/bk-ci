@@ -85,7 +85,7 @@ func StartProcess(command string, args []string, workDir string, envMap map[stri
 		}
 	}
 
-	err := setUser(cmd, runUser)
+	err := SetUser(cmd, runUser)
 	if err != nil {
 		logs.Error("set user failed: ", err.Error())
 		return -1, errors.New(

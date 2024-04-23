@@ -114,9 +114,7 @@ type AgentEnv struct {
 
 var GAgentEnv *AgentEnv
 var GAgentConfig *AgentConfig
-var GEnvVars map[string]string
 var UseCert bool
-
 var IsDebug bool = false
 
 // Init 加载和初始化配置
@@ -129,6 +127,11 @@ func Init(isDebug bool) {
 	}
 	initCert()
 	LoadAgentEnv()
+
+	GApiEnvVars = &GEnvVarsT{
+		envs: make(map[string]string),
+		lock: sync.RWMutex{},
+	}
 }
 
 // LoadAgentEnv 加载Agent环境

@@ -85,7 +85,19 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 	}
 
 	// agent环境变量
-	config.GEnvVars = heartbeatResponse.Envs
+	flag := false
+	if heartbeatResponse.Envs != nil {
+		config.GApiEnvVars.RangeDo(func(k, v string) bool {
+			if heartbeatResponse.Envs[k] != v {
+				flag = true
+				return false
+			}
+			return true
+		})
+	}
+	if flag {
+		config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+	}
 
 	/*
 	   忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP

@@ -48,7 +48,7 @@ var envHome = "HOME"
 var envUser = "USER"
 var envLogName = "LOGNAME"
 
-func setUser(cmd *exec.Cmd, runUser string) error {
+func SetUser(cmd *exec.Cmd, runUser string) error {
 
 	if len(runUser) == 0 { // 传空则直接返回
 		return nil
