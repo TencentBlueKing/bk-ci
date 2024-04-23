@@ -53,6 +53,7 @@ import FormFieldGroup from './FormFieldGroup'
 import StaffInput from '@/components/atomFormField/StaffInput'
 import CompositeInput from '@/components/atomFormField/CompositeInput'
 import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
+import EnumButton from '@/components/atomFormField/EnumButton'
 
 const atomMixin = {
     props: {
@@ -101,7 +102,8 @@ const atomMixin = {
         StaffInput,
         FormFieldGroup,
         CompositeInput,
-        ConditionalInputSelector
+        ConditionalInputSelector,
+        EnumButton
     },
     computed: {
         ...mapGetters('atom', [
