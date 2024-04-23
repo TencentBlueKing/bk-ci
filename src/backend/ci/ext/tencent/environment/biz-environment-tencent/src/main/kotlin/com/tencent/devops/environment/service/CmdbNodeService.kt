@@ -351,7 +351,8 @@ class CmdbNodeService @Autowired constructor(
                 agentVersion = if (grayTag) ipToAgentVersionMap?.get(cmdbNode.ip)?.version else null,
                 hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
                 cloudAreaId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkCloudId?.toLong(),
-                osType = queryCCIpToCCInfoMap[cmdbNode.ip]?.osType
+                osType = queryCCIpToCCInfoMap[cmdbNode.ip]?.osType,
+                serverId = queryCCIpToCCInfoMap[cmdbNode.ip]?.svrId
             )
         }
         val time6 = LocalDateTime.now()
@@ -427,9 +428,9 @@ class CmdbNodeService @Autowired constructor(
      * 返回值：无论在不在CC中的节点信息 CCInfo
      */
     private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
-        val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId.toLong() }
+        val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId }
         // 通过svrId查询节点是否在CC中
-        val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId.toLong() }
+        val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
         val (svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
         var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
         if (inCCSvrIdList.isNotEmpty()) { // 在CC中，通过svrId查出host_id（和云区域id，默认0，可默认）
