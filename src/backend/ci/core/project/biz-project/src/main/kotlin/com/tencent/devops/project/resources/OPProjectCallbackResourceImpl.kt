@@ -87,7 +87,8 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         val list = projectCallbackDao.get(
             dslContext = dslContext,
             event = event,
-            url = callbackUrl
+            url = callbackUrl,
+            ignoreTypes = emptySet()
         ).map {
             ProjectCallbackPojo(
                 event = it.event,

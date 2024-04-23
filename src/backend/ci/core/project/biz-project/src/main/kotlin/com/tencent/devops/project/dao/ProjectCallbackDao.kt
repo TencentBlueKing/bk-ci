@@ -36,11 +36,13 @@ class ProjectCallbackDao {
     fun get(
         dslContext: DSLContext,
         event: String,
-        url: String?
+        url: String?,
+        ignoreTypes: Set<String>
     ) = with(TProjectCallback.T_PROJECT_CALLBACK) {
         dslContext.selectFrom(this)
             .where(EVENT.eq(event).let {
                 if (url.isNullOrBlank()) it else it.and(CALLBACK_URL.eq(url))
+                if (ignoreTypes.isEmpty()) it else it.and(SECRET_TYPE.notIn(ignoreTypes))
             }).fetch()
     }
 
