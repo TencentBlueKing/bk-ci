@@ -41,6 +41,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -78,7 +79,7 @@ interface OPProjectCallbackResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @PathParam("id")
-        @Parameter(description = "事件类型", required = true)
+        @Parameter(description = "事件ID", required = true)
         id: Int
     ): Result<Boolean>
 
@@ -96,4 +97,18 @@ interface OPProjectCallbackResource {
         @Parameter(description = "回调地址", required = false)
         callbackUrl: String?
     ): Result<List<ProjectCallbackPojo>>
+
+    @PUT
+    @Path("/update/{id}")
+    @Operation(summary = "修改项目级回调")
+    fun update(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @PathParam("id")
+        @Parameter(description = "事件ID", required = true)
+        id: Int,
+        @Parameter(description = "回调凭证", required = true)
+        secretParam: ISecretParam
+    ): Result<Boolean>
 }

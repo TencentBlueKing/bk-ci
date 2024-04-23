@@ -100,6 +100,17 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         return Result(list)
     }
 
+    override fun update(userId: String, id: Int, secretParam: ISecretParam): Result<Boolean> {
+        logger.info("start update project callback")
+        val changeCount = projectCallbackDao.update(
+            dslContext = dslContext,
+            id = id,
+            secretParam = JsonUtil.toJson(secretParam.encode(aesKey), false)
+        )
+        logger.info("change project callback|changeCount[$changeCount]")
+        return Result(true)
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(OPProjectCallbackResourceImpl::class.java)
     }

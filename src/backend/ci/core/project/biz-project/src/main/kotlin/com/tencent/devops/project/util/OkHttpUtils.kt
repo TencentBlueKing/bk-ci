@@ -28,13 +28,11 @@
 package com.tencent.devops.project.util
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.util.HttpRetryUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.Response
 import org.slf4j.LoggerFactory
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -92,7 +90,7 @@ object OkHttpUtils {
             val targetUrl = params?.let {
                 url.plus(if (url.contains("?")) "&" else "?")
                     .plus(params.map { it.key + "=" + it.value }.joinToString("&"))
-            }?: url
+            } ?: url
             requestBuilder.url(targetUrl)
             val requestBody = RequestBody.create(JSON, requestBodyStr.ifBlank {
                 "{}"

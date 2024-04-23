@@ -37,6 +37,7 @@ import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
 import com.tencent.devops.project.pojo.secret.DefaultSecretParam
 import com.tencent.devops.project.pojo.secret.ISecretParam
+import com.tencent.devops.project.pojo.secret.PaasCCSecretParam
 import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoModelSecretParam
 import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
 import com.tencent.devops.project.service.secret.DefaultSecretTokenService
@@ -75,11 +76,17 @@ class ProjectCallbackControl @Autowired constructor(
     }
 
     fun callBackProjectEvent(projectEventType: ProjectEventType, callbackData: ProjectCallbackData) {
-        // 查询事件相关的回调记录
+        // 查询事件相关的回调记录，创建事件暂时过滤掉paasCC的回调，否则发布瞬间可能导致项目创建失败
+        // 参考：com.tencent.devops.project.service.impl.TxProjectExtServiceImpl.createExtProjectInfo
         val callBackList = projectCallbackDao.get(
             dslContext = dslContext,
             event = projectEventType.name,
-            url = null
+            url = null,
+            ignoreTypes = if (projectEventType == ProjectEventType.CREATE){
+                setOf(PaasCCSecretParam.classType)
+            }else{
+                emptySet()
+            }
         )
         callBackList.map {
             val secretParam = JsonUtil.to(it.secretParam, ISecretParam::class.java).decode(aesKey)

@@ -77,4 +77,16 @@ class ProjectCallbackDao {
             dslContext.deleteFrom(this).where(ID.eq(id)).execute()
         }
     }
+
+    fun update(
+        dslContext: DSLContext,
+        id: Int,
+        secretParam: String
+    ): Int {
+        return with(TProjectCallback.T_PROJECT_CALLBACK) {
+            dslContext.update(this).set(
+                SECRET_PARAM, secretParam
+            ).where(ID.eq(id)).execute()
+        }
+    }
 }

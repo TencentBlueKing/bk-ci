@@ -29,7 +29,7 @@ package com.tencent.devops.project.pojo.secret
 
 import com.tencent.devops.project.util.SecretParamEncryptUtil
 
-data class PassCCSecretParam(
+data class PaasCCSecretParam(
     var authorizationToken: String,
     override var url: String,
     override val userId: String,
@@ -49,6 +49,6 @@ data class PassCCSecretParam(
     }
 
     companion object {
-        const val classType = "passcc"
+        const val classType = "paascc"
     }
 }

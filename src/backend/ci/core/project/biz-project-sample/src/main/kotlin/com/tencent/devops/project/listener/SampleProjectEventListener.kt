@@ -73,7 +73,7 @@ class SampleProjectEventListener @Autowired constructor(
         )
     }
 
-    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent)  {
+    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
         val projectInfo = projectDao.get(dslContext, event.projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
             params = arrayOf(event.projectId),

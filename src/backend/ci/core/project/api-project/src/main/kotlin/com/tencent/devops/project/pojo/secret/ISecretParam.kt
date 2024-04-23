@@ -37,7 +37,7 @@ import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
     JsonSubTypes.Type(value = BkrepoProjectSecretParam::class, name = BkrepoProjectSecretParam.classType),
     JsonSubTypes.Type(value = BkrepoModelSecretParam::class, name = BkrepoModelSecretParam.classType),
     JsonSubTypes.Type(value = DefaultSecretParam::class, name = DefaultSecretParam.classType),
-    JsonSubTypes.Type(value = PassCCSecretParam::class, name = PassCCSecretParam.classType)
+    JsonSubTypes.Type(value = PaasCCSecretParam::class, name = PaasCCSecretParam.classType)
 )
 interface ISecretParam {
     var url: String

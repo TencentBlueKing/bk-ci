@@ -51,7 +51,7 @@ class BkrepoProjectSecretTokenService : BkrepoSecretTokenCommonService<BkrepoPro
         secretParam: BkrepoProjectSecretParam,
         projectCallbackData: ProjectCallbackData
     ): String {
-        val projectId = projectCallbackData.projectId
+        val projectId = projectCallbackData.projectEnglishName
         val userProjectCreateRequest = UserProjectCreateRequest(
             name = projectId,
             displayName = projectId,
