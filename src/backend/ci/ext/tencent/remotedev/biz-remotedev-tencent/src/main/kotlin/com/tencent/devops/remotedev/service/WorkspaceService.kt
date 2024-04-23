@@ -873,6 +873,12 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    fun getWorkspaceRecord(
+        workspaceName: String
+    ): WorkspaceRecord? {
+        return workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+    }
+
     @ActionAuditRecord(
         actionId = ActionId.CGS_VIEW,
         instance = AuditInstanceRecord(

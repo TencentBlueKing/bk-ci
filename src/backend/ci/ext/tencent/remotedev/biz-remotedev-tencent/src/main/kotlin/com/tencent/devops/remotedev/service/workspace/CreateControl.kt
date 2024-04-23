@@ -394,12 +394,23 @@ class CreateControl @Autowired constructor(
 
     fun devcloudCreateWorkspace(
         userId: String,
-        workspaceCreate: WindowsWorkspaceCreate
+        workspaceCreate: WindowsWorkspaceCreate,
+        projectId: String?
     ): Boolean {
-        logger.info("create workspace from devcloud |$userId|$workspaceCreate")
-        loadWorkspaceWithPersonalWindows(
-            userId, "_$userId", workspaceCreate
-        )
+        logger.info("create workspace from devcloud |$userId|$workspaceCreate|$projectId")
+        if (projectId != null) {
+            projectCreateWorkspace(
+                pmUserId = userId,
+                projectId = projectId,
+                cgsId = null,
+                autoAssign = null,
+                workspaceCreate = workspaceCreate
+            )
+        } else {
+            loadWorkspaceWithPersonalWindows(
+                userId, "_$userId", workspaceCreate
+            )
+        }
         return true
     }
 
