@@ -58,6 +58,7 @@ class PipelineSettingVersionService @Autowired constructor(
     /**
      * 获取指定版本的完整流水线设置（需要合并不属于版本管理的字段）
      */
+    @Suppress("NestedBlockDepth")
     fun getPipelineSetting(
         projectId: String,
         pipelineId: String,
