@@ -29,14 +29,6 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 import java.util.Properties
 
 tasks.register<BootRun>("multiBootRun") {
-
-    val bkEnvPath = joinPath(projectDir.absolutePath, "bkenv.properties")
-    val bkEnvProperties = Properties()
-    file(bkEnvPath).let {
-        if (it.exists()) {
-            bkEnvProperties.load(it.inputStream())
-        }
-    }
     doFirst {
         systemProperty("devops.multi.from", localRunMultiServices)
         systemProperty("spring.datasource.url", System.getProperty("mysqlURL"))

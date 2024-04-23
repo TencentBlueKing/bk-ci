@@ -35,24 +35,26 @@ class JooqDefinitionRegistrar : ImportBeanDefinitionRegistrar {
                 "${finalModuleName}DataSource"
             }
 
-            val dataSourceConnectionProvider = BeanDefinitionBuilder.genericBeanDefinition(
-                DataSourceConnectionProvider::class.java
-            ).addConstructorArgReference(dataSource)
+            val dataSourceConnectionProvider = BeanDefinitionBuilder.genericBeanDefinition(DataSourceConnectionProvider::class.java)
+                .addConstructorArgReference(dataSource)
             registry.registerBeanDefinition(
                 "${finalModuleName}ConnectionProvider",
                 dataSourceConnectionProvider.beanDefinition
             )
-            val beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(DefaultConfiguration::class.java) {
+            val jooqConfigurationBeanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(DefaultConfiguration::class.java) {
                 val configuration = DefaultConfiguration()
                 configuration.set(SQLDialect.MYSQL)
                 configuration.settings().isRenderSchema = false
                 configuration.set(DefaultExecuteListenerProvider(BkJooqExecuteListener()))
                 configuration
             }
-            beanDefinitionBuilder.addPropertyReference("connectionProvider", "${finalModuleName}ConnectionProvider")
+            jooqConfigurationBeanDefinitionBuilder.addPropertyReference(
+                "connectionProvider",
+                "${finalModuleName}ConnectionProvider"
+            )
             registry.registerBeanDefinition(
                 "${finalModuleName}JooqConfiguration",
-                beanDefinitionBuilder.beanDefinition
+                jooqConfigurationBeanDefinitionBuilder.beanDefinition
             )
         }
     }
