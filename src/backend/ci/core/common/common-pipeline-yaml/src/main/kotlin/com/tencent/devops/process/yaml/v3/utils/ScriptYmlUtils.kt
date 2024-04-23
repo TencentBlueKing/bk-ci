@@ -296,7 +296,10 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun formatStage(preScriptBuildYaml: PreScriptBuildYamlIParser, transferData: YamlTransferData? = null): List<Stage> {
+    fun formatStage(
+        preScriptBuildYaml: PreScriptBuildYamlIParser,
+        transferData: YamlTransferData? = null
+    ): List<Stage> {
         return when {
             preScriptBuildYaml.steps != null -> {
                 val jobId = randomString(jobNamespace)

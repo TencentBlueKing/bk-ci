@@ -54,8 +54,8 @@ object PipelineVersionUtils {
         triggerVersion: Int?,
         settingVersion: Int?
     ): String? {
-        return if (versionNum == null || pipelineVersion == null ||
-            triggerVersion == null || settingVersion == null) {
+        val isNull = versionNum == null || pipelineVersion == null || triggerVersion == null || settingVersion == null
+        return if (isNull) {
             null
         } else {
             "V$versionNum(P$pipelineVersion.T$triggerVersion.$settingVersion)"
