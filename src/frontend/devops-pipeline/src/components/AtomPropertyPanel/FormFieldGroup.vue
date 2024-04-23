@@ -79,9 +79,11 @@
                             {docs}
                         </span>
                     }
-                    <div class="bk-form-group-content">
-                        {$slots.default}
-                    </div>
+                    {
+                        ((showSwitch && value) || !showSwitch) && <div class="bk-form-group-content">
+                            {$slots.default}
+                        </div>
+                    }
                 </div>
             )
         }
