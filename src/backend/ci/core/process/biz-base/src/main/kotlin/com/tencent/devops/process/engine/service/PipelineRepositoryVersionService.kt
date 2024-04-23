@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -157,7 +156,7 @@ class PipelineRepositoryVersionService(
     }
 
     fun asyncBatchUpdateReferFlag(
-        channelCode: ChannelCode
+        projectChannelCode: String
     ): Boolean {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin asyncBatchUpdateReferFlag!!")
@@ -166,7 +165,7 @@ class PipelineRepositoryVersionService(
             do {
                 val projectInfos = client.get(ServiceProjectResource::class).listMigrateProjects(
                     migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                        channelCode = channelCode.name
+                        channelCode = projectChannelCode
                     ),
                     limit = limit,
                     offset = offset
@@ -209,15 +208,26 @@ class PipelineRepositoryVersionService(
                     pipelineId = pipelineId,
                     versions = versions
                 ).associateBy({ it.value1() }, { it.value2() })
+                // 批量把流水线版本记录置为关联状态
+                versionBuildNumMap.forEach { (version, buildNum) ->
+                    pipelineResVersionDao.updatePipelineVersionReferInfo(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        versions = listOf(version),
+                        referCount = buildNum,
+                        referFlag = true
+                    )
+                }
                 // 过滤出未关联的流水线版本号
-                val filterVersions =
+                val unReferVersions =
                     versions.filter { versionBuildNumMap[it] == null || (versionBuildNumMap[it] ?: 0) < 1 }
                 // 批量把流水线版本记录置为未关联状态
                 pipelineResVersionDao.updatePipelineVersionReferInfo(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    versions = filterVersions,
+                    versions = unReferVersions,
                     referCount = 0,
                     referFlag = false
                 )
