@@ -83,6 +83,7 @@ data class Stage(
         if (stageControlOption?.manualTrigger == true && checkIn == null) {
             checkIn = StagePauseCheck.convertControlOption(stageControlOption!!)
         }
+        if (finally) canRetry = false
     }
 
     fun getContainer(vmSeqId: String): Container? {

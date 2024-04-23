@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
