@@ -42,7 +42,7 @@ import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -82,7 +82,7 @@ class EsbAgentClient {
         logger.info("POST url: $url")
         logger.info("requestBody: $requestBody")
 
-        val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
+        val request = Request.Builder().url(url).post(requestBody.toRequestBody(JSON)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
@@ -147,7 +147,7 @@ class EsbAgentClient {
         logger.info("POST url: $url")
         logger.info("requestBody: $requestBody")
 
-        val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
+        val request = Request.Builder().url(url).post(requestBody.toRequestBody(JSON)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
@@ -190,7 +190,7 @@ class EsbAgentClient {
                             displayIp = lanIPs.joinToString(";"),
                             osName = osName,
                             agentStatus = false,
-                            serverId = it["serverId"] as Int
+                            serverId = it["serverId"] as Long
                         )
                     }
                 }
@@ -211,12 +211,12 @@ class EsbAgentClient {
     }
 
     private fun getAndSetDisplayIp(displayIp: String): Pair<String, List<String>> {
-        val allIpList = displayIp.split(",", ";").filterNot { it.isNullOrBlank() }.map { it.trim() }.toList()
+        val allIpList = displayIp.split(",", ";").filterNot { it.isBlank() }.map { it.trim() }.toList()
         return Pair(allIpList.joinToString(";"), allIpList)
     }
 
     private fun checkAndGetOperator(bakOperator: String): String {
-        val allOperators = bakOperator.split(",", ";").filterNot { it.isNullOrBlank() }.map { it.trim() }.toList()
+        val allOperators = bakOperator.split(",", ";").filterNot { it.isBlank() }.map { it.trim() }.toList()
         return when {
             allOperators.size == 1 -> allOperators[0]
             bakOperator.length > 255 -> allOperators.subList(0, 9).joinToString(";")
@@ -274,8 +274,8 @@ class EsbAgentClient {
 
         val ipStatusMap = getAgentStatus(DEFAULT_SYTEM_USER, allInnerIp)
         cmdbNodes.forEach { node ->
-            val ips = displayIp2IpsMap[node.displayIp]
-            ips!!.forEach lit@{ ip ->
+            val ipList = displayIp2IpsMap[node.displayIp]
+            ipList!!.forEach lit@{ ip ->
                 if (ipStatusMap[ip] == true) {
                     node.ip = ip
                     node.agentStatus = true
