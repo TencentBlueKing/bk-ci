@@ -66,11 +66,11 @@
 </template>
 <script>
     import '@blueking/search-select/dist/styles/index.css'
-import {
-    mapActions
-} from 'vuex'
-import EmptyTableStatus from '../empty-table-status.vue'
-import TimelineCollapse from './timeline-collapse.vue'
+    import {
+        mapActions
+    } from 'vuex'
+    import EmptyTableStatus from '../empty-table-status.vue'
+    import TimelineCollapse from './timeline-collapse.vue'
 
     export default {
         name: 'basicSetting',
@@ -363,7 +363,6 @@ import TimelineCollapse from './timeline-collapse.vue'
             handleChangeDaterange (date, type) {
                 const startTime = new Date(date[0]).getTime() || ''
                 const endTime = new Date(date[1]).getTime() || ''
-                this.daterange = [startTime, endTime]
                 this.daterangeCache = [startTime, endTime]
             },
             
