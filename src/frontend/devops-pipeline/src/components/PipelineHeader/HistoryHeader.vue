@@ -111,18 +111,18 @@
 
 <script>
     import Badge from '@/components/Badge.vue'
-import PacTag from '@/components/PacTag.vue'
-import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
-import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
-import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
-import {
-    RESOURCE_ACTION
-} from '@/utils/permission'
-import { pipelineTabIdMap } from '@/utils/pipelineConst'
-import { mapActions, mapGetters, mapState } from 'vuex'
-import MoreActions from './MoreActions.vue'
-import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import PacTag from '@/components/PacTag.vue'
+    import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
     export default {
         components: {
