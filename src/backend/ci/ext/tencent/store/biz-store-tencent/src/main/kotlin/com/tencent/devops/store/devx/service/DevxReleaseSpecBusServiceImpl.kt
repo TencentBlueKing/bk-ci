@@ -56,7 +56,8 @@ import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -77,14 +78,14 @@ import org.springframework.stereotype.Service
 
 @Primary
 @Service("DEVX_SPEC_BUS_SERVICE")
-class DevxSpecBusServiceImpl @Autowired constructor(
+class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
     private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
     private val storeCommonService: StoreCommonService,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig
-) : StoreSpecBusService {
+) : StoreReleaseSpecBusService {
 
     companion object {
         private const val KEY_OS_RUN_INFO = "osRunInfo"
@@ -127,12 +128,33 @@ class DevxSpecBusServiceImpl @Autowired constructor(
             )
         }
         if (maxPeakBandwidth.toString().toDouble() - minPeakBandwidth.toString().toDouble() < 0) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("$KEY_MIN_PEAK_BAND_WIDTH,$KEY_MAX_PEAK_BAND_WIDTH")
+            )
         }
         netPolicyInfo[KEY_NEED_VISITED_SITE_INFOS] ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf(KEY_NEED_VISITED_SITE_INFOS)
         )
+        // 检验云开发的包是否有上传
+        val baseRecord = storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeBaseUpdateRequest.storeCode,
+            version = storeBaseUpdateRequest.versionInfo.version,
+            storeType = StoreTypeEnum.DEVX
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        val storeId = baseRecord.id
+        val baseEnvRecords = storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId) ?: throw ErrorCodeException(
+            errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
+        )
+        baseEnvRecords.forEach { baseEnvRecord ->
+            if (baseEnvRecord.pkgPath.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
+                )
+            }
+        }
     }
 
     override fun getStoreUpdateStatus(): StoreStatusEnum {
