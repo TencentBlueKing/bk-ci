@@ -62,7 +62,7 @@ interface OpStoreComponentResource {
 
     @Operation(summary = "审核组件发布")
     @PUT
-    @Path("/components/{storeId}/release/approve")
+    @Path("/{storeId}/release/approve")
     fun approveComponentRelease(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

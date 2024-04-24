@@ -45,7 +45,7 @@ import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
@@ -230,10 +230,10 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreSpecBusService {
+    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {
         return SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(storeType)
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
     }
 

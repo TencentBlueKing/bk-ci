@@ -34,7 +34,7 @@ import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
-interface StoreSpecBusService {
+interface StoreReleaseSpecBusService {
 
     /**
      * 对更新组件请求参数进行国际化转换个性化逻辑

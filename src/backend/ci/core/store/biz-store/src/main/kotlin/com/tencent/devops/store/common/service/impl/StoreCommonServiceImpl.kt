@@ -384,9 +384,9 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         val dbStatus = opBaseRecord.status
         // 判断首个版本对应的请求是否合法
         if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            dbStatus != StoreStatusEnum.INIT.name
+            dbStatus !in listOf(StoreStatusEnum.INIT.name, StoreStatusEnum.GROUNDING_SUSPENSION.name)
         ) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
         }
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = dbStatus == StoreStatusEnum.GROUNDING_SUSPENSION.name
