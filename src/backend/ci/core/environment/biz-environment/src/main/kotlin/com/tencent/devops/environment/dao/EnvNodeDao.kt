@@ -119,4 +119,15 @@ class EnvNodeDao {
                 .execute()
         }
     }
+
+    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, disable: Boolean) {
+        with(TEnvNode.T_ENV_NODE) {
+            dslContext.update(this)
+                .set(ENABLE_NODE, !disable)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.eq(envId))
+                .and(NODE_ID.`in`(nodeIds))
+                .execute()
+        }
+    }
 }

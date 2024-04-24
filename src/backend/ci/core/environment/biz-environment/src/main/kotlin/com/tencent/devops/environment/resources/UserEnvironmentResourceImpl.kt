@@ -270,6 +270,23 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun enableNodeEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashId: String,
+        disableNode: Boolean
+    ): Result<Boolean> {
+        // TODO: 校验环境管理员权限才可以
+        envService.disableEnvNode(
+            projectId = projectId,
+            envHashId = envHashId,
+            nodeHashId = nodeHashId,
+            disableNode = disableNode
+        )
+        return Result(true)
+    }
+
     private fun checkParam(
         userId: String,
         projectId: String,

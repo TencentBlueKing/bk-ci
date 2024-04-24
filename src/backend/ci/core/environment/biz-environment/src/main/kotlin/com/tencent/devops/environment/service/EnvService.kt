@@ -1109,4 +1109,19 @@ class EnvService @Autowired constructor(
             .setInstanceName(envInfo.envName)
         envShareProjectDao.deleteBySharedProj(dslContext, envId, projectId, sharedProjectId)
     }
+
+    fun disableEnvNode(
+        projectId: String,
+        envHashId: String,
+        nodeHashId: String,
+        disableNode: Boolean
+    ) {
+        envNodeDao.disableOrEnableNode(
+            dslContext = dslContext,
+            projectId = projectId,
+            envId = HashUtil.decodeIdToLong(envHashId),
+            nodeId = HashUtil.decodeIdToLong(nodeHashId),
+            disable = disableNode
+        )
+    }
 }
