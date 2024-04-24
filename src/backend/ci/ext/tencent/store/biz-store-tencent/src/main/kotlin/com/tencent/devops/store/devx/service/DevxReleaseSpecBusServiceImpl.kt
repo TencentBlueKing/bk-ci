@@ -77,7 +77,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Primary
-@Service("DEVX_SPEC_BUS_SERVICE")
+@Service("DEVX_RELEASE_SPEC_BUS_SERVICE")
 class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
