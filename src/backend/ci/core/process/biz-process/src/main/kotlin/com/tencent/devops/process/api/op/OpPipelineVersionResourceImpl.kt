@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +38,10 @@ class OpPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService
 ) : OpPipelineVersionResource {
 
-    override fun asyncBatchUpdateReferFlag(projectChannelCode: String): Result<Boolean> {
-        return Result(pipelineRepositoryVersionService.asyncBatchUpdateReferFlag(projectChannelCode))
+    override fun asyncBatchUpdateReferFlag(
+        projectChannelCode: String,
+        routerTag: AuthSystemType?
+    ): Result<Boolean> {
+        return Result(pipelineRepositoryVersionService.asyncBatchUpdateReferFlag(projectChannelCode, routerTag))
     }
 }

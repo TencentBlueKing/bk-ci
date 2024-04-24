@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -48,8 +49,11 @@ interface OpPipelineVersionResource {
     @PUT
     @Path("/referFlag/async/batch/update")
     fun asyncBatchUpdateReferFlag(
-        @Parameter(description = "项目渠道代码", required = false)
+        @Parameter(description = "项目渠道代码", required = true)
         @QueryParam("projectChannelCode")
-        projectChannelCode: String
+        projectChannelCode: String,
+        @Parameter(description = "项目路由TAG", required = false)
+        @QueryParam("routerTag")
+        routerTag: AuthSystemType? = null
     ): Result<Boolean>
 }

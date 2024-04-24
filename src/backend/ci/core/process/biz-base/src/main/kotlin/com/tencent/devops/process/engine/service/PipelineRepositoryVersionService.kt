@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -156,7 +157,8 @@ class PipelineRepositoryVersionService(
     }
 
     fun asyncBatchUpdateReferFlag(
-        projectChannelCode: String
+        projectChannelCode: String,
+        routerTag: AuthSystemType? = null
     ): Boolean {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin asyncBatchUpdateReferFlag!!")
@@ -165,6 +167,7 @@ class PipelineRepositoryVersionService(
             do {
                 val projectInfos = client.get(ServiceProjectResource::class).listMigrateProjects(
                     migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                        routerTag = routerTag,
                         channelCode = projectChannelCode
                     ),
                     limit = limit,
@@ -223,14 +226,16 @@ class PipelineRepositoryVersionService(
                 val unReferVersions =
                     versions.filter { versionBuildNumMap[it] == null || (versionBuildNumMap[it] ?: 0) < 1 }
                 // 批量把流水线版本记录置为未关联状态
-                pipelineResVersionDao.updatePipelineVersionReferInfo(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    versions = unReferVersions,
-                    referCount = 0,
-                    referFlag = false
-                )
+                if (unReferVersions.isNotEmpty()) {
+                    pipelineResVersionDao.updatePipelineVersionReferInfo(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        versions = unReferVersions,
+                        referCount = 0,
+                        referFlag = false
+                    )
+                }
                 offset += limit
             } while (pipelineVersionList.size == limit)
         } finally {
