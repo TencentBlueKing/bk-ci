@@ -16,32 +16,27 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
-
 _M = {}
 
-function _M:get_cookie(cookie_name)
-    --- 获取cookies
-    local cookie, err = ck:new()
-    if not cookie then
-        ngx.log(ngx.STDERR, "failed to get request cookies: ", err)
-        return nil
-    end
+local iv = "iebm1AwblWzYJi0C"
 
-    --- 获取Cookie中cookie_name
-    local cookie_value, err = cookie:get(cookie_name)
-    if not cookie_value then
-        return nil
-    end
-    return cookie_value
+function _M.encrypt(data, key)
+    -- 加密数据
+    -- 使用 AES-256-CBC
+    local aes_256_cbc_md5 = require "resty.aes"
+    local str = require "resty.string"
+    local aes = aes_256_cbc_md5:new(key, nil, aes_256_cbc_md5.cipher(256, "cbc"), { iv = iv })
+    local encrypted = aes:encrypt(data)
+    return str.str_to_hex(encrypted)
 end
 
-function _M:set_cookie(cookie_table)
-    local cookie, err = ck:new()
-    if not cookie then
-        ngx.log(ngx.STDERR, "failed to get request cookies: ", err)
-        return nil
-    end
-    return cookie:set(cookie_table)
+function _M.decrypt(data, key)
+    -- 解密数据
+    local aes_256_cbc_md5 = require "resty.aes"
+    local str = require "resty.string"
+    local aes = aes_256_cbc_md5:new(key, nil, aes_256_cbc_md5.cipher(256, "cbc"), { iv = iv })
+    local decrypted = aes:decrypt(str.hex_to_str(data))
+    return decrypted
 end
 
 return _M
