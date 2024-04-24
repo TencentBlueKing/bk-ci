@@ -817,6 +817,8 @@
     "abnormal": "Abnormal",
     "noPermToView": "No permission to view",
     "selectSlave": "Select a agent",
+    "locksSlave": "Building Resource Locks",
+    "locksSlaveTips": "Once set, with this configuration, Jobs that are similar (including those with locked resources) must all finish execution before the build resources are released.",
     "inputSlave": "Input Agent Alias Name",
     "selectEnv": "Select a pool",
     "inputEnv": "Input Pool Alias Name",

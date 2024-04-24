@@ -99,14 +99,16 @@ enum class PoolType {
                     envName = pool.envName,
                     workspace = pool.workspace,
                     agentType = AgentType.NAME,
-                    dockerInfo = pool.dockerInfo
+                    dockerInfo = pool.dockerInfo,
+                    reusedInfo = null
                 )
             } else {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
                     agentType = AgentType.NAME,
-                    dockerInfo = pool.dockerInfo
+                    dockerInfo = pool.dockerInfo,
+                    reusedInfo = null
                 )
             }
         }
