@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.net.SocketTimeoutException
 import javax.ws.rs.core.Response
 
 @Service
@@ -118,8 +119,16 @@ class TencentQueryFromCmdbService {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         logger.info("POST url: $url, req: ${logWithLengthLimit(requestContent)}")
 
-        val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
-        logger.info("POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
+        var ccPostRes: String? = null
+        try {
+            ccPostRes = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
+            logger.info("POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
+        } catch (timeoutError: SocketTimeoutException) {
+            logger.error("Query CMDB interface time out. Error: $timeoutError")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT)
+        } catch (error: Exception) {
+            logger.error("Query CMDB interface error. Error: $error")
+        }
         return ccPostRes
     }
 
