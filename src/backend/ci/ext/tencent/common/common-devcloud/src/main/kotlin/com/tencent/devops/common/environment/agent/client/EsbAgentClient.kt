@@ -71,7 +71,8 @@ class EsbAgentClient {
 
         val url = "http://open.oa.com/component/compapi/gse/get_agent_status/"
 
-        val requestData = mapOf("app_code" to appCode,
+        val requestData = mapOf(
+            "app_code" to appCode,
             "app_secret" to appSecret,
             "operator" to userId,
             "company_id" to 0,
@@ -92,9 +93,10 @@ class EsbAgentClient {
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get user cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, I18nUtil.getCodeLanMessage(
-                        messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS
-                    ))
+                    throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS)
+                    )
                 }
 
                 val ipInfoMap = (responseData["data"] as Map<String, *>)["data"] as Map<String, *>
@@ -133,7 +135,9 @@ class EsbAgentClient {
                 "app_code" to appCode,
                 "app_secret" to appSecret,
                 "operator" to userId,
-                "req_column" to listOf("SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP"),
+                "req_column" to listOf(
+                    "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
+                ),
                 "key_values" to mapOf("SvrIp" to ips.joinToString(";")),
                 "paging_info" to mapOf("page_size" to 1000, "start_index" to 0, "return_total_rows" to 1)
             )
@@ -157,10 +161,10 @@ class EsbAgentClient {
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = FAILED_TO_GET_CMDB_NODE
-                        ))
+                    throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_NODE)
+                    )
                 }
 
                 val data = responseData["data"] as Map<String, *>
@@ -190,7 +194,8 @@ class EsbAgentClient {
                             displayIp = lanIPs.joinToString(";"),
                             osName = osName,
                             agentStatus = false,
-                            serverId = it["serverId"] as Long
+                            serverId = it["serverId"] as Long,
+                            deptId = it["DeptId"] as Int
                         )
                     }
                 }
