@@ -44,6 +44,11 @@ spring:
         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
         username: __BK_CI_MYSQL_USER__
         password: __BK_CI_MYSQL_PASSWORD__
+    archiveDataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_archive_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 server:
   port: __BK_CI_ASSEMBLY_API_PORT__
@@ -318,6 +323,12 @@ store:
   templateApproveSwitch: close
   imageApproveSwitch: close
   defaultStaticFileFormat: jpg,png,svg,gif,jpeg
+  atom:
+    maxTimeout: 10080   # 最大插件超时时间
+    defaultTimeout: 900  # 默认插件超时时间
+    minTimeout: 1  # 最小插件超时时间
+    maxRetryNum: 5  # 最大插件自动重试次数
+    minRetryNum: 1
 
 logo:
   allowUploadLogoTypes: jpg,png,svg
@@ -427,4 +438,11 @@ leaf:
 sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
+  tableShardingStrategy:
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveTableShardingAlgorithm"
+    defaultShardingNum: 1
+    shardingField: PROJECT_ID
+  archiveFlag: Y
+  defaultFlag: N

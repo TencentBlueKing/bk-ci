@@ -30,17 +30,17 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVALID
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
-import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -148,7 +148,7 @@ class CodeGithubRepositoryService @Autowired constructor(
         return GithubRepository(
             aliasName = repository.aliasName,
             url = repository.url,
-            userName = repository.userId,
+            userName = record.userName,
             projectName = record.projectName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),

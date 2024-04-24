@@ -56,6 +56,7 @@ object ProcessMessageCode {
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
 
     const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip" // 非定时触发，直接跳过
+    const val BK_RETRY_TIMED_TRIGGER_SKIP = "bkRetryTimedTriggerSkip" // 重试定时触发的构建，直接跳过
     const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty" // 第一阶段的环境不能为空
     const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed" // 质量红线({0})检测已通过
     const val BK_QUALITY_CHECK_INTERCEPTED = "bkQualityCheckIntercepted" // 质量红线({0})检测被拦截
@@ -288,8 +289,8 @@ object ProcessMessageCode {
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
     const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
-    const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
-    const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
+    const val GROUP_IS_EXIST = "2101186" // 分组({0})已存在/group ({0}) is already exist
+    const val GROUP_LABEL_IS_EXIST = "2101187" // 分组标签({0})已存在/group label ({0}) is already exist
     const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101189" // 用户没有操作模板的权限
 
     const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
@@ -297,6 +298,14 @@ object ProcessMessageCode {
     const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101183" // 触发类型{0}不支持重放
     const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101184" // 重放流水线ID不能为空
     const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
+    const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
+    const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
+
+    const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
+    // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -471,4 +480,8 @@ object ProcessMessageCode {
     const val BK_QUALITY_IN = "bkQualityIn" // 质量红线(准入)
     const val BK_QUALITY_OUT = "bkQualityOut" // 质量红线(准出)
     const val BK_BUILD_FINISHED_AND_DENY_PAUSE = "bkBuildFinishedAndDenyPause" // 构建已结束，禁止暂停请求
+
+    // TODO: AgentReuseMutex
+    const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
+    const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
 }

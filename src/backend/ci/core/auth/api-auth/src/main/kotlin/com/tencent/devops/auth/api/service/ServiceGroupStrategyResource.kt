@@ -28,21 +28,21 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.StrategyEntity
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_GROUP_STRATEGY"], description = "权限-用户-策略")
+@Tag(name = "AUTH_GROUP_STRATEGY", description = "权限-用户-策略")
 @Path("/service/auth/strategy")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGroupStrategyResource {
     @GET
     @Path("/getGroupStrategy")
-    @ApiOperation("获取组策略")
+    @Operation(summary = "获取组策略")
     fun getGroupStrategy(): List<StrategyEntity>
 }

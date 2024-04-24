@@ -129,6 +129,23 @@ BEGIN
         ALTER TABLE T_PIPELINE_MODEL_TASK MODIFY COLUMN ATOM_VERSION varchar(30)  NULL COMMENT '插件版本号';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PIPELINE_TRIGGER_DETAIL'
+                     AND INDEX_NAME = 'IDX_PROJECT_PIPELINE_ID') THEN
+        ALTER TABLE T_PIPELINE_TRIGGER_DETAIL ADD INDEX `IDX_PROJECT_PIPELINE_ID` (`PROJECT_ID`, `PIPELINE_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT_PIPELINE_CALLBACK'
+                        AND COLUMN_NAME = 'FAILURE_TIME') THEN
+        ALTER TABLE T_PROJECT_PIPELINE_CALLBACK
+            ADD COLUMN `FAILURE_TIME` datetime COMMENT '失败时间';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

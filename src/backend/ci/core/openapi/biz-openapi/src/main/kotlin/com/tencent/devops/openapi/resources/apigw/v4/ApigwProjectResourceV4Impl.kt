@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwProjectResourceV4
 import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -144,7 +145,7 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         projectId: String,
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean?> {
-        logger.info("createProjectUser v4 |$userId|$projectId|$createInfo|")
+        logger.info("createProjectUser v4 |$appCode|$userId|$projectId|$createInfo")
         openapiPermissionService.validProjectManagerPermission(appCode, apigwType, userId, projectId)
         val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
         if (!projectConsulTag.isNullOrEmpty()) {
@@ -153,6 +154,35 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         return client.get(ServiceProjectResource::class).createProjectUser(
             projectId = projectId,
             createInfo = createInfo
+        )
+    }
+
+    override fun updateProjectProductId(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        projectId: String,
+        productName: String?,
+        productId: Int?
+    ): Result<Boolean> {
+        logger.info("updateProjectProductId v4 |$appCode|$userId|$projectId|$productName")
+        openapiPermissionService.validProjectManagerPermission(appCode, apigwType, userId, projectId)
+        return client.get(ServiceProjectResource::class).updateProjectProductId(
+            projectCode = projectId,
+            productName = productName,
+            productId = productId
+        )
+    }
+
+    override fun getProjectListByProductId(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        productId: Int
+    ): Result<List<ProjectBaseInfo>> {
+        logger.info("getProjectListByProductId v4 |$appCode|$userId|$productId")
+        return client.get(ServiceProjectResource::class).getProjectListByProductId(
+            productId = productId
         )
     }
 }

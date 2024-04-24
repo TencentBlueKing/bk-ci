@@ -879,3 +879,48 @@
     body: "迁移PROCESS数据库中项目【${projectId}】的数据成功，迁移成功的流水线一共【${pipelineNum}】条。"
   creator: "system"
   modifior: "system"
+- index: 42
+  id: "ea98239a51a74f8db0a012a809bc2018"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE"
+  templateName: "项目下流水线的数据迁移失败提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2003"
+    sender: "DevOps"
+    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败"
+    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败，失败原因: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 43
+  id: "ea98239a51a74f8db0a012a809bc2019"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
+  templateName: "项目下流水线的数据迁移成功提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2004"
+    sender: "DevOps"
+    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功"
+    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功，迁移成功的流水线一共1条。"
+  creator: "system"
+  modifior: "system"
+- index: 44
+  id: "8565a48174524fedb68bfcccb5305d0c"
+  templateCode: "THIRD_AGENT_WORKER_ERROR"
+  templateName: "第三方构建机worker启动失败模板"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "2513d77c0b6b463f8dff122f975641f0"
+    sender: "DevOps"
+    title: "【项目${projectCode}】第三方构建机${agentId}启动构建失败"
+    body: "[构建链接|${buildUrl}]\n[第三方构建机链接|${agentUrl}]\n构建触发人：${userId}\n构建机拥有者：${agentOwner}"
+  creator: "system"
+  modifior: "system"

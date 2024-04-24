@@ -63,21 +63,44 @@
                     class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="'required'"
                     name="buildResource"></bk-input>
             </form-field>
-            <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' &&
-                buildResourceType !== 'WINDOWS' &&
-                !isPublicResourceType &&
-                containerModalId &&
-                !showImagePublicTypeList.includes(buildResourceType)
-            " :is-error="errors.has('buildResource')" :error-msg="errors.first('buildResource')" :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV'
-                ? this.$t('editPage.thirdSlaveTips')
-                : ''
-            ">
-                <container-env-node :required="true" :disabled="!editable" :os="container.baseOS"
-                    :container-id="containerModalId" :build-resource-type="buildResourceType"
-                    :build-image-type="buildImageType" :agent-type="buildAgentType" :toggle-visible="toggleVisible"
-                    :handle-change="changeBuildResource" :add-thrid-slave="addThridSlave" :value="buildResource"
-                    :env-project-id="buildResourceProj" :has-error="errors.has('buildResource')"
-                    v-validate.initial="'required'" name="buildResource" />
+            <form-field
+                :label="$t('editPage.assignResource')"
+                v-if="
+                    buildResourceType !== 'MACOS' &&
+                        buildResourceType !== 'WINDOWS' &&
+                        !isPublicResourceType &&
+                        containerModalId &&
+                        !showImagePublicTypeList.includes(buildResourceType)
+                "
+                :is-error="errors.has('buildResource')"
+                :error-msg="errors.first('buildResource')"
+                :desc="
+                    buildResourceType === 'THIRD_PARTY_AGENT_ENV'
+                        ? this.$t('editPage.thirdSlaveTips')
+                        : ''
+                "
+            >
+                <container-env-node
+                    :required="true"
+                    :disabled="!editable"
+                    :os="container.baseOS"
+                    :container-id="containerModalId"
+                    :build-resource-type="buildResourceType"
+                    :build-image-type="buildImageType"
+                    :agent-type="buildAgentType"
+                    :toggle-visible="toggleVisible"
+                    :handle-change="changeBuildResource"
+                    :add-thrid-slave="addThridSlave"
+                    :value="buildResource"
+                    :env-project-id="buildResourceProj"
+                    :pipeline="pipeline"
+                    :container-index="containerIndex"
+                    :stage-index="stageIndex"
+                    :stage="stage"
+                    :has-error="errors.has('buildResource')"
+                    v-validate.initial="'required'"
+                    name="buildResource"
+                />
             </form-field>
 
             <!-- windows公共构建机类型 -->
@@ -256,7 +279,8 @@
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
-            title: String
+            title: String,
+            pipeline: Object
         },
         data () {
             return {

@@ -111,18 +111,18 @@
 
 <script>
     import Badge from '@/components/Badge.vue'
-    import PacTag from '@/components/PacTag.vue'
-    import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
-    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
-    import {
-        RESOURCE_ACTION
-    } from '@/utils/permission'
-    import { pipelineTabIdMap } from '@/utils/pipelineConst'
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import MoreActions from './MoreActions.vue'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+import PacTag from '@/components/PacTag.vue'
+import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
+import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
+import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+import {
+    RESOURCE_ACTION
+} from '@/utils/permission'
+import { pipelineTabIdMap } from '@/utils/pipelineConst'
+import { mapActions, mapGetters, mapState } from 'vuex'
+import MoreActions from './MoreActions.vue'
+import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
     export default {
         components: {
@@ -163,7 +163,7 @@
                 pacEnabled: 'atom/pacEnabled'
             }),
             showRollback () {
-                return this.isReleaseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
+                return this.isReleaseVersion || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : undefined
@@ -199,7 +199,7 @@
                 switch (true) {
                     case this.isReleaseVersion:
                         return this.$t('edit')
-                    case this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
+                    case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
                         return this.$t('editCurDraft')
                     default:
                         return this.$t('rollback')

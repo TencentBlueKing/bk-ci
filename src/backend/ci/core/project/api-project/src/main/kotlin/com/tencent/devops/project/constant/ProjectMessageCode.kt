@@ -96,6 +96,10 @@ object ProjectMessageCode {
     const val CANCEL_CREATION_PROJECT_FAIL = "2119048" // 取消创建中的项目失败
     const val APPROVAL_PROJECT_CANT_UPDATE = "2119049" // 审批下的下项目{0}不能修改
     const val UNDER_APPROVAL_PROJECT = "2119050" // 项目{0}审批中，请耐心等待，或联系审批人处理
+    const val ERROR_GROUP_NOT_BELONG_TO_PROJECT = "2119051" // 用户组不属于该项目
+    const val ERROR_PROJECT_NOT_RELATED_PRODUCT = "2119052" // 项目未关联产品ID
+    const val ERROR_PRODUCT_NOT_EXIST = "2119053" // 运营产品不存在
+    const val ERROR_ORGANIZATION_CAN_NOT_TO_BE_EMPTY = "2119054" // 组织架构不允许为空
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败

@@ -29,9 +29,9 @@ package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.POST
@@ -39,25 +39,25 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
+@Tag(name = "DOCKER_HOST", description = "DockerHost")
 @Path("/docker-agentless")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AgentLessDockerHostResource {
 
-    @ApiOperation("启动无编译流水线容器构建")
+    @Operation(summary = "启动无编译流水线容器构建")
     @POST
     @Path("/build/start")
     fun startBuild(
-        @ApiParam("构建任务", required = true)
+        @Parameter(description = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<String>
 
-    @ApiOperation("终止无编译流水线容器构建")
+    @Operation(summary = "终止无编译流水线容器构建")
     @DELETE
     @Path("/build/end")
     fun endBuild(
-        @ApiParam("构建任务", required = true)
+        @Parameter(description = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
 }

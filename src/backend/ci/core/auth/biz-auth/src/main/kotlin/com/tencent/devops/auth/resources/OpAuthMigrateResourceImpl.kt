@@ -82,11 +82,20 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
     }
 
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
+        return Result(permissionMigrateService.handoverAllPermissions(permissionHandoverDTO = permissionHandoverDTO))
+    }
+
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
         return Result(permissionMigrateService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO))
     }
 
     override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
+    }
+
+    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
+        permissionMigrateService.autoRenewal(migrateProjectConditionDTO)
+        return Result(true)
     }
 }

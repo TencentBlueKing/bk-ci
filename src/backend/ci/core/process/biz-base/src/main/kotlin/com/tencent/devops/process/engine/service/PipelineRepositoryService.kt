@@ -52,7 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
+import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -475,13 +475,11 @@ class PipelineRepositoryService constructor(
                     "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
-        MatrixContextUtils.schemaCheck(
-            JsonUtil.toJson(
-                MatrixPipelineInfo(
-                    include = option.includeCaseStr,
-                    exclude = option.excludeCaseStr,
-                    strategy = option.strategyStr
-                ).toMatrixConvert()
+        MatrixYamlCheckUtils.checkYaml(
+            MatrixPipelineInfo(
+                include = option.includeCaseStr,
+                exclude = option.excludeCaseStr,
+                strategy = option.strategyStr
             )
         )
     }
@@ -772,17 +770,20 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null,
-        delete: Boolean? = false
+        delete: Boolean? = false,
+        queryDslContext: DSLContext? = null
     ): PipelineInfo? {
-        val template = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val finalDslContext = queryDslContext ?: dslContext
+        val template = templatePipelineDao.get(finalDslContext, projectId, pipelineId)
         val srcTemplate = template?.let { t ->
             templateDao.getTemplate(
-                dslContext = dslContext, templateId = t.templateId)
+                dslContext = finalDslContext, templateId = t.templateId
+            )
         }
         val templateId = template?.templateId
         val info = pipelineInfoDao.convert(
             t = pipelineInfoDao.getPipelineInfo(
-                dslContext = dslContext,
+                dslContext = finalDslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
@@ -1190,9 +1191,10 @@ class PipelineRepositoryService constructor(
         sortType: PipelineSortType,
         collation: PipelineCollation
     ): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(
+        val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
             projectId = projectId,
+            deleteFlag = true,
             days = days,
             offset = offset,
             limit = limit,

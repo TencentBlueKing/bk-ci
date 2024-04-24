@@ -153,9 +153,6 @@ spring:
       - index: 31
         name: T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO
         databaseShardingStrategy: SHARDING
-      - index: 32
-        name: T_PIPELINE_BUILD_COMMITS
-        databaseShardingStrategy: SHARDING
       - index: 33
         name: T_PIPELINE_RULE
         broadcastFlag: true
@@ -185,13 +182,13 @@ spring:
         broadcastFlag: true
       - index: 42
         name: T_PIPELINE_ATOM_REPLACE_BASE
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 43
         name: T_PIPELINE_ATOM_REPLACE_ITEM
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 44
         name: T_PIPELINE_ATOM_REPLACE_HISTORY
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 45
         name: T_PIPELINE_WEBHOOK_BUILD_PARAMETER
         databaseShardingStrategy: SHARDING
@@ -222,7 +219,12 @@ spring:
       - index: 54
         name: T_PIPELINE_TRIGGER_DETAIL
         databaseShardingStrategy: SHARDING
-      
+      - index: 55
+        name: T_PIPELINE_TRIGGER_REVIEW
+        databaseShardingStrategy: SHARDING
+      - index: 56
+        name: T_PIPELINE_DATA_CLEAR
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
@@ -253,8 +255,8 @@ devopsGateway:
   devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
   oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  fileDevnetGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  fileIdcGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileDevnetGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileIdcGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
 
 # certificate server 配置
 certificate:
@@ -333,6 +335,7 @@ bkci:
 process:
   clearBaseBuildData: true  # 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）5672
   deletedPipelineStoreDays: 30 # 回收站已删除流水线保存天数
+  archivePipelineStoreDays: 735 # 归档流水线保存天数
 
 net:
   proxy:
@@ -357,6 +360,8 @@ sharding:
     maxProjectCount: 5 # 同时迁移项目最大数量
     processDbMicroServices: "process,engine,misc,lambda" #使用process数据库的微服务
     sourceDbDataDeleteFlag: false # 迁移成功后是否删除原库数据
+  tableShardingStrategy:
+    defaultShardingNum: 1 # 默认分表数量
 
 cluster:
   tag: __BK_CI_CLUSTER_TAG__

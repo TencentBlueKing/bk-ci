@@ -29,9 +29,9 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.PermissionUrlDTO
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -40,7 +40,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_RESOURCE"], description = "用户态-权限")
+@Tag(name = "AUTH_RESOURCE", description = "用户态-权限")
 @Path("/user/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -48,19 +48,19 @@ interface UserAuthUrlResource {
 
     @POST
     @Path("/permissionUrl")
-    @ApiOperation("权限申请重定向Url")
+    @Operation(summary = "权限申请重定向Url")
     fun permissionUrl(
-        @ApiParam(value = "待申请实例信息")
+        @Parameter(description = "待申请实例信息")
         permissionUrlDTO: List<PermissionUrlDTO>
     ): Result<String?>
 
     @GET
     @Path("/group/permission/url")
     fun getRolePermissionUrl(
-        @ApiParam(value = "待分配权限用户组所属项目")
+        @Parameter(description = "待分配权限用户组所属项目")
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "用户组Id")
+        @Parameter(description = "用户组Id")
         @QueryParam("roleId")
         roleId: String?
     ): Result<String?>

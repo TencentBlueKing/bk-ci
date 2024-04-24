@@ -74,6 +74,7 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
@@ -122,6 +123,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
@@ -130,6 +132,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -175,7 +178,8 @@ class TemplateFacadeService @Autowired constructor(
     private val paramService: ParamFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineInfoExtService: PipelineInfoExtService
+    private val pipelineInfoExtService: PipelineInfoExtService,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -352,14 +356,19 @@ class TemplateFacadeService @Autowired constructor(
     ): String {
         logger.info("Start to saveAsTemplate, $userId | $projectId | $saveAsTemplateReq")
 
-        checkPermission(projectId, userId)
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
 
         val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-
+        val templateModel: Model = objectMapper.readValue(template)
+        checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -583,16 +592,20 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateId: String,
         versionName: String,
-        template: Model
+        template: Model,
+        checkPermissionFlag: Boolean = true
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
-            userId = userId,
-            projectId = projectId,
-            templateId = templateId,
-            permission = AuthPermission.EDIT
-        )
+        if (checkPermissionFlag) {
+            pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                permission = AuthPermission.EDIT
+            )
+        }
         checkTemplate(template, projectId)
+        checkTemplateAtomsForExplicitVersion(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
@@ -647,12 +660,14 @@ class TemplateFacadeService @Autowired constructor(
                 weight = latestTemplate.weight,
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
-            pipelineTemplatePermissionService.modifyResource(
-                userId = userId,
-                projectId = projectId,
-                templateId = templateId,
-                templateName = template.name
-            )
+            if (checkPermissionFlag) {
+                pipelineTemplatePermissionService.modifyResource(
+                    userId = userId,
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateName = template.name
+                )
+            }
             logger.info("Get the update template version $version")
         }
 
@@ -1872,7 +1887,29 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateInstanceUpdate.pipelineId,
                     templateName = templateInstanceUpdate.pipelineName
                 )
-                saveTemplatePipelineSetting(userId, setting)
+                pipelineSettingFacadeService.saveSetting(
+                    userId = userId,
+                    setting = setting,
+                    checkPermission = true,
+                    dispatchPipelineUpdateEvent = false
+                )
+            } else {
+                // 不应用模板设置但是修改了流水线名称,需要重命名流水线
+                val setting = pipelineRepositoryService.getSetting(
+                    projectId = projectId,
+                    pipelineId = templateInstanceUpdate.pipelineId
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
+                )
+                if (setting.pipelineName != templateInstanceUpdate.pipelineName) {
+                    setting.pipelineName = templateInstanceUpdate.pipelineName
+                    pipelineSettingFacadeService.saveSetting(
+                        userId = userId,
+                        setting = setting,
+                        checkPermission = true,
+                        dispatchPipelineUpdateEvent = false
+                    )
+                }
             }
         }
     }
@@ -1886,13 +1923,14 @@ class TemplateFacadeService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Boolean {
         logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
+        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_TEMPLATE_NOT_EXISTS
+            )
+        val templateModel: Model = objectMapper.readValue(template.template)
+        checkTemplateAtomsForExplicitVersion(templateModel, userId)
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
-            val template = templateDao.getTemplate(dslContext = dslContext, version = version)
-                ?: throw ErrorCodeException(
-                    errorCode = ERROR_TEMPLATE_NOT_EXISTS
-                )
-
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
             instances.forEach { templateInstanceUpdate ->
@@ -2314,6 +2352,32 @@ class TemplateFacadeService @Autowired constructor(
         }
         modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
         checkPipelineParam(template)
+    }
+
+    /**
+     * 检查模板中是否存在已下架、测试中插件(明确版本号)
+     */
+    fun checkTemplateAtomsForExplicitVersion(template: Model, userId: String) {
+        val codeVersions = mutableSetOf<AtomCodeVersionReqItem>()
+        template.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach nextElement@{ element ->
+                    val atomCode = element.getAtomCode()
+                    val version = element.version
+                    if (version.contains("*")) {
+                        return@nextElement
+                    }
+                    codeVersions.add(AtomCodeVersionReqItem(atomCode, version))
+                }
+            }
+        }
+        if (codeVersions.isNotEmpty()) {
+            AtomUtils.checkTemplateRealVersionAtoms(
+                codeVersions = codeVersions,
+                userId = userId,
+                client = client
+            )
+        }
     }
 
     fun checkTemplate(templateId: String, projectId: String? = null): Boolean {

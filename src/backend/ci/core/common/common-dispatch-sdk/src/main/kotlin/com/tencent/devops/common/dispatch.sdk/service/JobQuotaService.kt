@@ -27,7 +27,10 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
@@ -90,6 +93,7 @@ class JobQuotaService constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
+                queueTimeoutMinutes = queueTimeoutMinutes ?: 10,
                 jobType = jobType,
                 demoteQueueRouteKeySuffix = demoteQueueRouteKeySuffix,
                 startupEvent = startupEvent
@@ -105,10 +109,12 @@ class JobQuotaService constructor(
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
+        queueTimeoutMinutes: Int,
         jobType: JobQuotaVmType,
         demoteQueueRouteKeySuffix: String,
         startupEvent: IPipelineEvent
     ) {
+        val maxJobRetry = queueTimeoutMinutes * 60 * 1000 / RETRY_DELTA
         val dispatchService = SpringContextUtil.getBean(DispatchService::class.java)
 
         if (startupEvent.retryTime < RETRY_TIME) {
@@ -150,7 +156,7 @@ class JobQuotaService constructor(
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
             dispatchService.redispatch(startupEvent)
-        } else {
+        } else if (startupEvent.retryTime < maxJobRetry) {
             logger.info("$logPrefix DemoteQueue job quota excess. delay: " +
                     "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
 
@@ -171,6 +177,16 @@ class JobQuotaService constructor(
                 startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
             dispatchService.redispatch(startupEvent)
+        } else {
+            logger.info("$logPrefix DemoteQueue Job Maximum number of retries reached. " +
+                    "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
+            val errorMessage = I18nUtil.getCodeLanMessage(DispatchSdkErrorCode.JOB_QUOTA_EXCESS.toString())
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = DispatchSdkErrorCode.JOB_QUOTA_EXCESS,
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
+            )
         }
     }
 

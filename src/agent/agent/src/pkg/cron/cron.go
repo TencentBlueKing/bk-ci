@@ -30,7 +30,6 @@ package cron
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -83,7 +82,7 @@ func cleanDumpFile(timeBeforeInHours int) {
 	dumpFileBeforeStr := util.FormatTime(time.Now().Add(time.Hour * time.Duration(timeBeforeInHours*-1)))
 	workDir := systemutil.GetWorkDir()
 	logs.Info(fmt.Sprintf("clean dump file before %s(%d hours) in %s", dumpFileBeforeStr, timeBeforeInHours, workDir))
-	files, err := ioutil.ReadDir(workDir)
+	files, err := os.ReadDir(workDir)
 	if err != nil {
 		logs.Warn("read work dir error: ", err.Error())
 		return
@@ -92,7 +91,12 @@ func cleanDumpFile(timeBeforeInHours int) {
 		if file.IsDir() {
 			continue
 		}
-		if strings.HasPrefix(file.Name(), "hs_err_pid") && int(time.Since(file.ModTime()).Hours()) > timeBeforeInHours {
+		info, err := file.Info()
+		if err != nil {
+			logs.Warnf("cleanDumpFile|get file %s info error %s", file.Name(), err.Error())
+			return
+		}
+		if strings.HasPrefix(file.Name(), "hs_err_pid") && int(time.Since(info.ModTime()).Hours()) > timeBeforeInHours {
 			fileFullName := workDir + "/" + file.Name()
 			err = os.Remove(fileFullName)
 			if err != nil {
@@ -109,7 +113,7 @@ func cleanLogFile(timeBeforeInHours int) {
 	logFileBeforeStr := util.FormatTime(time.Now().Add(time.Hour * time.Duration(timeBeforeInHours*-1)))
 	logDir := systemutil.GetLogDir()
 	logs.Info(fmt.Sprintf("clean log file before %s(%d hours) in %s", logFileBeforeStr, timeBeforeInHours, logDir))
-	files, err := ioutil.ReadDir(logDir)
+	files, err := os.ReadDir(logDir)
 	if err != nil {
 		logs.Warn("read log dir error: ", err.Error())
 		return
@@ -118,7 +122,12 @@ func cleanLogFile(timeBeforeInHours int) {
 		if file.IsDir() {
 			continue
 		}
-		if strings.HasSuffix(file.Name(), ".log") && int(time.Since(file.ModTime()).Hours()) > timeBeforeInHours {
+		info, err := file.Info()
+		if err != nil {
+			logs.Warnf("cleanLogFile|get file %s info error %s", file.Name(), err.Error())
+			return
+		}
+		if strings.HasSuffix(file.Name(), ".log") && int(time.Since(info.ModTime()).Hours()) > timeBeforeInHours {
 			fileFullName := logDir + "/" + file.Name()
 			err = os.Remove(fileFullName)
 			if err != nil {
@@ -128,13 +137,15 @@ func cleanLogFile(timeBeforeInHours int) {
 			}
 		}
 	}
-	logs.Info("clean log file done")
 
 	// 清理docker构建记录
 	dockerLogDir := job_docker.LocalDockerWorkSpaceDirName + "/logs"
-	dockerFiles, err := ioutil.ReadDir(dockerLogDir)
+	if _, err := os.Stat(dockerLogDir); err != nil && os.IsNotExist(err) {
+		return
+	}
+	dockerFiles, err := os.ReadDir(dockerLogDir)
 	if err != nil {
-		logs.Warn("read docker log dir error: ", err.Error())
+		logs.Error("read docker log dir error: ", err.Error())
 		return
 	}
 
@@ -143,8 +154,12 @@ func cleanLogFile(timeBeforeInHours int) {
 		if !file.IsDir() {
 			continue
 		}
-
-		if int(time.Since(file.ModTime()).Hours()) > timeBeforeInHours {
+		info, err := file.Info()
+		if err != nil {
+			logs.Warnf("cleanLogFile docker|get file %s info error %s", file.Name(), err.Error())
+			return
+		}
+		if int(time.Since(info.ModTime()).Hours()) > timeBeforeInHours {
 			dockerFullName := dockerLogDir + "/" + file.Name()
 			err = os.RemoveAll(dockerFullName)
 			if err != nil {

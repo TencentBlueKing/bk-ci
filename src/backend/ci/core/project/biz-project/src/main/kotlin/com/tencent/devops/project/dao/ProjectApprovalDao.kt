@@ -45,7 +45,6 @@ import org.springframework.stereotype.Repository
 @Repository
 @Suppress("LongParameterList")
 class ProjectApprovalDao {
-
     fun create(
         dslContext: DSLContext,
         userId: String,
@@ -62,6 +61,8 @@ class ProjectApprovalDao {
                 DESCRIPTION,
                 BG_ID,
                 BG_NAME,
+                BUSINESS_LINE_ID,
+                BUSINESS_LINE_NAME,
                 DEPT_ID,
                 DEPT_NAME,
                 CENTER_ID,
@@ -84,6 +85,8 @@ class ProjectApprovalDao {
                 projectCreateInfo.description,
                 projectCreateInfo.bgId,
                 projectCreateInfo.bgName,
+                projectCreateInfo.businessLineId,
+                projectCreateInfo.businessLineName,
                 projectCreateInfo.deptId,
                 projectCreateInfo.deptName,
                 projectCreateInfo.centerId,
@@ -137,6 +140,8 @@ class ProjectApprovalDao {
                 .set(DESCRIPTION, projectUpdateInfo.description)
                 .set(BG_ID, projectUpdateInfo.bgId)
                 .set(BG_NAME, projectUpdateInfo.bgName)
+                .set(BUSINESS_LINE_ID, projectUpdateInfo.businessLineId)
+                .set(BUSINESS_LINE_NAME, projectUpdateInfo.businessLineName)
                 .set(DEPT_ID, projectUpdateInfo.deptId)
                 .set(DEPT_NAME, projectUpdateInfo.deptName)
                 .set(CENTER_ID, projectUpdateInfo.centerId)
@@ -166,6 +171,8 @@ class ProjectApprovalDao {
                 .set(DESCRIPTION, projectApprovalInfo.description)
                 .set(BG_ID, projectApprovalInfo.bgId?.toLong())
                 .set(BG_NAME, projectApprovalInfo.bgName)
+                .set(BUSINESS_LINE_ID, projectApprovalInfo.businessLineId)
+                .set(BUSINESS_LINE_NAME, projectApprovalInfo.businessLineName)
                 .set(DEPT_ID, projectApprovalInfo.deptId?.toLong())
                 .set(DEPT_NAME, projectApprovalInfo.deptName)
                 .set(CENTER_ID, projectApprovalInfo.centerId?.toLong())
@@ -259,6 +266,8 @@ class ProjectApprovalDao {
                 description = description,
                 bgId = bgId?.toString(),
                 bgName = bgName,
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
                 deptId = deptId?.toString(),
                 deptName = deptName,
                 centerId = centerId?.toString(),

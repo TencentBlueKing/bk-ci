@@ -46,6 +46,9 @@ enum class AuthPermission(val value: String, val alias: String) {
     MKDIR("mkdir", "创建目录"), // 自定义目录，容器
     EXPERIENCE("experience", "转体验"), // 版本体验
     ENABLE("enable", "停用/启用"), // 质量红线
+    ARCHIVE("archive", "归档"), // 归档流水线
+    MANAGE_ARCHIVED_PIPELINE("manage-archived-pipeline", "管理已归档流水线"), // 管理已归档流水线
+    API_OPERATE("api-operate", "api操作"), // api操作
 
     VIEWS_MANAGER("views_manager", "视图管理"), // 项目视图管理
     WEB_CHECK("webcheck", "页面按钮校验"), // 页面按钮校验

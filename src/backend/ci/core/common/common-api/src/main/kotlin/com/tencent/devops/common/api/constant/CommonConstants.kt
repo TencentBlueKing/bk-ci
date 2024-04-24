@@ -122,6 +122,7 @@ const val API_PERMISSION = "BK_CI_API_PERMISSION" // 请求API权限
 const val REQUEST_IP = "X-Forwarded-For" // 请求IP
 const val BK_CREATE = "bkCreate" // 创建
 const val BK_REVISE = "bkRevise" // 修改
+const val FAIL_MSG = "failMsg" // 失败信息
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
@@ -154,8 +155,12 @@ const val KEY_VERSION_NAME = "versionName"
 const val KEY_UPDATED_TIME = "updatedTime"
 const val KEY_DEFAULT_LOCALE_LANGUAGE = "defaultLocaleLanguage"
 const val KEY_PROJECT_ID = "projectId"
+const val KEY_PIPELINE_ID = "pipelineId"
 const val KEY_PIPELINE_NUM = "pipelineNum"
+const val KEY_ARCHIVE = "archive"
 const val KEY_BRANCH_TEST_FLAG = "branchTestFlag"
+const val KEY_TASK_ATOM = "taskAtom"
+const val KEY_ELEMENT_ENABLE = "elementEnable"
 
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed" // 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜像名称：

@@ -1,16 +1,16 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.GetAppInstallationForOrgRequest
-import com.tencent.devops.common.sdk.github.request.GetAppInstallationForRepoRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
-import com.tencent.devops.common.sdk.github.response.GetAppInstallationResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubAppResource
-import com.tencent.devops.repository.github.config.GithubProperties
-import com.tencent.devops.repository.github.service.GithubAppService
-import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.AppInstallationResult
+import com.tencent.devops.repository.sdk.github.config.GithubProperties
+import com.tencent.devops.repository.sdk.github.request.GetAppInstallationForOrgRequest
+import com.tencent.devops.repository.sdk.github.request.GetAppInstallationForRepoRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.response.GetAppInstallationResponse
+import com.tencent.devops.repository.sdk.github.service.GithubAppService
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

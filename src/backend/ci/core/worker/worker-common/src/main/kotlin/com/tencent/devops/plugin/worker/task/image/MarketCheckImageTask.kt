@@ -27,18 +27,12 @@
 
 package com.tencent.devops.plugin.worker.task.image
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
-import com.tencent.devops.dockerhost.pojo.CheckImageRequest
-import com.tencent.devops.dockerhost.pojo.CheckImageResponse
-import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
-import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_PORT
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -48,11 +42,8 @@ import com.tencent.devops.worker.common.api.docker.DockerSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [MarketCheckImageElement.classType])
 class MarketCheckImageTask : ITask() {
@@ -67,42 +58,26 @@ class MarketCheckImageTask : ITask() {
         LoggerService.addNormalLine("begin check image")
         val buildVariableMap = buildTask.buildVariable!!
         val imageCode = buildVariableMap["imageCode"]
-        val imageName = buildVariableMap["imageName"]
-        val imageType = buildVariableMap["imageType"]
+        val imageName = buildVariableMap["imageName"]!!
+        val registryHost = buildVariableMap["registryHost"]
         val registryUser = buildVariableMap["registryUser"]
         val registryPwd = buildVariableMap["registryPwd"]
-        val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
-        val dockerHostIp = System.getenv(ENV_DOCKER_HOST_IP)
-        val dockerHostPort = System.getenv(ENV_DOCKER_HOST_PORT)
-        val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/" +
-                "check?containerId=${buildVariables.containerId}&containerHashId=${buildVariables.containerHashId}"
-        val body = RequestBody.create(
-            "application/json; charset=utf-8".toMediaTypeOrNull(),
-            JsonUtil.toJson(checkImageRequest)
+        val userId = buildVariableMap[PIPELINE_START_USER_ID] ?: ""
+        val checkImageResult = dockerApi.checkDockerImage(
+            userId = userId,
+            checkDockerImageRequestList = arrayOf(
+                CheckDockerImageRequest(
+                    imageName = imageName,
+                    registryHost = registryHost ?: "",
+                    registryUser = registryUser,
+                    registryPwd = registryPwd
+                )
+            )
         )
-        val url = "http://$dockerHostIp:$dockerHostPort$path"
-        val request = Request.Builder()
-            .url(url)
-            .post(body)
-            .build()
-        val response = OkhttpUtils.doLongHttp(request)
-        val responseContent = response.body?.string()
-        if (!response.isSuccessful) {
-            logger.warn(
-                "Fail to request($request) with code ${response.code} ," +
-                        " message ${response.message} and response ($responseContent)"
-            )
-            LoggerService.addErrorLine(response.message)
-            throw TaskExecuteException(
-                errorMsg = "checkImage fail: message ${response.message} and response ($responseContent)",
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorType = ErrorType.USER
-            )
-        }
-        val checkImageResult = JsonUtil.to(responseContent!!, object : TypeReference<Result<CheckImageResponse?>>() {
-        })
-        LoggerService.addNormalLine("checkImageResult: $checkImageResult")
-        if (checkImageResult.isNotOk()) {
+        val checkImageResponse =
+        if (checkImageResult.isOk() && checkImageResult.data!!.isNotEmpty()) {
+            checkImageResult.data!![0]
+        } else {
             LoggerService.addErrorLine(JsonUtil.toJson(checkImageResult))
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: ${checkImageResult.message}",
@@ -110,17 +85,23 @@ class MarketCheckImageTask : ITask() {
                 errorType = ErrorType.USER
             )
         }
+        if (checkImageResponse.errorCode == -1) {
+            LoggerService.addErrorLine(JsonUtil.toJson(checkImageResponse))
+            throw TaskExecuteException(
+                errorMsg = "checkImage fail: ${checkImageResponse.errorMessage}",
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER
+            )
+        }
         val imageVersion = buildVariableMap["version"]
         // 获取镜像大小上送至商店
-        val checkImageResponse = checkImageResult.data
-        val userId = buildVariableMap[PIPELINE_START_USER_ID]
         val updateImageResult = dockerApi.updateImageInfo(
-            userId = userId!!,
+            userId = userId,
             projectCode = buildVariables.projectId,
             imageCode = imageCode!!,
             version = imageVersion!!,
             imageBaseInfoUpdateRequest = ImageBaseInfoUpdateRequest(
-                imageSize = checkImageResponse?.size.toString()
+                imageSize = checkImageResponse.size.toString()
             )
         )
         logger.info("MarketCheckImageTask updateImageResult: $updateImageResult")

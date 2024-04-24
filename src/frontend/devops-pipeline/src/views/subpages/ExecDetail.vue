@@ -116,6 +116,7 @@
             <template v-else-if="showContainerPanel">
                 <job
                     :exec-detail="execDetail"
+                    :pipeline="pipelineModel"
                     :editing-element-pos="editingElementPos"
                     @close="hideSidePanel"
                 />
@@ -367,6 +368,9 @@
             },
             isLatestBuild () {
                 return this.execDetail?.buildNum === this.execDetail?.latestBuildNum && this.execDetail?.curVersion === this.execDetail?.latestVersion
+            },
+            pipelineModel () {
+                return this.execDetail?.model || {}
             }
         },
 

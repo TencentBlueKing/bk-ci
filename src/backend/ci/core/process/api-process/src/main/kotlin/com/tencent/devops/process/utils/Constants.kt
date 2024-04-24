@@ -104,6 +104,8 @@ const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
 const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 const val BUILD_STATUS = "BK_CI_BUILD_STATUS" // "BuildStatus"
+const val BK_DOCKER_TARGE_IMAGE_TAG = "BK_DOCKER_TARGE_IMAGE_TAG"
+const val BK_DOCKER_TARGE_IMAGE_NAME = "BK_DOCKER_TARGE_IMAGE_NAME"
 
 const val JOB_RETRY_TASK_ID = "job.retry_task_id"
 
@@ -234,3 +236,5 @@ const val KEY_STAGE = "stage"
 const val KEY_JOB = "job"
 
 const val KEY_TASK = "task"
+
+const val KEY_TASK_ATOM = "taskAtom"

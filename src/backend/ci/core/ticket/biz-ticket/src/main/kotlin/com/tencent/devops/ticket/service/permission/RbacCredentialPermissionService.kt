@@ -28,12 +28,14 @@
 
 package com.tencent.devops.ticket.service.permission
 
+import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
+import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CredentialDao
@@ -75,15 +77,24 @@ class RbacCredentialPermissionService constructor(
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            resourceCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
             action = buildCredentialAction(authPermission),
-            relationResourceType = null
-        ).data ?: false
+            projectCode = projectId,
+            resourceCode = projectId
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                action = buildCredentialAction(authPermission),
+                relationResourceType = null
+            ).data ?: false
+        }
     }
 
     override fun validatePermission(
@@ -92,15 +103,24 @@ class RbacCredentialPermissionService constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            resourceCode = resourceCode,
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
             action = buildCredentialAction(authPermission),
-            relationResourceType = null
-        ).data ?: false
+            projectCode = projectId,
+            resourceCode = resourceCode
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = resourceCode,
+                resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
+                action = buildCredentialAction(authPermission),
+                relationResourceType = null
+            ).data ?: false
+        }
     }
 
     override fun filterCredential(

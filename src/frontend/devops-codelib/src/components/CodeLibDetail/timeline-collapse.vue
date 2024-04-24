@@ -252,13 +252,13 @@
 
             getEventDetail () {
                 this.isLoading = true
-                const pipelineName = this.searchValue.find(i => i.id === 'pipelineName')?.values[0].name || ''
+                const pipelineId = this.searchValue.find(i => i.id === 'pipelineId')?.values[0].id || ''
                 this.fetchEventDetail({
                     projectId: this.projectId,
                     eventId: this.eventId,
                     page: this.pagination.current,
                     pageSize: this.pagination.limit,
-                    pipelineName
+                    pipelineId
                 }).then(res => {
                     this.eventDetailList = res.records
                     this.pagination.count = res.count

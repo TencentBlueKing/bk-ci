@@ -42,7 +42,8 @@
     "terser-webpack-plugin": "^5.3.6",
     "vue-loader": "^15.10.0",
     "vue-style-loader": "^3.0.3",
-    "webpack": "^5.58.1"
+    "webpack": "^5.58.1",
+    "@blueking/search-select": "0.0.1-beta.2"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",

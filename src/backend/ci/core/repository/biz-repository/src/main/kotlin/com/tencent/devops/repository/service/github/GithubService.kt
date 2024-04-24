@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
@@ -51,8 +50,6 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GE
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_BRANCHS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_TAGS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_UPDATE_CHECK_RUNS
-import com.tencent.devops.repository.github.service.GithubRepositoryService
-import com.tencent.devops.repository.github.service.GithubUserService
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
@@ -61,20 +58,23 @@ import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")

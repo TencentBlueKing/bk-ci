@@ -17,23 +17,23 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import Vue from 'vue'
 import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+import Vue from 'vue'
 
 import {
-    STORE_API_URL_PREFIX,
+    DIALOG_LOADING_MUTATION,
+    FETCH_ERROR,
+    PROCESS_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
     SET_CODELIBS_MUTATION,
-    TICKET_API_URL_PREFIX,
-    PROCESS_API_URL_PREFIX,
-    SET_TICKETS_MUTATION,
-    UPDATE_CODE_LIB_MUTATION,
-    TOGGLE_CODE_LIB_DIALOG,
-    FETCH_ERROR,
-    DIALOG_LOADING_MUTATION,
     SET_OAUTH_MUTATION,
+    SET_TEMPLATE_CODELIB,
+    SET_TICKETS_MUTATION,
     SET_T_GIT_OAUTH_MUTATION,
-    SET_TEMPLATE_CODELIB
+    STORE_API_URL_PREFIX,
+    TICKET_API_URL_PREFIX,
+    TOGGLE_CODE_LIB_DIALOG,
+    UPDATE_CODE_LIB_MUTATION
 } from './constants'
 const vue = new Vue()
 
@@ -464,11 +464,11 @@ const actions = {
         eventId = '',
         eventType = '',
         triggerUser = '',
-        pipelineName = '',
+        pipelineId = '',
         startTime = '',
         endTime = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineId=${pipelineId}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
     },
 
     /**
@@ -479,10 +479,10 @@ const actions = {
         eventId,
         page,
         pageSize,
-        pipelineName
+        pipelineId
     }) {
         let queryUrl = ''
-        queryUrl = pipelineName ? `page=${page}&pageSize=${pageSize}&pipelineName=${pipelineName}` : `page=${page}&pageSize=${pageSize}`
+        queryUrl = pipelineId ? `page=${page}&pageSize=${pageSize}&pipelineId=${pipelineId}` : `page=${page}&pageSize=${pageSize}`
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail?${queryUrl}`)
     },
 
@@ -580,6 +580,15 @@ const actions = {
         repositoryHashId
     }) {
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listSyncFailedYaml`)
+    }
+    fetchPipelinesByName ({ commit }, {
+        projectId,
+        keyword = ''
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${keyword}`).then(data => data.map(_ => ({
+            id: _.pipelineId,
+            name: _.pipelineName
+        })))
     }
 }
 

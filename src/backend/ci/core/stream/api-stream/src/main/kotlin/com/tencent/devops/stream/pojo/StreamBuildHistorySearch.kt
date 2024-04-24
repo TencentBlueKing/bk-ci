@@ -29,29 +29,28 @@ package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("V2版本多选搜索过滤历史参数")
+@Schema(title = "V2版本多选搜索过滤历史参数")
 data class StreamBuildHistorySearch(
-    @ApiModelProperty("第几页", required = false)
+    @get:Schema(title = "第几页", required = false)
     val page: Int?,
-    @ApiModelProperty("每页多少条", required = false)
+    @get:Schema(title = "每页多少条", required = false)
     val pageSize: Int?,
-    @ApiModelProperty("分支", required = false)
+    @get:Schema(title = "分支", required = false)
     val branch: Set<String>?,
-    @ApiModelProperty("fork库分支", required = false)
+    @get:Schema(title = "fork库分支", required = false)
     val sourceGitProjectId: Set<String>?,
-    @ApiModelProperty("触发人", required = false)
+    @get:Schema(title = "触发人", required = false)
     val triggerUser: Set<String>?,
-    @ApiModelProperty("流水线ID", required = false)
+    @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String?,
-    @ApiModelProperty("Commit Msg", required = false)
+    @get:Schema(title = "Commit Msg", required = false)
     val commitMsg: String?,
-    @ApiModelProperty("Event", required = false)
+    @get:Schema(title = "Event", required = false)
     val event: Set<StreamGitObjectKind>?,
-    @ApiModelProperty("构建状态", required = false)
+    @get:Schema(title = "构建状态", required = false)
     val status: Set<BuildStatus>?,
-    @ApiModelProperty("流水线列表", required = false)
+    @get:Schema(title = "流水线列表", required = false)
     val pipelineIds: Set<String>?
 )
