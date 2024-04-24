@@ -138,7 +138,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
         var baseVersion: Int? = null
         var baseVersionName: String? = null
-        var baseVersionStatus = VersionStatus.RELEASED
+        var baseVersionStatus: VersionStatus? = null
         draftVersion?.let { draft ->
             val baseResource = draft.baseVersion?.let { base ->
                 pipelineRepositoryService.getPipelineResourceVersion(
