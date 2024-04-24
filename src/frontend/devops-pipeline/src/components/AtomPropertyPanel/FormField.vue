@@ -44,6 +44,10 @@
             },
             labelWidth: {
                 type: Number
+            },
+            bottomDivider: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -55,7 +59,7 @@
             }
         },
         render (h) {
-            const { label, inline, required, $slots, isError, errorMsg, desc, docsLink, descLink, descLinkText, type, widthStyle } = this
+            const { label, inline, required, $slots, isError, errorMsg, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider } = this
             return (
                 <div class={{ 'form-field': true, 'bk-form-item': !inline, 'form-field-group-item': type === 'groupItem', 'bk-form-inline-item': inline, 'is-required': required, 'is-danger': isError }} >
                     { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>{label}：
@@ -74,6 +78,13 @@
                         {$slots.default}
                         {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
                     </div>
+                    {
+                        bottomDivider
+                        ? (
+                            <div class="bottom-border-divider"></div>
+                        )
+                        : undefined
+                    }
                 </div>
             )
         }
@@ -93,6 +104,10 @@
         display: flex;
         align-items: center;
         line-height: 32px;
+        margin-top: 16px !important;
+        &:first-child {
+            margin-top: 0px !important;
+        }
         .atom-form-label {
             text-align: right !important;
             word-break: break-all;
@@ -119,5 +134,12 @@
     }
     .desc-link {
         color: #3c96ff;
+    }
+    
+    .bottom-border-divider {
+        height: 1px;
+        width: 100%;
+        margin: 24px 0 8px;
+        border-bottom: 1px solid #DCDEE5;
     }
 </style>
