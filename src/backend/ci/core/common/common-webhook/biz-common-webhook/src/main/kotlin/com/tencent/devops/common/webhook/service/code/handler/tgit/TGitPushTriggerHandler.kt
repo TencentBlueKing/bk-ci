@@ -211,23 +211,21 @@ class TGitPushTriggerHandler(
                 commits?.first()?.message ?: "",
                 pipelineId
             )
-            var pushChangeFiles: Set<String>? = null
+            val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+                eventCacheService.getChangeFileList(
+                    projectId = projectId,
+                    repo = repository,
+                    from = event.after,
+                    to = event.before
+                )
+            } else {
+                getPushChangeFiles(event)
+            }
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
                     if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
                         return true
                     }
-                    val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-                        eventCacheService.getChangeFileList(
-                            projectId = projectId,
-                            repo = repository,
-                            from = event.after,
-                            to = event.before
-                        )
-                    } else {
-                        getPushChangeFiles(event)
-                    }
-                    pushChangeFiles = eventPaths
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = pathFilterType,
@@ -256,7 +254,7 @@ class TGitPushTriggerHandler(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = event,
-                changeFiles = pushChangeFiles,
+                changeFiles = eventPaths,
                 enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
