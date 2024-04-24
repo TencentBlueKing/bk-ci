@@ -442,8 +442,10 @@ class PipelineResourceVersionDao {
                         .or(BRANCH_ACTION.isNull)
                 )
             if (includeDraft == false) {
-                query.and(STATUS.notEqual(VersionStatus.COMMITTING.name))
-                    .or(STATUS.isNull)
+                query.and(
+                    STATUS.ne(VersionStatus.COMMITTING.name)
+                        .or(STATUS.isNull)
+                )
             }
             versionName?.let {
                 query.and(
