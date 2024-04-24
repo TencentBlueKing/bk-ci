@@ -56,7 +56,7 @@ import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreatorImpl
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
-import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
@@ -359,7 +359,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
                 userId = "test",
                 model = modelAndSetting.model,
                 setting = modelAndSetting.setting,
-                version = YamlVersion.Version.V3_0,
+                version = YamlVersion.V3_0,
                 aspectWrapper = PipelineTransferAspectWrapper(defaultAspects)
             )
         )
@@ -405,7 +405,10 @@ internal class ModelTransferTest : BkCiAbstractTest() {
 
         val watcher = Watcher(id = "yaml and model transfer watcher")
         watcher.start("parse PreScriptBuildYaml")
-        val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
+        val pYml = YamlUtil.getObjectMapper().readValue(
+            yaml,
+            object : TypeReference<IPreTemplateScriptBuildYamlParser>() {}
+        )
         val aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
         aspects.add(
             object : IPipelineTransferAspectTrigger {
