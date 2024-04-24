@@ -153,7 +153,13 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             with(migrateProjectConditionDTO) {
                 conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
+                if (channelCode == null) {
+                    conditions.add(
+                        CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name))
+                    )
+                } else {
+                    conditions.add(CHANNEL.eq(channelCode))
+                }
                 conditions.add(ENABLED.eq(true))
                 centerId?.let { conditions.add(CENTER_ID.eq(centerId)) }
                 deptId?.let { conditions.add(DEPT_ID.eq(deptId)) }
@@ -186,7 +192,6 @@ class ProjectDao {
                             .or(ROUTER_TAG.like("%devx%"))
                     )
                 }
-                channelCode?.let { conditions.add(CHANNEL.eq(channelCode)) }
             }
         }
         return conditions
