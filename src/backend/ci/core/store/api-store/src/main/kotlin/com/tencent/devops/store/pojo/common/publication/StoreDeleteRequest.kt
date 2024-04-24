@@ -35,5 +35,7 @@ data class StoreDeleteRequest(
     @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
     @get:Schema(title = "组件类型", required = true)
-    val storeType: String
+    val storeType: String,
+    @get:Schema(title = "", required = false)
+    val checkPermissionFlag: Boolean = true
 ) : HandlerRequest()

@@ -25,46 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-enum class StoreStatusEnum {
-    INIT, // 初始化
-    COMMITTING, // 提交中
-    BUILDING, // 构建中
-    BUILD_FAIL, // 构建失败
-    CHECKING, // 验证中
-    CHECK_FAIL, // 验证失败
-    TESTING, // 测试中
-    AUDITING, // 审核中
-    AUDIT_REJECT, // 审核驳回
-    RELEASED, // 已发布
-    GROUNDING_SUSPENSION, // 上架中止
-    UNDERCARRIAGING, // 下架中
-    UNDERCARRIAGED, // 已下架
-    TESTED; // 测试结束(仅分支测试使用)
-
-    fun getI18n(language: String): String {
-        return MessageUtil.getMessageByLocale(
-            messageCode = "STORE_BASE_STATUS_${this.name}",
-            language = language
-        )
-    }
-
-    companion object {
-
-        fun getProcessingStatusList(): List<String> {
-            return listOf(
-                INIT.name,
-                COMMITTING.name,
-                BUILDING.name,
-                BUILD_FAIL.name,
-                CHECKING.name,
-                CHECK_FAIL.name,
-                TESTING.name,
-                AUDITING.name
-            )
-        }
-    }
-}
+@Schema(title = "研发商店-查询组件条件")
+data class ListComponentsQuery(
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: String,
+    @get:Schema(title = "类型", required = false)
+    val type: String?,
+    @get:Schema(title = "store组件名称", required = false)
+    val name: String?,
+    @get:Schema(title = "是否处于流程中", required = false)
+    val processFlag: Boolean? = null,
+    @get:Schema(title = "分类", required = false)
+    val classifyCode: String? = null,
+    @get:Schema(title = "应用范畴，多个用逗号分隔", required = false)
+    val categoryCodes: String?,
+    @get:Schema(title = "功能标签，多个用逗号分隔", required = false)
+    val labelCodes: String?,
+    @get:Schema(title = "排序", required = false)
+    val sortType: StoreSortTypeEnum?,
+    @get:Schema(title = "页码", required = true)
+    val page: Int,
+    @get:Schema(title = "每页数量", required = true)
+    val pageSize: Int
+)

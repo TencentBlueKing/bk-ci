@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
@@ -35,6 +36,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonSchemaUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -45,6 +48,7 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.dao.MarketStoreQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
@@ -73,6 +77,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.LATEST
+import com.tencent.devops.store.pojo.common.ListComponentsQuery
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
@@ -126,7 +131,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val storeDailyStatisticService: StoreDailyStatisticService,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
-    private val storeClassifyService: ClassifyService
+    private val storeClassifyService: ClassifyService,
+    private val labelDao: LabelDao
 ): StoreComponentQueryService {
 
     companion object {
@@ -142,6 +148,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         pageSize: Int
     ): Page<MyStoreComponent>? {
         logger.info("getMyComponents params:[$userId|$storeType|$name|$page|$pageSize]")
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         // 获取有权限的组件代码列表
         val records = storeBaseQueryDao.getMyComponents(
             dslContext = dslContext,
@@ -157,14 +164,11 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             storeType = StoreTypeEnum.valueOf(storeType),
             name = name
         )
-        // 获取项目ID对应的名称
-        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
-        val projectCodeList = mutableListOf<String>()
-        val storeCodes = mutableListOf<String>()
         val storeProjectMap = mutableMapOf<String, String>()
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val storeComponentList = mutableListOf<MyStoreComponent>()
         val storeIds = mutableListOf<String>()
+        val projectCodeList = mutableListOf<String>()
+        val storeCodes = mutableListOf<String>()
         records?.forEach { record ->
             storeIds.add(record[tStoreBase.ID])
             val storeCode = record[tStoreBase.STORE_CODE] as String
@@ -180,18 +184,116 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeProjectMap[storeCode] = testProjectCode
             }
         }
-        val intoMap =
-            storeBaseEnvQueryDao.batchQueryStoreLanguage(dslContext, storeIds).intoMap({ it.value1() }, { it.value2() })
+        val storeComponents = records?.let {
+            handleComponents(
+                storeType = storeTypeEnum,
+                storeCodes = storeCodes,
+                storeIds = storeIds,
+                projectCodeList = projectCodeList,
+                storeProjectMap = storeProjectMap,
+                records = it
+            )
+        }
+        return Page(
+            count = count.toLong(),
+            page = page,
+            pageSize = pageSize,
+            records = storeComponents ?: emptyList()
+        )
+    }
 
+    override fun listComponents(userId: String, listComponentsQuery: ListComponentsQuery): Page<MyStoreComponent>? {
+        val storeType = StoreTypeEnum.valueOf(listComponentsQuery.storeType)
+        val classifyId = listComponentsQuery.classifyCode?.let {
+            classifyDao.getClassifyByCode(
+                dslContext = dslContext,
+                classifyCode = it,
+                type = storeType
+            )
+        }
+        val categoryIds = listComponentsQuery.categoryCodes?.let {
+            val allCategory = categoryService.getAllCategory(storeType.type.toByte()).data
+            val categoryCodes = it.split(",")
+            allCategory?.filter { category -> categoryCodes.contains(category.categoryCode)}?.map { categoryInfo ->
+                categoryInfo.id
+            }
+        }
+        val labelIds = listComponentsQuery.labelCodes?.let {
+            labelDao.getIdsByCodes(
+                dslContext = dslContext,
+                labelCodes = it.split(","),
+                type = storeType.type.toByte()
+            )
+        }
+        val count = storeBaseQueryDao.countComponents(
+            dslContext = dslContext,
+            listComponentsQuery = listComponentsQuery,
+            classifyId = classifyId?.id,
+            categoryIds = categoryIds,
+            labelIds = labelIds
+        )
+        val records = storeBaseQueryDao.listComponents(
+            dslContext = dslContext,
+            listComponentsQuery = listComponentsQuery,
+            classifyId = classifyId?.id,
+            categoryIds = categoryIds,
+            labelIds = labelIds
+        )
+        val storeProjectMap = mutableMapOf<String, String>()
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val storeIds = mutableListOf<String>()
+        val storeCodes = mutableListOf<String>()
+
+        records.forEach { record ->
+            storeIds.add(record[tStoreBase.ID])
+            val storeCode = record[tStoreBase.STORE_CODE] as String
+            storeCodes.add(storeCode)
+        }
+        storeProjectRelDao.getStoreInitProjects(
+            dslContext = dslContext,
+            storeType = storeType.type.toByte(),
+            descFlag = false,
+            specProjectCodeList = storeCodes.toSet()
+        )?.forEach { storeProjectMap[it.storeCode] = it.projectCode }
+        val projectCodeList = storeProjectMap.values
+        val storeComponents = handleComponents(
+            storeType = storeType,
+            storeCodes = storeCodes,
+            storeIds = storeIds,
+            projectCodeList = projectCodeList.toList(),
+            storeProjectMap = storeProjectMap,
+            records = records
+        )
+        return Page(
+            count = count.toLong(),
+            page = listComponentsQuery.page,
+            pageSize = listComponentsQuery.pageSize,
+            records = storeComponents
+        )
+    }
+
+    private fun handleComponents(
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>,
+        storeIds: List<String>,
+        projectCodeList: List<String>,
+        storeProjectMap:  Map<String, String>,
+        records: org.jooq.Result<out Record>
+    ): List<MyStoreComponent> {
+
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        // 获取项目ID对应的名称
+        val storeComponentList = mutableListOf<MyStoreComponent>()
+        val languageMap =
+            storeBaseEnvQueryDao.batchQueryStoreLanguage(dslContext, storeIds).intoMap({ it.value1() }, { it.value2() })
+        // 获取组件的流程信息
         val processingStoreRecords = storeBaseQueryDao.getStoreBaseInfoByConditions(
             dslContext = dslContext,
-            storeType = storeTypeEnum,
+            storeType = storeType,
             storeCodeList = storeCodes,
             storeStatusList = StoreStatusEnum.getProcessingStatusList()
         )
-
         val processingVersionInfoMap = mutableMapOf<String, MutableList<StoreBaseInfo>>()
-
         processingStoreRecords.forEach { processingAtomRecord ->
             val version = processingAtomRecord[tStoreBase.VERSION] as String
             if (version == INIT_VERSION || version.isBlank()) {
@@ -212,12 +314,13 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             )
             processingVersionInfoMap.getOrPut(storeCode) { mutableListOf() }.add(storeBaseInfo)
         }
+        // 根据项目Code获取对应的名称
         val projectMap =
             client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
-        records?.forEach {
+        records.forEach {
             val storeCode = it[tStoreBase.STORE_CODE] as String
             var releaseFlag = false // 是否有处于上架状态的组件版本
-            val releaseStoreNum = storeBaseQueryDao.countReleaseStoreByCode(dslContext, storeCode)
+            val releaseStoreNum = storeBaseQueryDao.countReleaseStoreByCode(dslContext, storeCode, storeType)
             if (releaseStoreNum > 0) {
                 releaseFlag = true
             }
@@ -227,9 +330,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 MyStoreComponent(
                     storeId = storeId,
                     storeCode = it[tStoreBase.STORE_CODE] as String,
-                    storeType = storeType,
+                    storeType = storeType.name,
                     name = it[tStoreBase.NAME] as String,
-                    language = intoMap[storeId],
+                    language = languageMap[storeId],
                     logoUrl = logoUrl?.let {
                         StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
                     },
@@ -245,12 +348,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 )
             )
         }
-        return Page(
-            count = count.toLong(),
-            page = page,
-            pageSize = pageSize,
-            records = storeComponentList
-        )
+        return storeComponentList
     }
 
     override fun getComponentVersionsByCode(
@@ -258,12 +356,13 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         storeType: String,
         storeCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        checkPermissionFlag: Boolean
     ): Page<StoreDeskVersionItem> {
         logger.info("getComponentVersionsByCode:Input:($userId,$storeCode,$page,$pageSize)")
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         // 判断当前用户是否是组件的成员
-        if (!storeMemberDao.isStoreMember(
+        if (checkPermissionFlag && !storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
@@ -345,7 +444,18 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, storeCode, storeType)
 
         val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
-        val extData = baseExtRecords.associateBy({ it.fieldName }, { it.fieldValue })
+        val extData = baseExtRecords.associateBy(
+            { it.fieldName },
+            {
+                when {
+                    JsonSchemaUtil.isJsonArray(it.fieldValue) -> {JsonUtil.to(it.fieldValue, List::class.java)}
+                    JsonSchemaUtil.isJsonObject(it.fieldValue) -> {
+                        JsonUtil.to(it.fieldValue, object : TypeReference<Map<String, Any>>() {})
+                    }
+                    else -> it.fieldValue
+                }
+            }
+        )
         val htmlTemplateVersion = extData[KEY_HTML_TEMPLATE_VERSION]
         val initProjectCode =
             if (htmlTemplateVersion != null && htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
@@ -437,6 +547,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     override fun getMainPageComponents(
         userId: String,
         storeType: String,
+        projectCode: String?,
         page: Int,
         pageSize: Int,
         urlProtocolTrim: Boolean
@@ -456,7 +567,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 userDeptList = userDeptList,
                 storeInfoQuery = StoreInfoQuery(
                     storeType = storeType,
-                    projectCode = null,
+                    projectCode = projectCode,
                     keyword = null,
                     classifyId = null,
                     labelId = null,
@@ -486,7 +597,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 userDeptList = userDeptList,
                 storeInfoQuery = StoreInfoQuery(
                     storeType = storeType,
-                    projectCode = null,
+                    projectCode = projectCode,
                     keyword = null,
                     classifyId = null,
                     labelId = null,
@@ -521,7 +632,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         userDeptList = userDeptList,
                         storeInfoQuery = StoreInfoQuery(
                             storeType = storeType,
-                            projectCode = null,
+                            projectCode = projectCode,
                             keyword = null,
                             classifyId = it.id,
                             labelId = null,
@@ -636,7 +747,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             val results = mutableListOf<MarketItem>()
 
             // 调用拆分出的getStoreInfos函数获取商品信息
-            val (count, storeInfos) = getStoreInfos(storeInfoQuery)
+            var (count, storeInfos) = getStoreInfos(storeInfoQuery)
             try {
                 val storeCodeList = mutableListOf<String>()
                 val storeIds = mutableListOf<String>()
@@ -679,9 +790,11 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         StoreUtils.isGreaterVersion(version, installedInfoMap[storeCode]!!)
                     } else null
                     if (storeInfoQuery.installed == true && installed != true) {
+                        count -= 1
                         return@forEach
                     }
                     if (storeInfoQuery.updateFlag == true && updateFlag != true) {
+                        count -= 1
                         return@forEach
                     }
                     val osList = mutableListOf<String>()

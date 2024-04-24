@@ -31,18 +31,27 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreComponentResource
 import com.tencent.devops.store.common.service.OpStoreComponentService
+import com.tencent.devops.store.common.service.StoreComponentManageService
+import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreReleaseService
+import com.tencent.devops.store.pojo.common.ListComponentsQuery
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
+import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpStoreComponentResourceImpl @Autowired constructor(
-    private val opStoreComponentService: OpStoreComponentService
+    private val opStoreComponentService: OpStoreComponentService,
+    private val storeComponentQueryService: StoreComponentQueryService,
+    private val storeComponentManageService: StoreComponentManageService,
+    private val storeReleaseService: StoreReleaseService
 ) : OpStoreComponentResource {
 
     override fun approveComponentRelease(
@@ -66,7 +75,23 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<MyStoreComponent>?> {
-        TODO("Not yet implemented")
+        return Result(
+            storeComponentQueryService.listComponents(
+                userId = userId,
+                listComponentsQuery = ListComponentsQuery(
+                    storeType = storeType,
+                    type = type,
+                    name = name,
+                    processFlag = processFlag,
+                    classifyCode = classifyCode,
+                    categoryCodes = categoryCodes,
+                    labelCodes = labelCodes,
+                    sortType = sortType,
+                    page = page,
+                    pageSize = pageSize,
+                )
+            )
+        )
     }
 
     override fun getComponentVersionsByCode(
@@ -76,7 +101,16 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<StoreDeskVersionItem>> {
-        TODO("Not yet implemented")
+        return Result(
+            storeComponentQueryService.getComponentVersionsByCode(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                page = page,
+                pageSize = pageSize,
+                checkPermissionFlag = false
+            )
+        )
     }
 
     override fun getComponentDetailInfoById(
@@ -84,7 +118,13 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         storeType: String,
         storeId: String
     ): Result<StoreDetailInfo?> {
-        TODO("Not yet implemented")
+        return Result(
+            storeComponentQueryService.getComponentDetailInfoById(
+                userId = userId,
+                storeType = StoreTypeEnum.valueOf(storeType),
+                storeId = storeId
+            )
+        )
     }
 
     override fun updateComponentBaseInfo(
@@ -93,14 +133,32 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         storeCode: String,
         storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        return storeComponentManageService.updateComponentBaseInfo(
+            userId = userId,
+            storeType =storeType,
+            storeCode = storeCode,
+            storeBaseInfoUpdateRequest = storeBaseInfoUpdateRequest,
+            checkPermissionFlag = false
+        )
     }
 
     override fun deleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean> {
-        TODO("Not yet implemented")
+        return storeComponentManageService.deleteComponent(
+            userId = userId,
+            handlerRequest = StoreDeleteRequest(
+                storeCode = storeCode,
+                storeType = storeType,
+                checkPermissionFlag = false
+            )
+        )
     }
 
     override fun offlineComponent(userId: String, storeOfflineRequest: StoreOfflineRequest): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(storeReleaseService.offlineComponent(
+            userId = userId,
+            storeOfflineRequest = storeOfflineRequest,
+            checkPermissionFlag = false
+            )
+        )
     }
 }

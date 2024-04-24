@@ -115,12 +115,14 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
     override fun getMainPageComponents(
         userId: String,
         storeType: String,
+        projectCode: String?,
         page: Int,
         pageSize: Int
     ): Result<List<MarketMainItem>> {
         return storeComponentQueryService.getMainPageComponents(
             userId = userId,
             storeType = storeType,
+            projectCode = projectCode,
             page = page,
             pageSize = pageSize
         )
