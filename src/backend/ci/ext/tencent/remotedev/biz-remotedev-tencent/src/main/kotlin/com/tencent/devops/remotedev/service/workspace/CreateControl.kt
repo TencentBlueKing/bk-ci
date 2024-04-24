@@ -295,6 +295,7 @@ class CreateControl @Autowired constructor(
                     "0",
                     "unkown"
                 )
+            )
         }
         val free = sumResourceVmFree(
             res = data,
