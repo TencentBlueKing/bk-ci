@@ -279,12 +279,23 @@ class CreateControl @Autowired constructor(
         windowsConfig: WindowsResourceTypeConfig,
         newNum: Int
     ) {
-        val data = client.get(ServiceStartCloudResource::class).getResourceVm(
-            ResourceVmReq(
-                zoneId = windowsZone.zoneShortName,
-                machineType = windowsConfig.size
-            )
-        ).data
+        val data = kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class).getResourceVm(
+                ResourceVmReq(
+                    zoneId = windowsZone.zoneShortName,
+                    machineType = windowsConfig.size
+                )
+            ).data
+        }.getOrElse {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "0",
+                    "unkown"
+                )
+        }
         val free = sumResourceVmFree(
             res = data,
             zoneShortName = windowsZone.zoneShortName,
