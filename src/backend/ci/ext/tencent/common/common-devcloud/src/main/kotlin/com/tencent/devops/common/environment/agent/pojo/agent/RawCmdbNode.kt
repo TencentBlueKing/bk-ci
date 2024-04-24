@@ -38,4 +38,3 @@ data class RawCmdbNode(
     val serverId: Long,
     val deptId: Int
 )
-
