@@ -81,8 +81,8 @@
             'params-collapse-expand': activeName.has(6)
         }]" @click="toggleCollapse(6)">
             <i class="devops-icon icon-angle-right" />
-            {{ $t(startupInfo?.canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
-            <template v-if="startupInfo?.canElementSkip">
+            {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
+            <template v-if="canElementSkip">
                 <span class="no-bold-font">
                     ({{ $t('preview.skipTipsPrefix') }}
                     <span @click.stop="editTrigger" class="text-link item-title-tips-link">
@@ -99,7 +99,7 @@
         </header>
         <div v-if="activeName.has(6)" class="params-collapse-content pipeline-optional-model">
             <pipeline is-preview :show-header="false" :pipeline="pipelineModel" :editable="false"
-                :can-skip-element="startupInfo?.canElementSkip">
+                :can-skip-element="canElementSkip">
             </pipeline>
         </div>
 
@@ -168,6 +168,9 @@
             },
             resetDefaultParamsTips () {
                 return this.$t(this.isDebugPipeline ? 'debugParamsTips' : 'restoreDetaulParamsTips')
+            },
+            canElementSkip () {
+                return this.isDebugPipeline || (this.startupInfo?.canElementSkip ?? false)
             }
         },
         watch: {

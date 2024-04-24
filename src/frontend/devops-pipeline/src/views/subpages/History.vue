@@ -33,7 +33,7 @@
                 </ul>
                 <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
                     {{$t('switchToReleaseVersion')}}
-                    <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
+                    <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('switch') }}</span>
                 </div>
             </aside>
     
