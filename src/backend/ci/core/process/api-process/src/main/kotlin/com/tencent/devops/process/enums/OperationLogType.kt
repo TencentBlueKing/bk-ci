@@ -63,7 +63,7 @@ enum class OperationLogType(val description: String) {
         }
 
         fun fetchType(versionStatus: VersionStatus?): OperationLogType {
-            return when(versionStatus) {
+            return when (versionStatus) {
                 VersionStatus.COMMITTING -> CREATE_PIPELINE_AND_DRAFT
                 VersionStatus.BRANCH -> CREATE_BRANCH_VERSION
                 VersionStatus.RELEASED -> RELEASE_MASTER_VERSION
