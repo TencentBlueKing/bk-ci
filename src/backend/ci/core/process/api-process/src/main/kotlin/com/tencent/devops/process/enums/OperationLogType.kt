@@ -28,6 +28,7 @@
 package com.tencent.devops.process.enums
 
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 
 enum class OperationLogType(val description: String) {
     CREATE_PIPELINE_AND_DRAFT("创建流水线首次保存草稿：「创建了草稿」"),
@@ -51,12 +52,22 @@ enum class OperationLogType(val description: String) {
     }
 
     companion object {
+
         fun parseType(type: String?): OperationLogType {
             if (type.isNullOrBlank()) return NORMAL_SAVE_OPERATION
             return try {
                 OperationLogType.valueOf(type)
             } catch (ignore: Throwable) {
                 NORMAL_SAVE_OPERATION
+            }
+        }
+
+        fun fetchType(versionStatus: VersionStatus?): OperationLogType {
+            return when(versionStatus) {
+                VersionStatus.COMMITTING -> CREATE_PIPELINE_AND_DRAFT
+                VersionStatus.BRANCH -> CREATE_BRANCH_VERSION
+                VersionStatus.RELEASED -> RELEASE_MASTER_VERSION
+                else -> NORMAL_SAVE_OPERATION
             }
         }
     }

@@ -34,7 +34,7 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_INFO'
-                    AND COLUMN_NAME = 'ONLY_DRAFT') THEN
+                    AND COLUMN_NAME = 'LATEST_VERSION_STATUS') THEN
     ALTER TABLE `T_PIPELINE_INFO`
         ADD COLUMN `LATEST_VERSION_STATUS` varchar(64) DEFAULT NULL COMMENT '最新分布版本状态';
     END IF;
@@ -200,6 +200,14 @@ BEGIN
                     AND COLUMN_NAME = 'VERSION_NAME') THEN
     ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
         ADD COLUMN  `VERSION_NAME` varchar(64) DEFAULT NULL COMMENT '正式版本名称';
+    END IF;
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'YAML_VERSION') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
+        ADD COLUMN `YAML_VERSION` varchar(34) DEFAULT NULL COMMENT 'YAML的版本标记';
     END IF;
 
     COMMIT;

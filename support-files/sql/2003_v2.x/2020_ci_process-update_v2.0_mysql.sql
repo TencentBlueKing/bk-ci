@@ -168,7 +168,7 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_INFO'
-                    AND COLUMN_NAME = 'ONLY_DRAFT') THEN
+                    AND COLUMN_NAME = 'LATEST_VERSION_STATUS') THEN
     ALTER TABLE `T_PIPELINE_INFO`
         ADD COLUMN `LATEST_VERSION_STATUS` varchar(64) DEFAULT NULL COMMENT '最新分布版本状态';
     END IF;
