@@ -875,6 +875,12 @@
                             )
                         } finally {
                             this.isDeleteIng = false
+                            // 最后一页最后一条删除后，往前翻一页
+                            if (
+                                this.pagination.limit * (this.pagination.current - 1) + 1 === this.pagination.count
+                            ) {
+                                this.pagination.current -= 1
+                            }
                             this.requestList()
                         }
                     }
