@@ -46,6 +46,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
 import javax.ws.rs.core.Response
 
 @Component
@@ -204,12 +205,15 @@ class EsbAgentClient {
                     returnRows = returnRows,
                     totalRows = totalRows
                 )
+            } catch (timeoutError: SocketTimeoutException) {
+                logger.error("Query CMDB interface time out. Error: $timeoutError")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_LIST)
+                )
             } catch (e: Exception) {
                 logger.error("get cmdb nodes error", e)
                 throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = FAILED_TO_GET_CMDB_LIST
-                    )
+                    I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_LIST)
                 )
             }
         }
