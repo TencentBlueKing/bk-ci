@@ -317,11 +317,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = result.version,
-                operationLogType = if (versionStatus != VersionStatus.RELEASED) {
-                    OperationLogType.CREATE_PIPELINE_AND_DRAFT
-                } else {
-                    OperationLogType.NORMAL_SAVE_OPERATION
-                },
+                operationLogType = OperationLogType.fetchType(versionStatus),
                 params = result.versionName ?: PipelineVersionUtils.getVersionName(
                     result.version, result.version, 0, 0
                 ) ?: "",
