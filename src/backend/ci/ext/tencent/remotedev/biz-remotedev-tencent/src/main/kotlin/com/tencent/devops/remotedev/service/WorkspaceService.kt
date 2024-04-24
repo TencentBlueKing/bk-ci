@@ -491,15 +491,16 @@ class WorkspaceService @Autowired constructor(
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
             val detail = detailMap[it.workspaceName]
+            val status = checkStatus(it, userId)
             records.add(
                 ProjectWorkspace(
                     workspaceId = it.workspaceId,
                     workspaceName = it.workspaceName,
                     projectId = it.projectId,
                     displayName = it.displayName,
-                    status = it.status,
+                    status = status,
                     lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                    sleepingTime = if (it.status.checkSleeping()) {
+                    sleepingTime = if (status.checkSleeping()) {
                         it.lastStatusUpdateTime?.timestamp()
                     } else {
                         null
@@ -729,21 +730,7 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = result.count().toLong(),
             records = result.map {
-                var status = it.status
-                run {
-                    if (status.notOk2doNextAction(it.workspaceSystemType) && Duration.between(
-                            it.lastStatusUpdateTime ?: LocalDateTime.now(),
-                            LocalDateTime.now()
-                        ).seconds > DEFAULT_WAIT_TIME
-                    ) {
-                        status = workspaceCommon.fixUnexpectedStatus(
-                            userId = userId,
-                            workspaceName = it.workspaceName,
-                            status = status,
-                            mountType = it.workspaceMountType
-                        )
-                    }
-                }
+                val status = checkStatus(it, userId)
                 val owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
@@ -788,6 +775,25 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
+    }
+
+    private fun checkStatus(
+        it: WorkspaceRecordInf,
+        userId: String
+    ): WorkspaceStatus {
+        if (it.status.notOk2doNextAction(it.workspaceSystemType) && Duration.between(
+                it.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds > DEFAULT_WAIT_TIME
+        ) {
+            return workspaceCommon.fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = it.workspaceName,
+                status = it.status,
+                mountType = it.workspaceMountType
+            )
+        }
+        return it.status
     }
 
     fun getWorkspaceUserDetail(userId: String): WorkspaceUserDetail {

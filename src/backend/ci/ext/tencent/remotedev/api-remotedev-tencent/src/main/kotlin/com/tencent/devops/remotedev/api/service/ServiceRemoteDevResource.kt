@@ -198,7 +198,6 @@ interface ServiceRemoteDevResource {
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
 
-
     @Operation(summary = "创建windows工作空间-项目")
     @POST
     @Path("/project_win_workspace")
