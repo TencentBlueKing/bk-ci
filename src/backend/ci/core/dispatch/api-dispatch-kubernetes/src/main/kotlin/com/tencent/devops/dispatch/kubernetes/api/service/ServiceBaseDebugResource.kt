@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StopDebugReq
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -44,7 +44,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DISPATCH_BASE_DEBUG"], description = "SERVICE_DISPATCH_BASE_DEBUG")
+@Tag(name = "SERVICE_DISPATCH_BASE_DEBUG", description = "SERVICE_DISPATCH_BASE_DEBUG")
 @Path("/service/debug")
 @ServiceInterface("dispatch") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,23 +53,23 @@ interface ServiceBaseDebugResource {
 
     @POST
     @Path("/start")
-    @ApiOperation("获取登录调试ws")
+    @Operation(summary = "获取登录调试ws")
     fun startDebug(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("debug请求体", required = true)
+        @Parameter(description = "debug请求体", required = true)
         startDebugReq: StartDebugReq
     ): Result<DebugResponse>
 
     @POST
     @Path("/stop")
-    @ApiOperation("关闭调试")
+    @Operation(summary = "关闭调试")
     fun stopDebug(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("debug请求体", required = true)
+        @Parameter(description = "debug请求体", required = true)
         stopDebugReq: StopDebugReq
     ): Result<Boolean>
 }

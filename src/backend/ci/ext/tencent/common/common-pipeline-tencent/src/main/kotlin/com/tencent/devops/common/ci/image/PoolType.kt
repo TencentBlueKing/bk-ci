@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
-import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -90,28 +89,6 @@ enum class PoolType {
                         messageCode = PARAMETER_IS_EMPTY
                     )
                 )
-            }
-        }
-    },
-
-    DockerOnBcs {
-        override fun transfer(pool: Pool): DispatchType {
-            return PublicBcsDispatchType(
-                pool.container!!,
-                "0",
-                imageType = ImageType.THIRD,
-                credentialId = pool.credential?.credentialId
-            )
-        }
-
-        override fun validatePool(pool: Pool) {
-            if (null == pool.container) {
-                logger.error("validatePool, {}, container is null", this)
-                throw OperationException(I18nUtil.getCodeLanMessage(
-                    messageCode = DANG
-                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
-                    messageCode = PARAMETER_IS_EMPTY
-                ))
             }
         }
     },
@@ -188,7 +165,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             } else if (!pool.envId.isNullOrBlank()) {
                 return ThirdPartyAgentEnvDispatchType(
@@ -201,7 +179,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
                 return ThirdPartyAgentIDDispatchType(
@@ -213,7 +192,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             } else {
                 return ThirdPartyAgentIDDispatchType(
@@ -225,7 +205,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             }
         }

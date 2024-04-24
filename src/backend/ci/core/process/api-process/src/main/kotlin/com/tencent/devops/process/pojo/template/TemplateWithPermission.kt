@@ -27,21 +27,20 @@
 
 package com.tencent.devops.process.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.Record
 import org.jooq.Result
 
-@ApiModel("模板-权限实体")
+@Schema(title = "模板-权限实体")
 data class TemplateWithPermission(
-    @ApiModelProperty("拥有列表权限的模板记录", required = true)
+    @get:Schema(title = "拥有列表权限的模板记录", required = true)
     val templatesWithListPermRecords: Result<out Record>?,
-    @ApiModelProperty("拥有查看权限的模板列表ID", required = true)
+    @get:Schema(title = "拥有查看权限的模板列表ID", required = true)
     val templatesWithViewPermIds: List<String>?,
-    @ApiModelProperty("拥有编辑权限的模板列表ID", required = true)
+    @get:Schema(title = "拥有编辑权限的模板列表ID", required = true)
     val templatesWithEditPermIds: List<String>?,
-    @ApiModelProperty("拥有删除权限的模板列表ID", required = true)
+    @get:Schema(title = "拥有删除权限的模板列表ID", required = true)
     val templatesWithDeletePermIds: List<String>?,
-    @ApiModelProperty("数量", required = true)
+    @get:Schema(title = "数量", required = true)
     val count: Int
 )

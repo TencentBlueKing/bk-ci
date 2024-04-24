@@ -33,6 +33,7 @@ import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
@@ -43,6 +44,7 @@ import com.tencent.devops.dispatch.docker.exception.NoAvailableHostException
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseBuildLessResource
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
@@ -56,6 +58,7 @@ import java.net.SocketTimeoutException
 @Service
 class BuildLessStartHandler @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val dockerHostUtils: DockerHostUtils,
     private val dockerHostProxyService: DockerHostProxyService,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
@@ -76,11 +79,24 @@ class BuildLessStartHandler @Autowired constructor(
                 secretKey = secretKey,
                 rejectedExecutionType = rejectedExecutionType
             )
-            val request = dockerHostProxyService.getDockerHostProxyRequest(
-                dockerHostUri = Constants.BUILD_LESS_STARTUP_URI,
-                dockerHostIp = buildLessHost,
-                dockerHostPort = buildLessPort,
-                clusterType = DockerHostClusterType.BUILD_LESS
+
+            when (clusterType) {
+                DockerHostClusterType.BUILD_LESS -> startBuildLess(buildLessStartInfo, handlerContext)
+                DockerHostClusterType.K8S_BUILD_LESS -> startK8sBuildLess(buildLessStartInfo, handlerContext)
+                else -> startBuildLess(buildLessStartInfo, handlerContext)
+            }
+        }
+    }
+
+    private fun startBuildLess(
+        buildLessStartInfo: BuildLessStartInfo,
+        handlerContext: BuildLessStartHandlerContext
+    ) {
+        with(handlerContext) {
+            val request = getDockerHostProxyRequest(
+                hostUri = Constants.BUILD_LESS_STARTUP_URI,
+                hostIp = buildLessHost,
+                hostPort = buildLessPort
             ).post(
                 JsonUtil.toJson(buildLessStartInfo)
                     .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -108,7 +124,14 @@ class BuildLessStartHandler @Autowired constructor(
         }
     }
 
-    fun handleSocketTimeoutException(
+    private fun startK8sBuildLess(
+        buildLessStartInfo: BuildLessStartInfo,
+        handlerContext: BuildLessStartHandlerContext
+    ) {
+        client.get(ServiceBaseBuildLessResource::class).startBuildLess(buildLessStartInfo)
+    }
+
+    private fun handleSocketTimeoutException(
         e: SocketTimeoutException,
         handlerContext: BuildLessStartHandlerContext
     ) {

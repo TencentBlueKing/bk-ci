@@ -29,23 +29,22 @@ package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.BuildType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * deng
  * 2019-01-01
  */
-@ApiModel("")
+@Schema(title = "")
 data class PipelineContainerMonitor(
-    @ApiModelProperty("操作系统类型", required = false)
+    @get:Schema(title = "操作系统类型", required = false)
     val osType: VMBaseOS,
-    @ApiModelProperty("创建类型", required = false)
+    @get:Schema(title = "创建类型", required = false)
     val buildType: BuildType,
-    @ApiModelProperty("最长启动时间", required = false)
+    @get:Schema(title = "最长启动时间", required = false)
     val maxStartupTime: Long,
-    @ApiModelProperty("最长执行时间", required = false)
+    @get:Schema(title = "最长执行时间", required = false)
     val maxExecuteTime: Long,
-    @ApiModelProperty("用户列表", required = false)
+    @get:Schema(title = "用户列表", required = false)
     val users: List<String>
 )

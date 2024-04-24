@@ -29,9 +29,9 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -42,7 +42,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_USER_BLACKLIST"], description = "黑名单用户")
+@Tag(name = "AUTH_USER_BLACKLIST", description = "黑名单用户")
 @Path("/service/user/blacklist")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,13 +50,13 @@ interface ServiceUserBlackListResource {
 
     @POST
     @Path("/")
-    @ApiOperation("添加黑名单用户")
+    @Operation(summary = "添加黑名单用户")
     fun createBlackListUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待拉黑用户Id")
+        @Parameter(description = "待拉黑用户Id")
         userId: String,
         @QueryParam("remark")
-        @ApiParam("拉黑原因")
+        @Parameter(description = "拉黑原因")
         remark: String?
     ): Result<Boolean>
 
@@ -66,10 +66,10 @@ interface ServiceUserBlackListResource {
 
     @DELETE
     @Path("/")
-    @ApiOperation("移出黑名单用户")
+    @Operation(summary = "移出黑名单用户")
     fun removeBlackListUser(
         @QueryParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待移出用户Id")
+        @Parameter(description = "待移出用户Id")
         removeUserId: String
     ): Result<Boolean>
 }

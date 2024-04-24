@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.utils.QualityUtils
@@ -110,7 +110,7 @@ class PipelineElementService @Autowired constructor(
                     var skip = false
                     if (startValues != null) {
                         // 优化循环
-                        val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                        val key = ElementUtils.getSkipElementVariableName(element.id)
                         if (startValues[key] == "true" && startParamsMap != null) {
                             startParamsMap[key] = BuildParameters(
                                 key = key, value = "true", valueType = BuildFormPropertyType.TEMPORARY

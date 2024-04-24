@@ -33,15 +33,14 @@ import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.utils.IpaFileUtil
-import java.io.File
-import java.io.InputStream
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.InputStream
 
 @Service
 class FileServiceImpl : FileService {
-
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
     val tmpDir: String = "/data/enterprise_sign_tmp"
 
@@ -108,7 +107,9 @@ class FileServiceImpl : FileService {
         ipaSignInfo: IpaSignInfo,
         resignId: String?
     ): File {
-        return File("$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}" +
-            "/${ipaSignInfo.buildId}/$resignId/")
+        return File(
+            "$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}" +
+                "/${ipaSignInfo.buildId}/$resignId/"
+        )
     }
 }

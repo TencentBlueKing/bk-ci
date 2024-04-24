@@ -26,11 +26,10 @@
  */
 
 package com.tencent.devops.project.pojo.label
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目标签请求实体")
+@Schema(title = "项目标签请求实体")
 data class ProjectLabelRequest(
-    @ApiModelProperty("标签名称")
+    @get:Schema(title = "标签名称")
     val labelName: String
 )

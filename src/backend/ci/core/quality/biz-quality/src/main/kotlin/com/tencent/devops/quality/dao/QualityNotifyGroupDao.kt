@@ -183,6 +183,7 @@ class QualityNotifyGroupDao {
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         id: Long,
         name: String,
         innerUsers: String,
@@ -204,17 +205,20 @@ class QualityNotifyGroupDao {
                 .set(UPDATOR, updator)
                 .set(UPDATE_TIME, now)
                 .where(ID.eq(id))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
 
     fun delete(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ) {
         with(TGroup.T_GROUP) {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

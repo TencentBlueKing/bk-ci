@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("批量获取插件依赖关系")
+@Schema(title = "批量获取插件依赖关系")
 data class GetRelyAtom(
-    @ApiModelProperty("请求所需参数", required = true)
+    @get:Schema(title = "请求所需参数", required = true)
     val thirdPartyElementList: List<ElementThirdPartySearchParam>
 )

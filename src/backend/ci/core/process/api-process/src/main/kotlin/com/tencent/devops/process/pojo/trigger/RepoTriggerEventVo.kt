@@ -28,23 +28,22 @@
 
 package com.tencent.devops.process.pojo.trigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库webhook事件记录")
+@Schema(title = "代码库webhook事件记录")
 data class RepoTriggerEventVo(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("事件ID")
+    @get:Schema(title = "事件ID")
     val eventId: Long,
-    @ApiModelProperty("代码库ID", required = false)
+    @get:Schema(title = "代码库ID", required = false)
     val repoHashId: String,
-    @ApiModelProperty("事件描述")
+    @get:Schema(title = "事件描述")
     var eventDesc: String,
-    @ApiModelProperty("触发时间")
+    @get:Schema(title = "触发时间")
     val eventTime: Long,
-    @ApiModelProperty("总流水线数")
+    @get:Schema(title = "总流水线数")
     val total: Int,
-    @ApiModelProperty("成功的流水线数")
+    @get:Schema(title = "成功的流水线数")
     val success: Int
 )

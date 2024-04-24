@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件post属性查询返回报文")
+@Schema(title = "插件post属性查询返回报文")
 data class AtomPostResp(
-    @ApiModelProperty("带post属性插件集合")
+    @get:Schema(title = "带post属性插件集合")
     val postAtoms: List<AtomPostInfo>?
 )

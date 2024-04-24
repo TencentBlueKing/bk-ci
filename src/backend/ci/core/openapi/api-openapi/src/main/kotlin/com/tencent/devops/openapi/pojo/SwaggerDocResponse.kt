@@ -27,17 +27,16 @@
 package com.tencent.devops.openapi.pojo
 
 import com.tencent.devops.openapi.utils.markdown.MarkdownElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("swagger文档")
+@Schema(title = "swagger文档")
 data class SwaggerDocResponse(
-    @ApiModelProperty("请求path")
+    @get:Schema(title = "请求path")
     val path: String,
-    @ApiModelProperty("请求方法")
+    @get:Schema(title = "请求方法")
     val httpMethod: String,
-    @ApiModelProperty("markdown文档")
+    @get:Schema(title = "markdown文档")
     val markdown: String?,
-    @ApiModelProperty("原始数据")
+    @get:Schema(title = "原始数据")
     val metaData: List<MarkdownElement>?
 )

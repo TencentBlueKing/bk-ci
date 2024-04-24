@@ -29,9 +29,9 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -40,26 +40,26 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["build_SCM_GIT_CI"], description = "Service Code GIT CI resource")
+@Tag(name = "build_SCM_GIT_CI", description = "Service Code GIT CI resource")
 @Path("/build/gitci/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildGitCiResource {
 
-    @ApiOperation("获取项目的token")
+    @Operation(summary = "获取项目的token")
     @GET
     @Path("/getToken")
     fun getToken(
-        @ApiParam("gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitToken?>
 
-    @ApiOperation("销毁项目的token")
+    @Operation(summary = "销毁项目的token")
     @DELETE
     @Path("/clearToken")
     fun clearToken(
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String
     ): Result<Boolean>

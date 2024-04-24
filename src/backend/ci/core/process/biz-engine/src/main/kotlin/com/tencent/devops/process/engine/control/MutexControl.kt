@@ -57,11 +57,11 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Component
 @Suppress("TooManyFunctions", "LongParameterList")
@@ -75,11 +75,28 @@ class MutexControl @Autowired constructor(
 
     companion object {
         private const val DELIMITERS = "_"
-        private const val SECOND_TO_PRINT = 19
-        private const val MUTEX_MAX_QUEUE = 10
+        const val SECOND_TO_PRINT = 19
+        const val MUTEX_MAX_QUEUE = 10
         private val LOG = LoggerFactory.getLogger(MutexControl::class.java)
         private fun getMutexContainerId(buildId: String, containerId: String) = "${buildId}$DELIMITERS$containerId"
         private fun getBuildIdAndContainerId(mutexId: String): List<String> = mutexId.split(DELIMITERS)
+
+        fun parseTimeoutVar(timeout: Int, timeoutVar: String?, variables: Map<String, String>) =
+            (
+                if (!timeoutVar.isNullOrBlank()) {
+                    try {
+                        if (PipelineVarUtil.isVar(timeoutVar)) { // ${{ xx }} 变量
+                            EnvReplacementParser.parse(timeoutVar, contextMap = variables).toInt()
+                        } else {
+                            timeoutVar.toInt()
+                        }
+                    } catch (ignore: NumberFormatException) { // 解析失败，以timeout为准
+                        timeout
+                    }
+                } else {
+                    timeout
+                }
+                ).coerceAtLeast(0).coerceAtMost(Timeout.MAX_MINUTES)
     }
 
     internal fun decorateMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
@@ -87,7 +104,7 @@ class MutexControl @Autowired constructor(
             return mutexGroup
         }
         // 超时时间限制，0表示排队不等待直接超时
-        val timeOut = parseTimeoutVar(mutexGroup, variables)
+        val timeOut = parseTimeoutVar(mutexGroup.timeout, mutexGroup.timeoutVar, variables)
         // 排队任务数量限制，0表示不排队
         val queue = mutexGroup.queue.coerceAtLeast(0).coerceAtMost(MUTEX_MAX_QUEUE)
         // 替换环境变量
@@ -108,21 +125,6 @@ class MutexControl @Autowired constructor(
             mutexGroup
         }
     }
-
-    private fun parseTimeoutVar(mutexGroup: MutexGroup, variables: Map<String, String>) =
-        (if (!mutexGroup.timeoutVar.isNullOrBlank()) {
-            try {
-                if (PipelineVarUtil.isVar(mutexGroup.timeoutVar)) { // ${{ xx }} 变量
-                    EnvReplacementParser.parse(mutexGroup.timeoutVar, contextMap = variables).toInt()
-                } else {
-                    mutexGroup.timeoutVar!!.toInt()
-                }
-            } catch (ignore: NumberFormatException) { // 解析失败，以timeout为准
-                mutexGroup.timeout
-            }
-        } else {
-            mutexGroup.timeout
-        }).coerceAtLeast(0).coerceAtMost(Timeout.MAX_MINUTES)
 
     internal fun acquireMutex(mutexGroup: MutexGroup?, container: PipelineBuildContainer): ContainerMutexStatus {
         // 当互斥组为空为空或互斥组名称为空或互斥组没有启动的时候，不做互斥行为

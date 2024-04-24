@@ -49,7 +49,7 @@ class OpenProjectResourceImpl constructor(
     ): Result<ProjectVO> {
         check(token)
         return Result(
-            projectService.getByEnglishNameWithoutPerm(
+            projectService.getByEnglishName(
                 englishName = projectId
             ) ?: throw OperationException("project $projectId not found")
         )

@@ -27,8 +27,13 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.constant.HTTP_400
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.op.OPProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
@@ -45,7 +50,8 @@ class WindowsResourceConfigService @Autowired constructor(
     private val dslContext: DSLContext,
     private val windowsResourceTypeDao: WindowsResourceTypeDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
-    private val windowsSpecResourceDao: WindowsSpecResourceDao
+    private val windowsSpecResourceDao: WindowsSpecResourceDao,
+    private val client: Client
 ) {
 
     companion object {
@@ -67,6 +73,13 @@ class WindowsResourceConfigService @Autowired constructor(
     ): WindowsResourceTypeConfig? {
         logger.info("get windows resource config type $machineType")
         return windowsResourceTypeDao.fetchAny(dslContext, machineType)
+    }
+
+    fun getTypeConfig(
+        id: Int
+    ): WindowsResourceTypeConfig? {
+        logger.info("get windows resource config type $id")
+        return windowsResourceTypeDao.fetchAny(dslContext, id)
     }
 
     fun getZoneConfig(
@@ -195,5 +208,66 @@ class WindowsResourceConfigService @Autowired constructor(
             count = count,
             records = recode
         )
+    }
+
+    // 追加项目的云桌面配额
+    fun addProjectTotalQuota(
+        userId: String,
+        projectId: String,
+        quota: Int
+    ): Boolean {
+        logger.info("addProjectTotalQuota|projectId|$projectId|quota|$quota")
+        // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw RemoteServiceException(
+            "not find project $projectId", HTTP_400
+        )
+        val projectProperties = projectInfo.properties
+        if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
+            logger.info("addProjectTotalQuota|$projectId|not open remotedev")
+            return false
+        }
+        val curQuota = projectProperties.cloudDesktopNum
+        return client.get(OPProjectResource::class).setProjectProperties(
+            userId = userId,
+            projectCode = projectId,
+            properties = projectProperties.copy(
+                cloudDesktopNum = (curQuota + quota)
+            )
+        ).data == true
+    }
+
+    fun addProjectRemotedevManager(
+        userId: String,
+        projectId: String,
+        user: String
+    ): Boolean {
+        logger.info("addProjectTotalQuota|projectId|$projectId|user|$user")
+        // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw RemoteServiceException(
+            "not find project $projectId", HTTP_400
+        )
+        val projectProperties = projectInfo.properties
+        if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
+            logger.info("addProjectRemotedevManager|$projectId|not open remotedev")
+            return false
+        }
+        val remotedevManager = projectProperties.remotedevManager
+        return client.get(OPProjectResource::class).setProjectProperties(
+            userId = userId,
+            projectCode = projectId,
+            properties = projectProperties.copy(
+                remotedevManager = if (remotedevManager.isNullOrBlank()) {
+                    user
+                } else {
+                    ("$remotedevManager;$user")
+                }
+            )
+        ).data == true
     }
 }

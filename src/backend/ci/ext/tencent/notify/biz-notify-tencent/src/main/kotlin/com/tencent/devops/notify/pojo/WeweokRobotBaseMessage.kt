@@ -1,7 +1,7 @@
 package com.tencent.devops.notify.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 abstract class WeweokRobotBaseMessage(
     /**
@@ -9,12 +9,12 @@ abstract class WeweokRobotBaseMessage(
      * 特殊的，当chatid为“@all_group”时，表示对所有群和小黑板广播，为“@all_subscriber”时表示对订阅范围内员工广播单聊消息，为“@all”时，
      * 表示对所有群、所有订阅范围内员工和所有小黑板广播。不填则默认为“@all_group”
      */
-    @ApiModelProperty("会话id")
+    @get:Schema(title = "会话id")
     open val chatid: String?,
     /**
      * 小黑板帖子id，有且只有chatid指定了一个小黑板的时候生效
      */
-    @ApiModelProperty("会话id", name = "post_id")
+    @get:Schema(title = "会话id", description = "post_id")
     @JsonProperty("post_id")
     open val postId: String?,
 

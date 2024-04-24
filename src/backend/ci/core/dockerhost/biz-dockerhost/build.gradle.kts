@@ -30,7 +30,6 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:dockerhost:api-dockerhost"))
     api(project(":core:process:api-process"))
-    api(project(":core:store:api-store-image"))
     api("com.github.docker-java:docker-java")
     api("com.github.docker-java:docker-java-transport-okhttp")
     api("org.apache.httpcomponents:httpclient")

@@ -28,9 +28,9 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.FormParam
 import javax.ws.rs.POST
@@ -39,30 +39,30 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_MARKET_APPROVAL"], description = "open-store组件审批")
+@Tag(name = "OPEN_MARKET_APPROVAL", description = "open-store组件审批")
 @Path("/open/market/approval")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpenStoreApproveResource {
 
-    @ApiOperation("moa审批回调")
+    @Operation(summary = "moa审批回调")
     @POST
     @Path("/moa/tokens/{token}/callBack")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     fun moaApproveCallBack(
-        @ApiParam(value = "审批人", required = true)
+        @Parameter(description = "审批人", required = true)
         @FormParam("verifier")
         verifier: String,
-        @ApiParam(value = "审批状态 0对应驳回，1对应通过", required = true)
+        @Parameter(description = "审批状态 0对应驳回，1对应通过", required = true)
         @FormParam("result")
         result: Int,
-        @ApiParam(value = "任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @FormParam("taskid")
         taskId: String,
-        @ApiParam(value = "审批信息", required = true)
+        @Parameter(description = "审批信息", required = true)
         @FormParam("message")
         message: String,
-        @ApiParam(value = "token", required = true)
+        @Parameter(description = "token", required = true)
         @PathParam("token")
         token: String
     ): Result<Boolean>

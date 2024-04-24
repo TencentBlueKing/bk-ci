@@ -37,11 +37,7 @@ import com.tencent.devops.common.audit.ActionAuditContent.CGS_ASSIGN_USER_CONTEN
 import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -57,20 +53,22 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
+import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
+import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
 class DeliverControl @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -78,7 +76,9 @@ class DeliverControl @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val httpCallBackService: HttpCallBackService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
 
     companion object {
@@ -171,9 +171,20 @@ class DeliverControl @Autowired constructor(
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")
                 workspaceCommon.shareWorkspace(
                     workspaceName = workspaceName,
+                    projectId = workspace.projectId,
                     operator = userId,
                     assigns = listOf(assign2Owner),
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    ownerType = workspace.ownerType
+                )
+                workspaceCommon.updateHostMonitor(
+                    workspaceName = workspaceName,
+                    props = workspaceCommon.genWorkspaceCCInfo(
+                        projectId,
+                        workspace.displayName.ifBlank { workspaceName },
+                        assign2Owner.userId
+                    ),
+                    type = workspace.workspaceSystemType
                 )
                 if (workspace.status.checkDistributing()) {
                     workspaceDao.updateWorkspaceStatus(
@@ -195,6 +206,7 @@ class DeliverControl @Autowired constructor(
                 if (assign2Owner != null) {
                     workspaceCommon.shareWorkspace(
                         workspaceName = workspaceName,
+                        projectId = workspace.projectId,
                         operator = userId,
                         assigns = listOf(
                             ProjectWorkspaceAssign(
@@ -203,7 +215,17 @@ class DeliverControl @Autowired constructor(
                                 expiration = null
                             )
                         ),
-                        mountType = WorkspaceMountType.START
+                        mountType = WorkspaceMountType.START,
+                        ownerType = workspace.ownerType
+                    )
+                    workspaceCommon.updateHostMonitor(
+                        workspaceName = workspaceName,
+                        props = workspaceCommon.genWorkspaceCCInfo(
+                            projectId,
+                            workspace.displayName.ifBlank { workspaceName },
+                            assign2Owner.userId
+                        ),
+                        type = workspace.workspaceSystemType
                     )
                 }
             }
@@ -214,9 +236,11 @@ class DeliverControl @Autowired constructor(
         if (add.isNotEmpty()) {
             workspaceCommon.shareWorkspace(
                 workspaceName = workspaceName,
+                projectId = workspace.projectId,
                 operator = userId,
                 assigns = add,
-                mountType = WorkspaceMountType.START
+                mountType = WorkspaceMountType.START,
+                ownerType = workspace.ownerType
             )
         }
 
@@ -231,20 +255,8 @@ class DeliverControl @Autowired constructor(
             )
         }
 
-        // 分配完机器后通知客户端，刷新列表
-        notifyControl.dispatchWebsocketPushEvent(
-            userId = Constansts.ADMIN_NAME,
-            workspaceName = workspaceName,
-            workspaceHost = null,
-            errorMsg = null,
-            type = WebSocketActionType.WORKSPACE_ASSIGN,
-            status = true,
-            action = WorkspaceAction.ASSIGN,
-            systemType = workspace.workspaceSystemType,
-            workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType,
-            projectId = workspace.projectId
-        )
+        // 同步tgit proxy
+        gitProxyTGitService.refreshProjectTGitSpecUser(projectId)
     }
 
     fun softwareInstallationCompleteCallback(
@@ -257,7 +269,7 @@ class DeliverControl @Autowired constructor(
     ) {
         logger.info(
             "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
-                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+                "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
         )
         // 添加软件安装历史
         softwareManageService.updateSoftwareInstalledRecords(
@@ -289,22 +301,16 @@ class DeliverControl @Autowired constructor(
                                 )
                             )
                         }
-                        val projectInfo = kotlin.runCatching {
-                            client.get(ServiceProjectResource::class).get(projectId)
-                        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-                            .getOrElse { null }?.data ?: throw ErrorCodeException(
-                            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-                        )
-                        notifyControl.notify4User(
-                            userIds = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
-                                ?: mutableSetOf(),
-                            workspaceName = workspace.workspaceName,
+                        notifyControl.notify4RemoteDevManager(
+                            projectId = projectId,
+                            cc = mutableSetOf(workspace.createUserId),
                             notifyTemplateCode = WINDOWS_GPU_ASSIGN_NOTIFY,
-                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                            bodyParams = mapOf(
+                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                            bodyParams = mutableMapOf(
                                 "workspaceName" to workspace.workspaceName,
                                 "cgsId" to (workspace.hostName ?: workspace.workspaceName),
-                                "projectId" to projectId
+                                "projectId" to projectId,
+                                "creator" to workspace.createUserId
                             )
                         )
                     }
@@ -336,6 +342,13 @@ class DeliverControl @Autowired constructor(
                             workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                             workspace.status.name,
                             WorkspaceStatus.RUNNING.name
+                        )
+                    )
+                    httpCallBackService.asyncTask(
+                        WindowsDevCouldCallback(
+                            workspaceName,
+                            WorkspaceStatus.RUNNING,
+                            WorkspaceAction.CREATE
                         )
                     )
                     notifyControl.dispatchWebsocketPushEvent(

@@ -28,13 +28,12 @@
 package com.tencent.devops.metrics.pojo.dto
 
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询流水线失败趋势数据传输对象")
+@Schema(title = "查询流水线失败趋势数据传输对象")
 class QueryPipelineFailTrendInfoDTO(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("查询条件请求信息", required = true)
+    @get:Schema(title = "查询条件请求信息", required = true)
     val baseQueryReq: BaseQueryReqVO
 )

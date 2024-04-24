@@ -40,9 +40,9 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -55,208 +55,208 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_PIPELINE"], description = "OPEN-API-流水线资源")
+@Tag(name = "OPEN_API_PIPELINE", description = "OPEN-API-流水线资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineResource {
 
-    @ApiOperation("新建流水线编排", tags = ["v1_app_pipelines_create"])
+    @Operation(summary = "新建流水线编排", tags = ["v1_app_pipelines_create"])
     @POST
     @Path("/{projectId}/")
     fun create(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         pipeline: Model,
-        @ApiParam(value = "ChannelCode", required = false)
+        @Parameter(description = "ChannelCode", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<PipelineId>
 
-    @ApiOperation("编辑流水线编排", tags = ["v1_app_pipelines_edit"])
+    @Operation(summary = "编辑流水线编排", tags = ["v1_app_pipelines_edit"])
     @PUT
     @Path("/{projectId}/{pipelineId}/")
     fun edit(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         pipeline: Model,
-        @ApiParam(value = "ChannelCode", required = false)
+        @Parameter(description = "ChannelCode", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线编排", tags = ["v1_app_pipelines_get"])
+    @Operation(summary = "获取流水线编排", tags = ["v1_app_pipelines_get"])
     @GET
     @Path("/{projectId}/{pipelineId}/")
     fun get(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Model>
 
-    @ApiOperation("删除流水线编排", tags = ["v1_app_pipelines_delete"])
+    @Operation(summary = "删除流水线编排", tags = ["v1_app_pipelines_delete"])
     @DELETE
     @Path("/{projectId}/{pipelineId}/")
     fun delete(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的流水线列表", tags = ["v1_app_pipelines_getListByUser"])
+    @Operation(summary = "获取项目的流水线列表", tags = ["v1_app_pipelines_getListByUser"])
     @GET
     @Path("/{projectId}")
     fun getListByUser(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = null,
-        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<Pipeline>>
 
-    @ApiOperation("获取流水线状态", tags = ["v1_app_pipelines_status"])
+    @Operation(summary = "获取流水线状态", tags = ["v1_app_pipelines_status"])
     @GET
     @Path("/{projectId}/{pipelineId}/status")
     fun status(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Pipeline?>
 
-    @ApiOperation("安装插件到项目", tags = ["v1_app_pipelines_installAtom"])
+    @Operation(summary = "安装插件到项目", tags = ["v1_app_pipelines_installAtom"])
     @POST
     @Path("/atom/install")
     fun installAtom(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("渠道类型", required = false)
+        @Parameter(description = "渠道类型", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS,
-        @ApiParam("安装插件到项目请求报文体", required = true)
+        @Parameter(description = "安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
-    @ApiOperation("流水线重命名", tags = ["v1_app_pipelines_rename"])
+    @Operation(summary = "流水线重命名", tags = ["v1_app_pipelines_rename"])
     @POST
     @Path("/{pipelineId}/projects/{projectId}/rename")
     fun rename(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "流水线名称", required = true)
+        @Parameter(description = "流水线名称", required = true)
         name: PipelineName
     ): Result<Boolean>
 
-    @ApiOperation("还原流水线编排", tags = ["v1_app_pipelines_restore"])
+    @Operation(summary = "还原流水线编排", tags = ["v1_app_pipelines_restore"])
     @PUT
     @Path("/{pipelineId}/projects/{projectId}/restore")
     fun restore(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>

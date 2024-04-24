@@ -29,8 +29,7 @@ package com.tencent.devops.repository.pojo.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * github获取tag列表接口: /repos/{owner}/{repo}/tags
@@ -46,9 +45,9 @@ import io.swagger.annotations.ApiModelProperty
  }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("仓库tag信息")
+@Schema(title = "仓库tag信息")
 data class GithubRepoTag(
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     val name: String,
     @JsonProperty("zipball_url")
     val zipballUrl: String,

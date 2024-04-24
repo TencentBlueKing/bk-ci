@@ -228,7 +228,7 @@ class MetricsServiceImpl constructor(
         )
         containerMetricsDatas.add(
             BuildEndContainerMetricsData(
-                containerId = container.containerId ?: "",
+                containerId = container.id ?: "",
                 successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
                 costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
                 atomCodes = containerAtomCodes,

@@ -27,16 +27,15 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("团队工作空间信息-分配")
+@Schema(title = "团队工作空间信息-分配")
 data class ProjectWorkspaceAssign(
-    @ApiModelProperty("用户id")
+    @get:Schema(title = "用户id")
     val userId: String,
-    @ApiModelProperty("分配类型")
+    @get:Schema(title = "分配类型")
     val type: WorkspaceShared.AssignType,
-    @ApiModelProperty("分享过期时间")
+    @get:Schema(title = "分享过期时间")
     val expiration: LocalDateTime?
 )

@@ -28,24 +28,23 @@
 package com.tencent.devops.common.pipeline.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本仓库-跨项目构件分发", description = AcrossProjectDistributionElement.classType)
+@Schema(title = "版本仓库-跨项目构件分发")
 data class AcrossProjectDistributionElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "跨项目构件分发",
-    @ApiModelProperty("id", required = false, hidden = true)
+    @get:Schema(title = "id", required = false, hidden = true)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("路径", required = true)
+    @get:Schema(title = "路径", required = true)
     val path: String = "",
-    @ApiModelProperty("是否自定义仓库", required = true)
+    @get:Schema(title = "是否自定义仓库", required = true)
     val customized: Boolean,
-    @ApiModelProperty("目标项目", required = true)
+    @get:Schema(title = "目标项目", required = true)
     val targetProjectId: String = "",
-    @ApiModelProperty("目标路径", required = true)
+    @get:Schema(title = "目标路径", required = true)
     val targetPath: String = ""
 ) : Element(name, id, status) {
     companion object {

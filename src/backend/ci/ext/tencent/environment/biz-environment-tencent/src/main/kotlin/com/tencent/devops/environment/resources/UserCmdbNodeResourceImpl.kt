@@ -27,11 +27,15 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
+import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import com.tencent.devops.environment.service.CmdbNodeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -42,22 +46,41 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
 
     override fun listUserCmdbNodesNew(
         userId: String,
+        projectId: String,
         bakOperator: Boolean,
         page: Int,
         pageSize: Int,
         ips: List<String>?
     ): Result<Page<CmdbNode>> {
-        return Result(cmdbNodeService.getUserCmdbNodesNew(
-            userId = userId,
-            bakOperator = bakOperator,
-            page = page,
-            pageSize = pageSize,
-            ips = ips ?: listOf()
-        ))
+        return Result(
+            cmdbNodeService.getUserCmdbNodesNew(
+                userId = userId,
+                bakOperator = bakOperator,
+                page = page,
+                pageSize = pageSize,
+                projectId = projectId,
+                ips = ips ?: listOf()
+            )
+        )
     }
 
-    override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<Boolean> {
-        cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
-        return Result(true)
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
+    override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<AddCmdbNodesRes> {
+        val addCmdbNodesRes = cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
+        return Result(addCmdbNodesRes)
+    }
+
+    override fun reImportCmdbNodes(
+        userId: String,
+        projectId: String,
+        reImportCmdbNodeInfoList: List<ReImportCmdbNodeInfo>
+    ): Result<AddCmdbNodesRes> {
+        val reImportCmdbNodesRes = cmdbNodeService.reImportCmdbNodes(
+            userId = userId, projectId = projectId,
+            reImportCmdbNodeInfoList = reImportCmdbNodeInfoList.map {
+                ReImportCmdbNodeInfo(nodeIp = it.nodeIp, nodeId = it.nodeId)
+            }
+        )
+        return Result(reImportCmdbNodesRes)
     }
 }

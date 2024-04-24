@@ -1,16 +1,15 @@
 package com.tencent.devops.dispatch.devcloud.pojo.performance
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("devcloud性能基础选项配置")
+@Schema(title = "devcloud性能基础选项配置")
 data class PerformanceOptionsVO(
-    @ApiModelProperty("CPU")
+    @get:Schema(title = "CPU")
     val cpu: Int,
-    @ApiModelProperty("内存")
+    @get:Schema(title = "内存")
     val memory: Int,
-    @ApiModelProperty("磁盘")
+    @get:Schema(title = "磁盘")
     val disk: Int,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String
 )

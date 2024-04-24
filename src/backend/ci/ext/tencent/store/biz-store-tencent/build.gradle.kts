@@ -32,7 +32,7 @@ dependencies {
     api(project(":ext:tencent:store:api-store-tencent"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
+    api(project(":ext:tencent:misc:api-support-tencent"))
     api(project(":core:store:biz-store"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":core:misc:api-image"))
@@ -41,4 +41,5 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-codecc"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":ext:tencent:process:api-process-tencent"))
 }

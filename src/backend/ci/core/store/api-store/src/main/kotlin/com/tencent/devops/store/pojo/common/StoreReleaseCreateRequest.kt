@@ -28,18 +28,17 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("store组件发布升级新增请求报文体")
+@Schema(title = "store组件发布升级新增请求报文体")
 data class StoreReleaseCreateRequest(
-    @ApiModelProperty("store组件代码", required = true)
+    @get:Schema(title = "store组件代码", required = true)
     val storeCode: String,
-    @ApiModelProperty("store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("最近升级人", required = true)
+    @get:Schema(title = "最近升级人", required = true)
     val latestUpgrader: String,
-    @ApiModelProperty("最近升级时间", required = true)
+    @get:Schema(title = "最近升级时间", required = true)
     val latestUpgradeTime: LocalDateTime
 )

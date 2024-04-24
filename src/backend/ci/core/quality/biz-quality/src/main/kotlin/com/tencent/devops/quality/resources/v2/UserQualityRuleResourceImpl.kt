@@ -27,10 +27,12 @@
 
 package com.tencent.devops.quality.resources.v2
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.UserQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.RulePipelineRange
@@ -66,11 +68,13 @@ class UserQualityRuleResourceImpl @Autowired constructor(
         return Result(ruleService.hasCreatePermission(userId, projectId))
     }
 
+    @AuditEntry(actionId = ActionId.RULE_CREATE)
     override fun create(userId: String, projectId: String, rule: RuleCreateRequest): Result<String> {
         checkParam(userId, projectId)
         return Result(ruleService.userCreate(userId, projectId, rule))
     }
 
+    @AuditEntry(actionId = ActionId.RULE_EDIT)
     override fun update(
         userId: String,
         projectId: String,
@@ -82,18 +86,21 @@ class UserQualityRuleResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.RULE_ENABLE)
     override fun enable(userId: String, projectId: String, ruleHashId: String): Result<Boolean> {
         checkParam(userId, projectId, ruleHashId)
         ruleService.userUpdateEnable(userId, projectId, ruleHashId, true)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.RULE_ENABLE)
     override fun disable(userId: String, projectId: String, ruleHashId: String): Result<Boolean> {
         checkParam(userId, projectId, ruleHashId)
         ruleService.userUpdateEnable(userId, projectId, ruleHashId, false)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.RULE_DELETE)
     override fun delete(userId: String, projectId: String, ruleHashId: String): Result<Boolean> {
         checkParam(userId, projectId, ruleHashId)
         ruleService.userDelete(userId, projectId, ruleHashId)

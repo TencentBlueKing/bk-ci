@@ -27,19 +27,18 @@
 
 package com.tencent.devops.process.pojo.op
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工蜂CI支持的插件")
+@Schema(title = "工蜂CI支持的插件")
 data class GitCiMarketAtom(
-    @ApiModelProperty("记录ID", required = true)
+    @get:Schema(title = "记录ID", required = true)
     val id: Int,
-    @ApiModelProperty("插件code", required = true)
+    @get:Schema(title = "插件code", required = true)
     val atomCode: String,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val desc: String?,
-    @ApiModelProperty("更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val updateTime: String,
-    @ApiModelProperty("更新人", required = true)
+    @get:Schema(title = "更新人", required = true)
     val modifyUser: String
 )

@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -42,22 +42,22 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_OPERATION"], description = "服务-流水线修改用户")
+@Tag(name = "SERVICE_OPERATION", description = "服务-流水线修改用户")
 @Path("/service/operation")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceOperationResource {
 
-    @ApiOperation("获取修改流水线的用户")
+    @Operation(summary = "获取修改流水线的用户")
     @POST
     // @Path("/pipelines/{pipelineId}/getLastUpdateUser")
     @Path("/getLastUpdateUser/{pipelineId}/")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getUpdateUser(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @Parameter(description = "渠道号，默认为DS", required = false)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<String>

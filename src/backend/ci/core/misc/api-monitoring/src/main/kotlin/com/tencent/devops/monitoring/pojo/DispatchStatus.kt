@@ -29,36 +29,35 @@ package com.tencent.devops.monitoring.pojo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.api.annotation.InfluxTag
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("dispatch状态上报")
+@Schema(title = "dispatch状态上报")
 data class DispatchStatus(
-    @ApiModelProperty("蓝盾项目ID", required = true)
+    @get:Schema(title = "蓝盾项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("vmSeqId", required = true)
+    @get:Schema(title = "vmSeqId", required = true)
     val vmSeqId: String,
-    @ApiModelProperty("actionType", required = true)
+    @get:Schema(title = "actionType", required = true)
     val actionType: String,
-    @ApiModelProperty("retryCount", required = false)
+    @get:Schema(title = "retryCount", required = false)
     val retryCount: Long? = 0,
-    @ApiModelProperty("channelCode", required = false)
+    @get:Schema(title = "channelCode", required = false)
     val channelCode: ChannelCode?,
-    @ApiModelProperty("开机时间", required = true)
+    @get:Schema(title = "开机时间", required = true)
     val startTime: Long,
-    @ApiModelProperty("关机时间", required = false)
+    @get:Schema(title = "关机时间", required = false)
     val stopTime: Long?,
-    @ApiModelProperty("蓝盾错误码", required = true)
+    @get:Schema(title = "蓝盾错误码", required = true)
     val errorCode: String,
-    @ApiModelProperty("失败原因", required = false)
+    @get:Schema(title = "失败原因", required = false)
     val errorMsg: String?,
-    @ApiModelProperty("错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     val errorType: String? = ErrorType.SYSTEM.name,
     @InfluxTag
-    @ApiModelProperty("BuildType", required = false)
+    @get:Schema(title = "BuildType", required = false)
     val buildType: String
 )

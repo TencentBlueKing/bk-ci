@@ -44,6 +44,14 @@ func ListPod(workloadCoreLabel string) ([]*corev1.Pod, error) {
 	return list, nil
 }
 
+func DeletePod(podName string) error {
+	return kubeClient.CoreV1().Pods(config.Config.Kubernetes.NameSpace).Delete(
+		context.TODO(),
+		podName,
+		metav1.DeleteOptions{},
+	)
+}
+
 func LogPod(podName string, containerName string, sinceSeconds *int64) (string, error) {
 	req := kubeClient.CoreV1().Pods(config.Config.Kubernetes.NameSpace).GetLogs(podName, &corev1.PodLogOptions{
 		Container:    containerName,

@@ -30,9 +30,9 @@ package com.tencent.devops.monitoring.api.service
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -41,32 +41,32 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_SLA"], description = "SLA监控")
+@Tag(name = "SERVICE_SLA", description = "SLA监控")
 @Path("/service/sla")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ServiceInterface("misc")
 interface SlaMonitorResource {
-    @ApiOperation("SLA--CODECC统计")
+    @Operation(summary = "SLA--CODECC统计")
     @POST
     @Path("/codecc/query")
     fun codeccQuery(
-        @ApiParam(value = "事业群ID", required = true)
+        @Parameter(description = "事业群ID", required = true)
         @QueryParam("bgId")
         bgId: String,
-        @ApiParam(value = "开始时间", required = true)
+        @Parameter(description = "开始时间", required = true)
         @QueryParam("startTime")
         startTime: Long,
-        @ApiParam(value = "结束时间", required = true)
+        @Parameter(description = "结束时间", required = true)
         @QueryParam("endTime")
         endTime: Long
     ): Result<SlaCodeccResponseData>
 
-    @ApiOperation("邮件测试")
+    @Operation(summary = "邮件测试")
     @GET
     @Path("/email/test")
     fun emailTest(
-        @ApiParam(value = "密码", required = true)
+        @Parameter(description = "密码", required = true)
         @QueryParam("pwd")
         pwd: String
     ): Result<String>

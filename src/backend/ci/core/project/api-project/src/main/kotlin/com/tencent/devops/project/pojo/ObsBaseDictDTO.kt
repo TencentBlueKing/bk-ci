@@ -1,16 +1,15 @@
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("OBS基礎字典数据")
+@Schema(title = "OBS基礎字典数据")
 data class ObsBaseDictDTO(
-    @ApiModelProperty("jsonrpc")
+    @get:Schema(title = "jsonrpc")
     val jsonrpc: String,
-    @ApiModelProperty("id")
+    @get:Schema(title = "id")
     val id: String,
-    @ApiModelProperty("method")
+    @get:Schema(title = "method")
     val method: String,
-    @ApiModelProperty("params")
+    @get:Schema(title = "params")
     val params: Map<String, String>
 )

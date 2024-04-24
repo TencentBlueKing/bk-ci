@@ -27,19 +27,18 @@
 
 package com.tencent.devops.common.quality.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-拦截检测结果")
+@Schema(title = "质量红线-拦截检测结果")
 data class RuleCheckResult(
-    @ApiModelProperty("是否通过", required = true)
+    @get:Schema(title = "是否通过", required = true)
     val success: Boolean,
-    @ApiModelProperty("失败后是否结束", required = true)
+    @get:Schema(title = "失败后是否结束", required = true)
     val failEnd: Boolean,
-    @ApiModelProperty("审核超时时间", required = true)
+    @get:Schema(title = "审核超时时间", required = true)
     val auditTimeoutSeconds: Long,
-    @ApiModelProperty("第几次检查", required = true)
+    @get:Schema(title = "第几次检查", required = true)
     val checkTimes: Int,
-    @ApiModelProperty("失败信息", required = true)
+    @get:Schema(title = "失败信息", required = true)
     val resultList: List<RuleCheckSingleResult>
 )

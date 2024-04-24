@@ -49,7 +49,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -133,7 +132,8 @@ object TXStreamDispatchUtils {
                     envName = poolName,
                     workspace = workspace,
                     agentType = AgentType.NAME,
-                    dockerInfo = null
+                    dockerInfo = null,
+                    reusedInfo = null
                 )
             }
 
@@ -160,7 +160,8 @@ object TXStreamDispatchUtils {
                 envName = poolName,
                 workspace = workspace,
                 agentType = AgentType.NAME,
-                dockerInfo = dockerInfo
+                dockerInfo = dockerInfo,
+                reusedInfo = null
             )
         }
 
@@ -221,7 +222,8 @@ object TXStreamDispatchUtils {
                         displayName = "",
                         workspace = "",
                         agentType = AgentType.ID,
-                        dockerInfo = null
+                        dockerInfo = null,
+                        reusedInfo = null
                     )
                 }
 
@@ -258,21 +260,19 @@ object TXStreamDispatchUtils {
         }
 
         if (containsMatrix == true) {
-            return when (bizType) {
-                DispatchBizType.RDS, DispatchBizType.PRECI -> PublicDevCloudDispathcType(
-                    image = defaultImage,
-                    imageType = ImageType.THIRD,
-                    performanceConfigId = "0"
-                )
-
-                else -> GitCIDispatchType(defaultImage)
-            }
+            return PublicDevCloudDispathcType(
+                image = defaultImage,
+                imageType = ImageType.THIRD,
+                performanceConfigId = "0"
+            )
         } else {
-            throw CustomException(Response.Status.NOT_FOUND,
+            throw CustomException(
+                Response.Status.NOT_FOUND,
                 MessageUtil.getMessageByLocale(
                     messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ))
+                )
+            )
         }
     }
 

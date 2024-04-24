@@ -27,19 +27,18 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class StrategyEntity(
-    @ApiModelProperty("策略Id")
+    @get:Schema(title = "策略Id")
     val id: Int,
-    @ApiModelProperty("策略名称")
+    @get:Schema(title = "策略名称")
     val name: String,
-    @ApiModelProperty("策略内容")
+    @get:Schema(title = "策略内容")
     val strategy: Map<String, List<String>>,
-    @ApiModelProperty("添加人")
+    @get:Schema(title = "添加人")
     val createUser: String,
-    @ApiModelProperty("添加时间")
+    @get:Schema(title = "添加时间")
     val createTime: String
 )

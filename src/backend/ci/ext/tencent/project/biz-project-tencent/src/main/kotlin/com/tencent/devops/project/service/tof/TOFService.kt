@@ -59,6 +59,7 @@ import com.tencent.devops.project.pojo.tof.StaffInfoRequest
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils
+import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -66,7 +67,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  * API
@@ -139,7 +139,8 @@ class TOFService @Autowired constructor(
     fun getOrganizationInfo(
         userId: String? = null,
         type: OrganizationType,
-        id: Int
+        id: Int,
+        excludeBelowTheDept: Boolean = false
     ): List<OrganizationInfo> {
         validate()
         var childDeptInfos = getChildDeptInfos(
@@ -147,7 +148,7 @@ class TOFService @Autowired constructor(
             type = type,
             id = id
         )
-        if (type == OrganizationType.dept) {
+        if (type == OrganizationType.dept && excludeBelowTheDept) {
             // 获取部门时，将部门级以下的过滤掉
             childDeptInfos = childDeptInfos.filterNot { OrganizationType.isBelowTheDept(it.TypeId) }
         }
@@ -519,49 +520,51 @@ class TOFService @Autowired constructor(
         userCache: Boolean? = true
     ): UserDeptDetail? {
         logger.info("[$operator}|$userId|$bkTicket] Start to get the dept info")
-        val staffInfo = getStaffInfo(operator, userId, bkTicket, userCache)
+        val staffInfo = getStaffInfo(
+            operator = operator,
+            userId = userId,
+            bkTicket = bkTicket,
+            userCache = userCache
+        )
         if (checkUserLeave(staffInfo)) return null
-        val lowestLevelOrganization = getDeptInfo(id = staffInfo.groupId.toInt())
         val parentDeptInfo = getParentDeptInfo(staffInfo.groupId, 10)
-        val deptInfos = if (OrganizationType.isGroup(lowestLevelOrganization.typeId.toInt())) {
-            // 若最底层的组织是小组，直接获取小组的祖先，因为其祖先已经包含 bg,业务线，部门，中心
-            parentDeptInfo
-        } else {
-            // 若最底层的组织不是小组，需要获取当前组织以及组织的祖先
-            parentDeptInfo.plus(getDeptInfo(id = staffInfo.groupId.toInt()))
-        }
+        // 获取用户当前部门及祖先部门
+        val deptInfos = parentDeptInfo.plus(getDeptInfo(id = staffInfo.groupId.toInt()))
         var groupId = "0"
         var groupName = ""
-        var bgId = "0"
+        var bgId = ""
         var bgName = ""
         var deptId = "0"
         var deptName = ""
         var centerId = "0"
         var centerName = ""
-        var businessLineId: String? = null
-        var businessLineName: String? = null
-        groupId = staffInfo.groupId
-        groupName = staffInfo.groupName
+        var businessLineId = "0"
+        var businessLineName = ""
         for (deptInfo in deptInfos) {
             val typeId = deptInfo.typeId.toInt()
             val name = deptInfo.name
+            val id = deptInfo.id
             when (typeId) {
                 OrganizationType.bg.typeId -> {
                     bgName = name
-                    bgId = deptInfo.id
+                    bgId = id
                 }
                 OrganizationType.businessLine.typeId -> {
                     businessLineName = name
-                    businessLineId = deptInfo.id
+                    businessLineId = id
                 }
                 OrganizationType.dept.typeId -> {
                     deptName = name
-                    deptId = deptInfo.id
+                    deptId = id
                 }
 
                 OrganizationType.center.typeId -> {
                     centerName = name
-                    centerId = deptInfo.id
+                    centerId = id
+                }
+                OrganizationType.group.typeId -> {
+                    groupName = name
+                    groupId = id
                 }
             }
         }
@@ -578,7 +581,9 @@ class TOFService @Autowired constructor(
             groupId = groupId,
             groupName = groupName,
             // 该字段只返回部门及部门以上的层级，若不包含部门，将直接置空
-            deptInfos = filterDeptInfos(deptInfos = deptInfos)
+            deptInfos = filterDeptInfos(deptInfos = deptInfos),
+            name = staffInfo.chineseName,
+            userId = userId
         )
     }
 

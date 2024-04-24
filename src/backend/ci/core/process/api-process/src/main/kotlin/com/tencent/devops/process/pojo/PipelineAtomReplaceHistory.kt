@@ -27,29 +27,28 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线插件替换历史")
+@Schema(title = "流水线插件替换历史")
 data class PipelineAtomReplaceHistory(
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("业务ID", required = true)
+    @get:Schema(title = "业务ID", required = true)
     val busId: String,
-    @ApiModelProperty("业务类型", required = true)
+    @get:Schema(title = "业务类型", required = true)
     val busType: String,
-    @ApiModelProperty("源版本号", required = true)
+    @get:Schema(title = "源版本号", required = true)
     val sourceVersion: Int,
-    @ApiModelProperty("目标版本号", required = false)
+    @get:Schema(title = "目标版本号", required = false)
     val targetVersion: Int? = null,
-    @ApiModelProperty("状态", required = true)
+    @get:Schema(title = "状态", required = true)
     val status: String,
-    @ApiModelProperty("插件替换基本信息ID", required = true)
+    @get:Schema(title = "插件替换基本信息ID", required = true)
     val baseId: String,
-    @ApiModelProperty("插件替换项信息ID", required = true)
+    @get:Schema(title = "插件替换项信息ID", required = true)
     val itemId: String,
-    @ApiModelProperty("用户ID", required = true)
+    @get:Schema(title = "用户ID", required = true)
     val userId: String,
-    @ApiModelProperty("日志", required = false)
+    @get:Schema(title = "日志", required = false)
     val log: String? = null
 )

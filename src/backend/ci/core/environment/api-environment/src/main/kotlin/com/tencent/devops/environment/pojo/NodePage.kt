@@ -27,13 +27,12 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("节点(分页)")
+@Schema(title = "节点(分页)")
 data class NodePage(
-    @ApiModelProperty("节点总数", required = true)
+    @get:Schema(title = "节点总数", required = true)
     val total: Int,
-    @ApiModelProperty("节点详情", required = true)
+    @get:Schema(title = "节点详情", required = true)
     val data: List<NodeDevCloudInfo>
 )

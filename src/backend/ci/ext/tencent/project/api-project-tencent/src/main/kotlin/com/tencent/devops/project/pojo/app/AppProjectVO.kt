@@ -27,17 +27,16 @@
 
 package com.tencent.devops.project.pojo.app
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目-APP")
+@Schema(title = "项目-APP")
 data class AppProjectVO(
-    @ApiModelProperty("项目代码")
+    @get:Schema(title = "项目代码")
     val projectCode: String,
-    @ApiModelProperty("项目名称")
+    @get:Schema(title = "项目名称")
     val projectName: String,
-    @ApiModelProperty("logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @ApiModelProperty("项目来源 , 1--蓝盾CI , 2--工蜂CI")
+    @get:Schema(title = "项目来源 , 1--蓝盾CI , 2--工蜂CI")
     val projectSource: Int
 )

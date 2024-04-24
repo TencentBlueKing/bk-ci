@@ -30,48 +30,47 @@ package com.tencent.devops.process.pojo.trigger
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.web.utils.I18nUtil
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线触发类型")
+@Schema(title = "流水线触发类型")
 enum class PipelineTriggerType {
     // WEB_HOOK 触发
-    @ApiModelProperty("SVN 代码库")
+    @Schema(title = "SVN 代码库")
     CODE_SVN,
 
-    @ApiModelProperty("GIT 代码库")
+    @Schema(title = "GIT 代码库")
     CODE_GIT,
 
-    @ApiModelProperty("Gitlab 代码库")
+    @Schema(title = "Gitlab 代码库")
     CODE_GITLAB,
 
-    @ApiModelProperty("Github 代码库")
+    @Schema(title = "Github 代码库")
     GITHUB,
 
-    @ApiModelProperty("TGIT 代码库")
+    @Schema(title = "TGIT 代码库")
     CODE_TGIT,
 
-    @ApiModelProperty("P4 代码库")
+    @Schema(title = "P4 代码库")
     CODE_P4,
 
     // 手动触发
-    @ApiModelProperty("手动触发")
+    @Schema(title = "手动触发")
     MANUAL,
 
     // 定时触发
-    @ApiModelProperty("定时触发")
+    @Schema(title = "定时触发")
     TIME_TRIGGER,
 
     // 服务触发
-    @ApiModelProperty("服务触发")
+    @Schema(title = "服务触发")
     OPENAPI,
 
     // 流水线触发
-    @ApiModelProperty("流水线触发")
+    @Schema(title = "流水线触发")
     PIPELINE,
 
     // 远程触发
-    @ApiModelProperty("远程触发")
+    @Schema(title = "远程触发")
     REMOTE;
 
     companion object {

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.stream.v1.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Stream起始页配置信息-分类")
+@Schema(title = "Stream起始页配置信息-分类")
 data class V1GitStarterWebList(
-    @ApiModelProperty("TKEX分类")
+    @get:Schema(title = "TKEX分类")
     val tkex: List<V1GitYamlProperty>,
-    @ApiModelProperty("其他分类")
+    @get:Schema(title = "其他分类")
     val others: List<V1GitYamlProperty>
 )

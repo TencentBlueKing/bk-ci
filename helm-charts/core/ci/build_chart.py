@@ -44,7 +44,8 @@ include_dict = {
     'bkCiVersion': '{{ .Chart.AppVersion }}',
     'bkCiDispatchKubernetesNs': '{{ .Release.Namespace }}',
     'bkCiConsulDiscoveryTag': '{{ .Release.Namespace }}',
-    'bkCiPrivateUrl': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}'
+    'bkCiPrivateUrl': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}',
+    'bkRepoPrivateUrl': '{{ if empty .Values.config.bkRepoPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkRepoPrivateUrl }}{{ end }}'
 }
 
 # 正则匹配 __BK_XXX__

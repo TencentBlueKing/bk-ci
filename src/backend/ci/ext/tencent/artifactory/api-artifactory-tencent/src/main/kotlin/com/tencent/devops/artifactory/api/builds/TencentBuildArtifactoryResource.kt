@@ -38,9 +38,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -51,202 +51,202 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_ARTIFACTORY"], description = "版本仓库-仓库资源")
+@Tag(name = "BUILD_ARTIFACTORY", description = "版本仓库-仓库资源")
 @Path("/build/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
 
-    @ApiOperation("获取文件元数据")
+    @Operation(summary = "获取文件元数据")
     @Path("/properties")
     @GET
     fun getProperties(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam(value = "path")
         path: String
     ): Result<List<Property>>
 
-    @ApiOperation("设置文件元数据")
+    @Operation(summary = "设置文件元数据")
     @Path("/properties")
     @POST
     fun setProperties(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @ApiParam("元数据", required = true)
+        @Parameter(description = "元数据", required = true)
         properties: Map<String, String>
     ): Result<Boolean>
 
-    @ApiOperation("查询文件元数据")
+    @Operation(summary = "查询文件元数据")
     @Path("/getPropertiesByRegex")
     @GET
     fun getPropertiesByRegex(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         crossProjectId: String?,
-        @ApiParam("流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         crossPipineId: String?,
-        @ApiParam("构建No", required = false)
+        @Parameter(description = "构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?
     ): Result<List<FileDetail>>
 
-    @ApiOperation("获取文件第三方下载链接")
+    @Operation(summary = "获取文件第三方下载链接")
     @Path("/thirdPartyDownloadUrl")
     @GET
     fun getThirdPartyDownloadUrl(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @ApiParam("有效时间(s)", required = true)
+        @Parameter(description = "有效时间(s)", required = true)
         @QueryParam("ttl")
         ttl: Int?,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         crossProjectId: String?,
-        @ApiParam("流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         crossPipineId: String?,
-        @ApiParam("构建No", required = false)
+        @Parameter(description = "构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?,
-        @ApiParam("客户端区域", required = false)
+        @Parameter(description = "客户端区域", required = false)
         @HeaderParam(AUTH_HEADER_REGION)
         region: String?
     ): Result<List<String>>
 
-    @ApiOperation("获取文件下载url")
+    @Operation(summary = "获取文件下载url")
     @Path("/project/{projectId}/pipeline/{pipelineId}/buildId/{buildId}/getFileDownloadUrl")
     @GET
     fun getFileDownloadUrl(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<List<String>>
 
-    @ApiOperation("获取我的文件列表")
+    @Operation(summary = "获取我的文件列表")
     @Path("/users/{userId}/ownFileList")
     @GET
     fun getOwnFileList(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
     ): Result<FileInfoPage<FileInfo>>
 
-    @ApiOperation("检测文件是否存在")
+    @Operation(summary = "检测文件是否存在")
     @Path("/projects/{projectId}/fileCheck")
     @GET
     fun check(
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Boolean>
 
-    @ApiOperation("检查项目是否灰度仓库")
+    @Operation(summary = "检查项目是否灰度仓库")
     @Path("/checkRepoGray")
     @GET
     fun checkRepoGray(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("检查项目是否灰度")
+    @Operation(summary = "检查项目是否灰度")
     @Path("/checkGrayProject")
     @GET
     fun checkGrayProject(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("创建外部下载链接")
+    @Operation(summary = "创建外部下载链接")
     @Path("/{artifactoryType}/externalUrl")
     @GET
     fun externalUrl(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("完整路径", required = true)
+        @Parameter(description = "完整路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>

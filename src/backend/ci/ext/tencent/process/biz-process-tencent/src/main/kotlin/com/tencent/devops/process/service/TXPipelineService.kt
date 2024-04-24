@@ -80,7 +80,7 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BEE_CI_NOT_SUPPORT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_INTEGRITY_YAML
@@ -124,7 +124,7 @@ import com.tencent.devops.process.service.op.GitCiMarketAtomService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
-import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
+import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import java.io.BufferedReader
 import java.io.StringReader
 import java.net.URLEncoder

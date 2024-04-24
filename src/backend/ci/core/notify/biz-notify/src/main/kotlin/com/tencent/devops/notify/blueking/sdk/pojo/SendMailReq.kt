@@ -26,10 +26,10 @@
  */
 package com.tencent.devops.notify.blueking.sdk.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("邮件发送模型")
+@Schema(title = "邮件发送模型")
 data class SendMailReq(
     val sender: String?,
     val title: String,

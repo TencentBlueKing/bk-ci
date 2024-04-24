@@ -33,14 +33,14 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.openapi.api.apigw.v3.environment.ApigwEnvironmentResourceV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

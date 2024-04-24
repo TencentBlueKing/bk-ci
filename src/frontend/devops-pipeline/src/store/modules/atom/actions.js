@@ -46,6 +46,7 @@ import {
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
+    SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
@@ -84,8 +85,7 @@ import {
     UPDATE_CONTAINER,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
-    UPDATE_WHOLE_ATOM_INPUT,
-    SET_ATOM_EDITING
+    UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -148,15 +148,32 @@ export default {
     setRequestAtomData ({ commit }, data) {
         commit(SET_REQUEST_ATOM_DATA, data)
     },
-    requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
+    requestTemplate: async ({ commit, dispatch, getters }, { projectId, templateId, version }) => {
         try {
-            const url = `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
-            const response = await request.get(url, {
-                params: version ? { version } : {}
+            const versionQuery = version
+                ? {
+                    version
+                }
+                : null
+            const [templateRes, atomPropRes] = await Promise.all([
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`, {
+                    params: versionQuery
+                }),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/template/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
+                    params: versionQuery
+                })
+            ])
+            const template = templateRes.data.template
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(template.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
             })
-            dispatch('setPipeline', response.data.template)
+            dispatch('setPipeline', template)
             commit(SET_TEMPLATE, {
-                template: response.data
+                template: templateRes.data
             })
         } catch (e) {
             if (e.code === 403) {

@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 	`OWNER_TYPE` varchar(32) NOT NULL DEFAULT 'PERSONAL' COMMENT '工作空间所属（PERSONAL、PROJECT）',
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `PROJECT_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '项目名称',
+    `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
+    `REMARK` varchar(255) NULL DEFAULT '' COMMENT '备注',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -57,6 +59,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
     `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
     `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
+    `ZONE_ID` varchar(32) default '' null comment '地域id',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),
@@ -516,6 +519,116 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_SPEC_RESOURCE` (
 	`QUOTA` INT NOT NULL COMMENT '配额',
     PRIMARY KEY (`PROJECT_ID`, `SIZE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows特殊机型配额表';
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TCLOUD_CFS 项目和腾讯云cfs关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TCLOUD_CFS` (
+	PROJECT_ID varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+	CFS_ID varchar(64) NOT NULL,
+	PG_ID varchar(64) NULL COMMENT '权限组ID',
+    REGION varchar(32) NOT NULL COMMENT '区域',
+	PRIMARY KEY (`PROJECT_ID`, `CFS_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_LINK 蓝盾项目和工蜂关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+    `URL` varchar(255) NOT NULL COMMENT '工蜂url地址',
+    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
+    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
+	PRIMARY KEY (`PROJECT_ID`, `URL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_WORKSPACE_NOTIFY
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_NOTIFY` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
+    `PROJECT_IDS` varchar(1024) NOT NULL DEFAULT '' COMMENT '项目ID列表',
+    `IPS` mediumtext NOT NULL COMMENT 'IP列表',
+    `TITLE` varchar(256) NOT NULL DEFAULT '' COMMENT '标题',
+    `DESC` varchar(1024) NOT NULL DEFAULT '' COMMENT '描述内容',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    KEY `uni_1` (`OPERATOR`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云桌面消息通知记录';
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_ID_LINK 蓝盾项目和工蜂ID关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_ID_LINK`(
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+    `TGIT_ID` bigint(11) NOT NULL COMMENT 'GIT项目ID',
+    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
+    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
+    `GIT_TYPE` varchar(16) NOT NULL COMMENT 'GIT仓库类型SVN或者GIT',
+    `URL` varchar(255) NULL COMMENT '工蜂url地址',
+	PRIMARY KEY (`PROJECT_ID`, `TGIT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_START_APP_LINK` (
+	`APPNAME` varchar(64) NOT NULL COMMENT 'project的english_name',
+	`DETAIL` varchar(64) NOT NULL COMMENT 'project的project_name',
+	`APPID` bigint(20) NULL COMMENT 'start的appid',
+	PRIMARY KEY (`APPNAME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_LOGIN` (
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+	`WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称，唯一性',
+	`HOST_IP` varchar(64) NOT NULL COMMENT '云桌面IP',
+	`LAST_LOGIN_USER` varchar(64) NOT NULL,
+	`LAST_LOGIN_TIME` datetime NOT NULL,
+    PRIMARY KEY (`PROJECT_ID`, `WORKSPACE_NAME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_JOB_SCHEMA` (
+	`JOB_ID` varchar(64) NOT NULL,
+	`JOB_NAME` varchar(64) NOT NULL,
+	`JOB_SCHEMA` json NOT NULL,
+	`JOB_TYPE` varchar(32) NOT NULL COMMENT '任务类型,如一次性或者周期任务',
+    `JOB_ACTION_TYPE` varchar(32) NOT NULL COMMENT '任务执行类型,如后台或者流水线',
+	`JOB_ACTION_EXTRA_PARAM` json NOT NULL COMMENT '任务的额外参数，随着tion变更不同类型，比如job执行流水线时需要的参数',
+	PRIMARY KEY (`JOB_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_JOB_EXEC_RECORD` (
+	`ID` bigint(20) auto_increment NOT NULL,
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+	`NAME` varchar(256) NOT NULL,
+	`CREATE_TIME` timestamp NOT NULL COMMENT '创建时间',
+	`END_TIME` timestamp NULL COMMENT '结束时间',
+	`CREATOR` varchar(32) NOT NULL COMMENT '用户',
+	`STATUS` varchar(32) NOT NULL,
+    `ERROR_MSG` varchar(256) NULL COMMENT '执行失败时错误日志',
+    `JOB_SCHEMA_ID` varchar(64) NOT NULL,
+    `JOB_SCHEMA_PARAM` json NOT NULL,
+    `RECEIPT_INFO` json NULL COMMENT '调用一些异步任务时的回执信息，用来追踪状态',
+    PRIMARY KEY (`ID`),
+    KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CRON_JOB` (
+	`ID` bigint(20) auto_increment NOT NULL,
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+	`JOB_NAME` varchar(256) NOT NULL,
+	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '更新时间',
+	`CREATOR` varchar(32) NOT NULL COMMENT '创建人',
+	`CRON_EXP` varchar(16) NOT NULL,
+	`LAST_RUN_TIME` timestamp NULL COMMENT '上一次运行时间',
+	`UPDATER` varchar(32) NOT NULL COMMENT '更新人',
+	`RUN_TIMES` bigint(20) NOT NULL DEFAULT 0 COMMENT '运行次数',
+    `JOB_SCHEMA_ID` varchar(64) NOT NULL,
+    `JOB_SCHEMA_PARAM` json NOT NULL,
+    `ENABLE` bit(1) NOT NULL, 
+    PRIMARY KEY (`ID`),
+    KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 SET FOREIGN_KEY_CHECKS = 1;

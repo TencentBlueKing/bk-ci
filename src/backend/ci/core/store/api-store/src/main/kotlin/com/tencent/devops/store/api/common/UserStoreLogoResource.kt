@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -47,38 +47,38 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STORE_LOGO"], description = "STORE-LOGO")
+@Tag(name = "USER_STORE_LOGO", description = "STORE-LOGO")
 @Path("/user/store/logo")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStoreLogoResource {
 
-    @ApiOperation("上传logo")
+    @Operation(summary = "上传logo")
     @POST
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStoreLogo(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("contentLength", required = true)
+        @Parameter(description = "contentLength", required = true)
         @HeaderParam("content-length")
         contentLength: Long,
-        @ApiParam("logo", required = true)
+        @Parameter(description = "logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?>
 
-    @ApiOperation("获取logo列表")
+    @Operation(summary = "获取logo列表")
     @GET
     @Path("/type/{logoType}")
     fun list(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("logoType", required = true)
+        @Parameter(description = "logoType", required = true)
         @PathParam("logoType")
         logoType: LogoTypeEnum
     ): Result<List<Logo>?>

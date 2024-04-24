@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -43,95 +43,95 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_DOCKER_HOST"], description = "构建-构建执行DOCKER_HOST资源")
+@Tag(name = "BUILD_DOCKER_HOST", description = "构建-构建执行DOCKER_HOST资源")
 @Path("/dockerhost")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildDockerHostResource {
     @GET
     @Path("/resource-config/pipelines/{pipelineId}/vmSeqs/{vmSeqId}")
-    @ApiOperation("获取蓝盾项目的docker性能配置")
+    @Operation(summary = "获取蓝盾项目的docker性能配置")
     fun getResourceConfig(
-        @ApiParam("蓝盾流水线ID", required = true)
+        @Parameter(description = "蓝盾流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("JOB ID", required = true)
+        @Parameter(description = "JOB ID", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<DockerResourceOptionsVO>
 
     @GET
     @Path("/qpc/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
-    @ApiOperation("获取蓝盾项目的docker性能配置")
+    @Operation(summary = "获取蓝盾项目的docker性能配置")
     fun getQpcGitProjectList(
-        @ApiParam("蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("JOB ID", required = true)
+        @Parameter(description = "JOB ID", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam("POOLNo", required = true)
+        @Parameter(description = "POOLNo", required = true)
         @QueryParam("poolNo")
         poolNo: Int
     ): Result<List<String>>
 
-    @ApiOperation("上报日志信息")
+    @Operation(summary = "上报日志信息")
     @POST
     @Path("/log")
     fun log(
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("red", required = true)
+        @Parameter(description = "red", required = true)
         @QueryParam("red")
         red: Boolean,
-        @ApiParam("message", required = true)
+        @Parameter(description = "message", required = true)
         @QueryParam("message")
         message: String,
-        @ApiParam("tag", required = false)
+        @Parameter(description = "tag", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("jobId", required = false)
+        @Parameter(description = "jobId", required = false)
         @QueryParam("jobId")
         jobId: String?
     ): Result<Boolean>?
 
-    @ApiOperation("上报日志信息")
+    @Operation(summary = "上报日志信息")
     @POST
     @Path("/postlog")
     fun postLog(
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("red", required = false)
+        @Parameter(description = "red", required = false)
         @QueryParam("red")
         red: Boolean,
-        @ApiParam("message", required = true)
+        @Parameter(description = "message", required = true)
         message: String,
-        @ApiParam("tag", required = false)
+        @Parameter(description = "tag", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("jobId", required = false)
+        @Parameter(description = "jobId", required = false)
         @QueryParam("jobId")
         jobId: String?
     ): Result<Boolean>?
 
-    @ApiOperation("获取公共镜像")
+    @Operation(summary = "获取公共镜像")
     @GET
     @Path("/public/images")
     fun getPublicImages(): Result<List<ImageRepoInfo>>
 
     @POST
     @Path("/dockerIp/{dockerIp}/refresh")
-    @ApiOperation("刷新Docker构建机状态")
+    @Operation(summary = "刷新Docker构建机状态")
     fun refresh(
-        @ApiParam("构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         @PathParam("dockerIp")
         dockerIp: String,
-        @ApiParam("构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 }

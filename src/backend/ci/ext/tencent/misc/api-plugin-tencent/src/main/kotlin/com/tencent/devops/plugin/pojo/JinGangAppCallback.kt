@@ -28,30 +28,29 @@
 package com.tencent.devops.plugin.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("金刚app扫描回调结果")
+@Schema(title = "金刚app扫描回调结果")
 data class JinGangAppCallback(
-    @ApiModelProperty("0表示成功，其他表示失败")
+    @get:Schema(title = "0表示成功，其他表示失败")
     val status: String,
-    @ApiModelProperty("失败提示信息，成功则为空")
+    @get:Schema(title = "失败提示信息，成功则为空")
     val msg: String,
-    @ApiModelProperty("构建号")
+    @get:Schema(title = "构建号")
     val buildId: String,
-    @ApiModelProperty("构建下面对应的任务号")
+    @get:Schema(title = "构建下面对应的任务号")
     val taskId: String,
-    @ApiModelProperty("element ID")
+    @get:Schema(title = "element ID")
     val elementId: String,
-    @ApiModelProperty("该次扫描文件md5")
+    @get:Schema(title = "该次扫描文件md5")
     val md5: String,
-    @ApiModelProperty("结果html地址", name = "scan_url")
+    @get:Schema(title = "结果html地址", description = "scan_url")
     @JsonProperty("scan_url")
     val scanUrl: String,
-    @ApiModelProperty("结果xml下载地址", name = "scan_xml")
+    @get:Schema(title = "结果xml下载地址", description = "scan_xml")
     @JsonProperty("scan_xml")
     val scanXml: String,
-    @ApiModelProperty("上传人", name = "responseuser")
+    @get:Schema(title = "上传人", description = "responseuser")
     @JsonProperty("responseuser")
     val responseUser: String
 

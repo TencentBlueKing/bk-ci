@@ -35,9 +35,9 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -47,94 +47,94 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_PIPELINE_VIEW"], description = "app流水线视图相关接口")
+@Tag(name = "APP_PIPELINE_VIEW", description = "app流水线视图相关接口")
 @Path("/app/pipelineViews")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppPipelineViewResource {
 
     @SuppressWarnings("ALL")
-    @ApiOperation("app获取视图流水线编排列表")
+    @Operation(summary = "app获取视图流水线编排列表")
     @GET
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
-        @ApiParam("按流水线过滤", required = false)
+        @Parameter(description = "按流水线过滤", required = false)
         @QueryParam("filterByPipelineName")
         filterByPipelineName: String?,
-        @ApiParam("按创建人过滤", required = false)
+        @Parameter(description = "按创建人过滤", required = false)
         @QueryParam("filterByCreator")
         filterByCreator: String?,
-        @ApiParam("按标签过滤", required = false)
+        @Parameter(description = "按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String?,
-        @ApiParam("用户视图ID", required = false)
+        @Parameter(description = "用户视图ID", required = false)
         @QueryParam("viewId")
         viewId: String,
-        @ApiParam("是否过滤没权限流水线", required = false)
+        @Parameter(description = "是否过滤没权限流水线", required = false)
         @QueryParam("filterInvalid")
         filterInvalid: Boolean?
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
     @SuppressWarnings("ALL")
-    @ApiOperation("app获取视图流水线编排列表--V2")
+    @Operation(summary = "app获取视图流水线编排列表--V2")
     @GET
     @Path("/projects/{projectId}/listViewPipelines/v2")
     fun listViewPipelinesV2(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
-        @ApiParam("按流水线过滤", required = false)
+        @Parameter(description = "按流水线过滤", required = false)
         @QueryParam("filterByPipelineName")
         filterByPipelineName: String?,
-        @ApiParam("按创建人过滤", required = false)
+        @Parameter(description = "按创建人过滤", required = false)
         @QueryParam("filterByCreator")
         filterByCreator: String?,
-        @ApiParam("按标签过滤", required = false)
+        @Parameter(description = "按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String?,
-        @ApiParam("用户视图ID", required = false)
+        @Parameter(description = "用户视图ID", required = false)
         @QueryParam("viewId")
         viewId: String,
-        @ApiParam("是否过滤没权限流水线", required = false)
+        @Parameter(description = "是否过滤没权限流水线", required = false)
         @QueryParam("filterInvalid")
         filterInvalid: Boolean?
     ): Result<Pagination<Pipeline>>
 
-    @ApiOperation("获取视图设置")
+    @Operation(summary = "获取视图设置")
     @GET
     @Path("/projects/{projectId}/settings")
     fun getViewSettings(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<PipelineViewSettings>

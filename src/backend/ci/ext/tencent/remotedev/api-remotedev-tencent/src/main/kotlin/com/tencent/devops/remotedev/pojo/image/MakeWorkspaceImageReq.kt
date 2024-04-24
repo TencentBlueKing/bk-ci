@@ -27,11 +27,10 @@
 
 package com.tencent.devops.remotedev.pojo.image
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("创建VM镜像请求报文")
+@Schema(title = "创建VM镜像请求报文")
 data class MakeWorkspaceImageReq(
-    @ApiModelProperty("imageName")
+    @get:Schema(title = "imageName")
     val imageName: String
 )

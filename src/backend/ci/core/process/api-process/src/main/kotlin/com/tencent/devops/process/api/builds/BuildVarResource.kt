@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,49 +44,49 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_VARIABLE"], description = "构建-构建参数")
+@Tag(name = "BUILD_VARIABLE", description = "构建-构建参数")
 @Path("/build/variable")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildVarResource {
-    @ApiOperation("获取指定构建或指定流水线下的构建变量")
+    @Operation(summary = "获取指定构建或指定流水线下的构建变量")
     @Path("/getBuildVariable")
     @GET
     fun getBuildVar(
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String
     ): Result<Map<String, String>>
 
-    @ApiOperation("获取指定构建或指定构建下的上下文变量")
+    @Operation(summary = "获取指定构建或指定构建下的上下文变量")
     @Path("/get_build_context")
     @GET
     fun getContextVariableByName(
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         containerId: String,
-        @ApiParam(value = "TASK ID", required = true)
+        @Parameter(description = "TASK ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
         taskId: String?,
-        @ApiParam(value = "变量名称", required = true)
+        @Parameter(description = "变量名称", required = true)
         @QueryParam("contextName")
         contextName: String,
-        @ApiParam(value = "是否校验变量", required = false)
+        @Parameter(description = "是否校验变量", required = false)
         @QueryParam("check")
         check: Boolean? = false
     ): Result<String?>

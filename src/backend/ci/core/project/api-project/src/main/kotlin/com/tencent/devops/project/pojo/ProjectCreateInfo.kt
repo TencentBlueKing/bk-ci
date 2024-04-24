@@ -29,51 +29,50 @@ package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目-新增模型")
+@Schema(title = "项目-新增模型")
 data class ProjectCreateInfo(
-    @ApiModelProperty("项目名称")
+    @get:Schema(title = "项目名称")
     val projectName: String,
-    @ApiModelProperty("英文缩写")
+    @get:Schema(title = "英文缩写")
     val englishName: String,
-    @ApiModelProperty("项目类型")
+    @get:Schema(title = "项目类型")
     val projectType: Int = 0,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String,
-    @ApiModelProperty("BGID")
+    @get:Schema(title = "BGID")
     val bgId: Long = 0,
-    @ApiModelProperty("BG名称")
+    @get:Schema(title = "BG名称")
     val bgName: String = "",
-    @ApiModelProperty("业务线ID")
+    @get:Schema(title = "业务线ID")
     val businessLineId: Long? = null,
-    @ApiModelProperty("业务线名称")
+    @get:Schema(title = "业务线名称")
     val businessLineName: String? = "",
-    @ApiModelProperty("部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: Long = 0,
-    @ApiModelProperty("部门名称")
+    @get:Schema(title = "部门名称")
     val deptName: String = "",
-    @ApiModelProperty("中心ID")
+    @get:Schema(title = "中心ID")
     val centerId: Long = 0,
-    @ApiModelProperty("中心名称")
+    @get:Schema(title = "中心名称")
     val centerName: String = "",
-    @ApiModelProperty("是否保密")
+    @get:Schema(title = "是否保密")
     var secrecy: Boolean = false,
-    @ApiModelProperty("kind")
+    @get:Schema(title = "kind")
     val kind: Int = 0,
-    @ApiModelProperty("项目相关配置")
+    @get:Schema(title = "项目相关配置")
     val properties: ProjectProperties? = null,
-    @ApiModelProperty("项目最大可授权人员范围")
+    @get:Schema(title = "项目最大可授权人员范围")
     var subjectScopes: List<SubjectScopeInfo>? = emptyList(),
-    @ApiModelProperty("logo地址")
+    @get:Schema(title = "logo地址")
     val logoAddress: String? = null,
-    @ApiModelProperty("项目性质")
+    @get:Schema(title = "项目性质")
     val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
-    @ApiModelProperty("是否可用")
+    @get:Schema(title = "是否可用")
     val enabled: Boolean = true,
-    @ApiModelProperty("运营产品ID")
+    @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
-    @ApiModelProperty("运营产品名称")
+    @get:Schema(title = "运营产品名称")
     val productName: String? = null
 )

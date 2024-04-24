@@ -30,42 +30,42 @@ package com.tencent.devops.scm.pojo
 import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 data class CommitCheckRequest(
-    @ApiParam("项目名称", required = true)
+    @Parameter(description = "项目名称", required = true)
     val projectName: String,
-    @ApiParam("仓库地址", required = true)
+    @Parameter(description = "仓库地址", required = true)
     val url: String,
-    @ApiParam("仓库类型", required = true)
+    @Parameter(description = "仓库类型", required = true)
     val type: ScmType,
-    @ApiParam("privateKey", required = true)
+    @Parameter(description = "privateKey", required = true)
     @SkipLogField
     val privateKey: String?,
-    @ApiParam("passPhrase", required = false)
+    @Parameter(description = "passPhrase", required = false)
     @SkipLogField
     val passPhrase: String?,
-    @ApiParam("token", required = true)
+    @Parameter(description = "token", required = true)
     @SkipLogField
     val token: String?,
-    @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+    @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
     val region: CodeSvnRegion?,
-    @ApiParam("CommitId", required = false)
+    @Parameter(description = "CommitId", required = false)
     val commitId: String,
-    @ApiParam("状态", required = true)
+    @Parameter(description = "状态", required = true)
     val state: String,
-    @ApiParam("详情链接", required = true)
+    @Parameter(description = "详情链接", required = true)
     val targetUrl: String,
-    @ApiParam("区分标志", required = true)
+    @Parameter(description = "区分标志", required = true)
     val context: String,
-    @ApiParam("详情链接", required = true)
+    @Parameter(description = "详情链接", required = true)
     val description: String,
-    @ApiParam("是否锁mr", required = true)
+    @Parameter(description = "是否锁mr", required = true)
     val block: Boolean,
-    @ApiParam("mr对应的requestId", required = true)
+    @Parameter(description = "mr对应的requestId", required = true)
     val mrRequestId: Long?,
-    @ApiParam("报表数据", required = true)
+    @Parameter(description = "报表数据", required = true)
     val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
-    @ApiParam("检查结果关联的MR", required = true)
+    @Parameter(description = "检查结果关联的MR", required = true)
     val targetBranch: List<String>? = null
 )

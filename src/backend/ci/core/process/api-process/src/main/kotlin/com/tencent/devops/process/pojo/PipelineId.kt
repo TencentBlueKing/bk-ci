@@ -27,11 +27,10 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-ID")
+@Schema(title = "流水线模型-ID")
 data class PipelineId(
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val id: String
 )

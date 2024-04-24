@@ -28,11 +28,11 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.response.GetUserEmailResponse
-import com.tencent.devops.common.sdk.github.response.GetUserResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
-import com.tencent.devops.repository.github.service.GithubUserService
+import com.tencent.devops.repository.sdk.github.response.GetUserEmailResponse
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

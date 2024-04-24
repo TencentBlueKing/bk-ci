@@ -40,7 +40,10 @@ enum class ProjectApproveStatus(val status: Int) {
     CREATE_REJECT(3),
 
     // 修改审批中
-    UPDATE_PENDING(4);
+    UPDATE_PENDING(4),
+
+    // 修改审批驳回或拒绝
+    UPDATE_REJECT_OR_REVOKE(5);
 
     fun isSuccess(): Boolean = this == APPROVED || this == UPDATE_PENDING
 

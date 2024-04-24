@@ -1,14 +1,16 @@
 package com.tencent.devops.remotedev.pojo.op
 
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 data class WorkspaceNotifyData(
-    @ApiParam(value = "projectId", required = true)
-    val projectId: String,
-    @ApiParam(value = "ip", required = false)
+    @Parameter(description = "projectId", required = true)
+    val projectId: List<String>?,
+    @Parameter(description = "ip", required = false)
     val ip: List<String>?,
-    @ApiParam(value = "title", required = true)
+    @Parameter(description = "owner", required = false)
+    val owner: List<String>?,
+    @Parameter(description = "title", required = true)
     val title: String,
-    @ApiParam(value = "desc", required = false)
+    @Parameter(description = "desc", required = false)
     val desc: String?
 )

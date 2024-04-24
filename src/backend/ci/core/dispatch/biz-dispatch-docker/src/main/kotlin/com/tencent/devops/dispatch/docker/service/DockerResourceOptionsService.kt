@@ -48,7 +48,7 @@ class DockerResourceOptionsService constructor(
     private val dockerResourceOptionsDao: DockerResourceOptionsDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerResourceWhitelistService: DockerResourceWhitelistService,
-    private val extDockerResourceOptionsService: ExtDockerResourceOptionsService
+    private val extDockerResourceService: ExtDockerResourceService
 ) {
     private val logger = LoggerFactory.getLogger(DockerResourceOptionsService::class.java)
 
@@ -174,7 +174,7 @@ class DockerResourceOptionsService constructor(
                 getDockerResourceOptions(projectId)
             }
             else -> {
-                extDockerResourceOptionsService.getDockerResourceConfigList(
+                extDockerResourceService.getDockerResourceConfigList(
                     userId, projectId, buildType ?: BuildType.DOCKER.name
                 ) ?: UserDockerResourceOptionsVO(
                     default = "",

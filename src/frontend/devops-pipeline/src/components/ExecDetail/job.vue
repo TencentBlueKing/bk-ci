@@ -42,6 +42,7 @@
                 :stage-index="editingElementPos.stageIndex"
                 :stages="execDetail.model.stages"
                 :editable="false"
+                :pipeline="pipeline"
                 ref="container"
             />
         </template>
@@ -72,6 +73,9 @@
             editingElementPos: {
                 type: Object,
                 required: true
+            },
+            pipeline: {
+                type: Object
             }
         },
         data () {

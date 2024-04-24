@@ -28,32 +28,31 @@
 package com.tencent.devops.common.pipeline.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("推送镜像到第三方仓库", description = PushImageToThirdRepoElement.classType)
+@Schema(title = "推送镜像到第三方仓库")
 data class PushImageToThirdRepoElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "推送镜像到第三方仓库",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("源镜像名称", required = true)
+    @get:Schema(title = "源镜像名称", required = true)
     val srcImageName: String,
-    @ApiModelProperty("源镜像tag", required = true)
+    @get:Schema(title = "源镜像tag", required = true)
     val srcImageTag: String,
-    @ApiModelProperty("第三方仓库地址", required = false)
+    @get:Schema(title = "第三方仓库地址", required = false)
     val repoAddress: String?,
-    @ApiModelProperty("凭证ID", required = true)
+    @get:Schema(title = "凭证ID", required = true)
     val ticketId: String = "",
-    @ApiModelProperty("镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val targetImageName: String,
-    @ApiModelProperty("镜像tag", required = true)
+    @get:Schema(title = "镜像tag", required = true)
     val targetImageTag: String,
-    @ApiModelProperty("镜像关联的cmdb的ID", required = false)
+    @get:Schema(title = "镜像关联的cmdb的ID", required = false)
     val cmdbId: String?,
-    @ApiModelProperty("启用oa验证", required = false)
+    @get:Schema(title = "启用oa验证", required = false)
     val verifyByOa: Boolean?
 
 ) : Element(name, id, status) {

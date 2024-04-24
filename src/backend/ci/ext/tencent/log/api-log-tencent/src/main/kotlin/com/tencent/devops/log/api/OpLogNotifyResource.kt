@@ -28,9 +28,9 @@
 package com.tencent.devops.log.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -40,31 +40,31 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_LOG_NOTIFY"], description = "OP-LOG-NOTIFY")
+@Tag(name = "OP_LOG_NOTIFY", description = "OP-LOG-NOTIFY")
 @Path("/op/notifies")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpLogNotifyResource {
 
-    @ApiOperation("获取当前通知的用户")
+    @Operation(summary = "获取当前通知的用户")
     @GET
     @Path("/")
     fun get(): Result<Set<String>>
 
-    @ApiOperation("添加新的通知用户")
+    @Operation(summary = "添加新的通知用户")
     @POST
     @Path("/users/{userId}")
     fun addUser(
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除通知用户")
+    @Operation(summary = "删除通知用户")
     @DELETE
     @Path("/users/{userId}")
     fun deleteUser(
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>

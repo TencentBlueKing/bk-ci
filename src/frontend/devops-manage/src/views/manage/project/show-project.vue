@@ -15,7 +15,7 @@ Popover,
 } from 'bkui-vue';
 import {
 ref,
-watch,
+watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -40,6 +40,9 @@ const exceptionObj = ref({
   description: '',
   showBtn: false,
 });
+const showFailedEnableDialog = ref(false);
+const showDisableProjectDialog = ref(false);
+
 const projectList: any[] = [];
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -82,7 +85,6 @@ const fetchProjectData = async () => {
 };
 
 const generateDeptName = (dept, after = false) => {
-  console.log(dept, after);
   const deptName = [
     dept[after ? 'afterBgName' : 'bgName'] ?? dept.bgName,
     dept[after ? 'afterBusinessLineName' : 'businessLineName'],
@@ -174,18 +176,17 @@ const handleToApprovalDetails = (applyId: any) => {
   window.open(`/console/permission/my-apply/${applyId}`, '_blank');
 };
 
-const fetchOperationalList = async () => {
+const fetchOperationalList = async (bgName) => {
   isLoading.value = true;
-  await http.getOperationalList().then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-    isLoading.value = false;
-  });
-};
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  isLoading.value = false;
+}
 
 const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
 
@@ -216,11 +217,7 @@ const handleCancelUpdate = () => {
     onConfirm,
   });
 };
-
-/**
- * 停用/启用项目
- */
-const handleEnabledProject = () => {
+const toggleEnable = () => {
   const { englishName, enabled } = projectData.value;
   http
     .enabledProject({
@@ -245,7 +242,26 @@ const handleEnabledProject = () => {
           resourceCode: projectCode,
         });
       }
+    })
+    .finally(() => {
+      showDisableProjectDialog.value = false;
+      showFailedEnableDialog.value = false;
     });
+}
+/**
+ * 停用/启用项目
+ */
+const handleEnabledProject = () => {
+  const { enabled, productId } = projectData.value;
+  console.log(enabled, productId, 123)
+  if (!productId && !enabled) {
+    showFailedEnableDialog.value = true
+  } else if (productId && !enabled) {
+    toggleEnable()
+  } else if (enabled) {
+    showDisableProjectDialog.value = true
+  }
+  
 };
 
 /**
@@ -338,7 +354,7 @@ watch(() => projectData.value.approvalStatus, (status) => {
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
-  await fetchOperationalList();
+  await fetchOperationalList(projectData.value.bgName);
 });
 </script>
 
@@ -549,6 +565,33 @@ onMounted(async () => {
         </bk-exception>
       </article>
     </bk-loading>
+    <bk-dialog
+        :is-show="showFailedEnableDialog"
+        :width="600"
+        header-position="left"
+        ext-cls="enable-project-dialog"
+        :title="$t('启用项目失败')"
+        :confirm-text="$t('去关联运营产品')"
+        @confirm="() => handleEdit()"
+        @closed="() => showFailedEnableDialog = false">
+        {{ $t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
+    </bk-dialog>
+    <bk-dialog
+        :is-show="showDisableProjectDialog"
+        :width="600"
+        ext-cls="disable-project-dialog"
+        header-position="left"
+        :title="$t('确定停用项目吗？')"
+        @confirm="() => toggleEnable()"
+        @closed="() => showDisableProjectDialog = false">
+        <i18n-t
+            tag="div"
+            keypath="停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！"
+            class="empty-tips">
+            <span style="color: red">{{$t('流水线产生的构建日志、制品、报告。')}}</span>
+            <span style="color: red">{{$t('备份需要的')}}</span>
+        </i18n-t>
+    </bk-dialog>
   </section>
 </template>
 
@@ -672,6 +715,18 @@ onMounted(async () => {
     .inApproval {
       font-size: 12px;
       color: #FF9C01;
+    }
+  }
+</style>
+<style lang="postcss">
+  .enable-project-dialog {
+    .bk-modal-content {
+      min-height: 60px !important;
+    }
+  }
+  .disable-project-dialog {
+    .bk-modal-content {
+      min-height: 50px !important;
     }
   }
 </style>

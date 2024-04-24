@@ -28,9 +28,9 @@
 package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -41,24 +41,24 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_BK_REPO"], description = "版本仓库-BkRepo静态文件")
+@Tag(name = "SERVICE_BK_REPO", description = "版本仓库-BkRepo静态文件")
 @Path("/service/bkrepo/statics")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBkRepoStaticResource {
 
-    @ApiOperation("上传静态文件")
+    @Operation(summary = "上传静态文件")
     @POST
     @Path("/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStaticFile(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("目标路径", required = true)
+        @Parameter(description = "目标路径", required = true)
         @QueryParam("destPath")
         destPath: String,
-        @ApiParam("文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")

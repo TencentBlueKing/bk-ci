@@ -32,9 +32,9 @@ import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -46,82 +46,82 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STORE"], description = "service-store")
+@Tag(name = "SERVICE_STORE", description = "service-store")
 @Path("/service/store")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStoreResource {
 
-    @ApiOperation("卸载")
+    @Operation(summary = "卸载")
     @DELETE
     @Path("/codes/{storeCode}/uninstall")
     fun uninstall(
-        @ApiParam("标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("类型", required = true)
+        @Parameter(description = "类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("项目", required = true)
+        @Parameter(description = "项目", required = true)
         @QueryParam("projectCode")
         projectCode: String
     ): Result<Boolean>
 
-    @ApiOperation("获取敏感数据")
+    @Operation(summary = "获取敏感数据")
     @GET
     @Path("/getSensitiveConf")
     fun getSensitiveConf(
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String
     ): Result<List<SensitiveConfResp>?>
 
-    @ApiOperation("store组件内置流水线构建结果处理")
+    @Operation(summary = "store组件内置流水线构建结果处理")
     @PUT
     @Path("/pipelineIds/{pipelineId}/buildIds/{buildId}/build/handle")
     fun handleStoreBuildResult(
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam(value = "store组件内置流水线构建结果请求报文体", required = true)
+        @Parameter(description = "store组件内置流水线构建结果请求报文体", required = true)
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean>
 
-    @ApiOperation("判断用户是否是该组件的成员")
+    @Operation(summary = "判断用户是否是该组件的成员")
     @GET
     @Path("/codes/{storeCode}/user/validate")
     fun isStoreMember(
-        @ApiParam("标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("类型", required = true)
+        @Parameter(description = "类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<Boolean>
 
-    @ApiOperation("判断错误码是否合规")
+    @Operation(summary = "判断错误码是否合规")
     @POST
     @Path("/codes/{storeCode}/errorCode/compliance")
     fun isComplianceErrorCode(
-        @ApiParam("标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("类型", required = true)
+        @Parameter(description = "类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("错误码", required = true)
+        @Parameter(description = "错误码", required = true)
         @QueryParam("errorCode")
         errorCode: Int,
-        @ApiParam("错误码类型", required = true)
+        @Parameter(description = "错误码类型", required = true)
         @QueryParam("errorCodeType")
         errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean>

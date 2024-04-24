@@ -1,75 +1,98 @@
 package com.tencent.devops.remotedev.service.client
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
+import java.io.IOException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.IOException
 
 @Service
 class StartCloudClient @Autowired constructor(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val config: RemoteDevCommonConfig
 ) {
-    @Value("\${startCloud.appId}")
-    val appId: String = ""
-
-    @Value("\${startCloud.appKey}")
-    val appKey: String = ""
-
-    @Value("\${startCloud.apiUrl}")
-    val apiUrl: String = ""
-
-    @Value("\${startCloud.appName}")
-    val appName: String = "IEG_BKCI"
 
     fun computerStatus(
-        userId: String,
         cgsIds: Set<String>?
     ): List<StartCloudComputerStatusRespData>? {
-        val url = "$apiUrl/openapi/computer/status"
+        val url = "${config.apiUrl}/openapi/computer/status"
         val body = JsonUtil.toJson(
             StartCloudComputerStatusReqBody(
-                appName = appName,
+                appName = config.bkciAppName,
                 cgsIds = cgsIds
-            ), false
+            ),
+            false
         )
-        logger.debug("User $userId request url: $url, body: $body")
+        logger.debug("computerStatus request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(genStartApiHeaders(body).toHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-        val resp = doRequest(request).resolveResponse<StartCloudComputerStatusResp>()
+        val resp = doRequest(request).resolveResponse<StartCloudResp<List<StartCloudComputerStatusRespData>>>()
         if (resp.code != 0) {
             throw RemoteServiceException(
-                "request api[${request.url.toUrl()}] error ${resp.message}",
-                resp.code
+                errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
+                errorCode = resp.code
             )
         }
 
         return resp.data
     }
 
+    fun appCreate(
+        appName: String,
+        detail: String
+    ): Long? {
+        val url = "${config.apiUrl}/openapi/app/create"
+        val body = JsonUtil.toJson(
+            StartCloudAppCreateReq(
+                contentProviderName = config.contentProviderName,
+                appName = appName,
+                detail = detail
+            ),
+            false
+        )
+        logger.debug("$appName $detail request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(genStartApiHeaders(body).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = doRequest(request).resolveResponse<StartCloudResp<StartCloudAppCreateRespData>>()
+        if (resp.code != 0) {
+            throw RemoteServiceException(
+                errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
+                errorCode = resp.code
+            )
+        }
+
+        return resp.data?.appId
+    }
+
     fun genStartApiHeaders(
         body: String
     ): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
-        headerBuilder["x-start-appid"] = appId
+        headerBuilder["x-start-appid"] = config.appId
         val timestampMillis = System.currentTimeMillis().toString().take(10)
         headerBuilder["x-start-timestamp"] = timestampMillis
-        headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
+        headerBuilder["x-start-signature"] =
+            ShaUtils.sha256("${config.appId}${config.appKey}$timestampMillis$body").uppercase()
 
         return headerBuilder
     }
@@ -110,9 +133,9 @@ data class StartCloudComputerStatusReqBody(
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudComputerStatusResp(
+data class StartCloudResp<T>(
     val code: Int,
-    val data: List<StartCloudComputerStatusRespData>?,
+    val data: T?,
     val message: String?
 )
 
@@ -127,4 +150,16 @@ data class StartCloudComputerStatusRespData(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StartCloudComputerStatusUserInfo(
     val account: String
+)
+
+data class StartCloudAppCreateReq(
+    val contentProviderName: String,
+    val appName: String,
+    val detail: String
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class StartCloudAppCreateRespData(
+    @JsonProperty("AppId")
+    val appId: Long
 )

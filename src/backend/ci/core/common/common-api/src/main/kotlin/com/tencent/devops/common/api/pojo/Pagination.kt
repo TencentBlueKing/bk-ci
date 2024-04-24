@@ -27,13 +27,12 @@
 
 package com.tencent.devops.common.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("分页数据包装模型")
+@Schema(title = "分页数据包装模型")
 data class Pagination<out T>(
-    @ApiModelProperty("是否有下一页", required = true)
+    @get:Schema(title = "是否有下一页", required = true)
     val hasNext: Boolean,
-    @ApiModelProperty("数据", required = true)
+    @get:Schema(title = "数据", required = true)
     val records: List<T>
 )

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件市场-首页标签")
+@Schema(title = "插件市场-首页标签")
 data class MarketMainItemLabel(
     val key: String,
     val label: String

@@ -27,17 +27,20 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -46,8 +49,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
-import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
@@ -57,6 +60,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
 ) : ServiceRepositoryResource {
 
     @BkTimed(extraTags = ["operate", "create"])
+    @AuditEntry(actionId = ActionId.REPERTORY_CREATE)
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -175,6 +179,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
+    @AuditEntry(actionId = ActionId.REPERTORY_DELETE)
     override fun delete(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -189,6 +194,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.REPERTORY_EDIT)
     override fun edit(
         userId: String,
         projectId: String,
@@ -217,5 +223,23 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             request = request
         )
         return Result(true)
+    }
+
+    override fun updateAtomRepoFlag(
+        userId: String,
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
+    ): Result<Boolean> {
+        repositoryService.updateAtomRepoFlag(
+            userId = userId,
+            atomRefRepositoryInfo = atomRefRepositoryInfo
+        )
+        return Result(true)
+    }
+
+    override fun getGitProjectIdByRepositoryHashId(
+        userId: String,
+        repositoryHashIdList: List<String>
+    ): Result<List<String>> {
+        return Result(repositoryService.getGitProjectIdByRepositoryHashId(userId, repositoryHashIdList))
     }
 }

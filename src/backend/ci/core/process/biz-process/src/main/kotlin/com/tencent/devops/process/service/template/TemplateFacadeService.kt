@@ -123,6 +123,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
@@ -177,7 +178,8 @@ class TemplateFacadeService @Autowired constructor(
     private val paramService: ParamFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineInfoExtService: PipelineInfoExtService
+    private val pipelineInfoExtService: PipelineInfoExtService,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -590,15 +592,18 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateId: String,
         versionName: String,
-        template: Model
+        template: Model,
+        checkPermissionFlag: Boolean = true
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
-            userId = userId,
-            projectId = projectId,
-            templateId = templateId,
-            permission = AuthPermission.EDIT
-        )
+        if (checkPermissionFlag) {
+            pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                permission = AuthPermission.EDIT
+            )
+        }
         checkTemplate(template, projectId)
         checkTemplateAtomsForExplicitVersion(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
@@ -655,12 +660,14 @@ class TemplateFacadeService @Autowired constructor(
                 weight = latestTemplate.weight,
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
-            pipelineTemplatePermissionService.modifyResource(
-                userId = userId,
-                projectId = projectId,
-                templateId = templateId,
-                templateName = template.name
-            )
+            if (checkPermissionFlag) {
+                pipelineTemplatePermissionService.modifyResource(
+                    userId = userId,
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateName = template.name
+                )
+            }
             logger.info("Get the update template version $version")
         }
 
@@ -1880,7 +1887,29 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateInstanceUpdate.pipelineId,
                     templateName = templateInstanceUpdate.pipelineName
                 )
-                saveTemplatePipelineSetting(userId, setting)
+                pipelineSettingFacadeService.saveSetting(
+                    userId = userId,
+                    setting = setting,
+                    checkPermission = true,
+                    dispatchPipelineUpdateEvent = false
+                )
+            } else {
+                // 不应用模板设置但是修改了流水线名称,需要重命名流水线
+                val setting = pipelineRepositoryService.getSetting(
+                    projectId = projectId,
+                    pipelineId = templateInstanceUpdate.pipelineId
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
+                )
+                if (setting.pipelineName != templateInstanceUpdate.pipelineName) {
+                    setting.pipelineName = templateInstanceUpdate.pipelineName
+                    pipelineSettingFacadeService.saveSetting(
+                        userId = userId,
+                        setting = setting,
+                        checkPermission = true,
+                        dispatchPipelineUpdateEvent = false
+                    )
+                }
             }
         }
     }

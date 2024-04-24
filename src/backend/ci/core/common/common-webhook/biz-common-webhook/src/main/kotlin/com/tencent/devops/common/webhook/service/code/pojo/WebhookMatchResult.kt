@@ -28,15 +28,14 @@
 
 package com.tencent.devops.common.webhook.service.code.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class WebhookMatchResult(
-    @ApiModelProperty("是否匹配")
+    @get:Schema(title = "是否匹配")
     val isMatch: Boolean,
-    @ApiModelProperty("匹配时输出的变量")
+    @get:Schema(title = "匹配时输出的变量")
     val extra: Map<String, String> = mapOf(),
-    @ApiModelProperty("匹配失败原因")
+    @get:Schema(title = "匹配失败原因")
     val reason: String? = null
 )

@@ -29,9 +29,9 @@ package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalRepoResource
+import com.tencent.devops.repository.sdk.tapd.service.ITapdOauthService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
-import com.tencent.devops.repository.tapd.service.ITapdOauthService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder

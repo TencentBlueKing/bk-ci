@@ -28,25 +28,24 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("审核插件请求报文")
+@Schema(title = "审核插件请求报文")
 data class ApproveReq(
-    @ApiModelProperty("插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("审核结果：PASS：通过|REJECT：驳回")
+    @get:Schema(title = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @ApiModelProperty("审核结果说明")
+    @get:Schema(title = "审核结果说明")
     val message: String,
-    @ApiModelProperty("权重（数值越大代表权重越高）")
+    @get:Schema(title = "权重（数值越大代表权重越高）")
     val weight: Int?,
-    @ApiModelProperty("插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @get:Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val atomType: AtomTypeEnum,
-    @ApiModelProperty("是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
+    @get:Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
     val defaultFlag: Boolean,
-    @ApiModelProperty("服务范围", required = true)
+    @get:Schema(title = "服务范围", required = true)
     val serviceScope: List<String>,
-    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
+    @get:Schema(title = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
     val buildLessRunFlag: Boolean? = null
 )

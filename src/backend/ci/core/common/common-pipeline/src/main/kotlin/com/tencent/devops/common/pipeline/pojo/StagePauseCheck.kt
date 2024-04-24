@@ -34,33 +34,32 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("stage准入准出配置模型")
+@Schema(title = "stage准入准出配置模型")
 data class StagePauseCheck(
-    @ApiModelProperty("是否人工触发", required = false)
+    @get:Schema(title = "是否人工触发", required = false)
     var manualTrigger: Boolean? = false,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     var status: String? = null,
-    @ApiModelProperty("审核说明", required = false)
+    @get:Schema(title = "审核说明", required = false)
     var reviewDesc: String? = null,
-    @ApiModelProperty("审核流配置", required = false)
+    @get:Schema(title = "审核流配置", required = false)
     var reviewGroups: MutableList<StageReviewGroup>? = null, // 审核流配置
-    @ApiModelProperty("审核变量", required = false)
+    @get:Schema(title = "审核变量", required = false)
     var reviewParams: List<ManualReviewParam>? = null, // 审核变量
-    @ApiModelProperty("等待审核的超时时间，默认24小时兜底", required = false)
+    @get:Schema(title = "等待审核的超时时间，默认24小时兜底", required = false)
     var timeout: Int? = 24, // 等待审核的超时时间，默认24小时兜底
-    @ApiModelProperty("质量红线规则ID集合", required = false)
+    @get:Schema(title = "质量红线规则ID集合", required = false)
     var ruleIds: List<String>? = null, // 质量红线规则ID集合
-    @ApiModelProperty("记录本次构建质量红线规则的检查次数", required = false)
+    @get:Schema(title = "记录本次构建质量红线规则的检查次数", required = false)
     var checkTimes: Int? = null, // 记录本次构建质量红线规则的检查次数
-    @ApiModelProperty("是否以markdown格式发送审核说明", required = false)
+    @get:Schema(title = "是否以markdown格式发送审核说明", required = false)
     var markdownContent: Boolean? = false, // 是否以markdown格式发送审核说明
-    @ApiModelProperty("发送的通知类型", required = false)
+    @get:Schema(title = "发送的通知类型", required = false)
     var notifyType: MutableList<String>? = mutableListOf("RTX"), // 通知类型[企业微信群消息]
-    @ApiModelProperty("企业微信群id", required = false)
+    @get:Schema(title = "企业微信群id", required = false)
     var notifyGroup: MutableList<String>? = null
 ) {
 

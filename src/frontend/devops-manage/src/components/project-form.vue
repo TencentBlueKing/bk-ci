@@ -55,7 +55,7 @@ const vm = getCurrentInstance();
 const rules = {
   englishName: [
     {
-      validator: value => englishNameReg.test(value),
+      validator: value => props.type !== 'apply' || englishNameReg.test(value),
       message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
       trigger: 'blur',
     },
@@ -116,6 +116,8 @@ const showDialog = ref(false);
 
 const orgTree = shallowRef<Dept[]>([]);
 
+const bgName = ref('');
+
 const getDepartment = async ({ id, type = 'dept' }: Partial<Dept>, resolve?) => {
   try {
     if (!id) return [];
@@ -165,6 +167,11 @@ const handleChangeDept = async (deptPath) => {
   }].forEach(setProjectDeptProp);
 
   deptPath.forEach((deptId: string) => {
+    const dept = deptMap.value.get(deptId);
+    if (dept.type === 'bg') {
+      fetchOperationalList(dept.name);
+      projectData.value.productId = '';
+    }
     setProjectDeptProp(deptMap.value.get(deptId));
   });
   handleChangeForm();
@@ -319,7 +326,6 @@ const fetchUserDetail = async () => {
     centerId = res.centerId;
     centerName = res.centerName;
   }
-  console.log(deptInfos, 123);
   if (centerId) {
     setProjectDeptProp({
       type: 'center',
@@ -331,6 +337,10 @@ const fetchUserDetail = async () => {
     id: deptInfos[deptInfos.length - 1].id,
     type: 'center',
   });
+
+  if (deptInfos.length && deptInfos[1].type === 'bg') {
+    fetchOperationalList(deptInfos[1].name);
+  }
   return deptInfos;
 };
 
@@ -338,17 +348,17 @@ const showMemberDialog = () => {
   showDialog.value = true;
 };
 
-const fetchOperationalList = async () => {
+const fetchOperationalList = async (bgName) => {
+  if (!bgName) return;
   deptLoading.value.product = true;
-  await http.getOperationalList().then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-    deptLoading.value.product = false;
-  });
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  deptLoading.value.product = false;
 };
 
 const validateProjectNameTips = ref('');
@@ -405,10 +415,7 @@ watch(() => projectData.value.productId, (id) => {
 
 onMounted(async () => {
   const deptInfos = await fetchUserDetail();
-  await Promise.all([
-    fetchDepartmentList(deptInfos),
-    fetchOperationalList(),
-  ]);
+  await fetchDepartmentList(deptInfos);
   emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);
 });
@@ -537,7 +544,11 @@ onBeforeUnmount(() => {
       >
       </bk-select>
     </bk-form-item>
-    <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
+    <bk-form-item
+      :label="t('项目性质')"
+      property="authSecrecy"
+      :required="true"
+    >
       <bk-radio-group
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
@@ -563,7 +574,7 @@ onBeforeUnmount(() => {
         v-for="(subjectScope, index) in projectData.subjectScopes"
         :key="index"
       >
-        {{ subjectScope.name }}
+        {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
       </bk-tag>
       <EditLine
         class="edit-line ml5"

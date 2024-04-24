@@ -86,6 +86,8 @@ class RemoteDevSettingDao {
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(USER_NAME, userInfo.value?.accountName ?: "")
+                .set(COMPANY_NAME, userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: "")
                 .execute()
         }
     }
@@ -137,6 +139,7 @@ class RemoteDevSettingDao {
         limit: SQLLimit? = null,
         userIds: Set<String>? = null
     ): Map<String, Pair<String, String>> {
+        if (userIds?.isEmpty() == true) return emptyMap()
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.select(USER_ID, USER_NAME, COMPANY_NAME).from(this)
                 .let {

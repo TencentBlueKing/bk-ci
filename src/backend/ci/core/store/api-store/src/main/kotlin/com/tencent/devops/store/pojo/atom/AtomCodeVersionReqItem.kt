@@ -1,12 +1,11 @@
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件代码版本请求对象")
+@Schema(title = "插件代码版本请求对象")
 data class AtomCodeVersionReqItem(
-    @ApiModelProperty("插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String
 )

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.auth.entity
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class StrategyInfo(
-    @ApiModelProperty("策略名称")
+    @get:Schema(title = "策略名称")
     val name: String?,
-    @ApiModelProperty("策略内容")
+    @get:Schema(title = "策略内容")
     val strategy: String
 )

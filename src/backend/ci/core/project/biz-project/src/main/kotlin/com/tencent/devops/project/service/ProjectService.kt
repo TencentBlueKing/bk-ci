@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -42,6 +43,7 @@ import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -49,8 +51,8 @@ import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
 @Suppress("ALL")
 interface ProjectService {
@@ -92,13 +94,6 @@ interface ProjectService {
         englishName: String,
         accessToken: String?
     ): ProjectVO?
-
-    /**
-     * 根据项目ID/英文ID获取项目信息对象---用于OPEN接口
-     * @param englishName projectCode 英文ID
-     * @return ProjectVO 如果没有则为null
-     */
-    fun getByEnglishNameWithoutPerm(englishName: String): ProjectVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -166,7 +161,9 @@ interface ProjectService {
         userId: String,
         accessToken: String?,
         enabled: Boolean? = null,
-        unApproved: Boolean
+        unApproved: Boolean,
+        sortType: ProjectSortType? = null,
+        collation: ProjectCollation? = null
     ): List<ProjectVO>
 
     fun listProjectsForApply(
@@ -254,9 +251,12 @@ interface ProjectService {
 
     fun getOperationalProducts(): List<OperationalProductVO>
 
+    fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO>
+
     fun updateProjectProductId(
         englishName: String,
-        productName: String
+        productName: String? = null,
+        productId: Int? = null
     )
 
     fun updateOrganizationByEnglishName(
@@ -267,4 +267,17 @@ interface ProjectService {
     fun fixProjectOrganization(
         tProjectRecord: TProjectRecord
     ): ProjectOrganizationInfo
+
+    fun getProjectListByProductId(
+        productId: Int
+    ): List<ProjectBaseInfo>
+
+    fun getExistedEnglishName(
+        englishNameList: List<String>
+    ): List<String>?
+
+    fun remindUserOfRelatedProduct(
+        userId: String,
+        englishName: String
+    ): Boolean
 }

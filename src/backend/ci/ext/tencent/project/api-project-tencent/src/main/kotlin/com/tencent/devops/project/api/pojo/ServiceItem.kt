@@ -27,30 +27,30 @@
 
 package com.tencent.devops.project.api.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ServiceItem(
-    @ApiModelProperty("扩展Id")
+    @get:Schema(title = "扩展Id")
     val itemId: String,
-    @ApiModelProperty("扩展名称")
+    @get:Schema(title = "扩展名称")
     val itemName: String,
-    @ApiModelProperty("扩展标示编码")
+    @get:Schema(title = "扩展标示编码")
     val itemCode: String,
-    @ApiModelProperty("扩展蓝盾服务Id")
+    @get:Schema(title = "扩展蓝盾服务Id")
     val parentId: String,
-    @ApiModelProperty("扩展蓝盾服务Name")
+    @get:Schema(title = "扩展蓝盾服务Name")
     var parentName: String? = "",
-    @ApiModelProperty("页面路径")
+    @get:Schema(title = "页面路径")
     val htmlPath: String? = null,
-    @ApiModelProperty("UI组件类型")
+    @get:Schema(title = "UI组件类型")
     val htmlType: String? = null,
-    @ApiModelProperty("扩展服务安装个数")
+    @get:Schema(title = "扩展服务安装个数")
     val serviceCount: Int? = 0,
     val tooltip: String? = "",
-    @ApiModelProperty("icon路径")
+    @get:Schema(title = "icon路径")
     val icon: String? = "",
-    @ApiModelProperty("props参数")
+    @get:Schema(title = "props参数")
     val props: String = "",
-    @ApiModelProperty("扩展点状态")
+    @get:Schema(title = "扩展点状态")
     val itemStatus: String? = "ENABLE"
 )

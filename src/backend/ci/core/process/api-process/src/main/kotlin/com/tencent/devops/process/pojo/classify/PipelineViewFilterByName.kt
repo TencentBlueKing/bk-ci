@@ -28,14 +28,13 @@
 package com.tencent.devops.process.pojo.classify
 
 import com.tencent.devops.process.pojo.classify.enums.Condition
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线视图-通过名字过滤", description = PipelineViewFilterByName.classType)
+@Schema(title = "流水线视图-通过名字过滤", description = PipelineViewFilterByName.classType)
 data class PipelineViewFilterByName(
-    @ApiModelProperty("条件", required = false)
+    @get:Schema(title = "条件", required = false)
     val condition: Condition,
-    @ApiModelProperty("流水线名字", required = false)
+    @get:Schema(title = "流水线名字", required = false)
     val pipelineName: String
 ) : PipelineViewFilter() {
     companion object {

@@ -30,26 +30,25 @@ package com.tencent.devops.common.pipeline.pojo.element.atom
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("人工审核-自定义参数")
+@Schema(title = "人工审核-自定义参数")
 data class ManualReviewParam(
-    @ApiModelProperty("参数名", required = true)
+    @get:Schema(title = "参数名", required = true)
     var key: String = "",
-    @ApiModelProperty("参数内容(Any 类型)", required = true, dataType = "string")
+    @get:Schema(title = "参数内容(Any 类型)", required = true, type = "string")
     var value: Any? = "",
-    @ApiModelProperty("参数类型", required = false)
+    @get:Schema(title = "参数类型", required = false)
     val valueType: ManualReviewParamType = ManualReviewParamType.STRING,
-    @ApiModelProperty("是否必填", required = true)
+    @get:Schema(title = "是否必填", required = true)
     val required: Boolean = false,
-    @ApiModelProperty("参数描述", required = false)
+    @get:Schema(title = "参数描述", required = false)
     val desc: String? = "",
-    @ApiModelProperty("下拉框列表")
+    @get:Schema(title = "下拉框列表")
     var options: List<ManualReviewParamPair>? = null,
-    @ApiModelProperty("中文名称", required = false)
+    @get:Schema(title = "中文名称", required = false)
     val chineseName: String? = null,
-    @ApiModelProperty("变量形式的options")
+    @get:Schema(title = "变量形式的options")
     val variableOption: String? = null
 ) {
     /**

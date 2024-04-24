@@ -111,7 +111,7 @@ class PermissionService @Autowired constructor(
 
     fun getWorkspaceOwner(workspaceName: String): List<String> = workspaceOwnerCache.get(workspaceName)
 
-    fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
+    fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String, ownerType: WorkspaceOwnerType) {
         if (!enablePermission) return
 
         if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
@@ -121,7 +121,7 @@ class PermissionService @Autowired constructor(
             )
         }
 
-        if (!checkUserVisitPermission(userId, projectId)) {
+        if (ownerType == WorkspaceOwnerType.PROJECT && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -130,7 +130,9 @@ class PermissionService @Autowired constructor(
     }
 
     fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
-        return kotlin.runCatching { checkOwnerPermission(userId, workspaceName, projectId) }.fold(
+        return kotlin.runCatching {
+            checkOwnerPermission(userId, workspaceName, projectId, WorkspaceOwnerType.PROJECT)
+        }.fold(
             { return true }, { return false }
         )
     }
@@ -185,14 +187,12 @@ class PermissionService @Autowired constructor(
         userId: String,
         projectCode: String
     ): Boolean {
-//        return kotlin.runCatching {
-//            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-//                projectCode = projectCode,
-//                userId = userId
-//            ).data
-//        }.getOrNull() ?: false
-        // todo 待所有项目迁移到rbac。再做权限判断。
-        return true
+        return kotlin.runCatching {
+            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                projectCode = projectCode,
+                userId = userId
+            ).data
+        }.getOrNull() ?: false
     }
 
     private fun initRedisUser(params: UserOnePassword): String {

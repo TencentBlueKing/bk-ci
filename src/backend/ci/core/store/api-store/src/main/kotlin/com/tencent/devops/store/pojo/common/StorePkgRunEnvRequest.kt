@@ -29,33 +29,32 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store组件安装包运行时环境信息请求报文体")
+@Schema(title = "store组件安装包运行时环境信息请求报文体")
 data class StorePkgRunEnvRequest(
-    @ApiModelProperty("store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeType: String,
-    @ApiModelProperty("开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     val language: String,
-    @ApiModelProperty("支持的操作系统名称", required = true)
+    @get:Schema(title = "支持的操作系统名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val osName: String,
-    @ApiModelProperty("支持的操作系统架构", required = true)
+    @get:Schema(title = "支持的操作系统架构", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val osArch: String,
-    @ApiModelProperty("运行时版本", required = true)
+    @get:Schema(title = "运行时版本", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val runtimeVersion: String,
-    @ApiModelProperty("安装包名称", required = true)
+    @get:Schema(title = "安装包名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val pkgName: String,
-    @ApiModelProperty("安装包下载路径", required = true)
+    @get:Schema(title = "安装包下载路径", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 1000)
     val pkgDownloadPath: String,
-    @ApiModelProperty("是否为默认安装包", required = true)
+    @get:Schema(title = "是否为默认安装包", required = true)
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
     val defaultFlag: Boolean
 )

@@ -28,22 +28,22 @@
 package com.tencent.devops.repository.api.tapd
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_TAPD"], description = "tapd服务接口")
+@Tag(name = "SERVICE_TAPD", description = "tapd服务接口")
 @Path("/service/tapd")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTapdResource {
 
-    @ApiOperation("获取工作流状态中英文名对应关系")
+    @Operation(summary = "获取工作流状态中英文名对应关系")
     @POST
     @Path("/getWorkflowStatusMap")
     fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>>

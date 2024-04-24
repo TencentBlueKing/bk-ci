@@ -34,9 +34,9 @@ import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
 import com.tencent.devops.store.pojo.common.SensitiveApiInfo
 import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -48,86 +48,86 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_SDK_SENSITIVEAPI"], description = "用户-敏感API")
+@Tag(name = "USER_SDK_SENSITIVEAPI", description = "用户-敏感API")
 @Path("/user/sdk/{storeType}/{storeCode}/sensitiveApi/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserSensitiveApiResource {
 
-    @ApiOperation("获取未审批API列表")
+    @Operation(summary = "获取未审批API列表")
     @Path("unApprovalApiList")
     @GET
     fun unApprovalApiList(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @QueryParam("language")
         language: String
     ): Result<List<SensitiveApiNameInfo>>
 
-    @ApiOperation("敏感API申请")
+    @Operation(summary = "敏感API申请")
     @Path("apply")
     @POST
     fun apply(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("申请API请求体")
+        @Parameter(description = "申请API请求体")
         sensitiveApiApplyReq: SensitiveApiApplyReq
     ): Result<Boolean>
 
-    @ApiOperation("查看敏感API列表")
+    @Operation(summary = "查看敏感API列表")
     @Path("list")
     @GET
     fun list(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("API名", required = false)
+        @Parameter(description = "API名", required = false)
         @QueryParam("apiName")
         apiName: String?,
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<SensitiveApiInfo>>
 
-    @ApiOperation("取消申请敏感API")
+    @Operation(summary = "取消申请敏感API")
     @Path("cancel/{id}")
     @PUT
     fun cancel(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("敏感API名称", required = true)
+        @Parameter(description = "敏感API名称", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

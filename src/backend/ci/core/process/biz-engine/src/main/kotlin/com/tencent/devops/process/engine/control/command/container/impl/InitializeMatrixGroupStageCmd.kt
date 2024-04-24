@@ -330,16 +330,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
@@ -444,16 +446,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it

@@ -37,9 +37,9 @@ import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -52,187 +52,187 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_CREDENTIAL"], description = "用户-凭据资源")
+@Tag(name = "USER_CREDENTIAL", description = "用户-凭据资源")
 @Path("/user/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserCredentialResource {
-    @ApiOperation("是否拥有创建凭据权限")
+    @Operation(summary = "是否拥有创建凭据权限")
     @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("新增凭据")
+    @Operation(summary = "新增凭据")
     @Path("/{projectId}/")
     @POST
     fun create(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭据", required = true)
+        @Parameter(description = "凭据", required = true)
         credential: CredentialCreate
     ): Result<Boolean>
 
-    @ApiOperation("删除凭据")
+    @Operation(summary = "删除凭据")
     @Path("/{projectId}/{credentialId}")
     @DELETE
     fun delete(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭据ID", required = true)
+        @Parameter(description = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String
 
     ): Result<Boolean>
 
-    @ApiOperation("获取凭据列表")
+    @Operation(summary = "获取凭据列表")
     @Path("/{projectId}/")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭证类型列表，用逗号分隔", required = false)
+        @Parameter(description = "凭证类型列表，用逗号分隔", required = false)
         @QueryParam("credentialTypes")
         credentialTypesString: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("关键字", required = false)
+        @Parameter(description = "关键字", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<CredentialWithPermission>>
 
-    @ApiOperation("获取拥有对应权限凭据列表")
+    @Operation(summary = "获取拥有对应权限凭据列表")
     @Path("/{projectId}/hasPermissionList")
     @GET
     fun hasPermissionList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭证类型列表，用逗号分隔", required = false, defaultValue = "")
+        @Parameter(description = "凭证类型列表，用逗号分隔", required = false, example = "")
         @QueryParam("credentialTypes")
         credentialTypesString: String?,
-        @ApiParam("对应权限", required = true, defaultValue = "")
+        @Parameter(description = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("关键字", required = false)
+        @Parameter(description = "关键字", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<Credential>>
 
-    @ApiOperation("获取拥有对应权限凭据列表-不分页-插件UI调用")
+    @Operation(summary = "获取拥有对应权限凭据列表-不分页-插件UI调用")
     @Path("/{projectId}/getHasPermissionList")
     @GET
     fun getHasPermissionList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭证类型列表，用逗号分隔", required = false, defaultValue = "")
+        @Parameter(description = "凭证类型列表，用逗号分隔", required = false, example = "")
         @QueryParam("credentialTypes")
         credentialTypesString: String?,
-        @ApiParam("对应权限", required = true, defaultValue = "")
+        @Parameter(description = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @ApiParam("关键字", required = false)
+        @Parameter(description = "关键字", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<List<Credential>>
 
-    @ApiOperation("显示真实凭据")
+    @Operation(summary = "显示真实凭据")
     @Path("/{projectId}/{credentialId}/show")
     @GET
     fun show(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭据ID", required = true)
+        @Parameter(description = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String
     ): Result<CredentialWithPermission>
 
-    @ApiOperation("获取凭据以编辑")
+    @Operation(summary = "获取凭据以编辑")
     @Path("/{projectId}/{credentialId}/")
     @GET
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭据ID", required = true)
+        @Parameter(description = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String
     ): Result<CredentialWithPermission>
 
-    @ApiOperation("编辑凭据")
+    @Operation(summary = "编辑凭据")
     @Path("/{projectId}/{credentialId}/")
     @PUT
     fun edit(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭据ID", required = true)
+        @Parameter(description = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
-        @ApiParam("凭据", required = true)
+        @Parameter(description = "凭据", required = true)
         credential: CredentialUpdate
     ): Result<Boolean>
 
-    @ApiOperation("编辑凭据设置凭据")
+    @Operation(summary = "编辑凭据设置凭据")
     @Path("/{projectId}/{credentialId}/setting")
     @PUT
     fun editSetting(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭据ID", required = true)
+        @Parameter(description = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
-        @ApiParam("凭据设置", required = true)
+        @Parameter(description = "凭据设置", required = true)
         credentialSetting: CredentialSettingUpdate
     ): Result<Boolean>
 }

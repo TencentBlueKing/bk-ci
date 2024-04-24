@@ -66,7 +66,6 @@ import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -110,7 +109,6 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineResDao: PipelineResDao,
     pipelineBuildDao: PipelineBuildDao,
     pipelineResVersionDao: PipelineResVersionDao,
-    pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
@@ -123,8 +121,7 @@ class PipelineBuildRecordService @Autowired constructor(
     recordModelService = recordModelService,
     pipelineResDao = pipelineResDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineResVersionDao = pipelineResVersionDao
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:21}")

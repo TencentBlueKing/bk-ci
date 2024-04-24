@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -44,13 +44,11 @@ import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class ProjectIamV0Service @Autowired constructor(
-    private val bkAuthProjectApi: AuthProjectApi,
-    private val bkAuthPermissionApi: AuthPermissionApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val authProjectApi: AuthProjectApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val tofService: TOFService,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao
@@ -65,7 +63,7 @@ class ProjectIamV0Service @Autowired constructor(
     ): Boolean {
         logger.info("[createUser2Project] createUser[$createUser] userId[$userIds] projectCode[$projectCode]")
 
-        if (!bkAuthProjectApi.checkProjectManager(createUser, bsPipelineAuthServiceCode, projectCode)) {
+        if (!authProjectApi.checkProjectManager(createUser, pipelineAuthServiceCode, projectCode)) {
             logger.warn("BKSystemMonitor| createUser2Project| $createUser is not manager for project[$projectCode]")
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NOT_MANAGER,
@@ -101,7 +99,7 @@ class ProjectIamV0Service @Autowired constructor(
         val authPermission = AuthPermission.get(permission)
         val authResourceType = AuthResourceType.get(resourceType)
 
-        return bkAuthPermissionApi.addResourcePermissionForUsers(
+        return authPermissionApi.addResourcePermissionForUsers(
             userId = userId,
             projectCode = projectId,
             permission = authPermission,
@@ -123,7 +121,7 @@ class ProjectIamV0Service @Autowired constructor(
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
-        val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
+        val roleList = authProjectApi.getProjectRoles(pipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value
         roleList.forEach {
             if (roleId == null && roleName.isNullOrEmpty()) {
@@ -148,9 +146,9 @@ class ProjectIamV0Service @Autowired constructor(
         userIds.forEach {
             try {
                 tofService.getStaffInfo(it)
-                bkAuthProjectApi.createProjectUser(
+                authProjectApi.createProjectUser(
                     user = it,
-                    serviceCode = bsPipelineAuthServiceCode,
+                    serviceCode = pipelineAuthServiceCode,
                     projectCode = projectInfo.projectId,
                     role = authRoleId!!
                 )

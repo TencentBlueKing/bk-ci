@@ -28,21 +28,20 @@
 package com.tencent.devops.common.archive.pojo.replica.objects
 
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("同步对象信息")
+@Schema(title = "同步对象信息")
 data class ReplicaObjectInfo(
-    @ApiModelProperty("本地仓库")
+    @get:Schema(title = "本地仓库")
     val localRepoName: String,
-    @ApiModelProperty("远程项目")
+    @get:Schema(title = "远程项目")
     val remoteProjectId: String?,
-    @ApiModelProperty("远程仓库")
+    @get:Schema(title = "远程仓库")
     val remoteRepoName: String?,
-    @ApiModelProperty("仓库类型")
+    @get:Schema(title = "仓库类型")
     val repoType: RepositoryType,
-    @ApiModelProperty("包限制条件")
+    @get:Schema(title = "包限制条件")
     val packageConstraints: List<PackageConstraint>?,
-    @ApiModelProperty("路径限制条件")
+    @get:Schema(title = "路径限制条件")
     val pathConstraints: List<PathConstraint>?
 )

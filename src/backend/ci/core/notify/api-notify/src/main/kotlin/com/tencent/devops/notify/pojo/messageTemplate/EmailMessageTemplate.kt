@@ -28,21 +28,20 @@ package com.tencent.devops.notify.pojo.messageTemplate
 
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模板配置信息")
+@Schema(title = "模板配置信息")
 data class EmailMessageTemplate(
-    @ApiModelProperty("模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     val id: String,
-    @ApiModelProperty("标题", required = false)
+    @get:Schema(title = "标题", required = false)
     var title: String?,
-    @ApiModelProperty("内容", required = true)
+    @get:Schema(title = "内容", required = true)
     var body: String,
-    @ApiModelProperty("发送者", required = true)
+    @get:Schema(title = "发送者", required = true)
     val sender: String,
-    @ApiModelProperty("邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = "0,1", dataType = "int", required = false)
+    @get:Schema(title = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = ["0", "1"], type = "int", required = false)
     val bodyFormat: EnumEmailFormat?,
-    @ApiModelProperty("邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = "0,1", dataType = "int", required = false)
+    @get:Schema(title = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = ["0", "1"], type = "int", required = false)
     val emailType: EnumEmailType?
 )

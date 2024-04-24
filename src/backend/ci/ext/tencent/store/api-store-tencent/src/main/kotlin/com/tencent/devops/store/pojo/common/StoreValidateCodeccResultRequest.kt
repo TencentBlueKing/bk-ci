@@ -28,21 +28,20 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("校验codecc扫描结果请求报文体")
+@Schema(title = "校验codecc扫描结果请求报文体")
 data class StoreValidateCodeccResultRequest(
-    @ApiModelProperty("项目代码", required = true)
+    @get:Schema(title = "项目代码", required = true)
     val projectCode: String,
-    @ApiModelProperty("用户ID", required = true)
+    @get:Schema(title = "用户ID", required = true)
     val userId: String,
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @ApiModelProperty("组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     val language: String
 )

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-阶段标签信息请求体")
+@Schema(title = "流水线-阶段标签信息请求体")
 data class StageTagRequest(
-    @ApiModelProperty("阶段标签名称", required = true)
+    @get:Schema(title = "阶段标签名称", required = true)
     val stageTagName: String,
-    @ApiModelProperty("阶段标签权重", required = true)
+    @get:Schema(title = "阶段标签权重", required = true)
     val weight: Int
 )

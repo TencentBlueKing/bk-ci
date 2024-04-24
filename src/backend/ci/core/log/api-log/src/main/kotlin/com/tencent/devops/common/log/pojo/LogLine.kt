@@ -27,30 +27,29 @@
 
 package com.tencent.devops.common.log.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("日志模型")
+@Schema(title = "日志模型")
 data class LogLine(
-    @ApiModelProperty("日志行号", required = true)
+    @get:Schema(title = "日志行号", required = true)
     val lineNo: Long,
-    @ApiModelProperty("日志时间戳", required = true)
+    @get:Schema(title = "日志时间戳", required = true)
     val timestamp: Long,
-    @ApiModelProperty("日志消息体", required = true)
+    @get:Schema(title = "日志消息体", required = true)
     val message: String,
-    @ApiModelProperty("日志权重级", required = true)
+    @get:Schema(title = "日志权重级", required = true)
     val priority: Byte = 0,
-    @ApiModelProperty("日志tag", required = true)
+    @get:Schema(title = "日志tag", required = true)
     val tag: String = "",
-    @ApiModelProperty("日志子tag", required = true)
+    @get:Schema(title = "日志子tag", required = true)
     val subTag: String = "",
-    @ApiModelProperty("日志jobId", required = true)
+    @get:Schema(title = "日志jobId", required = true)
     val jobId: String = "",
-    @ApiModelProperty("日志执行次数", required = true)
+    @get:Schema(title = "日志执行次数", required = true)
     val executeCount: Int? = 1
 ) {
     override fun equals(other: Any?): Boolean {

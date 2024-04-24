@@ -28,12 +28,11 @@
 package com.tencent.devops.auth.entity
 
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class SearchRetrieveDeptEntity(
-    @ApiModelProperty("部门 ID")
+    @get:Schema(title = "部门 ID")
     val id: Int,
     override var bk_app_code: String,
     override var bk_app_secret: String,

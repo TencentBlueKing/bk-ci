@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -17,28 +17,28 @@ import javax.ws.rs.core.MediaType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.dispatch.macos.pojo.PasswordInfo
 
-@Api(tags = ["BUILD_PASSWORD"], description = "BUILD接口-密码资源")
+@Tag(name = "BUILD_PASSWORD", description = "BUILD接口-密码资源")
 @Path("build/macos/password")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildPasswordResource {
     @GET
     @Path("/")
-    @ApiOperation("获取vm列表")
+    @Operation(summary = "获取vm列表")
     fun get(
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("realIp", required = true)
+        @Parameter(description = "realIp", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
         realIp: String,
-        @ApiParam("Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<PasswordInfo?>

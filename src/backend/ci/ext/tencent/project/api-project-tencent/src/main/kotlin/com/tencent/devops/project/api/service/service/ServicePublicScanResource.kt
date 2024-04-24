@@ -30,9 +30,9 @@ package com.tencent.devops.project.api.service.service
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -41,7 +41,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PUBLICSCAN"], description = "开源代码扫描项目接口")
+@Tag(name = "SERVICE_PUBLICSCAN", description = "开源代码扫描项目接口")
 @Path("/service/publicScan")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -49,18 +49,18 @@ interface ServicePublicScanResource {
 
     @POST
     @Path("/project/{userId}")
-    @ApiOperation("为开源代码扫描创建项目")
+    @Operation(summary = "为开源代码扫描创建项目")
     fun createCodeCCScanProject(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("TAG", required = false)
+        @Parameter(description = "TAG", required = false)
         @QueryParam("tag")
         tag: String? = null,
-        @ApiParam("CodeCC路由Tag", required = false)
+        @Parameter(description = "CodeCC路由Tag", required = false)
         @QueryParam("codeccTag")
         codeccTag: String? = null,
-        @ApiParam(value = "项目创建信息", required = true)
+        @Parameter(description = "项目创建信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<ProjectVO>
 }

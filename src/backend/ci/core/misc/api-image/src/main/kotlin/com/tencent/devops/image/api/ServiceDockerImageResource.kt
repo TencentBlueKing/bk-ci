@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.image.pojo.CheckDockerImageResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -43,21 +43,21 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DOCKER_IMAGE"], description = "镜像-镜像服务")
+@Tag(name = "SERVICE_DOCKER_IMAGE", description = "镜像-镜像服务")
 @Path("/service/docker-image")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ServiceInterface("misc")
 interface ServiceDockerImageResource {
 
-    @ApiOperation("检查镜像信息")
+    @Operation(summary = "检查镜像信息")
     @POST
     @Path("/checkDockerImage")
     fun checkDockerImage(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "镜像repo", required = true)
+        @Parameter(description = "镜像repo", required = true)
         checkDockerImageRequestList: List<CheckDockerImageRequest>
     ): Result<List<CheckDockerImageResponse>>
 }

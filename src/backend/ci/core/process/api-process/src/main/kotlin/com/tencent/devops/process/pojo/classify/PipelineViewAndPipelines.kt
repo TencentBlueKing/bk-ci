@@ -28,15 +28,14 @@
 package com.tencent.devops.process.pojo.classify
 
 import com.tencent.devops.process.pojo.Pipeline
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(title = "")
 data class PipelineViewAndPipelines(
-    @ApiModelProperty("当前视图id", required = false)
+    @get:Schema(title = "当前视图id", required = false)
     val currentViewId: String,
-    @ApiModelProperty("视图列表", required = false)
+    @get:Schema(title = "视图列表", required = false)
     val viewList: List<PipelineViewIdAndName>,
-    @ApiModelProperty("流水线页面", required = false)
+    @get:Schema(title = "流水线页面", required = false)
     val pipelinePage: PipelineViewPipelinePage<Pipeline>
 )

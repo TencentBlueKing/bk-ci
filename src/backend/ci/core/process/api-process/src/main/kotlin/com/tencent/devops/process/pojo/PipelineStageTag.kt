@@ -27,21 +27,20 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-阶段标签信息")
+@Schema(title = "流水线-阶段标签信息")
 data class PipelineStageTag(
-    @ApiModelProperty("阶段标签ID", required = true)
+    @get:Schema(title = "阶段标签ID", required = true)
     val id: String,
-    @ApiModelProperty("阶段标签名称", required = true)
+    @get:Schema(title = "阶段标签名称", required = true)
     val stageTagName: String,
-    @ApiModelProperty("阶段标签权重", required = true)
+    @get:Schema(title = "阶段标签权重", required = true)
     val weight: Int,
-    @ApiModelProperty("是否为默认标签", required = true)
+    @get:Schema(title = "是否为默认标签", required = true)
     val defaultFlag: Boolean,
-    @ApiModelProperty("创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: Long = 0,
-    @ApiModelProperty("更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: Long = 0
 )
