@@ -547,6 +547,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     override fun getMainPageComponents(
         userId: String,
         storeType: String,
+        projectCode: String?,
         page: Int,
         pageSize: Int,
         urlProtocolTrim: Boolean
@@ -566,7 +567,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 userDeptList = userDeptList,
                 storeInfoQuery = StoreInfoQuery(
                     storeType = storeType,
-                    projectCode = null,
+                    projectCode = projectCode,
                     keyword = null,
                     classifyId = null,
                     labelId = null,
@@ -596,7 +597,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 userDeptList = userDeptList,
                 storeInfoQuery = StoreInfoQuery(
                     storeType = storeType,
-                    projectCode = null,
+                    projectCode = projectCode,
                     keyword = null,
                     classifyId = null,
                     labelId = null,
@@ -631,7 +632,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         userDeptList = userDeptList,
                         storeInfoQuery = StoreInfoQuery(
                             storeType = storeType,
-                            projectCode = null,
+                            projectCode = projectCode,
                             keyword = null,
                             classifyId = it.id,
                             labelId = null,

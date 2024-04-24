@@ -93,6 +93,7 @@ interface StoreComponentQueryService {
     fun getMainPageComponents(
         userId: String,
         storeType: String,
+        projectCode: String?,
         page: Int,
         pageSize: Int,
         urlProtocolTrim: Boolean = false
