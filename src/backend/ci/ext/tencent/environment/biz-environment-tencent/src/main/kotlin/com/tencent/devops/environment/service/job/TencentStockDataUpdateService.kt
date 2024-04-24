@@ -34,6 +34,10 @@ import com.tencent.devops.environment.constant.COLUMN_SEVER_LAN_IP
 import com.tencent.devops.environment.constant.COLUMN_SFW_NAME
 import com.tencent.devops.environment.constant.COLUMN_SVR_IP
 import com.tencent.devops.environment.constant.COLUMN_SVR_NAME
+import com.tencent.devops.environment.constant.FIELD_BK_CLOUD_ID
+import com.tencent.devops.environment.constant.FIELD_BK_HOST_ID
+import com.tencent.devops.environment.constant.FIELD_BK_HOST_INNERIP
+import com.tencent.devops.environment.constant.FIELD_BK_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
@@ -83,11 +87,6 @@ class TencentStockDataUpdateService @Autowired constructor(
         private const val EXPIRATION_TIME_OF_THE_LOCK = 600L
 
         const val AGENT_NORMAL_NODE_STATUS = 1
-
-        const val FIELD_BK_OS_TYPE = "bk_os_type"
-        const val FIELD_BK_HOST_ID = "bk_host_id"
-        const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
-        const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
 
         const val FIRST_IP_INDEX = 0
     }
@@ -211,7 +210,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             queryFromCCService.queryCCListHostWithoutBizByInRules(
                 listOf(FIELD_BK_HOST_INNERIP, FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_OS_TYPE),
                 nodeIpList,
-                QueryFromCCService.FIELD_BK_HOST_INNERIP
+                FIELD_BK_HOST_INNERIP
             ).data?.info
         } else null
         var ipToCCInfoMap: Map<String?, CCInfo> = mapOf()

@@ -34,6 +34,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.FIELD_BAK_OPERATOR
+import com.tencent.devops.environment.constant.FIELD_BK_CLOUD_ID
+import com.tencent.devops.environment.constant.FIELD_BK_HOST_ID
+import com.tencent.devops.environment.constant.FIELD_BK_HOST_INNERIP
+import com.tencent.devops.environment.constant.FIELD_OPERATOR
 import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
@@ -51,7 +56,7 @@ import com.tencent.devops.environment.pojo.job.ccres.HostBizRelation
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.Record5
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -95,11 +100,6 @@ class QueryFromCCService {
         const val LOG_OUTPUT_MAX_LENGTH = 4000
         const val DEFAULT_PAGE_LIMIT = 500
         const val DEFAULT_PAGE_START = 0
-        const val FIELD_BK_HOST_ID = "bk_host_id"
-        const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
-        const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
-        const val FIELD_OPERATOR = "operator"
-        const val FIELD_BAK_OPERATOR = "bk_bak_operator"
         const val AND_CONDITATION = "AND"
         const val IN_OPERATION = "in"
     }
@@ -224,7 +224,7 @@ class QueryFromCCService {
     private fun <T> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = mapper.writeValueAsString(req)
         logger.info("DELETE url: $url, req: ${logWithLengthLimit(requestContent)}")
-        val requestBody = RequestBody.create("text/plain".toMediaTypeOrNull(), requestContent)
+        val requestBody = requestContent.toRequestBody("text/plain".toMediaTypeOrNull())
         val deleteReq: Request = Request.Builder()
             .url(url)
             .headers(headers.toHeaders())
