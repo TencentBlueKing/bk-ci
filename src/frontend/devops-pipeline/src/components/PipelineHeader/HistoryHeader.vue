@@ -163,7 +163,7 @@
                 pacEnabled: 'atom/pacEnabled'
             }),
             showRollback () {
-                return this.isReleaseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
+                return this.isReleaseVersion || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : undefined
@@ -199,7 +199,7 @@
                 switch (true) {
                     case this.isReleaseVersion:
                         return this.$t('edit')
-                    case this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
+                    case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
                         return this.$t('editCurDraft')
                     default:
                         return this.$t('rollback')

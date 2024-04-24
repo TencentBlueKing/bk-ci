@@ -123,7 +123,8 @@
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: error.message
+                        message: error.message,
+                        zIndex: 3000
                     })
                     return ''
                 }
