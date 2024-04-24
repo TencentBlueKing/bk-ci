@@ -232,7 +232,6 @@ class CmdbNodeDao {
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .where(NODE_IP.`in`(ipList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .execute()
         }
     }
@@ -263,7 +262,6 @@ class CmdbNodeDao {
             return dslContext.selectCount()
                 .from(TNode.T_NODE)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -443,7 +441,6 @@ class CmdbNodeDao {
                 OS_TYPE.`as`(T_NODE_OS_TYPE)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .orderBy(NODE_ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
