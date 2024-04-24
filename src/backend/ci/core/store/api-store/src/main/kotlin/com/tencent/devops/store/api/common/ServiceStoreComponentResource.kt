@@ -74,6 +74,9 @@ interface ServiceStoreComponentResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
+        @Parameter(description = "项目代码", required = false)
+        @QueryParam("projectCode")
+        projectCode: String? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
