@@ -55,7 +55,7 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.service.StoreReleaseService
-import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CLOSE
@@ -172,11 +172,11 @@ class StoreReleaseServiceImpl @Autowired constructor(
             storeType = storeType,
             status = status
         )
-        val storeSpecBusService = SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(storeType)
+        val storeReleaseSpecBusService = SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
-        val processInfo = storeSpecBusService.getReleaseProcessItems(
+        val processInfo = storeReleaseSpecBusService.getReleaseProcessItems(
             userId = userId,
             isNormalUpgrade = isNormalUpgrade,
             status = status
@@ -396,11 +396,11 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val record = storeBaseQueryDao.getComponentById(dslContext, storeId)
             ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeId))
         val storeType = StoreTypeEnum.getStoreTypeObj(record.storeType.toInt())
-        val storeSpecBusService = SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(storeType)
+        val storeReleaseSpecBusService = SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
-        val status = storeSpecBusService.getStoreRunPipelineStatus(startFlag = false)
+        val status = storeReleaseSpecBusService.getStoreRunPipelineStatus(startFlag = false)
         status?.let {
             checkStoreVersionOptRight(userId, storeId, status)
         }
