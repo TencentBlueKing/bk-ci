@@ -74,19 +74,21 @@ class PipelineBuildVarDao @Autowired constructor() {
         buildId: String,
         name: String,
         value: Any,
-        valueType: String? = null
+        valueType: String? = null,
+        rewriteReadOnly: Boolean? = null
     ): Int {
         with(T_PIPELINE_BUILD_VAR) {
             val baseStep = dslContext.update(this)
             if (valueType != null) {
                 baseStep.set(VAR_TYPE, valueType)
             }
-            return baseStep.set(VALUE, value.toString())
-                .where(
-                    BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
-                        .and(PROJECT_ID.eq(projectId))
-                )
-                .execute()
+            val whereStep = baseStep.set(VALUE, value.toString())
+                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
+            if (rewriteReadOnly != true) {
+                whereStep.and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
+            }
+            whereStep.and(PROJECT_ID.eq(projectId))
+            return whereStep.execute()
         }
     }
 

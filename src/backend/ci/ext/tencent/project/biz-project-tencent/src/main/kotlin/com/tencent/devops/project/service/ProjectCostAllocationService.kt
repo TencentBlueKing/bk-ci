@@ -5,13 +5,13 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
 import com.tencent.devops.project.pojo.ProjectVO
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
@@ -21,14 +21,14 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
-@Suppress("NestedBlockDepth", "ComplexMethod")
+@Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList")
 class ProjectCostAllocationService constructor(
     val client: Client,
     val projectService: ProjectService,
     val redisOperation: RedisOperation,
-    val tokenService: ClientTokenService,
     val projectNotifyService: ProjectNotifyService,
-    val projectUserService: ProjectUserService
+    val projectUserService: ProjectUserService,
+    val dslContext: DSLContext
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")

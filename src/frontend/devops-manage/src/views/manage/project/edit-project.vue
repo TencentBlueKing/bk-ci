@@ -138,15 +138,15 @@ const updateProject = async () => {
   return Promise.resolve(false);
 };
 
-const fetchOperationalList = async () => {
-  await http.getOperationalList().then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-  });
+const fetchOperationalList = async (bgName) => {
+  if (!bgName) return
+  const res = await http.getOperationalList(bgName)
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
 };
 
 const showNeedApprovedTips = () => {
@@ -194,9 +194,9 @@ const handleNoPermission = () => {
   });
 };
 
-onMounted(() => {
-  fetchProjectData();
-  fetchOperationalList();
+onMounted(async () => {
+  await fetchProjectData();
+  await fetchOperationalList(projectData.value.bgName);
 });
 </script>
 

@@ -238,7 +238,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(windowsResourceConfigService.getAllType(true, null))
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
         return Result(createControl.devcloudCreateWorkspace(userId, data))
     }
 
@@ -256,8 +256,9 @@ class ServiceRemoteDevResourceImpl(
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
         return Result(
             workspaceService.getWorkspaceList4WeSec(
-                workspaceName = workspaceName
-            ).first()
+                workspaceName = workspaceName,
+                notStatus = null
+            ).firstOrNull()
         )
     }
 }

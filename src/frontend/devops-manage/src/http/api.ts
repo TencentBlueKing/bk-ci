@@ -107,7 +107,10 @@ export default {
    */
   getOrganizations(params: any) {
     const { type, id } = params;
-    return http.get(`${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`);
+    const url = type === 'dept'
+      ? `${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}?excludeBelowTheDept=true`
+      : `${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`
+    return http.get(url);
   },
 
   /**
@@ -219,7 +222,7 @@ export default {
     return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/getResource`);
   },
 
-  async getOperationalList() {
-    return http.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProducts`)
+  async getOperationalList(bgName: string) {
+    return http.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProductsByBgName/${bgName}`)
   }
 };

@@ -221,7 +221,7 @@ class SoftwareManageService @Autowired constructor(
                 "autoAssign=$autoAssign&projectId=$projectId&userId=$creator&x-devops-project-id=$projectId"
         installSoftwareFromXingyun(
             userId = creator,
-            ip = ip.substringAfter("."),
+            ip = regionId + ":" + ip.substringAfter("."),
             callBackUrl = callBackUrl,
             softwareInfoList = softwareInfoList
         )?.also {

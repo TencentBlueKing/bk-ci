@@ -55,15 +55,16 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -76,7 +77,8 @@ class DeliverControl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
-    private val httpCallBackService: HttpCallBackService
+    private val httpCallBackService: HttpCallBackService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
 
     companion object {
@@ -172,7 +174,8 @@ class DeliverControl @Autowired constructor(
                     projectId = workspace.projectId,
                     operator = userId,
                     assigns = listOf(assign2Owner),
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    ownerType = workspace.ownerType
                 )
                 workspaceCommon.updateHostMonitor(
                     workspaceName = workspaceName,
@@ -212,7 +215,8 @@ class DeliverControl @Autowired constructor(
                                 expiration = null
                             )
                         ),
-                        mountType = WorkspaceMountType.START
+                        mountType = WorkspaceMountType.START,
+                        ownerType = workspace.ownerType
                     )
                     workspaceCommon.updateHostMonitor(
                         workspaceName = workspaceName,
@@ -235,7 +239,8 @@ class DeliverControl @Autowired constructor(
                 projectId = workspace.projectId,
                 operator = userId,
                 assigns = add,
-                mountType = WorkspaceMountType.START
+                mountType = WorkspaceMountType.START,
+                ownerType = workspace.ownerType
             )
         }
 
@@ -249,6 +254,9 @@ class DeliverControl @Autowired constructor(
                 mountType = WorkspaceMountType.START
             )
         }
+
+        // 同步tgit proxy
+        gitProxyTGitService.refreshProjectTGitSpecUser(projectId)
     }
 
     fun softwareInstallationCompleteCallback(

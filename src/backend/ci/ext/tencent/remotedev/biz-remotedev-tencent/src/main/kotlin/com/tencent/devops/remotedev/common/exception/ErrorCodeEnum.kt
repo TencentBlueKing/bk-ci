@@ -211,6 +211,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132040",
         formatErrorMessage = "request bkvision {0} error {1}"
+    ),
+    REMOTEDEV_JOB_ERROR(
+        errorType = ErrorType.SYSTEM,
+        errorCode = "2132041",
+        formatErrorMessage = "do remotedev job error {1}"
     );
 
     fun getErrorMessage(): String {
