@@ -524,12 +524,14 @@ object TransferMapper {
         node.value.forEach { nodeTuple ->
             if (nodeTuple.keyNode.nodeId != NodeId.scalar) return@forEach
             val kn = nodeTuple.keyNode as ScalarNode
+            /* 目前页面只关心行坐标，暂对列坐标归零处理 */
+            val markFlag = if (nodeTuple.valueNode.endMark.column == 0) 1 else 0
             res[kn.value] = TransferMark(
                 startMark = TransferMark.Mark(
-                    nodeTuple.valueNode.startMark.line, nodeTuple.valueNode.startMark.column
+                    nodeTuple.valueNode.startMark.line, 0
                 ),
                 endMark = TransferMark.Mark(
-                    nodeTuple.valueNode.endMark.line, nodeTuple.valueNode.endMark.column
+                    nodeTuple.valueNode.endMark.line + markFlag, 0
                 )
             )
         }
