@@ -58,7 +58,9 @@ import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
+import java.util.Locale
 
 @Suppress("ALL")
 @Repository
@@ -669,11 +671,11 @@ class ProjectDao {
                 )
                 .let {
                     it.takeIf { projectName != null }?.and(
-                        PROJECT_NAME.like("%${projectName!!.trim()}%")
+                        lower(PROJECT_NAME).like("%${projectName!!.trim().lowercase(Locale.getDefault())}%")
                     ) ?: it
                 }
                 .let { it.takeIf { projectId != null }?.and(ENGLISH_NAME.eq(projectId)) ?: it }
-                .and(CHANNEL.eq("BS"))
+                .and(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
@@ -683,7 +685,7 @@ class ProjectDao {
 
     private fun TProject.generateQueryProjectForApplyCondition(): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(CHANNEL.eq("BS"))
+        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
         conditions.add(IS_OFFLINED.eq(false))
         conditions.add(ENABLED.eq(true))
         conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
