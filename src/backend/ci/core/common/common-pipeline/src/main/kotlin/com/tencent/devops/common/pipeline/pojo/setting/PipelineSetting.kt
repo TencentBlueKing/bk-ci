@@ -123,6 +123,7 @@ data class PipelineSetting(
     }
 
     fun fixSubscriptions() {
+        // 只有旧数据向新数据的更新，取消旧数据的保存
         if (successSubscriptionList.isNullOrEmpty()) {
             successSubscriptionList = listOf(this.successSubscription)
         } else {

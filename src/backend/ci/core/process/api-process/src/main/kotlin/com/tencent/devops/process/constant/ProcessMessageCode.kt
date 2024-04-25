@@ -333,7 +333,7 @@ object ProcessMessageCode {
     const val ERROR_VERSION_IS_NOT_UPDATED = "2101219" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
     const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
     const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
-    const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容配配置不正确置，请检查
+    const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容为空，请检查
     const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101235" // 创建分支失败: {0}
     const val ERROR_YAML_PUSH_CREATE_BRANCH_NO_PERMISSION = "2101236" // 用户{0}没有代码库{1}的创建分支权限
     const val ERROR_YAML_PUSH_CREATE_FILE = "2101237" // 创建文件失败: {0}
