@@ -905,7 +905,14 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
 
         extData?.let {
             extDataResult.forEach { record ->
-                extData[record.fieldName] = record.fieldValue
+                extData[record.fieldName] =
+                when {
+                    JsonSchemaUtil.isJsonArray(record.fieldValue) -> {JsonUtil.to(record.fieldValue, List::class.java)}
+                    JsonSchemaUtil.isJsonObject(record.fieldValue) -> {
+                        JsonUtil.to(record.fieldValue, object : TypeReference<Map<String, Any>>() {})
+                    }
+                    else -> record.fieldValue
+                }
             }
         }
         return extData

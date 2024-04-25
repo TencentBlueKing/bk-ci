@@ -245,7 +245,7 @@ class MarketStoreQueryDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        if (queryProjectComponentFlag) {
+        if (!queryProjectComponentFlag) {
             conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
         } else {
             conditions.add(
