@@ -422,11 +422,36 @@ class CmdbNodeService @Autowired constructor(
 
     /**
      * 将节点添加到CC中
+     * 四类节点情况：（2.1、2.2为两种不能导入CC的情况，2.1U2.2 <= 2.*）
+     * 1. 单ip/多ip，在CC - 查CCInfo并更新信息；
+     * 2.1 单ip/多ip，不在cc，不能导入CC - ieg的机器，需要用户手动处理，调用侧导入蓝盾并更新节点状态为NOT_IN_CC
+     * 2.2 多ip，不在cc，不能导入CC - 有ip已经在CC中，本次导入去掉这个ip不导入，调用侧导入蓝盾并更新节点状态为NOT_IN_CC
+     * 3. 单ip/多ip，不在cc，可以导入CC - 导入，查CCInfo更新信息
      * 返回值：无论在不在CC中的节点信息 CCInfo
      */
     private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
-        // 1. 通过ip查询：节点是否有ip已经在CC中 (如果已经有ip在CC中，则本次导入去掉这个ip不导入，调用侧设置状态为NOT_IN_CC)
+        // 通过节点svrId查询：节点是否在CC中
+        val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId }
+        val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
+        val (svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
+        // 1. 在CC中，通过svrId查出host_id、云区域id、操作系统类型
+        var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>()
+        if (inCCSvrIdList.isNotEmpty()) {
+            val ccData = svrIdQueryCCRes.data?.info
+            val ccDataWithStringOsType = ccData?.map {
+                it.osType = getOsTypeByCCCode(it.osType)
+                it
+            } ?: listOf()
+            queryCCIpToCCInfoMap = ccDataWithStringOsType.associateBy {
+                it.bkHostInnerip?.split(",")?.get(INNER_IP_FIRST_INDEX)
+            }
+        }
+        // 2.1 通过svrId查询：是否为ieg的机器，即运维部门id == 3（若为ieg的机器，需要用户手动处理，改机器业务为CC对应的二级业务，同步到CC中，此接口无法导入，调用侧设置状态为NOT_IN_CC）
         val toAddIpToCmdbNodeMutableMap = toAddIpToCmdbNodeMap.toMutableMap()
+        toAddIpToCmdbNodeMutableMap.entries.retainAll {
+            it.value.serverId in notInCCSvrIdList && IEG_DEPT_ID != it.value.deptId
+        }
+        // 2.2 通过ip查询：多ip节点是否有ip已经在CC中 (如果多ip节点已经有ip在CC中，则本次导入去掉这个ip不导入，调用侧设置状态为NOT_IN_CC)
         val toAddIpList = toAddIpToCmdbNodeMutableMap.keys
         val ipQueryCCRes = queryFromCCService.queryCCListHostWithoutBizByInRules(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID, FIELD_BK_OS_TYPE),
@@ -442,34 +467,15 @@ class CmdbNodeService @Autowired constructor(
                 }
             }
         }
-        // 2. 获取节点server_id
-        val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMutableMap.values.associateBy { it.serverId }
-        // 2.1 通过svrId查询：是否为ieg的机器，即运维部门id == 3（若为ieg的机器，需要用户手动处理，改机器业务为CC对应的二级业务，同步到CC中，此接口无法导入）
-        toAddIpToCmdbNodeMutableMap.forEach {
-            if (IEG_DEPT_ID == it.value.deptId) toAddIpToCmdbNodeMutableMap.remove(it.value.ip)
-        }
-        // 2.2 通过svrId查询：节点是否在CC中
-        val svrIdList = toAddIpToCmdbNodeMutableMap.map { it.value.serverId }
-        val (svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
-        var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
-        if (inCCSvrIdList.isNotEmpty()) { // 在CC中，通过svrId查出host_id（和云区域id，默认0，可默认）
-            val ccData = svrIdQueryCCRes.data?.info
-            val ccDataWithStringOsType = ccData?.map {
-                it.osType = getOsTypeByCCCode(it.osType)
-                it
-            } ?: listOf()
-            queryCCIpToCCInfoMap = ccDataWithStringOsType.associateBy {
-                it.bkHostInnerip?.split(",")?.get(INNER_IP_FIRST_INDEX)
-            }
-        }
-        // 3. 不在CC中，add到CC中，查出host_id和云区域id
+        // 3. 不在CC中，add到CC中，查出host_id、云区域id和操作系统类型
         var addToCCIpToCCInfoMap = mapOf<String?, CCInfo>()
+        val notInCCAddSvrIdList = toAddIpToCmdbNodeMutableMap.values.map { it.serverId }
         if (notInCCSvrIdList.isNotEmpty()) {
-            val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
-            val (addToCCSvrIdQueryCCRes, _, _) = checkNodeInCCBySvrId(notInCCSvrIdList)
+            val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCAddSvrIdList)
+            val (addToCCSvrIdQueryCCRes, _, _) = checkNodeInCCBySvrId(notInCCAddSvrIdList)
             val addToCCData = addToCCSvrIdQueryCCRes.data?.info
             val hostIdToCCInfoMap = addToCCData?.associateBy { it.bkHostId }
-            val ccHostIdList = addToCCResp.data?.bkHostIds // [11111,22222,33333,...]
+            val ccHostIdList = addToCCResp.data?.bkHostIds
             val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
                 CCInfo(
                     svrId = notInCCSvrIdList[index],
@@ -484,7 +490,9 @@ class CmdbNodeService @Autowired constructor(
                     "[addCmdbNodes]addToCCInfo: " +
                         addToCCInfoList?.joinToString(separator = ", ", transform = { it.toString() })
                 )
-            addToCCIpToCCInfoMap = addToCCInfoList?.associateBy { it.bkHostInnerip } ?: mapOf()
+            addToCCIpToCCInfoMap = addToCCInfoList?.associateBy {
+                it.bkHostInnerip?.split(",")?.get(INNER_IP_FIRST_INDEX)
+            } ?: mapOf()
         }
         return queryCCIpToCCInfoMap + addToCCIpToCCInfoMap
     }
