@@ -173,6 +173,8 @@ class MarketStoreQueryDao {
                 storeInfoQuery = storeInfoQuery
                 ))
             )
+        } else if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+            conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
         }
         storeInfoQuery.recommendFlag?.let {
             conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
@@ -211,7 +213,9 @@ class MarketStoreQueryDao {
         val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
         val conditions = mutableListOf<Condition>().apply {
             add(tStoreBase.STORE_TYPE.eq(storeType))
-
+            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+                add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
+            }
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))

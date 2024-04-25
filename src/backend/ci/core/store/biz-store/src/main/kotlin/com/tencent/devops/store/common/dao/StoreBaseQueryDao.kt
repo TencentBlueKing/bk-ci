@@ -44,6 +44,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectJoinStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -114,6 +115,19 @@ class StoreBaseQueryDao {
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
+        }
+    }
+
+    fun getLatestComponentByCodes(
+        dslContext: DSLContext,
+        storeCodes: List<String>,
+        storeType: StoreTypeEnum
+    ): Result<TStoreBaseRecord>? {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
         }
     }
 
@@ -343,12 +357,14 @@ class StoreBaseQueryDao {
             tStoreBase.CREATOR,
             tStoreBase.CREATE_TIME,
             tStoreBase.MODIFIER,
-            tStoreBase.UPDATE_TIME
+            tStoreBase.UPDATE_TIME,
+            DSL.max(tStoreBase.CREATE_TIME)
         )
             .from(tStoreBase)
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
+            .groupBy(tStoreBase.STORE_CODE)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
         return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
     }
@@ -366,7 +382,7 @@ class StoreBaseQueryDao {
             storeName = name,
             storeType = storeType
         )
-        return dslContext.selectCount()
+        return dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE))
             .from(tStoreBase)
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
@@ -383,12 +399,12 @@ class StoreBaseQueryDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
+        conditions.add(tStoreBase.STATUS.`in`(StoreStatusEnum.getProcessingStatusList()))
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        conditions.add(tStoreMember.USERNAME.eq(userId))
         conditions.add(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
+        conditions.add(tStoreMember.USERNAME.eq(userId))
         return conditions
     }
 

@@ -720,6 +720,31 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     }
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
+        val storeCodes = mutableListOf<String>()
+        val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+        storeInfoQuery.projectCode?.let { projectCode ->
+            if (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true) {
+                val installedMap = storeProjectService.getInstalledComponent(
+                    projectCode,
+                    storeType.type.toByte()
+                ) ?: emptyMap()
+                if (storeInfoQuery.updateFlag == true) {
+                    storeBaseQueryDao.getLatestComponentByCodes(
+                        dslContext,
+                        installedMap.keys.toList(),
+                        storeType
+                    )?.forEach {
+                        if (StoreUtils.isGreaterVersion(installedMap[it.storeCode]!!, it.version)) {
+                            storeCodes.add(it.storeCode)
+                        }
+                    }
+                } else {
+                    storeCodes.addAll(installedMap.keys.toList())
+                }
+                storeInfoQuery.storeCodes = storeCodes
+            }
+        }
+
         val count = marketStoreQueryDao.count(
             dslContext = dslContext,
             storeInfoQuery = storeInfoQuery
