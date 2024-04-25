@@ -104,6 +104,7 @@ interface RepoDownloadService {
         crossProjectId: String?,
         crossPipineId: String?,
         crossBuildNo: String?,
+        crossBuildId: String?,
         region: String? = null,
         userId: String? = null
     ): List<String>
