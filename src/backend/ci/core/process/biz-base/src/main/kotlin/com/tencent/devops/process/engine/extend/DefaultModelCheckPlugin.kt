@@ -178,7 +178,7 @@ open class DefaultModelCheckPlugin constructor(
 //                    errorCode = ERROR_INCORRECT_NOTIFICATION_TYPE
 //                )
 //            }
-            if (subscription.content.isBlank()) {
+            if (subscription.types.isNotEmpty() && subscription.content.isBlank()) {
                 throw ErrorCodeException(
                     errorCode = ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
                 )
