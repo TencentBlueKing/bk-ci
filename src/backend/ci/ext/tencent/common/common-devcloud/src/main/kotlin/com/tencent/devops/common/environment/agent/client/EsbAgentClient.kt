@@ -195,7 +195,7 @@ class EsbAgentClient {
                             displayIp = lanIPs.joinToString(";"),
                             osName = osName,
                             agentStatus = false,
-                            serverId = it["serverId"] as Long,
+                            serverId = (it["serverId"] as Int).toLong(),
                             deptId = it["DeptId"] as Int
                         )
                     }
@@ -206,7 +206,7 @@ class EsbAgentClient {
                     totalRows = totalRows
                 )
             } catch (timeoutError: SocketTimeoutException) {
-                logger.error("Query CMDB interface time out. Error: $timeoutError")
+                logger.error("Query CMDB interface time out. Error:", timeoutError)
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_LIST)
                 )
