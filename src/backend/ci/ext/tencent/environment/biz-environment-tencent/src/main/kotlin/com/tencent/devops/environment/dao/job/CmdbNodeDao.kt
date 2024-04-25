@@ -72,6 +72,7 @@ class CmdbNodeDao {
                 nodeIpToServerIdMap.map { (ip, serverId) ->
                     dslContext.update(this)
                         .set(SERVER_ID, serverId)
+                        .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                         .where(NODE_IP.eq(ip))
                         .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 }
@@ -107,6 +108,7 @@ class CmdbNodeDao {
                         .set(HOST_ID, it.bkHostId)
                         .set(CLOUD_AREA_ID, it.bkCloudId)
                         .set(OS_TYPE, it.osType)
+                        .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -122,6 +124,7 @@ class CmdbNodeDao {
                         .set(NODE_STATUS, it.nodeStatus)
                         .set(AGENT_STATUS, it.agentStatus)
                         .set(AGENT_VERSION, it.agentVersion)
+                        .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -152,6 +155,7 @@ class CmdbNodeDao {
                 ipToNodeStatus.map { (ip, nodeStatus) ->
                     val updateInfo = dslContext.update(this)
                         .set(NODE_STATUS, nodeStatus)
+                        .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                     if (NodeStatus.NOT_INSTALLED.name == nodeStatus) {
                         updateInfo.set(AGENT_VERSION, agentVersionDefault)
                     }
@@ -196,6 +200,7 @@ class CmdbNodeDao {
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .set(OS_TYPE, osTypeDefault)
                 .set(AGENT_VERSION, agentVersionDefault)
+                .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(notInCCIpList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CC.name))
@@ -230,6 +235,7 @@ class CmdbNodeDao {
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.name)
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
+                .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(ipList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .execute()
