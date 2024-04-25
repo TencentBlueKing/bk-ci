@@ -222,7 +222,7 @@ interface ApigwRemoteDevResource {
         taiUser: String
     ): Result<List<WeSecProjectWorkspace>>
 
-    @Operation(summary = "创建windows工作空间", tags = ["v4_app_remotedev_win_create"])
+    @Operation(summary = "创建windows工作空间-个人", tags = ["v4_app_remotedev_win_prosonal_create"])
     @POST
     @Path("/personal_win_workspace")
     fun createPersonalWorkspace(
@@ -233,7 +233,7 @@ interface ApigwRemoteDevResource {
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
 
-    @Operation(summary = "删除windows工作空间", tags = ["v4_app_remotedev_win_delete"])
+    @Operation(summary = "删除windows工作空间-个人", tags = ["v4_app_remotedev_win_prosonal_delete"])
     @DELETE
     @Path("/personal_win_workspace")
     fun deletePersonalWorkspace(
@@ -245,13 +245,57 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @Operation(summary = "获取windows工作空间", tags = ["v4_app_remotedev_win_detail"])
+    @Operation(summary = "获取windows工作空间-个人", tags = ["v4_app_remotedev_win_prosonal_detail"])
     @GET
     @Path("/personal_win_workspace")
     fun getPersonalWorkspace(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "创建windows工作空间-项目", tags = ["v4_app_remotedev_win_project_create"])
+    @POST
+    @Path("/project_win_workspace")
+    fun createProjectWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "创建内容", required = true)
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean>
+
+    @Operation(summary = "删除windows工作空间-项目", tags = ["v4_app_remotedev_win_project_delete"])
+    @DELETE
+    @Path("/project_win_workspace")
+    fun deleteProjectWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间-项目", tags = ["v4_app_remotedev_win_project_detail"])
+    @GET
+    @Path("/project_win_workspace")
+    fun getProjectWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @Parameter(description = "工作空间名", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
