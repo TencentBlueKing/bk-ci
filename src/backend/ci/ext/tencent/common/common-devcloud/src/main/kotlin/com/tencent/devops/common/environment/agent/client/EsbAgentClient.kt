@@ -318,7 +318,9 @@ class EsbAgentClient {
                 "app_code" to appCode,
                 "app_secret" to appSecret,
                 "operator" to userId,
-                "req_column" to listOf("SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP"),
+                "req_column" to listOf(
+                    "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
+                ),
                 "key_values" to operatorCondition,
                 "paging_info" to mapOf("page_size" to limit, "start_index" to start, "return_total_rows" to 1)
             )
