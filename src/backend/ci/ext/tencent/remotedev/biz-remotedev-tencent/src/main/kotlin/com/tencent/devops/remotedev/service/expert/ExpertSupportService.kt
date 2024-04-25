@@ -84,12 +84,6 @@ class ExpertSupportService @Autowired constructor(
             )
         }
 
-        if (record.status.checkException()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
-            )
-        }
-
         val fetchExpertSupportData = expertSupportDao.fetchSupports(
             dslContext = dslContext,
             projectId = data.projectId,
