@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.service.expert
 
+import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -11,6 +13,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
@@ -28,6 +31,8 @@ import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.CreateControl.Companion
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -114,6 +119,12 @@ class ExpertSupportService @Autowired constructor(
                     it.key
                 }
             }
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(data.projectId)
+        }.onFailure { logger.warn("get project ${data.projectId} info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw RemoteServiceException(
+            "not find project ${data.projectId}", HTTP_400
+        )
         // 发送企业微信群消息
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
@@ -123,7 +134,7 @@ class ExpertSupportService @Autowired constructor(
                 bodyParams = mapOf(
                     NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
                     "id" to id.toString(),
-                    "projectId" to data.projectId,
+                    "projectId" to (data.projectId + " | " + projectInfo.projectName),
                     "workspaceName" to data.workspaceName,
                     "hostIp" to data.hostIp,
                     "userId" to (taiUserCN[data.creator] ?: data.creator),
