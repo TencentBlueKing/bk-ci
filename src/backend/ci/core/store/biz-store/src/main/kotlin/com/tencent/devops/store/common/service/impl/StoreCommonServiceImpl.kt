@@ -414,7 +414,7 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         if (!requireVersionList.contains(version)) {
             logger.warn("$storeType[$storeCode]| invalid version: $version|requireVersionList:$requireVersionList")
             throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
+                errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID,
                 params = arrayOf(version, requireVersionList.toString())
             )
         }
@@ -456,7 +456,7 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
             )
             if (!storeFinalStatusList.contains(dbStatus)) {
                 throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                    errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
                     params = arrayOf(name, dbVersion)
                 )
             }

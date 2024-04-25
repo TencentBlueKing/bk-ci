@@ -43,6 +43,6 @@ data class StoreBaseInfoUpdateRequest(
     val logoUrl: String? = null,
     @get:Schema(title = "发布者", required = false)
     val publisher: String? = null,
-    @get:Schema(title = "原子标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labelIdList: ArrayList<String>? = null
 )
