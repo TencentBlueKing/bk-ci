@@ -45,6 +45,24 @@ BEGIN
                     AND TABLE_NAME = 'T_NODE'
                     AND COLUMN_NAME = 'HOST_ID') THEN
         ALTER TABLE `T_NODE`
+            ADD COLUMN `SYSTEM_UPDATE_TIME` timestamp default null comment '系统任务更新数据时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'HOST_ID') THEN
+        ALTER TABLE `T_NODE`
+            ADD COLUMN `SERVER_ID` bigint(20) default null comment '服务器id';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'HOST_ID') THEN
+        ALTER TABLE `T_NODE`
             ADD COLUMN `HOST_ID` bigint(20) default null comment 'CC的host_id';
     END IF;
 
@@ -67,7 +85,7 @@ BEGIN
         UPDATE T_NODE
             JOIN T_ENVIRONMENT_THIRDPARTY_AGENT ON T_NODE.NODE_ID = T_ENVIRONMENT_THIRDPARTY_AGENT.NODE_ID
         SET T_NODE.AGENT_VERSION = T_ENVIRONMENT_THIRDPARTY_AGENT.MASTER_VERSION
-        WHERE T_NODE.NODE_TYPE  = 'THIRDPARTY';
+        WHERE T_NODE.NODE_TYPE = 'THIRDPARTY';
     END IF;
 
     IF NOT EXISTS(SELECT 1
