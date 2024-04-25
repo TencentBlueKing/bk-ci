@@ -45,6 +45,24 @@ BEGIN
                     AND TABLE_NAME = 'T_NODE'
                     AND COLUMN_NAME = 'HOST_ID') THEN
         ALTER TABLE `T_NODE`
+            ADD COLUMN `SYSTEM_UPDATE_TIME` timestamp default null comment '系统任务更新数据时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'HOST_ID') THEN
+        ALTER TABLE `T_NODE`
+            ADD COLUMN `SERVER_ID` bigint(20) default null comment '服务器id';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'HOST_ID') THEN
+        ALTER TABLE `T_NODE`
             ADD COLUMN `HOST_ID` bigint(20) default null comment 'CC的host_id';
     END IF;
 
