@@ -292,8 +292,8 @@ class CreateControl @Autowired constructor(
                 params = arrayOf(
                     windowsZone.zone,
                     windowsConfig.size,
-                    "0",
-                    "unkown"
+                    "unkown",
+                    newNum.toString()
                 )
             )
         }
