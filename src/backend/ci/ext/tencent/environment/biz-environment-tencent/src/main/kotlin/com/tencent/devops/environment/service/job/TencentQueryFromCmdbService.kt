@@ -124,10 +124,10 @@ class TencentQueryFromCmdbService {
             ccPostRes = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
             logger.info("POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
         } catch (timeoutError: SocketTimeoutException) {
-            logger.error("Query CMDB interface time out. Error: $timeoutError")
+            logger.error("Query CMDB interface time out. Error:", timeoutError)
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT)
         } catch (error: Exception) {
-            logger.error("Query CMDB interface error. Error: $error")
+            logger.error("Query CMDB interface error. Error:", error)
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_CMDB_RESPONSE)
         }
         return ccPostRes
