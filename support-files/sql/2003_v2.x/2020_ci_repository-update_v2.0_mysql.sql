@@ -57,6 +57,15 @@ BEGIN
             ADD COLUMN `YAML_SYNC_STATUS` VARCHAR(10) NULL COMMENT 'pac同步状态';
         END IF;
 
+        IF NOT EXISTS(SELECT 1
+                           FROM information_schema.statistics
+                           WHERE TABLE_SCHEMA = db
+                             AND TABLE_NAME = 'T_REPOSITORY_CODE_GIT'
+                             AND INDEX_NAME = 'IDX_GIT_PROJECT_ID') THEN
+            ALTER TABLE `T_REPOSITORY_CODE_GIT`
+                ADD INDEX `IDX_GIT_PROJECT_ID`(`GIT_PROJECT_ID`);
+        END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

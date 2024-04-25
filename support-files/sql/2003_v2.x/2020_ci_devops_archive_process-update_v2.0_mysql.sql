@@ -61,6 +61,15 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_RESOURCE'
+                    AND COLUMN_NAME = 'YAML_VERSION') THEN
+    ALTER TABLE `T_PIPELINE_RESOURCE`
+        ADD COLUMN `YAML_VERSION` varchar(34) DEFAULT NULL COMMENT 'YAML的版本标记';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE'
                     AND COLUMN_NAME = 'VERSION_NUM') THEN
     ALTER TABLE `T_PIPELINE_RESOURCE`
         ADD COLUMN `VERSION_NUM` int(11) DEFAULT NULL COMMENT '流水线发布版本';
@@ -100,6 +109,15 @@ BEGIN
                     AND COLUMN_NAME = 'YAML') THEN
     ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
         ADD COLUMN `YAML` mediumtext COMMENT 'YAML编排';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                    AND COLUMN_NAME = 'YAML_VERSION') THEN
+    ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
+        ADD COLUMN `YAML_VERSION` varchar(34) DEFAULT NULL COMMENT 'YAML的版本标记';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -187,7 +205,7 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
-                    AND COLUMN_NAME = 'SETTING_VERSION') THEN
+                    AND COLUMN_NAME = 'UPDATE_TIME') THEN
     ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
         ADD COLUMN `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间';
