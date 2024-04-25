@@ -207,7 +207,7 @@ class GitProxyTGitService @Autowired constructor(
         // 获取项目下正在跑的所有机器IP
         val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
         // 获取项目下正在跑的所有机器的用户
-        val users = fetchProjectOwnerUser(projectId)
+        val users = fetchProjectSpecAclUsers(projectId)
 
         // 获取关联的工蜂仓库
         val repoMap = projectTGitLinkDao.fetch(dslContext, projectId).associate {
@@ -476,15 +476,15 @@ class GitProxyTGitService @Autowired constructor(
     ) {
         executor.execute {
             // 获取项目下正在跑的所有机器的用户
-            val users = fetchProjectOwnerUser(projectId)
+            val users = fetchProjectSpecAclUsers(projectId)
             fetchProjectTGit(projectId) { repo, token ->
                 offshoreTGitApiClient.updateProjectAclSpecUser(token, repo.tgitId.toString(), users)
             }
         }
     }
 
-    private fun fetchProjectOwnerUser(projectId: String): Set<String> {
-        return workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId, true)
+    private fun fetchProjectSpecAclUsers(projectId: String): Set<String> {
+        return workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId, false)
             .filter { it.endsWith("@tai") }.map { it.removeSuffix("@tai") }.toSet()
     }
 
@@ -661,7 +661,7 @@ class GitProxyTGitService @Autowired constructor(
             executor.execute {
                 projects.forEach { projectId ->
                     logger.info("OP|refreshTGitAcl|$projectId start")
-                    val users = fetchProjectOwnerUser(projectId)
+                    val users = fetchProjectSpecAclUsers(projectId)
                     val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
                     fetchProjectTGit(projectId) { repo, token ->
                         val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
@@ -686,7 +686,7 @@ class GitProxyTGitService @Autowired constructor(
         // 创建内容
         var offset = 1
         projects.forEach { fProjectId ->
-            val users = fetchProjectOwnerUser(fProjectId)
+            val users = fetchProjectSpecAclUsers(fProjectId)
             val ips = workspaceDao.fetchProjectIp(dslContext, fProjectId).map { it.substringAfter(".") }.toSet()
             fetchProjectTGit(fProjectId, false) { repo, _ ->
                 val row = sheet.createRow(offset)
