@@ -76,10 +76,16 @@ class ExpertSupportService @Autowired constructor(
             workspaceName = data.workspaceName,
             mountType = WorkspaceMountType.START
         )
-        if (record == null || record.status == WorkspaceStatus.DELETED) {
+        if (record == null || record.status.checkDeleted() || record.status.checkInProcess()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                 params = arrayOf(data.workspaceName)
+            )
+        }
+
+        if (record.status.checkException()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
             )
         }
 
