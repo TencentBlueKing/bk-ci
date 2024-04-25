@@ -34,11 +34,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.FIELD_BAK_OPERATOR
-import com.tencent.devops.environment.constant.FIELD_BK_CLOUD_ID
-import com.tencent.devops.environment.constant.FIELD_BK_HOST_ID
-import com.tencent.devops.environment.constant.FIELD_BK_HOST_INNERIP
-import com.tencent.devops.environment.constant.FIELD_OPERATOR
+import com.tencent.devops.environment.constant.Constants.FIELD_BAK_OPERATOR
+import com.tencent.devops.environment.constant.Constants.FIELD_BK_CLOUD_ID
+import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_ID
+import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_INNERIP
+import com.tencent.devops.environment.constant.Constants.FIELD_OPERATOR
 import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP

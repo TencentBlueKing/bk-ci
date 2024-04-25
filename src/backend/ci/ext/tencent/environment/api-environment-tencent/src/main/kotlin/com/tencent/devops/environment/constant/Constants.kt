@@ -27,34 +27,36 @@
 
 package com.tencent.devops.environment.constant
 
-/**
- * 请求CMDB接口的请求参数
- */
-const val COLUMN_SVR_BAK_OPERATOR = "SvrBakOperator"
-const val COLUMN_SVR_OPERATOR = "SvrOperator"
-const val COLUMN_SVR_IP = "SvrIp"
-const val COLUMN_SVR_NAME = "SvrName"
-const val COLUMN_SFW_NAME = "SfwName"
-const val COLUMN_SEVER_LAN_IP = "serverLanIP"
-const val COLUMN_DEPT_ID = "DeptId"
+object Constants {
+    /**
+     * 请求CMDB接口的请求参数
+     */
+    const val COLUMN_SVR_BAK_OPERATOR = "SvrBakOperator"
+    const val COLUMN_SVR_OPERATOR = "SvrOperator"
+    const val COLUMN_SVR_IP = "SvrIp"
+    const val COLUMN_SVR_NAME = "SvrName"
+    const val COLUMN_SFW_NAME = "SfwName"
+    const val COLUMN_SEVER_LAN_IP = "serverLanIP"
+    const val COLUMN_DEPT_ID = "DeptId"
 
-/**
- * 请求CC接口的请求参数
- */
-const val FIELD_BK_HOST_ID = "bk_host_id"
-const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
-const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
-const val FIELD_OPERATOR = "operator"
-const val FIELD_BAK_OPERATOR = "bk_bak_operator"
-const val FIELD_BK_OS_TYPE = "bk_os_type"
-const val FIELD_BK_SVR_ID = "svr_id"
+    /**
+     * 请求CC接口的请求参数
+     */
+    const val FIELD_BK_HOST_ID = "bk_host_id"
+    const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
+    const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
+    const val FIELD_OPERATOR = "operator"
+    const val FIELD_BAK_OPERATOR = "bk_bak_operator"
+    const val FIELD_BK_OS_TYPE = "bk_os_type"
+    const val FIELD_BK_SVR_ID = "svr_id"
 
-/**
- * CC接口返回值中 操作系统类型对应CODE
- */
-const val OS_TYPE_CC_CODE_LINUX = "1"
-const val OS_TYPE_CC_CODE_WINDOWS = "2"
-const val OS_TYPE_CC_CODE_AIX = "3"
-const val OS_TYPE_CC_CODE_UNIX = "4"
-const val OS_TYPE_CC_CODE_SOLARIS = "5"
-const val OS_TYPE_CC_CODE_FREEBSD = "7"
+    /**
+     * CC接口返回值中 操作系统类型对应CODE
+     */
+    const val OS_TYPE_CC_CODE_LINUX = "1"
+    const val OS_TYPE_CC_CODE_WINDOWS = "2"
+    const val OS_TYPE_CC_CODE_AIX = "3"
+    const val OS_TYPE_CC_CODE_UNIX = "4"
+    const val OS_TYPE_CC_CODE_SOLARIS = "5"
+    const val OS_TYPE_CC_CODE_FREEBSD = "7"
+}
