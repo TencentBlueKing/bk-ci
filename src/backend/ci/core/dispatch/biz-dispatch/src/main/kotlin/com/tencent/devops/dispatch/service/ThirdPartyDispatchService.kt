@@ -50,6 +50,7 @@ import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_REDISPATCH
 import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_WAIT_REUSED_ENV
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
+import com.tencent.devops.dispatch.constants.BK_ENV_NODE_DISABLE
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
 import com.tencent.devops.dispatch.constants.BK_MAX_BUILD_SEARCHING_AGENT
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
@@ -65,6 +66,7 @@ import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -578,10 +580,10 @@ class ThirdPartyDispatchService @Autowired constructor(
         val (envId, agentResData) = if (dispatchType.idType()) {
             Pair(
                 HashUtil.decodeIdToLong(dispatchType.envName),
-                (agentsResult.data!! as List<ThirdPartyAgent>)
+                (agentsResult.data!! as List<EnvNodeAgent>)
             )
         } else {
-            (agentsResult.data as Pair<Long?, List<ThirdPartyAgent>>)
+            (agentsResult.data as Pair<Long?, List<EnvNodeAgent>>)
         }
 
         if (agentResData.isEmpty()) {
@@ -600,6 +602,16 @@ class ThirdPartyDispatchService @Autowired constructor(
         ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
             if (lock) {
+                val disableAgentIds = agentResData.filter { !it.enableNode }.map { it.agent.agentId }.toSet()
+                logDebug(
+                    buildLogPrinter,
+                    dispatchMessage,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_ENV_NODE_DISABLE,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(disableAgentIds.joinToString(","))
+                    )
+                )
                 /**
                  * 1. 现获取当前正常的agent列表
                  * 2. 获取可用的agent列表
@@ -607,9 +619,10 @@ class ThirdPartyDispatchService @Autowired constructor(
                  * 4. 如果启动可用的agent失败再调用有任务的agent
                  */
                 val activeAgents = agentResData.filter {
-                    it.status == AgentStatus.IMPORT_OK &&
-                            (dispatchMessage.event.os == it.os || dispatchMessage.event.os == VMBaseOS.ALL.name)
-                }
+                    it.agent.status == AgentStatus.IMPORT_OK &&
+                        (dispatchMessage.event.os == it.agent.os || dispatchMessage.event.os == VMBaseOS.ALL.name) &&
+                        it.enableNode
+                }.map { it.agent }
 
                 var jobEnvActiveAgents = activeAgents
                 if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {

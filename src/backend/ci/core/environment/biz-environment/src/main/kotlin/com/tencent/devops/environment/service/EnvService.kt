@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_OR_DISABLE_TEMPLATE
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -1110,18 +1111,39 @@ class EnvService @Autowired constructor(
         envShareProjectDao.deleteBySharedProj(dslContext, envId, projectId, sharedProjectId)
     }
 
-    fun disableEnvNode(
+    @ActionAuditRecord(
+        actionId = ActionId.ENVIRONMENT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENVIRONMENT
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENVIRONMENT_ENABLE_OR_DISABLE_NODE
+    )
+    fun enableNodeEnv(
         projectId: String,
         envHashId: String,
         nodeHashId: String,
-        disableNode: Boolean
+        enableNode: Boolean
     ) {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        ActionAuditContext.current()
+            .setInstanceId(nodeId.toString())
+            .setInstanceName(envId.toString())
+        if (enableNode) {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+        } else {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
+        }
         envNodeDao.disableOrEnableNode(
             dslContext = dslContext,
             projectId = projectId,
-            envId = HashUtil.decodeIdToLong(envHashId),
-            nodeId = HashUtil.decodeIdToLong(nodeHashId),
-            disable = disableNode
+            envId = envId,
+            nodeId = nodeId,
+            enable = enableNode
         )
     }
 }

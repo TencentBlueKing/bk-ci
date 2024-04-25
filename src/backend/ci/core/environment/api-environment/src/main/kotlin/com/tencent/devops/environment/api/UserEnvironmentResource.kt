@@ -41,9 +41,9 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -372,8 +372,8 @@ interface UserEnvironmentResource {
         @Parameter(description = "节点 hashId", required = true)
         @PathParam("envHashId")
         nodeHashId: String,
-        @Parameter(description = "是否停用", required = true)
-        @QueryParam("disableNode")
-        disableNode: Boolean
+        @Parameter(description = "启动或者停用", required = true)
+        @QueryParam("enableNode")
+        enableNode: Boolean
     ): Result<Boolean>
 }

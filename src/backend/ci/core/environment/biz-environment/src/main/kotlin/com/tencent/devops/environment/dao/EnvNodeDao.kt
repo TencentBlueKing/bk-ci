@@ -70,20 +70,22 @@ class EnvNodeDao {
         if (nodeIds.isEmpty()) {
             return
         }
-        dslContext.batch(nodeIds.map {
-            with(TEnvNode.T_ENV_NODE) {
-                dslContext.insertInto(
-                    this,
-                    ENV_ID,
-                    NODE_ID,
-                    PROJECT_ID
-                ).values(
-                    envId,
-                    it,
-                    projectId
-                )
+        dslContext.batch(
+            nodeIds.map {
+                with(TEnvNode.T_ENV_NODE) {
+                    dslContext.insertInto(
+                        this,
+                        ENV_ID,
+                        NODE_ID,
+                        PROJECT_ID
+                    ).values(
+                        envId,
+                        it,
+                        projectId
+                    )
+                }
             }
-        }).execute()
+        ).execute()
     }
 
     fun batchDeleteEnvNode(dslContext: DSLContext, projectId: String, envId: Long, nodeIds: List<Long>) {
@@ -120,13 +122,13 @@ class EnvNodeDao {
         }
     }
 
-    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, disable: Boolean) {
+    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, enable: Boolean) {
         with(TEnvNode.T_ENV_NODE) {
             dslContext.update(this)
-                .set(ENABLE_NODE, !disable)
+                .set(ENABLE_NODE, enable)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
-                .and(NODE_ID.`in`(nodeIds))
+                .and(NODE_ID.eq(nodeId))
                 .execute()
         }
     }

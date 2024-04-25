@@ -817,7 +817,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
-        val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
+        val sharedThirdPartyAgents = mutableListOf<EnvNodeAgent>()
 
         run outSide@{
             // 优先进行单个项目的匹配
@@ -890,12 +890,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 I18nUtil.getCodeLanMessage(ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST) + "($projectId:$envHashId)"
             )
         }
-        val nodeIdMap = nodes.map {
+        val nodeIdMap = nodes.associate {
             it.nodeId to it.enableNode
-        }.toMap()
+        }
         val agents = thirdPartyAgentDao.getAgentsByNodeIds(
             dslContext = dslContext,
-            nodeIds = nodeIdMap.keys(),
+            nodeIds = nodeIdMap.keys,
             projectId = projectId
         )
         return agents.map {
@@ -1045,9 +1045,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         } else if (status == AgentStatus.IMPORT_EXCEPTION) {
             status = AgentStatus.IMPORT_OK
         }
-        if (!(AgentStatus.isImportException(status) ||
+        if (!(
+            AgentStatus.isImportException(status) ||
                 AgentStatus.isUnImport(status) ||
-                agentRecord.startRemoteIp.isNullOrBlank())
+                agentRecord.startRemoteIp.isNullOrBlank()
+            )
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1078,8 +1080,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val context = DSL.using(configuration)
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
-                if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
+                if (nodeRecord != null && (
+                    nodeRecord.nodeIp != startInfo.hostIp ||
+                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name
+                    )
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
