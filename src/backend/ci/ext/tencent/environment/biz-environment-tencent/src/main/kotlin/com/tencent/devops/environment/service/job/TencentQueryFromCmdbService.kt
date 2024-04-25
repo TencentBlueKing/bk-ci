@@ -119,7 +119,7 @@ class TencentQueryFromCmdbService {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         logger.info("POST url: $url, req: ${logWithLengthLimit(requestContent)}")
 
-        var ccPostRes: String? = null
+        val ccPostRes: String?
         try {
             ccPostRes = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
             logger.info("POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
@@ -128,6 +128,7 @@ class TencentQueryFromCmdbService {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT)
         } catch (error: Exception) {
             logger.error("Query CMDB interface error. Error: $error")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_CMDB_RESPONSE)
         }
         return ccPostRes
     }

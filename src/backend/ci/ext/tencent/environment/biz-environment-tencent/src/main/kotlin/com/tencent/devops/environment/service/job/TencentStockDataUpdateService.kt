@@ -410,7 +410,11 @@ class TencentStockDataUpdateService @Autowired constructor(
             val totalPage = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, cmdbNodesCount.toLong())
             val time1 = LocalDateTime.now()
             for (page in 1..totalPage) {
-                writeServerIdByPage(page)
+                try {
+                    writeServerIdByPage(page)
+                } catch (e: Exception) {
+                    logger.error("[writeServerId]Error in page[$page], Error:$e")
+                }
             }
             logger.info(
                 "[writeServerId]total time: ${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s, " +
