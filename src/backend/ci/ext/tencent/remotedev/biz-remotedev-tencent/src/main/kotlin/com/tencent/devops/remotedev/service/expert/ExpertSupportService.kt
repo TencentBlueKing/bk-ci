@@ -67,6 +67,7 @@ class ExpertSupportService @Autowired constructor(
 
     private val executor = Executors.newCachedThreadPool()
 
+    @Suppress("ComplexMethod")
     fun createSupport(
         data: CreateSupportData
     ) {
