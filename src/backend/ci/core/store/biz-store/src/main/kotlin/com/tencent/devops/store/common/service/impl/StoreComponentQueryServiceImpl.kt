@@ -304,7 +304,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeId = processingAtomRecord[tStoreBase.ID] as String,
                 storeCode = storeCode,
                 storeName = processingAtomRecord[tStoreBase.NAME] as String,
-                storeType = StoreTypeEnum.valueOf(processingAtomRecord[tStoreBase.STORE_TYPE] as String),
+                storeType = StoreTypeEnum.getStoreTypeObj((processingAtomRecord[tStoreBase.STORE_TYPE] as Byte).toInt()),
                 version = version,
                 publicFlag = processingAtomRecord[TStoreBaseFeature.T_STORE_BASE_FEATURE.PUBLIC_FLAG] as Boolean,
                 status = processingAtomRecord[tStoreBase.STATUS] as String,
