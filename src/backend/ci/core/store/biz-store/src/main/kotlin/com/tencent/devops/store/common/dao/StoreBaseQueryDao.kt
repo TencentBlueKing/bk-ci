@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.ListComponentsQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -347,6 +348,16 @@ class StoreBaseQueryDao {
             storeName = name,
             storeType = storeType
         )
+        val subquery = dslContext.select(
+            tStoreBase.STORE_CODE,
+            DSL.max(tStoreBase.CREATE_TIME).`as`("max_create_time")
+        )
+            .from(tStoreBase)
+            .join(tStoreMember)
+            .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
+            .where(conditions)
+            .groupBy(tStoreBase.STORE_CODE)
+
         val baseStep = dslContext.select(
             tStoreBase.ID,
             tStoreBase.STORE_CODE,
@@ -357,14 +368,15 @@ class StoreBaseQueryDao {
             tStoreBase.CREATOR,
             tStoreBase.CREATE_TIME,
             tStoreBase.MODIFIER,
-            tStoreBase.UPDATE_TIME,
-            DSL.max(tStoreBase.CREATE_TIME)
+            tStoreBase.UPDATE_TIME
         )
             .from(tStoreBase)
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
+            .join(subquery)
+            .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
+            .and(tStoreBase.CREATE_TIME.eq(subquery.field("max_create_time", LocalDateTime::class.java)))
             .where(conditions)
-            .groupBy(tStoreBase.STORE_CODE)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
         return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
     }
