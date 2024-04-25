@@ -66,5 +66,24 @@ enum class StoreStatusEnum {
                 AUDITING.name
             )
         }
+
+        fun getAll(): List<String> {
+            return listOf(
+                INIT.name,
+                COMMITTING.name,
+                BUILDING.name,
+                BUILD_FAIL.name,
+                CHECKING.name,
+                CHECK_FAIL.name,
+                TESTING.name,
+                AUDITING.name,
+                AUDIT_REJECT.name,
+                RELEASED.name,
+                GROUNDING_SUSPENSION.name,
+                UNDERCARRIAGING.name,
+                UNDERCARRIAGED.name,
+                TESTED.name
+            )
+        }
     }
 }

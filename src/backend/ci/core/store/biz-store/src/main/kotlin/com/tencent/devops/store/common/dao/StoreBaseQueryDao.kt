@@ -399,8 +399,9 @@ class StoreBaseQueryDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        val statusList = mutableListOf(StoreStatusEnum.RELEASED.name)
-        statusList.addAll(StoreStatusEnum.getProcessingStatusList())
+        val statusList = StoreStatusEnum.getAll().toMutableList()
+        statusList.removeAll(StoreStatusEnum.getProcessingStatusList())
+        statusList.add(StoreStatusEnum.INIT.name)
         conditions.add(tStoreBase.STATUS.`in`(statusList))
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
