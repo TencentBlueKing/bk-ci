@@ -106,22 +106,14 @@ class ProjectCronService constructor(
     }
 
     /**
-     * 每周日更新OBS产品
+     * 每天更新OBS产品
      * */
     @Scheduled(cron = "0 0 3 * * ?")
     fun updateObsProduct() {
-        if (!enable) {
-            return
-        }
         try {
             logger.info("update obs product | start")
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                projectOperationalProductService.syncOperationalProduct()
-                logger.info("update obs product|finish")
-            } else {
-                logger.info("update obs product|running")
-            }
+            projectOperationalProductService.syncOperationalProduct()
+            logger.info("update obs product|finish")
         } catch (e: Exception) {
             logger.warn("update obs product | error", e)
         }
