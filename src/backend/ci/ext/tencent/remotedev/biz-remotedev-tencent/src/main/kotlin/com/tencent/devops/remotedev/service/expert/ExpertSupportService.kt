@@ -31,14 +31,13 @@ import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
-import com.tencent.devops.remotedev.service.workspace.CreateControl
-import com.tencent.devops.remotedev.service.workspace.CreateControl.Companion
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
@@ -234,6 +233,14 @@ class ExpertSupportService @Autowired constructor(
             )
         ) {
             return Pair(false, "${userId}已认领该工单")
+        }
+
+        // 校验求助单是否已过期：1小时
+        if (Duration.between(
+                expertSupportDao.getSup(dslContext, id)?.createTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds > DEFAULT_WAIT_TIME) {
+            return Pair(false, "单据[$id]已超过1小时过期")
         }
 
         // 校验机器在不在
