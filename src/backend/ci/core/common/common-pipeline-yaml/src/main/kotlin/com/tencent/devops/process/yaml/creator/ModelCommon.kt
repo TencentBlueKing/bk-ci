@@ -28,7 +28,6 @@
 package com.tencent.devops.process.yaml.creator
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -38,15 +37,15 @@ import org.slf4j.LoggerFactory
 object ModelCommon {
 
     private val logger = LoggerFactory.getLogger(ModelCommon::class.java)
-    private val regexMatch = Regex("""([^ ]+)\s*==\s*'(.*)'""")
-    private val regexNotMatch = Regex("""([^ ]+)\s*!=\s*'(.*)'""")
 
     fun getBranchName(ref: String): String {
         return when {
             ref.startsWith("refs/heads/") ->
                 ref.removePrefix("refs/heads/")
+
             ref.startsWith("refs/tags/") ->
                 ref.removePrefix("refs/tags/")
+
             else -> ref
         }
     }
@@ -100,33 +99,5 @@ object ModelCommon {
         }
 
         return parseReceivers
-    }
-
-    fun revertCustomVariableMatch(input: String): List<NameAndValue>? {
-        if (input.indexOf("==") == -1) return null
-        val res = mutableListOf<NameAndValue>()
-        kotlin.runCatching {
-            input.split("&&").forEach {
-                regexMatch.matchEntire(it.trim())?.run {
-                    val (key, value) = this.destructured
-                    res.add(NameAndValue(key, value))
-                }
-            }
-        }.onFailure { return null }
-        return res
-    }
-
-    fun revertCustomVariableNotMatch(input: String): List<NameAndValue>? {
-        if (input.indexOf("!=") == -1) return null
-        val res = mutableListOf<NameAndValue>()
-        kotlin.runCatching {
-            input.split("||").forEach {
-                regexNotMatch.matchEntire(it.trim())?.run {
-                    val (key, value) = this.destructured
-                    res.add(NameAndValue(key, value))
-                }
-            }
-        }.onFailure { return null }
-        return res
     }
 }
