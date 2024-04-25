@@ -413,7 +413,7 @@ class TencentStockDataUpdateService @Autowired constructor(
                 try {
                     writeServerIdByPage(page)
                 } catch (e: Exception) {
-                    logger.error("[writeServerId]Error in page[$page], Error:$e")
+                    logger.error("[writeServerId]Error in page[$page], Error:", e)
                 }
             }
             logger.info(
