@@ -350,6 +350,7 @@ class StoreBaseQueryDao {
         )
         val subquery = dslContext.select(
             tStoreBase.STORE_CODE,
+            tStoreBase.STORE_TYPE,
             DSL.max(tStoreBase.CREATE_TIME).`as`("max_create_time")
         )
             .from(tStoreBase)
@@ -375,6 +376,7 @@ class StoreBaseQueryDao {
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
             .join(subquery)
             .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
+            .and(tStoreBase.STORE_TYPE.eq(subquery.field(tStoreBase.STORE_TYPE)))
             .and(tStoreBase.CREATE_TIME.eq(subquery.field("max_create_time", LocalDateTime::class.java)))
             .where(conditions)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
