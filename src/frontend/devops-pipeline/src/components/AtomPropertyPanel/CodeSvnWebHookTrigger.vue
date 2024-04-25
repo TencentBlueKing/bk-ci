@@ -1,15 +1,36 @@
 <template>
     <div class="bk-form bk-form-vertical">
-        <form-field v-for="(obj, key) in atomPropsModel" v-if="!obj.hidden" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-            <component
-                :is="obj.component"
-                :name="key"
-                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
-                :handle-change="handleMethods"
-                :value="element[key]"
-                v-bind="obj">
-            </component>
-        </form-field>
+        <template v-for="(obj, key) in atomPropsModel">
+            <template v-if="obj.type === 'group'">
+                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :handle-change="handleMethods" :key="key" v-bind="obj">
+                    <template v-for="(i, index) in obj.children">
+                        <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
+                            <component
+                                :is="i.component"
+                                :name="i.key"
+                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
+                                :handle-change="handleMethods"
+                                :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
+                                v-bind="i">
+                            </component>
+                        </form-field>
+                    </template>
+                </form-field-group>
+            </template>
+            <template v-else>
+                <form-field v-if="!obj.hidden" :key="key" v-bind="obj" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                        :handle-change="handleMethods"
+                        :value="element[key]"
+                        :element="element"
+                        v-bind="obj">
+                    </component>
+                </form-field>
+            </template>
+        </template>
     </div>
 </template>
 
@@ -34,12 +55,14 @@
                 }
             },
             handleChooseCodelibType (name, value) {
-                if (value === 'ID') {
-                    this.atomPropsModel.repositoryHashId.hidden = false
-                    this.atomPropsModel.repositoryName.hidden = true
-                } else if (value === 'NAME') {
-                    this.atomPropsModel.repositoryHashId.hidden = true
-                    this.atomPropsModel.repositoryName.hidden = false
+                if (!this.atomPropsModel?.repositoryType?.list) {
+                    if (value === 'ID') {
+                        this.atomPropsModel.repositoryHashId.hidden = false
+                        this.atomPropsModel.repositoryName.hidden = true
+                    } else if (value === 'NAME') {
+                        this.atomPropsModel.repositoryHashId.hidden = true
+                        this.atomPropsModel.repositoryName.hidden = false
+                    }
                 }
                 this.handleUpdateElement(name, value)
             }

@@ -104,7 +104,6 @@
         .icon-info-circle, .icon-question-circle {
             color: #C3CDD7;
             font-size: 14px;
-            vertical-align: middle;
             pointer-events: auto;
         }
     }

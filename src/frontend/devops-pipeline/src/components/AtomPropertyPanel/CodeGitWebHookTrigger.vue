@@ -24,7 +24,7 @@
                         :name="key"
                         v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
                         :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
-                        :value="element[key]"
+                        :value="element[key] || atomPropsModel[key]?.default"
                         :element="element"
                         v-bind="obj">
                     </component>
@@ -62,7 +62,7 @@
             }
         },
         created () {
-            if (!this.atomPropsModel.userSettings) {
+            if (!this.atomPropsModel?.repositoryType?.list) {
                 this.enableThirdFilter = this.element.enableThirdFilter || false
                 if (this.element.eventType === 'MERGE_REQUEST') {
                     this.atomPropsModel.webhookQueue.hidden = false
@@ -78,7 +78,7 @@
         },
         methods: {
             handleBlockEnable (name, value) {
-                if (!this.atomPropsModel.userSettings) {
+                if (!this.atomPropsModel?.repositoryType?.list) {
                     if (value === 'MERGE_REQUEST') {
                         this.atomPropsModel.block.hidden = false
                         this.atomPropsModel.webhookQueue.hidden = false
@@ -91,7 +91,7 @@
             },
             handleMethods (name, value) {
                 // 兼容逻辑，后续该需求上线后可删除
-                if (this.atomPropsModel.userSettings) {
+                if (this.atomPropsModel?.repositoryType?.list) {
                     this.handleUpdateElement(name, value)
                 } else {
                     if (name === 'repositoryType') {
@@ -102,7 +102,7 @@
                 }
             },
             handleChooseCodelibType (name, value) {
-                if (!this.atomPropsModel.userSettings) {
+                if (!this.atomPropsModel?.repositoryType?.list) {
                     if (value === 'ID') {
                         this.atomPropsModel.repositoryHashId.hidden = false
                         this.atomPropsModel.repositoryName.hidden = true

@@ -75,7 +75,6 @@
         methods: {
             handleChangeValue (val) {
                 const { name, handleChange } = this
-                console.log(name, val, 123)
                 handleChange(name, val)
             }
         }
