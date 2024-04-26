@@ -8,6 +8,7 @@ import {
   h,
   ref,
   watch,
+  onMounted,
   computed,
   resolveDirective,
   withDirectives,
@@ -167,11 +168,13 @@ const handleChangeSearch = (data) => {
 };
 
 const fetchGroupList = async (payload = []) => {
-  if (!props.projectCode) return;
+  const projectId = props.projectCode || route?.query.project_code;
+  if (!projectId) return;
   const params = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
     groupLevel: groupLevel.value,
+    projectId,
   };
   payload.forEach((i) => {
     if (i.id === 'actionId') {
@@ -186,7 +189,6 @@ const fetchGroupList = async (payload = []) => {
       params[i.id] = i.values.join();
     }
   });
-  params.projectId = props.projectCode;
   isLoading.value = true;
   await http.getUserGroupList(params).then((res) => {
     pagination.value.count = res.count;
@@ -325,6 +327,14 @@ const columns = [
     },
   },
 ];
+
+onMounted(() => {
+  const { iamRelatedResourceType } = route?.query;
+  groupLevel.value = iamRelatedResourceType && iamRelatedResourceType !== 'project' ? 'OTHER' : 'PROJECT';
+  if (!iamRelatedResourceType) {
+    fetchGroupList(filter.value);
+  };
+});
 </script>
 
 <template>
