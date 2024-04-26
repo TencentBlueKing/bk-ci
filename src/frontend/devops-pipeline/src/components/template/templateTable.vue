@@ -400,8 +400,8 @@
                 const content = `${this.$t('template.deleteTemplateTips', [row.name])}`
 
                 navConfirm({ type: 'warning', content })
-                    .then(() => {
-                        this.confirmDeleteTemplate(row)
+                    .then((val) => {
+                        val && this.confirmDeleteTemplate(row)
                     }).catch(() => {})
             },
 

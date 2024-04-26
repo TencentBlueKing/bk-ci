@@ -25,5 +25,7 @@ import Vue from 'vue'
 
 export const ADD_TO_PIPELINE_GROUP = 'showAddToPipelineGroup'
 export const REFRESH_PIPELINE_LIST = 'refreshPipelineList'
+export const SHOW_VERSION_HISTORY_SIDESLIDER = 'SHOW_VERSION_HISTORY_SIDESLIDER'
+export const UPDATE_PREVIEW_PIPELINE_NAME = 'UPDATE_PREVIEW_PIPELINE_NAME'
 // Use a bus for components communication,
 export const bus = new Vue()
