@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -16,7 +16,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.SendEmailForProjectByConditionDTO
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
@@ -95,13 +95,14 @@ class ProjectNotifyService constructor(
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE
             do {
-                val projectInfos = projectService.listMigrateProjects(
-                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                val projectInfos = projectService.listProjectsByCondition(
+                    projectConditionDTO = ProjectConditionDTO(
                         bgId = sendEmailForProjectByConditionDTO.bgId,
                         deptId = sendEmailForProjectByConditionDTO.deptId,
                         centerId = sendEmailForProjectByConditionDTO.centerId,
                         relatedProduct = false,
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                        enabled = true
                     ),
                     limit = limit,
                     offset = offset
@@ -162,13 +163,14 @@ class ProjectNotifyService constructor(
         var count = 0
         val projectIds = mutableListOf<String>()
         do {
-            val projectInfos = projectService.listMigrateProjects(
-                migrateProjectConditionDTO = MigrateProjectConditionDTO(
+            val projectInfos = projectService.listProjectsByCondition(
+                projectConditionDTO = ProjectConditionDTO(
                     bgId = sendEmailForProjectByConditionDTO.bgId,
                     deptId = sendEmailForProjectByConditionDTO.deptId,
                     centerId = sendEmailForProjectByConditionDTO.centerId,
                     relatedProduct = false,
-                    routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                    routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                    enabled = true
                 ),
                 limit = limit,
                 offset = offset
@@ -321,9 +323,10 @@ class ProjectNotifyService constructor(
                 val projectID2ManagerBelongVerifyBgId = mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg为校验的verifyBgId*/>()
                 val projectID2ManagerNotBelongVerifyBgId = mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg不为校验的verifyBgId*/>()
                 do {
-                    val projectInfos = projectService.listMigrateProjects(
-                        migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                            routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                    val projectInfos = projectService.listProjectsByCondition(
+                        projectConditionDTO = ProjectConditionDTO(
+                            routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                            enabled = true
                         ),
                         limit = limit,
                         offset = offset
@@ -353,7 +356,7 @@ class ProjectNotifyService constructor(
     }
 
     private fun processProjectInfos(
-        projectInfos: List<ProjectWithPermission>,
+        projectInfos: List<ProjectByConditionDTO>,
         verifyBgId: Long,
         wrongOrganizationalProjectList: MutableList<String>,
         projectID2ManagerBelongVerifyBgId: MutableMap<String, List<String>>,
@@ -388,7 +391,7 @@ class ProjectNotifyService constructor(
         }
     }
 
-    private fun getManagerDeptInfos(projectInfo: ProjectWithPermission): MutableList<UserDeptDetail>? {
+    private fun getManagerDeptInfos(projectInfo: ProjectByConditionDTO): MutableList<UserDeptDetail>? {
         val projectId = projectInfo.englishName
         val managerWithDeptDetail = projectId2ManagerWithDeptDetail.getIfPresent(projectId)
         if (managerWithDeptDetail != null)
@@ -411,7 +414,7 @@ class ProjectNotifyService constructor(
     }
 
     private fun processManagerBgSame(
-        projectInfo: ProjectWithPermission,
+        projectInfo: ProjectByConditionDTO,
         managerBgIds: List<String>,
         verifyBgId: Long,
         wrongOrganizationalProjectList: MutableList<String>
@@ -425,7 +428,7 @@ class ProjectNotifyService constructor(
     }
 
     private fun processManagerBgNotSame(
-        projectInfo: ProjectWithPermission,
+        projectInfo: ProjectByConditionDTO,
         managerDeptInfos: MutableList<UserDeptDetail>,
         managerBgIds: List<String>,
         verifyBgId: Long,

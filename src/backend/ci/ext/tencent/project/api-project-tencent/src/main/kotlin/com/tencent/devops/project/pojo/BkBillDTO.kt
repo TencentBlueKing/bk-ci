@@ -25,25 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.vo
+package com.tencent.devops.project.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import io.swagger.v3.oas.annotations.Parameter
 
-@Schema(title = "流水线失败信息查询请求报文")
-data class PipelineFailInfoQueryReqVO(
-    @Parameter(description = "项目ID", required = false)
-    override var projectId: String? = null,
-    @Parameter(description = "流水线ID", required = false)
-    override var pipelineIds: List<String>? = null,
-    @Parameter(description = "流水线标签", required = false)
-    override val pipelineLabelIds: List<Long>? = null,
-    @Parameter(description = "开始时间", required = false)
-    override var startTime: String? = null,
-    @Parameter(description = "结束时间", required = false)
-    override var endTime: String? = null,
-    @Parameter(description = "错误类型", required = false)
-    val errorTypes: List<Int>? = null,
-    @Parameter(description = "插件代码", required = false)
-    val atomCodes: List<String>? = null
-) : BaseQueryReqVO(projectId, pipelineIds, pipelineLabelIds, startTime, endTime)
+@Schema(title = "蓝盾货币化数据")
+data class BkBillDTO(
+    @get:Schema(title = "账单周期（月）")
+    @JsonProperty(value = "cost_date")
+    val costDate: String,
+    @get:Schema(title = "項目ID")
+    @JsonProperty(value = "project_id")
+    val projectId: String,
+    @get:Schema(title = "种类")
+    val kind: String,
+    @get:Schema(title = "使用量")
+    val usage: Int,
+    @get:Schema(title = "bg名称")
+    @JsonProperty(value = "bg_name")
+    val bgName: String,
+    @get:Schema(title = "是否计费标志")
+    val flag: Boolean
+)

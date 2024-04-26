@@ -47,7 +47,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -90,7 +90,7 @@ class UserProjectResourceImpl @Autowired constructor(
         projectId: String?,
         page: Int,
         pageSize: Int
-    ): Result<Pagination<ProjectWithPermission>> {
+    ): Result<Pagination<ProjectByConditionDTO>> {
         return Result(
             projectService.listProjectsForApply(
                 userId = userId,

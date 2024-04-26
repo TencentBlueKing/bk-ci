@@ -1,9 +1,9 @@
 package com.tencent.devops.project.service.cron
 
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.project.service.ProjectCostAllocationService
+import com.tencent.devops.project.service.ProjectBillsService
 import com.tencent.devops.project.service.ProjectNotifyService
 import com.tencent.devops.project.service.ProjectOperationalProductService
 import org.slf4j.LoggerFactory
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectCronService constructor(
     val projectNotifyService: ProjectNotifyService,
-    val projectCostAllocationService: ProjectCostAllocationService,
+    val projectBillsService: ProjectBillsService,
     val redisOperation: RedisOperation,
     val projectOperationalProductService: ProjectOperationalProductService
 ) {
@@ -75,10 +75,14 @@ class ProjectCronService constructor(
         }
     }
 
-    // 每周一8点开始检测项目活跃度
+    /**
+     * 每周一8点开始检测项目活跃度
+     * 该检测比较严格，会对 关联产品但不活跃/活跃但未关联产品/不关联产品且不活跃的项目进行检测，
+     * 连续三周发送邮件，仍不处理，则会禁用项目
+     * */
     @Scheduled(cron = "0 0 8 ? * MON")
     @Suppress("NestedBlockDepth")
-    fun processInactiveProjectRegularly() {
+    fun checkInactiveProjectRegularly() {
         if (!enable) {
             return
         }
@@ -91,8 +95,8 @@ class ProjectCronService constructor(
                     logger.info("bg ids is null or blank")
                     return
                 }
-                projectCostAllocationService.processInactiveProjectByCondition(
-                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                projectBillsService.checkInactiveProjectRegularly(
+                    projectConditionDTO = ProjectConditionDTO(
                         bgIdList = bgIds.split(",").map { it.toLong() }
                     )
                 )
@@ -106,22 +110,37 @@ class ProjectCronService constructor(
     }
 
     /**
-     * 每周日更新OBS产品
+     * 禁用不活跃项目，不活跃定义两个月内无人访问且未执行流水线。
      * */
-    @Scheduled(cron = "0 0 3 * * ?")
-    fun updateObsProduct() {
+    @Scheduled(cron = "0 0 8 ? * SUN")
+    @Suppress("NestedBlockDepth")
+    fun disableInactiveProjectRegularly() {
         if (!enable) {
             return
         }
         try {
-            logger.info("update obs product | start")
+            logger.info("disable inactive project regularly |start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                projectOperationalProductService.syncOperationalProduct()
-                logger.info("update obs product|finish")
+                projectBillsService.disableInactiveProjectRegularly()
+                logger.info("disable inactive project regularly |finish")
             } else {
-                logger.info("update obs product|running")
+                logger.info("disable inactive project regularly |running")
             }
+        } catch (e: Exception) {
+            logger.warn("disable inactive project regularly |error", e)
+        }
+    }
+
+    /**
+     * 每天更新OBS产品
+     * */
+    @Scheduled(cron = "0 0 3 * * ?")
+    fun updateObsProduct() {
+        try {
+            logger.info("update obs product | start")
+            projectOperationalProductService.syncOperationalProduct()
+            logger.info("update obs product|finish")
         } catch (e: Exception) {
             logger.warn("update obs product | error", e)
         }

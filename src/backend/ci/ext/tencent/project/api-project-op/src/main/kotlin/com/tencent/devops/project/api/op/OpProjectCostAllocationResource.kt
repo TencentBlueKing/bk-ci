@@ -1,7 +1,7 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -29,11 +29,16 @@ interface OpProjectCostAllocationResource {
     @Path("/processInactiveProjectByCondition/")
     fun processInactiveProjectByCondition(
         @Parameter(description = "条件", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
 
     @Operation(summary = "同步OBS数据")
     @POST
     @Path("/syncOperationalProduct/")
     fun syncOperationalProduct(): Result<Boolean>
+
+    @Operation(summary = "上报货币化数据")
+    @POST
+    @Path("/reportBillsData/")
+    fun reportBillsData(): Result<Boolean>
 }
