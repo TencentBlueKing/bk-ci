@@ -169,9 +169,11 @@ class MarketStoreQueryDao {
                     storeInfoQuery = storeInfoQuery
                 ))
             )
-        } else if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
-            conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
         }
+
+//        if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+//            conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
+//        }
         if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
             baseStep.leftJoin(tStoreBaseFeature)
                 .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
@@ -214,9 +216,9 @@ class MarketStoreQueryDao {
         val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
         val conditions = mutableListOf<Condition>().apply {
             add(tStoreBase.STORE_TYPE.eq(storeType))
-            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
-                add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
-            }
+//            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+//                add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
+//            }
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))
