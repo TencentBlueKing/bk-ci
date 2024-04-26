@@ -149,14 +149,14 @@ class EsbAgentClient {
         val url = "http://open.oa.com/component/compapi/cmdb/get_query_info/"
 
         val requestBody = ObjectMapper().writeValueAsString(requestData)
-        logger.info("POST url: $url")
-        logger.info("requestBody: $requestBody")
+        logger.info("[queryCmdbNode]POST url: $url")
+        logger.info("[queryCmdbNode]requestBody: $requestBody")
 
         val request = Request.Builder().url(url).post(requestBody.toRequestBody(JSON)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
-                logger.info("responseBody: $responseBody")
+                logger.info("[queryCmdbNode]responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
