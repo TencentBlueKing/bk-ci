@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
 
 @Service
 class RemoteDevJobActionService @Autowired constructor(
@@ -45,45 +44,41 @@ class RemoteDevJobActionService @Autowired constructor(
         // TODO: 注册定时任务
     }
 
-    private val executor = Executors.newCachedThreadPool()
-
     // 执行流水线任务，异步
     fun startPipeline(projectId: String, id: Long, param: PipelineParam) {
-        executor.execute {
-            val ips = fetchIpByJobScope(projectId, param)
-            // 将ID加到启动参数中，方便流水线执行完后回写
-            val mVars = param.variables.toMutableMap()
-            mVars[PIPELINE_JOB_CALLBACK_ID] = id.toString()
-            mVars[PIPELINE_JOB_IPS] = ips.joinToString(",") { it.substringAfter(".") }
+        val ips = fetchIpByJobScope(projectId, param)
+        // 将ID加到启动参数中，方便流水线执行完后回写
+        val mVars = param.variables.toMutableMap()
+        mVars[PIPELINE_JOB_CALLBACK_ID] = id.toString()
+        mVars[PIPELINE_JOB_IPS] = ips.joinToString(",") { it.substringAfter(".") }
 
-            logger.info("remotedev start pipeline job $id ${param.pipelineId}")
-            val res = try {
-                client.get(ServiceBuildResource::class).manualStartupNew(
-                    userId = param.userId,
-                    projectId = param.projectId,
-                    pipelineId = param.pipelineId,
-                    values = mVars,
-                    channelCode = ChannelCode.BS,
-                    buildNo = null,
-                    startType = StartType.SERVICE
-                )
-            } catch (e: Exception) {
-                remoteDevJobExecRecordDao.updateStatus(
-                    dslContext = dslContext,
-                    id = id,
-                    status = JobRecordStatus.FAIL,
-                    errMsg = "start pipeline error $e",
-                    endTime = LocalDateTime.now()
-                )
-                return@execute
-            }
-            // 流水线任务需要再执行后更新对应的流水线信息
-            remoteDevJobExecRecordDao.updateReceiptInfo(
+        logger.info("remotedev start pipeline job $id ${param.pipelineId}")
+        val res = try {
+            client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = param.userId,
+                projectId = param.projectId,
+                pipelineId = param.pipelineId,
+                values = mVars,
+                channelCode = ChannelCode.BS,
+                buildNo = null,
+                startType = StartType.SERVICE
+            )
+        } catch (e: Exception) {
+            remoteDevJobExecRecordDao.updateStatus(
                 dslContext = dslContext,
                 id = id,
-                info = PipelineJobReceiptInfo(res.data?.id ?: "", res.data?.num)
+                status = JobRecordStatus.FAIL,
+                errMsg = "start pipeline error $e",
+                endTime = LocalDateTime.now()
             )
+            return
         }
+        // 流水线任务需要再执行后更新对应的流水线信息
+        remoteDevJobExecRecordDao.updateReceiptInfo(
+            dslContext = dslContext,
+            id = id,
+            info = PipelineJobReceiptInfo(res.data?.id ?: "", res.data?.num)
+        )
     }
 
     // 根据JobScope拿到真正需要执行的Ip

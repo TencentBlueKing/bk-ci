@@ -12,24 +12,28 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.TGitConfig
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
+import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
+import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
+import com.tencent.devops.remotedev.utils.AsyncUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.concurrent.Executors
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -45,7 +49,8 @@ class GitProxyTGitService @Autowired constructor(
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
     private val tGitConfig: TGitConfig,
     private val redisOperation: RedisOperation,
-    private val workspaceDao: WorkspaceDao
+    private val workspaceDao: WorkspaceDao,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -403,36 +408,45 @@ class GitProxyTGitService @Autowired constructor(
     /**
      * 创建和删除云桌面时同步
      */
-    private val executor = Executors.newCachedThreadPool()
     fun addOrRemoveAclIp(
         projectId: String,
         ip: String,
         remove: Boolean
     ) {
-        executor.execute {
-            fetchProjectTGit(projectId) { repo, token ->
-                val config = offshoreTGitApiClient.getProjectAcl(
-                    accessToken = token,
-                    projectId = repo.tgitId.toString()
-                )
-                if (config == null) {
-                    logger.warn("addOrRemoveAclIp|get $projectId|${repo.projectId} acl config error")
-                    return@fetchProjectTGit
-                }
+        AsyncExecute.dispatch(
+            rabbitTemplate, AsyncTGitAclIp(
+                projectId = projectId, ip = ip, remove = remove
+            )
+        )
+    }
 
-                val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
-                if (remove) {
-                    ips.remove(ip)
-                } else {
-                    ips.add(ip)
-                }
-                updateTGitProjectAcl(
-                    token = token,
-                    tGitProjectId = repo.tgitId.toString(),
-                    ips = ips,
-                    users = null
-                )
+    fun doAddOrRemoveAclIp(
+        projectId: String,
+        ip: String,
+        remove: Boolean
+    ) {
+        fetchProjectTGit(projectId) { repo, token ->
+            val config = offshoreTGitApiClient.getProjectAcl(
+                accessToken = token,
+                projectId = repo.tgitId.toString()
+            )
+            if (config == null) {
+                logger.warn("addOrRemoveAclIp|get $projectId|${repo.projectId} acl config error")
+                return@fetchProjectTGit
             }
+
+            val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
+            if (remove) {
+                ips.remove(ip)
+            } else {
+                ips.add(ip)
+            }
+            updateTGitProjectAcl(
+                token = token,
+                tGitProjectId = repo.tgitId.toString(),
+                ips = ips,
+                users = null
+            )
         }
     }
 
@@ -474,12 +488,16 @@ class GitProxyTGitService @Autowired constructor(
     fun refreshProjectTGitSpecUser(
         projectId: String
     ) {
-        executor.execute {
-            // 获取项目下正在跑的所有机器的用户
-            val users = fetchProjectSpecAclUsers(projectId)
-            fetchProjectTGit(projectId) { repo, token ->
-                offshoreTGitApiClient.updateProjectAclSpecUser(token, repo.tgitId.toString(), users)
-            }
+        AsyncExecute.dispatch(rabbitTemplate, AsyncTGitAclUser(projectId))
+    }
+
+    fun doRefreshProjectTGitSpecUser(
+        projectId: String
+    ) {
+        // 获取项目下正在跑的所有机器的用户
+        val users = fetchProjectSpecAclUsers(projectId)
+        fetchProjectTGit(projectId) { repo, token ->
+            offshoreTGitApiClient.updateProjectAclSpecUser(token, repo.tgitId.toString(), users)
         }
     }
 
@@ -658,7 +676,7 @@ class GitProxyTGitService @Autowired constructor(
         }
 
         if (export != true) {
-            executor.execute {
+            AsyncUtil.pool.execute {
                 projects.forEach { projectId ->
                     logger.info("OP|refreshTGitAcl|$projectId start")
                     val users = fetchProjectSpecAclUsers(projectId)

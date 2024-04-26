@@ -16,6 +16,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -24,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
@@ -34,13 +36,13 @@ import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -51,7 +53,8 @@ class ExpertSupportService @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
-    private val remoteDevSettingDao: RemoteDevSettingDao
+    private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     @Value("\${expertsupport.rtxtemplate:#{null}}")
     val rtxTemplate: String? = null
@@ -64,8 +67,6 @@ class ExpertSupportService @Autowired constructor(
 
     @Value("\${expertsupport.weworkGroupId:#{null}}")
     val weworkGroupId: String? = null
-
-    private val executor = Executors.newCachedThreadPool()
 
     @Suppress("ComplexMethod")
     fun createSupport(
@@ -147,34 +148,31 @@ class ExpertSupportService @Autowired constructor(
             )
         )
         // 异步执行流水线完成其他动作
-        executor.execute {
-            try {
-                val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return@execute
-                val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
-                val newParam = mutableMapOf<String, String>()
-                val hostIdSub = data.hostIp.split(".")
-                val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-                info.buildParam.forEach { (k, v) ->
-                    when (v) {
-                        "ip" -> newParam[k] = ip
-                        "projectId" -> newParam[k] = data.projectId
-                        else -> newParam[k] = v
-                    }
+        try {
+            val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+            val newParam = mutableMapOf<String, String>()
+            val hostIdSub = data.hostIp.split(".")
+            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "ip" -> newParam[k] = ip
+                    "projectId" -> newParam[k] = data.projectId
+                    else -> newParam[k] = v
                 }
-
-                client.get(ServiceBuildResource::class).manualStartupNew(
+            }
+            AsyncExecute.dispatch(
+                rabbitTemplate, AsyncPipelineEvent(
                     userId = info.userId ?: "",
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
-                    values = newParam,
-                    channelCode = ChannelCode.BS,
-                    buildNo = null,
-                    startType = StartType.SERVICE
+                    values = newParam
                 )
-            } catch (e: Exception) {
-                logger.warn("execute createSupport pipeline error", e)
-            }
+            )
+        } catch (e: Exception) {
+            logger.warn("execute createSupport pipeline error", e)
         }
     }
 
@@ -219,7 +217,7 @@ class ExpertSupportService @Autowired constructor(
     fun assignExpSup(userId: String, id: Long, workspaceName: String): Pair<Boolean, String?> {
         // 校验这个人是不是可以分配的运维
         if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
-            .map { it.content.trim() }.toSet().contains(userId.trim())
+                .map { it.content.trim() }.toSet().contains(userId.trim())
         ) {
             return Pair(false, "${userId}不是云研发运维，不可认领")
         }
@@ -240,7 +238,8 @@ class ExpertSupportService @Autowired constructor(
         if (Duration.between(
                 expertSupportDao.getSup(dslContext, id)?.createTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
-            ).seconds > DEFAULT_WAIT_TIME) {
+            ).seconds > DEFAULT_WAIT_TIME
+        ) {
             return Pair(false, "单据[$id]已超过1小时过期")
         }
 
@@ -343,6 +342,7 @@ class ExpertSupportService @Autowired constructor(
 
         return Pair(true, "已发起查询，稍后通知密码")
     }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
