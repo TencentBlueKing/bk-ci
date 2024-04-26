@@ -188,7 +188,6 @@ const fetchGroupList = async (payload = []) => {
       params[i.id] = i.values.join();
     }
   });
-
   isLoading.value = true;
   await http.getUserGroupList(params).then((res) => {
     pagination.value.count = res.count;
@@ -329,9 +328,9 @@ const columns = [
 ];
 
 onMounted(() => {
-  const { resourceType } = route?.query;
-  groupLevel.value = resourceType && resourceType !== 'project' ? 'OTHER' : 'PROJECT';
-  if (!resourceType) {
+  const { iamRelatedResourceType } = route?.query;
+  groupLevel.value = iamRelatedResourceType && iamRelatedResourceType !== 'project' ? 'OTHER' : 'PROJECT';
+  if (!iamRelatedResourceType) {
     fetchGroupList(filter.value);
   };
 });
