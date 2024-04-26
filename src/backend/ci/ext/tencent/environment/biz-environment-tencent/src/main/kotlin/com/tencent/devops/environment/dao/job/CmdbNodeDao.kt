@@ -333,7 +333,8 @@ class CmdbNodeDao {
                         LAST_BUILD_TIME,
                         HOST_ID,
                         CLOUD_AREA_ID,
-                        OS_TYPE
+                        OS_TYPE,
+                        SERVER_ID
                     ).values(
                         it.nodeStringId,
                         it.projectId,
@@ -360,7 +361,8 @@ class CmdbNodeDao {
                         it.lastBuildTime,
                         it.hostId,
                         it.cloudAreaId,
-                        it.osType
+                        it.osType,
+                        it.serverId
                     ).returning(NODE_ID).fetchOne()!!.let { newRecord ->
                         val hashId = HashUtil.encodeLongId(newRecord.nodeId)
                         val displayName = it.nodeType + "-" + hashId + "-" + newRecord.nodeId
@@ -481,7 +483,7 @@ class CmdbNodeDao {
                 NODE_IP.`as`(T_NODE_NODE_IP)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(SERVER_ID.isNotNull)
+                .and(SERVER_ID.isNull)
                 .orderBy(NODE_ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
