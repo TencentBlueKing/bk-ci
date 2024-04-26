@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -51,6 +52,8 @@ class PipelineOperationLogService @Autowired constructor(
     private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
 
+    private val logger = LoggerFactory.getLogger(PipelineOperationLogService::class.java)
+
     fun addOperationLog(
         userId: String,
         projectId: String,
@@ -62,17 +65,25 @@ class PipelineOperationLogService @Autowired constructor(
     ) {
         val id = client.get(ServiceAllocIdResource::class)
             .generateSegmentId("T_PIPELINE_OPERATION_LOG").data
-        pipelineOperationLogDao.add(
-            dslContext = dslContext,
-            id = id,
-            operator = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            operationLogType = operationLogType,
-            params = params,
-            description = description
-        )
+        try {
+            pipelineOperationLogDao.add(
+                dslContext = dslContext,
+                id = id,
+                operator = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                operationLogType = operationLogType,
+                params = params,
+                description = description
+            )
+        } catch (ignore: Throwable) {
+            logger.warn(
+                "[$projectId]|$userId|$pipelineId|addOperationLog with error, " +
+                    "version=$version, operationLogType=$operationLogType", ignore
+            )
+        }
+
     }
 
     fun getOperationLogsInPage(
