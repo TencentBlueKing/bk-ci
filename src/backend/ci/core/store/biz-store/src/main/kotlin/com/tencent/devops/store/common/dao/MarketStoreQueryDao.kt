@@ -193,17 +193,17 @@ class MarketStoreQueryDao {
                 conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
             }
         }
-        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
-            baseStep.leftJoin(tStoreBaseFeature)
-                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
-            storeInfoQuery.recommendFlag?.let {
-                conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
-            }
-            storeInfoQuery.rdType?.let {
-                conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
-            }
-        }
+//        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+//            baseStep.leftJoin(tStoreBaseFeature)
+//                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+//                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+//            storeInfoQuery.recommendFlag?.let {
+//                conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
+//            }
+//            storeInfoQuery.rdType?.let {
+//                conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
+//            }
+//        }
         if (storeInfoQuery.score != null) {
             val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
