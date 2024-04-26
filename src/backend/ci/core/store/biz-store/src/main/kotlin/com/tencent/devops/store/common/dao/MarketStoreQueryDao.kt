@@ -34,6 +34,7 @@ import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -90,22 +91,20 @@ class MarketStoreQueryDao {
         )
         if (!keyword.isNullOrEmpty()) {
             conditions.add(
-                tStoreBase.NAME.contains(keyword)
-                    .or(tStoreBase.SUMMARY.contains(keyword))
-                    .or(tStoreBase.STORE_CODE.contains(keyword))
+                tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
             )
         }
         if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
-                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+                val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
                 val t =
                     dslContext.select(
-                        tas.STORE_CODE,
-                        tas.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
+                        tStoreStatisticsTotal.STORE_CODE,
+                        tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
                     )
-                        .from(tas).where(tas.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
-                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
+                        .from(tStoreStatisticsTotal).where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
+                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java)))
             }
 
             val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
@@ -172,6 +171,10 @@ class MarketStoreQueryDao {
                     storeInfoQuery = storeInfoQuery
                 ))
             )
+        } else {
+            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+                conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
+            }
         }
         storeInfoQuery.recommendFlag?.let {
             conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
@@ -210,7 +213,9 @@ class MarketStoreQueryDao {
         val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
         val conditions = mutableListOf<Condition>().apply {
             add(tStoreBase.STORE_TYPE.eq(storeType))
-
+            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+                add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
+            }
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))
