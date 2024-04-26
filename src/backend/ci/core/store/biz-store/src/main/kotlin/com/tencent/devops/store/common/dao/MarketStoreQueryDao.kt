@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -94,7 +95,7 @@ class MarketStoreQueryDao {
                 tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
             )
         }
-        if (null != sortType) {
+        val filteredResultsSubquery = if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
                 val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
@@ -112,10 +113,26 @@ class MarketStoreQueryDao {
         } else {
             baseStep.where(conditions)
         }
-        return baseStep.limit(
-            (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
-            storeInfoQuery.pageSize
-        ).fetch()
+        // 查询每个组件中最新记录
+        val maxCreateTimeSubquery = dslContext.select(
+            filteredResultsSubquery.field(tStoreBase.STORE_CODE),
+            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))?.`as`(tStoreBase.CREATE_TIME)
+        ).from(filteredResultsSubquery)
+
+        return dslContext.select()
+            .from(filteredResultsSubquery)
+            .innerJoin(maxCreateTimeSubquery)
+            .on(
+                filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
+                    .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
+                    .and(
+                        filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
+                            .eq(maxCreateTimeSubquery.field(tStoreBase.CREATE_TIME))
+                    )
+            ).limit(
+                (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
+                storeInfoQuery.pageSize
+            ).skipCheck().fetch()
     }
 
 
@@ -176,11 +193,16 @@ class MarketStoreQueryDao {
                 conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
             }
         }
-        storeInfoQuery.recommendFlag?.let {
-            conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
-        }
-        storeInfoQuery.rdType?.let {
-            conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
+        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+            baseStep.leftJoin(tStoreBaseFeature)
+                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+            storeInfoQuery.recommendFlag?.let {
+                conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
+            }
+            storeInfoQuery.rdType?.let {
+                conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
+            }
         }
         if (storeInfoQuery.score != null) {
             val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
@@ -260,7 +282,6 @@ class MarketStoreQueryDao {
                 ))
             )
         }
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
     }
 }
