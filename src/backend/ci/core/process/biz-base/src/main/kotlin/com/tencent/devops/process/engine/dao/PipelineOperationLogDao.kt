@@ -43,6 +43,7 @@ class PipelineOperationLogDao {
 
     fun add(
         dslContext: DSLContext,
+        id: Long,
         projectId: String,
         pipelineId: String,
         version: Int,
@@ -54,6 +55,7 @@ class PipelineOperationLogDao {
         with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
             dslContext.insertInto(
                 this,
+                ID,
                 PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
@@ -62,6 +64,7 @@ class PipelineOperationLogDao {
                 PARAMS,
                 DESCRIPTION
             ).values(
+                id,
                 projectId,
                 pipelineId,
                 version,

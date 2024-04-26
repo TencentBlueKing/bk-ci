@@ -30,12 +30,14 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -44,6 +46,7 @@ import org.springframework.stereotype.Service
 @Suppress("LongParameterList")
 class PipelineOperationLogService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val pipelineOperationLogDao: PipelineOperationLogDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
@@ -57,8 +60,10 @@ class PipelineOperationLogService @Autowired constructor(
         params: String,
         description: String?
     ) {
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         pipelineOperationLogDao.add(
             dslContext = dslContext,
+            id = id,
             operator = userId,
             projectId = projectId,
             pipelineId = pipelineId,
