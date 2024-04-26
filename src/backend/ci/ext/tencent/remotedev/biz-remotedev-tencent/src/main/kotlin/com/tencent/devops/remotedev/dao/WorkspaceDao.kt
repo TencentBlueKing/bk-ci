@@ -1014,6 +1014,24 @@ class WorkspaceDao {
         )
     }
 
+    // 获取正常状态的 workspace ip
+    fun fetchProjectIp(
+        dslContext: DSLContext,
+        projectId: String
+    ): Set<String> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(
+                    STATUS.notIn(
+                        WorkspaceStatus.PREPARING.ordinal,
+                        WorkspaceStatus.DELETED.ordinal,
+                        WorkspaceStatus.DELIVERING_FAILED.ordinal
+                    )
+                ).fetch().map { it.hostName }.filter { !it.isNullOrBlank() }.toSet()
+        }
+    }
+
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
     }

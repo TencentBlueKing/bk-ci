@@ -39,15 +39,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val bkRepoClient: BkRepoClient,
-    private val commonConfig: CommonConfig
+    private val bkRepoClient: BkRepoClient
 ) : ServiceArtifactoryDownLoadResource {
 
     override fun getThirdPartyDownloadUrl(
@@ -61,6 +59,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         crossProjectId: String?,
         crossPipineId: String?,
         crossBuildNo: String?,
+        crossBuildId: String?,
         region: String?
     ): Result<List<String>> {
         checkParam(projectId, path)
@@ -75,6 +74,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
                 crossProjectId = crossProjectId,
                 crossPipineId = crossPipineId,
                 crossBuildNo = crossBuildNo,
+                crossBuildId = crossBuildId,
                 region = region,
                 userId = userId
             )
