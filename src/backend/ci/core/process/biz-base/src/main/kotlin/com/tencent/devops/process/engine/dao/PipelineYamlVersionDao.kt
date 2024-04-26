@@ -44,6 +44,7 @@ class PipelineYamlVersionDao {
 
     fun save(
         dslContext: DSLContext,
+        id: Long,
         projectId: String,
         repoHashId: String,
         filePath: String,
@@ -59,6 +60,7 @@ class PipelineYamlVersionDao {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             dslContext.insertInto(
                 this,
+                ID,
                 PROJECT_ID,
                 REPO_HASH_ID,
                 FILE_PATH,
@@ -72,6 +74,7 @@ class PipelineYamlVersionDao {
                 CREATOR,
                 CREATE_TIME
             ).values(
+                id,
                 projectId,
                 repoHashId,
                 filePath,
