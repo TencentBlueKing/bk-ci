@@ -35,8 +35,6 @@ import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
-import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -107,7 +105,7 @@ class MarketStoreQueryDao {
                         tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
                     )
                         .from(tStoreStatisticsTotal).where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
-                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java)))
+                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
             val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
@@ -118,7 +116,7 @@ class MarketStoreQueryDao {
 
         val maxCreateTimeSubquery = dslContext.select(
             filteredResultsSubquery.field(tStoreBase.STORE_CODE),
-            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))!!.`as`(KEY_CREATE_TIME)
+            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))!!.`as`("max_create_time")
         ).from(filteredResultsSubquery)
 
         return dslContext.select()
@@ -129,12 +127,12 @@ class MarketStoreQueryDao {
                     .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
                     .and(
                         filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
-                        .eq(maxCreateTimeSubquery.field(KEY_CREATE_TIME, LocalDateTime::class.java))
+                            .eq(maxCreateTimeSubquery.field("max_create_time", LocalDateTime::class.java))
                     )
             ).limit(
-            (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
-            storeInfoQuery.pageSize
-        ).skipCheck().fetch()
+                (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
+                storeInfoQuery.pageSize
+            ).skipCheck().fetch()
     }
 
 
@@ -184,9 +182,9 @@ class MarketStoreQueryDao {
         if (queryProjectComponentFlag || !classifyId.isNullOrBlank() || !labelId.isNullOrBlank()) {
             conditions.add(
                 tStoreBase.STORE_CODE.`in`(getStoreCodesByCondition(
-                dslContext = dslContext,
-                storeType = storeType.type.toByte(),
-                storeInfoQuery = storeInfoQuery
+                    dslContext = dslContext,
+                    storeType = storeType.type.toByte(),
+                    storeInfoQuery = storeInfoQuery
                 ))
             )
         } else if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
