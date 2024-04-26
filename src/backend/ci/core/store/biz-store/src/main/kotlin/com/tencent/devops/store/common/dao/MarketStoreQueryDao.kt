@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -127,12 +126,12 @@ class MarketStoreQueryDao {
                     .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
                     .and(
                         filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
-                            .eq(maxCreateTimeSubquery.field("max_create_time", LocalDateTime::class.java))
+                        .eq(maxCreateTimeSubquery.field("max_create_time", LocalDateTime::class.java))
                     )
             ).limit(
-                (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
-                storeInfoQuery.pageSize
-            ).skipCheck().fetch()
+            (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
+            storeInfoQuery.pageSize
+        ).fetch()
     }
 
 
@@ -159,6 +158,7 @@ class MarketStoreQueryDao {
             tStoreBaseFeature.RECOMMEND_FLAG,
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
+            tStoreBase.CREATE_TIME
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
             .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
