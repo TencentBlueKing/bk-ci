@@ -109,15 +109,15 @@ class MarketStoreQueryDao {
             }
 
             val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
-            baseStep.where(conditions).orderBy(realSortType)
+            baseStep.where(conditions).orderBy(realSortType).asTable()
         } else {
-            baseStep.where(conditions)
+            baseStep.where(conditions).asTable()
         }
         // 查询每个组件中最新记录
         val maxCreateTimeSubquery = dslContext.select(
             filteredResultsSubquery.field(tStoreBase.STORE_CODE),
-            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))?.`as`(tStoreBase.CREATE_TIME)
-        ).from(filteredResultsSubquery)
+            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))?.`as`(tStoreBase.CREATE_TIME.name)
+        ).from(filteredResultsSubquery).asTable()
 
         return dslContext.select()
             .from(filteredResultsSubquery)
@@ -132,7 +132,7 @@ class MarketStoreQueryDao {
             ).limit(
                 (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
                 storeInfoQuery.pageSize
-            ).skipCheck().fetch()
+            ).fetch()
     }
 
 
