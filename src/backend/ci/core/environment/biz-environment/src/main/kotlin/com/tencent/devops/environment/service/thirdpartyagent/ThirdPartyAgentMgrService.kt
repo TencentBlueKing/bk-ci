@@ -73,6 +73,7 @@ import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentPipelineRefDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentEnableProjectsDao
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
@@ -141,7 +142,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val envShareProjectDao: EnvShareProjectDao,
     private val commonConfig: CommonConfig,
     private val agentMetricService: AgentMetricService,
-    private val agentShareProjectDao: AgentShareProjectDao
+    private val agentShareProjectDao: AgentShareProjectDao,
+    private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
+    private val thirdPartAgentService: ThirdPartAgentService
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
@@ -434,13 +437,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
 
-        val agentActionCount = thirdPartyAgentDao.getAgentActionsCount(
+        val agentActionCount = thirdPartyAgentActionDao.getAgentActionsCount(
             dslContext = dslContext,
             projectId = projectId,
             agentId = agentRecord.id
         )
         val agentActions =
-            thirdPartyAgentDao.listAgentActions(
+            thirdPartyAgentActionDao.listAgentActions(
                 dslContext = dslContext,
                 projectId = projectId,
                 agentId = agentRecord.id,
@@ -768,7 +771,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                            "($sharedProjectId:$sharedEnvId)"
+                                "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -807,12 +810,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                    "mainProjectId: $sharedProjectId"
+                        "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -858,7 +861,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:$sharedEnvName)"
+                        "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -1042,8 +1045,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             status = AgentStatus.IMPORT_OK
         }
         if (!(AgentStatus.isImportException(status) ||
-                AgentStatus.isUnImport(status) ||
-                agentRecord.startRemoteIp.isNullOrBlank())
+                    AgentStatus.isUnImport(status) ||
+                    agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1067,7 +1070,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status ||
             agentRecord.status == AgentStatus.UN_IMPORT.status
         ) {
-            thirdPartyAgentDao.addAgentAction(dslContext, projectId, id, AgentAction.ONLINE.name)
+            thirdPartAgentService.addAgentAction(projectId, id, AgentAction.ONLINE)
         }
 
         dslContext.transactionResult { configuration ->
@@ -1075,7 +1078,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
                 if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
+                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
@@ -1240,11 +1243,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                             projectId = projectId,
                             status = AgentStatus.IMPORT_OK
                         )
-                        thirdPartyAgentDao.addAgentAction(
-                            dslContext = context,
+                        thirdPartAgentService.addAgentAction(
                             projectId = projectId,
                             agentId = agentRecord.id,
-                            action = AgentAction.ONLINE.name
+                            action = AgentAction.ONLINE
                         )
                     }
                     if (agentRecord.nodeId != null) {
@@ -1370,7 +1372,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         os = agentRecord.os ?: ""
                     )
                     thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.IMPORT_OK)
-                    thirdPartyAgentDao.addAgentAction(context, projectId, agentRecord.id, AgentAction.ONLINE.name)
+                    thirdPartAgentService.addAgentAction(projectId, agentRecord.id, AgentAction.ONLINE)
                     if (agentRecord.nodeId != null) {
                         nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
                     }
