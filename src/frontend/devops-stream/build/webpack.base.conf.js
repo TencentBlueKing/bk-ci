@@ -3,10 +3,10 @@
  * @author Blueking
  */
 
-import webpack from 'webpack'
 import { VueLoaderPlugin } from 'vue-loader'
-import { resolve, assetsPath } from './util'
+import webpack from 'webpack'
 import config from './config'
+import { assetsPath, resolve } from './util'
 const ESLintPlugin = require('eslint-webpack-plugin')
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -20,6 +20,9 @@ export default {
 
     resolve: {
         extensions: ['.js', '.vue', '.json'],
+        fallback: {
+            path: false
+        },
         alias: {
             vue$: 'vue/dist/vue.esm.js',
             '@': resolve('src'),

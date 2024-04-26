@@ -59,7 +59,7 @@
                     @select="selectItem"
                     @select-all="selectItem"
                 >
-                    
+
                     <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
                     <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
                         <template slot-scope="props">
@@ -154,7 +154,8 @@
             :desc="emptyTipsConfig.desc"
             :btns="emptyTipsConfig.btns">
         </empty-tips>
-        <instance-compared :show-compared-instance="showComparedInstance"
+        <instance-compared
+            :show-compared-instance="showComparedInstance"
             :loading="dialogLoading"
             :instance-version="instanceVersion"
             :cur-version="currentVersion"
@@ -167,7 +168,8 @@
             :target-stages="targetStages"
             @comfire="comfireHandler"
             @cancel="cancelHandler"
-            :selected-version="selectedVersion"></instance-compared>
+            :selected-version="selectedVersion"
+        />
     </div>
 </template>
 
@@ -175,11 +177,11 @@
     import innerHeader from '@/components/devops/inner_header'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
-    import { convertTime } from '@/utils/util'
     import {
-        TEMPLATE_RESOURCE_ACTION,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -282,7 +284,7 @@
             // 初始化url中携带的分页信息
             this.$route.query.limit > 0 && (this.pagination.limit = parseInt(this.$route.query.limit))
             this.$route.query.page > 0 && (this.pagination.current = parseInt(this.$route.query.page))
-        
+
             this.renderData()
         },
         methods: {
@@ -420,10 +422,10 @@
                     })
 
                     this.versionList = res.versions
-                    const curVersion = this.versionList.filter(val => {
+                    const curVersion = this.versionList.find(val => {
                         return val.version === parseInt(versionId)
                     })
-                    this.instanceVersion = curVersion[0].version
+                    this.instanceVersion = curVersion?.version
 
                     const curData = res.origin
                     const targetData = res.target
@@ -516,9 +518,6 @@
 
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
     .instance-manage-wrapper {
         flex-direction: column;
