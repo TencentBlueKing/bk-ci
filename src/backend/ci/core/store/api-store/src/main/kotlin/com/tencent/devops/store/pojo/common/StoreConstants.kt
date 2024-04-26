@@ -144,7 +144,7 @@ const val KEY_VERSION_INFO = "versionInfo"
 const val KEY_CLASSIFY_TYPE = "classifyType"
 const val KEY_CLASSIFY_WEIGHT = "classifyWeight"
 const val KEY_RELEASE_TYPE = "releaseType"
-class val KEY_YAML_FLAG = "yamlFlag"
+const val KEY_YAML_FLAG = "yamlFlag"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"
