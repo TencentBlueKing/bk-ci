@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -35,7 +34,6 @@ import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
-import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -92,20 +90,22 @@ class MarketStoreQueryDao {
         )
         if (!keyword.isNullOrEmpty()) {
             conditions.add(
-                tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
+                tStoreBase.NAME.contains(keyword)
+                    .or(tStoreBase.SUMMARY.contains(keyword))
+                    .or(tStoreBase.STORE_CODE.contains(keyword))
             )
         }
-        val filteredResultsSubquery = if (null != sortType) {
+        if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
-                val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
                 val t =
                     dslContext.select(
-                        tStoreStatisticsTotal.STORE_CODE,
-                        tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
+                        tas.STORE_CODE,
+                        tas.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
                     )
-                        .from(tStoreStatisticsTotal).where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
-                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java)))
+                        .from(tas).where(tas.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
+                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
             val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
@@ -113,26 +113,10 @@ class MarketStoreQueryDao {
         } else {
             baseStep.where(conditions)
         }
-
-        val maxCreateTimeSubquery = dslContext.select(
-            filteredResultsSubquery.field(tStoreBase.STORE_CODE),
-            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))?.`as`(tStoreBase.CREATE_TIME)
-        ).from(filteredResultsSubquery)
-
-        return dslContext.select()
-            .from(filteredResultsSubquery)
-            .join(maxCreateTimeSubquery)
-            .on(
-                filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
-                    .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
-                    .and(
-                        filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
-                            .eq(maxCreateTimeSubquery.field(tStoreBase.CREATE_TIME))
-                    )
-            ).limit(
-                (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
-                storeInfoQuery.pageSize
-            ).skipCheck().fetch()
+        return baseStep.limit(
+            (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
+            storeInfoQuery.pageSize
+        ).fetch()
     }
 
 
@@ -153,13 +137,13 @@ class MarketStoreQueryDao {
             tStoreBase.LOGO_URL,
             tStoreBase.PUBLISHER,
             tStoreBase.PUB_TIME,
-            tStoreBase.CREATE_TIME,
             tStoreBase.MODIFIER,
             tStoreBase.UPDATE_TIME,
             tStoreBase.CLASSIFY_ID,
             tStoreBaseFeature.RECOMMEND_FLAG,
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
+            tStoreBase.CREATE_TIME
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
             .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
@@ -188,21 +172,12 @@ class MarketStoreQueryDao {
                     storeInfoQuery = storeInfoQuery
                 ))
             )
-        } else {
-            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
-                conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
-            }
         }
-        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
-            baseStep.leftJoin(tStoreBaseFeature)
-                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
-            storeInfoQuery.recommendFlag?.let {
-                conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
-            }
-            storeInfoQuery.rdType?.let {
-                conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
-            }
+        storeInfoQuery.recommendFlag?.let {
+            conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
+        }
+        storeInfoQuery.rdType?.let {
+            conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
         }
         if (storeInfoQuery.score != null) {
             val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
@@ -235,9 +210,7 @@ class MarketStoreQueryDao {
         val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
         val conditions = mutableListOf<Condition>().apply {
             add(tStoreBase.STORE_TYPE.eq(storeType))
-            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
-                add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
-            }
+
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))
@@ -282,6 +255,7 @@ class MarketStoreQueryDao {
                 ))
             )
         }
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
     }
 }
