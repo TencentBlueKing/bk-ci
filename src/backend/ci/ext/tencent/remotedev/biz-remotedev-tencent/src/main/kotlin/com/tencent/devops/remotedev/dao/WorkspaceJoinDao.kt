@@ -150,6 +150,14 @@ class WorkspaceJoinDao {
                 }
             }
 
+            search.workspaceOwnerType?.ifEmpty { null }?.let { types ->
+                if (search.onFuzzyMatch) {
+                    conditions.add(OWNER_TYPE.likeRegex(types.joinToString("|") { it.name }))
+                } else {
+                    conditions.add(OWNER_TYPE.`in`(types.map { it.name }))
+                }
+            }
+
             queryType.ownerType()?.let {
                 conditions.add(OWNER_TYPE.eq(it.name))
             }
