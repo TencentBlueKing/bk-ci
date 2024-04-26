@@ -9,6 +9,7 @@ import {
   ref,
   watch,
   computed,
+  onMounted,
   resolveDirective,
   withDirectives,
 } from 'vue';
@@ -167,7 +168,7 @@ const handleChangeSearch = (data) => {
 };
 
 const fetchGroupList = async (payload = []) => {
-  if (!props.projectCode) return;
+  if (!(props.projectCode || route?.query.project_code)) return;
   const params = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
@@ -186,7 +187,7 @@ const fetchGroupList = async (payload = []) => {
       params[i.id] = i.values.join();
     }
   });
-  params.projectId = props.projectCode;
+  params.projectId = props.projectCode || route?.query.project_code;
   isLoading.value = true;
   await http.getUserGroupList(params).then((res) => {
     pagination.value.count = res.count;
@@ -325,6 +326,14 @@ const columns = [
     },
   },
 ];
+
+onMounted(() => {
+  const { resourceType } = route?.query;
+  groupLevel.value = resourceType && resourceType !== 'project' ? 'OTHER' : 'PROJECT';
+  if (!resourceType) {
+    fetchGroupList(filter.value);
+  };
+});
 </script>
 
 <template>
