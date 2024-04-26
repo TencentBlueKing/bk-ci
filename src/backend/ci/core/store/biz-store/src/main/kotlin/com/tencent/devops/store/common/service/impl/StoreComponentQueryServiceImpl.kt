@@ -50,7 +50,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.dao.MarketStoreQueryDao
-import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
@@ -722,7 +721,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 } else {
                     storeCodes.addAll(installedMap.keys.toList())
                 }
-                storeInfoQuery.storeCodes = storeCodes
+                if (storeCodes.isNotEmpty()) {
+                    storeInfoQuery.storeCodes = storeCodes
+                }
             }
         }
 
