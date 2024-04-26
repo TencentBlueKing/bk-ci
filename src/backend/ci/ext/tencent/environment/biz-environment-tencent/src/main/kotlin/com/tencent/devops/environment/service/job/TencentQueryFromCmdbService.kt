@@ -50,6 +50,10 @@ class TencentQueryFromCmdbService {
         const val PAGE_SIZE = 1000
         const val DEFAULT_START_INDEX = 0
         const val DEFAULT_RETURN_TOTAL_ROWS = 1
+
+        private const val CONNECT_TIMEOUT = 5L // 三个超时时间单位：均为秒
+        private const val READ_TIMEOUT = 15L
+        private const val WRITE_TIMEOUT = 15L
     }
 
     /*
@@ -121,7 +125,14 @@ class TencentQueryFromCmdbService {
 
         val ccPostRes: String?
         try {
-            ccPostRes = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
+            ccPostRes = OkhttpUtils.doCustomTimeoutPost(
+                connectTimeout = CONNECT_TIMEOUT,
+                readTimeout = READ_TIMEOUT,
+                writeTimeout = WRITE_TIMEOUT,
+                url = url,
+                jsonParam = requestContent,
+                headers = headers
+            ).body?.string()
             logger.info("POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
         } catch (timeoutError: SocketTimeoutException) {
             logger.error("Query CMDB interface time out. Error:", timeoutError)
