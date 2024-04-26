@@ -96,7 +96,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 后台定时轮询机器状态，看机器在不在公司cmdb中
      * 轮询T_NODE表中 NODE_TYPE==部署 的记录。部署：CMDB("CMDB")，UNKNOWN("未知")，OTHER("其他")
      * 在不在cmdb -> 在不在cc -> cc的host_id和云区域id是否改变
-     * cron：每小时 第7,37分钟 各执行一次。
+     * cron：每10分钟执行一次。
      */
     @Scheduled(cron = "0 7/10 * * * ?")
     fun checkDeployNodes() {
@@ -108,7 +108,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 定时任务：gse agent状态/版本 轮询 + 差量更新
      * 条件：NODE_TYPE为"部署"的，查询该节点的agent安装状态以及版本，并对比差异更新。
      * 分组执行，每次遍历1000条记录。
-     * cron：每小时 第8,38分钟 各执行一次。
+     * cron：每10分钟执行一次。
      */
     @Scheduled(cron = "0 8/10 * * * ?")
     fun scheduledUpdateGseAgent() {
