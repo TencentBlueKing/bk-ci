@@ -249,7 +249,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
                         id = UUIDUtil.generate(),
                         userId = userId,
                         storeCode = storeCode,
-                        storeType = StoreTypeEnum.ATOM.type.toByte(),
+                        storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
                         reasonId = it.reasonId,
                         note = it.note,
                         type = ReasonTypeEnum.UNINSTALLATOM.type

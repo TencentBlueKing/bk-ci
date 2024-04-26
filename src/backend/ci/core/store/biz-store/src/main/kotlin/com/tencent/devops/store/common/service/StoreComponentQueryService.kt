@@ -29,7 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.ListComponentsQuery
+import com.tencent.devops.store.pojo.common.ComponentFullQuery
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
@@ -54,7 +54,7 @@ interface StoreComponentQueryService {
 
     fun listComponents(
         userId: String,
-        listComponentsQuery: ListComponentsQuery
+        listComponentsQuery: ComponentFullQuery
     ): Page<MyStoreComponent>?
 
     /**

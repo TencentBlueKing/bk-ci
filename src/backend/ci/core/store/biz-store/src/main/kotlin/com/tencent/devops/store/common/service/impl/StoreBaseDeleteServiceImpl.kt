@@ -45,6 +45,7 @@ import com.tencent.devops.store.common.service.StoreBaseDeleteService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.jooq.DSLContext
@@ -93,10 +94,11 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
                 params = arrayOf(storeCode)
             )
         }
-        val releasedCount = storeBaseQueryDao.countReleaseStoreByCode(
+        val releasedCount = storeBaseQueryDao.countByCondition(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeTepe = storeType
+            storeType = storeType,
+            status = StoreStatusEnum.RELEASED
         )
         if (releasedCount > 0) {
             throw ErrorCodeException(

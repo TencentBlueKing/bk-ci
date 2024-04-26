@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -60,11 +61,7 @@ class MarketStoreQueryDao {
         storeInfoQuery: StoreInfoQuery
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val baseStep = dslContext.select(DSL.countDistinct(tStoreBase.ID)).from(tStoreBase)
-            .leftJoin(tStoreBaseFeature)
-            .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+        val baseStep = dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE)).from(tStoreBase)
         val conditions = formatConditions(
             dslContext = dslContext,
             storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType),
@@ -94,21 +91,19 @@ class MarketStoreQueryDao {
         )
         if (!keyword.isNullOrEmpty()) {
             conditions.add(
-                tStoreBase.NAME.contains(keyword)
-                    .or(tStoreBase.SUMMARY.contains(keyword))
-                    .or(tStoreBase.STORE_CODE.contains(keyword))
+                tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
             )
         }
-        if (null != sortType) {
+        val filteredResultsSubquery = if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
-                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+                val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
                 val t =
                     dslContext.select(
-                        tas.STORE_CODE,
-                        tas.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
+                        tStoreStatisticsTotal.STORE_CODE,
+                        tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
                     )
-                        .from(tas).where(tas.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
+                        .from(tStoreStatisticsTotal).where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
                 baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -117,11 +112,29 @@ class MarketStoreQueryDao {
         } else {
             baseStep.where(conditions)
         }
-        return baseStep.limit(
+
+        val maxCreateTimeSubquery = dslContext.select(
+            filteredResultsSubquery.field(tStoreBase.STORE_CODE),
+            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))!!.`as`("max_create_time")
+        ).from(filteredResultsSubquery)
+
+        return dslContext.select()
+            .from(filteredResultsSubquery)
+            .join(maxCreateTimeSubquery)
+            .on(
+                filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
+                    .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
+                    .and(
+                        filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
+                        .eq(maxCreateTimeSubquery.field("max_create_time", LocalDateTime::class.java))
+                    )
+            ).limit(
             (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
             storeInfoQuery.pageSize
         ).fetch()
     }
+
+
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
@@ -176,6 +189,11 @@ class MarketStoreQueryDao {
         } else if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
             conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
         }
+        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+            baseStep.leftJoin(tStoreBaseFeature)
+                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+        }
         storeInfoQuery.recommendFlag?.let {
             conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
         }
@@ -183,13 +201,13 @@ class MarketStoreQueryDao {
             conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
         }
         if (storeInfoQuery.score != null) {
-            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+            val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
-                tas.STORE_CODE,
-                tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name),
-                tas.SCORE_AVERAGE
-            ).from(tas).asTable("t")
+                tStoreStatisticsTotal.STORE_CODE,
+                tStoreStatisticsTotal.STORE_TYPE,
+                tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name),
+                tStoreStatisticsTotal.SCORE_AVERAGE
+            ).from(tStoreStatisticsTotal).asTable("t")
             baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             conditions.add(
                 t.field("SCORE_AVERAGE", BigDecimal::class.java)!!
@@ -260,7 +278,6 @@ class MarketStoreQueryDao {
                 ))
             )
         }
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
     }
 }

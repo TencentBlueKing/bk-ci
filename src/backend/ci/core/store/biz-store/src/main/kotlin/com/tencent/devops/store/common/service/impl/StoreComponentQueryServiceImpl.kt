@@ -74,10 +74,10 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.ComponentFullQuery
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.LATEST
-import com.tencent.devops.store.pojo.common.ListComponentsQuery
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
@@ -202,7 +202,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         )
     }
 
-    override fun listComponents(userId: String, listComponentsQuery: ListComponentsQuery): Page<MyStoreComponent>? {
+    override fun listComponents(userId: String, listComponentsQuery: ComponentFullQuery): Page<MyStoreComponent>? {
         val storeType = StoreTypeEnum.valueOf(listComponentsQuery.storeType)
         val classifyId = listComponentsQuery.classifyCode?.let {
             classifyDao.getClassifyByCode(
@@ -293,6 +293,11 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             storeCodeList = storeCodes,
             storeStatusList = StoreStatusEnum.getProcessingStatusList()
         )
+        val publicFlagInfoMap = storeBaseFeatureQueryDao.getComponentPublicFlagInfo(
+            dslContext = dslContext,
+            storeCodes = processingStoreRecords.map { it.storeCode },
+            storeType = storeType
+        )
         val processingVersionInfoMap = mutableMapOf<String, MutableList<StoreBaseInfo>>()
         processingStoreRecords.forEach { processingAtomRecord ->
             val version = processingAtomRecord[tStoreBase.VERSION] as String
@@ -306,7 +311,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeName = processingAtomRecord[tStoreBase.NAME] as String,
                 storeType = StoreTypeEnum.getStoreTypeObj((processingAtomRecord[tStoreBase.STORE_TYPE] as Byte).toInt()),
                 version = version,
-                publicFlag = processingAtomRecord[TStoreBaseFeature.T_STORE_BASE_FEATURE.PUBLIC_FLAG] as Boolean,
+                publicFlag = publicFlagInfoMap[storeCode] ?: false,
                 status = processingAtomRecord[tStoreBase.STATUS] as String,
                 logoUrl = processingAtomRecord[tStoreBase.LOGO_URL],
                 publisher = processingAtomRecord[tStoreBase.PUBLISHER] as String,
@@ -320,7 +325,12 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         records.forEach {
             val storeCode = it[tStoreBase.STORE_CODE] as String
             var releaseFlag = false // 是否有处于上架状态的组件版本
-            val releaseStoreNum = storeBaseQueryDao.countReleaseStoreByCode(dslContext, storeCode, storeType)
+            val releaseStoreNum = storeBaseQueryDao.countByCondition(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                status = StoreStatusEnum.RELEASED
+            )
             if (releaseStoreNum > 0) {
                 releaseFlag = true
             }
@@ -425,7 +435,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         logger.info("getComponentDetailInfoById:Input:($userId,$storeType,$storeId)")
         val storeBaseRecord = storeBaseQueryDao.getComponentById(dslContext, storeId) ?: return null
         val storeCode = storeBaseRecord.storeCode
-        val storeFeatureRecord = storeBaseFeatureQueryDao.getComponentFeatureDataByCode(
+        val storeFeatureRecord = storeBaseFeatureQueryDao.getBaseFeatureByCode(
             dslContext = dslContext,
             storeCode = storeBaseRecord.storeCode,
             storeType = storeType
@@ -814,14 +824,6 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     val updateFlag = if (installed == true && installedInfoMap?.get(storeCode) != null) {
                         StoreUtils.isGreaterVersion(version, installedInfoMap[storeCode]!!)
                     } else null
-                    if (storeInfoQuery.installed == true && installed != true) {
-                        count -= 1
-                        return@forEach
-                    }
-                    if (storeInfoQuery.updateFlag == true && updateFlag != true) {
-                        count -= 1
-                        return@forEach
-                    }
                     val osList = mutableListOf<String>()
                     storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId)?.forEach {
                         it.osName?.let { osName -> osList.add(osName) }

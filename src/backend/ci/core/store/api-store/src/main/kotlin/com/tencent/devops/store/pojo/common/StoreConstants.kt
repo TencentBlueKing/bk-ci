@@ -143,8 +143,6 @@ const val KEY_RELEASE_INFO = "releaseInfo"
 const val KEY_VERSION_INFO = "versionInfo"
 const val KEY_CLASSIFY_TYPE = "classifyType"
 const val KEY_CLASSIFY_WEIGHT = "classifyWeight"
-const val KEY_CLASSIFY_CREATE_TIME = "classifyCreateTime"
-const val KEY_CLASSIFY_UPDATE_TIME = "classifyUpdateTime"
 const val KEY_RELEASE_TYPE = "releaseType"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
