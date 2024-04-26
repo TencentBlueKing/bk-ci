@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -115,9 +114,10 @@ class MarketStoreQueryDao {
         }
         // 查询每个组件中最新记录
         val maxCreateTimeSubquery = dslContext.select(
-            filteredResultsSubquery.field(tStoreBase.STORE_CODE),
-            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))?.`as`(tStoreBase.CREATE_TIME.name)
-        ).from(filteredResultsSubquery).asTable()
+            filteredResultsSubquery.field(tStoreBase.STORE_CODE.name),
+            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME).name)
+        ).from(filteredResultsSubquery)
+            .groupBy(DSL.field(tStoreBase.STORE_CODE.name))
 
         return dslContext.select()
             .from(filteredResultsSubquery)
