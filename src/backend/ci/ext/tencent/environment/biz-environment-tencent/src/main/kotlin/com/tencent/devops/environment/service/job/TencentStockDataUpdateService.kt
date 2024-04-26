@@ -98,7 +98,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 在不在cmdb -> 在不在cc -> cc的host_id和云区域id是否改变
      * cron：每小时 第7,37分钟 各执行一次。
      */
-    @Scheduled(cron = "0 7,37 * * * ?")
+    @Scheduled(cron = "0 7/10 * * * ?")
     fun checkDeployNodes() {
         taskWithRedisLock(SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY, ::checkDeployNodesIsInCmdb)
     }
@@ -110,7 +110,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 分组执行，每次遍历1000条记录。
      * cron：每小时 第8,38分钟 各执行一次。
      */
-    @Scheduled(cron = "0 8,38 * * * ?")
+    @Scheduled(cron = "0 8/10 * * * ?")
     fun scheduledUpdateGseAgent() {
         taskWithRedisLock(SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY, ::updateGseAgent)
     }
