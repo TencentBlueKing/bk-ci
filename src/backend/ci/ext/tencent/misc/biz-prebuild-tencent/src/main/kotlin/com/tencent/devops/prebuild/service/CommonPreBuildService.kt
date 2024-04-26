@@ -140,7 +140,7 @@ open class CommonPreBuildService constructor(
         pipelineId: String
     ) {
         val projectId = getUserProjectId(userId)
-        client.get(ServicePipelineResource::class).edit(userId, projectId, pipelineId, model, channelCode)
+        client.get(ServicePipelineResource::class).editPipeline(userId, projectId, pipelineId, model, channelCode)
         prebuildProjectDao.createOrUpdate(
             dslContext = dslContext,
             prebuildProjectId = preProjectId,
@@ -169,7 +169,7 @@ open class CommonPreBuildService constructor(
                     .create(userId, projectId, model, channelCode).data!!.id
         } else {
             client.get(ServicePipelineResource::class)
-                    .edit(userId, projectId, pipeline.pipelineId, model, channelCode)
+                    .editPipeline(userId, projectId, pipeline.pipelineId, model, channelCode)
             pipeline.pipelineId
         }
 

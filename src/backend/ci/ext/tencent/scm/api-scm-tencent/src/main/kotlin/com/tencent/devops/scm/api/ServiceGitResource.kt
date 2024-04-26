@@ -57,8 +57,11 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitListMergeRequest
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -1142,4 +1145,52 @@ interface ServiceGitResource {
         @QueryParam("ignore_white_space")
         ignoreWhiteSpace: Boolean?
     ): Result<List<GitDiff>>
+
+    @Operation(summary = "创建分支")
+    @POST
+    @Path("/createBranch")
+    fun createBranch(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean>
+
+    @Operation(summary = "获取合并请求列表")
+    @POST
+    @Path("/listMergeRequest")
+    fun listMergeRequest(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>>
+
+    @Operation(summary = "创建合并请求")
+    @POST
+    @Path("/createMergeRequest")
+    fun createMergeRequest(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo>
 }

@@ -14,7 +14,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.yaml.modelCreate.ModelCreate
+import com.tencent.devops.process.yaml.creator.ModelCreate
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import io.mockk.verify
 import org.jooq.DSLContext
@@ -74,7 +74,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
         // 流水线修改远程调用
         Mockito.`when`(
             client.get(ServicePipelineResource::class)
-                .edit(anyString(), anyString(), PIPELINE_ID, any()!!, ChannelCode.BS)
+                .editPipeline(anyString(), anyString(), PIPELINE_ID, any()!!, ChannelCode.BS)
         ).thenReturn(Result(true))
 
         // 启动流水线远程调用

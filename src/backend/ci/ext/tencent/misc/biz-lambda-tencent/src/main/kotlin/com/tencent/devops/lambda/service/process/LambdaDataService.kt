@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.lambda.service.process
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryConfig
@@ -74,8 +73,6 @@ import com.tencent.devops.lambda.service.store.LambdaStoreService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
-import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -617,40 +614,6 @@ class LambdaDataService @Autowired constructor(
                 bgId = projectInfo.bgId,
                 deptId = projectInfo.deptId,
                 centerId = projectInfo.centerId
-            )
-        }
-    }
-
-    private fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
-        return if (t == null) {
-            null
-        } else {
-            BuildInfo(
-                projectId = t.projectId,
-                pipelineId = t.pipelineId,
-                buildId = t.buildId,
-                version = t.version,
-                buildNum = t.buildNum,
-                trigger = t.trigger,
-                status = BuildStatus.values()[t.status],
-                startUser = t.startUser,
-                triggerUser = t.triggerUser,
-                queueTime = t.queueTime?.timestampmilli() ?: 0L,
-                startTime = t.startTime?.timestampmilli() ?: 0L,
-                endTime = t.endTime?.timestampmilli() ?: 0L,
-                taskCount = t.taskCount,
-                firstTaskId = t.firstTaskId,
-                parentBuildId = t.parentBuildId,
-                parentTaskId = t.parentTaskId,
-                channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = null,
-                executeTime = t.executeTime ?: 0,
-                buildParameters = t.buildParameters?.let { self ->
-                    JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
-                },
-                stageStatus = kotlin.runCatching {
-                    JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
-                }.getOrNull()
             )
         }
     }

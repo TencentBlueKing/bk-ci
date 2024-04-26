@@ -67,6 +67,7 @@ class CheckImageInitPipelineService @Autowired constructor(
         // 保存流水线信息
         val model = JsonUtil.to(checkImageInitPipelineReq.pipelineModel, Model::class.java)
         val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
+            .pipelineId
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
