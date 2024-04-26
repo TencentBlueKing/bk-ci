@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
@@ -175,6 +176,11 @@ interface MarketAtomService {
      * 获得插件依赖关系
      */
     fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>>
+
+    /**
+     * 获得插件默认值
+     */
+    fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, String>
 
     /**
      * 查找带post属性的插件

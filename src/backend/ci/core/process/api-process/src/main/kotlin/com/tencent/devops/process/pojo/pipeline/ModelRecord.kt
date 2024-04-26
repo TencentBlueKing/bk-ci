@@ -68,6 +68,8 @@ data class ModelRecord(
     val cancelUserId: String?,
     @get:Schema(title = "本次执行的编排版本号", required = true)
     val curVersion: Int,
+    @get:Schema(title = "本次执行的编排版本名", required = true)
+    val curVersionName: String?,
     @get:Schema(title = "流水线当前最新版本号", required = true)
     val latestVersion: Int,
     @get:Schema(title = "最新一次的构建buildNo", required = true)
@@ -96,6 +98,8 @@ data class ModelRecord(
     val material: List<PipelineBuildMaterial>?,
     @get:Schema(title = "备注", required = false)
     val remark: String?,
+    @get:Schema(title = "是否为调试构建", required = false)
+    val debug: Boolean? = false,
     @get:Schema(title = "触发信息（包括代码库等）", required = false)
     val webhookInfo: WebhookInfo?,
     @get:Schema(title = "约束模式下的模板信息", required = false)

@@ -82,7 +82,10 @@ interface UserArchivePipelineResource {
         pipelineId: String,
         @Parameter(description = "项目id", required = true)
         @PathParam(value = "projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
+        @QueryParam("version")
+        debugVersion: Int? = null
     ): Result<List<Map<String, String>>>
 
     @Operation(summary = "获取某个项目用户可以下载归档的所有流水线")

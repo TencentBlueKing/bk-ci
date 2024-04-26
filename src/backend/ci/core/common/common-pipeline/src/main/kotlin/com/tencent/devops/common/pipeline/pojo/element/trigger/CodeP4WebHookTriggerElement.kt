@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -37,7 +37,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "p4事件触发", description = CodeP4WebHookTriggerElement.classType)
 data class CodeP4WebHookTriggerElement(
     @get:Schema(title = "任务名称", required = true)
-    override val name: String = "TGit变更触发",
+    override val name: String = "P4事件触发",
     @get:Schema(title = "id", required = false)
     override var id: String? = null,
     @get:Schema(title = "状态", required = false)
@@ -91,9 +91,9 @@ data class CodeP4WebHookTriggerData(
 
 data class CodeP4WebHookTriggerInput(
     @get:Schema(title = "仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @get:Schema(title = "新版的git原子的类型")
-    val repositoryType: RepositoryType? = null,
+    val repositoryType: TriggerRepositoryType? = null,
     @get:Schema(title = "新版的git代码库名")
     val repositoryName: String? = null,
     @get:Schema(title = "用于包含的路径", required = false)
