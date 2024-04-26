@@ -232,4 +232,4 @@ BEGIN
 END <CI_UBF>
 DELIMITER ;
 COMMIT;
-CALL ci_process_schema_update();
+CALL ci_archive_process_schema_update();
