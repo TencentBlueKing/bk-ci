@@ -27,10 +27,12 @@
 
 package com.tencent.devops.store.devx.service
 
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -47,6 +49,7 @@ import org.springframework.stereotype.Service
 @Service("DEVX_MANAGEMENT_EXTRA_SERVICE")
 class DevxManagementExtraServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
@@ -57,7 +60,11 @@ class DevxManagementExtraServiceImpl @Autowired constructor(
     }
 
     override fun deleteComponentRepoFile(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
-        return Result(true)
+        return client.get(ServiceArchiveComponentPkgResource::class).deleteStorePkg(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
     }
 
     override fun uninstallComponentParamCheck(
