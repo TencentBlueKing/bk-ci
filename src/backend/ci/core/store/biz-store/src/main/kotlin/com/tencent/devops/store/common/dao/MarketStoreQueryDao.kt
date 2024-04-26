@@ -39,7 +39,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -94,28 +93,11 @@ class MarketStoreQueryDao {
                 tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
             )
         }
-        val filteredResultsSubquery = if (null != sortType) {
-            val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
-            if (flag && storeInfoQuery.score == null) {
-                val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-                val t =
-                    dslContext.select(
-                        tStoreStatisticsTotal.STORE_CODE,
-                        tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
-                    )
-                        .from(tStoreStatisticsTotal).where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
-                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            }
-
-            val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
-            baseStep.where(conditions).orderBy(realSortType)
-        } else {
-            baseStep.where(conditions)
-        }
+        val filteredResultsSubquery = baseStep.where(conditions)
 
         val maxCreateTimeSubquery = dslContext.select(
             filteredResultsSubquery.field(tStoreBase.STORE_CODE),
-            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))!!.`as`("max_create_time")
+            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))
         ).from(filteredResultsSubquery)
 
         return dslContext.select()
@@ -126,7 +108,7 @@ class MarketStoreQueryDao {
                     .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
                     .and(
                         filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
-                        .eq(maxCreateTimeSubquery.field("max_create_time", LocalDateTime::class.java))
+                        .eq(maxCreateTimeSubquery.field(tStoreBase.CREATE_TIME))
                     )
             ).limit(
             (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
