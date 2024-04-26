@@ -64,6 +64,10 @@ class ApigwJobCloudApi {
         private const val INTERNAL_SERVER_ERROR_CODE = 1240002
         private val INTERNAL_SERVER_ERROR_STATUS = javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
 
+        private const val CONNECT_TIMEOUT = 5L // 三个超时时间单位：均为秒
+        private const val READ_TIMEOUT = 15L
+        private const val WRITE_TIMEOUT = 15L
+
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
             "distributeFile" to "/api/v3/fast_transfer_file",
@@ -116,7 +120,16 @@ class ApigwJobCloudApi {
             "[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
                 "body: ${logWithLengthLimit(requestContent)}"
         )
-        return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
+        return getResultFromRes(
+            OkhttpUtils.doCustomTimeoutPost(
+                connectTimeout = CONNECT_TIMEOUT,
+                readTimeout = READ_TIMEOUT,
+                writeTimeout = WRITE_TIMEOUT,
+                url = jobCloudAuthenticationReq.url,
+                jsonParam = requestContent,
+                headers = headers
+            ), classOfU
+        )
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, vararg args: U): JobCloudResult<T> {
