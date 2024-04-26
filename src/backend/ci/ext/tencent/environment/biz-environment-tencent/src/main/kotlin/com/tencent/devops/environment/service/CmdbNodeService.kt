@@ -349,7 +349,7 @@ class CmdbNodeService @Autowired constructor(
                 hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
                 cloudAreaId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkCloudId?.toLong(),
                 osType = queryCCIpToCCInfoMap[cmdbNode.ip]?.osType,
-                serverId = queryCCIpToCCInfoMap[cmdbNode.ip]?.svrId
+                serverId = cmdbNode.serverId
             )
         }
         val time6 = LocalDateTime.now()
