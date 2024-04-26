@@ -81,7 +81,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
         "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
-        "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s"
+        "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s&iamRelatedResourceType=%s"
     private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
     private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
     private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest"
@@ -593,7 +593,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
                         authApplyRedirectUrl, projectId, projectName, finalResourceType,
-                        encodedResourceName, iamResourceCode, action ?: "", "", ""
+                        encodedResourceName, iamResourceCode, action ?: "", "", "", iamRelatedResourceType
                     )
                 )
             )
@@ -609,7 +609,8 @@ class RbacPermissionApplyService @Autowired constructor(
                             resourceType = finalResourceType,
                             resourceCode = resourceCode,
                             groupCode = it.groupCode,
-                            iamResourceCode = iamResourceCode
+                            iamResourceCode = iamResourceCode,
+                            iamRelatedResourceType = iamRelatedResourceType
                         )
                     }
                 }
@@ -622,7 +623,8 @@ class RbacPermissionApplyService @Autowired constructor(
                     resourceType = finalResourceType,
                     resourceCode = resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value,
-                    iamResourceCode = iamResourceCode
+                    iamResourceCode = iamResourceCode,
+                    iamRelatedResourceType = iamRelatedResourceType
                 )
             }
         }
@@ -636,7 +638,8 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         groupCode: String,
-        iamResourceCode: String
+        iamResourceCode: String,
+        iamRelatedResourceType: String
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
@@ -652,7 +655,8 @@ class RbacPermissionApplyService @Autowired constructor(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
                         authApplyRedirectUrl, projectId, projectName, resourceType,
-                        resourceName, iamResourceCode, action, resourceGroup.groupName, resourceGroup.relationId
+                        resourceName, iamResourceCode, action, resourceGroup.groupName,
+                        resourceGroup.relationId, iamRelatedResourceType
                     ),
                     groupName = I18nUtil.getCodeLanMessage(
                         messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
