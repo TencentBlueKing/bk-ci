@@ -43,7 +43,7 @@ class PipelineOperationLogDao {
 
     fun add(
         dslContext: DSLContext,
-        id: Long,
+        id: Long?,
         projectId: String,
         pipelineId: String,
         version: Int,

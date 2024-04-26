@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线操作日志")
 data class PipelineOperationDetail(
-    @get:Schema(title = "唯一标识ID", required = true)
-    val id: Int,
+    @get:Schema(title = "唯一标识ID", required = false)
+    val id: Long?,
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
     @get:Schema(title = "流水线ID", required = true)

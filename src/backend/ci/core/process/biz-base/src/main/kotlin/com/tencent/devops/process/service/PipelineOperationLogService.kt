@@ -60,7 +60,7 @@ class PipelineOperationLogService @Autowired constructor(
         params: String,
         description: String?
     ) {
-        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("T_PIPELINE_OPERATION_LOG").data
         pipelineOperationLogDao.add(
             dslContext = dslContext,
             id = id,
