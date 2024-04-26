@@ -83,7 +83,6 @@ class PipelineOperationLogService @Autowired constructor(
                     "version=$version, operationLogType=$operationLogType", ignore
             )
         }
-
     }
 
     fun getOperationLogsInPage(
