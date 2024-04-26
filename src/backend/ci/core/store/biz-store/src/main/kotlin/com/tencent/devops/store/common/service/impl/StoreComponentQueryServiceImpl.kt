@@ -135,8 +135,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     private val storeDailyStatisticService: StoreDailyStatisticService,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
     private val storeClassifyService: ClassifyService,
-    private val labelDao: LabelDao,
-    private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao
+    private val labelDao: LabelDao
 ): StoreComponentQueryService {
 
     companion object {
@@ -373,7 +372,6 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         pageSize: Int,
         checkPermissionFlag: Boolean
     ): Page<StoreDeskVersionItem> {
-        logger.info("getComponentVersionsByCode:Input:($userId,$storeCode,$page,$pageSize)")
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         // 判断当前用户是否是组件的成员
         if (checkPermissionFlag && !storeMemberDao.isStoreMember(
