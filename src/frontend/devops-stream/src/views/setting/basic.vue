@@ -205,7 +205,7 @@
                         class="mt-20 basic-btn"
                         theme="primary"
                         :loading="isToggleEnable"
-                        @click="toggleEnable">
+                        @click="saveEnable">
                         {{ $t('setting.enableCi') }}
                     </bk-button>
                 </section>
@@ -362,10 +362,31 @@
                 })
             },
 
-            async toggleEnable () {
+            async saveEnable () {
                 this.isToggleEnable = true
                 try {
                     await this.$refs.projectForm.validate()
+                    const { dept, productId, centerId } = this.projectOrg
+                    await setting.saveProjectInfo(this.projectId, {
+                        ...this.generateProjectOrgParam(dept),
+                        centerId,
+                        centerName: this.centers.find(item => item.id === this.projectOrg.centerId)?.name ?? ''
+                    }, {
+                        productId,
+                        productName: this.products.find(item => item.id === this.projectOrg.productId)?.name ?? ''
+                    })
+                    await setting.toggleEnableCi(!this.form.enableCi, this.projectInfo)
+                    this.getSetting()
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err.content || err })
+                } finally {
+                    this.isToggleEnable = false
+                }
+            },
+
+            async toggleEnable () {
+                this.isToggleEnable = true
+                try {
                     await setting.toggleEnableCi(!this.form.enableCi, this.projectInfo)
                     this.getSetting()
                 } catch (err) {
