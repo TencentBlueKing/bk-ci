@@ -33,7 +33,8 @@ export default {
     module: {
         noParse: [
             /\/node_modules\/jquery\/dist\/jquery\.min\.js$/,
-            /\/node_modules\/echarts\/dist\/echarts\.min\.js$/
+            /\/node_modules\/echarts\/dist\/echarts\.min\.js$/,
+            /\/bk-pipeline\/dist\/bk-pipeline\.min\.js$/
         ],
         rules: [
             {

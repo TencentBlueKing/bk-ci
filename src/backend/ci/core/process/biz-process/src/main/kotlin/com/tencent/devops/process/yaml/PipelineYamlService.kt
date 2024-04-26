@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import org.jooq.DSLContext
@@ -63,6 +64,7 @@ class PipelineYamlService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlService::class.java)
+        private const val PIPELINE_YAML_VERSION_BIZ_ID = "T_PIPELINE_YAML_VERSION"
     }
 
     fun save(
@@ -81,6 +83,7 @@ class PipelineYamlService(
         version: Int,
         webhooks: List<PipelineWebhookVersion>
     ) {
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.save(
@@ -96,6 +99,7 @@ class PipelineYamlService(
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
+                id = id,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
@@ -135,6 +139,7 @@ class PipelineYamlService(
         version: Int,
         webhooks: List<PipelineWebhookVersion>
     ) {
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.update(
@@ -147,6 +152,7 @@ class PipelineYamlService(
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
+                id = id,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,

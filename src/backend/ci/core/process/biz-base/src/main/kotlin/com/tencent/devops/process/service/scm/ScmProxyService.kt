@@ -378,7 +378,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
             is CodeSvnRepository -> {
-                throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_NOT_SUPPORT_TAG)
+                return Result(emptyList())
             }
             is CodeGitRepository -> {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
