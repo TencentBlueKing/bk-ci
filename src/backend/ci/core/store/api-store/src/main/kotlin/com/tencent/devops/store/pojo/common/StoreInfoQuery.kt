@@ -38,29 +38,29 @@ data class StoreInfoQuery(
     @get:Schema(title = "组件代码列表", required = false)
     var storeCodes: List<String>? = null,
     @get:Schema(title = "项目代码", required = false)
-    val projectCode: String?,
+    val projectCode: String? = null,
     @get:Schema(title = "搜索关键字", required = false)
-    val keyword: String?,
+    val keyword: String? = null,
     @get:Schema(title = "分类ID", required = false)
-    val classifyId: String?,
+    val classifyId: String? = null,
     @get:Schema(title = "标签ID", required = false)
-    val labelId: String?,
+    val labelId: String? = null,
     @get:Schema(title = "范畴ID", required = false)
-    val categoryId: String?,
+    val categoryId: String? = null,
     @get:Schema(title = "评分", required = false)
-    val score: Int?,
+    val score: Int? = null,
     @get:Schema(title = "研发来源类型", required = false)
-    val rdType: RdTypeEnum?,
+    val rdType: RdTypeEnum? = null,
     @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
-    val recommendFlag: Boolean?,
+    val recommendFlag: Boolean? = null,
     @get:Schema(title = "是否查询项目下组件标识", required = true)
     val queryProjectComponentFlag: Boolean,
     @get:Schema(title = "是否已安装", required = false)
-    val installed: Boolean?,
+    val installed: Boolean? = null,
     @get:Schema(title = "是否需要更新标识 true：需要，false：不需要", required = false)
-    val updateFlag: Boolean?,
+    val updateFlag: Boolean? = null,
     @get:Schema(title = "排序", required = false)
-    val sortType: StoreSortTypeEnum?,
+    val sortType: StoreSortTypeEnum? = null,
     @get:Schema(title = "页码", required = true)
     val page: Int,
     @get:Schema(title = "每页数量", required = true)

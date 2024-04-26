@@ -50,6 +50,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.dao.MarketStoreQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
@@ -76,7 +77,9 @@ import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.ComponentFullQuery
 import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
+import com.tencent.devops.store.pojo.common.KEY_YAML_FLAG
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
@@ -132,7 +135,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     private val storeDailyStatisticService: StoreDailyStatisticService,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
     private val storeClassifyService: ClassifyService,
-    private val labelDao: LabelDao
+    private val labelDao: LabelDao,
+    private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao
 ): StoreComponentQueryService {
 
     companion object {
@@ -299,23 +303,23 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             storeType = storeType
         )
         val processingVersionInfoMap = mutableMapOf<String, MutableList<StoreBaseInfo>>()
-        processingStoreRecords.forEach { processingAtomRecord ->
-            val version = processingAtomRecord[tStoreBase.VERSION] as String
+        processingStoreRecords.forEach { processingStoreRecord ->
+            val version = processingStoreRecord[tStoreBase.VERSION] as String
             if (version == INIT_VERSION || version.isBlank()) {
                 return@forEach
             }
-            val storeCode = processingAtomRecord[tStoreBase.STORE_CODE] as String
+            val storeCode = processingStoreRecord[tStoreBase.STORE_CODE] as String
             val storeBaseInfo = StoreBaseInfo(
-                storeId = processingAtomRecord[tStoreBase.ID] as String,
+                storeId = processingStoreRecord[tStoreBase.ID] as String,
                 storeCode = storeCode,
-                storeName = processingAtomRecord[tStoreBase.NAME] as String,
-                storeType = StoreTypeEnum.getStoreTypeObj((processingAtomRecord[tStoreBase.STORE_TYPE] as Byte).toInt()),
+                storeName = processingStoreRecord[tStoreBase.NAME] as String,
+                storeType = storeType,
                 version = version,
                 publicFlag = publicFlagInfoMap[storeCode] ?: false,
-                status = processingAtomRecord[tStoreBase.STATUS] as String,
-                logoUrl = processingAtomRecord[tStoreBase.LOGO_URL],
-                publisher = processingAtomRecord[tStoreBase.PUBLISHER] as String,
-                classifyId = processingAtomRecord[tStoreBase.CLASSIFY_ID] as String,
+                status = processingStoreRecord[tStoreBase.STATUS] as String,
+                logoUrl = processingStoreRecord[tStoreBase.LOGO_URL],
+                publisher = processingStoreRecord[tStoreBase.PUBLISHER] as String,
+                classifyId = processingStoreRecord[tStoreBase.CLASSIFY_ID] as String,
             )
             processingVersionInfoMap.getOrPut(storeCode) { mutableListOf() }.add(storeBaseInfo)
         }
@@ -531,12 +535,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             certificationFlag = storeFeatureRecord.certificationFlag,
             type = storeFeatureRecord.type,
             userCommentInfo = userCommentInfo,
-            editFlag = storeMemberDao.isStoreAdmin(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte()
-            ),
+            editFlag = StoreUtils.checkEditCondition(storeBaseRecord.status),
             honorInfos = storeHonorService.getStoreHonor(userId, storeType, storeCode),
             indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(storeType, storeCode),
             extData = extData
@@ -578,15 +577,6 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeInfoQuery = StoreInfoQuery(
                     storeType = storeType,
                     projectCode = projectCode,
-                    keyword = null,
-                    classifyId = null,
-                    labelId = null,
-                    score = null,
-                    rdType = null,
-                    categoryId = null,
-                    recommendFlag = null,
-                    installed = null,
-                    updateFlag = null,
                     queryProjectComponentFlag = false,
                     sortType = StoreSortTypeEnum.UPDATE_TIME,
                     page = page,
@@ -608,15 +598,6 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeInfoQuery = StoreInfoQuery(
                     storeType = storeType,
                     projectCode = projectCode,
-                    keyword = null,
-                    classifyId = null,
-                    labelId = null,
-                    score = null,
-                    rdType = null,
-                    categoryId = null,
-                    recommendFlag = null,
-                    installed = null,
-                    updateFlag = null,
                     queryProjectComponentFlag = false,
                     sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
                     page = page,
@@ -643,15 +624,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         storeInfoQuery = StoreInfoQuery(
                             storeType = storeType,
                             projectCode = projectCode,
-                            keyword = null,
                             classifyId = it.id,
-                            labelId = null,
-                            score = null,
-                            rdType = null,
-                            categoryId = null,
-                            recommendFlag = null,
-                            installed = null,
-                            updateFlag = null,
                             queryProjectComponentFlag = false,
                             sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
                             page = page,
@@ -828,6 +801,15 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId)?.forEach {
                         it.osName?.let { osName -> osList.add(osName) }
                     }
+                    val baseExtResult = storeBaseExtQueryDao.getBaseExtByEnvId(
+                        dslContext = dslContext,
+                        storeId = storeId,
+                        fieldName = KEY_BUILD_LESS_RUN_FLAG
+                    )
+                    val buildLessRunFlag = if (baseExtResult.isNotEmpty) {
+                        baseExtResult[0]!!.fieldValue.toBoolean()
+                    } else null
+                    val extData = getExtData(storeCode, storeTypeEnum)
                     val marketItem =MarketItem(
                         id = storeId,
                         name = record[tStoreBase.NAME],
@@ -852,20 +834,19 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                             userDeptList = userDeptList
                         ),
                         publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG],
-                        buildLessRunFlag = null,
+                        buildLessRunFlag = buildLessRunFlag,
                         docsLink = record[tStoreBase.DOCS_LINK],
                         modifier = record[tStoreBase.MODIFIER],
                         updateTime = DateTimeUtil.toDateTime(record[tStoreBase.UPDATE_TIME] as LocalDateTime),
                         recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
-                        yamlFlag = null,
+                        yamlFlag = extData?.get(KEY_YAML_FLAG) as? Boolean,
                         installed = installed,
                         updateFlag = updateFlag,
-                        dailyStatisticList = getRecentDailyStatisticList(storeCode, storeTypeEnum),
                         honorInfos = storeHonorInfoMap[storeCode],
                         indexInfos = storeIndexInfosMap[storeCode],
                         recentExecuteNum = statistic?.recentExecuteNum,
                         hotFlag = statistic?.hotFlag,
-                        extData = getExtData(storeCode, storeTypeEnum)
+                        extData = extData
                     )
                     results.add(marketItem)
                 }

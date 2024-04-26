@@ -39,6 +39,9 @@ import com.tencent.devops.store.common.dao.OperationLogDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.SensitiveConfDao
 import com.tencent.devops.store.common.dao.StoreApproveDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
+import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreCommentDao
@@ -46,6 +49,7 @@ import com.tencent.devops.store.common.dao.StoreCommentPraiseDao
 import com.tencent.devops.store.common.dao.StoreCommentReplyDao
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreEnvVarDao
+import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMediaInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
@@ -143,6 +147,18 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
 
     @Autowired
     lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
+
+    @Autowired
+    lateinit var storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao
+
+    @Autowired
+    lateinit var storeLabelRelDao: StoreLabelRelDao
+
+    @Autowired
+    lateinit var storeBaseExtManageDao: StoreBaseExtManageDao
+
+    @Autowired
+    lateinit var storeBaseEnvManageDao: StoreBaseEnvManageDao
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
 
@@ -315,6 +331,13 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         storeStatisticDao.deleteStoreStatistic(context, storeCode, storeType)
         storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
         storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
+        val storeIds = storeBaseQueryDao.getComponentIds(context, storeCode, storeType)
+        if (storeIds.isNotEmpty()) {
+            storeBaseEnvManageDao.batchDeleteStoreEnvInfo(context, storeIds)
+            storeLabelRelDao.batchDeleteByStoreId(context, storeIds)
+            storeBaseExtManageDao.batchDeleteStoreBaseExtInfo(context, storeIds)
+            storeBaseEnvExtManageDao.batchDeleteStoreEnvExtInfo(context, storeIds)
+        }
         return true
     }
 

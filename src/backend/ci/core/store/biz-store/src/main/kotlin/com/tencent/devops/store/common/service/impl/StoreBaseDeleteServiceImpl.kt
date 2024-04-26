@@ -31,14 +31,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
-import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
-import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.dao.StoreLabelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreBaseDeleteService
@@ -61,11 +57,7 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseManageDao: StoreBaseManageDao,
     private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
-    private val storeLabelDao: StoreLabelDao,
-    private val storeBaseExtManageDao: StoreBaseExtManageDao,
     private val storeCommonService: StoreCommonService,
-    private val storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao,
-    private val storeBaseEnvManageDao: StoreBaseEnvManageDao,
     private val storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao,
     private val storeVersionLogDao: StoreVersionLogDao
 ) : StoreBaseDeleteService {
@@ -129,15 +121,10 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
         val storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val storeIds = storeBaseQueryDao.getComponentIds(context, storeCode, storeType)
             storeCommonService.deleteStoreInfo(context, storeCode, storeType.type.toByte())
-            storeBaseEnvExtManageDao.batchDeleteStoreEnvExtInfo(context, storeIds)
-            storeBaseEnvManageDao.batchDeleteStoreEnvInfo(context, storeIds)
             storeBaseFeatureManageDao.deleteStoreBaseFeature(context, storeCode, storeType.type.toByte())
             storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
-            storeLabelDao.batchDeleteByStoreId(context, storeIds)
             storeVersionLogDao.deleteByStoreCode(context, storeCode, storeType)
-            storeBaseExtManageDao.batchDeleteStoreBaseExtInfo(context, storeIds)
             storeBaseManageDao.deleteByComponentCode(context, storeCode, storeType)
         }
     }

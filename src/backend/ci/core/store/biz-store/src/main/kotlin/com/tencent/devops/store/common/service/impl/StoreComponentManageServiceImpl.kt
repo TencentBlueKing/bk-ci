@@ -40,7 +40,7 @@ import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.dao.StoreLabelDao
+import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.handler.StoreDeleteCheckHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
@@ -51,12 +51,12 @@ import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.jooq.DSLContext
@@ -72,7 +72,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
     private val storeBaseManageDao: StoreBaseManageDao,
     private val storeProjectService: StoreProjectService,
     private val classifyDao: ClassifyDao,
-    private val storeLabelDao: StoreLabelDao,
+    private val storeLabelRelDao: StoreLabelRelDao,
     private val storeBaseExtManageDao: StoreBaseExtManageDao,
     private val storeDeleteCheckHandler: StoreDeleteCheckHandler,
     private val storeDeleteRepoFileHandler: StoreDeleteRepoFileHandler,
@@ -123,7 +123,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(storeCode)
         )
-        val editFlag = checkEditCondition(componentBaseInfoRecord.status)
+        val editFlag = StoreUtils.checkEditCondition(componentBaseInfoRecord.status)
         if (!editFlag) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
@@ -161,8 +161,8 @@ class StoreComponentManageServiceImpl @Autowired constructor(
             )
             storeBaseInfoUpdateRequest.labelIdList?.let {
                 storeIds.forEach { storeId ->
-                    storeLabelDao.deleteByStoreId(context, storeId)
-                    storeLabelDao.batchAdd(
+                    storeLabelRelDao.deleteByStoreId(context, storeId)
+                    storeLabelRelDao.batchAdd(
                         dslContext = context,
                         userId = userId,
                         storeId = storeId,
@@ -175,18 +175,6 @@ class StoreComponentManageServiceImpl @Autowired constructor(
             }
         }
         return Result(true)
-    }
-
-    private fun checkEditCondition(status: String): Boolean {
-        val componentFinalStatusList = listOf(
-            StoreStatusEnum.AUDIT_REJECT.name,
-            StoreStatusEnum.RELEASED.name,
-            StoreStatusEnum.GROUNDING_SUSPENSION.name,
-            StoreStatusEnum.UNDERCARRIAGED.name,
-            StoreStatusEnum.INIT.name
-        )
-        // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
-        return componentFinalStatusList.contains(status)
     }
 
     override fun installComponent(

@@ -29,11 +29,8 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseExt
 import com.tencent.devops.model.store.tables.records.TStoreBaseExtRecord
-import com.tencent.devops.store.pojo.common.publication.StoreBaseExtDataPO
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -44,6 +41,20 @@ class StoreBaseExtQueryDao {
             return dslContext.selectFrom(this)
                 .where(STORE_ID.`in`(storeIds))
                 .fetch()
+        }
+    }
+
+    fun getBaseExtByEnvId(
+        dslContext: DSLContext,
+        storeId: String,
+        fieldName: String? = null
+    ): Result<TStoreBaseExtRecord> {
+        return with(TStoreBaseExt.T_STORE_BASE_EXT) {
+            val conditions = mutableListOf(STORE_ID.eq(storeId))
+            if (!fieldName.isNullOrBlank()) {
+                conditions.add(FIELD_NAME.eq(fieldName))
+            }
+            dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 }

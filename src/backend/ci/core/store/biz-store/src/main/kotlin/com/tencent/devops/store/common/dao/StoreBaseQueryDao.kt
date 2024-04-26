@@ -36,6 +36,7 @@ import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.ComponentFullQuery
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -210,11 +211,11 @@ class StoreBaseQueryDao {
         }
     }
 
-    fun getComponentIds(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): MutableList<String> {
+    fun getComponentIds(dslContext: DSLContext, storeCode: String, storeType: Byte): MutableList<String> {
         with(TStoreBase.T_STORE_BASE) {
             return dslContext.select(ID)
                 .from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .fetchInto(String::class.java)
         }
     }
@@ -335,7 +336,7 @@ class StoreBaseQueryDao {
         val subquery = dslContext.select(
             tStoreBase.STORE_CODE,
             tStoreBase.STORE_TYPE,
-            DSL.max(tStoreBase.CREATE_TIME).`as`("max_create_time")
+            DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
         )
             .from(tStoreBase)
             .join(tStoreMember)
@@ -361,7 +362,7 @@ class StoreBaseQueryDao {
             .join(subquery)
             .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
             .and(tStoreBase.STORE_TYPE.eq(subquery.field(tStoreBase.STORE_TYPE)))
-            .and(tStoreBase.CREATE_TIME.eq(subquery.field("max_create_time", LocalDateTime::class.java)))
+            .and(tStoreBase.CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .where(conditions)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
         return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -397,7 +398,7 @@ class StoreBaseQueryDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        val statusList = StoreStatusEnum.getAll().toMutableList()
+        val statusList = StoreStatusEnum.values().map { it.name }.toMutableList()
         statusList.removeAll(StoreStatusEnum.getProcessingStatusList())
         statusList.add(StoreStatusEnum.INIT.name)
         conditions.add(tStoreBase.STATUS.`in`(statusList))

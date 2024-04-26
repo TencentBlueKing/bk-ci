@@ -245,10 +245,8 @@ class CategoryServiceImpl @Autowired constructor(
                 updateTime = it[tCategory.UPDATE_TIME].timestampmilli()
             )
             val storeId = it[KEY_STORE_ID] as String
-            if (storeCategoryMap[storeId] == null) {
-                storeCategoryMap[storeId] = mutableListOf()
-            }
-            storeCategoryMap[storeId]?.add(category)
+            val storeCategories = storeCategoryMap.getOrPut(storeId) { mutableListOf() }
+            storeCategories.add(category)
         }
         return storeCategoryMap
     }
