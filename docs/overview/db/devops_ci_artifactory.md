@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_artifactory
 
-**文档版本：** 1.0.1
+**文档版本：** 1.0.2
 
 **文档描述：** devops_ci_artifactory 的数据库文档
 | 表名                  | 说明       |

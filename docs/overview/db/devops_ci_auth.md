@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.1
+**文档版本：** 1.0.2
 
 **文档描述：** devops_ci_auth 的数据库文档
 | 表名                  | 说明       |
@@ -409,11 +409,12 @@
 |  3   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
 |  4   | GROUP_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 用户组名称  |
 |  5   | CREATE_MODE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 创建模式,0-开启时创建,1-启用权限管理时创建  |
-|  6   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 用户组描述  |
-|  7   | AUTHORIZATION_SCOPES |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 用户组授权范围  |
-|  8   | ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 用户组拥有的资源操作  |
-|  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  6   | GROUP_TYPE |   int   | 10 |   0    |    N     |  N   |   0    | 用户组类型 0-默认组 1-自定义组  |
+|  7   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 用户组描述  |
+|  8   | AUTHORIZATION_SCOPES |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 用户组授权范围  |
+|  9   | ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 用户组拥有的资源操作  |
+|  10   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  11   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_AUTH_RESOURCE_TYPE</a>
 
