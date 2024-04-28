@@ -128,13 +128,6 @@ class MarketStoreQueryDao {
                         filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
                             .eq(maxCreateTimeSubquery.field(tStoreBase.CREATE_TIME))
                     )
-            ).where(
-                filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
-                    .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
-                    .and(
-                        filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
-                            .eq(maxCreateTimeSubquery.field(tStoreBase.CREATE_TIME))
-                    )
             ).limit(
                 (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
                 storeInfoQuery.pageSize
