@@ -92,7 +92,7 @@ class OpNodeService @Autowired constructor(
     }
 
     fun countPage(nodeName: String?): Int {
-        return cmdbNodeDao.count(dslContext, nodeName)
+        return cmdbNodeDao.countAllNodesOrByName(dslContext, nodeName)
     }
 
     /**

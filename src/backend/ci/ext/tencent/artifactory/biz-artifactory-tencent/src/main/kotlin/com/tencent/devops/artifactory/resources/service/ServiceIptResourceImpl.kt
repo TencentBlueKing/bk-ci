@@ -71,6 +71,7 @@ class ServiceIptResourceImpl @Autowired constructor(
                 crossProjectId = null,
                 crossPipineId = null,
                 crossBuildNo = null,
+                crossBuildId = null,
                 region = null
             ).firstOrNull()
         }

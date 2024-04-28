@@ -6,6 +6,8 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
+import java.io.IOException
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusReqBody
@@ -19,36 +21,21 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.IOException
 
 @Service
 class StartCloudClient @Autowired constructor(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val config: RemoteDevCommonConfig
 ) {
-    @Value("\${startCloud.appId}")
-    private val appId: String = ""
-
-    @Value("\${startCloud.appKey}")
-    private val appKey: String = ""
-
-    @Value("\${startCloud.apiUrl}")
-    private val apiUrl: String = ""
-
-    @Value("\${startCloud.appName}")
-    private val appName: String = "IEG_BKCI"
-
-    @Value("\${startCloud.contentProviderName}")
-    private val contentProviderName: String = ""
 
     fun computerStatus(
         cgsIds: Set<String>?
     ): List<StartCloudComputerStatusRespData>? {
-        val url = "$apiUrl/openapi/computer/status"
+        val url = "${config.apiUrl}/openapi/computer/status"
         val body = JsonUtil.toJson(
             StartCloudComputerStatusReqBody(
-                appName = appName,
+                appName = config.bkciAppName,
                 cgsIds = cgsIds
             ),
             false
@@ -76,10 +63,10 @@ class StartCloudClient @Autowired constructor(
         appName: String,
         detail: String
     ): Long? {
-        val url = "$apiUrl/openapi/app/create"
+        val url = "${config.apiUrl}/openapi/app/create"
         val body = JsonUtil.toJson(
             StartCloudAppCreateReq(
-                contentProviderName = contentProviderName,
+                contentProviderName = config.contentProviderName,
                 appName = appName,
                 detail = detail
             ),
@@ -107,7 +94,7 @@ class StartCloudClient @Autowired constructor(
     fun messageRegister(
         req: StartMessageRegisterReq
     ) {
-        val url = "$apiUrl/openapi/message/register"
+        val url = "${config.apiUrl}/openapi/message/register"
         val body = JsonUtil.toJson(req, false)
         logger.debug("messageRegister request url: $url, body: $body")
         val request = Request.Builder()
@@ -130,10 +117,11 @@ class StartCloudClient @Autowired constructor(
         body: String
     ): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
-        headerBuilder["x-start-appid"] = appId
+        headerBuilder["x-start-appid"] = config.appId
         val timestampMillis = System.currentTimeMillis().toString().take(10)
         headerBuilder["x-start-timestamp"] = timestampMillis
-        headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
+        headerBuilder["x-start-signature"] =
+            ShaUtils.sha256("${config.appId}${config.appKey}$timestampMillis$body").uppercase()
 
         return headerBuilder
     }

@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.interceptor
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**

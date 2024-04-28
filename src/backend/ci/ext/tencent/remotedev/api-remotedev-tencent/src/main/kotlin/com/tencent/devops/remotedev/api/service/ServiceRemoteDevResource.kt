@@ -184,7 +184,7 @@ interface ServiceRemoteDevResource {
         userId: String,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
-    ): Result<String>
+    ): Result<Boolean>
 
     @Operation(summary = "删除windows工作空间")
     @DELETE
@@ -205,6 +205,50 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "创建windows工作空间-项目")
+    @POST
+    @Path("/project_win_workspace")
+    fun createProjectWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "创建内容", required = true)
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean>
+
+    @Operation(summary = "删除windows工作空间-项目")
+    @DELETE
+    @Path("/project_win_workspace")
+    fun deleteProjectWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间-项目")
+    @GET
+    @Path("/project_win_workspace")
+    fun getProjectWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @Parameter(description = "工作空间名", required = true)
         @QueryParam("workspaceName")
         workspaceName: String

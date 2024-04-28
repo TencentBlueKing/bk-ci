@@ -10,6 +10,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Tag(name = "OP_CODE_PROY", description = "OP_CODE_PROY")
 @Path("/op/codeproxy")
@@ -26,8 +27,11 @@ interface OpCodeProxyResource {
 
     @POST
     @Path("/refresh/tGitAcl")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun refreshTGitAcl(
         @QueryParam("projectId")
-        projectId: String?
-    )
+        projectId: String?,
+        @QueryParam("export")
+        export: Boolean?
+    ): Response?
 }

@@ -46,6 +46,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -57,8 +59,6 @@ import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -456,7 +456,12 @@ class WorkspaceDao {
 
     fun fetchWorkspaceWithOwner(
         dslContext: DSLContext,
-        status: WorkspaceStatus? = null,
+        status: List<WorkspaceStatus>? = null,
+        notStatus: List<WorkspaceStatus>? = listOf(
+            WorkspaceStatus.DELETED,
+            WorkspaceStatus.PREPARING,
+            WorkspaceStatus.DELIVERING_FAILED
+        ),
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
         ip: String? = null,
@@ -469,14 +474,13 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
-        conditions.add(
-            t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)
-                .and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
-                .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal))
-        )
+
+        notStatus?.let {
+            conditions.add(t1.STATUS.notIn(notStatus.map { it.ordinal }))
+        }
 
         status?.let {
-            conditions.add(t1.STATUS.eq(it.ordinal))
+            conditions.add(t1.STATUS.`in`(status.map { it.ordinal }))
         }
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
@@ -1008,6 +1012,24 @@ class WorkspaceDao {
                 .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                 .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.eq(cgsId))
         )
+    }
+
+    // 获取正常状态的 workspace ip
+    fun fetchProjectIp(
+        dslContext: DSLContext,
+        projectId: String
+    ): Set<String> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .and(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(
+                    STATUS.notIn(
+                        WorkspaceStatus.PREPARING.ordinal,
+                        WorkspaceStatus.DELETED.ordinal,
+                        WorkspaceStatus.DELIVERING_FAILED.ordinal
+                    )
+                ).fetch().map { it.hostName }.filter { !it.isNullOrBlank() }.toSet()
+        }
     }
 
     fun fetchWorkspaceByIp(

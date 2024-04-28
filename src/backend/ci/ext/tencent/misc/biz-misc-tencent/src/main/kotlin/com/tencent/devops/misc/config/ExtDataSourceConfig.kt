@@ -27,7 +27,6 @@
 
 package com.tencent.devops.misc.config
 
-import com.mysql.jdbc.Driver
 import com.zaxxer.hikari.HikariDataSource
 import org.jooq.ExecuteListenerProvider
 import org.jooq.SQLDialect
@@ -49,6 +48,7 @@ import javax.sql.DataSource
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement
+@SuppressWarnings("TooManyFunctions")
 class ExtDataSourceConfig {
 
     @Bean
@@ -64,30 +64,23 @@ class ExtDataSourceConfig {
         @Value("\${spring.datasource.ttarget.leakDetectionThreshold:#{0}}")
         datasourceLeakDetectionThreshold: Long = 0
     ): DataSource {
-        return HikariDataSource().apply {
-            poolName = "DBPool-Process-ttarget"
-            jdbcUrl = datasourceUrl
-            username = datasourceUsername
-            password = datasourcePassword
-            driverClassName = Driver::class.java.name
-            minimumIdle = 1
-            maximumPoolSize = 5
-            idleTimeout = 60000
-            connectionInitSql = datasourceInitSql
-            leakDetectionThreshold = datasourceLeakDetectionThreshold
-        }
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Process-ttarget",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
     }
 
     @Bean
     fun ttargetJooqConfiguration(
         @Qualifier("ttargetDataSource")
-        ttargetDataSource: DataSource
+        ttargetDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(ttargetDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return defaultConfiguration(ttargetDataSource, executeListenerProviders)
     }
 
     @Bean
@@ -103,30 +96,23 @@ class ExtDataSourceConfig {
         @Value("\${spring.datasource.tsource.leakDetectionThreshold:#{0}}")
         datasourceLeakDetectionThreshold: Long = 0
     ): DataSource {
-        return HikariDataSource().apply {
-            poolName = "DBPool-Process-tsource"
-            jdbcUrl = datasourceUrl
-            username = datasourceUsername
-            password = datasourcePassword
-            driverClassName = Driver::class.java.name
-            minimumIdle = 1
-            maximumPoolSize = 5
-            idleTimeout = 60000
-            connectionInitSql = datasourceInitSql
-            leakDetectionThreshold = datasourceLeakDetectionThreshold
-        }
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Process-tsource",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
     }
 
     @Bean
     fun tsourceJooqConfiguration(
         @Qualifier("tsourceDataSource")
-        tsourceDataSource: DataSource
+        tsourceDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(tsourceDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return defaultConfiguration(tsourceDataSource, executeListenerProviders)
     }
 
     @Bean
@@ -142,18 +128,14 @@ class ExtDataSourceConfig {
         @Value("\${spring.datasource.monitoring.leakDetectionThreshold:#{0}}")
         datasourceLeakDetectionThreshold: Long = 0
     ): DataSource {
-        return HikariDataSource().apply {
-            poolName = "DBPool-Process-monitoring"
-            jdbcUrl = datasourceUrl
-            username = datasourceUsername
-            password = datasourcePassword
-            driverClassName = Driver::class.java.name
-            minimumIdle = 1
-            maximumPoolSize = 5
-            idleTimeout = 60000
-            connectionInitSql = datasourceInitSql
-            leakDetectionThreshold = datasourceLeakDetectionThreshold
-        }
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Process-monitoring",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
     }
 
     @Bean
@@ -162,13 +144,202 @@ class ExtDataSourceConfig {
         monitoringDataSource: DataSource,
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
+        return defaultConfiguration(monitoringDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun projectDataSource(
+        @Value("\${spring.datasource.project.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.project.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.project.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.project.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.project.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Project",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun projectJooqConfiguration(
+        @Qualifier("projectDataSource")
+        projectDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return defaultConfiguration(projectDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun storeDataSource(
+        @Value("\${spring.datasource.store.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.store.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.store.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.store.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.store.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Store",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun storeJooqConfiguration(
+        @Qualifier("storeDataSource")
+        storeDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return defaultConfiguration(storeDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun lambdaDataSource(
+        @Value("\${spring.datasource.lambda.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.lambda.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.lambda.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.lambda.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.lambda.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Lambda",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun lambdaJooqConfiguration(
+        @Qualifier("lambdaDataSource")
+        lambdaDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return defaultConfiguration(lambdaDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun supportDataSource(
+        @Value("\${spring.datasource.support.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.support.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.support.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.support.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.support.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-support",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun supportJooqConfiguration(
+        @Qualifier("supportDataSource")
+        supportDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return defaultConfiguration(supportDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun prebuildDataSource(
+        @Value("\${spring.datasource.prebuild.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.prebuild.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.prebuild.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.prebuild.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.prebuild.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-prebuild",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun prebuildJooqConfiguration(
+        @Qualifier("prebuildDataSource")
+        prebuildDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return defaultConfiguration(prebuildDataSource, executeListenerProviders)
+    }
+
+    @SuppressWarnings("LongParameterList", "MagicNumber")
+    private fun hikariDataSource(
+        datasourcePoolName: String,
+        datasourceUrl: String,
+        datasourceUsername: String,
+        datasourcePassword: String,
+        datasourceInitSql: String?,
+        datasourceLeakDetectionThreshold: Long
+    ): HikariDataSource {
+        return HikariDataSource().apply {
+            poolName = datasourcePoolName
+            jdbcUrl = datasourceUrl
+            username = datasourceUsername
+            password = datasourcePassword
+            driverClassName = com.mysql.cj.jdbc.Driver::class.java.name
+            minimumIdle = 10
+            maximumPoolSize = 50
+            idleTimeout = 60000
+            connectionInitSql = datasourceInitSql
+            leakDetectionThreshold = datasourceLeakDetectionThreshold
+        }
+    }
+
+    @SuppressWarnings("SpreadOperator")
+    private fun defaultConfiguration(
+        dataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
         val configuration = DefaultConfiguration()
         configuration.set(SQLDialect.MYSQL)
-        configuration.set(monitoringDataSource)
+        configuration.set(dataSource)
         configuration.settings().isRenderSchema = false
-        configuration.set(*executeListenerProviders.stream().toArray { size ->
-            arrayOfNulls<ExecuteListenerProvider>(size)
-        })
+        configuration.set(*executeListenerProviders.toList().toTypedArray())
         return configuration
     }
 }

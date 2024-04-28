@@ -28,7 +28,6 @@
 
 package com.tencent.devops.process.trigger
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -50,7 +49,6 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
@@ -105,7 +103,6 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
     ) {
-        triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineTriggerEventDao.save(
@@ -117,6 +114,20 @@ class PipelineTriggerEventService @Autowired constructor(
                 triggerDetail = triggerDetail
             )
         }
+    }
+
+    fun saveTriggerEvent(triggerEvent: PipelineTriggerEvent) {
+        pipelineTriggerEventDao.save(
+            dslContext = dslContext,
+            triggerEvent = triggerEvent
+        )
+    }
+
+    fun saveTriggerDetail(triggerDetail: PipelineTriggerDetail) {
+        pipelineTriggerEventDao.saveDetail(
+            dslContext = dslContext,
+            triggerDetail = triggerDetail
+        )
     }
 
     fun listPipelineTriggerEvent(
@@ -398,32 +409,6 @@ class PipelineTriggerEventService @Autowired constructor(
         eventDesc
     }
 
-    /**
-     * 获取国际化构建事件详情描述
-     */
-    private fun getI18nReasonDetailDesc(triggerType: String, reasonDetailList: List<String>?): List<String>? {
-        return when {
-            reasonDetailList.isNullOrEmpty() -> null
-            // 非webhook触发,直接返回异常信息
-            !PipelineTriggerType.webhookTrigger(triggerType) -> reasonDetailList
-            else -> try {
-                reasonDetailList.map {
-                    val reasonDetail = JsonUtil.to(it, PipelineTriggerReasonDetail::class.java)
-                    // 国际化触发失败原因
-                    val i18nReason = JsonUtil.to(
-                        json = reasonDetail.reasonMsg,
-                        typeReference = object : TypeReference<I18Variable>() {}
-                    ).getCodeLanMessage()
-                    // 详情格式： {{触发器名称}}|{{国际化后的触发失败原因}}
-                    "${reasonDetail.elementName} | $i18nReason"
-                }
-            } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo trigger event detail", ignored)
-                reasonDetailList
-            }
-        }
-    }
-
     private fun getI18nReason(reason: String?): String = getCodeLanMessage(
         messageCode = if (reason.isNullOrBlank()) {
             PipelineTriggerReason.TRIGGER_SUCCESS.name
@@ -456,7 +441,6 @@ class PipelineTriggerEventService @Autowired constructor(
         return with(eventParam) {
             eventDesc = getI18nEventDesc(eventDesc)
             buildNum = getBuildNumUrl()
-            reasonDetailList = getI18nReasonDetailDesc(triggerType = triggerType, reasonDetailList = reasonDetailList)
             reason = getI18nReason(eventParam.reason)
             this
         }

@@ -72,6 +72,7 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
+import com.tencent.devops.project.pojo.enums.ProjectRouteTag
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtOrganizationService
@@ -407,7 +408,7 @@ class TxProjectServiceImpl @Autowired constructor(
             AuthSystemType.V0_AUTH_TYPE.value
         } else if (routerTag.contains(AuthSystemType.V3_AUTH_TYPE.value)) {
             AuthSystemType.V3_AUTH_TYPE.value
-        } else if (routerTag.contains(AuthSystemType.RBAC_AUTH_TYPE.value)) {
+        } else if (routerTag.contains(ProjectRouteTag.RBAC.value) || routerTag.contains(ProjectRouteTag.DEVX.value)) {
             AuthSystemType.RBAC_AUTH_TYPE.value
         } else {
             AuthSystemType.V0_AUTH_TYPE.value

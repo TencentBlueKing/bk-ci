@@ -1,8 +1,5 @@
 <template>
     <h3 class="component-tip pointer-events-auto">
-        <span class="tip-icon">
-            <i class="devops-icon icon-info-circle-shape"></i>
-        </span>
         <span class="tip-message" v-html="tip"></span>
     </h3>
 </template>
@@ -153,25 +150,13 @@
         font-size: 12px;
         display: flex;
         border: 1px solid #e6e6e6;
-        .tip-icon {
-            min-width: 44px;
-            background-color: #ffb400;
-            position: relative;
-            .devops-icon {
-                font-size: 18px;
-                color: #fff;
-                display: inline-block;
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate3d(-50%, -50%, 0);
-            }
-        }
         .tip-message {
             flex: 1;
             padding: 10px 18px;
             line-height: 22px;
             word-break: break-all;
+            background: #f5f7fa;
+            color: #63656e;
             .text-link {
                 font-size: 12px;
                 margin: 0;

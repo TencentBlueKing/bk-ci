@@ -19,7 +19,6 @@
 <script>
     import PipelineIndex from '../subpages/index.vue'
     import TemplateEdit from '../template/edit.vue'
-    import VersionSideSlider from '@/components/VersionSideslider.vue'
 
     const COMPONENTS = {
         zyPipelines: PipelineIndex,
@@ -35,8 +34,7 @@
         name: 'ZyPipeline',
         components: {
             TemplateEdit,
-            PipelineIndex,
-            VersionSideSlider
+            PipelineIndex
         },
         provide () {
             return {

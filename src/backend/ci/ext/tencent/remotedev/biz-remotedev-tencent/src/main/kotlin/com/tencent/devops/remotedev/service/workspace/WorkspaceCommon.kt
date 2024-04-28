@@ -47,6 +47,8 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
+import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -73,6 +75,7 @@ import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -114,7 +117,10 @@ class WorkspaceCommon @Autowired constructor(
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val notifyControl: NotifyControl,
     private val kafkaClient: KafkaClient,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val remotedevProjectService: RemotedevProjectService,
+    private val projectStartAppLinkDao: ProjectStartAppLinkDao,
+    private val config: RemoteDevCommonConfig
 ) {
 
     companion object {
@@ -135,17 +141,27 @@ class WorkspaceCommon @Autowired constructor(
 
     fun getOrSaveWorkspaceDetail(
         workspaceName: String,
+        projectId: String,
         mountType: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType,
         event: RemoteDevUpdateEvent? = null
     ): WorkSpaceCacheInfo {
         return getWorkspaceDetail(workspaceName) ?: run {
-            return updateWorkspaceDetail(workspaceName, mountType, event)
+            return updateWorkspaceDetail(
+                workspaceName = workspaceName,
+                projectId = projectId,
+                mountType = mountType,
+                ownerType = ownerType,
+                event = event
+            )
         }
     }
 
     fun updateWorkspaceDetail(
         workspaceName: String,
+        projectId: String,
         mountType: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType,
         event: RemoteDevUpdateEvent? = null
     ): WorkSpaceCacheInfo {
         logger.info("$workspaceName update workspaceDetail, $event")
@@ -157,6 +173,7 @@ class WorkspaceCommon @Autowired constructor(
             )
         }
 
+        val gameId = getGameIdAndAppId(projectId, ownerType)
         val cache = if (mountType == WorkspaceMountType.START && event != null) {
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                 .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
@@ -167,7 +184,7 @@ class WorkspaceCommon @Autowired constructor(
                 environmentIP = event.environmentIp ?: "",
                 clusterId = "",
                 namespace = workspaceInfo.namespace,
-                curLaunchId = workspaceInfo.curLaunchId,
+                curLaunchId = gameId.second.toInt(),
                 regionId = workspaceInfo.regionId
             )
         } else {
@@ -186,7 +203,7 @@ class WorkspaceCommon @Autowired constructor(
                 environmentIP = workspaceInfo.environmentIP,
                 clusterId = workspaceInfo.environmentIP,
                 namespace = workspaceInfo.namespace,
-                curLaunchId = workspaceInfo.curLaunchId,
+                curLaunchId = gameId.second.toInt(),
                 regionId = workspaceInfo.regionId
             )
         }
@@ -281,12 +298,30 @@ class WorkspaceCommon @Autowired constructor(
             }
 
             workspaceInfo.status == EnvStatusEnum.restarting -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.RESTARTING)
                 return WorkspaceStatus.RESTARTING
+            }
+
+            workspaceInfo.status == EnvStatusEnum.rebuilding -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.REBUILDING)
+                return WorkspaceStatus.REBUILDING
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
+            }
+
+            workspaceInfo.status in mutableSetOf(
+                EnvStatusEnum.startFailed,
+                EnvStatusEnum.stopFailed,
+                EnvStatusEnum.abnormalAfterRunning,
+                EnvStatusEnum.abnormalAfterReady,
+                EnvStatusEnum.createFailed,
+                EnvStatusEnum.unknow
+            ) -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
+                return WorkspaceStatus.EXCEPTION
             }
 
             else -> logger.warn(
@@ -504,7 +539,8 @@ class WorkspaceCommon @Autowired constructor(
         projectId: String,
         operator: String,
         assigns: List<ProjectWorkspaceAssign>,
-        mountType: WorkspaceMountType
+        mountType: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType
     ) {
         // 获取workspaceName对应的cgsId
         val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp
@@ -517,11 +553,13 @@ class WorkspaceCommon @Autowired constructor(
             )
 
         val resourceId = if (mountType == WorkspaceMountType.START) {
+            val gameId = getGameIdAndAppId(projectId, ownerType)
             client.get(ServiceStartCloudResource::class)
                 .shareWorkspace(
                     operator = operator,
                     cgsId = cgsId,
-                    receivers = assigns.map { it.userId }
+                    receivers = assigns.map { it.userId },
+                    gameId = gameId.first
                 ).data!!
         } else {
             ""
@@ -686,9 +724,9 @@ class WorkspaceCommon @Autowired constructor(
         kotlin.runCatching {
             kafkaClient.send(
                 buildCommitsTopic!!,
-                    JsonUtil.toJson(
-                workspaceKafkaInfo
-            )
+                JsonUtil.toJson(
+                    workspaceKafkaInfo
+                )
             )
         }.onFailure {
             logger.warn("send cgs info 2 kafka fail")
@@ -737,5 +775,15 @@ class WorkspaceCommon @Autowired constructor(
         bkccService.updateHostMonitor(
             regId, ip, props
         )
+    }
+
+    fun getGameIdAndAppId(projectId: String?, ownerType: WorkspaceOwnerType): Pair<String, Long> {
+        if (projectId.isNullOrBlank() || ownerType == WorkspaceOwnerType.PERSONAL) {
+            return config.devcouldAppName to config.devcouldCurLaunchId
+        }
+        return projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it } ?: kotlin.run {
+            remotedevProjectService.migrateOldData(projectId)
+            checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
+        }
     }
 }

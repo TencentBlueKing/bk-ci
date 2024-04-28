@@ -300,8 +300,9 @@ class WorkspaceService @Autowired constructor(
 
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START) {
+                val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
                 client.get(ServiceStartCloudResource::class)
-                    .createStartCloudUser(sharedUser)
+                    .createStartCloudUser(sharedUser, gameId.first)
             }
             if (workspaceSharedDao.existWorkspaceSharedInfo(workspaceName, sharedUser, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
@@ -316,7 +317,8 @@ class WorkspaceService @Autowired constructor(
                 projectId = workspace.projectId,
                 operator = userId,
                 assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER, null)),
-                mountType = workspace.workspaceMountType
+                mountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -489,15 +491,16 @@ class WorkspaceService @Autowired constructor(
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
             val detail = detailMap[it.workspaceName]
+            val status = checkStatus(it, userId)
             records.add(
                 ProjectWorkspace(
                     workspaceId = it.workspaceId,
                     workspaceName = it.workspaceName,
                     projectId = it.projectId,
                     displayName = it.displayName,
-                    status = it.status,
+                    status = status,
                     lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                    sleepingTime = if (it.status.checkSleeping()) {
+                    sleepingTime = if (status.checkSleeping()) {
                         it.lastStatusUpdateTime?.timestamp()
                     } else {
                         null
@@ -535,7 +538,12 @@ class WorkspaceService @Autowired constructor(
         hasCurrentUser: Boolean? = null,
         businessLineName: String? = null,
         ownerName: String? = null,
-        workspaceName: String? = null
+        workspaceName: String? = null,
+        notStatus: List<WorkspaceStatus>? = listOf(
+            WorkspaceStatus.DELETED,
+            WorkspaceStatus.PREPARING,
+            WorkspaceStatus.DELIVERING_FAILED
+        )
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 
@@ -546,7 +554,8 @@ class WorkspaceService @Autowired constructor(
             ip = ip,
             businessLineName = businessLineName,
             ownerName = ownerName,
-            workspaceName = workspaceName
+            workspaceName = workspaceName,
+            notStatus = notStatus
         ) ?: emptyList()
 
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
@@ -721,21 +730,7 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = result.count().toLong(),
             records = result.map {
-                var status = it.status
-                run {
-                    if (status.notOk2doNextAction(it.workspaceSystemType) && Duration.between(
-                            it.lastStatusUpdateTime ?: LocalDateTime.now(),
-                            LocalDateTime.now()
-                        ).seconds > DEFAULT_WAIT_TIME
-                    ) {
-                        status = workspaceCommon.fixUnexpectedStatus(
-                            userId = userId,
-                            workspaceName = it.workspaceName,
-                            status = status,
-                            mountType = it.workspaceMountType
-                        )
-                    }
-                }
+                val status = checkStatus(it, userId)
                 val owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
@@ -780,6 +775,25 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
+    }
+
+    private fun checkStatus(
+        it: WorkspaceRecordInf,
+        userId: String
+    ): WorkspaceStatus {
+        if (it.status.notOk2doNextAction(it.workspaceSystemType) && Duration.between(
+                it.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds > DEFAULT_WAIT_TIME
+        ) {
+            return workspaceCommon.fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = it.workspaceName,
+                status = it.status,
+                mountType = it.workspaceMountType
+            )
+        }
+        return it.status
     }
 
     fun getWorkspaceUserDetail(userId: String): WorkspaceUserDetail {
@@ -863,6 +877,12 @@ class WorkspaceService @Autowired constructor(
             },
             winUsageTimeLeft = remoteDevSettingService.userWinTimeLeft(userId)
         )
+    }
+
+    fun getWorkspaceRecord(
+        workspaceName: String
+    ): WorkspaceRecord? {
+        return workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
     }
 
     @ActionAuditRecord(
@@ -979,9 +999,10 @@ class WorkspaceService @Autowired constructor(
         } else {
             workspace.createUserId
         }
+        val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
-            curLaunchId = detail.curLaunchId!!,
+            curLaunchId = gameId.second.toInt(),
             regionId = detail.regionId,
             projectId = workspace.projectId,
             name = workspace.workspaceName,
@@ -1035,8 +1056,10 @@ class WorkspaceService @Autowired constructor(
 
         return workspace?.let {
             workspaceCommon.getOrSaveWorkspaceDetail(
-                workspaceName,
-                workspace.workspaceMountType
+                workspaceName = workspaceName,
+                projectId = workspace.projectId,
+                mountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType
             ).let {
                 WorkspaceProxyDetail(
                     workspaceName = workspaceName,
@@ -1055,7 +1078,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
-            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.workspaceMountType)
+            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.projectId, it.workspaceMountType, it.ownerType)
         }
     }
 
