@@ -120,7 +120,10 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.labels = ve.labels ?: listOf()
                 settingInfo.desc = ve.desc ?: settingInfo.desc
                 settingInfo.buildNumRule = ve.buildNumRule ?: settingInfo.buildNumRule
-                settingInfo.runLockType = ve.runLockType ?: settingInfo.runLockType
+                // #8161 如果是PAC发布前产生的数据，则流水线名称为空，可以用正式配置覆盖
+                settingInfo.runLockType = if (ve.pipelineName.isNullOrBlank()) {
+                    settingInfo.runLockType
+                } else ve.runLockType ?: settingInfo.runLockType
                 settingInfo.concurrencyGroup = ve.concurrencyGroup ?: settingInfo.concurrencyGroup
                 settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress
                     ?: settingInfo.concurrencyCancelInProgress
