@@ -79,6 +79,7 @@ class MarketStoreQueryDao {
         storeInfoQuery: StoreInfoQuery
     ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
         val baseStep = createBaseStep(dslContext)
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         val keyword = storeInfoQuery.keyword
@@ -114,7 +115,26 @@ class MarketStoreQueryDao {
         }
         val leftTable = filteredResultsSubquery.asTable("left_table")
         val rightTable = filteredResultsSubquery.asTable("right_table")
-        return dslContext.select()
+        return dslContext.select(
+            leftTable.field(tStoreBase.ID),
+            leftTable.field(tStoreBase.STORE_CODE),
+            leftTable.field(tStoreBase.STORE_TYPE),
+            leftTable.field(tStoreBase.NAME),
+            leftTable.field(tStoreBase.VERSION),
+            leftTable.field(tStoreBase.DOCS_LINK),
+            leftTable.field(tStoreBase.DESCRIPTION),
+            leftTable.field(tStoreBase.SUMMARY),
+            leftTable.field(tStoreBase.LOGO_URL),
+            leftTable.field(tStoreBase.PUBLISHER),
+            leftTable.field(tStoreBase.PUB_TIME),
+            leftTable.field(tStoreBase.MODIFIER),
+            leftTable.field(tStoreBase.UPDATE_TIME),
+            leftTable.field(tStoreBase.CLASSIFY_ID),
+            leftTable.field(tStoreBaseFeature.RECOMMEND_FLAG),
+            leftTable.field(tStoreBaseFeature.RD_TYPE),
+            leftTable.field(tStoreBaseFeature.PUBLIC_FLAG),
+            leftTable.field(tStoreBase.CREATE_TIME)
+        )
             .from(leftTable)
             .leftJoin(rightTable)
             .on(
