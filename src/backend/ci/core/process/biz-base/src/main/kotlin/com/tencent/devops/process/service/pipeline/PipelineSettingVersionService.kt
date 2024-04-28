@@ -118,14 +118,14 @@ class PipelineSettingVersionService @Autowired constructor(
                 // 这里不应该出现错误的流水线名，但保留历史留下的处理方式
                 settingInfo.pipelineName = ve.pipelineName ?: settingInfo.pipelineName
                 settingInfo.labels = ve.labels ?: listOf()
-                settingInfo.desc = ve.desc ?: ""
-                settingInfo.buildNumRule = ve.buildNumRule
-                settingInfo.runLockType = ve.runLockType
-                settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute
-                    ?: PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-                settingInfo.maxQueueSize = ve.maxQueueSize ?: PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
-                settingInfo.concurrencyGroup = ve.concurrencyGroup
-                settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress ?: false
+                settingInfo.desc = ve.desc ?: settingInfo.desc
+                settingInfo.buildNumRule = ve.buildNumRule ?: settingInfo.buildNumRule
+                settingInfo.runLockType = ve.runLockType ?: settingInfo.runLockType
+                settingInfo.concurrencyGroup = ve.concurrencyGroup ?: settingInfo.concurrencyGroup
+                settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress
+                    ?: settingInfo.concurrencyCancelInProgress
+                settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute ?: settingInfo.waitQueueTimeMinute
+                settingInfo.maxQueueSize = ve.maxQueueSize ?: settingInfo.maxQueueSize
             }
             // 来自前端的请求中，版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
             if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {

@@ -62,7 +62,7 @@ data class PipelineSettingVersion(
 
     // 运行控制、流水线禁用相关配置
     @get:Schema(title = "Lock 类型", required = false)
-    val runLockType: PipelineRunLockType = PipelineRunLockType.MULTIPLE,
+    val runLockType: PipelineRunLockType?,
     @get:Schema(title = "最大排队时长", required = false)
     val waitQueueTimeMinute: Int?,
     @get:Schema(title = "最大排队数量", required = false)
