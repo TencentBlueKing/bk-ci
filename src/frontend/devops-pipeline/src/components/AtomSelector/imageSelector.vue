@@ -171,6 +171,7 @@
             isShow (val) {
                 const ele = this.$refs.imageTab.$el.querySelector('.bk-tab-section')
                 const method = val ? 'addEventListener' : 'removeEventListener'
+                this.setShowVariable(false)
                 ele[method]('scroll', this.scrollLoadMore, { passive: true })
             }
         },
@@ -185,6 +186,9 @@
                 'requestInstallImageList',
                 'requestStoreImageList',
                 'requestMarketImage'
+            ]),
+            ...mapActions('atom', [
+                'setShowVariable'
             ]),
 
             initData () {
@@ -369,12 +373,12 @@
         position: fixed;
         right: 660px;
         width: 600px;
-        height: calc(100% - 20px);
+        height: calc(100% - 80px);
         background: white;
         z-index: 2000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 0;
+        top: 64px;
         margin: 10px 0;
         &:before {
             content: '';

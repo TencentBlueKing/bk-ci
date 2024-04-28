@@ -326,9 +326,10 @@ class WorkspaceJoinDao {
     // 获取正在运行的 workspace 的用户
     fun fetchProjectSharedUser(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        onlyOwner: Boolean
     ): Set<String> {
-        return dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
+        val dsl = dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
             .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
             .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
             .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
@@ -339,7 +340,10 @@ class WorkspaceJoinDao {
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
             )
-            .fetch().distinct()
+        if (onlyOwner) {
+            dsl.and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+        }
+        return dsl.fetch().distinct()
             .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] ?: "" }
             .filter { it.isNotBlank() }
             .toSet()

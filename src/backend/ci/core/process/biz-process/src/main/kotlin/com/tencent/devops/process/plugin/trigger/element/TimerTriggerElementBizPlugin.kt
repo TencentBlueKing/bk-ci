@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.plugin.trigger.element
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -43,6 +45,7 @@ import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
 import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.Repository
 import org.quartz.CronExpression
 import org.slf4j.LoggerFactory
 
@@ -101,7 +104,13 @@ class TimerTriggerElementBizPlugin constructor(
                 crontabExpressions.add(cron)
             }
         }
-        val repoHashId = getRepoHashId(projectId = projectId, element = element)
+        val repo = getRepo(projectId = projectId, element = element)
+        // svn仓库分支必填
+        if (repo != null && repo.getScmType() == ScmType.CODE_SVN && element.branches.isNullOrEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY
+            )
+        }
         if (crontabExpressions.isNotEmpty()) {
             val result = pipelineTimerService.saveTimer(
                 projectId = projectId,
@@ -109,7 +118,7 @@ class TimerTriggerElementBizPlugin constructor(
                 userId = userId,
                 crontabExpressions = crontabExpressions,
                 channelCode = channelCode,
-                repoHashId = repoHashId,
+                repoHashId = repo?.repoHashId,
                 branchs = element.branches?.toSet(),
                 noScm = element.noScm
             )
@@ -132,7 +141,7 @@ class TimerTriggerElementBizPlugin constructor(
         }
     }
 
-    private fun getRepoHashId(projectId: String, element: TimerTriggerElement): String? {
+    private fun getRepo(projectId: String, element: TimerTriggerElement): Repository? {
         return when {
             !element.repoHashId.isNullOrBlank() || !element.repoName.isNullOrBlank() -> {
                 val repositoryConfig = with(element) {
@@ -147,7 +156,7 @@ class TimerTriggerElementBizPlugin constructor(
                     projectId = projectId,
                     repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
                     repositoryType = repositoryConfig.repositoryType
-                ).data?.repoHashId
+                ).data
             }
             else -> null
         }

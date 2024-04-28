@@ -1847,7 +1847,7 @@ class TemplateFacadeService @Autowired constructor(
             } else {
                 // 不应用模板设置但是修改了流水线名称,需要重命名流水线
                 val setting = pipelineSettingDao.getSetting(
-                    dslContext = dslContext,
+                    dslContext = context,
                     projectId = projectId,
                     pipelineId = templateInstanceUpdate.pipelineId
                 ) ?: throw ErrorCodeException(

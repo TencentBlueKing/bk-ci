@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
-import GroupDeatil from './group-detail.vue';
-import SearchSelect from './search-select';
-import GroupTab from './group-tab';
+import BkCheckbox from 'bkui-vue/lib/checkbox';
 import {
-  h,
-  ref,
-  watch,
   computed,
+  h,
+  onMounted,
+  ref,
   resolveDirective,
+  watch,
   withDirectives,
 } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import BkCheckbox from 'bkui-vue/lib/checkbox';
+import GroupDeatil from './group-detail.vue';
+import GroupTab from './group-tab';
+import SearchSelect from './search-select';
 
 const route = useRoute();
 
@@ -167,11 +168,12 @@ const handleChangeSearch = (data) => {
 };
 
 const fetchGroupList = async (payload = []) => {
-  if (!props.projectCode) return;
+  if (!(props.projectCode || route?.query.project_code)) return;
   const params = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
     groupLevel: groupLevel.value,
+    projectId: props.projectCode || route?.query.project_code,
   };
   payload.forEach((i) => {
     if (i.id === 'actionId') {
@@ -186,7 +188,6 @@ const fetchGroupList = async (payload = []) => {
       params[i.id] = i.values.join();
     }
   });
-  params.projectId = props.projectCode;
   isLoading.value = true;
   await http.getUserGroupList(params).then((res) => {
     pagination.value.count = res.count;
@@ -325,6 +326,14 @@ const columns = [
     },
   },
 ];
+
+onMounted(() => {
+  const { iamRelatedResourceType } = route?.query;
+  groupLevel.value = iamRelatedResourceType && iamRelatedResourceType !== 'project' ? 'OTHER' : 'PROJECT';
+  if (!iamRelatedResourceType) {
+    fetchGroupList(filter.value);
+  };
+});
 </script>
 
 <template>
