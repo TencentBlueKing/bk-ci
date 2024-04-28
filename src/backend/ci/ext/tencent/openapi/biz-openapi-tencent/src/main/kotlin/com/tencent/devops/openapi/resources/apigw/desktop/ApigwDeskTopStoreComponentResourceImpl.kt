@@ -3,10 +3,14 @@ package com.tencent.devops.openapi.resources.apigw.desktop
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.desktop.ApigwDeskTopStoreComponentResource
+import com.tencent.devops.openapi.api.apigw.pojo.StoreDailyStatisticInfo
 import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
@@ -15,6 +19,7 @@ import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -131,6 +136,24 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
             version = version,
             osName = osName,
             osArch = osArch
+        )
+    }
+
+    override fun updateDailyStatisticInfo(
+        appCode: String?,
+        apigwType: String?,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeDailyStatisticInfo: StoreDailyStatisticInfo
+    ): Result<Boolean> {
+        val storeDailyStatisticRequest = StoreDailyStatisticRequest(
+            dailyActiveDuration = storeDailyStatisticInfo.dailyActiveDuration,
+            statisticsTime = DateTimeUtil.stringToLocalDateTime(storeDailyStatisticInfo.statisticsTime, YYYY_MM_DD)
+        )
+        return client.get(ServiceStoreStatisticResource::class).updateDailyStatisticInfo(
+            storeType = storeType,
+            storeCode = storeCode,
+            storeDailyStatisticRequest = storeDailyStatisticRequest
         )
     }
 }

@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.openapi.api.apigw.pojo.StoreDailyStatisticInfo
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
@@ -24,6 +25,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -234,4 +236,25 @@ interface ApigwDeskTopStoreComponentResource {
         @QueryParam("osArch")
         osArch: String? = null
     ): Result<String>
+
+    @Operation(summary = "更新store组件的每日统计信息")
+    @PUT
+    @Path("/types/{storeType}/codes/{storeCode}/daily/info/update")
+    fun updateDailyStatisticInfo(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "store组件的每日统计信息", required = true)
+        storeDailyStatisticInfo: StoreDailyStatisticInfo
+    ): Result<Boolean>
 }
