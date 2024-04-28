@@ -22,6 +22,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
@@ -61,6 +62,9 @@ class ExpertSupportService @Autowired constructor(
 
     @Value("\${expertsupport.jumpurl:#{null}}")
     val jumpUrl: String? = null
+
+    @Value("\${expertsupport.personalWeworkGroupId:#{null}}")
+    val personalWeworkGroupId: String? = null
 
     @Value("\${expertsupport.weworkGroupId:#{null}}")
     val weworkGroupId: String? = null
@@ -132,9 +136,23 @@ class ExpertSupportService @Autowired constructor(
                 notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
                 titleParams = null,
                 bodyParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
+                    NotifyUtils.WEWORK_GROUP_KEY to
+                        (
+                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
+                            weworkGroupId!!
+                        } else {
+                            personalWeworkGroupId!!
+                        }
+                        ),
                     "id" to id.toString(),
-                    "projectId" to (data.projectId + " | " + projectInfo.projectName),
+                    "projectId" to
+                        (
+                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
+                                data.projectId + " | " + projectInfo.projectName
+                            } else {
+                                "个人云桌面"
+                            }
+                        ),
                     "workspaceName" to data.workspaceName,
                     "hostIp" to data.hostIp,
                     "userId" to (taiUserCN[data.creator] ?: data.creator),
@@ -240,7 +258,8 @@ class ExpertSupportService @Autowired constructor(
         if (Duration.between(
                 expertSupportDao.getSup(dslContext, id)?.createTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
-            ).seconds > DEFAULT_WAIT_TIME) {
+            ).seconds > DEFAULT_WAIT_TIME
+        ) {
             return Pair(false, "单据[$id]已超过1小时过期")
         }
 
