@@ -21,13 +21,13 @@ class TxPipelineNotifyConfiguration {
     @Primary
     fun notifySendCmd(
         client: Client,
-        bsAuthProjectApi: AuthProjectApi,
+        authProjectApi: AuthProjectApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
         wechatWorkService: WechatWorkService,
         wechatWorkRobotService: WechatWorkRobotService
     ) = TxNotifySendGroupMsgCmdImpl(
         client = client,
-        authProjectApi = bsAuthProjectApi,
+        authProjectApi = authProjectApi,
         pipelineAuthServiceCode = pipelineAuthServiceCode,
         wechatWorkService = wechatWorkService,
         wechatWorkRobotService = wechatWorkRobotService
