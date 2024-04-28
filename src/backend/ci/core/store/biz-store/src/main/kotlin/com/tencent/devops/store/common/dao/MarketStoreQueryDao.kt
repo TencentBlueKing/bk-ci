@@ -79,7 +79,6 @@ class MarketStoreQueryDao {
         storeInfoQuery: StoreInfoQuery
     ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
         val baseStep = createBaseStep(dslContext)
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         val keyword = storeInfoQuery.keyword
@@ -95,7 +94,7 @@ class MarketStoreQueryDao {
                 tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
             )
         }
-        val filteredResultsSubquery = if (null != sortType) {
+        if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
                 val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
@@ -113,44 +112,29 @@ class MarketStoreQueryDao {
         } else {
             baseStep.where(conditions)
         }
-        val leftTable = filteredResultsSubquery.asTable("left_table")
-        val rightTable = filteredResultsSubquery.asTable("right_table")
-        return dslContext.select(
-            leftTable.field(tStoreBase.ID),
-            leftTable.field(tStoreBase.STORE_CODE),
-            leftTable.field(tStoreBase.STORE_TYPE),
-            leftTable.field(tStoreBase.NAME),
-            leftTable.field(tStoreBase.VERSION),
-            leftTable.field(tStoreBase.DOCS_LINK),
-            leftTable.field(tStoreBase.DESCRIPTION),
-            leftTable.field(tStoreBase.SUMMARY),
-            leftTable.field(tStoreBase.LOGO_URL),
-            leftTable.field(tStoreBase.PUBLISHER),
-            leftTable.field(tStoreBase.PUB_TIME),
-            leftTable.field(tStoreBase.MODIFIER),
-            leftTable.field(tStoreBase.UPDATE_TIME),
-            leftTable.field(tStoreBase.CLASSIFY_ID),
-            leftTable.field(tStoreBaseFeature.RECOMMEND_FLAG),
-            leftTable.field(tStoreBaseFeature.RD_TYPE),
-            leftTable.field(tStoreBaseFeature.PUBLIC_FLAG),
-            leftTable.field(tStoreBase.CREATE_TIME)
-        )
-            .from(leftTable)
-            .leftJoin(rightTable)
-            .on(
-                leftTable.field(tStoreBase.STORE_CODE)!!.eq(rightTable.field(tStoreBase.STORE_CODE))
-                    .and(
-                        leftTable.field(tStoreBase.CREATE_TIME)!!.lt(rightTable.field(tStoreBase.CREATE_TIME))
-                    )
-            )
-            .where(rightTable.field(tStoreBase.CREATE_TIME)!!.isNull)
-            .limit(
+        return baseStep.limit(
                 (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
                 storeInfoQuery.pageSize
             ).fetch()
     }
 
+    fun queryBaseLatestIdByIds(dslContext: DSLContext, storeIds: List<String>): List<String> {
+        with(TStoreBase.T_STORE_BASE) {
+            val maxQuery = dslContext.select(
+                STORE_CODE,
+                DSL.max(CREATE_TIME).`as`(CREATE_TIME)
+            )
+                .from(this)
+                .where(ID.`in`(storeIds))
+                .groupBy(STORE_CODE)
 
+            return dslContext.select(ID).from(this)
+                .join(maxQuery)
+                .on(STORE_CODE.eq(maxQuery.field(STORE_CODE)).and(CREATE_TIME.eq(maxQuery.field(CREATE_TIME))))
+                .where(ID.`in`(storeIds))
+                .fetchInto(String::class.java)
+        }
+    }
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
