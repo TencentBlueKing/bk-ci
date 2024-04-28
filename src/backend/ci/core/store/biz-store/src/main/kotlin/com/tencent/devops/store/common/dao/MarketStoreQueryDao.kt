@@ -115,12 +115,12 @@ class MarketStoreQueryDao {
         // 查询每个组件中最新记录
         val maxCreateTimeSubquery = dslContext.select(
             filteredResultsSubquery.field(tStoreBase.STORE_CODE.name),
-            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME).name)
-        ).from(filteredResultsSubquery).groupBy(DSL.field(tStoreBase.STORE_CODE.name))
+            filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME))?.`as`(tStoreBase.CREATE_TIME.name)
+        ).from(filteredResultsSubquery).groupBy(filteredResultsSubquery.field(tStoreBase.STORE_CODE.name))
 
         return dslContext.select()
             .from(filteredResultsSubquery)
-            .leftJoin(maxCreateTimeSubquery)
+            .innerJoin(maxCreateTimeSubquery)
             .on(
                 filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
                     .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
