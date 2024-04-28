@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -56,15 +56,13 @@ import com.tencent.devops.process.notify.command.impl.BluekingNotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 
-@Service
 @Suppress("ComplexMethod", "NestedBlockDepth")
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     client: Client,
-    val bsAuthProjectApi: AuthProjectApi,
-    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    val authProjectApi: AuthProjectApi,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode,
     val wechatWorkService: WechatWorkService,
     val wechatWorkRobotService: WechatWorkRobotService
 ) : NotifySendCmd(client) {
@@ -99,8 +97,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     }.toMutableSet()
                     if (!emptyGroup(successSubscription.groups)) {
                         logger.info("success notify config group: ${successSubscription.groups}")
-                        val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
-                            serviceCode = bsPipelineAuthServiceCode,
+                        val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
+                            serviceCode = pipelineAuthServiceCode,
                             projectCode = commandContext.projectId)
                         projectRoleUsers.forEach {
                             if (it.roleName in successSubscription.groups) {
@@ -137,8 +135,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     }.toMutableSet()
                     if (!emptyGroup(failSubscription.groups)) {
                         logger.info("fail notify config group: ${failSubscription.groups}")
-                        val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
-                            serviceCode = bsPipelineAuthServiceCode,
+                        val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
+                            serviceCode = pipelineAuthServiceCode,
                             projectCode = commandContext.projectId)
                         projectRoleUsers.forEach {
                             if (it.roleName in failSubscription.groups) {
