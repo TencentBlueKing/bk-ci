@@ -275,12 +275,6 @@ export default {
       },
       deep: true
     },
-    projectCode: {
-      handler (val) {
-        this.searchSelectValue = []
-      },
-      deep: true
-    },
     curProject: {
       async handler (val) {
         if (val && val.englishName !== this.$route.query.project_code) {

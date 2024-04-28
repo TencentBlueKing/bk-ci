@@ -1,0 +1,48 @@
+version: v3.0
+name: pac1
+desc: test
+# asdasdasd
+on:
+  repo-name: yongyiduan/newtest
+  type: git
+  push:
+    branches:
+      - '*'
+  manual: enabled
+stages:
+  - name: stage-1
+    label:
+      - Build
+      - Build
+      - Build
+    jobs:
+#      这个job很帅
+      job_dwG:
+        name: 构建环境-Linux
+        runs-on:
+          pool-name: docker
+          container:
+            image-code: imageaaaba
+            image-version: 1.0.0
+        steps:
+          - name: Bash
+            uses: linuxScript@1.*
+            with:
+              script: "1"
+            timeout-minutes: "100"
+notices:
+  - if: FAILURE
+    type:
+      - wework-message
+    receivers:
+      - "${{BK_CI_START_USwER_NAME}}"
+    content: "【${{BK_CI_PROJECT_NAME_CN}}】- 【${{BK_CI_PIPELINE_NAME}}】#${{BK_CI_BUILD_NUM}} 执行失败，耗时${{BK_CI_BUILD_TOTAL_TIME}}, 触发人: ${{BK_CI_START_USER_NAME}}。"
+recommended-version:
+  enabled: true
+  allow-modify-at-startup: false
+  major: 0
+  minor: 0
+  fix: 0
+  build-no:
+    initial-value: 0
+    strategy: plus1-everytime

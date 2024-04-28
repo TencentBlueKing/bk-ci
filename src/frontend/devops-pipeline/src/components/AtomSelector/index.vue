@@ -2,6 +2,7 @@
     <portal to="atom-selector-popup">
         <transition name="selector-slide">
             <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
+
                 <header class="atom-selector-header">
                     <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
                     <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
@@ -34,6 +35,7 @@
                         <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
                             <empty-tips type="no-result"></empty-tips>
                         </div>
+
                     </bk-tab-panel>
                 </bk-tab>
                 <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
@@ -71,6 +73,7 @@
                         <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
+
             </div>
         </transition>
     </portal>
@@ -90,6 +93,8 @@
             EmptyTips
         },
         props: {
+            showAtomYaml: Boolean,
+            atomYaml: String,
             container: {
                 type: Object,
                 default: () => ({})
@@ -97,6 +102,9 @@
             element: {
                 type: Object,
                 default: () => ({})
+            },
+            beforeClose: {
+                type: Function
             },
             elementIndex: Number
         },
@@ -178,10 +186,12 @@
                     if (visible) {
                         this.classifyCode = atomMap[atomCode] ? atomMap[atomCode].classifyCode : firstClassify
                         this.activeAtomCode = atomCode
+                        // 收起变量侧栏
+                        this.setShowVariable(false)
                         this.fetchClassify()
                         this.fetchAtomList()
                         setTimeout(() => {
-                            this.$refs.searchStr.focus()
+                            this.$refs.searchStr?.focus?.()
                         }, 0)
                     } else {
                         this.clearSearch()
@@ -223,6 +233,7 @@
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'setRequestAtomData',
+                'setShowVariable',
                 'fetchAtoms',
                 'fetchClassify',
                 'setAtomPageOver',
@@ -238,14 +249,14 @@
                     this.timer = setTimeout(async () => {
                         this.isThrottled = false
                         const queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
-        
+
                         let jobType // job类型 => 触发器插件无需传jobType
                         if (this.category === 'TRIGGER') {
                             jobType = undefined
                         } else {
                             jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
                         }
-                        
+
                         await this.fetchAtoms({
                             projectCode: this.projectCode,
                             category: this.category,
@@ -300,6 +311,7 @@
                 this.fetchAtomList()
             },
             close () {
+                this.beforeClose?.()
                 this.toggleAtomSelectorPopup(false)
                 this.clearSearch()
             },
@@ -337,13 +349,12 @@
         right: 660px;
         position: absolute;
         width: 600px;
-        height: calc(100% - 20px);
+        height: calc(100% - 80px);
         background: white;
         z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 0;
-        margin: 10px 0;
+        top: 64px;
         &:before {
             content: '';
             display: block;
@@ -358,6 +369,7 @@
             right: -6px;
             top: 136px;
         }
+
         .not-recommend {
             text-decoration: line-through;
         }
@@ -531,6 +543,7 @@
                 }
                 .select-atom-btn:hover {
                     background-color: $primaryColor;
+                    border-color: $primaryColor;
                     color: white;
                 }
                 .atom-link {

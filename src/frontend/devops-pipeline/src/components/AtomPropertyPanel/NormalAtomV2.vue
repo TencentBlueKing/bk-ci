@@ -50,7 +50,8 @@
                 </template>
             </template>
         </template>
-        <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
+        <atom-output :element="element" :atom-props-model="atomPropsModel"
+            :set-parent-validate="() => { }"></atom-output>
     </section>
     <section v-else>
         <div class="empty-tips">{{ $t('editPage.noAppIdTips') }}</div>
@@ -58,20 +59,20 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
-    import Selector from '../AtomFormComponent/Selector'
-    import CcAppId from '@/components/AtomFormComponent/CcAppId'
     import AppId from '@/components/AtomFormComponent/AppId'
-    import Accordion from '@/components/atomFormField/Accordion'
-    import TimePicker from '@/components/AtomFormComponent/TimePicker'
-    import Parameter from '@/components/AtomFormComponent/Parameter'
-    import Tips from '@/components/AtomFormComponent/Tips'
+    import CcAppId from '@/components/AtomFormComponent/CcAppId'
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
     import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
+    import Parameter from '@/components/AtomFormComponent/Parameter'
+    import TimePicker from '@/components/AtomFormComponent/TimePicker'
+    import Tips from '@/components/AtomFormComponent/Tips'
+    import Accordion from '@/components/atomFormField/Accordion'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
+    import Selector from '../AtomFormComponent/Selector'
+    import validMixins from '../validMixins'
     import AtomOutput from './AtomOutput'
-    
+    import atomMixin from './atomMixin'
+
     export default {
         name: 'normal-atom-v2',
         components: {
@@ -192,14 +193,15 @@
             atomValue () {
                 try {
                     const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
+
                     // 新增字段，已添加插件读取默认值
-                    const atomValue = Object.keys(this.element.data.input).reduce((res, key) => {
-                        if (Object.prototype.hasOwnProperty.call(atomDefaultValue, key)) {
-                            res[key] = this.element.data.input[key]
+                    const atomValue = Object.keys(atomDefaultValue).reduce((res, key) => {
+                        if (!Object.prototype.hasOwnProperty.call(this.element.data.input, key)) {
+                            res[key] = atomDefaultValue[key]
                         }
                         return res
-                    }, atomDefaultValue)
-                    this.handleUpdateWholeAtomInput(atomValue)
+                    }, this.element.data.input)
+                    console.log(1111, atomDefaultValue, this.atomPropsModel, atomValue)
                     return atomValue
                 } catch (e) {
                     console.warn('getAtomInput error', e)
@@ -221,13 +223,15 @@
 </script>
 
 <style lang="scss">
-    .atom-output-var-list {
-        > h4,
-        > p {
-            margin: 0;
-        }
-        > p {
-            line-height: 36px;
-        }
+.atom-output-var-list {
+
+    >h4,
+    >p {
+        margin: 0;
     }
+
+    >p {
+        line-height: 36px;
+    }
+}
 </style>

@@ -35,7 +35,6 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -88,6 +87,7 @@ import org.springframework.stereotype.Service
 class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineElementService: PipelineElementService,
     private val projectCacheService: ProjectCacheService,
@@ -119,13 +119,16 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         isMobile: Boolean,
         model: Model,
+        yamlVersion: String?,
         signPipelineVersion: Int? = null, // 指定的版本
         frequencyLimit: Boolean = true,
         buildNo: Int? = null,
         startValues: Map<String, String>? = null,
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        debug: Boolean? = false,
+        versionName: String? = null
     ): BuildId {
 
         var acquire = false
@@ -138,7 +141,21 @@ class PipelineBuildService(
             )
         }
 
-        val setting = pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        val setting = if (debug == true) {
+            pipelineRepositoryService.getDraftVersionResource(
+                pipeline.projectId, pipeline.pipelineId
+            )?.settingVersion?.let {
+                pipelineSettingVersionService.getPipelineSetting(
+                    userId = userId,
+                    projectId = pipeline.pipelineId,
+                    pipelineId = pipeline.pipelineId,
+                    detailInfo = null,
+                    version = it
+                )
+            }
+        } else {
+            pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        }
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
@@ -189,13 +206,15 @@ class PipelineBuildService(
                 pipelineId = pipeline.pipelineId,
                 buildId = buildId,
                 resourceVersion = pipeline.version,
+                model = model,
                 pipelineSetting = setting,
                 currentBuildNo = buildNo,
                 triggerReviewers = triggerReviewers,
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
-                // 解析出定义的流水线变量
-                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
+                debug = debug ?: false,
+                versionName = versionName,
+                yamlVersion = yamlVersion
             )
 
             val interceptResult = pipelineInterceptorChain.filter(
@@ -238,7 +257,8 @@ class PipelineBuildService(
         pipeline: PipelineInfo,
         projectVO: ProjectVO?,
         channelCode: ChannelCode,
-        isMobile: Boolean
+        isMobile: Boolean,
+        debug: Boolean? = false
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -283,7 +303,7 @@ class PipelineBuildService(
 //        }
 //        pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
 
-        pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
+        if (debug != true) pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
             key = PIPELINE_BUILD_MSG,
             value = BuildMsgUtils.getBuildMsg(
                 buildMsg = startValues?.get(PIPELINE_BUILD_MSG)
