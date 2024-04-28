@@ -47,8 +47,7 @@ class GitProxyTGitService @Autowired constructor(
     private val bkitsmService: BKItsmService,
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
     private val tGitConfig: TGitConfig,
-    private val redisOperation: RedisOperation,
-    private val workspaceDao: WorkspaceDao
+    private val redisOperation: RedisOperation
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -379,8 +378,8 @@ class GitProxyTGitService @Autowired constructor(
                 userId = userId
             )
             if (gitRs?.any {
-                it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
-            } != true
+                    it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
+                } != true
             ) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
@@ -715,7 +714,7 @@ class GitProxyTGitService @Autowired constructor(
 
         // 关联
         val ips = workspaceDao.fetchProjectIp(dslContext, info.projectId).map { it.substringAfter(".") }.toSet()
-        val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, info.projectId)
+        val users = fetchProjectSpecAclUsers(info.projectId)
 
         val ok = updateTGitProjectAcl(
             token = token.accessToken,
