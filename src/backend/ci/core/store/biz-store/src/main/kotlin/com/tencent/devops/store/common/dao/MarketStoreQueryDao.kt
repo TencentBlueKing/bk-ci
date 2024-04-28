@@ -120,8 +120,15 @@ class MarketStoreQueryDao {
 
         return dslContext.select()
             .from(filteredResultsSubquery)
-            .join(maxCreateTimeSubquery)
+            .leftJoin(maxCreateTimeSubquery)
             .on(
+                filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
+                    .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
+                    .and(
+                        filteredResultsSubquery.field(tStoreBase.CREATE_TIME)!!
+                            .eq(maxCreateTimeSubquery.field(tStoreBase.CREATE_TIME))
+                    )
+            ).where(
                 filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
                     .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
                     .and(
