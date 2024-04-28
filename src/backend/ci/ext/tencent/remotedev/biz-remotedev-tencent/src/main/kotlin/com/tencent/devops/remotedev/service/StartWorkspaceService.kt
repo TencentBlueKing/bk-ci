@@ -1,8 +1,11 @@
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -30,7 +33,9 @@ class StartWorkspaceService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val client: Client,
+    val checkTokenService: ClientTokenService
 ) {
     fun computerStatus(
         projectId: String?,
@@ -111,14 +116,27 @@ class StartWorkspaceService @Autowired constructor(
             )
         }
         // 获取当前项目下的所有用户做过滤
-        val currUsers = workspaceJoinDao.fetchProjectSharedUser(dslContext, record.first().projectId)
+        // 先使用云桌面做判断
+        val projectId = record.first().projectId
+        val currUsers = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId, false)
         val subUsers = users.subtract(currUsers)
-        if (subUsers.isNotEmpty()) {
-            logger.warn("$ip checkIpUsers error $subUsers")
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.REMOTEDEV_CLIENT_IP_NO_PERM_ERROR.errorCode,
-                params = arrayOf(ip, subUsers.joinToString(","))
-            )
+        if (subUsers.isEmpty()) {
+            return true
+        }
+        // 再使用项目人员做判断
+        subUsers.forEach { user ->
+            val check = client.get(ServiceProjectAuthResource::class).isProjectUser(
+                token = checkTokenService.getSystemToken(),
+                userId = user,
+                projectCode = projectId
+            ).data == true
+            if (!check) {
+                logger.warn("$ip checkIpUsers error $user")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.REMOTEDEV_CLIENT_IP_NO_PERM_ERROR.errorCode,
+                    params = arrayOf(ip, user)
+                )
+            }
         }
         return true
     }
