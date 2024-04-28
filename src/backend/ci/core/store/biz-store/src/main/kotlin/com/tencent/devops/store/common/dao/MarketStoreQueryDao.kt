@@ -34,12 +34,14 @@ import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -94,6 +96,20 @@ class MarketStoreQueryDao {
                 tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
             )
         }
+
+        val subquery = dslContext.select(
+            tStoreBase.STORE_CODE,
+            tStoreBase.STORE_TYPE,
+            DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
+        ).from(tStoreBase)
+            .where(conditions)
+            .groupBy(tStoreBase.STORE_CODE)
+
+        baseStep.join(subquery)
+            .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
+            .and(tStoreBase.STORE_TYPE.eq(subquery.field(tStoreBase.STORE_TYPE)))
+            .and(tStoreBase.CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+
         if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
@@ -112,29 +128,15 @@ class MarketStoreQueryDao {
         } else {
             baseStep.where(conditions)
         }
-        return baseStep.limit(
+
+        return baseStep
+            .limit(
                 (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
                 storeInfoQuery.pageSize
             ).fetch()
     }
 
-    fun queryBaseLatestIdByIds(dslContext: DSLContext, storeIds: List<String>): List<String> {
-        with(TStoreBase.T_STORE_BASE) {
-            val maxQuery = dslContext.select(
-                STORE_CODE,
-                DSL.max(CREATE_TIME).`as`(CREATE_TIME)
-            )
-                .from(this)
-                .where(ID.`in`(storeIds))
-                .groupBy(STORE_CODE)
 
-            return dslContext.select(ID).from(this)
-                .join(maxQuery)
-                .on(STORE_CODE.eq(maxQuery.field(STORE_CODE)).and(CREATE_TIME.eq(maxQuery.field(CREATE_TIME))))
-                .where(ID.`in`(storeIds))
-                .fetchInto(String::class.java)
-        }
-    }
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE

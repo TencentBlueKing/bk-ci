@@ -743,6 +743,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeInfoQuery = storeInfoQuery
         )
+
         return Pair(count.toLong(), storeInfos)
     }
 
@@ -759,28 +760,28 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 ThreadLocalUtil.set(REFERER, referer)
             }
             val results = mutableListOf<MarketItem>()
-            // 查询符合条件的组件信息
-            val (count, storeInfos) = getStoreInfos(storeInfoQuery)
+
+            // 调用拆分出的getStoreInfos函数获取商品信息
+            var (count, storeInfos) = getStoreInfos(storeInfoQuery)
             try {
-                val storeCodeSet = mutableSetOf<String>()
+                val storeCodeList = mutableListOf<String>()
                 val storeIds = mutableListOf<String>()
                 val storeTypeEnum = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
                 val tStoreBase = TStoreBase.T_STORE_BASE
                 val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
                 val projectCode = storeInfoQuery.projectCode
                 storeInfos.forEach {
-                    storeCodeSet.add(it[tStoreBase.STORE_CODE] as String)
+                    storeCodeList.add(it[tStoreBase.STORE_CODE] as String)
                     storeIds.add(it[tStoreBaseFeature.ID] as String)
                 }
-                val latestIds = marketStoreQueryDao.queryBaseLatestIdByIds(dslContext, storeIds)
                 val storeVisibleData =
-                    storeCommonService.generateStoreVisibleData(storeCodeSet.toList(), storeTypeEnum)
+                    storeCommonService.generateStoreVisibleData(storeCodeList, storeTypeEnum)
                 val storeStatisticData = storeTotalStatisticService.getStatisticByCodeList(
                     storeType = storeTypeEnum.type.toByte(),
-                    storeCodeList = storeCodeSet.toList()
+                    storeCodeList = storeCodeList
                 )
                 // 获取用户
-                val memberData = storeMemberService.batchListMember(storeCodeSet.toList(), storeTypeEnum).data
+                val memberData = storeMemberService.batchListMember(storeCodeList, storeTypeEnum).data
                 val installedInfoMap = projectCode?.let {
                     storeProjectService.getInstalledComponent(it, storeTypeEnum.type.toByte())
                 }
@@ -790,18 +791,12 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 classifyList?.forEach {
                     classifyMap[it.id] = it.classifyCode
                 }
-                val storeHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
-                    storeTypeEnum,
-                    storeCodeSet.toList()
-                )
+                val storeHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeTypeEnum, storeCodeList)
                 val storeIndexInfosMap =
-                    storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeSet.toList())
-                val categoryInfoMap = categoryService.getByRelStoreIds(latestIds)
+                    storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
+                val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
                 storeInfos.forEach { record ->
                     val storeId = record[tStoreBase.ID]
-                    if (storeId !in latestIds) {
-                        return@forEach
-                    }
                     val storeCode = record[tStoreBase.STORE_CODE]
                     val statistic = storeStatisticData[storeCode]
                     val version = record[tStoreBase.VERSION]
