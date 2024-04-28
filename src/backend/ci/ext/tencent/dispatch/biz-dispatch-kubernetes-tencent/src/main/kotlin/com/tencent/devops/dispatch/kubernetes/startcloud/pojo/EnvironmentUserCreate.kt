@@ -10,5 +10,7 @@ data class EnvironmentUserCreate(
     @JsonProperty("UserID")
     val userId: String,
     @JsonProperty("ContentProviderName")
+    val contentProviderName: String,
+    @JsonProperty("AppName")
     val appName: String
 )

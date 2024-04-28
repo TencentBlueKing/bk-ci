@@ -31,5 +31,5 @@ data class StepHostResult(
     @get:Schema(title = "执行结束时间", description = "Unix时间戳，单位毫秒", required = true)
     val endTime: Long,
     @get:Schema(title = "总耗时", description = "单位毫秒", required = true)
-    val totalTime: Int
+    val totalTime: Long
 )

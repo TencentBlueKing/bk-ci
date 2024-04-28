@@ -1,11 +1,11 @@
 <template>
     <bk-form form-type="vertical">
         <bk-form-item>
-            <label class="label-selector-label">
+            <label v-if="dynamicGroupEditable" class="label-selector-label">
                 <span>{{ $t('label') }}</span>
                 <span class="pipeline-label-action-span">
                     <router-link target="_blank" :to="addLabelRoute" class="pipeline-label-action-span-btn">
-                        <logo name="plus" size="18" />
+                        <logo name="plus" size="20" />
                         {{$t('addLabel')}}
                     </router-link>
                     <span @click="refreshLabel" class="pipeline-label-action-span-btn">
@@ -16,7 +16,8 @@
             </label>
             <PipelineLabelSelector
                 ref="labelSelector"
-                v-model="initTags"
+                v-model="labels"
+                :editable="dynamicGroupEditable"
                 @change="updateDynamicGroup"
             />
         </bk-form-item>
@@ -28,7 +29,7 @@
                 :value="dynamicGroup"
                 :loading="isMatching"
                 :placeholder="$t('pipelineDynamicMatchPlaceholder')"
-                
+
             >
                 <bk-option
                     v-for="group in dynamicPipelineGroups"
@@ -42,6 +43,7 @@
         <bk-form-item label-width="auto" :label="$t('staticPipelineGroup')">
             <bk-select
                 multiple
+                :disabled="!staticGroupEditable"
                 v-model="staticViews"
                 @change="emitChange"
                 :popover-options="{
@@ -76,6 +78,10 @@
         },
         mixins: [piplineActionMixin],
         props: {
+            dynamicGroupEditable: {
+                type: Boolean,
+                default: true
+            },
             pipelineName: {
                 type: String,
                 required: true
@@ -87,6 +93,13 @@
             hasManagePermission: {
                 type: Boolean,
                 default: false
+            },
+            staticGroupEditable: {
+                type: Boolean,
+                default: true
+            },
+            staticGroups: {
+                type: Array
             }
         },
         data () {
@@ -124,7 +137,8 @@
                         children: []
                     })
                 }
-                return this.staticPipelineGroups.reduce((acc, group) => {
+
+                return (this.staticGroups ?? this.staticPipelineGroups).reduce((acc, group) => {
                     const pos = group.projected ? 1 : 0
                     if (acc[pos]) {
                         acc[pos].children.push(group)
@@ -144,12 +158,12 @@
             },
             pipelineName () {
                 this.$nextTick(() => {
-                    this.updateDynamicGroup(this.initTags)
+                    this.updateDynamicGroup(this.labels, this.initTags)
                 })
             }
         },
         created () {
-            if (this.allPipelineGroup.length === 0) {
+            if (this.allPipelineGroup.length === 0 && !Array.isArray(this.staticGroups)) {
                 this.requestGetGroupLists(this.$route.params)
             }
         },
@@ -161,19 +175,19 @@
             refreshLabel () {
                 this.$refs?.labelSelector.init?.()
             },
-            async updateDynamicGroup (tags) {
+            async updateDynamicGroup (labels, tags) {
                 if (this.isMatching || !this.pipelineName) return
                 this.isMatching = true
-                this.labels = Object.values(tags).flat()
+                this.labels = labels
+                this.initTags = tags
                 try {
-                    const labels = Object.keys(tags).map(key => ({
-                        groupId: key,
-                        labelIds: tags[key]
-                    }))
                     const { data } = await this.matchDynamicView({
                         projectId: this.$route.params.projectId,
                         pipelineName: this.pipelineName,
-                        labels
+                        labels: Object.keys(tags).map(key => ({
+                            groupId: key,
+                            labelIds: tags[key]
+                        }))
                     })
                     this.dynamicGroup = data
                 } catch (e) {
@@ -207,6 +221,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-size: 12px;
         .pipeline-label-action-span {
             display: grid;
             grid-gap: 20px;

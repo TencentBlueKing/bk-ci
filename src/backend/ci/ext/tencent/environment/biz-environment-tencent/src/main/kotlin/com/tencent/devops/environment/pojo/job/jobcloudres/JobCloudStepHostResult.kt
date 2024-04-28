@@ -41,5 +41,5 @@ data class JobCloudStepHostResult(
     val endTime: Long,
     @get:Schema(title = "总耗时", description = "单位毫秒", required = true)
     @JsonProperty("total_time")
-    val totalTime: Int
+    val totalTime: Long
 )

@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.service.expert
 
+import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -11,9 +13,11 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -33,6 +37,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
@@ -45,7 +50,8 @@ class ExpertSupportService @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisOperation: RedisOperation,
-    private val workspaceDao: WorkspaceDao
+    private val workspaceDao: WorkspaceDao,
+    private val remoteDevSettingDao: RemoteDevSettingDao
 ) {
     @Value("\${expertsupport.rtxtemplate:#{null}}")
     val rtxTemplate: String? = null
@@ -61,6 +67,7 @@ class ExpertSupportService @Autowired constructor(
 
     private val executor = Executors.newCachedThreadPool()
 
+    @Suppress("ComplexMethod")
     fun createSupport(
         data: CreateSupportData
     ) {
@@ -70,7 +77,7 @@ class ExpertSupportService @Autowired constructor(
             workspaceName = data.workspaceName,
             mountType = WorkspaceMountType.START
         )
-        if (record == null || record.status == WorkspaceStatus.DELETED) {
+        if (record == null || record.status.checkDeleted() || record.status.checkInProcess()) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                 params = arrayOf(data.workspaceName)
@@ -104,6 +111,20 @@ class ExpertSupportService @Autowired constructor(
             city = data.city,
             machineType = data.machineType
         )
+        val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
+            .mapValues {
+                if (it.value.first.isNotBlank()) {
+                    "${it.value.first}@${it.value.second}"
+                } else {
+                    it.key
+                }
+            }
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(data.projectId)
+        }.onFailure { logger.warn("get project ${data.projectId} info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw RemoteServiceException(
+            "not find project ${data.projectId}", HTTP_400
+        )
         // 发送企业微信群消息
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
@@ -113,10 +134,10 @@ class ExpertSupportService @Autowired constructor(
                 bodyParams = mapOf(
                     NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
                     "id" to id.toString(),
-                    "projectId" to data.projectId,
+                    "projectId" to (data.projectId + " | " + projectInfo.projectName),
                     "workspaceName" to data.workspaceName,
                     "hostIp" to data.hostIp,
-                    "userId" to data.creator,
+                    "userId" to (taiUserCN[data.creator] ?: data.creator),
                     "content" to data.content,
                     "url" to jumpUrl.toString(),
                     "machineType" to data.machineType,
@@ -215,6 +236,14 @@ class ExpertSupportService @Autowired constructor(
             return Pair(false, "${userId}已认领该工单")
         }
 
+        // 校验求助单是否已过期：1小时
+        if (Duration.between(
+                expertSupportDao.getSup(dslContext, id)?.createTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds > DEFAULT_WAIT_TIME) {
+            return Pair(false, "单据[$id]已超过1小时过期")
+        }
+
         // 校验机器在不在
         val record = workspaceDao.fetchAnyWorkspace(
             dslContext = dslContext,
@@ -237,7 +266,8 @@ class ExpertSupportService @Autowired constructor(
                     expiration = LocalDateTime.now().plusHours(1)
                 )
             ),
-            mountType = WorkspaceMountType.START
+            mountType = WorkspaceMountType.START,
+            ownerType = record.ownerType
         )
 
         // 添加认领人信息

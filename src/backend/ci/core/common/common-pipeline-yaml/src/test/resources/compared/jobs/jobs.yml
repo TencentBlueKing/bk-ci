@@ -1,469 +1,146 @@
----
-version: "v2.0"
+version: v2.0
 name: ""
 label: []
-triggerOn:
+on:
   push:
     branches:
-    - "*"
+    - '*'
   tag:
     tags:
-    - "*"
+    - '*'
   mr:
     target-branches:
-    - "*"
+    - '*'
     action:
-    - "open"
-    - "reopen"
-    - "push-update"
+    - open
+    - reopen
+    - push-update
 stages:
-- name: "stage_1"
+- name: stage_1
   label: []
-  if: null
   fast-kill: false
   jobs:
-  - id: "root_job_id_1"
-    name: null
+  - id: root_job_id_1
     mutex:
-      label: "mutex-3"
-      queue-length: null
-      timeout-minutes: null
+      label: mutex-3
     runs-on:
       self-hosted: false
-      pool-name: "docker"
-      container: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+      pool-name: docker
     services: []
-    if: null
     steps:
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"template_step_id_1 username world!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"cyc_step_id_1 username CYC_STEP1!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"cyc_step_id_3 username STEP6!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"cyc_step_id_2 username CYC_STEP4!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"cyc_step_id_6 username STEP6!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"cyc_step_id_5 username CYC_STEP5!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"root_step_1\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
-    depend-on: null
-  - id: "root_job_id_2"
-    name: "root_job_id_2"
+    - run: |
+        echo "template_step_id_1 username world!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "cyc_step_id_1 username CYC_STEP1!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "cyc_step_id_3 username STEP6!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "cyc_step_id_2 username CYC_STEP4!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "cyc_step_id_6 username STEP6!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "cyc_step_id_5 username CYC_STEP5!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "root_step_1"
+      runAdditionalOptions: {}
+  - id: root_job_id_2
+    name: root_job_id_2
     mutex:
-      label: "mutex-3"
+      label: mutex-3
       queue-length: 0
       timeout-minutes: 10
     runs-on:
       self-hosted: false
-      pool-name: "docker"
-      container: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+      pool-name: docker
     services: []
-    if: null
     steps:
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"root_stage_id_1, root_job_id_2\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoA_step_id_1 username RES_STEP!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoB_step_id_6 username STEP6!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoB_step_id_1 username RES_REPOA_STEP1!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoA_step_id_3 username RES_REPOA_STEP1_STEP3!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoB_step_id_6 username STEP6!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoB_step_id_1 username RES_REPOA_STEP3!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
+    - run: |
+        echo "root_stage_id_1, root_job_id_2"
+      runAdditionalOptions: {}
+    - run: |
+        echo "res_repoA_step_id_1 username RES_STEP!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "res_repoB_step_id_6 username STEP6!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "res_repoB_step_id_1 username RES_REPOA_STEP1!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "res_repoA_step_id_3 username RES_REPOA_STEP1_STEP3!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "res_repoB_step_id_6 username STEP6!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "res_repoB_step_id_1 username RES_REPOA_STEP3!"
+      runAdditionalOptions: {}
     depend-on:
-    - "job_id_1"
-  - id: "res_repoA_job_id_1"
-    name: "res_repoA_job_id_1"
-    mutex: null
+    - job_id_1
+  - id: res_repoA_job_id_1
+    name: res_repoA_job_id_1
     runs-on:
       self-hosted: false
-      pool-name: "docker"
-      container: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+      pool-name: docker
     services: []
-    if: null
     steps:
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoA_job_id_1\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
-    depend-on: null
-  - id: "res_repoB_job_id_2"
-    name: "res_repoB_job_id_2"
-    mutex: null
+    - run: |
+        echo "res_repoA_job_id_1"
+      runAdditionalOptions: {}
+  - id: res_repoB_job_id_2
+    name: res_repoB_job_id_2
     runs-on:
       self-hosted: false
-      pool-name: "docker"
-      container: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+      pool-name: docker
     services: []
-    if: null
     steps:
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoB_job_id_2\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
-    depend-on: null
-  - id: "res_repoB_job_id_3"
-    name: "res_repoB_job_id_3"
-    mutex: null
+    - run: |
+        echo "res_repoB_job_id_2"
+      runAdditionalOptions: {}
+  - id: res_repoB_job_id_3
+    name: res_repoB_job_id_3
     runs-on:
       self-hosted: false
-      pool-name: "docker"
-      container: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+      pool-name: docker
     services: []
-    if: null
     steps:
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoB_job_id_3 username RES_REPOB_JOB3\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
-    depend-on: null
-  - id: "res_repoA_job_id_3"
-    name: "res_repoA_job_id_3"
-    mutex: null
+    - run: |
+        echo "res_repoB_job_id_3 username RES_REPOB_JOB3"
+      runAdditionalOptions: {}
+  - id: res_repoA_job_id_3
+    name: res_repoA_job_id_3
     runs-on:
       self-hosted: false
-      pool-name: "docker"
-      container: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+      pool-name: docker
     services: []
-    if: null
     steps:
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoA_job_id_3\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
-    depend-on: null
-  - id: "res_repoA_job_id_2"
-    name: "res_repoA_job_id_2"
-    mutex: null
+    - run: |
+        echo "res_repoA_job_id_3"
+      runAdditionalOptions: {}
+  - id: res_repoA_job_id_2
+    name: res_repoA_job_id_2
     runs-on:
       self-hosted: false
-      pool-name: "docker"
-      container: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+      pool-name: docker
     services: []
-    if: null
     steps:
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoA_job_id_2 username RES_JOB!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: null
-      if: null
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo \"res_repoA_job_id_2 jobname JOBNAME again!\"\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
-    depend-on: null
-  if-modify: null
-  check-in: null
-  check-out: null
+    - run: |
+        echo "res_repoA_job_id_2 username RES_JOB!"
+      runAdditionalOptions: {}
+    - run: |
+        echo "res_repoA_job_id_2 jobname JOBNAME again!"
+      runAdditionalOptions: {}
 resource:
   repositories:
-  - repository: "repoA"
-    name: "repoA"
-    ref: "master"
+  - repository: repoA
+    name: repoA
+    ref: master
     credentials:
-      personal-access-token: "xxx"
+      personal-access-token: xxx
 finally: []

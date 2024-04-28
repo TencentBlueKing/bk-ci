@@ -174,7 +174,8 @@ class DeliverControl @Autowired constructor(
                     projectId = workspace.projectId,
                     operator = userId,
                     assigns = listOf(assign2Owner),
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    ownerType = workspace.ownerType
                 )
                 workspaceCommon.updateHostMonitor(
                     workspaceName = workspaceName,
@@ -214,7 +215,8 @@ class DeliverControl @Autowired constructor(
                                 expiration = null
                             )
                         ),
-                        mountType = WorkspaceMountType.START
+                        mountType = WorkspaceMountType.START,
+                        ownerType = workspace.ownerType
                     )
                     workspaceCommon.updateHostMonitor(
                         workspaceName = workspaceName,
@@ -237,7 +239,8 @@ class DeliverControl @Autowired constructor(
                 projectId = workspace.projectId,
                 operator = userId,
                 assigns = add,
-                mountType = WorkspaceMountType.START
+                mountType = WorkspaceMountType.START,
+                ownerType = workspace.ownerType
             )
         }
 

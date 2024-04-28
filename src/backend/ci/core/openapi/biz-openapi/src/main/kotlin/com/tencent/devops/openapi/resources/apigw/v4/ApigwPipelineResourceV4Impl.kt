@@ -43,8 +43,8 @@ import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -95,7 +95,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pipeline: Model
     ): Result<Boolean> {
         logger.info("OPENAPI_PIPELINE_V4|$userId|edit|$projectId|$pipelineId")
-        return client.get(ServicePipelineResource::class).edit(
+        return client.get(ServicePipelineResource::class).editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
