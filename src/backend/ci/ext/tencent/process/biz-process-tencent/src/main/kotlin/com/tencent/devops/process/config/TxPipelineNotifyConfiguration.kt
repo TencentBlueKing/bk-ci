@@ -1,7 +1,7 @@
 package com.tencent.devops.process.config
 
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -21,14 +21,14 @@ class TxPipelineNotifyConfiguration {
     @Primary
     fun notifySendCmd(
         client: Client,
-        bsAuthProjectApi: AuthProjectApi,
-        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        authProjectApi: AuthProjectApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
         wechatWorkService: WechatWorkService,
         wechatWorkRobotService: WechatWorkRobotService
     ) = TxNotifySendGroupMsgCmdImpl(
         client = client,
-        bsAuthProjectApi = bsAuthProjectApi,
-        bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
+        authProjectApi = authProjectApi,
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
         wechatWorkService = wechatWorkService,
         wechatWorkRobotService = wechatWorkRobotService
     )
