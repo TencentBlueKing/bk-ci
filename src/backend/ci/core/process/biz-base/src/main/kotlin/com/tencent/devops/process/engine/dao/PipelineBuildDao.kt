@@ -791,7 +791,7 @@ class PipelineBuildDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute() == 1
-        } else false
+        } else true
     }
 
     fun updateExecuteCount(

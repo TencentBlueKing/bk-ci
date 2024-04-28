@@ -436,7 +436,7 @@ class PipelineSettingDao {
                     ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
                 val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
                     ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
-                val oldSuccessSubscription = Subscription(
+                var oldSuccessSubscription = Subscription(
                     types = successType,
                     groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
                     users = t.successReceiver ?: "",
@@ -446,7 +446,7 @@ class PipelineSettingDao {
                     detailFlag = t.successDetailFlag,
                     content = t.successContent ?: ""
                 ).takeIf { successType.isNotEmpty() }
-                val oldFailSubscription = Subscription(
+                var oldFailSubscription = Subscription(
                     types = failType,
                     groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
                     users = t.failReceiver ?: "",
@@ -456,11 +456,20 @@ class PipelineSettingDao {
                     detailFlag = t.failDetailFlag,
                     content = t.failContent ?: ""
                 ).takeIf { failType.isNotEmpty() }
+                // 如果新数组有值，则老数据被替换为新数据的首个元素
                 val successSubscriptionList = t.successSubscription?.let {
-                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    if (list.isNotEmpty()) {
+                        oldSuccessSubscription = list.first()
+                        list
+                    } else null
                 } ?: oldSuccessSubscription?.let { listOf(it) }
                 val failSubscriptionList = t.failureSubscription?.let {
-                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    if (list.isNotEmpty()) {
+                        oldFailSubscription = list.first()
+                        list
+                    } else null
                 } ?: oldFailSubscription?.let { listOf(it) }
                 PipelineSetting(
                     projectId = t.projectId,
