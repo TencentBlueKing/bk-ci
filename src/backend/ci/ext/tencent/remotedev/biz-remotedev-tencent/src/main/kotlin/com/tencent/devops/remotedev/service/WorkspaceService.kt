@@ -107,6 +107,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_ASSIGN_AUTO_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_LOGIN_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_3_DAY_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -1413,6 +1414,43 @@ class WorkspaceService @Autowired constructor(
                     )
                 )
             }
+        }
+    }
+
+    fun notifyWhenNotAssign() {
+        val limitDay = holidayHelper.getLastWorkingDays(3).last()
+        logger.info("notifyWhenWhenNotAssign|$limitDay")
+        val notifyGroups = mutableMapOf<String, MutableList<Pair<String, String>>>()
+        workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.DISTRIBUTING,
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
+        )?.parallelStream()?.forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) > limitDay) {
+                logger.info(
+                    "ready to notify when not assign " +
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                )
+                val value = Pair(workspace.hostName ?: "", workspace.createUserId)
+                notifyGroups.putIfAbsent(
+                    workspace.projectId,
+                    mutableListOf(value)
+                )?.add(value)
+            }
+        }
+        notifyGroups.forEach { (projectId, values) ->
+            // 邮件通知
+            notifyControl.notify4RemoteDevManager(
+                projectId = projectId,
+                cc = values.mapTo(mutableSetOf()) { it.second },
+                notifyTemplateCode = NOT_ASSIGN_AUTO_NOTIFY,
+                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                bodyParams = mutableMapOf(
+                    "cgsIps" to values.joinToString("\n") { it.first },
+                    "projectId" to projectId
+                )
+            )
         }
     }
 
