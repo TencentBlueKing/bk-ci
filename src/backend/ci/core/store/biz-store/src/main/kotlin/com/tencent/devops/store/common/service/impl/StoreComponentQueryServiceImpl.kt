@@ -404,7 +404,15 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             getTestVersionFlag = true
         )?.associateBy({ it.storeId }, { it.content }) ?: emptyMap()
         val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, storeIds)
-        val baseExtMap = baseExtRecords.groupBy({ it.storeId }, { it.fieldName to it.fieldValue })
+        val baseExtMap = baseExtRecords.groupBy({ it.storeId }, {
+            it.fieldName to when {
+                JsonSchemaUtil.isJsonArray(it.fieldValue) -> {JsonUtil.to(it.fieldValue, List::class.java)}
+                JsonSchemaUtil.isJsonObject(it.fieldValue) -> {
+                    JsonUtil.to(it.fieldValue, object : TypeReference<Map<String, Any>>() {})
+                }
+                else -> it.fieldValue
+            }
+        })
             .mapValues { it.value.toMap().toMutableMap() }
         val storeVersionInfos = records.map {
             StoreDeskVersionItem(

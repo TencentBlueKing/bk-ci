@@ -116,12 +116,11 @@ class MarketStoreQueryDao {
         val maxCreateTimeSubquery = dslContext.select(
             filteredResultsSubquery.field(tStoreBase.STORE_CODE.name),
             filteredResultsSubquery.field(DSL.max(tStoreBase.CREATE_TIME).name)
-        ).from(filteredResultsSubquery)
-            .groupBy(DSL.field(tStoreBase.STORE_CODE.name))
+        ).from(filteredResultsSubquery).groupBy(DSL.field(tStoreBase.STORE_CODE.name))
 
         return dslContext.select()
             .from(filteredResultsSubquery)
-            .leftJoin(maxCreateTimeSubquery)
+            .join(maxCreateTimeSubquery)
             .on(
                 filteredResultsSubquery.field(tStoreBase.STORE_CODE)!!
                     .eq(maxCreateTimeSubquery.field(tStoreBase.STORE_CODE))
