@@ -147,6 +147,7 @@ class PipelineBuildSummaryDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        buildId: String,
         debug: Boolean,
         buildNum: Int = 0,
         buildNumAlias: String? = null
@@ -157,11 +158,15 @@ class PipelineBuildSummaryDao {
                 dslContext.update(this)
                     .set(numColumn, numColumn + 1)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
+                    .set(LATEST_BUILD_ID, buildId)
+                    .set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
                     .set(numColumn, buildNum)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
+                    .set(LATEST_BUILD_ID, buildId)
+                    .set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
             return dslContext.select(numColumn)
