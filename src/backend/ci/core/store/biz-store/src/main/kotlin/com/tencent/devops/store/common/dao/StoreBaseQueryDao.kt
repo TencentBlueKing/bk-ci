@@ -35,8 +35,8 @@ import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.pojo.common.ComponentFullQuery
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -222,7 +222,7 @@ class StoreBaseQueryDao {
 
     fun countComponents(
         dslContext: DSLContext,
-        listComponentsQuery: ComponentFullQuery,
+        queryComponentsParam: QueryComponentsParam,
         classifyId: String?,
         categoryIds: List<String>?,
         labelIds: List<String>?
@@ -230,7 +230,7 @@ class StoreBaseQueryDao {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val baseStep = dslContext.selectCount().from(tStoreBase)
         val conditions = generateListComponentsConditions(
-            componentFullQuery = listComponentsQuery,
+            queryComponentsParam = queryComponentsParam,
             classifyId = classifyId,
             categoryIds = categoryIds,
             labelIds = labelIds,
@@ -241,13 +241,13 @@ class StoreBaseQueryDao {
 
     fun listComponents(
         dslContext: DSLContext,
-        listComponentsQuery: ComponentFullQuery,
+        queryComponentsParam: QueryComponentsParam,
         classifyId: String?,
         categoryIds: List<String>?,
         labelIds: List<String>?
     ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val sortType = listComponentsQuery.sortType
+        val sortType = queryComponentsParam.sortType
         val baseStep = dslContext.select(
             tStoreBase.ID,
             tStoreBase.STORE_CODE,
@@ -261,7 +261,7 @@ class StoreBaseQueryDao {
             tStoreBase.UPDATE_TIME
         ).from(tStoreBase)
         val conditions = generateListComponentsConditions(
-            componentFullQuery = listComponentsQuery,
+            queryComponentsParam = queryComponentsParam,
             classifyId = classifyId,
             categoryIds = categoryIds,
             labelIds = labelIds,
@@ -273,13 +273,13 @@ class StoreBaseQueryDao {
             baseStep.where(conditions)
         }
         return baseStep.limit(
-            (listComponentsQuery.page - 1) * listComponentsQuery.pageSize,
-            listComponentsQuery.pageSize
+            (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
+            queryComponentsParam.pageSize
         ).fetch()
     }
 
     private fun generateListComponentsConditions(
-        componentFullQuery: ComponentFullQuery,
+        queryComponentsParam: QueryComponentsParam,
         classifyId: String?,
         categoryIds: List<String>?,
         labelIds: List<String>?,
@@ -287,18 +287,18 @@ class StoreBaseQueryDao {
     ): MutableList<Condition> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val storeType = StoreTypeEnum.valueOf(componentFullQuery.storeType)
-        val name = componentFullQuery.name
+        val storeType = StoreTypeEnum.valueOf(queryComponentsParam.storeType)
+        val name = queryComponentsParam.name
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        componentFullQuery.type?.let {
+        queryComponentsParam.type?.let {
             conditions.add(tStoreBaseFeature.TYPE.eq(it))
         }
         if (null != name) {
             conditions.add(tStoreBase.NAME.contains(name))
         }
-        componentFullQuery.processFlag?.let {
+        queryComponentsParam.processFlag?.let {
             val processingStatusList = StoreStatusEnum.getProcessingStatusList()
             conditions.add(tStoreBase.STATUS.`in`(processingStatusList))
         }

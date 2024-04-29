@@ -31,7 +31,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店-查询组件条件")
-data class ComponentFullQuery(
+data class QueryComponentsParam(
     @get:Schema(title = "组件类型", required = true)
     val storeType: String,
     @get:Schema(title = "类型", required = false)

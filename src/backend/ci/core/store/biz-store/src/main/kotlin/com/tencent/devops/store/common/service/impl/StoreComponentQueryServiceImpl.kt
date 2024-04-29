@@ -74,7 +74,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.pojo.common.ComponentFullQuery
+import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
@@ -204,7 +204,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         )
     }
 
-    override fun listComponents(userId: String, listComponentsQuery: ComponentFullQuery): Page<MyStoreComponent>? {
+    override fun listComponents(userId: String, listComponentsQuery: QueryComponentsParam): Page<MyStoreComponent>? {
         val storeType = StoreTypeEnum.valueOf(listComponentsQuery.storeType)
         val classifyId = listComponentsQuery.classifyCode?.let {
             classifyDao.getClassifyByCode(

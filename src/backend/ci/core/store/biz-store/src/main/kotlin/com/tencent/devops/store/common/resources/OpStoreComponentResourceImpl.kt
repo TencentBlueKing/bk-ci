@@ -34,8 +34,8 @@ import com.tencent.devops.store.common.service.OpStoreComponentService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.common.service.StoreReleaseService
-import com.tencent.devops.store.pojo.common.ComponentFullQuery
 import com.tencent.devops.store.pojo.common.MyStoreComponent
+import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
@@ -78,7 +78,7 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         return Result(
             storeComponentQueryService.listComponents(
                 userId = userId,
-                listComponentsQuery = ComponentFullQuery(
+                queryComponentsParam = QueryComponentsParam(
                     storeType = storeType,
                     type = type,
                     name = name,
