@@ -44,6 +44,8 @@ data class StoreDailyStatisticRequest(
     val dailyFailNum: Int? = null,
     @get:Schema(title = "每日执行失败详情")
     val dailyFailDetail: Map<String, Any>? = null,
+    @get:Schema(title = "每日活跃时长，单位：小时")
+    val dailyActiveDuration: Double? = null,
     @get:Schema(title = "统计时间")
-    val statisticsTime: LocalDateTime? = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
+    val statisticsTime: LocalDateTime = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
 )

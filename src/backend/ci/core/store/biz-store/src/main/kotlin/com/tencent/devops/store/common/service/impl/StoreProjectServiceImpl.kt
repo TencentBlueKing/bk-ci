@@ -231,7 +231,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         )
         val storeDailyStatisticRequest = StoreDailyStatisticRequest(
             totalDownloads = downloads,
-            dailyDownloads = storeDailyStatistic?.dailyDownloads ?: increment
+            dailyDownloads = (storeDailyStatistic?.dailyDownloads ?: 0) + increment
         )
         if (storeDailyStatistic != null) {
             storeStatisticDailyDao.updateDailyStatisticData(

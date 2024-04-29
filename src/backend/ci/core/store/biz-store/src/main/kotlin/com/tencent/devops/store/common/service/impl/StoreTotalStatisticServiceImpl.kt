@@ -380,9 +380,13 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             endTime = endTime
         )
         var totalExecuteNum = 0
+        var totalActiveDuration = 0.0
         dailyStatisticList?.forEach { dailyStatistic ->
             totalExecuteNum += dailyStatistic.dailySuccessNum
             totalExecuteNum += dailyStatistic.dailyFailNum
+            dailyStatistic.dailyActiveDuration?.let {
+                totalActiveDuration += it
+            }
         }
         val statisticTotal = storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
         val percentileValue =
@@ -397,7 +401,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 score = score?.toInt(),
                 scoreAverage = scoreAverage,
                 recentExecuteNum = totalExecuteNum,
-                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() }
+                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
+                recentActiveDuration = totalActiveDuration
             )
         } else {
             storeStatisticTotalDao.initStatisticData(
@@ -409,7 +414,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 score = score?.toInt(),
                 scoreAverage = scoreAverage,
                 recentExecuteNum = totalExecuteNum,
-                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() }
+                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
+                recentActiveDuration = totalActiveDuration
             )
         }
     }

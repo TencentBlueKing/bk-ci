@@ -45,6 +45,6 @@ data class StoreStatistic(
     val successRate: Double? = null,
     @get:Schema(title = "是否为受欢迎组件")
     val hotFlag: Boolean? = false,
-    @get:Schema(title = "活跃时长，单位：小时")
-    val activeDuration: Double? = null
+    @get:Schema(title = "最近活跃时长，单位：小时")
+    val recentActiveDuration: Double? = null
 )

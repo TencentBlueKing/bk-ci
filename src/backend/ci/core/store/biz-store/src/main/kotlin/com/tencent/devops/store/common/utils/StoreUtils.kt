@@ -147,8 +147,8 @@ object StoreUtils {
         }
     }
 
-    fun getSpecBusServiceBeanName(storeType: StoreTypeEnum): String {
-        return "${storeType}_SPEC_BUS_SERVICE"
+    fun getReleaseSpecBusServiceBeanName(storeType: StoreTypeEnum): String {
+        return "${storeType}_RELEASE_SPEC_BUS_SERVICE"
     }
 
     fun checkEditCondition(status: String): Boolean {

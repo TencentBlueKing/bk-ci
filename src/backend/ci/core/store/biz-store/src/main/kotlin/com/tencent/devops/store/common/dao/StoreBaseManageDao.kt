@@ -170,6 +170,7 @@ class StoreBaseManageDao {
         }
     }
 
+    @Suppress("LongParameterList")
     fun offlineComponent(
         dslContext: DSLContext,
         storeCode: String,

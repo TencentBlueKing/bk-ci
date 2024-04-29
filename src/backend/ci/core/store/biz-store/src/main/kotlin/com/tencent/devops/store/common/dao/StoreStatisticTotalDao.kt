@@ -56,7 +56,8 @@ class StoreStatisticTotalDao {
         score: Int? = null,
         scoreAverage: Double? = null,
         recentExecuteNum: Int = 0,
-        hotFlag: Boolean? = null
+        hotFlag: Boolean? = null,
+        recentActiveDuration: Double? = null
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val record = dslContext.newRecord(this)
@@ -69,6 +70,7 @@ class StoreStatisticTotalDao {
             scoreAverage?.let { record.scoreAverage = scoreAverage.toBigDecimal() }
             record.recentExecuteNum = recentExecuteNum
             hotFlag?.let { record.hotFlag = hotFlag }
+            recentActiveDuration?.let { record.rencentActiveDuration = recentActiveDuration.toBigDecimal() }
             dslContext.insertInto(this).set(record).execute()
         }
     }
@@ -82,7 +84,8 @@ class StoreStatisticTotalDao {
         score: Int?,
         scoreAverage: Double?,
         recentExecuteNum: Int,
-        hotFlag: Boolean?
+        hotFlag: Boolean?,
+        recentActiveDuration: Double? = null
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val baseStep = dslContext.update(this)
@@ -93,6 +96,7 @@ class StoreStatisticTotalDao {
             score?.let { baseStep.set(SCORE, score) }
             scoreAverage?.let { baseStep.set(SCORE_AVERAGE, scoreAverage.toBigDecimal()) }
             hotFlag?.let { baseStep.set(HOT_FLAG, hotFlag) }
+            recentActiveDuration?.let { baseStep.set(RENCENT_ACTIVE_DURATION, recentActiveDuration.toBigDecimal()) }
             baseStep.where(STORE_TYPE.eq(storeType))
                 .and(STORE_CODE.eq(storeCode))
                 .execute()
