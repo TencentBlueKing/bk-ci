@@ -58,6 +58,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
@@ -104,6 +105,8 @@ import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -1041,6 +1044,28 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         } else if (status == AgentStatus.IMPORT_EXCEPTION) {
             status = AgentStatus.IMPORT_OK
         }
+
+        // 如果已经有了状态正常的Agent且IP不同，发送告警
+        if (status == AgentStatus.IMPORT_OK && agentRecord.ip != startInfo.hostIp) {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                SendNotifyMessageTemplateRequest(
+                    templateCode = "THIRDPART_AGENT_REPEAT_INSTALL",
+                    // TODO: 加上项目或者 Agent 管理
+                    receivers = mutableSetOf(agentRecord.createdUser),
+                    titleParams = mapOf(
+                        "projectId" to agentRecord.projectId,
+                        "agentId" to HashUtil.encodeLongId(agentRecord.id)
+                    ),
+                    bodyParams = mapOf(
+                        "oldIp" to agentRecord.ip,
+                        "newIp" to startInfo.hostIp,
+                        "url" to "${HomeHostUtil.innerServerHost()}/console/environment/${agentRecord.projectId}/" +
+                                "nodeDetail/${HashUtil.encodeLongId(agentRecord.nodeId)}"
+                    )
+                )
+            )
+        }
+
         if (!(AgentStatus.isImportException(status) ||
                 AgentStatus.isUnImport(status) ||
                 agentRecord.startRemoteIp.isNullOrBlank())
