@@ -47,7 +47,7 @@ data class TransferResponseResult(
     @get:Schema(title = "YAML解析异常信息")
     val yamlInvalidMsg: String? = null
 ) {
-    constructor(transfer: TransferResponse): this(
+    constructor(transfer: TransferResponse) : this(
         modelAndSetting = transfer.modelAndSetting,
         newYaml = transfer.yamlWithVersion?.yamlStr,
         mark = transfer.mark,

@@ -791,7 +791,7 @@ class PipelineBuildDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute() == 1
-        } else false
+        } else true
     }
 
     fun updateExecuteCount(
@@ -1717,11 +1717,12 @@ class PipelineBuildDao {
                     buildNum = t.buildNum,
                     trigger = t.trigger,
                     status = BuildStatus.values()[t.status],
-                    queueTime = t.queueTime?.timestampmilli() ?: 0L,
+                    // queueTime在数据库中必定会写值，不为空，以防万一用当前时间兜底
+                    queueTime = t.queueTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
                     startUser = t.startUser,
                     triggerUser = t.triggerUser,
-                    startTime = t.startTime?.timestampmilli() ?: 0L,
-                    endTime = t.endTime?.timestampmilli() ?: 0L,
+                    startTime = t.startTime?.timestampmilli(),
+                    endTime = t.endTime?.timestampmilli(),
                     taskCount = t.taskCount,
                     firstTaskId = t.firstTaskId,
                     parentBuildId = t.parentBuildId,

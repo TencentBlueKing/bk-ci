@@ -933,6 +933,7 @@ class PipelineRuntimeService @Autowired constructor(
                     dslContext = transactionContext,
                     projectId = context.projectId,
                     pipelineId = context.pipelineId,
+                    buildId = context.buildId,
                     buildNumAlias = context.buildNumAlias,
                     debug = context.debug
                 )
