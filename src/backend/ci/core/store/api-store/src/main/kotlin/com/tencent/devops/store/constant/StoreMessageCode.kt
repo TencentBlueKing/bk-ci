@@ -159,8 +159,8 @@ object StoreMessageCode {
     const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
     const val STORE_PROJECT_COMPONENT_NO_PERMISSION= "2120931" // 研发商店：项目[{0}]没有组件[{1}]的使用权限，请先安装组件
     const val STORE_VERSION_IS_INVALID = "2120932" // 研发商店：组件升级的版本号{0}错误，应为{1}
-    const val STORE_INSTALL_VALIDATE_FAIL = "2120932" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
-    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120933" // 研发商店：组件仓库文件删除失败
+    const val STORE_INSTALL_VALIDATE_FAIL = "2120933" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
+    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120934" // 研发商店：组件仓库文件删除失败
 
     const val BK_OTHER = "bkOther" // 其他
     const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job
