@@ -319,7 +319,8 @@ class StoreProjectServiceImpl @Autowired constructor(
         return storeProjectRelDao.getInstalledComponent(
             dslContext = dslContext,
             projectCode = projectCode,
-            storeType = storeType
+            storeType = storeType,
+            storeProjectType = StoreProjectTypeEnum.COMMON
         )?.intoMap({ it.storeCode }, { it.version })
     }
 }

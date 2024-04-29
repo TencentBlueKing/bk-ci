@@ -179,9 +179,11 @@ class MarketStoreQueryDao {
         val queryProjectComponentFlag = storeInfoQuery.queryProjectComponentFlag
         val classifyId = storeInfoQuery.classifyId
         val labelId = storeInfoQuery.labelId
+        val categoryId = storeInfoQuery.categoryId
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         // 缩减查询范围
-        if (queryProjectComponentFlag || !classifyId.isNullOrBlank() || !labelId.isNullOrBlank()) {
+        if (queryProjectComponentFlag || !classifyId.isNullOrBlank() ||
+            !labelId.isNullOrBlank() || !categoryId.isNullOrBlank()) {
             conditions.add(
                 tStoreBase.STORE_CODE.`in`(getStoreCodesByCondition(
                     dslContext = dslContext,
@@ -194,31 +196,24 @@ class MarketStoreQueryDao {
                 conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
             }
         }
-//        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
-//            baseStep.leftJoin(tStoreBaseFeature)
-//                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-//                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
-//            storeInfoQuery.recommendFlag?.let {
-//                conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
-//            }
-//            storeInfoQuery.rdType?.let {
-//                conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
-//            }
-//        }
+        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+            baseStep.leftJoin(tStoreBaseFeature)
+                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+            storeInfoQuery.recommendFlag?.let {
+                conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
+            }
+            storeInfoQuery.rdType?.let {
+                conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
+            }
+        }
         if (storeInfoQuery.score != null) {
             val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-            val t = dslContext.select(
-                tStoreStatisticsTotal.STORE_CODE,
-                tStoreStatisticsTotal.STORE_TYPE,
-                tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name),
-                tStoreStatisticsTotal.SCORE_AVERAGE
-            ).from(tStoreStatisticsTotal).asTable("t")
-            baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
+            baseStep.leftJoin(tStoreStatisticsTotal).on(tStoreBase.STORE_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+            conditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte()))
             conditions.add(
-                t.field("SCORE_AVERAGE", BigDecimal::class.java)!!
-                    .ge(BigDecimal.valueOf(storeInfoQuery.score!!.toLong()))
+                tStoreStatisticsTotal.SCORE_AVERAGE.ge(BigDecimal.valueOf(storeInfoQuery.score!!.toLong()))
             )
-            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType.type.toByte()))
         }
         return conditions
     }
@@ -274,6 +269,7 @@ class MarketStoreQueryDao {
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         if (!queryProjectComponentFlag) {
             conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
+            conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         } else {
             conditions.add(
                 tStoreBase.STATUS.`in`(listOf(

@@ -135,7 +135,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
     private val storeClassifyService: ClassifyService,
     private val labelDao: LabelDao
-): StoreComponentQueryService {
+) : StoreComponentQueryService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
