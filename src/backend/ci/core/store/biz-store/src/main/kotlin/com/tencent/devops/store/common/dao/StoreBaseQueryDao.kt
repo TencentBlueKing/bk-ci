@@ -268,12 +268,24 @@ class StoreBaseQueryDao {
             labelIds = labelIds,
             baseStep = baseStep
         )
+        val subquery = dslContext.select(
+            tStoreBase.STORE_CODE,
+            tStoreBase.STORE_TYPE,
+            DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
+        ).from(tStoreBase)
+            .where(conditions)
+            .groupBy(tStoreBase.STORE_CODE)
         if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
             baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name))
         } else {
             baseStep.where(conditions)
         }
-        return baseStep.limit(
+        return baseStep
+            .join(subquery)
+            .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
+            .and(tStoreBase.STORE_TYPE.eq(subquery.field(tStoreBase.STORE_TYPE)))
+            .and(tStoreBase.CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+            .limit(
             (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
             queryComponentsParam.pageSize
         ).fetch()
@@ -299,9 +311,10 @@ class StoreBaseQueryDao {
         if (null != name) {
             conditions.add(tStoreBase.NAME.contains(name))
         }
-        queryComponentsParam.processFlag?.let {
+        if (queryComponentsParam.processFlag == true) {
             val processingStatusList = StoreStatusEnum.getProcessingStatusList()
-            conditions.add(tStoreBase.STATUS.`in`(processingStatusList))
+            conditions.add(tStoreBase.STATUS.`in`(processingStatusList)
+                .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION))))
         }
         classifyId?.let {
             conditions.add(tStoreBase.CLASSIFY_ID.eq(it))

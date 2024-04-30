@@ -204,23 +204,24 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         )
     }
 
-    override fun listComponents(userId: String, listComponentsQuery: QueryComponentsParam): Page<MyStoreComponent>? {
-        val storeType = StoreTypeEnum.valueOf(listComponentsQuery.storeType)
-        val classifyId = listComponentsQuery.classifyCode?.let {
+    override fun listComponents(userId: String, queryComponentsParam: QueryComponentsParam): Page<MyStoreComponent>? {
+
+        val storeType = StoreTypeEnum.valueOf(queryComponentsParam.storeType)
+        val classifyId = queryComponentsParam.classifyCode?.let {
             classifyDao.getClassifyByCode(
                 dslContext = dslContext,
                 classifyCode = it,
                 type = storeType
             )
         }
-        val categoryIds = listComponentsQuery.categoryCodes?.let {
+        val categoryIds = queryComponentsParam.categoryCodes?.let {
             val allCategory = categoryService.getAllCategory(storeType.type.toByte()).data
             val categoryCodes = it.split(",")
             allCategory?.filter { category -> categoryCodes.contains(category.categoryCode)}?.map { categoryInfo ->
                 categoryInfo.id
             }
         }
-        val labelIds = listComponentsQuery.labelCodes?.let {
+        val labelIds = queryComponentsParam.labelCodes?.let {
             labelDao.getIdsByCodes(
                 dslContext = dslContext,
                 labelCodes = it.split(","),
@@ -229,14 +230,14 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         }
         val count = storeBaseQueryDao.countComponents(
             dslContext = dslContext,
-            queryComponentsParam = listComponentsQuery,
+            queryComponentsParam = queryComponentsParam,
             classifyId = classifyId?.id,
             categoryIds = categoryIds,
             labelIds = labelIds
         )
         val records = storeBaseQueryDao.listComponents(
             dslContext = dslContext,
-            queryComponentsParam = listComponentsQuery,
+            queryComponentsParam = queryComponentsParam,
             classifyId = classifyId?.id,
             categoryIds = categoryIds,
             labelIds = labelIds
@@ -269,8 +270,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         )
         return Page(
             count = count.toLong(),
-            page = listComponentsQuery.page,
-            pageSize = listComponentsQuery.pageSize,
+            page = queryComponentsParam.page,
+            pageSize = queryComponentsParam.pageSize,
             records = storeComponents
         )
     }
