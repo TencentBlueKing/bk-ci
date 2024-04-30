@@ -88,9 +88,7 @@ class ProjectMQConfiguration {
 
     @Bean
     fun projectEnableExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_ENABLE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
+        return FanoutExchange(MQ.EXCHANGE_PROJECT_ENABLE_FANOUT, true, false)
     }
 
     @Bean
