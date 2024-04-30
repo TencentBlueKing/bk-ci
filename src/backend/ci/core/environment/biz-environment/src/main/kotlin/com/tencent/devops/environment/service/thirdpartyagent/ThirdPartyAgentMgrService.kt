@@ -34,6 +34,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.CustomException
@@ -54,8 +55,10 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -144,7 +147,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val envShareProjectDao: EnvShareProjectDao,
     private val commonConfig: CommonConfig,
     private val agentMetricService: AgentMetricService,
-    private val agentShareProjectDao: AgentShareProjectDao
+    private val agentShareProjectDao: AgentShareProjectDao,
+    val tokenService: ClientTokenService
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
@@ -1047,11 +1051,23 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
         // 如果已经有了状态正常的Agent且IP不同，发送告警
         if (status == AgentStatus.IMPORT_OK && agentRecord.ip != startInfo.hostIp) {
+            val users = mutableSetOf(agentRecord.createdUser)
+            val nodeHashId = HashUtil.encodeLongId(agentRecord.nodeId)
+            val authUsers = kotlin.runCatching {
+                client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                    token = tokenService.getSystemToken(),
+                    projectCode = agentRecord.projectId,
+                    resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+                    resourceCode = nodeHashId
+                ).data
+            }.onFailure {
+                logger.warn("agentStartup|getResourceGroupMembers|${agentRecord.projectId}|$nodeHashId")
+            }.getOrNull()
+            users.addAll(authUsers ?: emptySet())
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
                 SendNotifyMessageTemplateRequest(
                     templateCode = "THIRDPART_AGENT_REPEAT_INSTALL",
-                    // TODO: 加上项目或者 Agent 管理
-                    receivers = mutableSetOf(agentRecord.createdUser),
+                    receivers = users,
                     titleParams = mapOf(
                         "projectId" to agentRecord.projectId,
                         "agentId" to HashUtil.encodeLongId(agentRecord.id)
