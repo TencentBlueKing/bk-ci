@@ -11,6 +11,7 @@ data class YamlTransferInput(
     val userId: String,
     val projectCode: String,
     val pipelineInfo: PipelineInfo?,
+    val yamlFileName: String?,
     val yaml: IPreTemplateScriptBuildYamlParser,
     val aspectWrapper: PipelineTransferAspectWrapper,
     val defaultScmType: ScmType = ScmType.CODE_GIT,
