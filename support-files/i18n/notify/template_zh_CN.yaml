@@ -924,3 +924,18 @@
     body: "[构建链接|${buildUrl}]\n[第三方构建机链接|${agentUrl}]\n构建触发人：${userId}\n构建机拥有者：${agentOwner}"
   creator: "system"
   modifior: "system"
+- index: 45
+  id: "e166ee7f4dfe4d96b2bb32addc6dd34c"
+  templateCode: "THIRDPART_AGENT_REPEAT_INSTALL"
+  templateName: "第三方构建机重复安装告警"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d18a"
+    sender: "DevOps"
+    title: "项目 ${projectId} 第三方构建机 ${agentId} 存在重复安装可能"
+    body: "原 IP ${oldIp} 新启动 IP ${newIp}\n${url}"
+  creator: "system"
+  modifior: "system"

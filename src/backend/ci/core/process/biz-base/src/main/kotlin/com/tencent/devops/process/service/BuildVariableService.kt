@@ -93,7 +93,7 @@ class BuildVariableService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Map<String, String> {
-        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId) == true) {
+        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, null) == true) {
             pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId)
         } else {
             PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
