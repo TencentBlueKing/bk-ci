@@ -229,14 +229,14 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         }
         val count = storeBaseQueryDao.countComponents(
             dslContext = dslContext,
-            listComponentsQuery = listComponentsQuery,
+            queryComponentsParam = listComponentsQuery,
             classifyId = classifyId?.id,
             categoryIds = categoryIds,
             labelIds = labelIds
         )
         val records = storeBaseQueryDao.listComponents(
             dslContext = dslContext,
-            listComponentsQuery = listComponentsQuery,
+            queryComponentsParam = listComponentsQuery,
             classifyId = classifyId?.id,
             categoryIds = categoryIds,
             labelIds = labelIds
@@ -251,6 +251,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             val storeCode = record[tStoreBase.STORE_CODE] as String
             storeCodes.add(storeCode)
         }
+        // 查询组件初始化项目信息
         storeProjectRelDao.getStoreInitProjects(
             dslContext = dslContext,
             storeType = storeType.type.toByte(),

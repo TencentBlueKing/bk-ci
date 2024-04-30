@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -401,7 +402,8 @@ class StoreBaseQueryDao {
         val statusList = StoreStatusEnum.values().map { it.name }.toMutableList()
         statusList.removeAll(StoreStatusEnum.getProcessingStatusList())
         statusList.add(StoreStatusEnum.INIT.name)
-        conditions.add(tStoreBase.STATUS.`in`(statusList))
+        conditions.add(tStoreBase.STATUS.`in`(statusList)
+            .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION))))
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }

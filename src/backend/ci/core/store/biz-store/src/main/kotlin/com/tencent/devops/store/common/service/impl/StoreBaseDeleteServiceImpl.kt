@@ -55,11 +55,7 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeMemberDao: StoreMemberDao,
     private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeBaseManageDao: StoreBaseManageDao,
-    private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
-    private val storeCommonService: StoreCommonService,
-    private val storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao,
-    private val storeVersionLogDao: StoreVersionLogDao
+    private val storeCommonService: StoreCommonService
 ) : StoreBaseDeleteService {
 
     companion object {
@@ -122,10 +118,6 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeCommonService.deleteStoreInfo(context, storeCode, storeType.type.toByte())
-            storeBaseFeatureManageDao.deleteStoreBaseFeature(context, storeCode, storeType.type.toByte())
-            storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
-            storeVersionLogDao.deleteByStoreCode(context, storeCode, storeType)
-            storeBaseManageDao.deleteByComponentCode(context, storeCode, storeType)
         }
     }
 }

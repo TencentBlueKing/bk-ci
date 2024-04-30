@@ -52,6 +52,9 @@ interface StoreComponentQueryService {
         pageSize: Int
     ): Page<MyStoreComponent>?
 
+    /**
+     * 查询所有流程中组件信息
+     */
     fun listComponents(
         userId: String,
         queryComponentsParam: QueryComponentsParam
