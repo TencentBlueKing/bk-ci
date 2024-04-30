@@ -31,12 +31,12 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
 import java.lang.reflect.Field
+import java.net.URLDecoder
 import java.text.MessageFormat
 import java.util.Locale
 import java.util.Properties
 import java.util.ResourceBundle
 import org.slf4j.LoggerFactory
-import java.net.URLDecoder
 
 object MessageUtil {
 
@@ -72,13 +72,13 @@ object MessageUtil {
             val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
             // 通过resourceBundle获取对应语言的描述信息
             message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+            if (null != params) {
+                val mf = MessageFormat(message)
+                // 根据参数动态替换状态码描述里的占位符
+                message = mf.format(params)
+            }
         } catch (ignored: Throwable) {
             logger.warn("Fail to get i18nMessage of messageCode[$messageCode]")
-        }
-        if (null != params && null != message) {
-            val mf = MessageFormat(message)
-            // 根据参数动态替换状态码描述里的占位符
-            message = mf.format(params)
         }
         val res = message ?: defaultMessage ?: ""
         return if (checkUrlDecoder) URLDecoder.decode(res, Charsets.UTF_8.name()) else res

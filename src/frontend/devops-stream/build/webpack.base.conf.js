@@ -3,10 +3,10 @@
  * @author Blueking
  */
 
-import webpack from 'webpack'
 import { VueLoaderPlugin } from 'vue-loader'
-import { resolve, assetsPath } from './util'
+import webpack from 'webpack'
 import config from './config'
+import { assetsPath, resolve } from './util'
 const ESLintPlugin = require('eslint-webpack-plugin')
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -30,7 +30,8 @@ export default {
     module: {
         noParse: [
             /\/node_modules\/jquery\/dist\/jquery\.min\.js$/,
-            /\/node_modules\/echarts\/dist\/echarts\.min\.js$/
+            /\/node_modules\/echarts\/dist\/echarts\.min\.js$/,
+            /\/bk-pipeline\/dist\/bk-pipeline\.min\.js$/
         ],
         rules: [
             {

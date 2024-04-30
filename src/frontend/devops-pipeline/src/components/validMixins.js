@@ -21,7 +21,10 @@ import { mapState } from 'vuex'
 import { bus } from '@/utils/bus'
 const validMixins = {
     props: {
-        setParentValidate: Function
+        setParentValidate: {
+            type: Function,
+            default: () => {}
+        }
     },
     computed: {
         ...mapState('atom', [

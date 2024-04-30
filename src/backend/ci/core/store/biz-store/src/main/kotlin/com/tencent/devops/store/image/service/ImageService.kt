@@ -729,6 +729,30 @@ abstract class ImageService @Autowired constructor() {
         }
     }
 
+    fun getImageInfoByCodeAndVersion(
+        imageCode: String,
+        imageVersion: String?
+    ): ImageRepoInfo? {
+        // 区分是否为调试项目
+        val imageStatusList = mutableListOf(
+            ImageStatusEnum.RELEASED.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        val imageRecords =
+            imageDao.getImagesByBaseVersion(
+                dslContext = dslContext,
+                imageCode = imageCode,
+                imageStatusSet = imageStatusList.toSet(),
+                baseVersion = imageVersion
+            )
+        imageRecords?.sortWith(Comparator { o1, o2 ->
+            ImageUtil.compareVersion(o2.get(KEY_IMAGE_VERSION) as String?, o1.get(KEY_IMAGE_VERSION) as String?)
+        })
+        val latestImage = imageRecords?.get(0)
+        return latestImage?.let { getImageRepoInfoByRecord(it) }
+    }
+
     fun getSelfDevelopPublicImages(
         interfaceName: String? = "Anon interface"
     ): List<ImageRepoInfo> {
