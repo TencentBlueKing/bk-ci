@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.classify
+package com.tencent.devops.common.api.enums
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+enum class TriggerRepositoryType {
+    ID,
+    NAME,
+    SELF;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = PipelineViewFilterByName::class, name = PipelineViewFilterByName.classType),
-    JsonSubTypes.Type(value = PipelineViewFilterByCreator::class, name = PipelineViewFilterByCreator.classType),
-    JsonSubTypes.Type(value = PipelineViewFilterByLabel::class, name = PipelineViewFilterByLabel.classType),
-    JsonSubTypes.Type(value = PipelineViewFilterByPacRepo::class, name = PipelineViewFilterByPacRepo.classType)
-)
-abstract class PipelineViewFilter
+    companion object {
+        fun toRepositoryType(type: TriggerRepositoryType?): RepositoryType? {
+            return when (type) {
+                ID, SELF -> RepositoryType.ID
+                NAME -> RepositoryType.NAME
+                else -> null
+            }
+        }
+    }
+}
