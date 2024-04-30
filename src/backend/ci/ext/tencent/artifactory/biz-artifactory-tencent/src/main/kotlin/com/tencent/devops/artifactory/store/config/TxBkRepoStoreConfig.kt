@@ -34,19 +34,7 @@ import org.springframework.stereotype.Component
  * 研发商店仓库配置
  */
 @Component
-class BkRepoStoreConfig {
-
-    // 蓝盾新仓库研发商店项目名称
-    @Value("\${bkrepo.store.projectName:bk-store}")
-    val bkrepoStoreProjectName: String = "bk-store"
-
-    // 蓝盾新仓库研发商店用户名
-    @Value("\${bkrepo.store.userName:g_bkstore}")
-    val bkrepoStoreUserName: String = "g_bkstore"
-
-    // 蓝盾新仓库研发商店密码
-    @Value("\${bkrepo.store.password:}")
-    val bkrepoStorePassword: String = ""
+class TxBkRepoStoreConfig {
 
     // 蓝盾新仓库微扩展项目名称
     @Value("\${bkrepo.extService.projectName:bk-extension}")
