@@ -579,7 +579,7 @@ class PipelineResourceVersionDao {
                     name -> name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
-                ) ?: "V$versionNum(${record.versionName}"
+                ) ?: "V$versionNum(${record.versionName})"
                 PipelineResourceVersion(
                     projectId = record.projectId,
                     pipelineId = record.pipelineId,

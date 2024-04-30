@@ -193,6 +193,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         projectCode = projectId,
                         pipelineInfo = pipelineInfo,
                         yaml = pYml,
+                        yamlFileName = data.yamlFileName,
                         asCodeSettings = data.modelAndSetting?.setting?.pipelineAsCodeSettings,
                         aspectWrapper = PipelineTransferAspectWrapper(aspects)
                     )
