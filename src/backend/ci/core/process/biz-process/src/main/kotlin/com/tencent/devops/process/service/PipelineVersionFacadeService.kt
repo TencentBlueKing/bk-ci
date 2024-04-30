@@ -324,23 +324,25 @@ class PipelineVersionFacadeService @Autowired constructor(
             Pair(VersionStatus.DRAFT_RELEASE, null)
         }
         if (enabled) {
+            if (request.yamlInfo == null) throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
+            )
             if (draftVersion.yaml.isNullOrBlank()) {
                 transferService.transfer(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     actionType = TransferActionType.FULL_MODEL2YAML,
-                    data = TransferBody(PipelineModelAndSetting(draftVersion.model, targetSettings))
+                    data = TransferBody(
+                        modelAndSetting = PipelineModelAndSetting(draftVersion.model, targetSettings),
+                        yamlFileName = request.yamlInfo?.filePath
+                    )
                 )
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY
                 )
             }
-
-            if (request.yamlInfo == null) throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
-            )
             val yamlInfo = request.yamlInfo ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
                 params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
