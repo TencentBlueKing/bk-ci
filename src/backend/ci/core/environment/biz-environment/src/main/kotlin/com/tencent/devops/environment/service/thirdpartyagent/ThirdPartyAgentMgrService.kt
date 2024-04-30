@@ -1053,6 +1053,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (status == AgentStatus.IMPORT_OK && agentRecord.ip != startInfo.hostIp) {
             val users = mutableSetOf(agentRecord.createdUser)
             val nodeHashId = HashUtil.encodeLongId(agentRecord.nodeId)
+            val agentHashId = HashUtil.encodeLongId(agentRecord.id)
             val authUsers = kotlin.runCatching {
                 client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
                     token = tokenService.getSystemToken(),
@@ -1064,22 +1065,25 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 logger.warn("agentStartup|getResourceGroupMembers|${agentRecord.projectId}|$nodeHashId")
             }.getOrNull()
             users.addAll(authUsers ?: emptySet())
+            kotlin.runCatching {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
                 SendNotifyMessageTemplateRequest(
                     templateCode = "THIRDPART_AGENT_REPEAT_INSTALL",
                     receivers = users,
                     titleParams = mapOf(
                         "projectId" to agentRecord.projectId,
-                        "agentId" to HashUtil.encodeLongId(agentRecord.id)
+                        "agentId" to agentHashId
                     ),
                     bodyParams = mapOf(
                         "oldIp" to agentRecord.ip,
                         "newIp" to startInfo.hostIp,
                         "url" to "${HomeHostUtil.innerServerHost()}/console/environment/${agentRecord.projectId}/" +
-                                "nodeDetail/${HashUtil.encodeLongId(agentRecord.nodeId)}"
+                                "nodeDetail/$nodeHashId"
                     )
                 )
-            )
+            ) }.onFailure {
+                logger.warn("agentStartup|sendNotifyMessageByTemplate|${agentRecord.projectId}|$agentHashId")
+            }
         }
 
         if (!(AgentStatus.isImportException(status) ||
