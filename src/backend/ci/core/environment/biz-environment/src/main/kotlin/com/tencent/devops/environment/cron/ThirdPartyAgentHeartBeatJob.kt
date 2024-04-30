@@ -87,8 +87,8 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                 ?: return@forEach
 
             val escape = System.currentTimeMillis() - heartbeatTime
-            // 5min
-            if (escape > 60 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
+            // 50s
+            if (escape > 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     thirdPartyAgentDao.updateStatus(
