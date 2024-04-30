@@ -180,7 +180,6 @@ class MarketStoreQueryDao {
         val classifyId = storeInfoQuery.classifyId
         val labelId = storeInfoQuery.labelId
         val categoryId = storeInfoQuery.categoryId
-        conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         // 缩减查询范围
         if (queryProjectComponentFlag || !classifyId.isNullOrBlank() ||
             !labelId.isNullOrBlank() || !categoryId.isNullOrBlank()) {
@@ -237,7 +236,10 @@ class MarketStoreQueryDao {
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))
-                    selectJoinStep.leftJoin(tStoreProjectRel).on(tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE))
+                    selectJoinStep.leftJoin(tStoreProjectRel).on(
+                        tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE)
+                            .and(tStoreBase.STORE_TYPE.eq(tStoreProjectRel.STORE_TYPE))
+                    )
                 }
             }
 
