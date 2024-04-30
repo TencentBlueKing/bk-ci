@@ -83,7 +83,7 @@ class ModelTransfer @Autowired constructor(
             pipelineId = yamlInput.pipelineInfo?.pipelineId ?: "",
             buildNumRule = yaml.customBuildNum,
             // 如果yaml内容缺失，先用pac文件名兜底，没有文件名才用原流水线名
-            pipelineName = yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
+            pipelineName = yaml.name ?: yamlInput.yamlFileName ?: yamlInput.pipelineInfo?.pipelineName ?: "",
             desc = yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
             concurrencyGroup = yaml.concurrency?.group ?: PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
             // Cancel-In-Progress 配置group后默认为true
