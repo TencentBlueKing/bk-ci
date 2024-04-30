@@ -25,42 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.artifactory.store.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
- * 仓库配置
+ * 研发商店仓库配置
  */
 @Component
-class BkRepoClientConfig {
+class BkRepoStoreConfig {
 
-    @Value("\${artifactory.realm:}")
-    lateinit var artifactoryRealm: String
+    // 蓝盾新仓库研发商店项目名称
+    @Value("\${bkrepo.store.projectName:bk-store}")
+    val bkrepoStoreProjectName: String = "bk-store"
 
-    @Value("\${bkrepo.logRepoCredentialsKey:}")
-    lateinit var logRepoCredentialsKey: String
+    // 蓝盾新仓库研发商店用户名
+    @Value("\${bkrepo.store.userName:g_bkstore}")
+    val bkrepoStoreUserName: String = "g_bkstore"
 
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl:}")
-    val bkRepoApiUrl: String = ""
-
-    // 蓝盾新仓库静态资源仓库前缀地址
-    @Value("\${bkrepo.staticRepoPrefixUrl:}")
-    val bkRepoStaticRepoPrefixUrl: String = ""
-
-    // 蓝盾新仓库静态资源仓库用户名
-    @Value("\${bkrepo.staticUserName:g_bkstore}")
-    val bkRepoStaticUserName: String = "g_bkstore"
-
-    // 蓝盾新仓库静态资源仓库密码
-    @Value("\${bkrepo.staticPassword:}")
-    val bkRepoStaticPassword: String = ""
-
-    @Value("\${bkrepo.bkrepoUrl:}")
-    val bkRepoIdcHost: String = ""
-
-    @Value("\${bkrepo.devxBkrepoUrl:}")
-    val bkRepoDevxIdcHost: String = ""
+    // 蓝盾新仓库研发商店密码
+    @Value("\${bkrepo.store.password:}")
+    val bkrepoStorePassword: String = ""
 }
