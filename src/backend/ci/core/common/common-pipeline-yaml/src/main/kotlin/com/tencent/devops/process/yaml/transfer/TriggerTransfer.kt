@@ -96,7 +96,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
-                    // todo action
+                    includePushAction = push.action,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
@@ -136,7 +136,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    // todo action
+                    includeMrAction = mr.action,
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
@@ -226,8 +226,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    // todo action
-                    action = null
+                    action = git.includePushAction
                 )
 
                 CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
@@ -255,8 +254,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    // todo action
-                    action = null
+                    action = git.includeMrAction
                 )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
