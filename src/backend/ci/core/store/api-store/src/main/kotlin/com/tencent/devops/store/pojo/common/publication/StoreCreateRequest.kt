@@ -36,6 +36,6 @@ data class StoreCreateRequest(
     @get:Schema(title = "项目代码", required = true)
     val projectCode: String,
     @get:Schema(title = "基础信息", required = true)
-    @Valid
+    @field:Valid
     val baseInfo: StoreBaseCreateRequest,
 ) : HandlerRequest()

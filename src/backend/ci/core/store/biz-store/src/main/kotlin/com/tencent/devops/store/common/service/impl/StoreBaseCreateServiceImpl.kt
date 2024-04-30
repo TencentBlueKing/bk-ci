@@ -49,6 +49,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import org.jooq.DSLContext
@@ -152,38 +153,48 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             if (!storeBaseEnvExtDataPOs.isNullOrEmpty()) {
                 storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs)
             }
-            // 初始化统计表数据
-            storeStatisticTotalDao.initStatisticData(
-                dslContext = context,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte()
-            )
-            // 默认给新建组件的人赋予管理员权限
-            storeMemberDao.addStoreMember(
-                dslContext = context,
-                userId = userId,
-                storeCode = storeCode,
-                userName = userId,
-                type = StoreMemberTypeEnum.ADMIN.type.toByte(),
-                storeType = storeType.type.toByte()
-            )
-            // 添加组件与项目关联关系，type为0代表新增组件时关联的初始化项目
-            storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
-                storeCode = storeCode,
-                projectCode = storeCreateRequest.projectCode,
-                type = StoreProjectTypeEnum.INIT.type.toByte(),
-                storeType = storeType.type.toByte()
-            )
-            storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
-                storeCode = storeCode,
-                projectCode = storeCreateRequest.projectCode,
-                type = StoreProjectTypeEnum.TEST.type.toByte(),
-                storeType = storeType.type.toByte()
-            )
+            initStoreData(context, storeCode, storeType, userId, storeCreateRequest)
         }
+    }
+
+    private fun initStoreData(
+        context: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        userId: String,
+        storeCreateRequest: StoreCreateRequest
+    ) {
+        // 初始化统计表数据
+        storeStatisticTotalDao.initStatisticData(
+            dslContext = context,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        // 默认给新建组件的人赋予管理员权限
+        storeMemberDao.addStoreMember(
+            dslContext = context,
+            userId = userId,
+            storeCode = storeCode,
+            userName = userId,
+            type = StoreMemberTypeEnum.ADMIN.type.toByte(),
+            storeType = storeType.type.toByte()
+        )
+        // 添加组件与项目关联关系，type为0代表新增组件时关联的初始化项目
+        storeProjectRelDao.addStoreProjectRel(
+            dslContext = context,
+            userId = userId,
+            storeCode = storeCode,
+            projectCode = storeCreateRequest.projectCode,
+            type = StoreProjectTypeEnum.INIT.type.toByte(),
+            storeType = storeType.type.toByte()
+        )
+        storeProjectRelDao.addStoreProjectRel(
+            dslContext = context,
+            userId = userId,
+            storeCode = storeCode,
+            projectCode = storeCreateRequest.projectCode,
+            type = StoreProjectTypeEnum.TEST.type.toByte(),
+            storeType = storeType.type.toByte()
+        )
     }
 }
