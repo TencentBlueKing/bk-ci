@@ -35,10 +35,10 @@ import com.tencent.devops.store.pojo.common.StoreBaseInfo
 interface StoreBaseInstallService {
 
     /**
-     * 检查安装组件请求参数合法性
+     * 检查安装组件请求合法性
      * @param installStoreReq 安装组件到项目请求报文
      */
-    fun installComponentParamCheck(
+    fun installComponentCheck(
         userId: String,
         channelCode: ChannelCode,
         installStoreReq: InstallStoreReq

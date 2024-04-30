@@ -54,7 +54,7 @@ class StoreBaseInstallServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StoreBaseInstallServiceImpl::class.java)
     }
-    override fun installComponentParamCheck(
+    override fun installComponentCheck(
         userId: String,
         channelCode: ChannelCode,
         installStoreReq: InstallStoreReq

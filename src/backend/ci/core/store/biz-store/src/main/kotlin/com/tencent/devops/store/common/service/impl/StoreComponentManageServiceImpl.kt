@@ -183,12 +183,14 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         installStoreReq: InstallStoreReq
     ): Result<Boolean> {
         logger.info("installComponent params:[$userId|$installStoreReq]")
+        // 检查安装组件请求合法性
         val storeBaseInstallService = getStoreBaseInstallService(installStoreReq.storeType)
-        val storeBaseInfo = storeBaseInstallService.installComponentParamCheck(
+        val storeBaseInfo = storeBaseInstallService.installComponentCheck(
             userId = userId,
             channelCode = channelCode,
             installStoreReq = installStoreReq
         ).data!!
+        // 安装前准备
         val installComponentPrepareResult = storeBaseInstallService.installComponentPrepare(
             userId = userId,
             projectCodes = installStoreReq.projectCodes,
@@ -219,16 +221,18 @@ class StoreComponentManageServiceImpl @Autowired constructor(
     ): Result<Boolean> {
 
         logger.info("uninstallComponent|userId:$userId|projectCode:$projectCode|storeCode:$storeCode")
-        getStoreManagementExtraService(StoreTypeEnum.valueOf(storeType)).uninstallComponentParamCheck(
+        // 卸载请求检查
+        getStoreManagementExtraService(StoreTypeEnum.valueOf(storeType)).uninstallComponentCheck(
             userId = userId,
             projectCode = projectCode,
             storeType = storeType,
             storeCode = storeCode
         )
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 卸载
-            storeProjectService.uninstall(StoreTypeEnum.valueOf(storeType), storeCode, projectCode)
+            storeProjectService.uninstall(storeTypeEnum, storeCode, projectCode)
             // 入库卸载原因
             unInstallReq.reasonList.forEach {
                 if (it?.reasonId != null) {
@@ -237,7 +241,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
                         id = UUIDUtil.generate(),
                         userId = userId,
                         storeCode = storeCode,
-                        storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
+                        storeType = storeTypeEnum.type.toByte(),
                         reasonId = it.reasonId,
                         note = it.note,
                         type = ReasonTypeEnum.UNINSTALLATOM.type

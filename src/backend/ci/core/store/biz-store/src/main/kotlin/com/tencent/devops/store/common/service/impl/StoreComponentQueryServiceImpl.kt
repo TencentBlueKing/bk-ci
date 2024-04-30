@@ -39,8 +39,10 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -150,58 +152,66 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         pageSize: Int
     ): Page<MyStoreComponent>? {
         logger.info("getMyComponents params:[$userId|$storeType|$name|$page|$pageSize]")
-        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
-        // 获取有权限的组件代码列表
-        val records = storeBaseQueryDao.getMyComponents(
-            dslContext = dslContext,
-            userId = userId,
-            storeType = StoreTypeEnum.valueOf(storeType),
-            name = name,
-            page = page,
-            pageSize = pageSize
-        )
-        val count = storeBaseQueryDao.countMyComponents(
-            dslContext = dslContext,
-            userId = userId,
-            storeType = StoreTypeEnum.valueOf(storeType),
-            name = name
-        )
-        val storeProjectMap = mutableMapOf<String, String>()
-        val tStoreBase = TStoreBase.T_STORE_BASE
-        val storeIds = mutableListOf<String>()
-        val projectCodeList = mutableListOf<String>()
-        val storeCodes = mutableListOf<String>()
-        records?.forEach { record ->
-            storeIds.add(record[tStoreBase.ID])
-            val storeCode = record[tStoreBase.STORE_CODE] as String
-            storeCodes.add(storeCode)
-            val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+        val watcher = Watcher("getMyComponents|$userId|$storeType")
+        try {
+            val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+            // 获取有权限的组件代码列表
+            watcher.start("queryMyComponents")
+            val records = storeBaseQueryDao.getMyComponents(
                 dslContext = dslContext,
                 userId = userId,
-                storeCode = storeCode,
-                storeType = storeTypeEnum
+                storeType = StoreTypeEnum.valueOf(storeType),
+                name = name,
+                page = page,
+                pageSize = pageSize
             )
-            if (null != testProjectCode) {
-                projectCodeList.add(testProjectCode)
-                storeProjectMap[storeCode] = testProjectCode
+            watcher.start("countMyComponents")
+            val count = storeBaseQueryDao.countMyComponents(
+                dslContext = dslContext,
+                userId = userId,
+                storeType = StoreTypeEnum.valueOf(storeType),
+                name = name
+            )
+            val storeProjectMap = mutableMapOf<String, String>()
+            val tStoreBase = TStoreBase.T_STORE_BASE
+            val storeIds = mutableListOf<String>()
+            val projectCodeList = mutableListOf<String>()
+            val storeCodes = mutableListOf<String>()
+            records?.forEach { record ->
+                storeIds.add(record[tStoreBase.ID])
+                val storeCode = record[tStoreBase.STORE_CODE] as String
+                storeCodes.add(storeCode)
+                val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = storeCode,
+                    storeType = storeTypeEnum
+                )
+                if (null != testProjectCode) {
+                    projectCodeList.add(testProjectCode)
+                    storeProjectMap[storeCode] = testProjectCode
+                }
             }
-        }
-        val storeComponents = records?.let {
-            handleComponents(
-                storeType = storeTypeEnum,
-                storeCodes = storeCodes,
-                storeIds = storeIds,
-                projectCodeList = projectCodeList,
-                storeProjectMap = storeProjectMap,
-                records = it
+            val storeComponents = records?.let {
+                handleComponents(
+                    storeType = storeTypeEnum,
+                    storeCodes = storeCodes,
+                    storeIds = storeIds,
+                    projectCodeList = projectCodeList,
+                    storeProjectMap = storeProjectMap,
+                    records = it
+                )
+            }
+            return Page(
+                count = count.toLong(),
+                page = page,
+                pageSize = pageSize,
+                records = storeComponents ?: emptyList()
             )
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
-        return Page(
-            count = count.toLong(),
-            page = page,
-            pageSize = pageSize,
-            records = storeComponents ?: emptyList()
-        )
     }
 
     override fun listComponents(userId: String, queryComponentsParam: QueryComponentsParam): Page<MyStoreComponent>? {
@@ -569,93 +579,104 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
         logger.info("getMainPageComponents:Input:($userId,$storeType,$page,$pageSize)")
-        val result = mutableListOf<MarketMainItem>()
-        // 获取用户组织架构
-        val userDeptList = storeUserService.getUserDeptList(userId)
-        val futureList = mutableListOf<Future<Page<MarketItem>>>()
-        val labelInfoList = mutableListOf<MarketMainItemLabel>()
-        labelInfoList.add(
-            MarketMainItemLabel(LATEST, I18nUtil.getCodeLanMessage(LATEST))
-        )
-        futureList.add(
-            doList(
-                userId = userId,
-                userDeptList = userDeptList,
-                storeInfoQuery = StoreInfoQuery(
-                    storeType = storeType,
-                    projectCode = projectCode,
-                    queryProjectComponentFlag = false,
-                    sortType = StoreSortTypeEnum.UPDATE_TIME,
-                    page = page,
-                    pageSize = pageSize
-                ),
-                urlProtocolTrim = urlProtocolTrim
+        val watcher = Watcher("getMainPageComponents|$userId|$storeType")
+        try {
+            val result = mutableListOf<MarketMainItem>()
+            // 获取用户组织架构
+            val userDeptList = storeUserService.getUserDeptList(userId)
+            val futureList = mutableListOf<Future<Page<MarketItem>>>()
+            val labelInfoList = mutableListOf<MarketMainItemLabel>()
+            labelInfoList.add(
+                MarketMainItemLabel(LATEST, I18nUtil.getCodeLanMessage(LATEST))
             )
-        )
-        labelInfoList.add(
-            MarketMainItemLabel(
-                HOTTEST,
-                I18nUtil.getCodeLanMessage(HOTTEST)
-            )
-        )
-        futureList.add(
-            doList(
-                userId = userId,
-                userDeptList = userDeptList,
-                storeInfoQuery = StoreInfoQuery(
-                    storeType = storeType,
-                    projectCode = projectCode,
-                    queryProjectComponentFlag = false,
-                    sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-                    page = page,
-                    pageSize = pageSize
-                ),
-                urlProtocolTrim = urlProtocolTrim
-            )
-        )
-
-        val classifyList = storeClassifyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte()).data
-        classifyList?.forEach {
-            val classifyCode = it.classifyCode
-            if (classifyCode != "trigger") {
-                val classifyLanName = I18nUtil.getCodeLanMessage(
-                    messageCode = "$storeType.classify.$classifyCode",
-                    defaultMessage = it.classifyName,
-                    language = I18nUtil.getLanguage(userId)
+            watcher.start("getMainPageComponentsBySortType")
+            futureList.add(
+                // 根据最新排序
+                doList(
+                    userId = userId,
+                    userDeptList = userDeptList,
+                    storeInfoQuery = StoreInfoQuery(
+                        storeType = storeType,
+                        projectCode = projectCode,
+                        queryProjectComponentFlag = false,
+                        sortType = StoreSortTypeEnum.UPDATE_TIME,
+                        page = page,
+                        pageSize = pageSize
+                    ),
+                    urlProtocolTrim = urlProtocolTrim
                 )
-                labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
-                futureList.add(
-                    doList(
-                        userId = userId,
-                        userDeptList = userDeptList,
-                        storeInfoQuery = StoreInfoQuery(
-                            storeType = storeType,
-                            projectCode = projectCode,
-                            classifyId = it.id,
-                            queryProjectComponentFlag = false,
-                            sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-                            page = page,
-                            pageSize = pageSize
-                        ),
-                        urlProtocolTrim = urlProtocolTrim
+            )
+            labelInfoList.add(
+                MarketMainItemLabel(
+                    HOTTEST,
+                    I18nUtil.getCodeLanMessage(HOTTEST)
+                )
+            )
+            futureList.add(
+                // 根据热度排序
+                doList(
+                    userId = userId,
+                    userDeptList = userDeptList,
+                    storeInfoQuery = StoreInfoQuery(
+                        storeType = storeType,
+                        projectCode = projectCode,
+                        queryProjectComponentFlag = false,
+                        sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
+                        page = page,
+                        pageSize = pageSize
+                    ),
+                    urlProtocolTrim = urlProtocolTrim
+                )
+            )
+
+            watcher.start("getMainPageComponentsByClassify")
+            // 根据分类排序
+            val classifyList = storeClassifyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte()).data
+            classifyList?.forEach {
+                val classifyCode = it.classifyCode
+                if (classifyCode != "trigger") {
+                    val classifyLanName = I18nUtil.getCodeLanMessage(
+                        messageCode = "$storeType.classify.$classifyCode",
+                        defaultMessage = it.classifyName,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                    labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
+                    futureList.add(
+                        doList(
+                            userId = userId,
+                            userDeptList = userDeptList,
+                            storeInfoQuery = StoreInfoQuery(
+                                storeType = storeType,
+                                projectCode = projectCode,
+                                classifyId = it.id,
+                                queryProjectComponentFlag = false,
+                                sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
+                                page = page,
+                                pageSize = pageSize
+                            ),
+                            urlProtocolTrim = urlProtocolTrim
+                        )
+                    )
+                }
+            }
+            if (futureList.isEmpty()) {
+                return Result(result)
+            }
+            for (index in futureList.indices) {
+                val labelInfo = labelInfoList[index]
+                result.add(
+                    MarketMainItem(
+                        key = labelInfo.key,
+                        label = labelInfo.label,
+                        records = futureList[index].get().records
                     )
                 )
             }
-        }
-        if (futureList.isEmpty()) {
             return Result(result)
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
-        for (index in futureList.indices) {
-            val labelInfo = labelInfoList[index]
-            result.add(
-                MarketMainItem(
-                    key = labelInfo.key,
-                    label = labelInfo.label,
-                    records = futureList[index].get().records
-                )
-            )
-        }
-        return Result(result)
     }
 
     override fun queryComponents(
@@ -690,6 +711,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(storeCode)
         )
+        // 获取回显版本号
         val cancelFlag = record.status == StoreStatusEnum.GROUNDING_SUSPENSION.name
         val showVersion = if (cancelFlag) {
             record.version
@@ -712,12 +734,14 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         val storeCodes = mutableListOf<String>()
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+        // 查询项目关联信息缩小组件查询范围
         storeInfoQuery.projectCode?.let { projectCode ->
             if (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true) {
                 val installedMap = storeProjectService.getInstalledComponent(
                     projectCode,
                     storeType.type.toByte()
                 ) ?: emptyMap()
+                // 筛选可更新组件
                 if (storeInfoQuery.updateFlag == true) {
                     storeBaseQueryDao.getLatestComponentByCodes(
                         dslContext,
@@ -763,8 +787,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             }
             val results = mutableListOf<MarketItem>()
 
-            // 调用拆分出的getStoreInfos函数获取商品信息
-            var (count, storeInfos) = getStoreInfos(storeInfoQuery)
+            // 调用拆分出的getStoreInfos函数获取组件信息
+            val (count, storeInfos) = getStoreInfos(storeInfoQuery)
             try {
                 val storeCodeList = mutableListOf<String>()
                 val storeIds = mutableListOf<String>()
@@ -776,6 +800,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     storeCodeList.add(it[tStoreBase.STORE_CODE] as String)
                     storeIds.add(it[tStoreBaseFeature.ID] as String)
                 }
+                // 获取组件可见范围
                 val storeVisibleData =
                     storeCommonService.generateStoreVisibleData(storeCodeList, storeTypeEnum)
                 val storeStatisticData = storeTotalStatisticService.getStatisticByCodeList(
@@ -793,6 +818,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 classifyList?.forEach {
                     classifyMap[it.id] = it.classifyCode
                 }
+                // 获取组件荣誉信息及指标
                 val storeHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeTypeEnum, storeCodeList)
                 val storeIndexInfosMap =
                     storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
@@ -802,7 +828,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     val storeCode = record[tStoreBase.STORE_CODE]
                     val statistic = storeStatisticData[storeCode]
                     val version = record[tStoreBase.VERSION]
+                    // 组件是否已安装
                     val installed = projectCode?.let { installedInfoMap?.contains(storeCode) }
+                    // 是否可更新
                     val updateFlag = if (installed == true && installedInfoMap?.get(storeCode) != null) {
                         StoreUtils.isGreaterVersion(version, installedInfoMap[storeCode]!!)
                     } else null
@@ -815,6 +843,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         storeId = storeId,
                         fieldName = KEY_BUILD_LESS_RUN_FLAG
                     )
+                    // 无构建环境组件是否可以在有构建环境运行
                     val buildLessRunFlag = if (baseExtResult.isNotEmpty) {
                         baseExtResult[0]!!.fieldValue.toBoolean()
                     } else null
@@ -919,7 +948,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         } else {
             mutableMapOf<String, Any>()
         }
-
+        // 解析扩展字段值为json格式字符串的数据
         extData?.let {
             extDataResult.forEach { record ->
                 extData[record.fieldName] =

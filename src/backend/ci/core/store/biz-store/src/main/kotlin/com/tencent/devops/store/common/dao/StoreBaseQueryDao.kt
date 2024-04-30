@@ -313,8 +313,7 @@ class StoreBaseQueryDao {
         }
         if (queryComponentsParam.processFlag == true) {
             val processingStatusList = StoreStatusEnum.getProcessingStatusList()
-            conditions.add(tStoreBase.STATUS.`in`(processingStatusList)
-                .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION))))
+            conditions.add(tStoreBase.STATUS.`in`(processingStatusList))
         }
         classifyId?.let {
             conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
