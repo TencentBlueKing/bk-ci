@@ -83,7 +83,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class StoreReleaseServiceImpl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
@@ -256,25 +256,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val storeCode = storeReleaseRequest.storeCode
         val storeType = storeReleaseRequest.storeType
         val status = storeReleaseRequest.status
-        // 查找插件最近一个已经发布的版本
-        val releaseRecords = storeBaseQueryDao.getReleaseComponentsByCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType,
-            num = 1
-        )
-        val newestReleaseRecord = if (releaseRecords.isNullOrEmpty()) {
-            null
-        } else {
-            releaseRecords[0]
-        }
-        var newestReleaseFlag = false
-        if (newestReleaseRecord != null) {
-            // 比较当前版本是否比最近一个已经发布的版本新
-            val requestVersion = storeReleaseRequest.version
-            val newestReleaseVersion = newestReleaseRecord.version
-            newestReleaseFlag = StoreUtils.isGreaterVersion(requestVersion, newestReleaseVersion)
-        }
+        val newestReleaseFlag = getNewestReleaseFlag(storeCode, storeType, storeReleaseRequest)
         val releaseType = storeReleaseRequest.releaseType
         val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE && !newestReleaseFlag) {
             // 历史大版本下的小版本更新不把latestFlag置为true（当前发布的版本不是最新的已发布版本）
@@ -325,6 +307,33 @@ class StoreReleaseServiceImpl @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun getNewestReleaseFlag(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        storeReleaseRequest: StoreReleaseRequest
+    ): Boolean {
+        // 查找插件最近一个已经发布的版本
+        val releaseRecords = storeBaseQueryDao.getReleaseComponentsByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            num = 1
+        )
+        val newestReleaseRecord = if (releaseRecords.isNullOrEmpty()) {
+            null
+        } else {
+            releaseRecords[0]
+        }
+        var newestReleaseFlag = false
+        if (newestReleaseRecord != null) {
+            // 比较当前版本是否比最近一个已经发布的版本新
+            val requestVersion = storeReleaseRequest.version
+            val newestReleaseVersion = newestReleaseRecord.version
+            newestReleaseFlag = StoreUtils.isGreaterVersion(requestVersion, newestReleaseVersion)
+        }
+        return newestReleaseFlag
     }
 
     override fun offlineComponent(
@@ -505,6 +514,22 @@ class StoreReleaseServiceImpl @Autowired constructor(
                 params = arrayOf(record.name)
             )
         }
+        checkStoreStatus(
+            storeCode = storeCode,
+            storeType = storeType,
+            isNormalUpgrade = isNormalUpgrade,
+            recordStatus = recordStatus,
+            status = status
+        )
+    }
+
+    private fun checkStoreStatus(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        isNormalUpgrade: Boolean?,
+        recordStatus: StoreStatusEnum,
+        status: StoreStatusEnum
+    ) {
         val repositoryHashId = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
             dslContext = dslContext,
             storeCode = storeCode,
