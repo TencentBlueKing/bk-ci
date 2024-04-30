@@ -302,6 +302,21 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin()
                 )
+
+                CodeEventType.PULL_REQUEST -> nowExist.mr = MrRule(
+                    name = git.name.nullIfDefault(defaultName),
+                    enable = git.enable.nullIfDefault(true),
+                    targetBranches = git.branchName?.disjoin(),
+                    targetBranchesIgnore = git.excludeBranchName?.disjoin(),
+                    sourceBranches = git.includeSourceBranchName?.disjoin(),
+                    sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers,
+                    pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
+                    action = git.includeMrAction
+                )
             }
             aspectWrapper.setYamlTriggerOn(nowExist, PipelineTransferAspectWrapper.AspectType.AFTER)
         }
@@ -505,7 +520,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    // todo action
+                    includeMrAction = mr.action,
                     eventType = CodeEventType.PULL_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
