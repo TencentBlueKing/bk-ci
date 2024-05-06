@@ -83,7 +83,7 @@
             <i class="devops-icon icon-angle-right" />
             {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
             <template v-if="canElementSkip">
-                <span class="no-bold-font">
+                <span v-if="!isDebugPipeline" class="no-bold-font">
                     ({{ $t('preview.skipTipsPrefix') }}
                     <span @click.stop="editTrigger" class="text-link item-title-tips-link">
                         {{ $t('preview.manualTrigger') }}

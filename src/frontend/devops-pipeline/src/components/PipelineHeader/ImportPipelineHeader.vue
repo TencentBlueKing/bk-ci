@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-import-edit-header">
         <pipeline-bread-crumb />
-        <mode-switch />
+        <mode-switch draft />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus"
@@ -27,13 +27,13 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ModeSwitch from '@/components/ModeSwitch'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
     export default {
         components: {
@@ -78,7 +78,6 @@
                 'setSaveStatus',
                 'updateContainer'
             ]),
-
             formatParams (pipeline) {
                 const params = pipeline.stages[0].containers[0].params
                 const paramList

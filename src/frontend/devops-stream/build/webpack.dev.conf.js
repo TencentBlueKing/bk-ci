@@ -58,6 +58,7 @@ const devConf = merge(baseConf, {
             maxInitialRequests: 3,
             // 名字中间的间隔符
             automaticNameDelimiter: '~',
+            // chunk 的名字，如果设成 true，会根据被提取的 chunk 自动生成
             cacheGroups: {
                 // 提取 chunk-bk-magic-vue 代码块
                 bkMagic: {
