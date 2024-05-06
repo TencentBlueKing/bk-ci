@@ -404,8 +404,8 @@ class TencentStockDataUpdateService @Autowired constructor(
     private fun writeServerId() {
         logger.info("Write deploy nodes server id task starts...")
         val startTime = LocalDateTime.now()
-        val cmdbNodesCount = cmdbNodeDao.countDeployNodes(dslContext)
-        logger.info("Write deploy nodes server id, node(s) count:$cmdbNodesCount.")
+        val cmdbNodesCount = cmdbNodeDao.countDeployNodesServerIdNull(dslContext)
+        logger.info("Write deploy nodes server id, server id null node(s) count:$cmdbNodesCount.")
         cmdbNodesCount.takeIf { it > 0 }.run {
             val totalPage = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, cmdbNodesCount.toLong())
             val time1 = LocalDateTime.now()

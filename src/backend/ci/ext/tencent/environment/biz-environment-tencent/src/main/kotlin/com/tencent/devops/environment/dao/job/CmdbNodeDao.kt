@@ -263,6 +263,16 @@ class CmdbNodeDao {
         }
     }
 
+    fun countDeployNodesServerIdNull(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(SERVER_ID.isNull)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun countDeployNodesInCmdb(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
