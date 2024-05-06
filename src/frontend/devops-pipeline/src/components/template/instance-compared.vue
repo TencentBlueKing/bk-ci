@@ -82,10 +82,11 @@
 
 <script>
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
-
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     export default {
         components: {
-            KeyValueNormal
+            KeyValueNormal,
+            BkPipeline
         },
         props: {
             showComparedInstance: Boolean,
@@ -110,6 +111,9 @@
                     quickClose: false
                 }
             }
+        },
+        created () {
+            loadI18nMessages(this.$i18n)
         },
         methods: {
             cancelHandler () {
@@ -143,7 +147,7 @@
         .compared-content {
             padding: 20px;
             min-height: 560px;
-            max-height: 580px;
+            max-height: 680px;
         }
         .update-version-compared {
             display: flex;

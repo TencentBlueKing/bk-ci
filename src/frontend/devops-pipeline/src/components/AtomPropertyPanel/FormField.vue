@@ -23,6 +23,10 @@
                 type: String,
                 default: ''
             },
+            hideColon: {
+                type: Boolean,
+                default: false
+            },
             desc: {
                 type: String,
                 default: ''
@@ -41,15 +45,15 @@
             }
         },
         render (h) {
-            const { label, inline, required, $slots, isError, errorMsg, desc, docsLink, descLink, descLinkText } = this
+            const { label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink, descLink, descLinkText } = this
             return (
                 <div class={{ 'form-field': true, 'bk-form-item': !inline, 'bk-form-inline-item': inline, 'is-required': required, 'is-danger': isError }} >
-                    { label && <label title={label} class='bk-label atom-form-label'>{label}：
+                    { label && <label title={label} class='bk-label atom-form-label'>{label}{hideColon ? '' : '：'}
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
                         { label.trim() && desc.trim() && <bk-popover placement="top">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class={{ 'bk-icon': true, 'icon-info-circle': !hideColon, 'icon-question-circle-shape': hideColon }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
                             <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
                                 <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
                             </div>

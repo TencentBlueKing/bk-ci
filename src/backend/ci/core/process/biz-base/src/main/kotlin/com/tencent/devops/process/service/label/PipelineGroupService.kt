@@ -131,7 +131,8 @@ class PipelineGroupService @Autowired constructor(
         return groups.map {
             PipelineGroupWithLabels(
                 id = it.id,
-                labels = it.labels.map { label -> label.id }
+                labels = it.labels.map { label -> label.id },
+                labelNames = it.labels.map { label -> label.name }
             )
         }
     }

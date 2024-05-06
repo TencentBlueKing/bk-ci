@@ -993,9 +993,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (record.nodeId != null) {
                 environmentPermissionService.deleteNode(projectId = projectId, nodeId = record.nodeId)
             }
-            webSocketDispatcher.dispatch(
-                websocketService.buildDetailMessage(projectId, userId)
-            )
         }
     }
 
@@ -1275,9 +1272,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                             nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                             nodeRecord.nodeIp = newHeartbeatInfo.agentIp
                             nodeDao.saveNode(dslContext = context, nodeRecord = nodeRecord)
-                            webSocketDispatcher.dispatch(
-                                websocketService.buildDetailMessage(projectId, "")
-                            )
                         }
                     }
                     AgentStatus.IMPORT_OK
@@ -1379,9 +1373,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     thirdPartyAgentDao.addAgentAction(context, projectId, agentRecord.id, AgentAction.ONLINE.name)
                     if (agentRecord.nodeId != null) {
                         nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
-                        webSocketDispatcher.dispatch(
-                            websocketService.buildDetailMessage(projectId, "")
-                        )
                     }
                     AgentStatus.IMPORT_OK
                 }
@@ -1402,9 +1393,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 hostname = agentRecord.hostname ?: "",
                                 createUser = agentRecord.createdUser ?: "",
                                 os = agentRecord.os ?: ""
-                            )
-                            webSocketDispatcher.dispatch(
-                                websocketService.buildDetailMessage(projectId, "")
                             )
                             logger.info("Update the node status - $count of agent $agentId")
                         }

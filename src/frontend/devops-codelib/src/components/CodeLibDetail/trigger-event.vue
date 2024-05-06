@@ -11,7 +11,9 @@
                 }"
                 :shortcuts="shortcuts"
                 :key="repoId"
+                @clear="handleClearDaterange"
                 @change="handleChangeDaterange"
+                @pick-success="handlePickSuccess"
             >
             </bk-date-picker>
             <search-select
@@ -56,6 +58,7 @@
         </section>
         <EmptyTableStatus
             v-else
+            v-bkloading="{ isLoading: pageLoading }"
             :type="isSearch ? 'search-empty' : 'empty'"
             @clear="resetFilter"
         />
@@ -113,6 +116,7 @@
                 eventList: [],
                 timelineMap: {},
                 searchValue: [],
+                daterangeCache: [],
                 daterange: setDefaultDaterange(),
                 page: 1,
                 pageSize: 20,
@@ -352,23 +356,32 @@
                 this.getListData()
             },
 
+            handleClearDaterange () {
+                this.daterange = ['', '']
+            },
+            
             handleChangeDaterange (date, type) {
-                const startTime = new Date(`${date[0]} 00:00:00`).getTime() || ''
-                const endTime = new Date(`${date[1]} 23:59:59`).getTime() || ''
-                this.daterange = [startTime, endTime]
+                const startTime = new Date(date[0]).getTime() || ''
+                const endTime = new Date(date[1]).getTime() || ''
+                this.daterangeCache = [startTime, endTime]
+            },
+            
+            handlePickSuccess () {
+                this.daterange = this.daterangeCache
             },
 
             async handleRefresh () {
+                this.page = 1
                 this.pageLoading = true
                 this.hasLoadEnd = false
-                this.daterange = this.setDefaultDaterange()
-                // await this.getListData()
+                await this.getListData()
             },
 
             replayEvent () {
                 this.pageLoading = true
+                this.hasLoadEnd = false
                 setTimeout(() => {
-                    this.handleRefresh()
+                    this.daterange = this.setDefaultDaterange()
                 }, 1000)
             }
         }
@@ -394,8 +407,8 @@
             cursor: pointer;
         }
         .date-picker {
-            max-width: 300px;
-            min-width: 200px;
+            max-width: 400px;
+            min-width: 340px;
         }
         .search-select {
             width: 100%;

@@ -41,12 +41,15 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
@@ -183,7 +186,8 @@ class BuildEndControl @Autowired constructor(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                endTime = endTime, buildNum = buildInfo.buildNum
+                endTime = endTime, buildNum = buildInfo.buildNum, executeCount = buildInfo.executeCount ?: 1,
+                debug = buildInfo.debug
             ),
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList,
@@ -193,10 +197,35 @@ class BuildEndControl @Autowired constructor(
         // 更新buildNo
         val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
         if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+            setBuildNoWhenBuildSuccess(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId, debug = buildInfo.debug
+            )
         }
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
+
+        // #10082 兜底解锁Agent复用锁和退出队列
+        if (model.stages.any { stage ->
+                stage.containers.filterIsInstance<VMBuildContainer>().any { con ->
+                    con.dispatchType is ThirdPartyAgentDispatch &&
+                            (con.dispatchType as ThirdPartyAgentDispatch).agentType.isReuse()
+                }
+            }) {
+            buildVariableService.fetchAgentReuseMutexVar(
+                projectId = projectId,
+                buildId = buildId,
+                likeStr = "%${AgentReuseMutex.CONTEXT_KEY_SUFFIX}"
+            ).forEach { agentId ->
+                RedisLockByValue(
+                    redisOperation = redisOperation,
+                    lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(projectId, agentId),
+                    lockValue = buildId,
+                    expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
+                ).unlock()
+                val queueKey = AgentReuseMutex.genAgentReuseMutexQueueKey(projectId, agentId)
+                redisOperation.hdelete(queueKey, buildId)
+            }
+        }
 
         // 上报SLA数据
         if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
@@ -245,7 +274,7 @@ class BuildEndControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
+    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String, debug: Boolean) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
@@ -254,16 +283,18 @@ class BuildEndControl @Autowired constructor(
             // 使用分布式锁防止并发更新
             PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
                 buildNoLock.lock()
-                updateBuildNoInfo(projectId, pipelineId)
+                updateBuildNoInfo(projectId, pipelineId, debug)
             }
         }
     }
 
-    private fun updateBuildNoInfo(projectId: String, pipelineId: String) {
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String, debug: Boolean) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
         if (buildNo != null) {
-            pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
+            pipelineRuntimeService.updateBuildNo(
+                projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1, debug = debug
+            )
             // 更新历史表的推荐版本号 BuildNo在开始就已经存入构建历史，构建结束后+1并不会影响本次构建开始的值
         }
     }

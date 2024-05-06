@@ -40,5 +40,7 @@ data class BuildManualStartupInfo(
     @get:Schema(title = "启动表单元素列表", required = true)
     val properties: List<BuildFormProperty> = listOf(),
     @get:Schema(title = "指定的构建号", required = true)
-    val buildNo: BuildNo?
+    val buildNo: BuildNo?,
+    @get:Schema(title = "是否使用最近一次的参数进行构建", required = false)
+    var useLatestParameters: Boolean?
 )
