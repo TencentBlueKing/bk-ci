@@ -452,16 +452,16 @@ class TencentStockDataUpdateService @Autowired constructor(
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("[taskWithRedisLock]Locked.")
+                logger.info("[taskWithRedisLock]$lockKey Locked.")
                 operation()
             } else {
-                logger.info("[taskWithRedisLock]Lock failed.")
+                logger.info("[taskWithRedisLock]$lockKey Lock failed.")
             }
         } catch (e: Throwable) {
-            logger.error("[taskWithRedisLock]exception: ", e)
+            logger.error("[taskWithRedisLock]$lockKey exception: ", e)
         } finally {
             redisLock.unlock()
-            logger.info("[taskWithRedisLock]Unlocked.")
+            logger.info("[taskWithRedisLock]$lockKey Unlocked.")
         }
     }
 }
