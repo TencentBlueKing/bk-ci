@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service.expert
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -22,6 +23,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
@@ -40,6 +42,7 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.concurrent.Executors
 
 @Service
@@ -61,6 +64,9 @@ class ExpertSupportService @Autowired constructor(
 
     @Value("\${expertsupport.jumpurl:#{null}}")
     val jumpUrl: String? = null
+
+    @Value("\${expertsupport.personalWeworkGroupId:#{null}}")
+    val personalWeworkGroupId: String? = null
 
     @Value("\${expertsupport.weworkGroupId:#{null}}")
     val weworkGroupId: String? = null
@@ -125,6 +131,7 @@ class ExpertSupportService @Autowired constructor(
             .getOrElse { null }?.data ?: throw RemoteServiceException(
             "not find project ${data.projectId}", HTTP_400
         )
+        val expiredTime = DateTimeUtil.getFutureDateFromNow(Calendar.HOUR, 1)
         // 发送企业微信群消息
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
@@ -132,16 +139,34 @@ class ExpertSupportService @Autowired constructor(
                 notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
                 titleParams = null,
                 bodyParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
+                    NotifyUtils.WEWORK_GROUP_KEY to
+                        (
+                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
+                            weworkGroupId!!
+                        } else {
+                            personalWeworkGroupId!!
+                        }
+                        ),
                     "id" to id.toString(),
-                    "projectId" to (data.projectId + " | " + projectInfo.projectName),
+                    "projectId" to
+                        (
+                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
+                                data.projectId + " | " + projectInfo.projectName
+                            } else {
+                                "个人云桌面"
+                            }
+                        ),
                     "workspaceName" to data.workspaceName,
                     "hostIp" to data.hostIp,
                     "userId" to (taiUserCN[data.creator] ?: data.creator),
                     "content" to data.content,
                     "url" to jumpUrl.toString(),
                     "machineType" to data.machineType,
-                    "city" to data.city
+                    "city" to data.city,
+                    "expiredTime" to
+                        DateTimeUtil.toDateTime(
+                            DateTimeUtil.convertDateToLocalDateTime(expiredTime), "HH:mm:ss"
+                        )
                 ),
                 markdownContent = true
             )
@@ -240,7 +265,8 @@ class ExpertSupportService @Autowired constructor(
         if (Duration.between(
                 expertSupportDao.getSup(dslContext, id)?.createTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
-            ).seconds > DEFAULT_WAIT_TIME) {
+            ).seconds > DEFAULT_WAIT_TIME
+        ) {
             return Pair(false, "单据[$id]已超过1小时过期")
         }
 

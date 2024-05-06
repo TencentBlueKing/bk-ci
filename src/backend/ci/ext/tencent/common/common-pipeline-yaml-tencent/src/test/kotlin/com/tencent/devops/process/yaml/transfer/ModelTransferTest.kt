@@ -442,7 +442,8 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             projectCode = "testProject",
             pipelineInfo = pipelineInfo,
             yaml = pYml,
-            aspectWrapper = PipelineTransferAspectWrapper(aspects)
+            aspectWrapper = PipelineTransferAspectWrapper(aspects),
+            yamlFileName = ""
         )
         val model = modelTransfer.yaml2Model(input)
         val setting = modelTransfer.yaml2Setting(input)
