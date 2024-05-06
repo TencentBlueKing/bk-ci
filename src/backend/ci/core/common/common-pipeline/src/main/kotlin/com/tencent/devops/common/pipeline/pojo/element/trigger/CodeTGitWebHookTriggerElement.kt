@@ -153,7 +153,7 @@ data class CodeTGitWebHookTriggerElement(
     override fun transformCompatibility() {
         super.transformCompatibility()
         // 触发器action判断上线后，在此处对存量触发器配置进行适配
-        with(data.input){
+        with(data.input) {
             when {
                 eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
                     eventType = CodeEventType.MERGE_REQUEST
