@@ -35,7 +35,7 @@
                                 <div class="retry-bth">
                                     <span class="test-btn"
                                         v-if="entry.code === 'test' && entry.status === 'doing'">
-                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
+                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}`"> {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>
                                 <bk-button :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"
@@ -168,9 +168,9 @@
 </template>
 
 <script>
-    import cookie from 'js-cookie'
-    import webSocketMessage from '@/utils/webSocketMessage'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import cookie from 'js-cookie'
 
     const CSRFToken = cookie.get('backend_csrftoken')
 
