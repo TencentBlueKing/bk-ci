@@ -168,9 +168,15 @@ class TencentStockDataUpdateService @Autowired constructor(
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(
             nodeIpList, COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME
         )
-        // 2.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
+        // 2.1.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
         val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
         cmdbNodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
+        // 2.1.2 在CMDB中，但是节点状态是NOT_IN_CMDB，此类节点，此处更新为NOT_IN_CC，后面在checkDeployNodesIsInCC函数中再进一步更新
+        // （正常不应出现这种情况，该逻辑是为防止CMDB接口返回的数据不稳定，导致将一些在CMDB中的节点更新为NOT_IN_CMDB）
+        val inCmdbIpList = ipToCmdbInfoMap?.keys
+        if (!inCmdbIpList.isNullOrEmpty()) {
+            cmdbNodeDao.updateStatusIncorrectNodeByIpList(dslContext, inCmdbIpList)
+        }
     }
 
     /**
