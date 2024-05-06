@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -133,7 +134,7 @@ class MarketStoreQueryDao {
             .limit(
                 (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
                 storeInfoQuery.pageSize
-            ).fetch()
+            ).skipCheck().fetch()
     }
 
 

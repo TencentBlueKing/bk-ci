@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
@@ -378,7 +379,7 @@ class StoreBaseQueryDao {
             .and(tStoreBase.CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .where(conditions)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
-        return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        return baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
     }
 
     fun countMyComponents(
