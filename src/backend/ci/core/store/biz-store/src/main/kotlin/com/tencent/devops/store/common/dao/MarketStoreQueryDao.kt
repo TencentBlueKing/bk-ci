@@ -276,7 +276,7 @@ class MarketStoreQueryDao {
             conditions.add(
                 tStoreBase.STATUS.`in`(listOf(
                     StoreStatusEnum.RELEASED.name,
-                    StoreStatusEnum.TESTED.name,
+                    StoreStatusEnum.TESTING.name,
                     StoreStatusEnum.AUDITING.name
                 ))
             )
