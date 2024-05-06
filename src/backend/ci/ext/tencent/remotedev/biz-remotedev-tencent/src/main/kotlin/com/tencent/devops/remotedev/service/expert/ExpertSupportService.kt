@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service.expert
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -41,6 +42,7 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.concurrent.Executors
 
 @Service
@@ -129,6 +131,7 @@ class ExpertSupportService @Autowired constructor(
             .getOrElse { null }?.data ?: throw RemoteServiceException(
             "not find project ${data.projectId}", HTTP_400
         )
+        val expiredTime = DateTimeUtil.getFutureDateFromNow(Calendar.HOUR, 1)
         // 发送企业微信群消息
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
@@ -159,7 +162,8 @@ class ExpertSupportService @Autowired constructor(
                     "content" to data.content,
                     "url" to jumpUrl.toString(),
                     "machineType" to data.machineType,
-                    "city" to data.city
+                    "city" to data.city,
+                    "expiredTime" to expiredTime.toString()
                 ),
                 markdownContent = true
             )
