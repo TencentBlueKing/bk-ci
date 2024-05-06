@@ -163,7 +163,7 @@ class ExpertSupportService @Autowired constructor(
                     "url" to jumpUrl.toString(),
                     "machineType" to data.machineType,
                     "city" to data.city,
-                    "expiredTime" to DateTimeUtil.convertDateToLocalDateTime(expiredTime).toString()
+                    "expiredTime" to DateTimeUtil.toDateTime(DateTimeUtil.convertDateToLocalDateTime(expiredTime), "HH:mm:ssZ")
                 ),
                 markdownContent = true
             )
