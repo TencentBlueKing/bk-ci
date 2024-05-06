@@ -560,6 +560,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             yaml = yaml,
+            yamlFileName = yamlFileName,
             isDefaultBranch = isDefaultBranch,
             branchName = branchName,
             aspects = aspects
@@ -610,6 +611,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             yaml = yaml,
+            yamlFileName = yamlFileName,
             isDefaultBranch = isDefaultBranch,
             branchName = branchName,
             aspects = aspects
@@ -723,6 +725,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         yaml: String,
+        yamlFileName: String,
         isDefaultBranch: Boolean,
         branchName: String,
         aspects: LinkedList<IPipelineTransferAspect>? = null
@@ -733,7 +736,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = null,
                 actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(oldYaml = yaml),
+                data = TransferBody(oldYaml = yaml, yamlFileName = yamlFileName),
                 aspects = aspects ?: LinkedList()
             )
             if (result.modelAndSetting == null) {

@@ -35,5 +35,7 @@ data class TransferBody(
     @get:Schema(title = "当前modelAndSetting,model转yaml时需带上")
     val modelAndSetting: PipelineModelAndSetting? = null,
     @get:Schema(title = "当前yaml内容，model转yaml以及yaml转model都需要带上,如果首次互转没有就传空")
-    val oldYaml: String = ""
+    val oldYaml: String = "",
+    @get:Schema(title = "yaml内容的来源yaml文件名（用于流水线名称的缺省值）")
+    val yamlFileName: String? = null
 )
