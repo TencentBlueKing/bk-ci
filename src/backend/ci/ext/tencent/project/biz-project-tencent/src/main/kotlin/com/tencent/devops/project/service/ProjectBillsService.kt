@@ -77,7 +77,8 @@ class ProjectBillsService constructor(
                     projectConditionDTO = projectConditionDTO.copy(
                         excludedCreateTime = LocalDate.now().minusMonths(2).format(DATE_FORMATTER),
                         routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        enabled = true
+                        enabled = true,
+                        relatedProduct = false
                     ),
                     limit = limit,
                     offset = offset
@@ -118,6 +119,15 @@ class ProjectBillsService constructor(
     fun checkInactiveProjectRegularly(englishName: String) {
         try {
             val projectInfo = projectService.getByEnglishName(englishName) ?: return
+            // 若备案为不被禁用项目，不做禁用
+            val isDisableWhenInactive = projectInfo.properties?.disableWhenInactive
+            if (isDisableWhenInactive == false) {
+                logger.info(
+                    "the project(${englishName}) not allowed to disable" +
+                        " when the project is inactive"
+                )
+                return
+            }
 
             val isActive = isProjectActive(englishName)
             if (isActive && projectInfo.productId != null) {
