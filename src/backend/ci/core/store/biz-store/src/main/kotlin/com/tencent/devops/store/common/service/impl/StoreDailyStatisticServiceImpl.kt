@@ -80,7 +80,7 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
                     dailyFailDetail = if (dailyStatisticRecord.dailyFailDetail != null) JsonUtil.toMap(
                         dailyStatisticRecord.dailyFailDetail!!
                     ) else null,
-                    dailyActiveDuration = dailyStatisticRecord.dailyActiveDuration.toDouble(),
+                    dailyActiveDuration = dailyStatisticRecord.dailyActiveDuration?.toDouble(),
                     statisticsTime = DateTimeUtil.toDateTime(
                         dailyStatisticRecord.statisticsTime,
                         DateTimeUtil.YYYY_MM_DD

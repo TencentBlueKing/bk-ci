@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
@@ -40,6 +41,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -87,4 +89,34 @@ interface UserArchiveComponentPkgResource {
         @FormDataParam("file")
         disposition: FormDataContentDisposition
     ): Result<Boolean>
+
+    @Operation(summary = "获取组件包文件下载链接")
+    @GET
+    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/pkg/download/url/get")
+    @Suppress("LongParameterList")
+    fun getComponentPkgDownloadUrl(
+        @Parameter(description = "用户Id", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件标识", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "组件版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "操作系统名称", required = false)
+        @QueryParam("osName")
+        osName: String? = null,
+        @Parameter(description = "操作系统架构", required = false)
+        @QueryParam("osArch")
+        osArch: String? = null
+    ): Result<String>
 }

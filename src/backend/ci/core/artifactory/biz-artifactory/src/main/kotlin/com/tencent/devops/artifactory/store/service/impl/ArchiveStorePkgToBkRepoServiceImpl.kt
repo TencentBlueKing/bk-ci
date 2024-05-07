@@ -1,5 +1,7 @@
 package com.tencent.devops.artifactory.store.service.impl
 
+import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
@@ -144,19 +146,24 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         pkgPath: String
     ): String {
         val repoPrefixUrl = getRepoPrefixUrl(storeType)
-        val shareUri = bkRepoClient.createShareUri(
-            creatorId = userId,
-            projectId = getBkRepoProjectId(storeType),
-            repoName = getBkRepoName(storeType),
-            fullPath = pkgPath,
-            downloadUsers = listOf(),
-            downloadIps = listOf(),
-            timeoutInSeconds = 3600L,
+        val temporaryAccessUrls = bkRepoClient.createTemporaryAccessUrl(
+            temporaryUrlCreateRequest = TemporaryUrlCreateRequest(
+                projectId = getBkRepoProjectId(storeType),
+                repoName = getBkRepoName(storeType),
+                fullPathSet = setOf(pkgPath),
+                expireSeconds = 3600L,
+                type = TokenType.DOWNLOAD,
+                host = "$repoPrefixUrl/generic"
+            ),
             bkrepoPrefixUrl = repoPrefixUrl,
             userName = bkRepoStoreConfig.bkrepoStoreUserName,
             password = bkRepoStoreConfig.bkrepoStorePassword
         )
-        return "$repoPrefixUrl/repository$shareUri&download=true"
+        return if (temporaryAccessUrls.isNotEmpty()) {
+            temporaryAccessUrls[0].url
+        } else {
+            ""
+        }
     }
 
     private fun getRepoPrefixUrl(storeType: StoreTypeEnum): String {
