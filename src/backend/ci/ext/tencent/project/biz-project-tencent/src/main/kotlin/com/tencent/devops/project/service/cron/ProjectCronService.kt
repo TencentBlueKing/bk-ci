@@ -135,8 +135,9 @@ class ProjectCronService constructor(
     /**
      * 每天更新OBS产品
      * */
-    @Scheduled(cron = "0 0 3 * * ?")
-    fun updateObsProduct() {
+    @Scheduled(cron = "0 0 8 ? * SUN")
+    @Suppress("NestedBlockDepth")
+    fun disableInactiveProjectRegularly() {
         try {
             logger.info("update obs product | start")
             projectOperationalProductService.syncOperationalProduct()

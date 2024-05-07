@@ -55,6 +55,7 @@ import com.tencent.devops.process.yaml.v2.parameter.Parameters
 import com.tencent.devops.process.yaml.v2.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v2.utils.StreamEnvUtils
 
+@Suppress("ComplexMethod")
 object YamlObjects {
 
     fun getVariable(fromPath: String, key: String, variable: Map<String, Any>): Variable {

@@ -17,10 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 import { getQueryParamList } from '../../../utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
@@ -28,21 +28,15 @@ const pluginPrefix = 'plugin/api'
 
 const state = {
     historyPageStatus: {
-        currentPage: 1,
-        scrollTop: 0,
-        queryStr: false,
-        hasNext: false,
+        queryStr: '',
         isQuerying: false,
-        queryMap: {
-            query: {
-                status: [],
-                materialAlias: [],
-                materialBranch: [],
-                dateTimeRange: []
-            },
-            searchKey: []
+        count: 0,
+        page: 1,
+        pageSize: 20,
+        dateTimeRange: [],
+        query: {
         },
-        pageSize: 24
+        searchKey: []
     }
 }
 
@@ -79,33 +73,34 @@ const mutations = {
             ...state.historyPageStatus,
             ...status
         }
-    },
-    updateCurrentRouterQuery (state, queryStr) {
-        state.historyPageStatus = {
-            ...state.historyPageStatus,
-            ...queryStr
-        }
     }
 }
 
 const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
+        if ((newStatus.query || newStatus.searchKey || newStatus.page || newStatus.pageSize) && !newStatus.queryStr) {
+            const newQuery = newStatus.query ?? state.historyPageStatus.query
+            const newSearchKey = newStatus.searchKey ?? state.historyPageStatus.searchKey
+            newStatus.queryStr = generateQueryString({
+                page: newStatus.page ?? state.historyPageStatus.page,
+                pageSize: newStatus.pageSize ?? state.historyPageStatus.pageSize,
+                ...state.historyPageStatus.query,
+                ...newQuery,
+                ...flatSearchKey(newSearchKey)
+            })
+        }
         commit('updateHistoryPageStatus', newStatus)
-    },
-    setRouterQuery ({ commit, state }, query) {
-        commit('updateCurrentRouterQuery', query)
     },
     resetHistoryFilterCondition ({ commit }) {
         commit('updateHistoryPageStatus', {
-            queryMap: {
-                query: {
-                    status: [],
-                    materialAlias: [],
-                    materialBranch: [],
-                    dateTimeRange: []
-                },
-                searchKey: []
-            }
+            count: 0,
+            dateTimeRange: [],
+            query: {
+                page: 1,
+                pageSize: 20
+            },
+            searchKey: [],
+            queryStr: ''
         })
     },
     /**
@@ -119,8 +114,10 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestStartupInfo ({ commit, state, dispatch }, { projectId, pipelineId }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/manualStartupInfo`).then(response => {
+    requestStartupInfo ({ commit, state, dispatch }, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/manualStartupInfo`, {
+            params
+        }).then(response => {
             return response.data
         })
     },
@@ -135,14 +132,20 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, params }) {
-        let url = `${prefix}${projectId}/${pipelineId}`
+    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, params }) {
+        const url = `${prefix}${projectId}/${pipelineId}`
+        const query = {
+            version
+        }
         if (params.buildNo && typeof params.buildNo.buildNo !== 'undefined') {
-            url += `?buildNo=${params.buildNo.buildNo}`
+            Object.assign(query, {
+                buildNo: params.buildNo.buildNo
+            })
             delete params.buildNo
         }
-        return ajax.post(url, {
-            ...params
+        console.log('exec', query)
+        return ajax.post(url, params, {
+            params: query
         }).then(response => {
             return response.data
         })
@@ -191,20 +194,17 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, page, pageSize }) {
-        const { historyPageStatus: { queryMap } } = state
-        const filterStr = generateQueryString({
-            ...queryMap.query,
-            ...flatSearchKey(queryMap.searchKey)
-        })
+    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, version }) {
+        let { historyPageStatus: { queryStr, page, pageSize } } = state
         dispatch('setHistoryPageStatus', {
-            isQuerying: !!filterStr
+            isQuerying: !!queryStr
         })
-        dispatch('setRouterQuery', {
-            queryStr: filterStr
-        })
-
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?page=${page}&pageSize=${pageSize}&${filterStr}`).then(response => {
+        if (version) {
+            queryStr += `&version=${version}`
+        }
+        queryStr += `&page=${page}&pageSize=${pageSize}`
+        console.log(queryStr, 'queryStr')
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryStr}`).then(response => {
             return response.data
         })
     },

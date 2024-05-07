@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -280,57 +281,61 @@ class RemoteDevJobService @Autowired constructor(
         }
     }
 
+    private val executor = Executors.newCachedThreadPool()
     fun pipelineJobEnd(
         id: Long
     ) {
-        val record = remoteDevJobExecRecordDao.getRecord(dslContext, id) ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
-            params = arrayOf(I18nUtil.getCodeLanMessage(REMOTEDEV_JOB_NOT_FOUND, params = arrayOf(id.toString())))
-        )
-        val info = objectMapper.readValue<PipelineParam>(record.jobSchemaParam.data())
-        val receiptInfo = objectMapper.readValue<PipelineJobReceiptInfo>(
-            record.receiptInfo?.data() ?: throw ErrorCodeException(
+        executor.execute {
+            val record = remoteDevJobExecRecordDao.getRecord(dslContext, id) ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
-                defaultMessage = "job $id receipt is null"
+                params = arrayOf(I18nUtil.getCodeLanMessage(REMOTEDEV_JOB_NOT_FOUND, params = arrayOf(id.toString())))
             )
-        )
-        repeat(5) {
-            // 先暂停60s看看，因为是从finalStage发送的，发送到的时候流水线的状态还是运行中
-            Thread.sleep(1000 * 60)
-            // 获取流水线状态
-            val build = client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
-                userId = info.userId,
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
-                buildId = receiptInfo.buildId,
-                channelCode = ChannelCode.BS
-            ).data ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
-                defaultMessage = "build ${receiptInfo.buildId} status is null"
+            val info = objectMapper.readValue<PipelineParam>(record.jobSchemaParam.data())
+            val receiptInfo = objectMapper.readValue<PipelineJobReceiptInfo>(
+                record.receiptInfo?.data() ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
+                    defaultMessage = "job $id receipt is null"
+                )
             )
-            val status = BuildStatus.parse(build.status)
-            if (!status.isFinish()) {
-                return@repeat
+            repeat(5) {
+                // 先暂停60s看看，因为是从finalStage发送的，发送到的时候流水线的状态还是运行中
+                Thread.sleep(1000 * 60)
+                // 获取流水线状态
+                val build = client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
+                    userId = info.userId,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    buildId = receiptInfo.buildId,
+                    channelCode = ChannelCode.BS
+                ).data ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
+                    defaultMessage = "build ${receiptInfo.buildId} status is null"
+                )
+                val status = BuildStatus.parse(build.status)
+                if (!status.isFinish()) {
+                    return@repeat
+                }
+                remoteDevJobExecRecordDao.updateStatus(
+                    dslContext = dslContext,
+                    id = id,
+                    status = if (status.isFailure()) {
+                        JobRecordStatus.FAIL
+                    } else {
+                        JobRecordStatus.SUCCESS
+                    },
+                    errMsg = build.errorInfoList?.joinToString(";"),
+                    endTime = LocalDateTime.now()
+                )
+                return@execute
             }
             remoteDevJobExecRecordDao.updateStatus(
                 dslContext = dslContext,
                 id = id,
-                status = if (status.isFailure()) {
-                    JobRecordStatus.FAIL
-                } else {
-                    JobRecordStatus.SUCCESS
-                },
-                errMsg = build.errorInfoList?.joinToString(";"),
+                status = JobRecordStatus.UNKNOWN,
+                errMsg = I18nUtil.getCodeLanMessage(REMOTEDEV_PIPELINE_JOB_STATUS_UNKNOWN),
                 endTime = LocalDateTime.now()
             )
         }
-        remoteDevJobExecRecordDao.updateStatus(
-            dslContext = dslContext,
-            id = id,
-            status = JobRecordStatus.UNKNOWN,
-            errMsg = I18nUtil.getCodeLanMessage(REMOTEDEV_PIPELINE_JOB_STATUS_UNKNOWN),
-            endTime = LocalDateTime.now()
-        )
     }
 
     companion object {

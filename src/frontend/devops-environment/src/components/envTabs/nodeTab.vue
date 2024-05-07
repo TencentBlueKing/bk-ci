@@ -42,7 +42,7 @@
                             <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
                             <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
                             <StatusIcon v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)" status="normal" />
-                                
+
                             <div v-else-if="runningStatus.includes(props.row.nodeStatus)"
                                 class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
                             >

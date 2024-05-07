@@ -88,7 +88,8 @@ class ServiceVarResourceImpl @Autowired constructor(
             buildId = data.buildId,
             varName = data.contextName,
             varValue = data.contextVal,
-            readOnly = data.readOnly
+            readOnly = data.readOnly,
+            rewriteReadOnly = data.rewriteReadOnly
         )
     }
 }

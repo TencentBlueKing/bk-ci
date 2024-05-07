@@ -238,11 +238,16 @@ class ServiceRemoteDevResourceImpl(
         return Result(windowsResourceConfigService.getAllType(true, null))
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
-        return Result(createControl.devcloudCreateWorkspace(userId, data))
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
+        return Result(createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = null))
     }
 
     override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PERSONAL) {
+            logger.warn("delete personal workspace with invalid workspace type: $userId|$workspaceName")
+            return Result(false)
+        }
         return Result(
             deleteControl.deleteWorkspace(
                 userId = userId,
@@ -254,10 +259,60 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PERSONAL) {
+            logger.warn("get personal workspace with invalid workspace type: $userId|$workspaceName")
+            return Result(null)
+        }
         return Result(
             workspaceService.getWorkspaceList4WeSec(
-                workspaceName = workspaceName
-            ).first()
+                workspaceName = workspaceName,
+                notStatus = null
+            ).firstOrNull()
+        )
+    }
+
+    override fun createProjectWorkspace(
+        userId: String,
+        projectId: String,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        return Result(
+            createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = projectId)
+        )
+    }
+
+    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+            logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
+            return Result(false)
+        }
+        return Result(
+            deleteControl.deleteWorkspace(
+                userId = userId,
+                workspaceName = workspaceName,
+                needPermission = true,
+                checkDeleteImmediately = true
+            )
+        )
+    }
+
+    override fun getProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+            logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
+            return Result(null)
+        }
+        return Result(
+            workspaceService.getWorkspaceList4WeSec(
+                workspaceName = workspaceName,
+                notStatus = null
+            ).firstOrNull()
         )
     }
 }

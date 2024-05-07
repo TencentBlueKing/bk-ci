@@ -3,7 +3,6 @@
         <draggable
             :class="{
                 'container-atom-list': true,
-                'trigger-container': stageIndex === 0,
                 readonly: !reactiveData.editable
             }"
             :data-baseos="container.baseOS || container.classType"
@@ -78,7 +77,7 @@
             Logo,
             Atom
         },
-        inject: ['reactiveData'],
+        inject: ['reactiveData', 'emitPipelineChange'],
         mixins: [localeMixins],
         props: {
             stage: {
@@ -149,11 +148,6 @@
                     return this.container.elements
                         .filter((atom) => !this.isHookAtom(atom) || this.showPostAction)
                         .map((atom) => {
-                            atom.isReviewing = atom.status === STATUS_MAP.REVIEWING
-                            if (atom.isReviewing) {
-                                const atomReviewer = this.getReviewUser(atom)
-                                atom.computedReviewers = atomReviewer
-                            }
                             if (!atom.atomCode) {
                                 atom.atomCode = atom['@type']
                             }
@@ -212,9 +206,11 @@
             },
             handleCopy ({ elementIndex, element }) {
                 this.container.elements.splice(elementIndex + 1, 0, element)
+                this.emitPipelineChange()
             },
             handleDelete ({ elementIndex }) {
                 this.container.elements.splice(elementIndex, 1)
+                this.emitPipelineChange()
             },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
@@ -237,22 +233,6 @@
                             && os.length <= 0
                             && element.buildLessRunFlag))
                 )
-            },
-
-            getReviewUser (atom) {
-                try {
-                    const list
-                        = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
-                    const reviewUsers = list
-                        .map((user) => user.split(';').map((val) => val.trim()))
-                        .reduce((prev, curr) => {
-                            return prev.concat(curr)
-                        }, [])
-                    return reviewUsers
-                } catch (error) {
-                    console.error(error)
-                    return []
-                }
             },
             editAtom (atomIndex, isAdd) {
                 const { stageIndex, containerIndex, container } = this

@@ -36,7 +36,7 @@ class WorkspaceWindowsDao {
 
     fun batchFetchWorkspaceWindowsInfo(
         dslContext: DSLContext,
-        workspaceNames: List<String>
+        workspaceNames: Set<String>
     ): Result<TWorkspaceWindowsRecord> {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch()

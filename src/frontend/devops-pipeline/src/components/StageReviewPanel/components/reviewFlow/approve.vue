@@ -76,7 +76,7 @@
                     if (curExecIndex === index) status = 'loading'
 
                     let icon = index + 1
-                    if (!status) icon = `${index + 1} bk-devops-icon`
+                    if (!status) icon = index + 1
 
                     return { status, title: item.name, icon }
                 }
@@ -146,9 +146,6 @@
         margin: 25px 0 32px;
         ::v-deep .bk-step {
             max-width: 367.56px;
-        }
-        ::v-deep .bk-devops-icon {
-            font-family: 'bk-devops' !important;
         }
     }
     .review-result {

@@ -38,4 +38,13 @@ class ProjectStartAppLinkDao {
             return dslContext.selectFrom(this).skipCheck().fetch()
         }
     }
+
+    fun getAppId(
+        dslContext: DSLContext,
+        gameId: String
+    ): Long? {
+        with(TProjectStartAppLink.T_PROJECT_START_APP_LINK) {
+            return dslContext.select(APPID).from(this).where(APPNAME.eq(gameId)).fetchAny(APPID)
+        }
+    }
 }
