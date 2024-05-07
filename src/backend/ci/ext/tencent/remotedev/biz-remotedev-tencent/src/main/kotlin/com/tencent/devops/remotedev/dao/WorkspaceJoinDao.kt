@@ -331,7 +331,7 @@ class WorkspaceJoinDao {
             .toSet()
     }
 
-    // 获取正在运行的 workspace 的用户
+    // 获取正常状态的 workspace 的用户
     fun fetchProjectSharedUser(
         dslContext: DSLContext,
         projectId: String,

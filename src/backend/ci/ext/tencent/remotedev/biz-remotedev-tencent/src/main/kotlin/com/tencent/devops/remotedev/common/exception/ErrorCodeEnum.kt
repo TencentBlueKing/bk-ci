@@ -216,6 +216,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.SYSTEM,
         errorCode = "2132041",
         formatErrorMessage = "do remotedev job error {1}"
+    ),
+    REQ_TGIT_API_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132042",
+        formatErrorMessage = "request tgit api {0} error {1}"
     );
 
     fun getErrorMessage(): String {
