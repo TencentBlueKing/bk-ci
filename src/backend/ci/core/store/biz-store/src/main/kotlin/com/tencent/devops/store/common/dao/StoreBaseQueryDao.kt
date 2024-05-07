@@ -269,23 +269,31 @@ class StoreBaseQueryDao {
             labelIds = labelIds,
             baseStep = baseStep
         )
-        val subquery = dslContext.select(
-            tStoreBase.STORE_CODE,
-            tStoreBase.STORE_TYPE,
-            DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
-        ).from(tStoreBase)
-            .where(conditions)
-            .groupBy(tStoreBase.STORE_CODE)
+        if (queryComponentsParam.processFlag == true) {
+            val subqueryCondition = mutableListOf<Condition>()
+            val processingStatusList = StoreStatusEnum.getProcessingStatusList()
+            subqueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
+            subqueryCondition.addAll(conditions)
+            val subquery = dslContext.select(
+                tStoreBase.STORE_CODE,
+            ).from(tStoreBase)
+                .where(subqueryCondition)
+                .groupBy(tStoreBase.STORE_CODE)
+                .limit(
+                    (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
+                    queryComponentsParam.pageSize
+                )
+            conditions.add(tStoreBase.STORE_CODE.`in`(subquery))
+        }
+
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
+
         if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
             baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name)!!.desc())
         } else {
             baseStep.where(conditions)
         }
         return baseStep
-            .join(subquery)
-            .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
-            .and(tStoreBase.STORE_TYPE.eq(subquery.field(tStoreBase.STORE_TYPE)))
-            .and(tStoreBase.CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .limit(
             (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
             queryComponentsParam.pageSize
@@ -311,10 +319,6 @@ class StoreBaseQueryDao {
         }
         if (null != name) {
             conditions.add(tStoreBase.NAME.contains(name))
-        }
-        if (queryComponentsParam.processFlag == true) {
-            val processingStatusList = StoreStatusEnum.getProcessingStatusList()
-            conditions.add(tStoreBase.STATUS.`in`(processingStatusList))
         }
         classifyId?.let {
             conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
