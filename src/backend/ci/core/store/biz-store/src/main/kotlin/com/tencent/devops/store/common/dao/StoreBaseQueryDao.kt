@@ -46,7 +46,9 @@ import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -232,6 +234,7 @@ class StoreBaseQueryDao {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val baseStep = dslContext.selectCount().from(tStoreBase)
         val conditions = generateListComponentsConditions(
+            dslContext = dslContext,
             queryComponentsParam = queryComponentsParam,
             classifyId = classifyId,
             categoryIds = categoryIds,
@@ -263,23 +266,13 @@ class StoreBaseQueryDao {
             tStoreBase.UPDATE_TIME
         ).from(tStoreBase)
         val conditions = generateListComponentsConditions(
+            dslContext = dslContext,
             queryComponentsParam = queryComponentsParam,
             classifyId = classifyId,
             categoryIds = categoryIds,
             labelIds = labelIds,
             baseStep = baseStep
         )
-        if (queryComponentsParam.processFlag == true) {
-            val subqueryCondition = mutableListOf<Condition>()
-            val processingStatusList = StoreStatusEnum.getProcessingStatusList()
-            subqueryCondition.addAll(conditions)
-            subqueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
-            val subquery = dslContext.selectDistinct(tStoreBase.STORE_CODE,).from(tStoreBase).where(subqueryCondition)
-            conditions.add(tStoreBase.STORE_CODE.`in`(subquery))
-        }
-
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-
         if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
             baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name)!!.desc())
         } else {
@@ -292,7 +285,20 @@ class StoreBaseQueryDao {
         ).fetch()
     }
 
+    fun getProcessingComponents(
+        dslContext: DSLContext,
+        conditions: List<Condition>,
+        tStoreBase: TStoreBase
+    ): SelectConditionStep<Record1<String>> {
+        val subqueryCondition = mutableListOf<Condition>()
+        val processingStatusList = StoreStatusEnum.getProcessingStatusList()
+        subqueryCondition.addAll(conditions)
+        subqueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
+        return dslContext.selectDistinct(tStoreBase.STORE_CODE,).from(tStoreBase).where(subqueryCondition)
+    }
+
     private fun generateListComponentsConditions(
+        dslContext: DSLContext,
         queryComponentsParam: QueryComponentsParam,
         classifyId: String?,
         categoryIds: List<String>?,
@@ -324,6 +330,18 @@ class StoreBaseQueryDao {
             conditions.add(tStoreLabelRel.LABEL_ID.`in`(it))
             baseStep.leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
         }
+        if (queryComponentsParam.processFlag == true) {
+            conditions.add(
+                tStoreBase.STORE_CODE.`in`(
+                    getProcessingComponents(
+                        dslContext = dslContext,
+                        conditions = conditions,
+                        tStoreBase = tStoreBase
+                    )
+                )
+            )
+        }
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         return conditions
     }
 
