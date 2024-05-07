@@ -131,6 +131,12 @@ class ExpertSupportService @Autowired constructor(
             .getOrElse { null }?.data ?: throw RemoteServiceException(
             "not find project ${data.projectId}", HTTP_400
         )
+        val detail = workspaceCommon.getWorkspaceDetail(record.workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                params = arrayOf(record.workspaceName)
+            )
+
         val expiredTime = DateTimeUtil.getFutureDateFromNow(Calendar.HOUR, 1)
         // 发送企业微信群消息
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
@@ -157,7 +163,7 @@ class ExpertSupportService @Autowired constructor(
                             }
                         ),
                     "workspaceName" to data.workspaceName,
-                    "hostIp" to data.hostIp,
+                    "hostIp" to (detail.regionId.toString().plus(":").plus(data.hostIp) ),
                     "userId" to (taiUserCN[data.creator] ?: data.creator),
                     "content" to data.content,
                     "url" to jumpUrl.toString(),
@@ -179,10 +185,10 @@ class ExpertSupportService @Autowired constructor(
 
                 val newParam = mutableMapOf<String, String>()
                 val hostIdSub = data.hostIp.split(".")
-                val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+                val ip =  hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
                 info.buildParam.forEach { (k, v) ->
                     when (v) {
-                        "ip" -> newParam[k] = ip
+                        "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
                         "projectId" -> newParam[k] = data.projectId
                         else -> newParam[k] = v
                     }
