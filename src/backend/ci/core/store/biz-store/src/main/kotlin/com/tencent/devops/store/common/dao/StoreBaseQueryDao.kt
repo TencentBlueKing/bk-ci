@@ -279,10 +279,6 @@ class StoreBaseQueryDao {
             ).from(tStoreBase)
                 .where(subqueryCondition)
                 .groupBy(tStoreBase.STORE_CODE)
-                .limit(
-                    (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
-                    queryComponentsParam.pageSize
-                )
             conditions.add(tStoreBase.STORE_CODE.`in`(subquery))
         }
 
