@@ -163,7 +163,7 @@ class ExpertSupportService @Autowired constructor(
                             }
                         ),
                     "workspaceName" to data.workspaceName,
-                    "hostIp" to (detail.regionId.toString().plus(":").plus(data.hostIp) ),
+                    "hostIp" to (detail.regionId.toString().plus(":").plus(data.hostIp)),
                     "userId" to (taiUserCN[data.creator] ?: data.creator),
                     "content" to data.content,
                     "url" to jumpUrl.toString(),
@@ -185,7 +185,7 @@ class ExpertSupportService @Autowired constructor(
 
                 val newParam = mutableMapOf<String, String>()
                 val hostIdSub = data.hostIp.split(".")
-                val ip =  hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+                val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
                 info.buildParam.forEach { (k, v) ->
                     when (v) {
                         "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
