@@ -30,6 +30,7 @@ class AsyncExecuteListener @Autowired constructor(
     private val jobActionService: RemoteDevJobActionService
 ) {
     fun listenAsyncExecuteEvent(event: AsyncExecuteEvent) {
+        logger.debug("listenAsyncExecuteEvent|$event")
         try {
             doExecute(event)
         } catch (e: Throwable) {
