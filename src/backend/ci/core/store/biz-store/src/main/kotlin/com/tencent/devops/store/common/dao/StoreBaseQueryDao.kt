@@ -277,7 +277,7 @@ class StoreBaseQueryDao {
             .where(conditions)
             .groupBy(tStoreBase.STORE_CODE)
         if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
-            baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name))
+            baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name)!!.desc())
         } else {
             baseStep.where(conditions)
         }
