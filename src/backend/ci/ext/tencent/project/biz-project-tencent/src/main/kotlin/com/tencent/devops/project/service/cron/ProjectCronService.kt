@@ -16,7 +16,7 @@ class ProjectCronService constructor(
     val projectNotifyService: ProjectNotifyService,
     val projectBillsService: ProjectBillsService,
     val redisOperation: RedisOperation,
-    val projectOperationalProductService: ProjectOperationalProductService
+    val projectOperationalProductService: ProjectOperationalProductService,
 ) {
     private val redisLock = RedisLock(redisOperation, PROJECT_CRON_KEY, 10)
 
@@ -76,11 +76,13 @@ class ProjectCronService constructor(
     }
 
     /**
-     * 每周一8点开始检测项目活跃度
-     * 该检测比较严格，会对 关联产品但不活跃/活跃但未关联产品/不关联产品且不活跃的项目进行检测，
-     * 连续三周发送邮件，仍不处理，则会禁用项目
+     * 每周日8点开始检测项目活跃度
+     * 处理逻辑：
+     *（1）若项目未关联运营产品，连续两个月不活跃，则禁用；
+     *（2）若项目已关联运营产品，连续四个月不活跃，则禁用；
+     *（3）发邮件。
      * */
-    @Scheduled(cron = "0 0 8 ? * MON")
+    @Scheduled(cron = "0 0 8 ? * SUN")
     @Suppress("NestedBlockDepth")
     fun checkInactiveProjectRegularly() {
         if (!enable) {
@@ -90,16 +92,7 @@ class ProjectCronService constructor(
             logger.info("process inactive project regularly |start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                val bgIds = redisOperation.get(key = PROCESS_INACTIVE_PROJECT_BG)
-                if (bgIds.isNullOrBlank()) {
-                    logger.info("bg ids is null or blank")
-                    return
-                }
-                projectBillsService.checkInactiveProjectRegularly(
-                    projectConditionDTO = ProjectConditionDTO(
-                        bgIdList = bgIds.split(",").map { it.toLong() }
-                    )
-                )
+                projectBillsService.checkInactiveProject(projectConditionDTO = ProjectConditionDTO())
                 logger.info("process inactive project regularly  |finish")
             } else {
                 logger.info("process inactive project regularly  |running")
@@ -110,34 +103,38 @@ class ProjectCronService constructor(
     }
 
     /**
-     * 禁用不活跃项目，不活跃定义两个月内无人访问且未执行流水线。
+     * 每周一8点开始检测项目活跃度
+     * 处理逻辑：
+     * 对未关联运营产品的项目，连续三周发送邮件，若第四周还未处理的项目，则禁用。
      * */
-    @Scheduled(cron = "0 0 8 ? * SUN")
-    @Suppress("NestedBlockDepth")
-    fun disableInactiveProjectRegularly() {
+    fun checkProjectRelatedProductRegularly() {
         if (!enable) {
             return
         }
         try {
-            logger.info("disable inactive project regularly |start")
+            logger.info("check project related product regularly|start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                projectBillsService.disableInactiveProjectRegularly()
-                logger.info("disable inactive project regularly |finish")
+                val bgIds = redisOperation.get(key = PROCESS_INACTIVE_PROJECT_BG)
+                if (bgIds.isNullOrBlank()) {
+                    logger.info("bg ids is null or blank")
+                    return
+                }
+                projectBillsService.checkProjectRelatedProduct()
+                logger.info("check project related product regularly|finish")
             } else {
-                logger.info("disable inactive project regularly |running")
+                logger.info("check project related product regularly|running")
             }
         } catch (e: Exception) {
-            logger.warn("disable inactive project regularly |error", e)
+            logger.warn("check project related product regularly|error", e)
         }
     }
 
     /**
      * 每天更新OBS产品
      * */
-    @Scheduled(cron = "0 0 8 ? * SUN")
-    @Suppress("NestedBlockDepth")
-    fun disableInactiveProjectRegularly() {
+    @Scheduled(cron = "0 0 3 * * ?")
+    fun updateObsProduct() {
         try {
             logger.info("update obs product | start")
             projectOperationalProductService.syncOperationalProduct()

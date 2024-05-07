@@ -3,29 +3,37 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpProjectCostAllocationResource
+import com.tencent.devops.project.api.op.OpProjectBillResource
 import com.tencent.devops.project.service.ProjectBillsService
 import com.tencent.devops.project.service.ProjectOperationalProductService
 
 @RestResource
-class OpProjectCostAllocationResourceImpl constructor(
+class OpProjectBillResourceImpl constructor(
     val projectBillsService: ProjectBillsService,
-    val projectOperationalProductService: ProjectOperationalProductService
-) : OpProjectCostAllocationResource {
+    val projectOperationalProductService: ProjectOperationalProductService,
+) : OpProjectBillResource {
     override fun processInactiveProject(projectList: List<String>): Result<Boolean> {
         return Result(
-            projectBillsService.checkInactiveProjectRegularly(
+            projectBillsService.checkInactiveProject(
                 projectList = projectList
             )
         )
     }
 
     override fun processInactiveProjectByCondition(
-        projectConditionDTO: ProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO,
     ): Result<Boolean> {
         return Result(
-            projectBillsService.checkInactiveProjectRegularly(
+            projectBillsService.checkInactiveProject(
                 projectConditionDTO = projectConditionDTO
+            )
+        )
+    }
+
+    override fun checkProjectRelatedProduct(projectList: List<String>): Result<Boolean> {
+        return Result(
+            projectBillsService.checkProjectRelatedProduct(
+                projectList = projectList
             )
         )
     }

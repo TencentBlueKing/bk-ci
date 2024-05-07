@@ -40,10 +40,12 @@ class ProjectBillsService constructor(
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        private val projectCostAllocationThreadPool = Executors.newFixedThreadPool(2)
+        private val projectBillThreadPool = Executors.newSingleThreadExecutor()
         private val logger = LoggerFactory.getLogger(ProjectBillsService::class.java)
-        private const val NUMBER_OF_PROJECT_ACTIVITY_CHECKS_KEY = "number_of_project_activity_checks_%s"
-        private const val PROCESS_INACTIVE_PROJECT_BG = "process_inactive_project_bg"
+        private const val NUMBER_OF_PROJECT_NOT_RELATED_PRODUCT_KEY = "number_of_project_not_related_product_%s"
+        private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE =
+            "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
+        private const val PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE = "PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE"
     }
 
     private val project2Status = Caffeine.newBuilder()
@@ -62,12 +64,10 @@ class ProjectBillsService constructor(
     @Value("\${bill.key:#{null}}")
     private var billKey: String = ""
 
-    fun checkInactiveProjectRegularly(
-        projectConditionDTO: ProjectConditionDTO
-    ): Boolean {
+    fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
-        projectCostAllocationThreadPool.submit {
+        projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE
@@ -76,6 +76,94 @@ class ProjectBillsService constructor(
                 val projectInfos = projectService.listProjectsByCondition(
                     projectConditionDTO = projectConditionDTO.copy(
                         excludedCreateTime = LocalDate.now().minusMonths(2).format(DATE_FORMATTER),
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                        enabled = true
+                    ),
+                    limit = limit,
+                    offset = offset
+                )
+                if (projectInfos.isEmpty()) break
+                logger.debug("check inactive projects:${projectInfos.map { it.englishName }}")
+                projectInfos.forEach {
+                    checkInactiveProject(it.englishName)
+                }
+                offset += limit
+                totalCount += projectInfos.size
+            } while (projectInfos.size == limit)
+            // Send email
+            projectNotifyService.sendEmailsForCheckProjects(
+                project2Status = project2Status.asMap(),
+                manager2projectList = manager2projectList.asMap(),
+                templateCode = PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE
+            )
+            clearCacheAfterCheck()
+            logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList")
+        }
+        return true
+    }
+
+    fun checkInactiveProject(projectList: List<String>): Boolean {
+        projectBillThreadPool.submit {
+            projectList.forEach {
+                checkInactiveProject(it)
+            }
+            // Send email
+            projectNotifyService.sendEmailsForCheckProjects(
+                project2Status = project2Status.asMap(),
+                manager2projectList = manager2projectList.asMap(),
+                templateCode = PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE
+            )
+            clearCacheAfterCheck()
+        }
+        return true
+    }
+
+    private fun checkInactiveProject(englishName: String) {
+        try {
+            val projectInfo = projectService.getByEnglishName(englishName) ?: return
+            // 若备案为不被禁用项目，则不做禁用
+            val isDisableWhenInactive = projectInfo.properties?.disableWhenInactive
+            if (isDisableWhenInactive == false) {
+                logger.info(
+                    "the project($englishName) not allowed to disable" +
+                        " when the project is inactive"
+                )
+                return
+            }
+
+            val isActive = isProjectActive(projectInfo)
+            if (isActive) {
+                logger.info("The project{$englishName} is active and does not need to be processed")
+                return
+            }
+
+            val status = calculateProjectStatus(projectInfo.productId)
+            logger.info("project($englishName) status is ${status.value}")
+            // todo 待数据确认无问题后，再做禁用
+            projectService.updateUsableStatus(
+                englishName = englishName,
+                enabled = false,
+                checkPermission = false
+            )
+            project2Status.put(englishName, status)
+            addProjectToManagerList(projectInfo)
+            disabledProjectList.add(englishName)
+        } catch (ex: Exception) {
+            logger.warn("process inactive project failed: $englishName | ${ex.message}")
+        }
+    }
+
+    fun checkProjectRelatedProduct(): Boolean {
+        logger.info("check project related product start")
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectBillThreadPool.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE
+            var totalCount = 0
+            do {
+                val projectInfos = projectService.listProjectsByCondition(
+                    projectConditionDTO = ProjectConditionDTO(
                         routerTag = AuthSystemType.RBAC_AUTH_TYPE,
                         enabled = true,
                         relatedProduct = false
@@ -86,89 +174,76 @@ class ProjectBillsService constructor(
                 if (projectInfos.isEmpty()) break
                 logger.debug("check inactive projects:${projectInfos.map { it.englishName }}")
                 projectInfos.forEach {
-                    checkInactiveProjectRegularly(it.englishName)
+                    checkProjectRelatedProduct(it.englishName)
                 }
                 offset += limit
                 totalCount += projectInfos.size
             } while (projectInfos.size == limit)
             // Send email
-            projectNotifyService.sendEmailsForCheckInactiveProjects(
+            projectNotifyService.sendEmailsForCheckProjects(
                 project2Status = project2Status.asMap(),
-                manager2projectList = manager2projectList.asMap()
+                manager2projectList = manager2projectList.asMap(),
+                templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
             )
-            logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList")
-            disabledProjectList.clear()
+            clearCacheAfterCheck()
+            logger.info("check project related product start, total: $totalCount|$disabledProjectList")
         }
         return true
     }
 
-    fun checkInactiveProjectRegularly(projectList: List<String>): Boolean {
-        projectCostAllocationThreadPool.submit {
+    fun checkProjectRelatedProduct(projectList: List<String>): Boolean {
+        projectBillThreadPool.submit {
             projectList.forEach {
-                checkInactiveProjectRegularly(it)
+                checkProjectRelatedProduct(it)
             }
             // Send email
-            projectNotifyService.sendEmailsForCheckInactiveProjects(
+            projectNotifyService.sendEmailsForCheckProjects(
                 project2Status = project2Status.asMap(),
-                manager2projectList = manager2projectList.asMap()
+                manager2projectList = manager2projectList.asMap(),
+                templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
             )
+            clearCacheAfterCheck()
         }
         return true
     }
 
-    fun checkInactiveProjectRegularly(englishName: String) {
+    private fun checkProjectRelatedProduct(englishName: String) {
         try {
             val projectInfo = projectService.getByEnglishName(englishName) ?: return
-            // 若备案为不被禁用项目，不做禁用
+            // 若备案为不被禁用项目，则不做禁用
             val isDisableWhenInactive = projectInfo.properties?.disableWhenInactive
             if (isDisableWhenInactive == false) {
                 logger.info(
-                    "the project(${englishName}) not allowed to disable" +
+                    "the project($englishName) not allowed to disable" +
                         " when the project is inactive"
                 )
                 return
             }
-
-            val isActive = isProjectActive(englishName)
-            if (isActive && projectInfo.productId != null) {
-                logger.info("project($englishName) status is active and related product")
-                return
-            }
-
-            val status = calculateProjectStatus(projectInfo.productId, isActive)
-            logger.info("project($englishName) status is ${status.value}")
-
-            project2Status.put(englishName, status)
-
-            // 连续四周检测项目不合格，需要禁用项目
             if (shouldDisableProject(englishName)) {
                 disableProject(englishName)
                 return
             }
-
-            updateProjectActivityCheck(englishName)
-
+            project2Status.put(englishName, ProjectRelateOBSProductStatusEnum.NOT_RELATE_PRODUCT)
             addProjectToManagerList(projectInfo)
+            updateProjectNotRelatedProductCheck(englishName)
         } catch (ex: Exception) {
-            logger.warn("process inactive project failed: $englishName | ${ex.message}")
+            logger.warn("check project related product failed: $englishName | ${ex.message}")
         }
     }
 
-    private fun calculateProjectStatus(productId: Int?, isActive: Boolean): ProjectRelateOBSProductStatusEnum {
+    private fun calculateProjectStatus(productId: Int?): ProjectRelateOBSProductStatusEnum {
         return when {
-            // 活跃但未关联产品
-            isActive -> ProjectRelateOBSProductStatusEnum.ACTIVE_BUT_NOT_RELATE_PRODUCT
-            // 关联产品但不活跃
+            // 已关联OBS运营产品，但已有4个月不活跃
             productId != null -> ProjectRelateOBSProductStatusEnum.RELATE_PRODUCT_BUT_INACTIVE
-            // 未关联产品且不活跃
+            // 未关联OBS运营产品，且已有2个月不活跃
             else -> ProjectRelateOBSProductStatusEnum.INACTIVE_AND_NOT_RELATE_PRODUCT
         }
     }
 
     private fun shouldDisableProject(englishName: String): Boolean {
-        val key = String.format(NUMBER_OF_PROJECT_ACTIVITY_CHECKS_KEY, englishName)
+        val key = String.format(NUMBER_OF_PROJECT_NOT_RELATED_PRODUCT_KEY, englishName)
         val numberOfProjectActivityCheck = redisOperation.get(key)?.toInt() ?: 0
-        logger.info("number of project activity check: $key | $numberOfProjectActivityCheck")
+        logger.info("number of project not related check: $key | $numberOfProjectActivityCheck")
         // 该项目已被检测过三次，此次为第四次检测，应该被禁用
         return numberOfProjectActivityCheck == 3
     }
@@ -180,14 +255,13 @@ class ProjectBillsService constructor(
             enabled = false,
             checkPermission = false
         )
-        val key = String.format(NUMBER_OF_PROJECT_ACTIVITY_CHECKS_KEY, englishName)
+        val key = String.format(NUMBER_OF_PROJECT_NOT_RELATED_PRODUCT_KEY, englishName)
         redisOperation.delete(key)
-        project2Status.invalidate(englishName)
         disabledProjectList.add(englishName)
     }
 
-    private fun updateProjectActivityCheck(englishName: String) {
-        val key = String.format(NUMBER_OF_PROJECT_ACTIVITY_CHECKS_KEY, englishName)
+    private fun updateProjectNotRelatedProductCheck(englishName: String) {
+        val key = String.format(NUMBER_OF_PROJECT_NOT_RELATED_PRODUCT_KEY, englishName)
         val numberOfProjectActivityCheck = redisOperation.get(key)?.toInt() ?: 0
         redisOperation.set(
             key, (numberOfProjectActivityCheck + 1).toString(),
@@ -209,10 +283,14 @@ class ProjectBillsService constructor(
         }
     }
 
-    // 若项目两个月内无人访问并且未执行过流水线，则判定为不活跃项目
-    private fun isProjectActive(projectId: String): Boolean {
-        val startTime = LocalDate.now().minusMonths(2).format(DATE_FORMATTER)
+
+    private fun isProjectActive(projectInfo: ProjectVO): Boolean {
+        /*若项目已关联运营产品，则4个月内无人访问并且没有执行过流水线则为不活跃；
+        若项目未关联运营产品，则2个月内无人访问并且没有执行过流水线则为不活跃。*/
+        val monthsToSubtract = if (projectInfo.productId == null) 2L else 4L
+        val startTime = LocalDate.now().minusMonths(monthsToSubtract).format(DATE_FORMATTER)
         val endTime = LocalDate.now().format(DATE_FORMATTER)
+        val projectId = projectInfo.englishName
         val projectActiveUserCount = client.get(ServiceMetricsResource::class).getProjectActiveUserCount(
             BaseQueryReqVO(
                 projectId = projectId,
@@ -225,16 +303,22 @@ class ProjectBillsService constructor(
             projectId = projectId,
             userId = "devops-admin",
             baseQueryReq = BaseQueryReqVO(
-                startTime = LocalDate.now().minusMonths(2).format(DATE_FORMATTER),
-                endTime = LocalDate.now().format(DATE_FORMATTER)
+                startTime = startTime,
+                endTime = endTime
             )
         ).data?.pipelineSumInfoDO?.totalExecuteCount ?: 0
         return projectActiveUserCount != 0 && totalExecuteCount != 0L
     }
 
+    private fun clearCacheAfterCheck() {
+        disabledProjectList.clear()
+        project2Status.cleanUp()
+        manager2projectList.cleanUp()
+    }
+
     fun reportBillsData(): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
-        projectCostAllocationThreadPool.submit {
+        projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = 10
@@ -263,13 +347,14 @@ class ProjectBillsService constructor(
                     try {
                         val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
                         // 若项目不活跃（无人访问），不上报
-                        val projectActiveUserCount = client.get(ServiceMetricsResource::class).getProjectActiveUserCount(
-                            BaseQueryReqVO(
-                                projectId = it.englishName,
-                                startTime = previousDate.format(DATE_FORMATTER),
-                                endTime = targetDate.format(DATE_FORMATTER)
-                            )
-                        ).data?.userCount ?: return@forEach
+                        val projectActiveUserCount = client.get(ServiceMetricsResource::class)
+                            .getProjectActiveUserCount(
+                                BaseQueryReqVO(
+                                    projectId = it.englishName,
+                                    startTime = previousDate.format(DATE_FORMATTER),
+                                    endTime = targetDate.format(DATE_FORMATTER)
+                                )
+                            ).data?.userCount ?: return@forEach
                         val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
                             BaseQueryReqVO(
                                 projectId = it.englishName,
@@ -335,62 +420,5 @@ class ProjectBillsService constructor(
         } catch (ignore: Exception) {
             logger.warn("request bill data failed!${ignore.message}")
         }
-    }
-
-    fun disableInactiveProjectRegularly(): Boolean {
-        logger.info("Checking inactive projects start")
-        val traceId = MDC.get(TraceTag.BIZID)
-        projectCostAllocationThreadPool.submit {
-            MDC.put(TraceTag.BIZID, traceId)
-            var offset = 0
-            val limit = PageUtil.MAX_PAGE_SIZE
-            var totalCount = 0
-            val excludeBgIds = redisOperation.get(key = PROCESS_INACTIVE_PROJECT_BG)?.split(",")?.map { it.toLong() }
-                ?: emptyList()
-            do {
-                val projects = projectService.listProjectsByCondition(
-                    projectConditionDTO = ProjectConditionDTO(
-                        excludedCreateTime = LocalDate.now().minusMonths(2).format(DATE_FORMATTER),
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        enabled = true,
-                        relatedProduct = false
-                    ),
-                    limit = limit,
-                    offset = offset
-                )
-                if (projects.isEmpty()) break
-
-                projects.forEach {
-                    val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
-                    // 对于已经参与项目活跃度检查的BG，不参与不活跃项目停用监控
-                    if (excludeBgIds.contains(it.bgId)) return@forEach
-                    // 已关联产品的项目，不做禁用
-                    if (projectInfo.productId != null) return@forEach
-                    // 若备案为不被禁用项目，不做禁用
-                    val isDisableWhenInactive = projectInfo.properties?.disableWhenInactive
-                    if (isDisableWhenInactive == false) {
-                        logger.info(
-                            "the project(${it.englishName}) not allowed to disable" +
-                                " when the project is inactive"
-                        )
-                        return@forEach
-                    }
-                    if (!isProjectActive(it.englishName)) {
-                        // todo 先上线确认代码有没有问题
-                        /*projectService.updateUsableStatus(
-                            englishName = it.englishName,
-                            enabled = false,
-                            checkPermission = false
-                        )*/
-                        disabledProjectList.add(it.englishName)
-                        totalCount += 1
-                    }
-                }
-                offset += limit
-            } while (projects.size == limit)
-            logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList")
-            disabledProjectList.clear()
-        }
-        return true
     }
 }

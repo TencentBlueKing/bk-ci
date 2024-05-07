@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/cost/allocation")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpProjectCostAllocationResource {
+interface OpProjectBillResource {
     @Operation(summary = "检查项目活跃度--项目列表")
     @POST
     @Path("/processInactiveProject/")
@@ -30,6 +30,14 @@ interface OpProjectCostAllocationResource {
     fun processInactiveProjectByCondition(
         @Parameter(description = "条件", required = true)
         projectConditionDTO: ProjectConditionDTO
+    ): Result<Boolean>
+
+    @Operation(summary = "检查项目是否关联运营产品--按条件")
+    @POST
+    @Path("/checkProjectRelatedProduct/")
+    fun checkProjectRelatedProduct(
+        @Parameter(description = "项目ID列表", required = true)
+        projectList: List<String>
     ): Result<Boolean>
 
     @Operation(summary = "同步OBS数据")
