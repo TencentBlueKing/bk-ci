@@ -809,6 +809,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 )
                 // 获取用户
                 val memberData = storeMemberService.batchListMember(storeCodeList, storeTypeEnum).data
+                // 获取项目下已安装组件
                 val installedInfoMap = projectCode?.let {
                     storeProjectService.getInstalledComponent(it, storeTypeEnum.type.toByte())
                 }

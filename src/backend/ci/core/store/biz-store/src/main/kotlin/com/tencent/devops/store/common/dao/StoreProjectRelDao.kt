@@ -233,14 +233,14 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         projectCode: String,
         storeType: Byte,
-        storeProjectType: StoreProjectTypeEnum? = null,
+        storeProjectTypes: List<Byte>? = null,
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions = mutableListOf(PROJECT_CODE.eq(projectCode))
-            storeProjectType?.let {
-                conditions.add(TYPE.eq(storeProjectType.type.toByte()))
+            storeProjectTypes?.let {
+                conditions.add(TYPE.`in`(storeProjectTypes))
             }
             val baseQuery = dslContext.selectFrom(this)
                 .where(conditions)

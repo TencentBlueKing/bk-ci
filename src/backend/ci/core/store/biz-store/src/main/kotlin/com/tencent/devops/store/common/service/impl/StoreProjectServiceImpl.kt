@@ -320,7 +320,9 @@ class StoreProjectServiceImpl @Autowired constructor(
             dslContext = dslContext,
             projectCode = projectCode,
             storeType = storeType,
-            storeProjectType = StoreProjectTypeEnum.COMMON
+            storeProjectTypes = listOf(
+                StoreProjectTypeEnum.COMMON.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte()
+            )
         )?.intoMap({ it.storeCode }, { it.version })
     }
 }
