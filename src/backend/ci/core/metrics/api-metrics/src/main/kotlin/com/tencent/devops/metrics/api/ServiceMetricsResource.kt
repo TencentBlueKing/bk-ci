@@ -112,7 +112,7 @@ interface ServiceMetricsResource {
     @POST
     fun getProjectActiveUserCount(
         @Parameter(description = "查询条件", required = false)
-        baseQueryReq: BaseQueryReqVO,
+        baseQueryReq: BaseQueryReqVO
     ): Result<ProjectUserCountV0?>
 
     @Operation(summary = "获取job最大并发")
