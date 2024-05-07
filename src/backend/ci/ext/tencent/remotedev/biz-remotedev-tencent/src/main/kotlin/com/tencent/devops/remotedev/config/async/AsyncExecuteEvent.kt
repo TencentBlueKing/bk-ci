@@ -17,5 +17,6 @@ enum class AsyncExecuteEventType {
     ASYNC_JOB_END,
     ASYNC_TGIT_ACL_IP,
     ASYNC_TGIT_ACL_USER,
-    ASYNC_TCLOUD_CFS
+    ASYNC_TCLOUD_CFS,
+    ASYNC_JOB_PIPELINE
 }

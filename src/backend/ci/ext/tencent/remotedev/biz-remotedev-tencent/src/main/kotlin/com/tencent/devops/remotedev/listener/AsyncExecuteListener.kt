@@ -7,11 +7,13 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEvent
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEventType
 import com.tencent.devops.remotedev.pojo.async.AsyncJobEndEvent
+import com.tencent.devops.remotedev.pojo.async.AsyncJobPipeline
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.job.RemoteDevJobActionService
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import org.slf4j.LoggerFactory
@@ -24,7 +26,8 @@ class AsyncExecuteListener @Autowired constructor(
     private val client: Client,
     private val remoteDevJobService: RemoteDevJobService,
     private val tCloudCfsService: TCloudCfsService,
-    private val gitProxyTGitService: GitProxyTGitService
+    private val gitProxyTGitService: GitProxyTGitService,
+    private val jobActionService: RemoteDevJobActionService
 ) {
     fun listenAsyncExecuteEvent(event: AsyncExecuteEvent) {
         try {
@@ -51,7 +54,7 @@ class AsyncExecuteListener @Autowired constructor(
 
             AsyncExecuteEventType.ASYNC_JOB_END -> {
                 val data = objectMapper.readValue<AsyncJobEndEvent>(event.eventStr)
-                remoteDevJobService.pipelineJobEnd(data.id)
+                remoteDevJobService.doPipelineJobEnd(data.id)
             }
 
             AsyncExecuteEventType.ASYNC_TCLOUD_CFS -> {
@@ -79,6 +82,11 @@ class AsyncExecuteListener @Autowired constructor(
                 gitProxyTGitService.doRefreshProjectTGitSpecUser(
                     projectId = data.projectId
                 )
+            }
+
+            AsyncExecuteEventType.ASYNC_JOB_PIPELINE -> {
+                val data = objectMapper.readValue<AsyncJobPipeline>(event.eventStr)
+                jobActionService.doStartPipeline(data.projectId, data.id, data.param)
             }
         }
     }

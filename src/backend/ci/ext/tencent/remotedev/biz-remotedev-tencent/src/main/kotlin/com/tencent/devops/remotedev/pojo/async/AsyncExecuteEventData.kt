@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.pojo.async
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEventType
+import com.tencent.devops.remotedev.pojo.job.PipelineParam
 
 interface AsyncExecuteEventData {
     fun toType(): AsyncExecuteEventType
@@ -46,6 +47,14 @@ data class AsyncTCloudCfs(
     val ruleId: String,
     val region: String,
     val delete: Boolean
+) : AsyncExecuteEventData {
+    override fun toType() = AsyncExecuteEventType.ASYNC_TCLOUD_CFS
+}
+
+data class AsyncJobPipeline(
+    val projectId: String,
+    val id: Long,
+    val param: PipelineParam
 ) : AsyncExecuteEventData {
     override fun toType() = AsyncExecuteEventType.ASYNC_TCLOUD_CFS
 }
