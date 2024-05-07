@@ -165,7 +165,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     callBackUrl = it.callbackUrl,
                     events = it.events,
                     secretToken = it.secretToken,
-                    enable = it.enable
+                    enable = it.enable,
+                    failureTime = it.failureTime
                 )
             )
         }
@@ -216,26 +217,35 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
-    fun disable(callBack: ProjectPipelineCallBack) {
+    fun disable(projectId: String, id: Long) {
         // 修改接口状态
         projectPipelineCallbackDao.disable(
             dslContext = dslContext,
-            projectId = callBack.projectId,
-            id = callBack.id!!
+            projectId = projectId,
+            id = id
         )
         // 通知用户接口被禁用
-        sendDisableNotifyMessage(callBack)
+        sendDisableNotifyMessage(projectId = projectId, id = id)
+    }
+
+    fun batchDisable(projectId: String, callbackIds: String) {
+        val ids = callbackIds.split(",")
+            .filter { it.isNotEmpty() }
+            .map { it.toLong() }
+        ids.forEach { id ->
+            disable(projectId = projectId, id = id)
+        }
     }
 
     /**
      *  发送回调禁用通知
      */
-    fun sendDisableNotifyMessage(callBack: ProjectPipelineCallBack) {
+    fun sendDisableNotifyMessage(projectId: String, id: Long) {
         try {
             val callbackRecord = projectPipelineCallbackDao.get(
                 dslContext = dslContext,
-                projectId = callBack.projectId,
-                id = callBack.id!!
+                projectId = projectId,
+                id = id
             )
             callbackRecord?.run {
                 with(callbackRecord) {
@@ -267,8 +277,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.warn(
-                "Failure to send disable notify message for " +
-                    "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
+                "Failure to send disable notify message for [$projectId|$id]", e
             )
         }
     }
@@ -293,6 +302,19 @@ class ProjectPipelineCallBackService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             ids = ids
+        )
+    }
+
+    fun updateFailureTime(
+        projectId: String,
+        id: Long,
+        failureTime: LocalDateTime?
+    ) {
+        projectPipelineCallbackDao.updateFailureTime(
+            dslContext = dslContext,
+            projectId = projectId,
+            id = id,
+            failureTime = failureTime
         )
     }
 
@@ -505,7 +527,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             url = callbackInfo.callbackUrl
         )
         callbackInfo.callbackUrl = callBackUrl
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: return
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model ?: return
         val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
 
         if (model.events?.isEmpty() == true) {

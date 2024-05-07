@@ -28,6 +28,7 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.repository.tables.TRepositoryPipelineRef
 import com.tencent.devops.model.repository.tables.records.TRepositoryPipelineRefRecord
@@ -142,8 +143,9 @@ class RepoPipelineRefDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        eventType: String?,
-        triggerConditionMd5: String?,
+        eventType: String? = null,
+        triggerConditionMd5: String? = null,
+        taskRepoType: RepositoryType? = null,
         channel: String?,
         limit: Int,
         offset: Int
@@ -161,6 +163,9 @@ class RepoPipelineRefDao {
             }
             if (!eventType.isNullOrBlank()) {
                 conditions.add(EVENT_TYPE.eq(eventType))
+            }
+            if (taskRepoType != null) {
+                conditions.add(TASK_REPO_TYPE.eq(taskRepoType.name))
             }
             dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME)
                 .from(this)
@@ -182,8 +187,9 @@ class RepoPipelineRefDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        eventType: String?,
-        triggerConditionMd5: String?,
+        eventType: String? = null,
+        triggerConditionMd5: String? = null,
+        taskRepoType: RepositoryType? = null,
         channel: String?
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
@@ -199,6 +205,9 @@ class RepoPipelineRefDao {
             }
             if (!eventType.isNullOrBlank()) {
                 conditions.add(EVENT_TYPE.eq(eventType))
+            }
+            if (taskRepoType != null) {
+                conditions.add(TASK_REPO_TYPE.eq(taskRepoType.name))
             }
             dslContext.select()
                 .from(this)
@@ -278,6 +287,15 @@ class RepoPipelineRefDao {
     ): List<TRepositoryPipelineRefRecord> {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             dslContext.selectFrom(this).where(ID.`in`(ids)).orderBy(EVENT_TYPE.asc()).fetch()
+        }
+    }
+
+    fun removeRepositoryPipelineRefsById(
+        dslContext: DSLContext,
+        repoId: Long
+    ): Int {
+        return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            dslContext.deleteFrom(this).where(REPOSITORY_ID.eq(repoId)).execute()
         }
     }
 }

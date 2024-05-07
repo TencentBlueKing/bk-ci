@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
-import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
+import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

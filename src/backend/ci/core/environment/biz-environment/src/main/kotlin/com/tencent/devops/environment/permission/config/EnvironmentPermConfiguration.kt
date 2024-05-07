@@ -32,15 +32,12 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.permission.BluekingEnvironmentPermissionService
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.permission.MockEnvironmentPermissionService
 import com.tencent.devops.environment.permission.RbacEnvironmentPermissionService
 import com.tencent.devops.environment.permission.StreamEnvironmentPermissionServiceImp
-import com.tencent.devops.environment.permission.V3EnvironmentPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -54,18 +51,6 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class EnvironmentPermConfiguration {
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
-    fun environmentPermissionService(
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        environmentAuthServiceCode: EnvironmentAuthServiceCode
-    ): EnvironmentPermissionService = BluekingEnvironmentPermissionService(
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        environmentAuthServiceCode = environmentAuthServiceCode
-    )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
@@ -83,28 +68,6 @@ class EnvironmentPermConfiguration {
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         environmentAuthServiceCode = environmentAuthServiceCode
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
-    fun v3EnvironmentPermissionService(
-        dslContext: DSLContext,
-        envDao: EnvDao,
-        nodeDao: NodeDao,
-        client: Client,
-        redisOperation: RedisOperation,
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        environmentAuthServiceCode: EnvironmentAuthServiceCode
-    ): EnvironmentPermissionService = V3EnvironmentPermissionService(
-        dslContext = dslContext,
-        envDao = envDao,
-        nodeDao = nodeDao,
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        environmentAuthServiceCode = environmentAuthServiceCode,
-        client = client,
-        redisOperation = redisOperation
     )
 
     @Bean

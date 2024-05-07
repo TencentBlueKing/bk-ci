@@ -171,6 +171,7 @@ export default {
             return bindData
         },
         formRules () {
+            const _ = this
             const rulesMap = {
                 url: [
                     {
@@ -189,7 +190,7 @@ export default {
                         validator: async function (value) {
                             let result = true
                             await vue.$ajax.get(
-                                `${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`
+                                `${REPOSITORY_API_URL_PREFIX}/user/repositories/${_.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`
                             )
                                 .then((res) => {
                                     result = !res
@@ -233,7 +234,7 @@ export default {
             this.isLoadingTickets = false
         },
         'codelib.url': function (newVal) {
-            // this.handleCheckPacProject(newVal)
+            this.handleCheckPacProject(newVal)
             const { codelib, codelibTypeName } = this
             const { alias, msg } = parsePathAlias(
                 codelibTypeName,

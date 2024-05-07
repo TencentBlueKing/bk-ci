@@ -924,3 +924,18 @@
     body: "[Build link|${buildUrl}]\n[Third-party build machine connection|${agentUrl}]\nBuild triggerer: ${userId}\nBuild machine owner: ${agentOwner}"
   creator: "system"
   modifior: "system"
+- index: 45
+  id: "e166ee7f4dfe4d96b2bb32addc6dd34c"
+  templateCode: "THIRDPART_AGENT_REPEAT_INSTALL"
+  templateName: "Alarm for repeated installation of third-party build machine"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d18a"
+    sender: "DevOps"
+    title: "Project ${projectId} third-party build machine ${agentId} may be repeatedly installed"
+    body: "Original IP ${oldIp} New IP ${newIp}\n${url}"
+  creator: "system"
+  modifior: "system"

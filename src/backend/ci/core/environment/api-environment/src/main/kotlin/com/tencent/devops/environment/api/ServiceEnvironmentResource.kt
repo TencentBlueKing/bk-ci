@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -81,6 +82,21 @@ interface ServiceEnvironmentResource {
         @Parameter(description = "环境信息", required = true)
         environment: EnvCreateInfo
     ): Result<EnvironmentId>
+
+    @Operation(summary = "获取环境信息")
+    @GET
+    @Path("/projects/{projectId}/envs/{envHashId}")
+    fun get(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<EnvWithPermission>
 
     @Operation(summary = "删除环境")
     @DELETE
@@ -144,6 +160,26 @@ interface ServiceEnvironmentResource {
         @Parameter(description = "环境 hashId(s)", required = true)
         envHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
+
+    @Operation(summary = "获取环境（多个）的节点列表")
+    @POST
+    @Path("/projects/{projectId}/listNodesByEnvIdsNew")
+    fun listNodesByEnvIdsNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "环境 hashId(s)", required = true)
+        envHashIds: List<String>
+    ): Result<Page<NodeBaseInfo>>
 
     @Operation(summary = "获取用户有权限使用的环境列表")
     @GET

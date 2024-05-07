@@ -200,14 +200,6 @@ class PipelineTaskService @Autowired constructor(
         }
     }
 
-    fun deletePipelineBuildTasks(transactionContext: DSLContext?, projectId: String, pipelineId: String) {
-        pipelineBuildTaskDao.deletePipelineBuildTasks(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-    }
-
     fun deleteTasksByContainerSeqId(
         dslContext: DSLContext,
         projectId: String,
@@ -323,28 +315,6 @@ class PipelineTaskService @Autowired constructor(
                 taskId = taskId,
                 subBuildId = subBuildId,
                 subProjectId = subProjectId
-            )
-        }
-    }
-
-    fun setTaskErrorInfo(
-        transactionContext: DSLContext?,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        errorType: ErrorType,
-        errorCode: Int,
-        errorMsg: String
-    ) {
-        JooqUtils.retryWhenDeadLock {
-            pipelineBuildTaskDao.setTaskErrorInfo(
-                dslContext = transactionContext ?: dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
             )
         }
     }
@@ -552,6 +522,13 @@ class PipelineTaskService @Autowired constructor(
         )
         try {
             val errorElement = findElementMsg(model, taskRecord)
+
+            // 存在的不重复添加 fix：流水线设置的变量重试一次就会叠加一次变量值 #6058
+            if (inFailTasks(failTasks = failTask, failTask = errorElement.first)) {
+                logger.info("$projectId|$buildId|$taskId| skip_createFailTaskVar: ${errorElement.first}")
+                return
+            }
+
             val errorElements = if (failTask.isNullOrBlank()) {
                 errorElement.first
             } else {
@@ -579,19 +556,23 @@ class PipelineTaskService @Autowired constructor(
 
     fun removeFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val failTaskRecord = redisOperation.get(failTaskRedisKey(buildId = buildId, taskId = taskId))
+        if (failTaskRecord.isNullOrBlank()) {
+            return
+        }
         val failTaskNameRecord = redisOperation.get(failTaskNameRedisKey(buildId = buildId, taskId = taskId))
-        if (failTaskRecord.isNullOrBlank() || failTaskNameRecord.isNullOrBlank()) {
+        if (failTaskNameRecord.isNullOrBlank()) {
             return
         }
         try {
             val failTask = pipelineVariableService.getVariable(
                 projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
-            )
+            ) ?: return
+            val newFailTask = delTaskString(strings = failTask, string = failTaskRecord, " \n")
+
             val failTaskNames = pipelineVariableService.getVariable(
                 projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
-            )
-            val newFailTask = failTask!!.replace(failTaskRecord, "")
-            val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord, "")
+            ) ?: return
+            val newFailTaskNames = delTaskString(strings = failTaskNames, string = failTaskNameRecord, ",")
             if (newFailTask != failTask || newFailTaskNames != failTaskNames) {
                 val valueMap = mutableMapOf<String, Any>()
                 valueMap[BK_CI_BUILD_FAIL_TASKS] = newFailTask
@@ -606,6 +587,15 @@ class PipelineTaskService @Autowired constructor(
             logger.warn("$buildId|$taskId|removeFailVarWhenSuccess error, msg: $ignored")
         }
     }
+
+    private fun inFailTasks(failTasks: String?, failTask: String) =
+        failTasks?.split(" \n")?.contains(failTask.replace(" \n", "")) ?: false
+
+    private fun delTaskString(strings: String, string: String, delimiter: String) =
+        strings.split(delimiter).toMutableList().let {
+            it.remove(string.replace(delimiter, ""))
+            it.joinToString(separator = delimiter)
+        }
 
     private fun failTaskRedisKey(buildId: String, taskId: String): String {
         return "devops:failTask:redis:key:$buildId:$taskId"

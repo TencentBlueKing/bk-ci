@@ -71,7 +71,7 @@ object EnvironmentMessageCode {
     const val ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT = "2105022" // 构建节点[{0}]不能添加到非构建环境
     const val ERROR_NODE_CHANGE_USER_NOT_SUPPORT = "2105023" // 节点类型【{0}】不支持修改导入人
     const val ERROR_NODE_IMPORT_EXCEED = "2105024" // 环境管理：导入节点数不能超过配额[{0}]
-    const val ERROR_NODE_IP_ILLEGAL_USER = "2105025" // 环境管理：非法 IP [{0}], 请确认是否是服务器的责任人
+    const val ERROR_NODE_IP_ILLEGAL_USER = "2105025" // 环境管理：非法 IP [{0}], 请确认当前用户[{1}]是否是服务器的主备负责人 - 测试机导入｜重新导入
     const val ERROR_QUOTA_LIMIT = "2105026" // 环境管理：配额不足，总量{0}, 已使用: {1}
     const val ERROR_VM_CAN_NOT_DESTROY = "2105027" // 环境管理：虚拟机状态为:{0}, 不允许销毁！请稍后操作！
     const val ERROR_VM_CAN_NOT_IMAGED = "2105028" // 环境管理：虚拟机状态为:{0}, 无法制作镜像!
@@ -91,7 +91,11 @@ object EnvironmentMessageCode {
     const val ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV = "2105042" // 无权限使用第三方构建机环境
     const val ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST = "2105043" // 第三方构建机环境节点不存在
     const val ERROR_PIPE_NOT_FOUND = "2105044" // 环境管理：不存在该管道信息
-    const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：没有节点使用权限
+    const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：节点[{0}]没有使用权限
+    // "2105046" 环境管理: 不在CMDB中的IP [{0}]; 无权限的IP [{1}], 请确认当前用户[{2}]或节点导入人[{3}]是否为这些节点的主备负责人 - 脚本执行｜文件分发
+    const val ERROR_NODE_IP_ILLEGAL = "2105046"
+    const val ERROR_CMDB_INTERFACE_TIME_OUT = "2105047"
+    const val ERROR_CMDB_RESPONSE = "2105048"
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

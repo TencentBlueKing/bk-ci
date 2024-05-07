@@ -32,7 +32,7 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import { eventBus, hashID, isTriggerContainer } from './util'
+    import { areDeeplyEqual, eventBus, hashID, isTriggerContainer } from './util'
 
     import {
         ADD_STAGE,
@@ -136,7 +136,10 @@
             })
 
             return {
-                reactiveData
+                reactiveData,
+                emitPipelineChange: () => {
+                    this.emitPipelineChange(this.pipeline)
+                }
             }
         },
         data () {
@@ -148,9 +151,7 @@
         computed: {
             computedStages: {
                 get () {
-                    return this.pipeline?.stages?.map((stage) => Object.assign(stage, {
-                        isTrigger: this.checkIsTriggerStage(stage)
-                    })) ?? []
+                    return this.pipeline?.stages ?? []
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
@@ -191,17 +192,12 @@
             }
         },
         watch: {
-            'pipeline.stages': {
-                deep: true,
-                handler: function () {
-                    this.$emit('input', this.pipeline)
-                    this.$emit('change', this.pipeline)
-                }
-            },
-            'pipeline.name': {
-                handler: function () {
-                    this.$emit('input', this.pipeline)
-                    this.$emit('change', this.pipeline)
+            pipeline: {
+                handler: function (newVal, oldVal) {
+                    if (this.editable && !areDeeplyEqual(newVal, oldVal)) {
+                        console.log('pipeline change', newVal, oldVal)
+                        // this.emitPipelineChange(newVal)
+                    }
                 }
             }
         },
@@ -213,6 +209,10 @@
             this.registeCustomEvent(true)
         },
         methods: {
+            emitPipelineChange (newVal) {
+                this.$emit('input', newVal)
+                this.$emit('change', newVal)
+            },
             registeCustomEvent (destory = false) {
                 customEvents.forEach((eventName) => {
                     const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
@@ -254,9 +254,11 @@
             },
             handleCopyStage ({ stageIndex, stage }) {
                 this.pipeline.stages.splice(stageIndex + 1, 0, stage)
+                this.emitPipelineChange()
             },
             handleDeleteStage (stageId) {
                 this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
+                this.emitPipelineChange()
             },
             expandPostAction (stageId, matrixId, containerId) {
                 return new Promise((resolve, reject) => {
