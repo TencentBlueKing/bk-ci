@@ -61,12 +61,14 @@
 <script>
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import AtomCheckboxList from '@/components/atomFormField/AtomCheckboxList'
+    import Tips from '@/components/AtomFormComponent/Tips'
     import validMixins from '../validMixins'
     import atomMixin from './atomMixin'
 
     export default {
         name: 'code-tgit-webhook-trigger',
         components: {
+            Tips,
             AtomCheckboxList
         },
         mixins: [atomMixin, validMixins],
