@@ -131,7 +131,7 @@
     },
     {
       "moduleLicense": "LGPL, version 2.1",
-      "moduleVersion": "3.4.0",
+      "moduleVersion": "5.14.0",
       "moduleName": "net.java.dev.jna:platform",
       "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
     },
