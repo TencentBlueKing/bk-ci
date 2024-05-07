@@ -81,6 +81,15 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.createEnvironment(userId, projectId, environment))
     }
 
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_VIEW)
+    override fun get(userId: String, projectId: String, envHashId: String): Result<EnvWithPermission> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        return Result(envService.getEnvironment(userId, projectId, envHashId))
+    }
+
     @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
     override fun delete(userId: String, projectId: String, envHashId: String): Result<Boolean> {
         if (envHashId.isBlank()) {

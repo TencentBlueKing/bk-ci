@@ -17,5 +17,5 @@ data class CmdbDataIns(
     @get:Schema(title = "服务器操作系统")
     val SfwName: String?,
     @get:Schema(title = "服务器ID")
-    val serverId: Int?
+    val serverId: Long?
 )

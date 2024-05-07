@@ -31,7 +31,6 @@ const bklogout = {
                 resolve(false)
             }
         })
-
     },
     init () {
         const a = location.hostname.match(/\w*\.(com|cn)$/)

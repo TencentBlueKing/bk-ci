@@ -365,7 +365,8 @@ class WorkspaceDao {
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null,
-        notDeleted: Boolean? = false
+        notDeleted: Boolean? = false,
+        ownerType: WorkspaceOwnerType? = null
     ): List<WorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
@@ -373,7 +374,8 @@ class WorkspaceDao {
                 status = status,
                 mountType = mountType,
                 projectId = projectId,
-                systemType = systemType
+                systemType = systemType,
+                ownerType = ownerType
             )
 
             if (notDeleted == true) {
@@ -617,7 +619,8 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
-        systemType: WorkspaceSystemType? = null
+        systemType: WorkspaceSystemType? = null,
+        ownerType: WorkspaceOwnerType? = null
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
@@ -638,6 +641,9 @@ class WorkspaceDao {
             }
             if (projectId != null) {
                 condition.add(PROJECT_ID.eq(projectId))
+            }
+            if (ownerType != null) {
+                condition.add(OWNER_TYPE.eq(ownerType.name))
             }
         }
         return condition

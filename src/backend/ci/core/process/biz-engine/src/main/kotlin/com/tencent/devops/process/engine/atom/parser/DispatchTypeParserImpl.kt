@@ -40,7 +40,7 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
-import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
+import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

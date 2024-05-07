@@ -18,6 +18,7 @@ import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidatorV2
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
@@ -253,7 +254,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
                 nowRepo = null,
                 repo = null,
                 resourcePoolMapExt = null
-            ).replace()
+            ).replace() as PreScriptBuildYaml
         )
     }
 }

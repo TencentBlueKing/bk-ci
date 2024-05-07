@@ -426,7 +426,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                    "artifactoryType:$artifactoryType , path:${experience.path}"
+                        "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -552,7 +552,7 @@ class ExperienceService @Autowired constructor(
                 version = appVersion
             )
         } else { // 内部体验
-            if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha") {
+            if (isDefendProject(propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE], projectId)) {
                 apkDefend(userId, projectId, artifactoryType, experienceId, experience.path)
                 delayNotify = true
             }
@@ -563,6 +563,13 @@ class ExperienceService @Autowired constructor(
         }
 
         return experienceId
+    }
+
+    private fun isDefendProject(stage: String?, projectId: String): Boolean {
+        if (stage.isNullOrBlank()) {
+            return false
+        }
+        return redisOperation.isMember("apk:defend:${stage.lowercase()}", projectId)
     }
 
     private fun onlinePublicExperience(
@@ -1087,7 +1094,7 @@ class ExperienceService @Autowired constructor(
 
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , " +
-                    "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
+                        "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty() &&
                 deptUsers.isEmpty()
@@ -1266,14 +1273,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }
