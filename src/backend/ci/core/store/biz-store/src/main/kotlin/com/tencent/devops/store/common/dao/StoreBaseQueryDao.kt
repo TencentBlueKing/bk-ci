@@ -272,13 +272,9 @@ class StoreBaseQueryDao {
         if (queryComponentsParam.processFlag == true) {
             val subqueryCondition = mutableListOf<Condition>()
             val processingStatusList = StoreStatusEnum.getProcessingStatusList()
-            subqueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
             subqueryCondition.addAll(conditions)
-            val subquery = dslContext.select(
-                tStoreBase.STORE_CODE,
-            ).from(tStoreBase)
-                .where(subqueryCondition)
-                .groupBy(tStoreBase.STORE_CODE)
+            subqueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
+            val subquery = dslContext.selectDistinct(tStoreBase.STORE_CODE,).from(tStoreBase).where(subqueryCondition)
             conditions.add(tStoreBase.STORE_CODE.`in`(subquery))
         }
 
@@ -309,7 +305,6 @@ class StoreBaseQueryDao {
         val name = queryComponentsParam.name
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         queryComponentsParam.type?.let {
             conditions.add(tStoreBaseFeature.TYPE.eq(it))
         }
