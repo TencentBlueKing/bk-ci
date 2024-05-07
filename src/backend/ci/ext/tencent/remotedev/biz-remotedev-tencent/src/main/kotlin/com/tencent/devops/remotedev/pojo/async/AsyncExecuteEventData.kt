@@ -56,5 +56,5 @@ data class AsyncJobPipeline(
     val id: Long,
     val param: PipelineParam
 ) : AsyncExecuteEventData {
-    override fun toType() = AsyncExecuteEventType.ASYNC_TCLOUD_CFS
+    override fun toType() = AsyncExecuteEventType.ASYNC_JOB_PIPELINE
 }
