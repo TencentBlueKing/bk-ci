@@ -625,11 +625,11 @@ export function isAbsoluteURL (url = '') {
     return /^https?:\/\//i.test(url)
 }
 
-export function getParamsValuesMap (params = []) {
+export function getParamsValuesMap (params = [], useLatestParameters) {
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {
         if (param.id) {
-            values[param.id] = param.defaultValue
+            values[param.id] = useLatestParameters === true ? param.value : param.defaultValue
         }
         return values
     }, {})

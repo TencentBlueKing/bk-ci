@@ -181,7 +181,7 @@
                         this.paramList = this.curPipelineInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
                         this.versionParamList = this.curPipelineInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                         this.buildList = this.curPipelineInfo.properties.filter(p => p.propertyType === 'BUILD')
-                        this.paramValues = getParamsValuesMap(this.paramList)
+                        this.paramValues = getParamsValuesMap(this.paramList, this.curPipelineInfo.useLatestParameters)
                         this.versionParamValues = getParamsValuesMap(this.versionParamList)
                         this.buildValues = getParamsValuesMap(this.buildList)
                     } else {
