@@ -20,7 +20,6 @@
 // http://eslint.org/docs/user-guide/configuring
 // eslint-config-standard 12.0.0
 // eslint-plugin-import 2.16.0
-// eslint-plugin-node 8.0.1
 // eslint-plugin-promise 4.0.1
 // eslint-plugin-standard 4.0.0
 // eslint-plugin-vue 5.2.2
@@ -42,8 +41,12 @@ module.exports = {
     ],
     // required to lint *.vue files
     plugins: [
-        'vue'
+        'vue',
+        'import'
     ],
+    settings: {
+        'import/resolver': 'node'
+    },
     globals: {
         DOCS_URL_PREFIX: true,
         LOGIN_SERVICE_URL: true,

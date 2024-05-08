@@ -37,7 +37,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineStatus
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
@@ -94,8 +94,8 @@ class PipelineStatusService(
             latestBuildNum = pipelineBuildSummary.buildNum,
             latestBuildStartTime = (pipelineBuildSummary.latestStartTime)?.timestampmilli() ?: 0,
             latestBuildStatus = pipelineBuildStatus,
-//            latestBuildTaskName = pipelineBuildSummary.latestTaskName, // 卡片界面不再需要该信息
-            lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType),
+//            latestBuildTaskName = pipelineBuildSummary.latestTaskName,
+            lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType.ordinal),
             runningBuildCount = pipelineBuildSummary.runningCount ?: 0,
             lastBuildFinishCount = lastBuildFinishCount,
             lastBuildTotalCount = lastBuildTotalCount,

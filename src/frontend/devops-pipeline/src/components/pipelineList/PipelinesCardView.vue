@@ -25,10 +25,10 @@
 </template>
 
 <script>
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
-    import PipelineCard from '@/components/pipelineList/PipelineCard'
     import InfiniteScroll from '@/components/InfiniteScroll'
+    import PipelineCard from '@/components/pipelineList/PipelineCard'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import { isShallowEqual } from '@/utils/util'
 
@@ -73,8 +73,10 @@
                     })
                 }
             },
-            filterParams: function () {
-                this.$refs.infiniteScroll?.updateList?.()
+            filterParams: function (filterMap, oldFilterMap) {
+                if (!isShallowEqual(filterMap, oldFilterMap) && Object.keys(filterMap).length > 0) {
+                    this.$refs.infiniteScroll?.updateList?.()
+                }
             }
         },
         methods: {
