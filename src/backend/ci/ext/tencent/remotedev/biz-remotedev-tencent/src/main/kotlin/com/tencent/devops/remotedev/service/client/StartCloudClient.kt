@@ -94,7 +94,7 @@ class StartCloudClient @Autowired constructor(
     fun messageRegister(
         req: StartMessageRegisterReq
     ) {
-        val url = "${config.apiUrl}/openapi/message/register"
+        val url = "${config.apiUrl}/openapi/push/message/register"
         val body = JsonUtil.toJson(req, false)
         logger.debug("messageRegister request url: $url, body: $body")
         val request = Request.Builder()

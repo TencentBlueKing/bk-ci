@@ -3,7 +3,7 @@ package com.tencent.devops.remotedev.pojo.startcloud
 data class StartMessageRegisterReq(
     val operator: String,
     val orderId: String,
-    val userStrategy: StartMessageRegisterUserStrategy,
+    val user: StartMessageRegisterUserStrategy,
     val condition: StartMessageRegisterCondition,
     val data: String
 )
@@ -12,7 +12,7 @@ data class StartMessageRegisterReq(
  * 如果填写多个字段则取交集， 以最小规则下发
  */
 data class StartMessageRegisterUserStrategy(
-    val userIdList: Set<String>?,
+    val userIds: Set<String>?,
     val contentProvideName: String?,
     val appName: String?
 )
