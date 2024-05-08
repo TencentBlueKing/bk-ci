@@ -60,8 +60,8 @@ object StoreMessageCode {
     const val USER_ATOM_RELEASE_STEPS_ERROR = "2120008" // 研发商店：插件发布流程状态变更顺序不正确
     const val USER_ATOM_VERSION_IS_NOT_FINISH = "2120009" // 研发商店：插件{0}的{1}版本发布未结束，请稍后再试
     const val USER_ATOM_VERSION_IS_INVALID = "2120010" // 研发商店：插件升级的版本号{0}错误，应为{1}
-    const val USER_ATOM_LOGO_SIZE_IS_INVALID = "2120011" // 研发商店：插件logo的尺寸应为{0}x{1}
-    const val USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT = "2120012" // 研发商店：logo不支持{0}类型，可以上传{1}类型
+    const val USER_LOGO_SIZE_IS_INVALID = "2120011" // logo的尺寸应为{0}x{1}
+    const val USER_LOGO_TYPE_IS_NOT_SUPPORT = "2120012" // logo不支持{0}类型，可以上传{1}类型
     const val UPLOAD_LOGO_IS_TOO_LARGE = "2120013" // 研发商店：上传的logo文件不能超过{0}
     const val USER_ATOM_CONF_INVALID = "2120014" // 研发商店：插件配置文件{0}格式不正确，请检查
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 研发商店：你不在{0}插件的可见范围之内，请联系插件发布者
