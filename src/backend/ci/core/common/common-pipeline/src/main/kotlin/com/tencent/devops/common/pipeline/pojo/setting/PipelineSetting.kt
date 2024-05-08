@@ -95,6 +95,10 @@ data class PipelineSetting(
     var pipelineAsCodeSettings: PipelineAsCodeSettings?
 ) {
 
+    init {
+        fixSubscriptions()
+    }
+
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
     fun notifySettingIsNull(): Boolean {
         var res = true
