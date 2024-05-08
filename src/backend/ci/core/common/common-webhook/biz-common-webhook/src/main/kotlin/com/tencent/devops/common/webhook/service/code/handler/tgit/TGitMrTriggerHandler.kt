@@ -260,15 +260,15 @@ class TGitMrTriggerHandler(
             )
 
             // 只有开启路径匹配时才查询mr change file list
-            val changeFiles = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
-                null
-            } else {
+            val changeFiles = if (tryGetChangeFilePath(this)) {
                 val mrId = if (repository is CodeGitlabRepository) {
                     event.object_attributes.iid
                 } else {
                     event.object_attributes.id
                 }
                 eventCacheService.getMergeRequestChangeInfo(projectId, mrId, repository)
+            } else {
+                null
             }?.toList() ?: emptyList()
             // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询
             val pathFilter = object : WebhookFilter {
@@ -482,5 +482,9 @@ class TGitMrTriggerHandler(
                 ""
             }
         }
+    }
+
+    private fun tryGetChangeFilePath(webHookParams: WebHookParams) = with(webHookParams) {
+        !excludePaths.isNullOrBlank() || !includePaths.isNullOrBlank() || enableThirdFilter == true
     }
 }

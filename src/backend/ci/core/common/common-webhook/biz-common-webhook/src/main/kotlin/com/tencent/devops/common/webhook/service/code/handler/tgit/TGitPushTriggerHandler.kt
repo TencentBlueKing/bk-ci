@@ -211,7 +211,7 @@ class TGitPushTriggerHandler(
                 commits?.first()?.message ?: "",
                 pipelineId
             )
-            val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            val eventPaths = if (tryGetChangeFilePath(this, event.operation_kind)) {
                 eventCacheService.getChangeFileList(
                     projectId = projectId,
                     repo = repository,
@@ -350,5 +350,13 @@ class TGitPushTriggerHandler(
             }
         }
         return changeFileList
+    }
+
+    private fun tryGetChangeFilePath(
+        webHookParams: WebHookParams,
+        operationKind: String?
+    ) = with(webHookParams) {
+        (!excludePaths.isNullOrBlank() || !includePaths.isNullOrBlank() || enableThirdFilter == true) &&
+                operationKind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value
     }
 }
