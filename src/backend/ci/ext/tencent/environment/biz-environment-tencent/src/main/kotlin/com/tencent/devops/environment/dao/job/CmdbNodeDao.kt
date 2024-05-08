@@ -60,9 +60,8 @@ import java.time.LocalDateTime
 
 @Repository
 class CmdbNodeDao {
-    /**
-     * batch update node record(s)
-     */
+    // -------------------------------batch update node record(s)-------------------------------
+
     fun batchUpdateNodeSeverIdByIp(
         dslContext: DSLContext,
         nodeIpToServerIdMap: Map<String, Long?>
@@ -185,8 +184,11 @@ class CmdbNodeDao {
         }
     }
 
+    // -------------------------------update node record(s)-------------------------------
+
     /**
-     * update node record(s)
+     * 将在CMDB中但被误更新为NOT_IN_CMDB的节点对应状态改为NOT_IN_CC
+     * @param ipList 在CMDB中但被误更新为NOT_IN_CMDB的节点ip
      */
     fun updateStatusIncorrectNodeByIpList(
         dslContext: DSLContext,
@@ -260,9 +262,8 @@ class CmdbNodeDao {
         }
     }
 
-    /**
-     * count node record(s)
-     */
+    // -------------------------------count node record(s)-------------------------------
+
     fun countCmdbNodes(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
@@ -326,9 +327,8 @@ class CmdbNodeDao {
         }
     }
 
-    /**
-     * batch insert node(s)
-     */
+    // -------------------------------batch insert node(s)-------------------------------
+
     fun batchInsertNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {
         if (nodes.isEmpty()) return
         val now = LocalDateTime.now()
@@ -422,9 +422,8 @@ class CmdbNodeDao {
         }
     }
 
-    /**
-     * get node record(s)
-     */
+    // -------------------------------get node record(s)-------------------------------
+
     fun getCmdbNodesByIpAndProjectId(
         dslContext: DSLContext,
         projectId: String,
