@@ -38,6 +38,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
@@ -78,7 +80,9 @@ class StoreComponentManageServiceImpl @Autowired constructor(
     private val storeDeleteRepoFileHandler: StoreDeleteRepoFileHandler,
     private val storeDeleteDataPersistHandler: StoreDeleteDataPersistHandler,
     private val storeMemberDao: StoreMemberDao,
-    private val reasonRelDao: ReasonRelDao
+    private val reasonRelDao: ReasonRelDao,
+    private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
+    private val storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao
 ) : StoreComponentManageService {
 
     companion object {
@@ -100,12 +104,13 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         checkPermissionFlag: Boolean
     ): Result<Boolean> {
         logger.info("updateComponentBaseInfo params:[$userId|$storeCode|$storeType|$storeBaseInfoUpdateRequest]")
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         // 校验当前用户是否拥有更新组件基本信息权限
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
-                storeType = StoreTypeEnum.valueOf(storeType).type.toByte()
+                storeType = storeTypeEnum.type.toByte()
             )
         ) {
             return I18nUtil.generateResponseDataObject(
@@ -118,7 +123,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         val componentBaseInfoRecord = storeBaseQueryDao.getNewestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType)
+            storeType = storeTypeEnum
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(storeCode)
@@ -132,15 +137,23 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         }
         val storeIds =  mutableListOf(componentBaseInfoRecord.id)
         val latestComponent =
-            storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode, StoreTypeEnum.valueOf(storeType))
+            storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode, storeTypeEnum)
         if (latestComponent != null && componentBaseInfoRecord.id != latestComponent.id) {
             storeIds.add(latestComponent.id)
         }
+
+        val (storeBaseFeatureDataPO, storeBaseFeatureExtDataPOs) = StoreReleaseUtils.generateStoreBaseFeaturePO(
+            baseFeatureInfo = storeBaseInfoUpdateRequest.baseFeatureInfo,
+            storeCode = storeCode,
+            storeType = storeTypeEnum,
+            userId = userId
+        )
+
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseInfoUpdateRequest.extBaseInfo,
             storeId = componentBaseInfoRecord.id,
             storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType),
+            storeType = storeTypeEnum,
             userId = userId
         )
         dslContext.transaction { t ->
@@ -149,7 +162,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
                 classifyDao.getClassifyByCode(
                     dslContext = context,
                     classifyCode = it,
-                    type = StoreTypeEnum.valueOf(storeType)
+                    type = storeTypeEnum
                 )?.id
             }
             storeBaseManageDao.updateComponentBaseInfo(
@@ -172,6 +185,17 @@ class StoreComponentManageServiceImpl @Autowired constructor(
             }
             if (!storeBaseExtDataPOs.isNullOrEmpty()) {
                 storeBaseExtManageDao.batchSave(context, storeBaseExtDataPOs)
+            }
+            storeBaseFeatureDataPO?.let {
+                storeBaseFeatureManageDao.saveStoreBaseFeatureData(context, it)
+            }
+            if (!storeBaseFeatureExtDataPOs.isNullOrEmpty()) {
+                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeTypeEnum.type.toByte()
+                )
+                storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs)
             }
         }
         return Result(true)
