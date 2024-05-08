@@ -424,8 +424,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 }
                 else -> it.fieldValue
             }
-        })
-            .mapValues { it.value.toMap().toMutableMap() }
+        }).mapValues { it.value.toMap() }
         val storeVersionInfos = records.map {
             StoreDeskVersionItem(
                 storeId = it.id,
