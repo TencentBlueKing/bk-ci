@@ -37,7 +37,7 @@ data class PipelineViewFilterByPacRepo(
     @get:Schema(title = "代码库HashId", required = false)
     val repoHashId: String,
     @get:Schema(title = "文件夹名称", required = false)
-    val folder: String? = null
+    val directory: String? = null
 ) : PipelineViewFilter() {
     companion object {
         const val classType = "filterByPacRepo"
