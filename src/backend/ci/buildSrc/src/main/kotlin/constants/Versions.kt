@@ -55,4 +55,8 @@ object Versions {
     const val tencentcloudsdkcfs = "3.1.946"
     const val swagger = "2.2.16"
     const val jakarta = "2.1.2"
+    // worker
+    const val Winp = "1.28"
+    const val Jna = "5.14.0"
+    const val JenkinsVersionNumber = "1.1"
 }
