@@ -150,13 +150,13 @@ class StartWorkspaceService @Autowired constructor(
         messageEndTime: Long
     ) {
         val id = UUIDUtil.generate()
-        val dataStr = Base64.getDecoder().decode(
+        val dataStr = Base64.getEncoder().encodeToString(
             JsonUtil.getObjectMapper(false).writeValueAsBytes(
                 StartMessageRegisterData(
                     dataType.value, data
                 )
             )
-        ).toString(Charsets.UTF_8)
+        )
         startCloudClient.messageRegister(
             StartMessageRegisterReq(
                 operator = operator,

@@ -70,6 +70,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.Base64
@@ -194,7 +195,7 @@ class NotifyControl @Autowired constructor(
             operator = userId,
             userIdList = userList,
             dataType = StartMessageDataType.MARQUEE,
-            data = Base64.getDecoder().decode(messageContent).toString(Charsets.UTF_8),
+            data = Base64.getEncoder().encodeToString(messageContent.toByteArray(StandardCharsets.UTF_8)),
             messageStartTime = now.timestampmilli(),
             messageEndTime = now.plusDays(1).with(LocalTime.MIDNIGHT).timestampmilli()
         )
