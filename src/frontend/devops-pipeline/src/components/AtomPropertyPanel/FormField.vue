@@ -60,6 +60,7 @@
         },
         render (h) {
             const { label, inline, required, $slots, isError, errorMsg, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider } = this
+            const descMap = desc.split('\n')
             return (
                 <div class={{
                     'form-field': true,
@@ -76,7 +77,16 @@
                         { label.trim() && desc.trim() && <bk-popover placement="top">
                             <i class="bk-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
-                                <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
+                                <div>
+                                    {
+                                        descMap.length > 1
+                                        ? descMap.map(item => (
+                                            <div>{item}</div>
+                                        ))
+                                        : { desc }
+                                    }
+                                    { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
+                                </div>
                             </div>
                         </bk-popover>
                     }

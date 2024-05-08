@@ -979,7 +979,11 @@
     "stageOption": "Control Options",
     "pipelineVersionSaveAt": "Version {0} save at {1}",
     "every": "Remind every",
-    "remindTime": "hours"
+    "remindTime": "hours",
+    "codelib": "Code Repositories",
+    "branches": "Branch",
+    "codelibConfigs": "Code Repositories Config",
+    "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path."
   },
   "storeMap": {
     "textarea": "Textarea",

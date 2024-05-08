@@ -69,7 +69,11 @@
         },
         computed: {
             curComponent () {
-                return this.list.find(i => i.value === this.value)
+                return this.list.find(i => i.value === this.value) || {
+                    type: 'request-selector',
+                    key: 'repositoryHashId',
+                    required: false
+                }
             }
         },
         methods: {
