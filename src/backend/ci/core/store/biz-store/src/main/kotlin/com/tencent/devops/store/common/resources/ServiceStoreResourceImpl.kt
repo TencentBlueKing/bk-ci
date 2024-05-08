@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.resources
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
@@ -38,6 +39,7 @@ import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
@@ -106,13 +108,18 @@ class ServiceStoreResourceImpl @Autowired constructor(
             // 如果从缓存中查出该组件是公共组件则无需权限校验
             return Result(true)
         }
-        return Result(
-            storeCommonService.getStorePublicFlagByCode(storeCode, storeType) ||
-                storeProjectService.isInstalledByProject(
-                    projectCode = projectCode,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte()
-                )
-        )
+        val checkFlag = storeCommonService.getStorePublicFlagByCode(storeCode, storeType) ||
+            storeProjectService.isInstalledByProject(
+                projectCode = projectCode,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        if (!checkFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
+                params = arrayOf(projectCode, storeCode)
+            )
+        }
+        return Result(true)
     }
 }

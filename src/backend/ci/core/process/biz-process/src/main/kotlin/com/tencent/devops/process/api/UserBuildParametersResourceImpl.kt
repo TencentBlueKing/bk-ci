@@ -29,29 +29,20 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
-import com.tencent.devops.process.utils.PIPELINE_ID
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
-import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.store.pojo.app.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
+import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.webhook.TriggerBuildParamUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -65,53 +56,41 @@ class UserBuildParametersResourceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserBuildParametersResourceImpl::class.java)
+        private val paramToContext = PipelineVarUtil.contextVarMap().map {
+            it.value to it.key
+        }.toMap()
     }
 
     override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
+        return Result(TriggerBuildParamUtils.getBasicBuildParams())
+    }
+
+    override fun getCommonParams(userId: String): Result<List<BuildParameterGroup>> {
         return Result(
-            data = listOf(
-                BuildEnvParameters(
-                    name = PIPELINE_START_USER_NAME,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_START_USER_NAME, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_START_TYPE,
-                    desc = MessageUtil.getMessageByLocale(
-                        PIPELINE_START_TYPE,
-                        I18nUtil.getLanguage(userId),
-                        arrayOf(StartType.values().joinToString("/") { it.name })
-                    )
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_BUILD_NUM,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_NUM, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PROJECT_NAME,
-                    desc = MessageUtil.getMessageByLocale(PROJECT_NAME, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_ID, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_NAME,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_NAME, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_BUILD_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_ID, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_VMSEQ_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_VMSEQ_ID, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_ELEMENT_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_ELEMENT_ID, I18nUtil.getLanguage(userId))
+            listOf(
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getBasicParamName(),
+                    params = TriggerBuildParamUtils.getBasicBuildParams().map {
+                        it.copy(name = paramToContext[it.name] ?: it.name)
+                    }.sortedBy { it.name }
                 )
             )
         )
+    }
+
+    override fun getTriggerParams(
+        userId: String,
+        atomCodeList: List<String?>
+    ): Result<List<BuildParameterGroup>> {
+        val buildParameterGroups = mutableListOf<BuildParameterGroup>()
+        atomCodeList.filterNotNull().distinct().forEach { atomCode ->
+            buildParameterGroups.addAll(
+                TriggerBuildParamUtils.getTriggerParamNameMap(
+                    atomCode = atomCode
+                )
+            )
+        }
+        return Result(buildParameterGroups)
     }
 
     override fun listRepositoryAliasName(

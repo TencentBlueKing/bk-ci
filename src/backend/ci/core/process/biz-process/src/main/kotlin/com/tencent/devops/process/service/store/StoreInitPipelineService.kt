@@ -57,7 +57,7 @@ class StoreInitPipelineService @Autowired constructor(
     ): Result<StoreInitPipelineResp> {
         // 保存流水线信息
         val model = JsonUtil.to(storeInitPipelineReq.pipelineModel, Model::class.java)
-        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectId, model, ChannelCode.AM)
+        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectId, model, ChannelCode.AM).pipelineId
         // 异步启动流水线
         var buildId: String? = null
         try {

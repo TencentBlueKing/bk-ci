@@ -44,7 +44,10 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -109,6 +112,7 @@ open class DefaultModelCheckPlugin constructor(
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
         val lastPosition = model.stages.size - 1
+
         model.stages.forEachIndexed { nowPosition, stage ->
             val containers = stage.containers
             // 判断stage下container数量是否超过系统限制
@@ -158,6 +162,28 @@ open class DefaultModelCheckPlugin constructor(
         }
 
         return metaSize
+    }
+
+    override fun checkSettingIntegrity(setting: PipelineSetting, projectId: String?) {
+        setting.successSubscriptionList?.checkSubscriptionList()
+        setting.failSubscriptionList?.checkSubscriptionList()
+    }
+
+    private fun List<Subscription>.checkSubscriptionList() {
+        this.forEach { subscription ->
+            // #8161 历史数据可能存在没有加通知类型的情况，暂时不加检查
+            //
+//            if (subscription.types.isEmpty()) {
+//                throw ErrorCodeException(
+//                    errorCode = ERROR_INCORRECT_NOTIFICATION_TYPE
+//                )
+//            }
+            if (subscription.types.isNotEmpty() && subscription.content.isBlank()) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
+                )
+            }
+        }
     }
 
     private fun Stage.checkStageReviewers() {

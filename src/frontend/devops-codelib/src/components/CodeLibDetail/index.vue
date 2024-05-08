@@ -117,6 +117,7 @@
                         :repo-info="repoInfo"
                         :cur-repo="curRepo"
                         :type="repoInfo['@type']"
+                        :pac-project-name="pacProjectName"
                         :fetch-repo-detail="fetchRepoDetail"
                         :event-type-list="eventTypeList"
                         :trigger-type-list="triggerTypeList"
@@ -155,17 +156,17 @@
     </div>
 </template>
 <script>
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import {
         mapActions
     } from 'vuex'
     import {
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
-    import { RESOURCE_ACTION, RESOURCE_TYPE, handleCodelibNoPermission } from '@/utils/permission'
-    import Trigger from './trigger.vue'
+    import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     import BasicSetting from './basic-setting.vue'
     import TriggerEvent from './trigger-event.vue'
-    import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
+    import Trigger from './trigger.vue'
     export default {
         name: 'CodeLibDetail',
         components: {
@@ -226,6 +227,7 @@
                     CODE_TGIT: 'code-TGit',
                     CODE_P4: 'code-P4'
                 },
+                pacProjectName: '',
                 eventTypeList: [],
                 triggerTypeList: [],
                 errorCode: 0
@@ -260,6 +262,7 @@
             curRepoId: {
                 handler (val) {
                     this.errorCode = 0
+                    this.pacProjectName = ''
                     this.fetchRepoDetail(val)
                 },
                 immediate: true
@@ -303,6 +306,7 @@
         methods: {
             ...mapActions('codelib', [
                 'deleteRepo',
+                'checkPacProject',
                 'renameAliasName',
                 'fetchUsingPipelinesList',
                 'fetchEventType',
@@ -341,8 +345,9 @@
             async fetchRepoDetail (id, loading = true) {
                 this.isLoading = true
                 await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
-                    .then((res) => {
+                    .then(async (res) => {
                         this.repoInfo = res
+                        await this.handleCheckPacProject()
                         this.$router.push({
                             query: {
                                 ...this.$route.query,
@@ -506,9 +511,24 @@
                     this.pipelinesDialogPayload.isLoadingMore = false
                 })
             },
+
+            /**
+             * 校验仓库是否已经在其他项目开启了PAC
+             */
+            handleCheckPacProject () {
+                if (this.repoInfo.scmType === 'CODE_GIT') {
+                    this.checkPacProject({
+                        repoUrl: this.repoInfo.url,
+                        repositoryType: this.repoInfo.scmType
+                    }).then((res) => {
+                        this.pacProjectName = res
+                    })
+                }
+            },
             handleApply () {
-                handleCodelibNoPermission({
+                this.handleNoPermission({
                     projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
                     resourceCode: this.urlRepoId,
                     action: RESOURCE_ACTION.VIEW
                 })
