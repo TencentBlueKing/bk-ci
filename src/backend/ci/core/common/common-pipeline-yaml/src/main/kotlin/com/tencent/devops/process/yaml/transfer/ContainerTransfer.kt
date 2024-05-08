@@ -217,7 +217,12 @@ class ContainerTransfer @Autowired(required = false) constructor(
     ): PreJob {
         return PreJob(
             name = job.name,
-            runsOn = dispatchTransfer.makeRunsOn(job)?.fix(userId, projectId, job.dispatchType?.buildType()),
+            runsOn = dispatchTransfer.makeRunsOn(job)?.fix(
+                jobId = job.jobId.toString(),
+                userId = userId,
+                projectId = projectId,
+                buildType = job.dispatchType?.buildType()
+            ),
             container = null,
             services = null,
             mutex = getMutexYaml(job.mutexGroup),
@@ -248,7 +253,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         )
     }
 
-    private fun RunsOn.fix(userId: String, projectId: String, buildType: BuildType?): RunsOn? {
+    private fun RunsOn.fix(jobId: String, userId: String, projectId: String, buildType: BuildType?): RunsOn? {
         /*修正私有构建机数据*/
         when (poolType) {
             JobRunsOnPoolType.AGENT_ID.name -> {
@@ -290,7 +295,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 }
                 hwSpec = hw?.dockerResourceOptionsShow?.description ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
-                    arrayOf("poolName:$poolName,hwSpec:$hwSpec")
+                    arrayOf("jobId:$jobId resource type not support transfer.[poolName:$poolName,hwSpec:$hwSpec]")
                 )
             }
         }
