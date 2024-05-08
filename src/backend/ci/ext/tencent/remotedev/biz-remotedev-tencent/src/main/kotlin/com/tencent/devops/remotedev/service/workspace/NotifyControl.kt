@@ -194,7 +194,7 @@ class NotifyControl @Autowired constructor(
             operator = userId,
             userIdList = userList,
             dataType = StartMessageDataType.MARQUEE,
-            data = Base64.getEncoder().encodeToString(messageContent.toByteArray()),
+            data = Base64.getDecoder().decode(messageContent).toString(Charsets.UTF_8),
             messageStartTime = now.timestampmilli(),
             messageEndTime = now.plusDays(1).with(LocalTime.MIDNIGHT).timestampmilli()
         )
