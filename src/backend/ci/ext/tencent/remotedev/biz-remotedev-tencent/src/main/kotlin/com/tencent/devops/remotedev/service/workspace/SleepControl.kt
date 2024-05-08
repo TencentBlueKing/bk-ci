@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -312,7 +313,8 @@ class SleepControl @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.RUNNING,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay &&
                 workspace.hostName != null && workspace.hostName !in logins

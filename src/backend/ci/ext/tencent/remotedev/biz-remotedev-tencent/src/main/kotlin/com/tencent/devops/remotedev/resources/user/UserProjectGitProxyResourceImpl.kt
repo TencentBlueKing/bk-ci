@@ -8,8 +8,10 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectGitProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -62,5 +64,18 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
 
     override fun deleteTgitRepo(userId: String, projectId: String, repoId: Long, url: String): Result<Boolean> {
         return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, repoId, url))
+    }
+
+    override fun getTGitNamespaces(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        svnProject: Boolean
+    ): Result<List<TGitNamespace>> {
+        return Result(gitProxyTGitService.getTGitNamespaces(userId, page, pageSize, svnProject))
+    }
+
+    override fun createProject(userId: String, data: CreateTGitProjectInfo): Result<Boolean> {
+        return Result(gitProxyTGitService.createProjectAndLinkTGit(userId, data))
     }
 }

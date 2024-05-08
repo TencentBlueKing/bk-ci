@@ -57,6 +57,9 @@ class ProjectOperationalProductService constructor(
             val bgList = getOperationalProductsByDictType(
                 dictType = ProjectProductDictType.BG
             )
+            // 同步时，清空缓存，防止数据重复
+            productInfoList.clear()
+            bgName2ProductList.clear()
             obsProductList.forEach { obsProductInfo ->
                 val planProductInfo = planProductList.firstOrNull {
                     it.planProductId == obsProductInfo.planProductId

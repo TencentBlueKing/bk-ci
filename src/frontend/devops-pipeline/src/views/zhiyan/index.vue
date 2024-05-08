@@ -1,6 +1,7 @@
 <template>
-    <div v-bkloading="{ isLoading: loading }">
+    <div class="zy-bk-page" v-bkloading="{ isLoading: loading }">
         <component
+            ref="zhiyan"
             v-if="!loading"
             :is="zyComponent"
             @on-pipeline-delegate="onPipelineDelegate"
@@ -12,6 +13,11 @@
                 v-bind="$attrs"
                 v-on="$listeners"
             />
+            <template #more-action="">
+                <div class="zy-more-action">
+                    <MoreAction />
+                </div>
+            </template>
         </component>
     </div>
 </template>
@@ -34,7 +40,8 @@
         name: 'ZyPipeline',
         components: {
             TemplateEdit,
-            PipelineIndex
+            PipelineIndex,
+            MoreAction: () => import('../../components/PipelineHeader/MoreActions.vue')
         },
         provide () {
             return {
@@ -50,7 +57,6 @@
                 zyComponentName: ZY_NAMES[this.$route.name] || 'DevopsWrap',
                 zyComponents: {},
                 jsUrl: `${prefix}/zhiyan.cicd.devops.umd.js`,
-                cssUrl: `${prefix}/zhiyan.cicd.devops.min.css`,
                 loading: true
             }
         },
@@ -74,30 +80,6 @@
                 this.loading = false
             }
         },
-        async mounted () {
-            await this.$nextTick()
-        },
-        beforeDestroy () {
-            this.removeCss()
-        },
-        beforeRouteLeave (to, from, next) {
-            const { name, query, params } = to || {}
-            const redirectNames = [
-                'pipelinesDetail',
-                'pipelinesEdit',
-                'pipelinesPreview'
-            ]
-
-            if (!redirectNames.includes(name)) {
-                return next()
-            }
-
-            return next({
-                name: name.replace(/^pipelines/, 'zyPipelines'),
-                query,
-                params
-            })
-        },
         methods: {
             onPipelineDelegate (action, ...args) {
                 if (!this.$refs.pipeline) {
@@ -113,30 +95,12 @@
 
                 this.$refs.pipeline[name] = value
             },
-            sendMessage (action, params) {
-                window.top.postMessage({
-                    action,
-                    params
-                }, '*')
-            },
             getZyComponent (name) {
                 const className = name === 'DevopsWrap' ? 'zy-bk-container' : ''
 
                 return this.zyComponents[name] || {
                     template: `<div class="${className}"><slot /></div>`
                 }
-            },
-            importStyle ({ type, href, name }, parent = document.head) {
-                return new Promise((resolve, reject) => {
-                    const link = document.createElement('link')
-                    type && (link.type = type)
-                    link.rel = 'stylesheet'
-                    link.href = href
-                    name && (link.setAttribute('data-name', name))
-                    link.onload = () => resolve(link)
-                    link.onerror = reject
-                    parent.appendChild(link)
-                })
             },
             importScript ({ url }, parent = document.body) {
                 return new Promise((resolve, reject) => {
@@ -147,29 +111,17 @@
                     parent.appendChild(s)
                 })
             },
-            removeCss (cssUrl = this.cssUrl) {
-                document.querySelectorAll('link').forEach((item, i) => {
-                    if (item.href && item.href.includes(cssUrl)) {
-                        item.remove()
-                    }
-                })
-            },
-            async loadComponents (jsUrl = this.jsUrl, cssUrl = this.cssUrl, lib = 'zhiyan_cicd_devops') {
-                if (!jsUrl && !cssUrl) {
+            async loadComponents (jsUrl = this.jsUrl, lib = 'zhiyan_cicd_devops') {
+                if (!jsUrl || !lib) {
                     return
                 }
 
                 try {
-                    await Promise.all([
-                        cssUrl && this.importStyle({ href: cssUrl }),
-                        jsUrl && await this.importScript({ url: jsUrl })
-                    ])
+                    await this.importScript({ url: jsUrl })
 
-                    if (jsUrl && lib) {
-                        const components = window[lib]
+                    const components = window[lib]
 
-                        return components || {}
-                    }
+                    return components || {}
                 } catch (e) {}
             }
         }

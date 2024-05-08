@@ -16,6 +16,8 @@ import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
@@ -39,13 +41,13 @@ import javax.ws.rs.core.StreamingOutput
 class GitProxyTGitService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
+    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val projectTGitLinkDao: ProjectTGitLinkDao,
     private val bkitsmService: BKItsmService,
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
     private val tGitConfig: TGitConfig,
-    private val redisOperation: RedisOperation,
-    private val workspaceDao: WorkspaceDao
+    private val redisOperation: RedisOperation
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -376,8 +378,8 @@ class GitProxyTGitService @Autowired constructor(
                 userId = userId
             )
             if (gitRs?.any {
-                it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
-            } != true
+                    it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
+                } != true
             ) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
@@ -645,6 +647,103 @@ class GitProxyTGitService @Autowired constructor(
                 gitResult[record.projectId]?.set(record.tgitId, record.url)
             }
         }
+    }
+
+    fun getTGitNamespaces(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        svnProject: Boolean
+    ): List<TGitNamespace> {
+        val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitConfig.tGitUrl)
+        )
+        if (!svnProject) {
+            return offshoreTGitApiClient.getNamespaces(token.accessToken, page, pageSize)
+        }
+
+        val userResult = mutableListOf<TGitNamespace>()
+        val result = mutableListOf<TGitNamespace>()
+        var fetchPage = 1
+        val fetchPageSize = 100
+        // 工作空间每次会带一个个人工作空间
+        val maxSize = page * pageSize + 1
+        while (true) {
+            val request = offshoreTGitApiClient.getNamespaces(token.accessToken, fetchPage, fetchPageSize)
+            // 第一次先把个人项目添加进去，后续都不添加
+            if (userResult.isEmpty()) {
+                userResult.addAll(request.filter { it.kind == TGitNamespaceKind.USER.text })
+            }
+
+            result.addAll(request.filter { it.kind != TGitNamespaceKind.USER.text && it.parentId == null })
+
+            // 没有多余的页数就直接退出
+            if ((request.size - userResult.size) < pageSize) {
+                break
+            }
+
+            // 判断筛选的总量是否到达了需要分页的总数
+            if (result.size == maxSize) {
+                break
+            }
+
+            // 都不满足就继续
+            fetchPage += 1
+        }
+
+        val startIndex = (page - 1) * pageSize
+        val endIndex = minOf(startIndex + pageSize, result.size)
+        userResult.addAll(result.subList(startIndex, endIndex))
+
+        return userResult
+    }
+
+    fun createProjectAndLinkTGit(
+        userId: String,
+        info: CreateTGitProjectInfo
+    ): Boolean {
+        val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitConfig.tGitUrl)
+        )
+
+        val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
+
+        // 关联
+        val ips = workspaceDao.fetchProjectIp(dslContext, info.projectId).map { it.substringAfter(".") }.toSet()
+        val users = fetchProjectSpecAclUsers(info.projectId)
+
+        val ok = updateTGitProjectAcl(
+            token = token.accessToken,
+            tGitProjectId = data.id.toString(),
+            ips = ips,
+            users = users
+        )
+
+        val url = data.httpsUrlToRepo ?: data.httpUrlToRepo ?: ""
+
+        projectTGitLinkDao.add(
+            dslContext = dslContext,
+            projectId = info.projectId,
+            tgitId = data.id,
+            status = if (ok) {
+                TGitRepoStatus.AVAILABLE
+            } else {
+                TGitRepoStatus.ABNORMAL
+            },
+            oauthUser = userId,
+            gitType = if (info.svnProject) {
+                TGitProjectType.SVN.name
+            } else {
+                TGitProjectType.GIT.name
+            },
+            url = url.removeHttpPrefix()
+        )
+
+        return ok
     }
 
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")

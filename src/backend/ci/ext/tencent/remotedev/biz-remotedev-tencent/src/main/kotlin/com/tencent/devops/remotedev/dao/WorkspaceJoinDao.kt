@@ -150,6 +150,14 @@ class WorkspaceJoinDao {
                 }
             }
 
+            search.workspaceOwnerType?.ifEmpty { null }?.let { types ->
+                if (search.onFuzzyMatch) {
+                    conditions.add(OWNER_TYPE.likeRegex(types.joinToString("|") { it.name }))
+                } else {
+                    conditions.add(OWNER_TYPE.`in`(types.map { it.name }))
+                }
+            }
+
             queryType.ownerType()?.let {
                 conditions.add(OWNER_TYPE.eq(it.name))
             }
@@ -323,7 +331,7 @@ class WorkspaceJoinDao {
             .toSet()
     }
 
-    // 获取正在运行的 workspace 的用户
+    // 获取正常状态的 workspace 的用户
     fun fetchProjectSharedUser(
         dslContext: DSLContext,
         projectId: String,

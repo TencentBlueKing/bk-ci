@@ -43,6 +43,7 @@ import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@SuppressWarnings("LongParameterList")
 class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val bkRepoClient: BkRepoClient

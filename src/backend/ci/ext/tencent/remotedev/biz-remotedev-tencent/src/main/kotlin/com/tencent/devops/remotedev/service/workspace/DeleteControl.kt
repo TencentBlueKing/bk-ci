@@ -438,7 +438,8 @@ class DeleteControl @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.DISTRIBUTING,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 if (workspace.projectId in whiteListProject) {
@@ -517,7 +518,8 @@ class DeleteControl @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.STOPPED,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 if (workspace.projectId in whiteListProject) {
