@@ -537,16 +537,19 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = resource.settingVersion ?: version
         )
+        val model = pipelineInfoFacadeService.getFixedModel(
+            model = resource.model,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            pipelineInfo = null
+        )
+        /* 兼容存量数据 */
+        model.desc = setting.desc
         // 后端主动填充前端展示的标签名称
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
-            model = pipelineInfoFacadeService.getFixedModel(
-                model = resource.model,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                pipelineInfo = null
-            )
+            model = model
         )
         val baseResource = resource.baseVersion?.let {
             repositoryVersionService.getPipelineVersionSimple(
