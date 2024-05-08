@@ -98,12 +98,6 @@ data class PipelineSetting(
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
     fun notifySettingIsNull(): Boolean {
         var res = true
-        if (this.successSubscription.types.isNotEmpty()) {
-            res = false
-        }
-        if (this.failSubscription.types.isNotEmpty()) {
-            res = false
-        }
         if (!this.successSubscriptionList.isNullOrEmpty() &&
             this.successSubscriptionList!!.any { it.types.isNotEmpty() }
         ) {
@@ -112,6 +106,12 @@ data class PipelineSetting(
         if (!this.failSubscriptionList.isNullOrEmpty() &&
             this.failSubscriptionList!!.any { it.types.isNotEmpty() }
         ) {
+            res = false
+        }
+        if (this.successSubscription.types.isNotEmpty()) {
+            res = false
+        }
+        if (this.failSubscription.types.isNotEmpty()) {
             res = false
         }
         return res
@@ -126,13 +126,11 @@ data class PipelineSetting(
         // 只有旧数据向新数据的更新，取消旧数据的保存
         if (successSubscriptionList.isNullOrEmpty()) {
             successSubscriptionList = listOf(this.successSubscription)
-        } else {
-            successSubscription = successSubscriptionList!!.first()
         }
+        successSubscription = successSubscriptionList!!.first()
         if (failSubscriptionList.isNullOrEmpty()) {
             failSubscriptionList = listOf(this.failSubscription)
-        } else {
-            failSubscription = failSubscriptionList!!.first()
         }
+        failSubscription = failSubscriptionList!!.first()
     }
 }

@@ -168,12 +168,13 @@ const handleChangeSearch = (data) => {
 };
 
 const fetchGroupList = async (payload = []) => {
-  if (!(props.projectCode || route?.query.project_code)) return;
+  const projectId = props.projectCode || route?.query.project_code;
+  if (!projectId) return;
   const params = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
     groupLevel: groupLevel.value,
-    projectId: props.projectCode || route?.query.project_code,
+    projectId,
   };
   payload.forEach((i) => {
     if (i.id === 'actionId') {

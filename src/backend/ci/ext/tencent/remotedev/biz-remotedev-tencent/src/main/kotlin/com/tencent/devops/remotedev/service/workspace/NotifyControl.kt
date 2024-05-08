@@ -111,6 +111,9 @@ class NotifyControl @Autowired constructor(
         /*云桌面处于待分配超过3天的自动回收，并邮件提醒	*/
         const val NOT_ASSIGN_AUTO_DELETE_NOTIFY = "NOT_ASSIGN_AUTO_DELETE_NOTIFY"
 
+        /*云桌面处于待分配没有超过3天的邮件提醒	*/
+        const val NOT_ASSIGN_AUTO_NOTIFY = "NOT_ASSIGN_AUTO_NOTIFY"
+
         /*云桌面通知-关机超过7天时自动销毁*/
         const val SLEEP_7_DAY_AUTO_DELETE_NOTIFY = "SLEEP_7_DAY_AUTO_DELETE_NOTIFY"
 

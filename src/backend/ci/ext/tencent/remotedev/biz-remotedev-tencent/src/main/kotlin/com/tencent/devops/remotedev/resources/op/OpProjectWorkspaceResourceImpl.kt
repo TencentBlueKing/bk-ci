@@ -220,7 +220,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             ) ?: return
             createControl.loadWorkspaceWithPersonalWindows(
                 userId = owner,
-                projectId = "_$owner",
                 workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),

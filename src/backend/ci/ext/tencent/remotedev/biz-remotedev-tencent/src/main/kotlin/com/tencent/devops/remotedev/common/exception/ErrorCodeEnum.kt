@@ -217,14 +217,19 @@ enum class ErrorCodeEnum(
         errorCode = "2132041",
         formatErrorMessage = "do remotedev job error {1}"
     ),
-    REMOTEDEV_CLIENT_IP_DUPLICATE_ERROR(
+    REQ_TGIT_API_ERROR(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132042",
+        formatErrorMessage = "request tgit api {0} error {1}"
+    ),
+    REMOTEDEV_CLIENT_IP_DUPLICATE_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132043",
         formatErrorMessage = "client ip {0} request error: duplicate ip"
     ),
     REMOTEDEV_CLIENT_IP_NO_PERM_ERROR(
         errorType = ErrorType.THIRD_PARTY,
-        errorCode = "2132043",
+        errorCode = "2132044",
         formatErrorMessage = "client ip {0} request error: ip no permission to perform the operation {1}"
     );
 

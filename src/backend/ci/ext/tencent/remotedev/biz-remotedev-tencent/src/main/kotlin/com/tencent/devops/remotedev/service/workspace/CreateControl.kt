@@ -49,6 +49,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
@@ -419,9 +420,7 @@ class CreateControl @Autowired constructor(
                 workspaceCreate = workspaceCreate
             )
         } else {
-            loadWorkspaceWithPersonalWindows(
-                userId, "_$userId", workspaceCreate
-            )
+            loadWorkspaceWithPersonalWindows(userId, workspaceCreate)
         }
         return true
     }
@@ -455,7 +454,7 @@ class CreateControl @Autowired constructor(
 
         val workspace = if (workspaceCreate.windowsType != null) {
             loadWorkspaceWithPersonalWindows(
-                userId = userId, projectId = projectId, workspaceCreate = WindowsWorkspaceCreate(
+                userId = userId, workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = checkNotNull(workspaceCreate.windowsType),
                     windowsZone = checkNotNull(workspaceCreate.windowsZone),
                     baseImageId = 0,
@@ -976,7 +975,6 @@ class CreateControl @Autowired constructor(
 
     fun loadWorkspaceWithPersonalWindows(
         userId: String,
-        projectId: String,
         workspaceCreate: WindowsWorkspaceCreate,
         cgsId: String? = null
     ): List<Workspace> {
@@ -1006,6 +1004,8 @@ class CreateControl @Autowired constructor(
                 params = arrayOf(workspaceCreate.windowsZone)
             )
         }
+
+        val projectId = checkOrInitPersonalProject(userId)
 
         val workspaceNames = workspaceCreate.assignNames.ifEmpty {
             buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(userId)) } }
@@ -1067,6 +1067,42 @@ class CreateControl @Autowired constructor(
         }
 
         return res
+    }
+
+    private fun checkOrInitPersonalProject(userId: String): String {
+        val userProjectId = "_$userId"
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(userProjectId)
+        }.onFailure { logger.warn("get project $userProjectId info error|${it.message}") }
+            .getOrThrow().data
+        if (projectInfo == null) {
+            /*初始化项目*/
+            kotlin.runCatching {
+                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
+            }.getOrElse {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
+                    params = arrayOf("load user project fail.")
+                )
+            }
+            /*初始化bkrepo*/
+            val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
+                userId = userId,
+                projectCode = userProjectId,
+                addcloudDesktopNum = null,
+                enable = true
+            ).data
+
+            if (ok != true) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
+                    params = arrayOf("init user project fail.")
+                )
+            }
+            /*初始化setting*/
+            remoteDevSettingDao.fetchOneSetting(dslContext, userId)
+        }
+        return userProjectId
     }
 
     private fun windowsGpuCheck(userId: String, count: Int) {
