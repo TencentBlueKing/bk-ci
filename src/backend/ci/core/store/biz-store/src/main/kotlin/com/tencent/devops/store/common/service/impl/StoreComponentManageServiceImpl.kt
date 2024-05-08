@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
@@ -68,22 +68,49 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class StoreComponentManageServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeBaseManageDao: StoreBaseManageDao,
-    private val storeProjectService: StoreProjectService,
-    private val classifyDao: ClassifyDao,
-    private val storeLabelRelDao: StoreLabelRelDao,
-    private val storeBaseExtManageDao: StoreBaseExtManageDao,
-    private val storeDeleteCheckHandler: StoreDeleteCheckHandler,
-    private val storeDeleteRepoFileHandler: StoreDeleteRepoFileHandler,
-    private val storeDeleteDataPersistHandler: StoreDeleteDataPersistHandler,
-    private val storeMemberDao: StoreMemberDao,
-    private val reasonRelDao: ReasonRelDao,
-    private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
-    private val storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao
-) : StoreComponentManageService {
+class StoreComponentManageServiceImpl : StoreComponentManageService {
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var storeBaseQueryDao: StoreBaseQueryDao
+
+    @Autowired
+    lateinit var storeBaseManageDao: StoreBaseManageDao
+
+    @Autowired
+    lateinit var storeProjectService: StoreProjectService
+
+    @Autowired
+    lateinit var classifyDao: ClassifyDao
+
+    @Autowired
+    lateinit var storeLabelRelDao: StoreLabelRelDao
+
+    @Autowired
+    lateinit var storeBaseExtManageDao: StoreBaseExtManageDao
+
+    @Autowired
+    lateinit var storeDeleteCheckHandler: StoreDeleteCheckHandler
+
+    @Autowired
+    lateinit var storeDeleteRepoFileHandler: StoreDeleteRepoFileHandler
+
+    @Autowired
+    lateinit var storeDeleteDataPersistHandler: StoreDeleteDataPersistHandler
+
+    @Autowired
+    lateinit var storeMemberDao: StoreMemberDao
+
+    @Autowired
+    lateinit var reasonRelDao: ReasonRelDao
+
+    @Autowired
+    lateinit var storeBaseFeatureManageDao: StoreBaseFeatureManageDao
+
+    @Autowired
+    lateinit var storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
@@ -105,22 +132,8 @@ class StoreComponentManageServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("updateComponentBaseInfo params:[$userId|$storeCode|$storeType|$storeBaseInfoUpdateRequest]")
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
-        // 校验当前用户是否拥有更新组件基本信息权限
-        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeTypeEnum.type.toByte()
-            )
-        ) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
-                language = I18nUtil.getLanguage(userId),
-                params = arrayOf(storeCode)
-            )
-        }
         // 查询组件的最新记录
-        val componentBaseInfoRecord = storeBaseQueryDao.getNewestComponentByCode(
+        val newestComponentRecord = storeBaseQueryDao.getNewestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeTypeEnum
@@ -128,30 +141,42 @@ class StoreComponentManageServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(storeCode)
         )
-        val editFlag = StoreUtils.checkEditCondition(componentBaseInfoRecord.status)
-        if (!editFlag) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
-                params = arrayOf(componentBaseInfoRecord.name, componentBaseInfoRecord.version)
-            )
-        }
-        val storeIds =  mutableListOf(componentBaseInfoRecord.id)
-        val latestComponent =
-            storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode, storeTypeEnum)
-        if (latestComponent != null && componentBaseInfoRecord.id != latestComponent.id) {
+        updateComponentCheck(
+            userId = userId,
+            storeTypeEnum = storeTypeEnum,
+            checkPermissionFlag = checkPermissionFlag,
+            componentBaseInfoRecord = newestComponentRecord
+        )
+        updateComponentPersistent(
+            userId = userId,
+            storeTypeEnum = storeTypeEnum,
+            newestComponentRecord = newestComponentRecord,
+            storeBaseInfoUpdateRequest = storeBaseInfoUpdateRequest
+        )
+        return Result(true)
+    }
+
+    private fun updateComponentPersistent(
+        userId: String,
+        storeTypeEnum: StoreTypeEnum,
+        newestComponentRecord: TStoreBaseRecord,
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+    ) {
+        val storeCode = newestComponentRecord.storeCode
+        val storeIds = mutableListOf(newestComponentRecord.id)
+        val latestComponent = storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode, storeTypeEnum)
+        if (latestComponent != null && newestComponentRecord.id != latestComponent.id) {
             storeIds.add(latestComponent.id)
         }
-
         val (storeBaseFeatureDataPO, storeBaseFeatureExtDataPOs) = StoreReleaseUtils.generateStoreBaseFeaturePO(
             baseFeatureInfo = storeBaseInfoUpdateRequest.baseFeatureInfo,
             storeCode = storeCode,
             storeType = storeTypeEnum,
             userId = userId
         )
-
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseInfoUpdateRequest.extBaseInfo,
-            storeId = componentBaseInfoRecord.id,
+            storeId = newestComponentRecord.id,
             storeCode = storeCode,
             storeType = storeTypeEnum,
             userId = userId
@@ -159,11 +184,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val classifyId = storeBaseInfoUpdateRequest.classifyCode?.let {
-                classifyDao.getClassifyByCode(
-                    dslContext = context,
-                    classifyCode = it,
-                    type = storeTypeEnum
-                )?.id
+                classifyDao.getClassifyByCode(dslContext = context, classifyCode = it, type = storeTypeEnum)?.id
             }
             storeBaseManageDao.updateComponentBaseInfo(
                 dslContext = context,
@@ -198,7 +219,35 @@ class StoreComponentManageServiceImpl @Autowired constructor(
                 storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs)
             }
         }
-        return Result(true)
+    }
+
+    private fun updateComponentCheck(
+        userId: String,
+        storeTypeEnum: StoreTypeEnum,
+        checkPermissionFlag: Boolean,
+        componentBaseInfoRecord: TStoreBaseRecord
+    ) {
+        // 校验当前用户是否拥有更新组件基本信息权限
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = componentBaseInfoRecord.storeCode,
+                storeType = storeTypeEnum.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
+                params = arrayOf(componentBaseInfoRecord.storeCode)
+            )
+        }
+
+        val editFlag = StoreUtils.checkEditCondition(componentBaseInfoRecord.status)
+        if (!editFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
+                params = arrayOf(componentBaseInfoRecord.name, componentBaseInfoRecord.version)
+            )
+        }
     }
 
     override fun installComponent(
@@ -243,7 +292,6 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         storeCode: String,
         unInstallReq: UnInstallReq
     ): Result<Boolean> {
-
         logger.info("uninstallComponent|userId:$userId|projectCode:$projectCode|storeCode:$storeCode")
         // 卸载请求检查
         getStoreManagementExtraService(StoreTypeEnum.valueOf(storeType)).uninstallComponentCheck(
@@ -289,10 +337,8 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-
-
     private fun getStoreBaseInstallService(storeType: StoreTypeEnum): StoreBaseInstallService {
-        val beanName = when(storeType) {
+        val beanName = when (storeType) {
             StoreTypeEnum.TEMPLATE -> {
                 "TEMPLATE_BASE_INSTALL_SERVICE"
             }

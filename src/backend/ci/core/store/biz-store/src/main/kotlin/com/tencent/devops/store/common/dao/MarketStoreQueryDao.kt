@@ -41,8 +41,6 @@ import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -52,6 +50,8 @@ import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Repository
 class MarketStoreQueryDao {
@@ -120,12 +120,13 @@ class MarketStoreQueryDao {
                         tStoreStatisticsTotal.STORE_CODE,
                         tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
                     )
-                        .from(tStoreStatisticsTotal).where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
+                        .from(tStoreStatisticsTotal)
+                        .where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
                 baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java)))
             }
 
             val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
-            baseStep.where(conditions).orderBy(realSortType)
+            baseStep.where(conditions).orderBy(realSortType!!.desc())
         } else {
             baseStep.where(conditions)
         }
@@ -136,8 +137,6 @@ class MarketStoreQueryDao {
                 storeInfoQuery.pageSize
             ).skipCheck().fetch()
     }
-
-
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
@@ -164,8 +163,10 @@ class MarketStoreQueryDao {
             tStoreBase.CREATE_TIME
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
-            .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+            .on(
+                tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+            )
     }
 
     private fun formatConditions(
@@ -181,15 +182,20 @@ class MarketStoreQueryDao {
         val classifyId = storeInfoQuery.classifyId
         val labelId = storeInfoQuery.labelId
         val categoryId = storeInfoQuery.categoryId
+        val shouldAddCondition = queryProjectComponentFlag ||
+            !classifyId.isNullOrBlank() ||
+            !labelId.isNullOrBlank() ||
+            !categoryId.isNullOrBlank()
         // 缩减查询范围
-        if (queryProjectComponentFlag || !classifyId.isNullOrBlank() ||
-            !labelId.isNullOrBlank() || !categoryId.isNullOrBlank()) {
+        if (shouldAddCondition) {
             conditions.add(
-                tStoreBase.STORE_CODE.`in`(getStoreCodesByCondition(
-                    dslContext = dslContext,
-                    storeType = storeType.type.toByte(),
-                    storeInfoQuery = storeInfoQuery
-                ))
+                tStoreBase.STORE_CODE.`in`(
+                    getStoreCodesByCondition(
+                        dslContext = dslContext,
+                        storeType = storeType.type.toByte(),
+                        storeInfoQuery = storeInfoQuery
+                    )
+                )
             )
         } else {
             if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
@@ -198,8 +204,10 @@ class MarketStoreQueryDao {
         }
         if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
             baseStep.leftJoin(tStoreBaseFeature)
-                .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+                .on(
+                    tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                        .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                )
             storeInfoQuery.recommendFlag?.let {
                 conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
             }
@@ -275,11 +283,13 @@ class MarketStoreQueryDao {
             conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         } else {
             conditions.add(
-                tStoreBase.STATUS.`in`(listOf(
-                    StoreStatusEnum.RELEASED.name,
-                    StoreStatusEnum.TESTING.name,
-                    StoreStatusEnum.AUDITING.name
-                ))
+                tStoreBase.STATUS.`in`(
+                    listOf(
+                        StoreStatusEnum.RELEASED.name,
+                        StoreStatusEnum.TESTING.name,
+                        StoreStatusEnum.AUDITING.name
+                    )
+                )
             )
         }
         return conditions
