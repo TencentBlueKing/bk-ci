@@ -900,29 +900,6 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         })
     }
 
-    private fun getRecentDailyStatisticList(
-        storeCode: String,
-        storeType: StoreTypeEnum
-    ): List<StoreDailyStatistic>? {
-        // 统计昨天为截止日期的最近一周的数据
-        val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
-            date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
-            format = "yyyy-MM-dd"
-        )
-        return storeDailyStatisticService.getDailyStatisticListByCode(
-            storeCode = storeCode,
-            storeType = storeType.type.toByte(),
-            startTime = DateTimeUtil.convertDateToLocalDateTime(
-                DateTimeUtil.getFutureDate(
-                    localDateTime = endTime,
-                    unit = Calendar.DAY_OF_MONTH,
-                    timeSpan = -6
-                )
-            ),
-            endTime = endTime
-        )
-    }
-
     private fun convertLogoUrl(url: String, urlProtocolTrim: Boolean): String? {
         var logoUrl = StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(url) as? String
         logoUrl = if (logoUrl?.contains("?") == true) {
