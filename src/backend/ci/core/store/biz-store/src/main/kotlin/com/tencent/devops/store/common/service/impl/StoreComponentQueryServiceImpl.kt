@@ -434,7 +434,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 name = it.name,
                 version = it.version,
                 versionContent = versionMap[it.id],
-                status = StoreStatusEnum.valueOf(it.status).getI18n(I18nUtil.getLanguage()),
+                status = it.status,
                 creator = it.creator,
                 createTime = DateTimeUtil.toDateTime(it.createTime),
                 extData = baseExtMap[it.id]
