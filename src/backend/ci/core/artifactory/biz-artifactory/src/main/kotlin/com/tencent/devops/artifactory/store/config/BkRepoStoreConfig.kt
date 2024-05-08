@@ -25,17 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.artifactory.store.config
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@Schema(title = "工作台-更新组件请求报文体")
-data class StoreUpdateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @field:Valid
-    val baseInfo: StoreBaseUpdateRequest
-) : HandlerRequest()
+/**
+ * 研发商店仓库配置
+ */
+@Component
+class BkRepoStoreConfig {
+
+    // 蓝盾新仓库研发商店项目名称
+    @Value("\${bkrepo.store.projectName:bk-store}")
+    val bkrepoStoreProjectName: String = "bk-store"
+
+    // 蓝盾新仓库研发商店用户名
+    @Value("\${bkrepo.store.userName:g_bkstore}")
+    val bkrepoStoreUserName: String = "g_bkstore"
+
+    // 蓝盾新仓库研发商店密码
+    @Value("\${bkrepo.store.password:}")
+    val bkrepoStorePassword: String = ""
+}

@@ -1,16 +1,19 @@
 package com.tencent.devops.artifactory.store.service.impl
 
+import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
+import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import java.io.File
 import java.io.InputStream
 import javax.ws.rs.NotFoundException
@@ -20,8 +23,11 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
     @Autowired
     lateinit var bkRepoClient: BkRepoClient
 
-    @Value("\${bkrepo.devxIdcHost:#{null}}")
-    private val devxIdcHost: String = ""
+    @Autowired
+    lateinit var bkRepoClientConfig: BkRepoClientConfig
+
+    @Autowired
+    lateinit var bkRepoStoreConfig: BkRepoStoreConfig
 
     override fun getStoreArchiveBasePath(): String {
         return System.getProperty("java.io.tmpdir")
@@ -80,13 +86,16 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             } else {
                 val path = it.path.removePrefix(prefix)
                 logger.debug("uploadLocalFile fileName=${it.name}|path=$path")
-
                 bkRepoClient.uploadLocalFile(
                     userId = BKREPO_DEFAULT_USER,
                     projectId = getBkRepoProjectId(storeType),
                     repoName = repoName,
                     path = path,
-                    file = it
+                    file = it,
+                    gatewayFlag = false,
+                    bkrepoApiUrl = "${getRepoPrefixUrl(storeType)}/api/generic",
+                    userName = bkRepoStoreConfig.bkrepoStoreUserName,
+                    password = bkRepoStoreConfig.bkrepoStorePassword
                 )
             }
         }
@@ -136,21 +145,35 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         storeType: StoreTypeEnum,
         pkgPath: String
     ): String {
-        val shareUri = bkRepoClient.createShareUri(
-            creatorId = userId,
-            projectId = getBkRepoProjectId(storeType),
-            repoName = getBkRepoName(storeType),
-            fullPath = pkgPath,
-            downloadUsers = listOf(),
-            downloadIps = listOf(),
-            timeoutInSeconds = 3600L
+        val repoPrefixUrl = getRepoPrefixUrl(storeType)
+        val temporaryAccessUrls = bkRepoClient.createTemporaryAccessUrl(
+            temporaryUrlCreateRequest = TemporaryUrlCreateRequest(
+                projectId = getBkRepoProjectId(storeType),
+                repoName = getBkRepoName(storeType),
+                fullPathSet = setOf(pkgPath),
+                expireSeconds = 3600L,
+                type = TokenType.DOWNLOAD,
+                host = "$repoPrefixUrl/generic"
+            ),
+            bkrepoPrefixUrl = repoPrefixUrl,
+            userName = bkRepoStoreConfig.bkrepoStoreUserName,
+            password = bkRepoStoreConfig.bkrepoStorePassword
         )
-        val host = if (storeType == StoreTypeEnum.DEVX && devxIdcHost.isNotBlank()) {
+        return if (temporaryAccessUrls.isNotEmpty()) {
+            temporaryAccessUrls[0].url
+        } else {
+            ""
+        }
+    }
+
+    private fun getRepoPrefixUrl(storeType: StoreTypeEnum): String {
+        val devxIdcHost = bkRepoClientConfig.bkRepoDevxIdcHost
+        val repoPrefixUrl = if (storeType == StoreTypeEnum.DEVX && devxIdcHost.isNotBlank()) {
             devxIdcHost
         } else {
-            bkRepoClient.getRkRepoIdcHost()
+            bkRepoClientConfig.bkRepoIdcHost
         }
-        return "$host/repository$shareUri&download=true"
+        return repoPrefixUrl
     }
 
     companion object {
