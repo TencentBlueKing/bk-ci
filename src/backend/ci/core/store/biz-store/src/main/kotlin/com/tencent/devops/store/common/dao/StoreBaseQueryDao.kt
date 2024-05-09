@@ -42,7 +42,6 @@ import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -52,7 +51,9 @@ import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
+@Suppress("TooManyFunctions")
 @Repository
 class StoreBaseQueryDao {
 
@@ -193,8 +194,7 @@ class StoreBaseQueryDao {
         storeType: StoreTypeEnum,
         name: String? = null,
         storeCode: String? = null,
-        status: StoreStatusEnum? = null,
-        version: String? = null
+        status: StoreStatusEnum? = null
     ): Int {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
@@ -207,9 +207,6 @@ class StoreBaseQueryDao {
             }
             if (status != null) {
                 conditions.add(STATUS.eq(status.name))
-            }
-            if (version != null) {
-                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
@@ -236,11 +233,13 @@ class StoreBaseQueryDao {
         val conditions = generateListComponentsConditions(
             dslContext = dslContext,
             queryComponentsParam = queryComponentsParam,
-            classifyId = classifyId,
             categoryIds = categoryIds,
             labelIds = labelIds,
             baseStep = baseStep
         )
+        classifyId?.let {
+            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
+        }
         return baseStep.where(conditions).fetchOne(0, Int::class.java) ?: 0
     }
 
@@ -268,11 +267,13 @@ class StoreBaseQueryDao {
         val conditions = generateListComponentsConditions(
             dslContext = dslContext,
             queryComponentsParam = queryComponentsParam,
-            classifyId = classifyId,
             categoryIds = categoryIds,
             labelIds = labelIds,
             baseStep = baseStep
         )
+        classifyId?.let {
+            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
+        }
         if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
             baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name)!!.desc())
         } else {
@@ -280,9 +281,9 @@ class StoreBaseQueryDao {
         }
         return baseStep
             .limit(
-            (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
-            queryComponentsParam.pageSize
-        ).fetch()
+                (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
+                queryComponentsParam.pageSize
+            ).fetch()
     }
 
     fun getProcessingComponents(
@@ -294,13 +295,12 @@ class StoreBaseQueryDao {
         val processingStatusList = StoreStatusEnum.getProcessingStatusList()
         subqueryCondition.addAll(conditions)
         subqueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
-        return dslContext.selectDistinct(tStoreBase.STORE_CODE,).from(tStoreBase).where(subqueryCondition)
+        return dslContext.selectDistinct(tStoreBase.STORE_CODE).from(tStoreBase).where(subqueryCondition)
     }
 
     private fun generateListComponentsConditions(
         dslContext: DSLContext,
         queryComponentsParam: QueryComponentsParam,
-        classifyId: String?,
         categoryIds: List<String>?,
         labelIds: List<String>?,
         baseStep: SelectJoinStep<out Record>
@@ -316,9 +316,6 @@ class StoreBaseQueryDao {
         }
         if (null != name) {
             conditions.add(tStoreBase.NAME.contains(name))
-        }
-        classifyId?.let {
-            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
         }
         categoryIds?.let {
             val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
@@ -347,19 +344,12 @@ class StoreBaseQueryDao {
 
     fun getMyComponents(
         dslContext: DSLContext,
-        userId: String,
-        storeType: StoreTypeEnum,
-        name: String?,
+        conditions: List<Condition>,
         page: Int,
         pageSize: Int
-    ): Result<out Record>? {
+    ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
-        val conditions = generateGetMyComponentConditions(
-            userId = userId,
-            storeName = name,
-            storeType = storeType
-        )
         val subquery = dslContext.select(
             tStoreBase.STORE_CODE,
             tStoreBase.STORE_TYPE,
@@ -397,17 +387,10 @@ class StoreBaseQueryDao {
 
     fun countMyComponents(
         dslContext: DSLContext,
-        userId: String,
-        storeType: StoreTypeEnum,
-        name: String?
+        conditions: List<Condition>
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
-        val conditions = generateGetMyComponentConditions(
-            userId = userId,
-            storeName = name,
-            storeType = storeType
-        )
         return dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE))
             .from(tStoreBase)
             .join(tStoreMember)
@@ -416,7 +399,7 @@ class StoreBaseQueryDao {
             .fetchOne(0, Int::class.java) ?: 0
     }
 
-    private fun generateGetMyComponentConditions(
+    fun generateGetMyComponentConditions(
         userId: String,
         storeType: StoreTypeEnum,
         storeName: String?
@@ -428,8 +411,10 @@ class StoreBaseQueryDao {
         val statusList = StoreStatusEnum.values().map { it.name }.toMutableList()
         statusList.removeAll(StoreStatusEnum.getProcessingStatusList())
         statusList.add(StoreStatusEnum.INIT.name)
-        conditions.add(tStoreBase.STATUS.`in`(statusList)
-            .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION))))
+        conditions.add(
+            tStoreBase.STATUS.`in`(statusList)
+                .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION)))
+        )
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }

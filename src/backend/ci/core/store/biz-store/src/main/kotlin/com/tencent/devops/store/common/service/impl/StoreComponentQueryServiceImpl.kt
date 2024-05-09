@@ -198,24 +198,17 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         logger.info("getMyComponents params:[$userId|$storeType|$name|$page|$pageSize]")
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         // 获取有权限的组件代码列表
-        val records = storeBaseQueryDao.getMyComponents(
-            dslContext = dslContext,
+        val (count, records) = queryMyComponents(
             userId = userId,
-            storeType = StoreTypeEnum.valueOf(storeType),
+            storeTypeEnum = storeTypeEnum,
             name = name,
             page = page,
             pageSize = pageSize
         )
-        val count = storeBaseQueryDao.countMyComponents(
-            dslContext = dslContext,
-            userId = userId,
-            storeType = StoreTypeEnum.valueOf(storeType),
-            name = name
-        )
         val storeProjectMap = mutableMapOf<String, String>()
         val storeIds = mutableListOf<String>()
         val storeCodes = mutableListOf<String>()
-        records?.forEach { record ->
+        records.forEach { record ->
             storeIds.add(record[TStoreBase.T_STORE_BASE.ID])
             val storeCode = record[TStoreBase.T_STORE_BASE.STORE_CODE] as String
             storeCodes.add(storeCode)
@@ -229,21 +222,41 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 storeProjectMap[storeCode] = testProjectCode
             }
         }
-        val storeComponents = records?.let {
-            handleComponents(
-                storeType = storeTypeEnum,
-                storeCodes = storeCodes,
-                storeIds = storeIds,
-                storeProjectMap = storeProjectMap,
-                records = it
-            )
-        }
+        val storeComponents = handleComponents(
+            storeType = storeTypeEnum,
+            storeCodes = storeCodes,
+            storeIds = storeIds,
+            storeProjectMap = storeProjectMap,
+            records = records
+        )
         return Page(
             count = count.toLong(),
             page = page,
             pageSize = pageSize,
-            records = storeComponents ?: emptyList()
+            records = storeComponents
         )
+    }
+
+    private fun queryMyComponents(
+        userId: String,
+        storeTypeEnum: StoreTypeEnum,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): Pair<Int, List<Record>> {
+        val conditions = storeBaseQueryDao.generateGetMyComponentConditions(
+            userId = userId,
+            storeType = storeTypeEnum,
+            storeName = name
+        )
+        val records = storeBaseQueryDao.getMyComponents(
+            dslContext = dslContext,
+            conditions = conditions,
+            page = page,
+            pageSize = pageSize
+        )
+        val count = storeBaseQueryDao.countMyComponents(dslContext, conditions)
+        return Pair(count, records)
     }
 
     override fun listComponents(userId: String, queryComponentsParam: QueryComponentsParam): Page<MyStoreComponent>? {
@@ -322,7 +335,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeCodes: List<String>,
         storeIds: List<String>,
         storeProjectMap: Map<String, String>,
-        records: org.jooq.Result<out Record>
+        records: List<Record>
     ): List<MyStoreComponent> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         // 获取项目ID对应的名称
@@ -513,6 +526,11 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 )
             }
         val statistic = storeTotalStatisticService.getStatisticByCode(userId, storeType.type.toByte(), storeCode)
+        val newestComponentRecord = storeBaseQueryDao.getNewestComponentByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )
         return StoreDetailInfo(
             storeId = storeId,
             storeCode = storeCode,
@@ -543,7 +561,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             certificationFlag = storeFeatureRecord.certificationFlag,
             type = storeFeatureRecord.type,
             userCommentInfo = userCommentInfo,
-            editFlag = StoreUtils.checkEditCondition(storeBaseRecord.status),
+            editFlag = StoreUtils.checkEditCondition(newestComponentRecord!!.status),
             honorInfos = storeHonorService.getStoreHonor(userId, storeType, storeCode),
             indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(storeType, storeCode),
             extData = extData

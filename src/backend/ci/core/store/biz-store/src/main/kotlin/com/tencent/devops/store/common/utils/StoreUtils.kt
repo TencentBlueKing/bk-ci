@@ -159,7 +159,7 @@ object StoreUtils {
             StoreStatusEnum.UNDERCARRIAGED.name,
             StoreStatusEnum.INIT.name
         )
-        // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
+        // 判断最近一个组件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
         return componentFinalStatusList.contains(status)
     }
 }
