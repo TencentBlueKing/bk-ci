@@ -945,14 +945,13 @@ class WorkspaceDao {
                 lower = false,
                 removeDoubleQuotes = true
             ).`as`("REG_ID")
-        ).from(TWorkspace.T_WORKSPACE)
-            .leftJoin(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
+        ).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
+            .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
 
         if (!projectId.isNullOrBlank()) {
-            sql.where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            sql.and(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
         }else{
-            sql.where(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+            sql.and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
         }
 
         return sql.and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
