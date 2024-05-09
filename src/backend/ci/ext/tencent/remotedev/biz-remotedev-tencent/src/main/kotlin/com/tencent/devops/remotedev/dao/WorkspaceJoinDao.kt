@@ -511,7 +511,13 @@ class WorkspaceJoinDao {
                     .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
             ).or(
                 TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                    .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+                    .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners)).and(
+                        TWorkspace.T_WORKSPACE.STATUS.notIn(
+                            WorkspaceStatus.PREPARING.ordinal,
+                            WorkspaceStatus.DELETED.ordinal,
+                            WorkspaceStatus.DELIVERING_FAILED.ordinal
+                        )
+                    )
             )
         }
         return dsl.fetch().map { it["HOST_IP"] as String }.toSet()
