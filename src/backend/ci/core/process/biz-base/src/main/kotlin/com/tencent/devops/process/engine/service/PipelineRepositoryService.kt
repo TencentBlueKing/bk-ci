@@ -54,12 +54,15 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -103,6 +106,7 @@ import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
+import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -121,6 +125,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import kotlin.math.log
 
 @Suppress(
     "LongParameterList",
@@ -155,6 +160,7 @@ class PipelineRepositoryService constructor(
     private val pipelineInfoExtService: PipelineInfoExtService,
     private val operationLogService: PipelineOperationLogService,
     private val client: Client,
+    private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao
 ) {
@@ -1906,11 +1912,10 @@ class PipelineRepositoryService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        pipelineInfo: PipelineInfo,
-        settingVersion: Int
+        savedSetting: PipelineSetting
     ) {
         val lock = PipelineModelLock(redisOperation, pipelineId)
-        val watcher = Watcher(id = "updateSettingVersion#$pipelineId#$settingVersion")
+        val watcher = Watcher(id = "updateSettingVersion#$pipelineId#${savedSetting.version}")
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1935,12 +1940,31 @@ class PipelineRepositoryService constructor(
                 val versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
                 val newVersionName = PipelineVersionUtils.getVersionName(
                     versionNum, releaseResource.pipelineVersion,
-                    releaseResource.triggerVersion, settingVersion
+                    releaseResource.triggerVersion, savedSetting.version
                 ) ?: ""
                 logger.info(
                     "PROCESS|updateSettingVersion|version=$version|" +
                         "versionNum=$versionNum|versionName=$newVersionName"
                 )
+                val newModel = releaseResource.model.copy(
+                    name = savedSetting.pipelineName, desc = savedSetting.desc
+                )
+                // 用新的流水线名称、描述和旧yaml的格式生成新的yaml
+                val yamlWithVersion = try {
+                    transferService.transfer(
+                        userId, projectId, pipelineId, TransferActionType.FULL_MODEL2YAML,
+                        TransferBody(
+                            PipelineModelAndSetting(newModel, savedSetting),
+                            releaseResource.yaml ?: ""
+                        )
+                    ).yamlWithVersion
+                } catch (ignore: Throwable) {
+                    if (ignore is ErrorCodeException) throw ignore
+                    logger.warn("TRANSFER_YAML_SETTING|$projectId|$userId|$pipelineId", ignore)
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                    )
+                }
                 watcher.start("updatePipelineInfo")
                 pipelineInfoDao.update(
                     dslContext = transactionContext,
@@ -1963,14 +1987,14 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     creator = userId,
                     version = version,
-                    model = releaseResource.model,
-                    yamlStr = releaseResource.yaml,
-                    yamlVersion = releaseResource.yamlVersion,
+                    model = newModel,
+                    yamlStr = yamlWithVersion?.yamlStr,
+                    yamlVersion = yamlWithVersion?.versionTag,
                     versionName = newVersionName,
                     versionNum = versionNum,
                     pipelineVersion = releaseResource.pipelineVersion,
                     triggerVersion = releaseResource.triggerVersion,
-                    settingVersion = settingVersion
+                    settingVersion = savedSetting.version
                 )
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(
@@ -1979,14 +2003,14 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     creator = userId,
                     version = version,
-                    model = releaseResource.model,
-                    yamlStr = releaseResource.yaml,
-                    yamlVersion = releaseResource.yamlVersion,
+                    model = newModel,
+                    yamlStr = yamlWithVersion?.yamlStr,
+                    yamlVersion = yamlWithVersion?.versionTag,
                     versionName = newVersionName,
                     versionNum = versionNum,
                     pipelineVersion = releaseResource.pipelineVersion,
                     triggerVersion = releaseResource.triggerVersion,
-                    settingVersion = settingVersion,
+                    settingVersion = savedSetting.version,
                     versionStatus = VersionStatus.RELEASED,
                     branchAction = releaseResource.branchAction,
                     description = releaseResource.description,

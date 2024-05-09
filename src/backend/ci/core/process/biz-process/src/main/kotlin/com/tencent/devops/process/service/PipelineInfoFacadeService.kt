@@ -1108,7 +1108,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
+            savedSetting = savedSetting
         )
     }
 
@@ -1116,19 +1116,13 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        settingVersion: Int
+        savedSetting: PipelineSetting
     ) {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-            )
         pipelineRepositoryService.updateSettingVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            pipelineInfo = pipelineInfo,
-            settingVersion = settingVersion
+            savedSetting = savedSetting
         )
     }
 
