@@ -263,6 +263,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun updateGseAgent() {
+        val startTime = LocalDateTime.now()
         val countCmdbNodes = cmdbNodeDao.countCmdbNodes(dslContext)
         logger.info("Update gse agent, node(s) quantity: $countCmdbNodes.")
         countCmdbNodes.takeIf { it > 0 }?.run {
@@ -320,6 +321,9 @@ class TencentStockDataUpdateService @Autowired constructor(
                 }
             }
         }
+        logger.info(
+            "[updateGseAgent]total time: ${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s, "
+        )
     }
 
     private fun batchUpdateAgent(

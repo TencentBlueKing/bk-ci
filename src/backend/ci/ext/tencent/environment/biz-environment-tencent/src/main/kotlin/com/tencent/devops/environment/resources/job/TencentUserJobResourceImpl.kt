@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.resources.job
 
-import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentUserJobResource
@@ -25,6 +25,7 @@ import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
+import javax.ws.rs.core.Response
 
 @RestResource
 class TencentUserJobResourceImpl @Autowired constructor(
@@ -155,9 +156,10 @@ class TencentUserJobResourceImpl @Autowired constructor(
 
     private fun checkJobInsBelongToProj(projectId: String, jobInstanceId: Long) {
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
-            throw OauthForbiddenException(
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
                 message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than three months."
+                    "or more than one month."
             )
         }
     }
