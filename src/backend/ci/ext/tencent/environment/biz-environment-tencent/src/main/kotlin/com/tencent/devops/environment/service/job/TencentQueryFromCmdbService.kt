@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.Constants.COLUMN_SEVER_LAN_IP
 import com.tencent.devops.environment.constant.Constants.COLUMN_SFW_NAME
 import com.tencent.devops.environment.constant.Constants.COLUMN_SVR_BAK_OPERATOR
@@ -136,10 +137,16 @@ class TencentQueryFromCmdbService {
             logger.info("POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
         } catch (timeoutError: SocketTimeoutException) {
             logger.error("Query CMDB interface time out. Error:", timeoutError)
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT)
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT,
+                defaultMessage = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT)
+            )
         } catch (error: Exception) {
             logger.error("Query CMDB interface error. Error:", error)
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_CMDB_RESPONSE)
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_CMDB_RESPONSE,
+                defaultMessage = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_CMDB_RESPONSE)
+            )
         }
         return ccPostRes
     }
