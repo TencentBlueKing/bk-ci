@@ -504,6 +504,7 @@ class WorkspaceJoinDao {
         }
         if (!owners.isNullOrEmpty()) {
             stepDsl.and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+                .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
         }
         return stepDsl.fetch().map { it["HOST_NAME"] as String }.toSet()
     }
