@@ -40,7 +40,6 @@ import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.RegexUtils
@@ -88,7 +87,6 @@ import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
-import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -483,10 +481,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             dslContext = dslContext,
             storeCode = storeBaseRecord.storeCode,
             storeType = storeType
-        ) ?: throw ErrorCodeException(
-            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-            params = arrayOf(storeCode)
-        )
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeCode))
         // 用户是否可安装组件
         val installFlag = storeUserService.isCanInstallStoreComponent(
             defaultFlag = storeFeatureRecord.publicFlag,
@@ -504,13 +499,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             if (htmlTemplateVersion != null && htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
                 ""
             } else {
-                storeProjectRelDao.getInitProjectCodeByStoreCode(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte()
-                )
+                storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, storeCode, storeType.type.toByte())
             }
-        val classify = classifyDao.getClassify(dslContext, storeBaseRecord.classifyId)
+        val classify = classifyService.getClassify(storeBaseRecord.classifyId).data
         val versionLog =
             storeVersionLogDao.getStoreVersions(dslContext, listOf(storeId), true)?.firstOrNull()?.let {
                 VersionModel(
@@ -528,22 +519,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             name = storeBaseRecord.name,
             version = storeBaseRecord.version,
             status = storeBaseRecord.status,
-            classify = classify?.let {
-                Classify(
-                    id = classify.id,
-                    classifyCode = classify.classifyCode,
-                    classifyName = I18nUtil.getCodeLanMessage(
-                        messageCode = "${StoreTypeEnum.getStoreType(
-                            classify.type.toInt()
-                        )}.classify.$classify.classifyCode",
-                        defaultMessage = classify.classifyName
-                    ),
-                    classifyType = StoreTypeEnum.getStoreType(classify.type.toInt()),
-                    weight = classify.weight,
-                    createTime = classify.createTime.timestampmilli(),
-                    updateTime = classify.updateTime.timestampmilli()
-                )
-            },
+            classify = classify,
             logoUrl = storeBaseRecord.logoUrl,
             versionInfo = versionLog,
             downloads = statistic.downloads,
@@ -584,6 +560,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         }
     }
 
+    @Suppress("LongMethod")
     override fun getMainPageComponents(
         userId: String,
         storeType: String,
@@ -748,35 +725,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
-        val storeCodes = mutableListOf<String>()
-        val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
-        // 查询项目关联信息缩小组件查询范围
-        storeInfoQuery.projectCode?.let { projectCode ->
-            if (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true) {
-                val installedMap = storeProjectService.getInstalledComponent(
-                    projectCode,
-                    storeType.type.toByte()
-                ) ?: emptyMap()
-                // 筛选可更新组件
-                if (storeInfoQuery.updateFlag == true) {
-                    storeBaseQueryDao.getLatestComponentByCodes(
-                        dslContext,
-                        installedMap.keys.toList(),
-                        storeType
-                    )?.forEach {
-                        if (StoreUtils.isGreaterVersion(installedMap[it.storeCode]!!, it.version)) {
-                            storeCodes.add(it.storeCode)
-                        }
-                    }
-                } else {
-                    storeCodes.addAll(installedMap.keys.toList())
-                }
-                if (storeCodes.isNotEmpty()) {
-                    storeInfoQuery.storeCodes = storeCodes
-                }
-            }
+        if (!storeInfoQuery.projectCode.isNullOrBlank()) {
+            queryInstalledInfoByProject(storeInfoQuery.projectCode!!, storeInfoQuery)
         }
-
         val count = marketStoreQueryDao.count(
             dslContext = dslContext,
             storeInfoQuery = storeInfoQuery
@@ -787,6 +738,38 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
 
         return Pair(count.toLong(), storeInfos)
+    }
+
+    private fun queryInstalledInfoByProject(
+        projectCode: String,
+        storeInfoQuery: StoreInfoQuery,
+    ) {
+        val storeCodes = mutableListOf<String>()
+        val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+        // 查询项目关联信息缩小组件查询范围
+        if (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true) {
+            val installedMap = storeProjectService.getInstalledComponent(
+                projectCode,
+                storeType.type.toByte()
+            ) ?: emptyMap()
+            // 筛选可更新组件
+            if (storeInfoQuery.updateFlag == true) {
+                storeBaseQueryDao.getLatestComponentByCodes(
+                    dslContext,
+                    installedMap.keys.toList(),
+                    storeType
+                )?.forEach {
+                    if (StoreUtils.isGreaterVersion(installedMap[it.storeCode]!!, it.version)) {
+                        storeCodes.add(it.storeCode)
+                    }
+                }
+            } else {
+                storeCodes.addAll(installedMap.keys.toList())
+            }
+            if (storeCodes.isNotEmpty()) {
+                storeInfoQuery.storeCodes = storeCodes
+            }
+        }
     }
 
     private fun doList(
