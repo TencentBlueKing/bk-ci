@@ -137,6 +137,10 @@ allprojects {
                 entry("swagger-core")
                 entry("swagger-models")
             }
+            // worker需要依赖
+            dependency("org.jvnet.winp:winp:${Versions.Winp}")
+            dependency("net.java.dev.jna:jna:${Versions.Jna}")
+            dependency("org.jenkins-ci:version-number:${Versions.JenkinsVersionNumber}")
         }
     }
 
