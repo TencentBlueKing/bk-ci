@@ -147,7 +147,7 @@ class VariableTransfer @Autowired constructor() {
             result[it.id] = Variable(
                 value = it.defaultValue.toString(),
                 name = it.name,
-                readonly = if (const == true) true else it.readOnly.nullIfDefault(false),
+                readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 valueNotEmpty = it.valueNotEmpty.nullIfDefault(false),
                 const = const,
@@ -231,7 +231,9 @@ class VariableTransfer @Autowired constructor() {
                     },
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
-                    readOnly = variable.readonly ?: false,
+                    readOnly = if (variable.const == true) true else {
+                        variable.readonly ?: false
+                    },
                     valueNotEmpty = variable.valueNotEmpty ?: false
                 )
             )
