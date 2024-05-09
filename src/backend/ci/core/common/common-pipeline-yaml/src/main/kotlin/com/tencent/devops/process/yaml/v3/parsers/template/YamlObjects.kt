@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
@@ -43,7 +44,6 @@ import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
-import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariableDatasource
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
@@ -72,8 +72,6 @@ object YamlObjects {
     fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
         val va = Variable(
             value = variable["value"]?.toString(),
-            name = variable["name"]?.toString(),
-            valueNotEmpty = getNullValue("required", variable)?.toBoolean(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
