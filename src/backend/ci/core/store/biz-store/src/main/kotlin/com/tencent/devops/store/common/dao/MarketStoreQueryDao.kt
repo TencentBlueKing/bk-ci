@@ -41,6 +41,8 @@ import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -50,8 +52,6 @@ import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Repository
 class MarketStoreQueryDao {
@@ -71,6 +71,11 @@ class MarketStoreQueryDao {
             storeInfoQuery = storeInfoQuery,
             baseStep = baseStep
         )
+        if (!storeInfoQuery.keyword.isNullOrEmpty()) {
+            conditions.add(
+                tStoreBase.NAME.contains(storeInfoQuery.keyword).or(tStoreBase.SUMMARY.contains(storeInfoQuery.keyword))
+            )
+        }
         return baseStep.where(conditions).fetchOne(0, Int::class.java) ?: 0
     }
 
@@ -97,7 +102,6 @@ class MarketStoreQueryDao {
                 tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword))
             )
         }
-
         val subquery = dslContext.select(
             tStoreBase.STORE_CODE,
             tStoreBase.STORE_TYPE,
