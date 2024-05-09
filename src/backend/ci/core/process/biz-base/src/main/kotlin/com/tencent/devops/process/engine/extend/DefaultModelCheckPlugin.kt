@@ -68,6 +68,7 @@ import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
 import org.slf4j.LoggerFactory
 
+@Suppress("ComplexMethod")
 open class DefaultModelCheckPlugin constructor(
     open val client: Client,
     open val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
@@ -133,6 +134,16 @@ open class DefaultModelCheckPlugin constructor(
             if (stage.finally) { // finallyStage只能存在于最后一个
                 if (nowPosition < lastPosition) {
                     throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE)
+                }
+            }
+
+            // #9810 检查 jobId 是否都存在以及不超过 32 位
+            containers.forEach { con ->
+                if (!con.jobId.isNullOrBlank() && con.jobId!!.length > 32) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                        params = arrayOf((con.id ?: ""), "32")
+                    )
                 }
             }
 

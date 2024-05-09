@@ -288,6 +288,9 @@ class PipelineContextService @Autowired constructor(
             stage.id?.let { contextMap["job.stage_id"] = it }
             stage.name?.let { contextMap["job.stage_name"] = it }
             matrixGroupIndex?.let { contextMap["job.index"] = it.toString() }
+            if (!c.jobId.isNullOrBlank() && variables["jobs.${c.jobId}.container.node_alias"] != null) {
+                contextMap["job.container.node_alias"] = variables["jobs.${c.jobId}.container.node_alias"]!!
+            }
         }
 
         // other job

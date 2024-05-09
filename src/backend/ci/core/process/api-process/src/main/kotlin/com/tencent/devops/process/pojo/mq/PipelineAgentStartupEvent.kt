@@ -57,6 +57,8 @@ data class PipelineAgentStartupEvent(
     val dockerRoutingType: String? = "VM",
     val jobId: String? = null,
     val ignoreEnvAgentIds: Set<String>? = null,
+    val singleNodeConcurrency: Int? = null,
+    val allNodeConcurrency: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
     override var routeKeySuffix: String? = null

@@ -99,7 +99,8 @@ class ThirdPartyAgentService @Autowired constructor(
         retryCount: Int = 0,
         dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
         envId: Long?,
-        ignoreEnvAgentIds: Set<String>?
+        ignoreEnvAgentIds: Set<String>?,
+        jobId: String?
     ) {
         with(dispatchMessage.event) {
             try {
@@ -120,7 +121,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     executeCount = executeCount,
                     containerHashId = containerHashId,
                     envId = envId,
-                    ignoreEnvAgentIds = ignoreEnvAgentIds
+                    ignoreEnvAgentIds = ignoreEnvAgentIds,
+                    jobId = jobId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
@@ -132,7 +134,8 @@ class ThirdPartyAgentService @Autowired constructor(
                         retryCount = retryCount + 1,
                         dockerInfo = dockerInfo,
                         envId = envId,
-                        ignoreEnvAgentIds = ignoreEnvAgentIds
+                        ignoreEnvAgentIds = ignoreEnvAgentIds,
+                        jobId = jobId
                     )
                 } else {
                     throw OperationException("Fail to add the third party agent build")
@@ -704,6 +707,38 @@ class ThirdPartyAgentService @Autowired constructor(
                 logger.warn("$agentId ask unknow error", e)
             }
         }
+    }
+
+    fun countProjectJobRunningAndQueueAll(
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        projectId: String
+    ): Long {
+        return thirdPartyAgentBuildDao.countProjectJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            projectId = projectId
+        )
+    }
+
+    fun countAgentsJobRunningAndQueueAll(
+        projectId: String,
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        agentIds: Set<String>
+    ): Map<String, Int> {
+        return thirdPartyAgentBuildDao.countAgentsJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            agentIds = agentIds,
+            projectId = projectId
+        )
     }
 
     companion object {

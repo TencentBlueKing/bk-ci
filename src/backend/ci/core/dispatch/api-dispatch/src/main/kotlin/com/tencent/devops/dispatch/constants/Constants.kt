@@ -69,3 +69,5 @@ const val AGENT_REUSE_MUTEX_REDISPATCH = "agentReuseMuteXRedispatch" // 构建�
 // 构建机复用互斥，等待被依赖的节点 {0} 调度到具体节点后再进行复用调度
 const val AGENT_REUSE_MUTEX_WAIT_REUSED_ENV = "agentReuseMuteXWaitReusedEnv"
 const val BK_ENV_NODE_DISABLE = "bkEnvNodeDisable"
+const val BK_THIRD_JOB_ENV_CURR = "bkThirdJobEnvCurr" // 当前环境下所有构建机并发{0}已经超过配置的{1},排队{2}分钟
+const val BK_THIRD_JOB_NODE_CURR = "bkThirdJobNodeCurr" // 当前环境下所有节点运行任务都超过了配置的{0},排队{1}分钟
