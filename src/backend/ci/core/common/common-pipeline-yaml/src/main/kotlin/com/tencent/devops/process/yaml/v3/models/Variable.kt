@@ -76,10 +76,8 @@ data class Variable(
     val value: String?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = false,
+    val allowModifyAtStartup: Boolean? = true,
     val const: Boolean? = null,
-    @JsonProperty("required")
-    val valueNotEmpty: Boolean? = false,
     val props: VariableProps? = null
 ) : IVariable
 
@@ -104,9 +102,9 @@ data class VariableProps(
     val type: String? = null,
     val options: List<VariablePropOption>? = null,
     val datasource: VariableDatasource? = null,
-    val description: String? = null,
+    var description: String? = null,
     val multiple: Boolean? = null,
-    val required: Boolean? = null,
+    var required: Boolean? = null,
     @JsonProperty("repo-id")
     @get:Schema(title = "repo-id")
     val repoHashId: String? = null,
