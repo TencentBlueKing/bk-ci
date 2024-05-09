@@ -67,7 +67,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
         when {
             // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
-            element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT && element.includeMrAction == null -> {
+            element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 params.includeMrAction = CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE
             }
 

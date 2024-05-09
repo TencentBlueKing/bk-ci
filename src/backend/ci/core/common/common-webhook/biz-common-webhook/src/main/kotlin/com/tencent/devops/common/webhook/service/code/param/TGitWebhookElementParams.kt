@@ -43,7 +43,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
         return CodeTGitWebHookTriggerElement::class.java
     }
 
-    @SuppressWarnings("ComplexMethod")
+    @SuppressWarnings("ComplexMethod", "LongMethod")
     override fun getWebhookElementParams(
         element: CodeTGitWebHookTriggerElement,
         variables: Map<String, String>
@@ -100,12 +100,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
                     params.includePushAction = joinToString(includePushAction)
                 }
             }
-            // 兼容存量merge_request_accept事件
-            params.eventType = if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
-                CodeEventType.MERGE_REQUEST
-            } else {
-                eventType
-            }
+            params.eventType = eventType
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
             params.pathFilterType = pathFilterType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
