@@ -24,17 +24,11 @@
                 ref="shareDiaglogTable"
                 :data="curNodeList"
                 :pagination="pagination"
+                :row-class-name="handleRowClassName"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
             >
                 <bk-table-column :label="$t('environment.envInfo.name')" width="150" prop="displayName" show-overflow-tooltip>
-                    <template slot-scope="props">
-                        <span :class="{
-                            'useless': !props.row.envEnableNode
-                        }">
-                            {{ props.row.displayName }}
-                        </span>
-                    </template>
                 </bk-table-column>
                 <bk-table-column :width="150" label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" show-overflow-tooltip>
@@ -652,6 +646,9 @@
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
+            },
+            handleRowClassName ({ row, rowIndex }) {
+                return row.envEnableNode ? '' : 'useless'
             },
             async handleToggleEnable (row) {
                 try {
