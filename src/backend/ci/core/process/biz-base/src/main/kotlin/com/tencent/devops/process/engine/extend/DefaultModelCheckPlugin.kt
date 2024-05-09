@@ -68,7 +68,7 @@ import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
 import org.slf4j.LoggerFactory
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "ComplexCondition")
 open class DefaultModelCheckPlugin constructor(
     open val client: Client,
     open val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
