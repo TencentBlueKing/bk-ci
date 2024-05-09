@@ -782,16 +782,14 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 if (
                     installedMap[it.storeCode] != null &&
                     StoreUtils.isGreaterVersion(installedMap[it.storeCode]!!, it.version)
-                    ) {
+                ) {
                     storeCodes.add(it.storeCode)
                 }
             }
         } else {
             storeCodes.addAll(installedMap.keys.toList())
         }
-        if (storeCodes.isNotEmpty()) {
-            storeInfoQuery.storeCodes = storeCodes
-        }
+        storeInfoQuery.storeCodes = storeCodes
     }
 
     private fun doList(

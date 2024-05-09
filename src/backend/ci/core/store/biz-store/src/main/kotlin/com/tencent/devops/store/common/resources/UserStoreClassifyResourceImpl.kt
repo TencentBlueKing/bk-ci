@@ -37,9 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStoreClassifyResourceImpl  @Autowired constructor(
-    private val classfiyService: ClassifyService
+    private val classifyService: ClassifyService
 ) : UserStoreClassifyResource {
     override fun getClassifyList(storeType: String): Result<List<Classify>> {
-        return classfiyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte())
+        return classifyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte())
     }
 }
