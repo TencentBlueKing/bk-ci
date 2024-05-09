@@ -950,7 +950,7 @@ class WorkspaceDao {
 
         if (!projectId.isNullOrBlank()) {
             sql.and(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
-        }else{
+        } else {
             sql.and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
         }
 
