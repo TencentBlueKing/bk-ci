@@ -166,11 +166,6 @@ class MarketStoreQueryDao {
             tStoreBaseFeature.PUBLIC_FLAG,
             tStoreBase.CREATE_TIME
         ).from(tStoreBase)
-            .leftJoin(tStoreBaseFeature)
-            .on(
-                tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
-            )
     }
 
     private fun formatConditions(
