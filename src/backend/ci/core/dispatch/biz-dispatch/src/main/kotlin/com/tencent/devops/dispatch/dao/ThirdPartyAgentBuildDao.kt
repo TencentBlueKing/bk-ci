@@ -346,10 +346,11 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String,
         envId: Long,
         jobId: String,
-        projectId: String?
+        projectId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(JOB_ID.eq(jobId))
                 .and(ENV_ID.eq(envId))
@@ -360,10 +361,11 @@ class ThirdPartyAgentBuildDao {
 
     fun countAgentsJobRunningAndQueueAll(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         envId: Long,
         jobId: String,
-        agentIds: Set<String>?
+        agentIds: Set<String>
     ): Map<String, Int> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.select(
@@ -371,6 +373,7 @@ class ThirdPartyAgentBuildDao {
             ).from(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.`in`(agentIds))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(JOB_ID.eq(jobId))
                 .and(ENV_ID.eq(envId))

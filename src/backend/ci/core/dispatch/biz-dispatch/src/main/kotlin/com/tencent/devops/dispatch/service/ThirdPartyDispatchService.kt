@@ -699,7 +699,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             pipelineId = dispatchMessage.event.pipelineId,
             envId = envId,
             jobId = dispatchMessage.event.jobId!!,
-            agentIds = activeAgents.map { it.agentId }.toSet()
+            agentIds = activeAgents.map { it.agentId }.toSet(),
+            projectId = dispatchMessage.event.projectId
         )
         activeAgents.forEach {
             // 为空说明当前节点没有记录就是没有任务直接加，除非并发是0的情况

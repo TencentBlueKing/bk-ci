@@ -713,7 +713,7 @@ class ThirdPartyAgentService @Autowired constructor(
         pipelineId: String,
         envId: Long,
         jobId: String,
-        projectId: String?
+        projectId: String
     ): Long {
         return thirdPartyAgentBuildDao.countProjectJobRunningAndQueueAll(
             dslContext = dslContext,
@@ -725,17 +725,19 @@ class ThirdPartyAgentService @Autowired constructor(
     }
 
     fun countAgentsJobRunningAndQueueAll(
+        projectId: String,
         pipelineId: String,
         envId: Long,
         jobId: String,
-        agentIds: Set<String>?
+        agentIds: Set<String>
     ): Map<String, Int> {
         return thirdPartyAgentBuildDao.countAgentsJobRunningAndQueueAll(
             dslContext = dslContext,
             pipelineId = pipelineId,
             envId = envId,
             jobId = jobId,
-            agentIds = agentIds
+            agentIds = agentIds,
+            projectId = projectId
         )
     }
 
