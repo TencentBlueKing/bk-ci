@@ -370,7 +370,7 @@ interface UserEnvironmentResource {
         @PathParam("envHashId")
         envHashId: String,
         @Parameter(description = "节点 hashId", required = true)
-        @PathParam("envHashId")
+        @PathParam("nodeHashId")
         nodeHashId: String,
         @Parameter(description = "启动或者停用", required = true)
         @QueryParam("enableNode")
