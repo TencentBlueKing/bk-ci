@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.process.yaml.utils
 
 import com.tencent.devops.common.web.utils.I18nUtil
 
