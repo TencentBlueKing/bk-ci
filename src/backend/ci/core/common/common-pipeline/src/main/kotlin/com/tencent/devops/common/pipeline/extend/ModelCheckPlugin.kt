@@ -45,7 +45,7 @@ interface ModelCheckPlugin {
      * @throws RuntimeException 子类  将检查失败或异常的以[ErrorCodeException]类抛出
      */
     @Throws(ErrorCodeException::class)
-    fun checkModelIntegrity(model: Model, projectId: String?): Int
+    fun checkModelIntegrity(model: Model, projectId: String?, userId: String): Int
 
     /**
      * 清理Model--不删除里面的Element内的逻辑
