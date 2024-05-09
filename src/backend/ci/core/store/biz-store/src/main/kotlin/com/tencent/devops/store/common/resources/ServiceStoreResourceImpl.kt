@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreBuildService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreErrorCodeService
@@ -40,6 +41,7 @@ import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
@@ -55,6 +57,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
     private val storeErrorCodeService: StoreErrorCodeService,
     private val storeCommonService: StoreCommonService,
     private val storeMemberService: StoreMemberService,
+    private val classifyService: ClassifyService,
     private val redisOperation: RedisOperation
 ) : ServiceStoreResource {
 
@@ -121,5 +124,9 @@ class ServiceStoreResourceImpl @Autowired constructor(
             )
         }
         return Result(true)
+    }
+
+    override fun getClassifyList(storeType: StoreTypeEnum): Result<List<Classify>> {
+        return classifyService.getAllClassify(storeType.type.toByte())
     }
 }
