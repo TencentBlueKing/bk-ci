@@ -121,10 +121,14 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
     ): Result<List<MarketMainItem>> {
         return storeComponentQueryService.getMainPageComponents(
             userId = userId,
-            storeType = storeType,
-            projectCode = projectCode,
-            page = page,
-            pageSize = pageSize
+            storeInfoQuery = StoreInfoQuery(
+                storeType = storeType,
+                projectCode = projectCode,
+                page = page,
+                pageSize = pageSize,
+                queryProjectComponentFlag = false
+            ),
+            urlProtocolTrim = true
         )
     }
 

@@ -469,6 +469,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
     }
 
+    @Suppress("LongMethod")
     override fun getComponentDetailInfoById(
         userId: String,
         storeType: StoreTypeEnum,
@@ -563,12 +564,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     @Suppress("LongMethod")
     override fun getMainPageComponents(
         userId: String,
-        storeType: String,
-        projectCode: String?,
-        page: Int,
-        pageSize: Int,
+        storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
+        val storeType = storeInfoQuery.storeType
+        val page = storeInfoQuery.page
+        val pageSize = storeInfoQuery.pageSize
+        val projectCode = storeInfoQuery.projectCode
         logger.info("getMainPageComponents:Input:($userId,$storeType,$page,$pageSize)")
         val watcher = Watcher("getMainPageComponents|$userId|$storeType")
         try {
@@ -725,7 +727,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
-        if (!storeInfoQuery.projectCode.isNullOrBlank()) {
+        val flag = (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true)
+        if (!storeInfoQuery.projectCode.isNullOrBlank() && flag) {
             queryInstalledInfoByProject(storeInfoQuery.projectCode!!, storeInfoQuery)
         }
         val count = marketStoreQueryDao.count(
@@ -747,28 +750,26 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val storeCodes = mutableListOf<String>()
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         // 查询项目关联信息缩小组件查询范围
-        if (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true) {
-            val installedMap = storeProjectService.getInstalledComponent(
-                projectCode,
-                storeType.type.toByte()
-            ) ?: emptyMap()
-            // 筛选可更新组件
-            if (storeInfoQuery.updateFlag == true) {
-                storeBaseQueryDao.getLatestComponentByCodes(
-                    dslContext,
-                    installedMap.keys.toList(),
-                    storeType
-                )?.forEach {
-                    if (StoreUtils.isGreaterVersion(installedMap[it.storeCode]!!, it.version)) {
-                        storeCodes.add(it.storeCode)
-                    }
+        val installedMap = storeProjectService.getInstalledComponent(
+            projectCode,
+            storeType.type.toByte()
+        ) ?: emptyMap()
+        // 筛选可更新组件
+        if (storeInfoQuery.updateFlag == true) {
+            storeBaseQueryDao.getLatestComponentByCodes(
+                dslContext,
+                installedMap.keys.toList(),
+                storeType
+            )?.forEach {
+                if (StoreUtils.isGreaterVersion(installedMap[it.storeCode]!!, it.version)) {
+                    storeCodes.add(it.storeCode)
                 }
-            } else {
-                storeCodes.addAll(installedMap.keys.toList())
             }
-            if (storeCodes.isNotEmpty()) {
-                storeInfoQuery.storeCodes = storeCodes
-            }
+        } else {
+            storeCodes.addAll(installedMap.keys.toList())
+        }
+        if (storeCodes.isNotEmpty()) {
+            storeInfoQuery.storeCodes = storeCodes
         }
     }
 
@@ -809,6 +810,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
     }
 
+    @Suppress("LongMethod")
     private fun handleMarketItem(
         userId: String,
         userDeptList: List<Int>,

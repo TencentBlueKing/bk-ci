@@ -32,10 +32,10 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreVersionLogRecord
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreVersionLogDao {
@@ -48,7 +48,8 @@ class StoreVersionLogDao {
         versionContent: String
     ) {
         with(TStoreVersionLog.T_STORE_VERSION_LOG) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 STORE_ID,
                 RELEASE_TYPE,

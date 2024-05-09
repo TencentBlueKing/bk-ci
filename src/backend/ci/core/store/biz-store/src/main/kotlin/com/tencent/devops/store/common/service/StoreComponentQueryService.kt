@@ -63,6 +63,7 @@ interface StoreComponentQueryService {
     /**
      * 根据组件标识获取组件版本列表
      */
+    @Suppress("LongParameterList")
     fun getComponentVersionsByCode(
         userId: String,
         storeType: String,
@@ -95,10 +96,7 @@ interface StoreComponentQueryService {
      */
     fun getMainPageComponents(
         userId: String,
-        storeType: String,
-        projectCode: String?,
-        page: Int,
-        pageSize: Int,
+        storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean = false
     ): Result<List<MarketMainItem>>
 
