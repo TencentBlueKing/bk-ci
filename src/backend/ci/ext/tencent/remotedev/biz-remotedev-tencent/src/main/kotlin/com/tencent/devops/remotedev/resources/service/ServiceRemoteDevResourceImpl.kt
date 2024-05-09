@@ -38,7 +38,6 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.net.URLDecoder
-import java.util.concurrent.Executors
 
 @RestResource
 @Suppress("ALL")
