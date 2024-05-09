@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.resources.user
 
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -76,7 +75,7 @@ class UserStreamProjectResourceImpl @Autowired constructor(
         return Result(streamProjectService.getUserProjectHistory(userId, size = fixPageSize) ?: emptyList())
     }
 
-    override fun getProjectInfo(userId: String, projectId: String): Result<ProjectVO> {
+    override fun getProjectInfo(userId: String, projectId: String): Result<ProjectVO?> {
         permissionService.checkStreamPermission(
             userId = userId,
             projectId = projectId,
@@ -84,7 +83,6 @@ class UserStreamProjectResourceImpl @Autowired constructor(
         )
         return Result(
             client.get(ServiceProjectResource::class).get(projectId).data
-                ?: throw OperationException("project $projectId not found")
         )
     }
 
