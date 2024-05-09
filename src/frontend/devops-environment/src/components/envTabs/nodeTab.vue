@@ -659,7 +659,7 @@
                         projectId: this.projectId,
                         envHashId: this.envHashId,
                         nodeHashId: row.nodeHashId,
-                        disableNode: row.envEnableNode
+                        enableNode: !row.envEnableNode
                     })
 
                     await this.requestList()

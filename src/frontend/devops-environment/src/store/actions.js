@@ -284,8 +284,8 @@ const actions = {
     removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
         return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
     },
-    enableNode (_, { projectId, envHashId, nodeHashId, disableNode }) {
-        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?disableNode=${disableNode}`)
+    enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
     }
 }
 
