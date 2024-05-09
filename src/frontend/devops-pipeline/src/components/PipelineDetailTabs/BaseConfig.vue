@@ -75,7 +75,7 @@
                     },
                     {
                         key: 'desc',
-                        value: basicInfo?.pipelineDesc ?? '--'
+                        value: basicInfo?.desc ?? '--'
                     },
                     {
                         key: 'creator',
