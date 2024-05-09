@@ -27,6 +27,7 @@
                     :loading="saveStatus"
                     outline
                     theme="primary"
+                    style="margin-right: 10px"
                     @click="saveSetting"
                     v-perm="{
                         hasPermission: canEdit,
@@ -92,6 +93,7 @@
             </template>
             <!-- <more-actions /> -->
             <release-button
+                v-if="!isTemplatePipeline"
                 :can-release="canRelease && !isEditing"
                 :project-id="projectId"
                 :pipeline-id="pipelineId"
@@ -108,6 +110,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { UI_MODE } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
@@ -184,7 +187,20 @@
                 return this.pipelineInfo?.version ?? ''
             }
         },
+        watch: {
+            isTemplatePipeline: {
+                handler (val) {
+                    if (val) {
+                        this.updatePipelineMode(UI_MODE)
+                    }
+                },
+                immediate: true
+            }
+        },
         methods: {
+            ...mapActions({
+                updatePipelineMode: 'updatePipelineMode'
+            }),
             ...mapActions('atom', [
                 'setPipelineEditing',
                 'saveDraftPipeline',
