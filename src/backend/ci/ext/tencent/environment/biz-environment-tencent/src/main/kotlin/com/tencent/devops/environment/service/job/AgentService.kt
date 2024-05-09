@@ -426,7 +426,7 @@ data class AgentService @Autowired constructor(
         }
         val queryAgentHostIdList = hostIdToAgentVersionInfoMap?.keys?.filterNotNull()
         queryAgentHostIdList?.map { hostIdToNodeStatus[it] = getNodeStatus(hostIdToAgentVersionInfoMap[it]) }
-        cmdbNodeDao.updateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
+        cmdbNodeDao.batchUpdateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
         return queryAgentTaskStatusRes
     }
 

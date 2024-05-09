@@ -3,10 +3,12 @@ package com.tencent.devops.remotedev.service.tcloud
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTCloudCfsDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
 import com.tencentcloudapi.cfs.v20190719.CfsClient
@@ -19,10 +21,10 @@ import com.tencentcloudapi.common.profile.ClientProfile
 import com.tencentcloudapi.common.profile.HttpProfile
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -30,7 +32,8 @@ class TCloudCfsService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectTCloudCfsDao: ProjectTCloudCfsDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     @Value("\${tcloud.apiSecretId:}")
     val secretId = ""
@@ -153,9 +156,6 @@ class TCloudCfsService @Autowired constructor(
         }
     }
 
-    // 腾讯云对创建cfs权限组规则有频率限制，我们使用75s发送一次
-    private val askExecutor = Executors.newCachedThreadPool()
-
     private fun createOrDeleteCfsRule(
         pgId: String,
         ip: String,
@@ -163,21 +163,29 @@ class TCloudCfsService @Autowired constructor(
         region: String,
         delete: Boolean
     ) {
-        askExecutor.execute {
-            val key = "$TCLOUD_PGID_REDIS_KEY_PREFIX:$pgId"
-            val redisLock = RedisLock(redisOperation, key, 76)
-            redisLock.lock()
-            doCreateOrDeleteCfsRule(pgId, ip, ruleId, region, delete)
-        }
+        AsyncExecute.dispatch(
+            rabbitTemplate, AsyncTCloudCfs(
+                pgId = pgId,
+                ip = ip,
+                ruleId = ruleId,
+                region = region,
+                delete = delete
+            )
+        )
     }
 
-    private fun doCreateOrDeleteCfsRule(
+    // 腾讯云对创建cfs权限组规则有频率限制，我们使用75s发送一次
+    fun doCreateOrDeleteCfsRule(
         pgId: String,
         ip: String,
         ruleId: String,
         region: String,
         delete: Boolean
     ) {
+        val key = "$TCLOUD_PGID_REDIS_KEY_PREFIX:$pgId"
+        val redisLock = RedisLock(redisOperation, key, 76)
+        redisLock.lock()
+
         val client = buildCfsClient(region)
         if (delete) {
             try {

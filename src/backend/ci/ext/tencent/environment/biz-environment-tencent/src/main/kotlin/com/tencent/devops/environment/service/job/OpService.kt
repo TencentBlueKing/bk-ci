@@ -94,7 +94,6 @@ class OpService @Autowired constructor(
 
         private const val DEFAULT_TRAVERSE_SIZE = 1000
         private const val DEFAULT_PAGE_VALUE = -1L
-        private const val EMPTY_GRAY_PROJS_NUM = 0
     }
 
     fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
@@ -262,7 +261,8 @@ class OpService @Autowired constructor(
      * ZADD NX
      */
     private fun setProjsGrayStatus(projectCodeList: List<String>?): OpOperateResult {
-        return if (!projectCodeList.isNullOrEmpty()) {
+        logger.info("[setProjsGrayStatus] Project(s) code list: $projectCodeList")
+        val opOperateResult = if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeTypedTuple = projectCodeList.map {
                     DefaultTypedTuple(it, System.currentTimeMillis().toDouble())
@@ -292,6 +292,11 @@ class OpService @Autowired constructor(
                 grayProjNumber = grayProjsTotalNum()
             )
         }
+        logger.info(
+            "[setProjsGrayStatus] code:${opOperateResult.code}, result:${opOperateResult.result}, " +
+                "msg:${opOperateResult.msg}, grayProjNumber:${opOperateResult.grayProjNumber}"
+        )
+        return opOperateResult
     }
 
     /**
@@ -299,7 +304,8 @@ class OpService @Autowired constructor(
      * ZREM
      */
     private fun cancelProjsGrayStatus(projectCodeList: List<String>?): OpOperateResult {
-        return if (!projectCodeList.isNullOrEmpty()) {
+        logger.info("[cancelProjsGrayStatus] Project(s) code list: $projectCodeList")
+        val opOperateResult = if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeSet = projectCodeList.toSet()
                 val removeProjsNumber = redisOperation.zremove(OP_KEY, *projectCodeSet.toTypedArray())
@@ -334,6 +340,11 @@ class OpService @Autowired constructor(
                 grayProjNumber = grayProjsTotalNum()
             )
         }
+        logger.info(
+            "[cancelProjsGrayStatus] code:${opOperateResult.code}, result:${opOperateResult.result}, " +
+                "msg:${opOperateResult.msg}, grayProjNumber:${opOperateResult.grayProjNumber}"
+        )
+        return opOperateResult
     }
 
     /**
@@ -341,8 +352,9 @@ class OpService @Autowired constructor(
      * delete key
      */
     private fun clearAllGrayProjs(): OpOperateResult {
+        logger.info("[clearAllGrayProjs] Start to clear all gray project(s).")
         val deleteKeyResult = redisOperation.delete(OP_KEY)
-        return if (deleteKeyResult) { // 1 - ZET中有元素
+        val opOperateResult = if (deleteKeyResult) { // 1 - ZET中有元素
             OpOperateResult(
                 code = SUCCESSFUL_CODE,
                 result = SUCCESSFUL_RESULT,
@@ -357,6 +369,11 @@ class OpService @Autowired constructor(
                 grayProjNumber = grayProjsTotalNum()
             )
         }
+        logger.info(
+            "[clearAllGrayProjs] code:${opOperateResult.code}, result:${opOperateResult.result}, " +
+                "msg:${opOperateResult.msg}, grayProjNumber:${opOperateResult.grayProjNumber}"
+        )
+        return opOperateResult
     }
 
     /**

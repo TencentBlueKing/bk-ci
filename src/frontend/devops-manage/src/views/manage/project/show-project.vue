@@ -261,7 +261,7 @@ const handleEnabledProject = () => {
   } else if (enabled) {
     showDisableProjectDialog.value = true
   }
-  
+
 };
 
 /**

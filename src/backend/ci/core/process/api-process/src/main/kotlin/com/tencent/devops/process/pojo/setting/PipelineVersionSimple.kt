@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线版本摘要")
@@ -37,12 +38,32 @@ data class PipelineVersionSimple(
     val creator: String,
     @get:Schema(title = "创建时间戳", required = true)
     val createTime: Long,
+    @get:Schema(title = "更新时间戳", required = true)
+    val updateTime: Long?,
     @get:Schema(title = "流水线版本号", required = true)
     val version: Int,
     @get:Schema(title = "流水线版本名称", required = true)
     val versionName: String,
+    @get:Schema(title = "YAML编排版本", required = false)
+    var yamlVersion: String?,
     @get:Schema(title = "是否还有构建记录引用该版本标识", required = false)
     val referFlag: Boolean? = null,
     @get:Schema(title = "关联构建记录总数", required = false)
-    val referCount: Int? = null
+    val referCount: Int? = null,
+    @get:Schema(title = "发布版本号", required = false)
+    val versionNum: Int?,
+    @get:Schema(title = "编排版本号", required = false)
+    val pipelineVersion: Int? = null,
+    @get:Schema(title = "触发器版本号", required = false)
+    val triggerVersion: Int? = null,
+    @get:Schema(title = "配置版本号", required = false)
+    val settingVersion: Int? = null,
+    @get:Schema(title = "草稿版本标识", required = false)
+    val status: VersionStatus? = VersionStatus.RELEASED,
+    @get:Schema(title = "版本变更说明", required = false)
+    val description: String? = null,
+    @get:Schema(title = "调试构建ID", required = false)
+    val debugBuildId: String? = null,
+    @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
+    val baseVersion: Int? = null
 )
