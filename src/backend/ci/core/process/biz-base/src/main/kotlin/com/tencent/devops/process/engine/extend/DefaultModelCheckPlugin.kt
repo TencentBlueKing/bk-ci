@@ -137,16 +137,6 @@ open class DefaultModelCheckPlugin constructor(
                 }
             }
 
-            // #9810 检查 jobId 是否都存在以及不超过 32 位
-            containers.forEach { con ->
-                if (!con.jobId.isNullOrBlank() && con.jobId!!.length > 32) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
-                        params = arrayOf((con.id ?: ""), "32")
-                    )
-                }
-            }
-
             // #4531 检查stage审核组配置是否符合要求
             stage.checkStageReviewers()
 
@@ -254,6 +244,25 @@ open class DefaultModelCheckPlugin constructor(
                     errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(name!!, container.name)
                 )
             )
+
+            // 检查 jobId 不超过 128 位，以及使用了包含jobId功能的不能为空
+            if (!container.jobId.isNullOrBlank() && container.jobId!!.length > 128) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                    params = arrayOf((container.id ?: ""), "128")
+                )
+            }
+            if (container is VMBuildContainer &&
+                container.jobId.isNullOrBlank() &&
+                (container.jobControlOption?.allNodeConcurrency != null ||
+                        container.jobControlOption?.singleNodeConcurrency != null)
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                    params = arrayOf((container.id ?: ""), "128")
+                )
+            }
+
             container.elements.forEach { e ->
                 container.checkElement(e, elementCnt, atomVersions, atomInputParamList, contextMap)
             }
