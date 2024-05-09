@@ -155,7 +155,6 @@ class VariableTransfer @Autowired constructor() {
                 val p = result[it.id]?.props ?: VariableProps()
                 p.description = it.desc
             }
-
         }
         return if (result.isEmpty()) {
             null

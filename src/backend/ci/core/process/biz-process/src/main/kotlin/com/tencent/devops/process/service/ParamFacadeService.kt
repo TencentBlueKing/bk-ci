@@ -324,6 +324,7 @@ class ParamFacadeService @Autowired constructor(
             required = property.required,
             type = property.type,
             defaultValue = property.defaultValue,
+            value = property.value,
             options = options,
             desc = property.desc,
             repoHashId = property.repoHashId,
