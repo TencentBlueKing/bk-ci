@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
@@ -140,4 +141,13 @@ interface ServiceStoreResource {
         @PathParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>
+
+    @Operation(summary = "获取组件分类信息列表")
+    @GET
+    @Path("/classifies/types/{storeType}/list")
+    fun getClassifyList(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<List<Classify>>
 }
