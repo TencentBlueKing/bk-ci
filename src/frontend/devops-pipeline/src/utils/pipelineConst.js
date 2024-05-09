@@ -159,6 +159,7 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'startType',
     'startTime',
     'endTime',
+    'totalTime',
     'executeTime',
     'artifactList',
     'pipelineVersion',
@@ -208,10 +209,17 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         label: 'history.tableMap.endTime',
         width: 120
     },
+    totalTime: {
+        index: 7,
+        id: 'totalTime',
+        label: 'details.totalCost',
+        width: localStorage.getItem('totalTimeWidth') ?? 120
+    },
     executeTime: {
         index: 7,
         id: 'executeTime',
-        label: 'details.totalCost'
+        label: 'details.executeCost',
+        width: localStorage.getItem('executeTimeWidth') ?? 120
     },
     artifactList: {
         index: 8,
