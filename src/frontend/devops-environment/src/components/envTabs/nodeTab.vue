@@ -200,7 +200,7 @@
             },
             curNodeList () {
                 const { limit, current } = this.pagination
-                return this.nodeList.slice(limit * (current - 1), limit * current)
+                return this.nodeList.slice(limit * (current - 1), limit * current).sort((a, b) => a.envEnableNode - b.envEnableNode)
             }
         },
         watch: {
