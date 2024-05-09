@@ -99,7 +99,12 @@ object KillBuildProcessTree {
             return listOf()
         }
 
-        val processTree = BkProcessTree.get()
+        val processTree = try {
+            BkProcessTree.get()
+        } catch (e: Exception) {
+            logger.error("killProcessTree get error: ", e)
+            return listOf()
+        }
         val processTreeIterator = processTree.iterator()
         val killedProcessIds = mutableListOf<Int>()
         while (processTreeIterator.hasNext()) {

@@ -24,7 +24,7 @@
     </div>
 </template>
 <script>
-
+    import ciYamlTheme from '@/utils/ciYamlTheme'
     export default {
         props: {
             value: {
@@ -43,10 +43,6 @@
                 type: String,
                 default: 'text'
             },
-            theme: {
-                type: String,
-                default: 'monokai'
-            },
             readOnly: {
                 type: Boolean,
                 default: false
@@ -58,6 +54,10 @@
             hasError: {
                 type: Boolean,
                 default: false
+            },
+            highlightRanges: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -82,12 +82,6 @@
                 }
             },
 
-            theme (newVal) {
-                if (this.editor) {
-                    this.monaco.editor.setTheme(newVal)
-                }
-            },
-
             fullScreen () {
                 this.$el.classList.toggle('ace-full-screen')
             }
@@ -101,10 +95,11 @@
                 /* webpackChunkName: "monaco-editor" */
                 'monaco-editor'
             )
+            this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
             this.editor = this.monaco.editor.create(this.$el, {
                 value: this.value,
                 language: this.getLang(this.lang),
-                theme: 'vs-dark',
+                theme: 'ciYamlTheme',
                 automaticLayout: true,
                 minimap: {
                     enabled: false
@@ -112,7 +107,6 @@
                 readOnly: this.readOnly
             })
             this.isLoading = false
-
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
                 if (this.value !== value) {
@@ -138,10 +132,16 @@
                 const _size = size.toString()
 
                 if (_size.match(/^\d*$/)) return `${size}px`
-                if (_size.match(/^[0-9]?%$/)) return _size
+                if (_size.match(/^[0-9]{1,2}%$/)) return _size
 
                 return '100%'
             }
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .code-highlight-block {
+        background: #232D46;
+    }
+</style>

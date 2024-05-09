@@ -10,7 +10,7 @@
                 <span>{{currentViewName}}</span>
             </h5>
             <header class="pipeline-list-main-header">
-                <div>
+                <div class="pipeline-list-main-header-left-area">
                     <bk-dropdown-menu trigger="click">
                         <bk-button
                             v-perm="{
@@ -48,6 +48,7 @@
                                 }
                             }"
                             v-if="pipelineGroupType"
+                            :disabled="isPacGroup"
                             @click="handleAddToGroup"
                         >
                             {{$t('pipelineCountEdit')}}
@@ -103,10 +104,11 @@
                 </div>
             </header>
         </template>
-        <div class="pipeline-list-box">
+        <div class="pipeline-list-box" ref="tableBox">
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
+                :max-height="$refs.tableBox?.offsetHeight"
                 ref="pipelineBox"
             />
             <pipelines-card-view
@@ -143,10 +145,7 @@
             @cancel="closeSaveAsDialog"
             @done="refresh"
         />
-        <pipeline-template-popup
-            :toggle-popup="toggleTemplatePopup"
-            :is-show.sync="templatePopupShow"
-        />
+
         <import-pipeline-popup
             :is-show.sync="importPipelinePopupShow"
         />
@@ -155,14 +154,21 @@
             @close="handleCloseEditCount"
             @done="refresh"
         />
+        <disable-dialog
+            v-model="pipelineActionState.isDisableDialogShow"
+            v-bind="pipelineActionState.activePipeline"
+            @close="closeDisableDialog"
+            :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
+            @done="refresh"
+        />
     </main>
 </template>
 <script>
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
+    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
-    import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
     import webSocketMessage from '@/utils/webSocketMessage'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
@@ -184,7 +190,6 @@
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-    import { getCacheViewId } from '@/utils/util'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -198,9 +203,9 @@
             PipelinesCardView,
             PipelineTableView,
             PipelineSearcher,
-            PipelineTemplatePopup,
             ImportPipelinePopup,
-            PipelineGroupEditDialog
+            PipelineGroupEditDialog,
+            DisableDialog
         },
         mixins: [piplineActionMixin],
         data () {
@@ -209,12 +214,15 @@
                 layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
                 hasCreatePermission: false,
                 filters: restQuery,
-                templatePopupShow: false,
                 importPipelinePopupShow: false,
                 activeGroup: null,
                 newPipelineDropdown: [{
                     text: this.$t('newPipelineFromTemplateLabel'),
-                    action: this.toggleTemplatePopup
+                    action: () => {
+                        this.$router.push({
+                            name: 'createPipeline'
+                        })
+                    }
                 }, {
                     text: this.$t('newPipelineFromJSONLabel'),
                     action: this.toggleImportPipelinePopup
@@ -250,6 +258,9 @@
             currentViewName () {
                 return this.currentGroup?.i18nKey ? this.$t(this.currentGroup.i18nKey) : (this.currentGroup?.name ?? '')
             },
+            isPacGroup () {
+                return this.currentGroup?.pac
+            },
             canNotMangeProjectedGroup () {
                 return this.currentGroup?.projected && !this.isManage
             },
@@ -267,8 +278,10 @@
             },
             noManagePermissionTips () {
                 return {
-                    content: this.$t('groupEditDisableTips'),
-                    disabled: !this.canNotMangeProjectedGroup
+                    content: this.$t(this.isPacGroup ? 'pacGroupDisableTips' : 'groupEditDisableTips'),
+                    maxWidth: 360,
+                    disabled: !this.canNotMangeProjectedGroup && !this.isPacGroup,
+                    delay: [300, 0]
                 }
             },
             sortList () {
@@ -295,29 +308,22 @@
             currentSortIconName () {
                 return this.getSortIconName(this.$route.query.sortType)
             }
-
         },
         watch: {
             '$route.params.projectId': function () {
                 this.filters = {}
                 this.$nextTick(() => {
-                    if (!this.isAllPipelineView) {
-                        this.goList()
-                    } else {
-                        this.$refs.pipelineBox?.requestList?.({
-                            page: 1,
-                            pageSize: 50
-                        })
-                    }
+                    this.goList()
                     this.checkHasCreatePermission()
                     this.handleCloseEditCount()
                     this.templatePopupShow = false
                 })
             },
-            '$route.params.viewId': function () {
+            '$route.params.viewId' () {
                 this.filters = {}
             }
         },
+        
         created () {
             this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
             this.goList()
@@ -349,25 +355,16 @@
                 return 'sort'
             },
             goList () {
-                if (!this.$route.params.viewId) {
-                    const viewId = getCacheViewId(this.$route.params.projectId)
-                    this.$router.replace({
-                        name: 'PipelineManageList',
-                        params: {
-                            ...this.$route.params,
-                            viewId
-                        }
-                    })
-                } else {
-                    this.$refs.pipelineBox?.requestList?.({
-                        page: 1,
-                        pageSize: 50
-                    })
-                }
+                this.$refs.pipelineBox?.requestList?.({
+                    page: 1
+                })
             },
             goPatchManage () {
                 this.$router.push({
-                    name: 'patchManageList'
+                    params: {
+                        ...this.$route.params,
+                        type: 'patch'
+                    }
                 })
             },
             getLs (key) {
@@ -401,10 +398,12 @@
                 }
                 localStorage.setItem('pipelineSortType', sortType)
                 localStorage.setItem('pipelineSortCollation', newSortQuery.collation)
-
-                this.$router.push({
-                    ...this.$route,
-                    query: newSortQuery
+                this.$router.replace({
+                    query: {
+                        ...(this.$route.query ?? {}),
+                        sortType,
+                        collation: newSortQuery.collation
+                    }
                 })
             },
 
@@ -413,13 +412,6 @@
                 this.hasCreatePermission = res
             },
 
-            toggleTemplatePopup () {
-                if (!this.hasCreatePermission) {
-                    this.toggleCreatePermission()
-                } else {
-                    this.templatePopupShow = !this.templatePopupShow
-                }
-            },
             handleAddToGroup () {
                 if (this.currentGroup) {
                     this.activeGroup = this.currentGroup
@@ -526,10 +518,8 @@
         @include ellipsis();
         flex-shrink: 0;
         max-width: 100px;
-        cursor: pointer;
-    }
-    .pipeline-list-box {
-        flex: 1;
-        overflow: hidden;
+        &.pipeline-group-more-tag {
+            cursor: pointer;
+        }
     }
 </style>

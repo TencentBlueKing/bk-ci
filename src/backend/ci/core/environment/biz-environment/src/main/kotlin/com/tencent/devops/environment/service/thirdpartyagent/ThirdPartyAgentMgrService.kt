@@ -34,6 +34,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.CustomException
@@ -54,10 +55,13 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
@@ -73,6 +77,7 @@ import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentPipelineRefDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentEnableProjectsDao
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
@@ -105,6 +110,8 @@ import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -142,7 +149,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val envShareProjectDao: EnvShareProjectDao,
     private val commonConfig: CommonConfig,
     private val agentMetricService: AgentMetricService,
-    private val agentShareProjectDao: AgentShareProjectDao
+    private val agentShareProjectDao: AgentShareProjectDao,
+    private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
+    private val thirdPartAgentService: ThirdPartAgentService,
+    private val tokenService: ClientTokenService
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
@@ -435,13 +445,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
 
-        val agentActionCount = thirdPartyAgentDao.getAgentActionsCount(
+        val agentActionCount = thirdPartyAgentActionDao.getAgentActionsCount(
             dslContext = dslContext,
             projectId = projectId,
             agentId = agentRecord.id
         )
         val agentActions =
-            thirdPartyAgentDao.listAgentActions(
+            thirdPartyAgentActionDao.listAgentActions(
                 dslContext = dslContext,
                 projectId = projectId,
                 agentId = agentRecord.id,
@@ -769,7 +779,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                            "($sharedProjectId:$sharedEnvId)"
+                                "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -808,12 +818,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                    "mainProjectId: $sharedProjectId"
+                        "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -859,7 +869,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:$sharedEnvName)"
+                        "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -1045,11 +1055,47 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         } else if (status == AgentStatus.IMPORT_EXCEPTION) {
             status = AgentStatus.IMPORT_OK
         }
-        if (!(
-            AgentStatus.isImportException(status) ||
-                AgentStatus.isUnImport(status) ||
-                agentRecord.startRemoteIp.isNullOrBlank()
-            )
+
+        // 如果已经有了状态正常的Agent且IP不同，发送告警
+        if (status == AgentStatus.IMPORT_OK && agentRecord.ip != startInfo.hostIp) {
+            val users = mutableSetOf(agentRecord.createdUser)
+            val nodeHashId = HashUtil.encodeLongId(agentRecord.nodeId)
+            val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+            val authUsers = kotlin.runCatching {
+                client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                    token = tokenService.getSystemToken(),
+                    projectCode = agentRecord.projectId,
+                    resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+                    resourceCode = nodeHashId
+                ).data
+            }.onFailure {
+                logger.warn("agentStartup|getResourceGroupMembers|${agentRecord.projectId}|$nodeHashId")
+            }.getOrNull()
+            users.addAll(authUsers ?: emptySet())
+            kotlin.runCatching {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                SendNotifyMessageTemplateRequest(
+                    templateCode = "THIRDPART_AGENT_REPEAT_INSTALL",
+                    receivers = users,
+                    titleParams = mapOf(
+                        "projectId" to agentRecord.projectId,
+                        "agentId" to agentHashId
+                    ),
+                    bodyParams = mapOf(
+                        "oldIp" to agentRecord.ip,
+                        "newIp" to startInfo.hostIp,
+                        "url" to "${HomeHostUtil.innerServerHost()}/console/environment/${agentRecord.projectId}/" +
+                                "nodeDetail/$nodeHashId"
+                    )
+                )
+            ) }.onFailure {
+                logger.warn("agentStartup|sendNotifyMessageByTemplate|${agentRecord.projectId}|$agentHashId")
+            }
+        }
+
+        if (!(AgentStatus.isImportException(status) ||
+                    AgentStatus.isUnImport(status) ||
+                    agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1073,17 +1119,15 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status ||
             agentRecord.status == AgentStatus.UN_IMPORT.status
         ) {
-            thirdPartyAgentDao.addAgentAction(dslContext, projectId, id, AgentAction.ONLINE.name)
+            thirdPartAgentService.addAgentAction(projectId, id, AgentAction.ONLINE)
         }
 
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
-                if (nodeRecord != null && (
-                    nodeRecord.nodeIp != startInfo.hostIp ||
-                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name
-                    )
+                if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
+                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
@@ -1248,11 +1292,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                             projectId = projectId,
                             status = AgentStatus.IMPORT_OK
                         )
-                        thirdPartyAgentDao.addAgentAction(
-                            dslContext = context,
+                        thirdPartAgentService.addAgentAction(
                             projectId = projectId,
                             agentId = agentRecord.id,
-                            action = AgentAction.ONLINE.name
+                            action = AgentAction.ONLINE
                         )
                     }
                     if (agentRecord.nodeId != null) {
@@ -1378,7 +1421,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         os = agentRecord.os ?: ""
                     )
                     thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.IMPORT_OK)
-                    thirdPartyAgentDao.addAgentAction(context, projectId, agentRecord.id, AgentAction.ONLINE.name)
+                    thirdPartAgentService.addAgentAction(projectId, agentRecord.id, AgentAction.ONLINE)
                     if (agentRecord.nodeId != null) {
                         nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
                     }

@@ -357,6 +357,9 @@
                 transform: rotate(90deg);
             }
         }
+        .trigger-user {
+            color: #979BA5;
+        }
         .trigger-time {
             padding-left: 8px;
             color: #979BA5;

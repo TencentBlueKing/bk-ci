@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
-import { Error } from 'bkui-vue/lib/icon'
-import GroupDeatil from './group-detail.vue'
-import SearchSelect from './search-select'
+import GroupDeatil from './group-detail.vue';
+import SearchSelect from './search-select';
+import GroupTab from './group-tab';
 import {
   h,
   ref,
   watch,
   computed,
+  onMounted,
   resolveDirective,
   withDirectives,
 } from 'vue';
@@ -28,19 +29,18 @@ const { t } = useI18n();
 const bkEllipsis = resolveDirective('bk-ellipsis');
 const showDetail = ref(false);
 const tableRef = ref();
-const resourcesTypeList = ref([]);
 const groupInfo = ref([]);
 const selections = ref([]);
 const filter = ref([]);
 const isLoading = ref(false);
 const isDetailLoading = ref(false);
 const userGroupList = ref([]);
+const groupLevel = ref('PROJECT');
 const pagination = ref({
   count: 0,
   limit: 10,
   current: 1,
 });
-const isRowChecked = ref(false);
 const indeterminate = ref(false);
 const isSelectedAll = ref(false);
 const applyTips = ref('');
@@ -76,9 +76,7 @@ const searchList = computed(() => {
       multiple: false,
     },
   ];
-  return datas.filter((data) => {
-    return !filter.value.find(val => val.id === data.id);
-  });
+  return datas.filter(data => !filter.value.find(val => val.id === data.id));
 });
 
 const emits = defineEmits(['handle-change-select-group']);
@@ -90,17 +88,18 @@ const handleChangeSelectGroup = (values) => {
 // 可选择的用户组 joined -> flase
 const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined));
 
-watch(() => props.projectCode, (newVal, oldVal) => {
-  if (oldVal) {
-    filter.value = [];
-    applyTips.value = '';
-    pagination.value.current = 1;
-  }
-},
+watch(
+  () => props.projectCode, (newVal, oldVal) => {
+    if (oldVal) {
+      filter.value = [];
+      applyTips.value = '';
+      pagination.value.current = 1;
+    }
+  },
   {
     immediate: true,
-  }
-)
+  },
+);
 
 watch(() => selections.value, () => {
   checkSelectedAll();
@@ -157,47 +156,51 @@ const handleChangeSearch = (data) => {
   pagination.value.current = 1;
   setTimeout(() => {
     filter.value = data;
-    const query = route.query;
+    const { query } = route;
     // const resourceType = query?.resourceType
     if (query && Object.keys(query).length > 1 && query.project_code === props.projectCode) {
       applyTips.value = t('根据筛选条件，匹配到如下用户组:');
     }
-    if (!props.curProject) return
+    if (!props.curProject) return;
     // if (resourceType && !userGroupList.value.length && !data.length) return
     fetchGroupList(data);
   }, 100);
 };
 
 const fetchGroupList = async (payload = []) => {
-  if (!props.projectCode) return;
+  const projectId = props.projectCode || route?.query.project_code;
+  if (!projectId) return;
   const params = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
+    groupLevel: groupLevel.value,
+    projectId,
   };
-  payload.forEach(i => {
+  payload.forEach((i) => {
     if (i.id === 'actionId') {
-      const values = i.values;
+      const { values } = i;
       params[i.id] = values.map(i => i.action).join('');
-      params['resourceType'] = values[0].resourceType;
+      params.resourceType = values[0].resourceType;
     } else if (i.id === 'resourceCode') {
-      const values = i.values;
-      params['iamResourceCode'] = values.map(i => i.iamResourceCode).join('');
-      params['resourceType'] = values[0].resourceType;
+      const { values } = i;
+      params.iamResourceCode = values.map(i => i.iamResourceCode).join('');
+      params.resourceType = values[0].resourceType;
     } else {
       params[i.id] = i.values.join();
     }
   });
-  params['projectId'] = props.projectCode;
   isLoading.value = true;
-  await http.getUserGroupList(params).then(res => {
+  await http.getUserGroupList(params).then((res) => {
     pagination.value.count = res.count;
     userGroupList.value = res.results;
-  }).catch(() => {
-    isLoading.value = false;
-    return [];
-  }).finally(() => {
-    isLoading.value = false;
   })
+    .catch(() => {
+      isLoading.value = false;
+      userGroupList.value = [];
+    })
+    .finally(() => {
+      isLoading.value = false;
+    });
 };
 
 const handleSelectRow = (value, row) => {
@@ -215,9 +218,7 @@ const checkSelectedAll = () => {
     return false;
   }
 
-  isSelectedAll.value = optionGroupList.value.every(i => {
-    return selections.value.some(group => group.id === i.id);
-  })
+  isSelectedAll.value = optionGroupList.value.every(i => selections.value.some(group => group.id === i.id));
 };
 
 const checkIndeterminate = () => {
@@ -231,7 +232,7 @@ const checkIndeterminate = () => {
   } else {
     indeterminate.value = selections.value.length !== optionGroupList.value.length;
   }
-}
+};
 
 const handleSelectAllGroup = (val) => {
   isSelectedAll.value = val;
@@ -242,33 +243,35 @@ const handleSelectAllGroup = (val) => {
   }
 };
 
-const renderSelectionCell = ({ row, column }) => {
-  return h(
-    BkCheckbox,
-    {
-      modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
-      disabled: row.joined,
-      class: 'label-text',
-      title: row.joined ? t('你已获得该权限') : '',
-      onChange(val) {
-        handleSelectRow(val, row)
-      }
-    }
-  )
-};
+const renderSelectionCell = ({ row, column }) => h(
+  BkCheckbox,
+  {
+    modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
+    disabled: row.joined,
+    class: 'label-text',
+    title: row.joined ? t('你已获得该权限') : '',
+    onChange(val) {
+      handleSelectRow(val, row);
+    },
+  },
+);
 
-const renderSelectionHeader = (col: any) => {
-  return h(
-    BkCheckbox,
-    {
-      indeterminate: indeterminate.value,
-      modelValue: isSelectedAll.value,
-      class: 'group-table-header-checkbox',
-      onChange(val) {
-        handleSelectAllGroup(val);
-      }
-    }
-  )
+const renderSelectionHeader = (col: any) => h(
+  BkCheckbox,
+  {
+    indeterminate: indeterminate.value,
+    modelValue: isSelectedAll.value,
+    class: 'group-table-header-checkbox',
+    onChange(val) {
+      handleSelectAllGroup(val);
+    },
+  },
+);
+
+const handleChangeTab = (id) => {
+  groupLevel.value = id;
+  filter.value = [];
+  fetchGroupList(filter.value);
 };
 
 const columns = [
@@ -279,7 +282,7 @@ const columns = [
   },
   {
     label: t('资源实例'),
-    render ({ cell, row }) {
+    render({ cell, row }) {
       return withDirectives(h(
         'div',
         {
@@ -291,29 +294,29 @@ const columns = [
   },
   {
     label: t('用户组名'),
-    render ({ cell, row }) {
+    render({ cell, row }) {
       return h(
         'span',
         {
-          title: row.name, 
+          title: row.name,
           style: {
             cursor: 'pointer',
             color: '#3a84ff',
           },
           onClick() {
-            handleShowGroupDetail(row)
+            handleShowGroupDetail(row);
           },
         },
         [
           cell,
-          row.name
-        ]
+          row.name,
+        ],
       );
     },
   },
   {
     label: t('描述'),
-    render ({ cell, row }) {
+    render({ cell, row }) {
       return withDirectives(h(
         'div',
         {
@@ -322,8 +325,16 @@ const columns = [
         row.description,
       ), [[bkEllipsis]]);
     },
-  }
+  },
 ];
+
+onMounted(() => {
+  const { iamRelatedResourceType } = route?.query;
+  groupLevel.value = iamRelatedResourceType && iamRelatedResourceType !== 'project' ? 'OTHER' : 'PROJECT';
+  if (!iamRelatedResourceType) {
+    fetchGroupList(filter.value);
+  };
+});
 </script>
 
 <template>
@@ -335,17 +346,19 @@ const columns = [
       :is-disabled="isDisabled"
       :project-code="projectCode"
       :cur-project="props.curProject"
+      :key="groupLevel"
       @change="handleChangeSearch">
     </search-select>
-    <div class="apply-tips">
-      
-    </div>
     <bk-loading
       class="group-table"
       :loading="isLoading">
       <div v-if="applyTips">
         {{ applyTips }}
       </div>
+      <group-tab
+        :active="groupLevel"
+        @change-tab="handleChangeTab"
+      />
       <bk-table
         ref="tableRef"
         class="group-table"
@@ -377,7 +390,6 @@ const columns = [
   }
   .group-table {
     width: 750px !important;
-    margin-top: 16px;
   }
   .group-name {
     color: #3A84FF;
@@ -389,7 +401,7 @@ const columns = [
   :deep(.bordered-outer) {
     border: 1px solid #dcdee5;
   }
-  
+
   :deep(.bk-table .bk-table-head table thead th),
   :deep(.bk-table .bk-table-body table thead th) {
     text-align: center !important;
