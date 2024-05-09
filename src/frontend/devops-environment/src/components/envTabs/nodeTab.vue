@@ -21,7 +21,7 @@
         <div class="node-table" v-if="showContent && nodeList.length">
             <bk-table
                 ref="shareDiaglogTable"
-                :data="nodeList"
+                :data="curNodeList"
             >
                 <bk-table-column :label="$t('environment.envInfo.name')" width="150" prop="displayName" show-overflow-tooltip>
                     <template slot-scope="props">
@@ -67,7 +67,7 @@
                         <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.operation')">
+                <bk-table-column :width="180" :label="$t('environment.operation')">
                     <template slot-scope="props">
                         <bk-button
                             v-perm="{
