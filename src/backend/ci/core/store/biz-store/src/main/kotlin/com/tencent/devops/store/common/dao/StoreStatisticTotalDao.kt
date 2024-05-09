@@ -39,7 +39,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
-import org.jooq.Record7
+import org.jooq.Record8
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -70,7 +70,7 @@ class StoreStatisticTotalDao {
             scoreAverage?.let { record.scoreAverage = scoreAverage.toBigDecimal() }
             record.recentExecuteNum = recentExecuteNum
             hotFlag?.let { record.hotFlag = hotFlag }
-            recentActiveDuration?.let { record.rencentActiveDuration = recentActiveDuration.toBigDecimal() }
+            recentActiveDuration?.let { record.recentActiveDuration = recentActiveDuration.toBigDecimal() }
             dslContext.insertInto(this).set(record).execute()
         }
     }
@@ -96,7 +96,7 @@ class StoreStatisticTotalDao {
             score?.let { baseStep.set(SCORE, score) }
             scoreAverage?.let { baseStep.set(SCORE_AVERAGE, scoreAverage.toBigDecimal()) }
             hotFlag?.let { baseStep.set(HOT_FLAG, hotFlag) }
-            recentActiveDuration?.let { baseStep.set(RENCENT_ACTIVE_DURATION, recentActiveDuration.toBigDecimal()) }
+            recentActiveDuration?.let { baseStep.set(RECENT_ACTIVE_DURATION, recentActiveDuration.toBigDecimal()) }
             baseStep.where(STORE_TYPE.eq(storeType))
                 .and(STORE_CODE.eq(storeCode))
                 .execute()
@@ -159,7 +159,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte
-    ): Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>? {
+    ): Record8<Int, Int, BigDecimal, Int, Int, String, Boolean, BigDecimal>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             return dslContext.select(
                 DOWNLOADS,
@@ -168,7 +168,8 @@ class StoreStatisticTotalDao {
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
                 STORE_CODE,
-                HOT_FLAG.`as`(KEY_HOT_FLAG)
+                HOT_FLAG.`as`(KEY_HOT_FLAG),
+                RECENT_ACTIVE_DURATION
             )
                 .from(this)
                 .where(STORE_TYPE.eq(storeType).and(STORE_CODE.eq(storeCode)))
@@ -183,7 +184,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCodeList: List<String?>,
         storeType: Byte
-    ): Result<Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>>? {
+    ): Result<Record8<Int, Int, BigDecimal, Int, Int, String, Boolean, BigDecimal>>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val baseStep = dslContext.select(
                 DOWNLOADS,
@@ -192,7 +193,8 @@ class StoreStatisticTotalDao {
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
                 STORE_CODE.`as`(KEY_STORE_CODE),
-                HOT_FLAG.`as`(KEY_HOT_FLAG)
+                HOT_FLAG.`as`(KEY_HOT_FLAG),
+                RECENT_ACTIVE_DURATION
             )
                 .from(this)
 
