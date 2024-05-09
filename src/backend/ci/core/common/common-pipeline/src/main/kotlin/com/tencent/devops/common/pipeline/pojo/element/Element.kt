@@ -166,7 +166,7 @@ abstract class Element(
     /**
      * 兼容性初始化等处理
      */
-    open fun transformCompatibility() {
+    fun transformCompatibility() {
         if (additionalOptions != null && additionalOptions!!.timeoutVar.isNullOrBlank()) {
             additionalOptions!!.timeoutVar = additionalOptions!!.timeout.toString()
         }

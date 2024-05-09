@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -65,13 +66,15 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         }
         params.block = isBlock(element)
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
+        params.version = element.version
         when {
             // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
             element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 params.includeMrAction = CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE
             }
 
-            element.eventType == CodeEventType.MERGE_REQUEST && element.includeMrAction == null -> {
+            element.eventType == CodeEventType.MERGE_REQUEST &&
+                    WebhookUtils.isCustomP4TriggerVersion(element.version) -> {
                 params.includeMrAction = joinToString(
                     listOf(
                         CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
@@ -81,7 +84,8 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
                 )
             }
 
-            element.eventType == CodeEventType.PUSH && element.includePushAction == null -> {
+            element.eventType == CodeEventType.PUSH &&
+                    WebhookUtils.isCustomP4TriggerVersion(element.version) -> {
                 params.includePushAction = joinToString(
                     listOf(
                         CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,

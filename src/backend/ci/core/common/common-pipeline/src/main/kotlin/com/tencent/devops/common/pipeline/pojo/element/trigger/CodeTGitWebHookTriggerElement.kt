@@ -149,34 +149,6 @@ data class CodeTGitWebHookTriggerElement(
             return props.filterNotNull()
         }
     }
-
-    override fun transformCompatibility() {
-        super.transformCompatibility()
-        // 触发器action判断上线后，在此处对存量触发器配置进行适配
-        with(data.input) {
-            when {
-                eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                    eventType = CodeEventType.MERGE_REQUEST
-                    includeMrAction = listOf(CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE)
-                }
-
-                eventType == CodeEventType.MERGE_REQUEST && includeMrAction == null -> {
-                    includeMrAction = listOf(
-                        CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
-                        CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
-                        CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
-                    )
-                }
-
-                eventType == CodeEventType.PUSH && includePushAction == null -> {
-                    includePushAction = listOf(
-                        CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
-                        CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
-                    )
-                }
-            }
-        }
-    }
 }
 
 data class CodeTGitWebHookTriggerData(

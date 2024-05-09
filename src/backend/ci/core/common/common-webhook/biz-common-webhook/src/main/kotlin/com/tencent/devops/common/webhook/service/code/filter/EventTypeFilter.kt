@@ -44,9 +44,6 @@ class EventTypeFilter(
         logger.info(
             "$pipelineId|triggerOnEventType:$triggerOnEventType|eventType:$eventType|eventType filter"
         )
-        if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT && triggerOnEventType == CodeEventType.MERGE_REQUEST) {
-            return true
-        }
         return eventType == triggerOnEventType
     }
 }
