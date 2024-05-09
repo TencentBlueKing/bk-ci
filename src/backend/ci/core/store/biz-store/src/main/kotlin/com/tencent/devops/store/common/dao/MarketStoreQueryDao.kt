@@ -115,7 +115,15 @@ class MarketStoreQueryDao {
             tStoreBase.STORE_TYPE,
             DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
         ).from(tStoreBase)
-            .where(conditions)
+        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+            subquery.leftJoin(tStoreBaseFeature)
+                .on(
+                    tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                        .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                )
+        }
+        subquery.where(conditions)
             .groupBy(tStoreBase.STORE_CODE)
 
         baseStep.join(subquery)
