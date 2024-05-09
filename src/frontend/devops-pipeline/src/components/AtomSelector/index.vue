@@ -194,7 +194,7 @@
                             this.$refs.searchStr?.focus?.()
                         }, 0)
                     } else {
-                        this.clearSearch()
+                        this.clearSearch(false)
                     }
                 },
                 immediate: true
@@ -248,11 +248,12 @@
                     this.isThrottled = true
                     this.timer = setTimeout(async () => {
                         this.isThrottled = false
-                        const queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
+                        let queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
 
                         let jobType // job类型 => 触发器插件无需传jobType
                         if (this.category === 'TRIGGER') {
                             jobType = undefined
+                            queryProjectAtomFlag = false
                         } else {
                             jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
                         }
@@ -302,13 +303,14 @@
                 })
                 this.clearAtomData()
             },
-            clearSearch () {
+            clearSearch (refetch = true) {
                 const input = this.$refs.searchStr || {}
                 input.curValue = ''
                 this.searchKey = ''
-                this.setAtomPageOver()
                 this.freshRequestAtomData()
-                this.fetchAtomList()
+                if (refetch) {
+                    this.fetchAtomList()
+                }
             },
             close () {
                 this.beforeClose?.()

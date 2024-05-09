@@ -53,7 +53,7 @@
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
                         { label.trim() && desc.trim() && <bk-popover placement="top">
-                            <i class={{ 'bk-icon': true, 'icon-info-circle': !hideColon, 'icon-question-circle-shape': hideColon }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
+                            <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
                             <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
                                 <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
                             </div>
@@ -76,7 +76,6 @@
         .icon-info-circle, .icon-question-circle {
             color: #C3CDD7;
             font-size: 14px;
-            vertical-align: middle;
             pointer-events: auto;
         }
     }
