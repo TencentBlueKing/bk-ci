@@ -773,6 +773,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeType.type.toByte()
         ) ?: emptyMap()
         // 筛选可更新组件
+        logger.info("queryInstalledInfoByProject installedMap:$installedMap")
         if (storeInfoQuery.updateFlag == true) {
             storeBaseQueryDao.getLatestComponentByCodes(
                 dslContext,
