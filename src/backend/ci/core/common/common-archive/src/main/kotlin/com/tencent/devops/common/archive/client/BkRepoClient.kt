@@ -46,6 +46,7 @@ import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessToken
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
+import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
@@ -706,7 +707,7 @@ class BkRepoClient constructor(
                     "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, " +
                     "timeoutInSeconds: $timeoutInSeconds"
         )
-        val repoUrlPrefix = if (!bkrepoPrefixUrl.isNullOrBlank()) {
+        val repoUrlPrefix = if (bkrepoPrefixUrl.isNullOrBlank()) {
             "${getGatewayUrl()}/bkrepo/api/service"
         } else {
             bkrepoPrefixUrl
@@ -733,6 +734,24 @@ class BkRepoClient constructor(
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<ShareRecordInfo>>()!!.data!!.shareUrl
+    }
+
+    fun createTemporaryAccessUrl(
+        temporaryUrlCreateRequest: TemporaryUrlCreateRequest,
+        bkrepoPrefixUrl: String,
+        userName: String,
+        password: String
+    ): List<TemporaryAccessUrl> {
+        val url = "$bkrepoPrefixUrl/generic/temporary/url/create"
+        val requestBody = objectMapper.writeValueAsString(temporaryUrlCreateRequest)
+        val header = mutableMapOf<String, String>()
+        header[AUTH_HEADER_IAM_TOKEN] = Credentials.basic(userName, password)
+        val request = Request.Builder()
+            .url(url)
+            .headers(header.toHeaders())
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        return doRequest(request).resolveResponse<Response<List<TemporaryAccessUrl>>>()!!.data!!
     }
 
     fun apkDefender(
