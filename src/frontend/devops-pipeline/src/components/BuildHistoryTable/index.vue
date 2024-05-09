@@ -294,7 +294,7 @@
                             size="small"
                             @click.stop="retry(props.row.id)"
                         >
-                            {{ $t(isDebug ? 'reDebug' : 'reExec') }}
+                            {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
                         </bk-button>
                     </template>
                 </bk-table-column>
