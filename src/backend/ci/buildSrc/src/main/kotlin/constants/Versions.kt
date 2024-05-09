@@ -53,4 +53,8 @@ object Versions {
     const val MysqlDriver = "8.0.33"
     const val swagger = "2.2.16"
     const val jakarta = "2.1.2"
+    // worker
+    const val Winp = "1.28"
+    const val Jna = "5.14.0"
+    const val JenkinsVersionNumber = "1.1"
 }

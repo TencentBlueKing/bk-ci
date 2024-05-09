@@ -3,19 +3,19 @@
  * @author Blueking
  */
 
-import { resolve, join } from 'path'
+import CopyWebpackPlugin from 'copy-webpack-plugin'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import OptimizeCSSPlugin from 'optimize-css-assets-webpack-plugin'
+import { join, resolve } from 'path'
+import TerserPlugin from 'terser-webpack-plugin'
 import webpack from 'webpack'
 import merge from 'webpack-merge'
-import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import TerserPlugin from 'terser-webpack-plugin'
-import OptimizeCSSPlugin from 'optimize-css-assets-webpack-plugin'
-import HtmlWebpackPlugin from 'html-webpack-plugin'
-import CopyWebpackPlugin from 'copy-webpack-plugin'
  
 import config from './config'
+import ReplaceCssStaticUrl from './replace-css-static-url-plugin'
 import { assetsPath } from './util'
 import baseConf from './webpack.base.conf'
-import ReplaceCssStaticUrl from './replace-css-static-url-plugin'
  
 const devConf = merge(baseConf, {
     mode: 'development',
@@ -50,8 +50,6 @@ const devConf = merge(baseConf, {
             chunks: 'all',
             // 表示提取出来的文件在压缩前的最小大小，默认为 30kb
             minSize: 30000,
-            // 表示提取出来的文件在压缩前的最大大小，默认为 0，表示不限制最大大小
-            maxSize: 0,
             // 表示被引用次数，默认为 1
             minChunks: 1,
             // 最多有 5 个异步加载请求该 module
@@ -61,7 +59,6 @@ const devConf = merge(baseConf, {
             // 名字中间的间隔符
             automaticNameDelimiter: '~',
             // chunk 的名字，如果设成 true，会根据被提取的 chunk 自动生成
-            name: true,
             cacheGroups: {
                 // 提取 chunk-bk-magic-vue 代码块
                 bkMagic: {

@@ -103,7 +103,6 @@ import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
-import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -156,7 +155,6 @@ class PipelineRepositoryService constructor(
     private val pipelineInfoExtService: PipelineInfoExtService,
     private val operationLogService: PipelineOperationLogService,
     private val client: Client,
-    private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao
 ) {
@@ -891,35 +889,11 @@ class PipelineRepositoryService constructor(
                     params = arrayOf(pipelineId)
                 )
                 model.latestVersion = releaseResource.version
-                val latestVersion = pipelineResourceVersionDao.getLatestVersionResource(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                ) ?: run {
-                    // #8161 没有版本表数据的流水线，兜底增加一个当前版本
-                    pipelineResourceVersionDao.create(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        creator = userId,
-                        version = releaseResource.version,
-                        model = releaseResource.model,
-                        yamlVersion = releaseResource.yamlVersion,
-                        yamlStr = releaseResource.yaml,
-                        baseVersion = baseVersion,
-                        versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
-                            releaseResource.version, releaseResource.version, 0, 0
-                        ) ?: "",
-                        versionNum = releaseResource.versionNum,
-                        pipelineVersion = null,
-                        triggerVersion = null,
-                        settingVersion = null,
-                        versionStatus = null,
-                        branchAction = null,
-                        description = "backup"
-                    )
-                    releaseResource
-                }
+                val latestVersion = getLatestVersionResource(
+                    transactionContext = transactionContext, projectId = projectId,
+                    pipelineId = pipelineId, userId = userId, releaseResource = releaseResource,
+                    baseVersion = baseVersion
+                )
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -1195,6 +1169,46 @@ class PipelineRepositoryService constructor(
             versionNum = versionNum,
             versionName = versionName
         )
+    }
+
+    private fun getLatestVersionResource(
+        transactionContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        releaseResource: PipelineResourceVersion,
+        baseVersion: Int?
+    ): PipelineResourceVersion {
+        val latestVersion = pipelineResourceVersionDao.getLatestVersionResource(
+            dslContext = transactionContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: run {
+            // #8161 没有版本表数据的流水线，兜底增加一个当前版本
+            pipelineResourceVersionDao.create(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = releaseResource.version,
+                model = releaseResource.model,
+                yamlVersion = releaseResource.yamlVersion,
+                yamlStr = releaseResource.yaml,
+                baseVersion = baseVersion,
+                versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
+                    releaseResource.version, releaseResource.version, 0, 0
+                ) ?: "",
+                versionNum = releaseResource.versionNum,
+                pipelineVersion = null,
+                triggerVersion = null,
+                settingVersion = null,
+                versionStatus = null,
+                branchAction = null,
+                description = "backup"
+            )
+            releaseResource
+        }
+        return latestVersion
     }
 
     fun getPipelineInfo(
@@ -1892,24 +1906,98 @@ class PipelineRepositoryService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        pipelineInfo: PipelineInfo,
         settingVersion: Int
     ) {
-        val version = pipelineResourceDao.updateSettingVersion(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            settingVersion = settingVersion
-        )
-        // 同步刷新流水线版本历史中关联的设置版本号
-        if (version != null) {
-            pipelineResourceVersionDao.updateSettingVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version,
-                settingVersion = settingVersion
-            )
+        val lock = PipelineModelLock(redisOperation, pipelineId)
+        val watcher = Watcher(id = "updateSettingVersion#$pipelineId#$settingVersion")
+        try {
+            lock.lock()
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                watcher.start("getOriginModel")
+                val releaseResource = pipelineResourceDao.getReleaseVersionResource(
+                    transactionContext, projectId, pipelineId
+                ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                    params = arrayOf(pipelineId)
+                )
+                val latestVersion = getLatestVersionResource(
+                    transactionContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    releaseResource = releaseResource,
+                    baseVersion = releaseResource.version
+                )
+                val version = latestVersion.version + 1
+                val versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
+                val newVersionName = PipelineVersionUtils.getVersionName(
+                    versionNum, releaseResource.pipelineVersion,
+                    releaseResource.triggerVersion, settingVersion
+                ) ?: ""
+                logger.info(
+                    "PROCESS|updateSettingVersion|version=$version|" +
+                        "versionNum=$versionNum|versionName=$newVersionName"
+                )
+                watcher.start("updatePipelineInfo")
+                pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    version = version
+                )
+                watcher.start("deleteEarlyVersion")
+                pipelineResourceDao.deleteEarlyVersion(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    beforeVersion = version
+                )
+                watcher.start("updatePipelineResource")
+                pipelineResourceDao.create(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    creator = userId,
+                    version = version,
+                    model = releaseResource.model,
+                    yamlStr = releaseResource.yaml,
+                    yamlVersion = releaseResource.yamlVersion,
+                    versionName = newVersionName,
+                    versionNum = versionNum,
+                    pipelineVersion = releaseResource.pipelineVersion,
+                    triggerVersion = releaseResource.triggerVersion,
+                    settingVersion = settingVersion
+                )
+                watcher.start("updatePipelineResourceVersion")
+                pipelineResourceVersionDao.create(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    creator = userId,
+                    version = version,
+                    model = releaseResource.model,
+                    yamlStr = releaseResource.yaml,
+                    yamlVersion = releaseResource.yamlVersion,
+                    versionName = newVersionName,
+                    versionNum = versionNum,
+                    pipelineVersion = releaseResource.pipelineVersion,
+                    triggerVersion = releaseResource.triggerVersion,
+                    settingVersion = settingVersion,
+                    versionStatus = VersionStatus.RELEASED,
+                    branchAction = releaseResource.branchAction,
+                    description = releaseResource.description,
+                    // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
+                    baseVersion = releaseResource.baseVersion
+                )
+            }
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
+            lock.unlock()
         }
     }
 

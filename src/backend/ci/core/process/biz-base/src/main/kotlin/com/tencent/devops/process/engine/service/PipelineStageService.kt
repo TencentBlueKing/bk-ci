@@ -428,7 +428,7 @@ class PipelineStageService @Autowired constructor(
                         oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
                     )
                     // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
-                    pipelineBuildSummaryDao.updateRunningCount(
+                    if (!debug) pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, projectId = projectId, pipelineId = pipelineId,
                         buildId = buildId, runningIncrement = 1
                     )
