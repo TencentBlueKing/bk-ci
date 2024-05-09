@@ -146,13 +146,16 @@ class VariableTransfer @Autowired constructor() {
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
                 value = it.defaultValue.toString(),
-                name = it.name,
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 valueNotEmpty = it.valueNotEmpty.nullIfDefault(false),
                 const = const,
                 props = props
             )
+            if (it.name?.isNotEmpty() == true) {
+                val p = result[it.id]?.props ?: VariableProps()
+                p.label = it.name
+            }
         }
         return if (result.isEmpty()) {
             null
@@ -204,7 +207,7 @@ class VariableTransfer @Autowired constructor() {
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
-                    name = variable.name,
+                    name = variable.props?.label,
                     required = variable.allowModifyAtStartup ?: true,
                     constant = variable.const ?: false,
                     type = type,
