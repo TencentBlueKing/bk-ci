@@ -191,6 +191,9 @@
         computed: {
             curUserInfo () {
                 return window.userInfo
+            },
+            curNodeList () {
+                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode)
             }
         },
         watch: {
