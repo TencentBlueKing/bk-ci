@@ -202,7 +202,7 @@ class MarketStoreQueryDao {
                 )
             )
         } else {
-            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+            if (storeInfoQuery.storeCodes != null) {
                 conditions.add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
             }
         }
