@@ -288,6 +288,7 @@ class CmdbNodeDao {
                 .from(TNode.T_NODE)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(SERVER_ID.isNull)
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
