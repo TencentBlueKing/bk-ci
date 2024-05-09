@@ -460,8 +460,8 @@ const actions = {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_log?instanceId=${instanceId}`)
     },
 
-    enableNode (_, { projectId, envHashId, nodeHashId, disableNode }) {
-        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?disableNode=${disableNode}`)
+    enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
     }
 }
 
