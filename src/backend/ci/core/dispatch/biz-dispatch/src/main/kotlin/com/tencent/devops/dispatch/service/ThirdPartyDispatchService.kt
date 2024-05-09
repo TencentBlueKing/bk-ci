@@ -583,69 +583,92 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        // 判断是否有 jobEnv 的限制，检查全集群限制
-        checkAllNodeConcurrency(envId, dispatchMessage)
+        val disableAgentIds = agentResData.filter { !it.enableNode }.map { it.agent.agentId }.toSet()
+        log(
+            dispatchMessage.event,
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_ENV_NODE_DISABLE,
+                language = I18nUtil.getDefaultLocaleLanguage(),
+                params = arrayOf(disableAgentIds.joinToString(","))
+            )
+        )
 
+        /**
+         * 1. 现获取当前正常的agent列表
+         * 2. 获取可用的agent列表
+         * 3. 优先调用可用的agent执行任务
+         * 4. 如果启动可用的agent失败再调用有任务的agent
+         */
+        val activeAgents = agentResData.filter {
+            it.agent.status == AgentStatus.IMPORT_OK &&
+                    (dispatchMessage.event.os == it.agent.os || dispatchMessage.event.os == VMBaseOS.ALL.name) &&
+                    it.enableNode
+        }.map { it.agent }
+        if (activeAgents.isEmpty()) {
+            logWarn(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_NO_AGENT_AVAILABLE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
+                errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
+                        )
+            )
+        }
+
+        var jobEnvActiveAgents = activeAgents
+        if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
+            logWarn(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ENV_WORKER_ERROR_IGNORE,
+                    params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
+            jobEnvActiveAgents = activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
+            if (jobEnvActiveAgents.isEmpty()) {
+                throw BuildFailureException(
+                    ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorType,
+                    ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode,
+                    ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.formatErrorMessage,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode.toString(),
+                        params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
+            }
+        }
+
+        screenEnvNode(dispatchMessage, dispatchType, jobEnvActiveAgents, envId)
+    }
+
+    private fun screenEnvNode(
+        dispatchMessage: DispatchMessage,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: List<ThirdPartyAgent>,
+        envId: Long?
+    ) {
         ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
             if (lock) {
-                val disableAgentIds = agentResData.filter { !it.enableNode }.map { it.agent.agentId }.toSet()
-                logDebug(
-                    buildLogPrinter,
-                    dispatchMessage,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_ENV_NODE_DISABLE,
-                        language = I18nUtil.getDefaultLocaleLanguage(),
-                        params = arrayOf(disableAgentIds.joinToString(","))
-                    )
-                )
-                /**
-                 * 1. 现获取当前正常的agent列表
-                 * 2. 获取可用的agent列表
-                 * 3. 优先调用可用的agent执行任务
-                 * 4. 如果启动可用的agent失败再调用有任务的agent
-                 */
-                val activeAgents = agentResData.filter {
-                    it.agent.status == AgentStatus.IMPORT_OK &&
-                        (dispatchMessage.event.os == it.agent.os || dispatchMessage.event.os == VMBaseOS.ALL.name) &&
-                        it.enableNode
-                }.map { it.agent }
-
-                var jobEnvActiveAgents = activeAgents
-                if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
-                    logWarn(
-                        dispatchMessage.event,
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_ENV_WORKER_ERROR_IGNORE,
-                            params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        )
-                    )
-                    jobEnvActiveAgents =
-                        activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
-                    if (jobEnvActiveAgents.isEmpty()) {
-                        throw BuildFailureException(
-                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorType,
-                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode,
-                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.formatErrorMessage,
-                            I18nUtil.getCodeLanMessage(
-                                messageCode = ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode.toString(),
-                                params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
-                                language = I18nUtil.getDefaultLocaleLanguage()
-                            )
-                        )
-                    }
-                }
-
-                // 获取锁之后再检查一次，防止多个任务排队等锁导致超出集群并发限制
+                // 判断是否有 jobEnv 的限制，检查全集群限制
                 checkAllNodeConcurrency(envId, dispatchMessage)
 
                 // 判断是否有 jobEnv 的限制，筛选单节点的并发数
-                jobEnvActiveAgents = checkSingleNodeConcurrency(dispatchMessage, envId, jobEnvActiveAgents)
+                val activeAgents = checkSingleNodeConcurrency(dispatchMessage, envId, agents)
 
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
-                if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(
-                        activeAgents = jobEnvActiveAgents,
+                if (activeAgents.isNotEmpty() && pickupAgent(
+                        activeAgents = activeAgents,
                         dispatchMessage = dispatchMessage,
                         dispatchType = dispatchType,
                         envId = envId
@@ -665,7 +688,7 @@ class ThirdPartyDispatchService @Autowired constructor(
 
             logger.info(
                 "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|Not Found, Retry!"
+                        "dispatchType=$dispatchType|Not Found, Retry!"
             )
 
             logDebug(
@@ -675,15 +698,14 @@ class ThirdPartyDispatchService @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
             )
-
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_QUEUE_TIMEOUT_MINUTES,
-                        language = I18nUtil.getDefaultLocaleLanguage(),
-                        params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
-                    )
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
+                        )
             )
         }
     }

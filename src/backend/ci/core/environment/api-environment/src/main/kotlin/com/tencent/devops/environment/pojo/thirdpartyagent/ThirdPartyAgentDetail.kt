@@ -60,9 +60,9 @@ data class ThirdPartyAgentDetail(
     val slaveVersion: String,
     @get:Schema(title = "agent安装路径", required = true)
     val agentInstallPath: String,
-    @get:Schema(title = "最大通道数量", required = true)
+    @get:Schema(title = "已废弃", required = true)
     val maxParallelTaskCount: String,
-    @get:Schema(title = "通道数量", required = true)
+    @get:Schema(title = "最大构建并发数", required = true)
     val parallelTaskCount: String,
     @get:Schema(title = "docker构建机通道数量", required = true)
     val dockerParallelTaskCount: String,
