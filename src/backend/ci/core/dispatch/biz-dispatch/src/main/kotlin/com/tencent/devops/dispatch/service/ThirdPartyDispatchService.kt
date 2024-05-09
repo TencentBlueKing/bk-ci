@@ -139,7 +139,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
                 // AgentEnv 类型的需要等到被复用对象选出节点再执行
                 if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
-                    logWarn(
+                    log(
                         dispatchMessage.event,
                         I18nUtil.getCodeLanMessage(
                             messageCode = AGENT_REUSE_MUTEX_WAIT_REUSED_ENV,
@@ -293,7 +293,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 ) {
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
-                    logWarn(
+                    log(
                         dispatchMessage.event,
                         ErrorCodeEnum.BUILD_MACHINE_UPGRADE_IN_PROGRESS.getErrorMessage(
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -313,7 +313,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                     // 没有拿到锁说明现在这台机被复用互斥占用不能选
                     if (!lock.tryLock()) {
-                        logWarn(
+                        log(
                             dispatchMessage.event,
                             I18nUtil.getCodeLanMessage(
                                 messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
@@ -677,7 +677,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     return
                 }
             } else {
-                log(
+                logWarn(
                     dispatchMessage.event,
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_ENV_BUSY,
@@ -691,7 +691,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                         "dispatchType=$dispatchType|Not Found, Retry!"
             )
 
-            logDebug(
+            logWarn(
                 dispatchMessage.event,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
@@ -750,7 +750,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
         // 没有一个节点满足则进入排队机制
         if (jobEnvActiveAgents.isEmpty()) {
-            logWarn(
+            log(
                 dispatchMessage.event,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_THIRD_JOB_NODE_CURR,
@@ -785,7 +785,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 projectId = dispatchMessage.event.projectId
             )
             if (c >= dispatchMessage.event.allNodeConcurrency!!) {
-                logWarn(
+                log(
                     dispatchMessage.event,
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_THIRD_JOB_ENV_CURR,
