@@ -44,44 +44,50 @@ const pipelineConstMixin = {
                     label: this.$t('history.tableMap.endTime'),
                     width: localStorage.getItem('endTimeWidth') ? localStorage.getItem('endTimeWidth') : 120
                 },
-                executeTime: {
+                totalTime: {
                     index: 7,
+                    id: 'totalTime',
+                    label: 'details.totalCost',
+                    width: localStorage.getItem('totalTimeWidth') ?? 120
+                },
+                executeTime: {
+                    index: 8,
                     prop: 'executeTime',
                     label: this.$t('details.totalCost'),
                     width: localStorage.getItem('executeTimeWidth') ? localStorage.getItem('executeTimeWidth') : 120
                 },
                 artifactList: {
-                    index: 8,
+                    index: 9,
                     prop: 'artifactList',
                     label: this.$t('history.artifactList'),
                     width: localStorage.getItem('artifactListWidth') ? localStorage.getItem('artifactListWidth') : 180
                 },
                 appVersions: {
-                    index: 9,
+                    index: 10,
                     prop: 'appVersions',
                     label: this.$t('history.tableMap.appVersions'),
                     width: localStorage.getItem('appVersionsWidth') ? localStorage.getItem('appVersionsWidth') : 120
                 },
                 remark: {
-                    index: 10,
+                    index: 11,
                     prop: 'remark',
                     label: this.$t('history.remark'),
                     width: localStorage.getItem('remarkWidth') ? localStorage.getItem('remarkWidth') : 120
                 },
                 recommendVersion: {
-                    index: 11,
+                    index: 12,
                     prop: 'recommendVersion',
                     label: this.$t('history.tableMap.recommendVersion'),
                     width: localStorage.getItem('recommendVersionWidth') ? localStorage.getItem('recommendVersionWidth') : 120
                 },
                 pipelineVersion: {
-                    index: 12,
+                    index: 13,
                     prop: 'pipelineVersion',
                     label: this.$t('history.tableMap.pipelineVersion'),
                     width: localStorage.getItem('pipelineVersionWidth') ? localStorage.getItem('pipelineVersionWidth') : 120
                 },
                 entry: {
-                    index: 12,
+                    index: 14,
                     prop: 'entry',
                     label: this.$t('history.tableMap.entry'),
                     width: localStorage.getItem('entryWidth') ? localStorage.getItem('entryWidth') : 120,
@@ -103,7 +109,7 @@ const pipelineConstMixin = {
                     }]
                 },
                 errorCode: {
-                    index: 13,
+                    index: 15,
                     width: localStorage.getItem('errorCodeWidth') ? localStorage.getItem('errorCodeWidth') : 280,
                     prop: 'errorCode',
                     label: this.$t('history.errorCode')

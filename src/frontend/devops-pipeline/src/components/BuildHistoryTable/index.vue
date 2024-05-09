@@ -410,6 +410,11 @@
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
+                        totalTime: item.totalTime
+                            ? `${convertMStoString(item.totalTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
+                            })`
+                            : '--',
                         executeTime: item.executeTime
                             ? `${convertMStoString(item.executeTime)} (${item.executeCount ?? 1}/${
                                 item.executeCount ?? 1
