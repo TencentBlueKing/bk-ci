@@ -189,7 +189,7 @@ class NotifyControl @Autowired constructor(
         )
     }
 
-    fun notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+    fun notify4UserAndCCRemoteDevManagerAndCCShareUser(
         userIds: MutableSet<String>,
         workspaceName: String,
         cc: MutableSet<String>,
@@ -201,9 +201,9 @@ class NotifyControl @Autowired constructor(
         val shareUser = sharedDao.fetchWorkspaceSharedInfo(
             dslContext = dslContext,
             workspaceName = workspaceName,
-            assignType = WorkspaceShared.AssignType.OWNER
+            assignType = WorkspaceShared.AssignType.VIEWER
         )
-        cc.addAll(shareUser.map { it.operator })
+        cc.addAll(shareUser.map { it.sharedUser })
         notify4UserAndCCRemoteDevManager(
             userIds = userIds,
             cc = cc,

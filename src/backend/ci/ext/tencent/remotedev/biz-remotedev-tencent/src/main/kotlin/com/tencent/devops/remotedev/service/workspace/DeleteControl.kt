@@ -214,7 +214,7 @@ class DeleteControl @Autowired constructor(
             val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).ifEmpty {
                 listOf(workspace.createUserId)
             }
-            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+            notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                 userIds = userIds.toMutableSet(),
                 workspaceName = workspace.workspaceName,
                 cc = mutableSetOf(workspace.createUserId),
@@ -557,7 +557,7 @@ class DeleteControl @Autowired constructor(
                         )
                         if (it) {
                             val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                                 userIds = userIds.toMutableSet(),
                                 workspaceName = workspace.workspaceName,
                                 cc = mutableSetOf(workspace.createUserId),
