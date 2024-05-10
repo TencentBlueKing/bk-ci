@@ -366,6 +366,17 @@ class StoreBaseQueryDao {
                 )
             )
         }
+        if (queryComponentsParam.processFlag == false) {
+            conditions.add(
+                tStoreBase.STORE_CODE.notIn(
+                    getProcessingComponents(
+                        dslContext = dslContext,
+                        conditions = conditions,
+                        tStoreBase = tStoreBase
+                    )
+                )
+            )
+        }
         conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         return conditions
     }

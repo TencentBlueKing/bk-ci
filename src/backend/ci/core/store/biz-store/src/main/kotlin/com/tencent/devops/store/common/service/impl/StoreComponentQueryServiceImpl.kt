@@ -95,15 +95,15 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
-import java.time.LocalDateTime
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("TooManyFunctions", "LargeClass")
 @Service
@@ -786,7 +786,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 非调试组件列表
             val thirdPartyComponent = mutableListOf<String>()
             thirdPartyComponent.addAll(installedMap.keys)
-            // 调试组件列表
             testComponentList?.let { thirdPartyComponent.removeAll(it) }
             val tStoreBase = TStoreBase.T_STORE_BASE
             // 查询非调试项目组件最新发布版本信息
@@ -894,11 +893,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 storeType = storeTypeEnum.type.toByte(),
                 storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte())
             )
-
         }
         val componentUpdateInfo = if (storeInfoQuery.updateFlag == true) {
             queryInstalledInfoByProject(projectCode!!, storeInfoQuery)
-        } else null
+        } else {
+            null
+        }
         // 获取分类
         val classifyList = classifyService.getAllClassify(storeTypeEnum.type.toByte()).data
         val classifyMap = mutableMapOf<String, String>()
