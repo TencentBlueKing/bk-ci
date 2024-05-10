@@ -65,6 +65,7 @@ import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
@@ -110,7 +111,7 @@ open class DefaultModelCheckPlugin constructor(
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
         // 检查触发容器
         val paramsMap = checkTriggerContainer(trigger)
-        val contextMap = paramsMap.mapValues { it.value.defaultValue.toString() }
+        val contextMap = PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
         val lastPosition = model.stages.size - 1

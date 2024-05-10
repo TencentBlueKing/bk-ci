@@ -44,11 +44,13 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.regex.Pattern
 
 /**
- * 子流水线插件处理类
+ * 子流水线插件扩展点处理类
  */
 @Service
 class SubPipelineElementBizPluginService @Autowired constructor(
@@ -58,6 +60,8 @@ class SubPipelineElementBizPluginService @Autowired constructor(
 
     companion object {
         private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
+        private val pattern = Pattern.compile("(p-)?[a-f\\d]{32}")
+        private val logger = LoggerFactory.getLogger(SubPipelineElementBizPluginService::class.java)
     }
 
     override fun supportElement(element: Element): Boolean {
@@ -115,6 +119,11 @@ class SubPipelineElementBizPluginService @Autowired constructor(
             else -> null
         } ?: return ElementCheckResult(true)
 
+        logger.info(
+            "check the sub-pipeline permissions when deploying pipeline|" +
+                    "project:$projectId|elementId:${element.id}|userId:$userId" +
+                    "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
+        )
         // 校验流水线修改人是否有子流水线执行权限
         val checkPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
@@ -204,13 +213,23 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 if (subPipelineName.isNullOrBlank()) {
                     return null
                 }
-                val subPipelineRealName = EnvUtils.parseEnv(subPipelineName, contextMap)
-                val subPipelineIdByName = pipelineRepositoryService.listPipelineIdByName(
+                var finalSubPipelineName = EnvUtils.parseEnv(subPipelineName, contextMap)
+                var finalSubPipelineId = pipelineRepositoryService.listPipelineIdByName(
                     projectId = subProjectId,
-                    pipelineNames = setOf(subPipelineRealName),
+                    pipelineNames = setOf(finalSubPipelineName),
                     filterDelete = true
-                )[subPipelineRealName] ?: return null
-                Triple(subProjectId, subPipelineIdByName, subPipelineRealName)
+                )[finalSubPipelineName]
+                // 流水线名称直接使用流水线ID代替
+                if (finalSubPipelineId.isNullOrBlank() && pattern.matcher(finalSubPipelineName).matches()) {
+                    finalSubPipelineId = finalSubPipelineName
+                    finalSubPipelineName = pipelineRepositoryService.getPipelineInfo(
+                        projectId = subProjectId, pipelineId = finalSubPipelineName
+                    )?.pipelineName ?: ""
+                }
+                if (finalSubPipelineId.isNullOrBlank() || finalSubPipelineName.isEmpty()) {
+                    return null
+                }
+                Triple(subProjectId, finalSubPipelineId, finalSubPipelineName)
             }
         }
     }
