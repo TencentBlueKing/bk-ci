@@ -155,6 +155,9 @@ interface BuildSubPipelineResource {
     @GET
     @Path("/projects/{projectId}/pipelines/getPipelineIdByName")
     fun getPipelineByName(
+        @Parameter(description = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

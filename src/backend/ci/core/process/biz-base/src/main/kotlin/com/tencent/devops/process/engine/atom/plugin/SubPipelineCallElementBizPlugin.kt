@@ -40,9 +40,10 @@ import org.springframework.beans.factory.annotation.Autowired
 @ElementBiz
 class SubPipelineCallElementBizPlugin @Autowired constructor(
     private val elementBizPluginServices: List<IElementBizPluginService>
-): ElementBizPlugin<SubPipelineCallElement> {
+) : ElementBizPlugin<SubPipelineCallElement> {
+
     override fun elementClass(): Class<SubPipelineCallElement> {
-       return SubPipelineCallElement::class.java
+        return SubPipelineCallElement::class.java
     }
 
     override fun check(
