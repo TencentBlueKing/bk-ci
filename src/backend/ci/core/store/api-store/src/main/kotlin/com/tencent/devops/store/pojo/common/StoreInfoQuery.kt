@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -65,4 +67,12 @@ data class StoreInfoQuery(
     val page: Int,
     @get:Schema(title = "每页数量", required = true)
     val pageSize: Int
-)
+) {
+    fun validate() {
+        // 检查 projectCode 是否为空
+        val paramCheck = (queryProjectComponentFlag || installed != null || updateFlag != null)
+        if (paramCheck && projectCode.isNullOrEmpty()) {
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_QUERY_PARAM_CHECK_FAIL)
+        }
+    }
+}

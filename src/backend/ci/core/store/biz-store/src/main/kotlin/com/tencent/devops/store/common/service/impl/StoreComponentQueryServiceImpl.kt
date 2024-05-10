@@ -94,15 +94,15 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
+import java.time.LocalDateTime
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 @Suppress("TooManyFunctions", "LargeClass")
 @Service
@@ -590,6 +590,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val pageSize = storeInfoQuery.pageSize
         val projectCode = storeInfoQuery.projectCode
         logger.info("getMainPageComponents:Input:($userId,$storeType,$page,$pageSize)")
+        storeInfoQuery.validate()
         val watcher = Watcher("getMainPageComponents|$userId|$storeType")
         try {
             val result = mutableListOf<MarketMainItem>()
@@ -699,6 +700,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             "queryComponents:Input:" +
                 "($userId,${storeInfoQuery.storeType},${storeInfoQuery.page},${storeInfoQuery.pageSize})"
         )
+        storeInfoQuery.validate()
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         return doList(
