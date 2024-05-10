@@ -959,7 +959,7 @@
     id: "34a071f8d22f4edaba56624df3a1aae0"
     sender: "DevOps"
     title: "The  store component [${name}] V${version} failed the audit"
-    body: "The  store component [${name}] V${version} failed the audit"
+    body: "The  store component [${name}] V${version} failed the audit, please modify it correctly and re-publish it"
   creator: "system"
   modifior: "system"
 - index: 47
@@ -981,7 +981,7 @@
   weworkTemplate:
     id: "48ba65ca230c46f08c6e3ca2da253ae0"
     sender: "DevOps"
-    title: "The  store component [${name}] V${version} has been approved and released successfully"
-    body: "The  store component [${name}] V${version} has been approved and released successfully"
+    title: "The store component [${name}] V${version} has been approved and released successfully"
+    body: "The store component [${name}]V${version} has been reviewed and approved and successfully released"
   creator: "system"
   modifior: "system"

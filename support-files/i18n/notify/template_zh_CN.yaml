@@ -959,7 +959,7 @@
     id: "34a071f8d22f4edaba56624df3a1aae0"
     sender: "DevOps"
     title: "研发商店组件【${name}】V${version} 审核不通过"
-    body: "研发商店组件【${name}】V${version} 审核不通过"
+    body: "研发商店组件【${name}】V${version} 审核不通过，请修改正确后重新发布"
   creator: "system"
   modifior: "system"
 - index: 47
@@ -982,6 +982,6 @@
     id: "48ba65ca230c46f08c6e3ca2da253ae0"
     sender: "DevOps"
     title: "研发商店组件【${name}】V${version} 审核通过，成功发布"
-    body: "研发商店组件【${name}】V${version} 审核通过，成功发布"
+    body: "研发商店组件【${name}】V${version} 已经审核通过，成功发布"
   creator: "system"
   modifior: "system"
