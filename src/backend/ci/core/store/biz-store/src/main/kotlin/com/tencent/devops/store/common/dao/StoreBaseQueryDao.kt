@@ -125,7 +125,7 @@ class StoreBaseQueryDao {
         }
     }
 
-    fun getLatestComponentByCodes(
+    fun getValidComponentsByCodes(
         dslContext: DSLContext,
         storeCodes: List<String>,
         storeType: StoreTypeEnum,

@@ -750,7 +750,10 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         val flag = (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true)
         if (!storeInfoQuery.projectCode.isNullOrBlank() && flag) {
-            storeInfoQuery.storeCodes = queryInstalledInfoByProject(storeInfoQuery.projectCode!!, storeInfoQuery)
+            storeInfoQuery.storeCodes = queryInstalledInfoByProject(
+                projectCode = storeInfoQuery.projectCode!!,
+                storeInfoQuery = storeInfoQuery,
+                updateFlag = storeInfoQuery.updateFlag ?: false)
         }
         val count = marketStoreQueryDao.count(
             dslContext = dslContext,
@@ -767,6 +770,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     private fun queryInstalledInfoByProject(
         projectCode: String,
         storeInfoQuery: StoreInfoQuery,
+        updateFlag: Boolean
     ): List<String> {
         val storeCodes = mutableListOf<String>()
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
@@ -776,7 +780,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeType.type.toByte(),
             storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte())
         ) ?: emptyMap()
-        if (storeInfoQuery.updateFlag == true) {
+        if (updateFlag) {
             // 查询项目下关联的调试组件
             val testComponentList = storeProjectService.getInstalledComponent(
                 projectCode,
@@ -784,20 +788,20 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 storeProjectTypes = listOf(StoreProjectTypeEnum.TEST.type.toByte())
             )?.keys?.toList()
             // 非调试组件列表
-            val thirdPartyComponent = mutableListOf<String>()
-            thirdPartyComponent.addAll(installedMap.keys)
-            testComponentList?.let { thirdPartyComponent.removeAll(it) }
+            val normalComponentList = mutableListOf<String>()
+            normalComponentList.addAll(installedMap.keys)
+            testComponentList?.let { normalComponentList.removeAll(it) }
             val tStoreBase = TStoreBase.T_STORE_BASE
             // 查询非调试项目组件最新发布版本信息
-            val componentMap = storeBaseQueryDao.getLatestComponentByCodes(
+            val componentMap = storeBaseQueryDao.getValidComponentsByCodes(
                 dslContext = dslContext,
-                storeCodes = thirdPartyComponent,
+                storeCodes = normalComponentList,
                 storeType = storeType,
                 testComponentFlag = false
             ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] }).toMutableMap()
             // 查询调试项目组件最新版本信息
             val testComponentMap = testComponentList?.let { list ->
-                storeBaseQueryDao.getLatestComponentByCodes(
+                storeBaseQueryDao.getValidComponentsByCodes(
                     dslContext = dslContext,
                     storeCodes = list,
                     storeType = storeType,
@@ -809,7 +813,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             componentMap.forEach {
                 if (
                     installedMap[it.key] != null &&
-                    StoreUtils.isGreaterVersion(it.value, installedMap[it.key]!!)
+                    StoreUtils.isGreaterVersion(installedMap[it.key]!!, it.value)
                 ) {
                     storeCodes.add(it.key)
                 }
@@ -894,10 +898,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte())
             )
         }
-        val componentUpdateInfo = if (storeInfoQuery.updateFlag == true) {
-            queryInstalledInfoByProject(projectCode!!, storeInfoQuery)
-        } else {
-            null
+        val componentUpdateInfo = projectCode?.let {
+            queryInstalledInfoByProject(
+                projectCode = it,
+                storeInfoQuery = storeInfoQuery,
+                updateFlag = true
+            )
         }
         // 获取分类
         val classifyList = classifyService.getAllClassify(storeTypeEnum.type.toByte()).data
@@ -918,7 +924,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 组件是否已安装
             val installed = projectCode?.let { installedInfoMap?.contains(storeCode) }
             // 是否可更新
-            val updateFlag = componentUpdateInfo?.contains(storeCode)
+            val updateFlag = componentUpdateInfo?.contains(storeCode) ?: true
             val osList = queryComponent(storeId)
             val baseExtResult = storeBaseExtQueryDao.getBaseExtByEnvId(
                 dslContext = dslContext,
