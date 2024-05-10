@@ -131,7 +131,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeType = storeType
         )?.map { it.value1() }
         if (!testProjectCodeList.isNullOrEmpty()) {
-            // 剔除需要安装的调试项目
+            // 剔除无需安装的调试项目
             projectCodeList.removeAll(testProjectCodeList)
             version?.let {
                 testProjectCodeList.forEach { testProjectCode ->
@@ -166,6 +166,18 @@ class StoreProjectServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             for (projectCode in projectCodeList) {
+                // 判断是否已安装
+                val relCount = storeProjectRelDao.countInstalledProject(
+                    dslContext = context,
+                    projectCode = projectCode,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    version = version
+                )
+                if (relCount > 0) {
+                    continue
+                }
+                // 未安装则入库
                 val result = storeProjectRelDao.addStoreProjectRel(
                     dslContext = context,
                     userId = userId,
