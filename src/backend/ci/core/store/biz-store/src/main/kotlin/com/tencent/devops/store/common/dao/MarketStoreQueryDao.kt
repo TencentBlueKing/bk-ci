@@ -254,7 +254,7 @@ class MarketStoreQueryDao {
         val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
         val conditions = mutableListOf<Condition>().apply {
             add(tStoreBase.STORE_TYPE.eq(storeType))
-            if (!storeInfoQuery.storeCodes.isNullOrEmpty()) {
+            if (storeInfoQuery.storeCodes != null) {
                 add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
             }
             storeInfoQuery.projectCode?.let {
