@@ -38,6 +38,7 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -259,6 +260,7 @@ class MarketStoreQueryDao {
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))
+                    add(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
                     selectJoinStep.leftJoin(tStoreProjectRel).on(
                         tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE)
                             .and(tStoreBase.STORE_TYPE.eq(tStoreProjectRel.STORE_TYPE))
@@ -267,7 +269,7 @@ class MarketStoreQueryDao {
             }
 
             storeInfoQuery.classifyId?.let {
-                add(tClassify.ID.eq(it))
+                add(tStoreBase.ID.eq(it))
                 selectJoinStep.leftJoin(tClassify).on(tStoreBase.CLASSIFY_ID.eq(tClassify.ID))
             }
 

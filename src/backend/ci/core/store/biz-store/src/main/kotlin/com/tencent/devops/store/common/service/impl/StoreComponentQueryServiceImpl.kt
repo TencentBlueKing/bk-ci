@@ -752,14 +752,14 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         if (!storeInfoQuery.projectCode.isNullOrBlank() && flag) {
             val storeCodes = queryInstalledInfoByProject(
                 projectCode = storeInfoQuery.projectCode!!,
-                storeInfoQuery = storeInfoQuery,
+                storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType),
                 updateFlag = storeInfoQuery.updateFlag ?: false
             )
-            val publicComponent = storeBaseFeatureQueryDao.getAllPublicComponent(
-                dslContext = dslContext,
-                storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
-            )
             storeInfoQuery.storeCodes?.let {
+                val publicComponent = storeBaseFeatureQueryDao.getAllPublicComponent(
+                    dslContext = dslContext,
+                    storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+                )
                 storeCodes.addAll(publicComponent)
             }
             storeInfoQuery.storeCodes = storeCodes
@@ -779,11 +779,10 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     private fun queryInstalledInfoByProject(
         projectCode: String,
-        storeInfoQuery: StoreInfoQuery,
+        storeType: StoreTypeEnum,
         updateFlag: Boolean
     ): MutableList<String> {
         val storeCodes = mutableListOf<String>()
-        val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         // 查询项目已安裝的组件版本信息
         val installedMap = storeProjectService.getInstalledComponent(
             projectCode,
@@ -912,7 +911,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val componentUpdateInfo = projectCode?.let {
             queryInstalledInfoByProject(
                 projectCode = it,
-                storeInfoQuery = storeInfoQuery,
+                storeType = storeTypeEnum,
                 updateFlag = true
             )
         }
