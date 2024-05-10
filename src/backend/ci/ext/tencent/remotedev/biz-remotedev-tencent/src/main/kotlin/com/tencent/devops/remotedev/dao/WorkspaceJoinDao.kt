@@ -481,6 +481,8 @@ class WorkspaceJoinDao {
     ): Set<String> {
         val dsl = dslContext.select(TWorkspace.T_WORKSPACE.HOST_NAME).from(TWorkspace.T_WORKSPACE)
         if (!size.isNullOrEmpty()) {
+            dsl.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
             dsl.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
                 .on(
                     TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
