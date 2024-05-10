@@ -123,7 +123,7 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
         } else {
             StoreTypeEnum.getStoreType(storeType.toInt()).lowercase()
         }
-        val host = if (storeType == StoreTypeEnum.IDE_ATOM.type.toByte()) {
+        val host = if (storeType == StoreTypeEnum.DEVX.type.toByte()) {
             storeHost.replace("devops", "developer")
         } else {
             storeHost
