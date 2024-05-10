@@ -112,13 +112,23 @@ class StoreProjectRelDao {
         }
     }
 
-    fun countInstalledProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Int {
+    fun countInstalledProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCode: String,
+        storeType: Byte,
+        version: String? = null
+    ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            version?.let {
+                conditions.add(VERSION.eq(version))
+            }
             return dslContext.selectCount().from(this)
-                .where(PROJECT_CODE.eq(projectCode)
-                    .and(STORE_CODE.eq(storeCode))
-                    .and(STORE_TYPE.eq(storeType))
-                )
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
