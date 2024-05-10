@@ -327,7 +327,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
+            savedSetting = savedSetting
         )
         auditService.createAudit(
             Audit(
