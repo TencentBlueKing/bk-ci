@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment.resources.job
 
-import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
@@ -56,6 +56,7 @@ import com.tencent.devops.environment.service.job.PermissionManageService
 import com.tencent.devops.environment.service.job.TencentStockDataUpdateService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class TencentServiceJobResourceImpl @Autowired constructor(
@@ -66,8 +67,6 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 ) : TencentServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentServiceJobResourceImpl::class.java)
-        private const val EXPIRATION_TIME_THREE_MONTH = "three months"
-        private const val EXPIRATION_TIME_ONE_MONTH = "one month"
     }
 
     override fun executeScript(
@@ -206,6 +205,11 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         tencentStockDataUpdateService.addNodesToCCOnce()
     }
 
+    override fun writeServerId(userId: String) {
+        if (userId.isBlank()) throw ParamBlankException("userId is blank.")
+        tencentStockDataUpdateService.writeServerIdOnce()
+    }
+
     private fun checkParamBlank(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("userId is blank.")
@@ -217,12 +221,10 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     private fun checkJobInsBelongToProj(projectId: String, jobInstanceId: Long) {
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
-            val expirationTime =
-                if (logger.isDebugEnabled) EXPIRATION_TIME_THREE_MONTH
-                else EXPIRATION_TIME_ONE_MONTH
-            throw OauthForbiddenException(
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
                 message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than " + expirationTime + "."
+                    "or more than one month."
             )
         }
     }

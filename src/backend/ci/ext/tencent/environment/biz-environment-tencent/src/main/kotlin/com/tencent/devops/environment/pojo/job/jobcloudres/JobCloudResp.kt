@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class JobCloudResp<T>(
     @get:Schema(title = "状态码", required = true)
     @JsonProperty("code")
-    var code: Int,
+    var code: Int?,
     @get:Schema(title = "执行成功失败", required = true)
     @JsonProperty("result")
     var result: Boolean,

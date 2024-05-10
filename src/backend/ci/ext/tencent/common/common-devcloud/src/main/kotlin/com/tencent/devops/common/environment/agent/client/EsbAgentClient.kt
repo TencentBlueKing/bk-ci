@@ -42,10 +42,11 @@ import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
 import javax.ws.rs.core.Response
 
 @Component
@@ -71,7 +72,8 @@ class EsbAgentClient {
 
         val url = "http://open.oa.com/component/compapi/gse/get_agent_status/"
 
-        val requestData = mapOf("app_code" to appCode,
+        val requestData = mapOf(
+            "app_code" to appCode,
             "app_secret" to appSecret,
             "operator" to userId,
             "company_id" to 0,
@@ -82,7 +84,7 @@ class EsbAgentClient {
         logger.info("POST url: $url")
         logger.info("requestBody: $requestBody")
 
-        val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
+        val request = Request.Builder().url(url).post(requestBody.toRequestBody(JSON)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
@@ -92,9 +94,10 @@ class EsbAgentClient {
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get user cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, I18nUtil.getCodeLanMessage(
-                        messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS
-                    ))
+                    throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS)
+                    )
                 }
 
                 val ipInfoMap = (responseData["data"] as Map<String, *>)["data"] as Map<String, *>
@@ -133,7 +136,9 @@ class EsbAgentClient {
                 "app_code" to appCode,
                 "app_secret" to appSecret,
                 "operator" to userId,
-                "req_column" to listOf("SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP"),
+                "req_column" to listOf(
+                    "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
+                ),
                 "key_values" to mapOf("SvrIp" to ips.joinToString(";")),
                 "paging_info" to mapOf("page_size" to 1000, "start_index" to 0, "return_total_rows" to 1)
             )
@@ -144,23 +149,23 @@ class EsbAgentClient {
         val url = "http://open.oa.com/component/compapi/cmdb/get_query_info/"
 
         val requestBody = ObjectMapper().writeValueAsString(requestData)
-        logger.info("POST url: $url")
-        logger.info("requestBody: $requestBody")
+        logger.info("[queryCmdbNode]POST url: $url")
+        logger.info("[queryCmdbNode]requestBody: $requestBody")
 
-        val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
+        val request = Request.Builder().url(url).post(requestBody.toRequestBody(JSON)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
-                logger.info("responseBody: $responseBody")
+                logger.info("[queryCmdbNode]responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = FAILED_TO_GET_CMDB_NODE
-                        ))
+                    throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_NODE)
+                    )
                 }
 
                 val data = responseData["data"] as Map<String, *>
@@ -186,11 +191,12 @@ class EsbAgentClient {
                             name = it["SvrName"] as String,
                             operator = it["SvrOperator"] as String,
                             bakOperator = bakOperator,
-                            ip = lanIPs[0],
+                            ip = it["SvrIp"] as String,
                             displayIp = lanIPs.joinToString(";"),
                             osName = osName,
                             agentStatus = false,
-                            serverId = it["serverId"] as Int
+                            serverId = (it["serverId"] as Int).toLong(),
+                            deptId = it["DeptId"] as Int
                         )
                     }
                 }
@@ -199,24 +205,27 @@ class EsbAgentClient {
                     returnRows = returnRows,
                     totalRows = totalRows
                 )
+            } catch (timeoutError: SocketTimeoutException) {
+                logger.error("Query CMDB interface time out. Error:", timeoutError)
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_LIST)
+                )
             } catch (e: Exception) {
                 logger.error("get cmdb nodes error", e)
                 throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = FAILED_TO_GET_CMDB_LIST
-                    )
+                    I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_GET_CMDB_LIST)
                 )
             }
         }
     }
 
     private fun getAndSetDisplayIp(displayIp: String): Pair<String, List<String>> {
-        val allIpList = displayIp.split(",", ";").filterNot { it.isNullOrBlank() }.map { it.trim() }.toList()
+        val allIpList = displayIp.split(",", ";").filterNot { it.isBlank() }.map { it.trim() }.toList()
         return Pair(allIpList.joinToString(";"), allIpList)
     }
 
     private fun checkAndGetOperator(bakOperator: String): String {
-        val allOperators = bakOperator.split(",", ";").filterNot { it.isNullOrBlank() }.map { it.trim() }.toList()
+        val allOperators = bakOperator.split(",", ";").filterNot { it.isBlank() }.map { it.trim() }.toList()
         return when {
             allOperators.size == 1 -> allOperators[0]
             bakOperator.length > 255 -> allOperators.subList(0, 9).joinToString(";")
@@ -274,8 +283,8 @@ class EsbAgentClient {
 
         val ipStatusMap = getAgentStatus(DEFAULT_SYTEM_USER, allInnerIp)
         cmdbNodes.forEach { node ->
-            val ips = displayIp2IpsMap[node.displayIp]
-            ips!!.forEach lit@{ ip ->
+            val ipList = displayIp2IpsMap[node.displayIp]
+            ipList!!.forEach lit@{ ip ->
                 if (ipStatusMap[ip] == true) {
                     node.ip = ip
                     node.agentStatus = true
@@ -309,7 +318,9 @@ class EsbAgentClient {
                 "app_code" to appCode,
                 "app_secret" to appSecret,
                 "operator" to userId,
-                "req_column" to listOf("SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP"),
+                "req_column" to listOf(
+                    "SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP", "DeptId"
+                ),
                 "key_values" to operatorCondition,
                 "paging_info" to mapOf("page_size" to limit, "start_index" to start, "return_total_rows" to 1)
             )

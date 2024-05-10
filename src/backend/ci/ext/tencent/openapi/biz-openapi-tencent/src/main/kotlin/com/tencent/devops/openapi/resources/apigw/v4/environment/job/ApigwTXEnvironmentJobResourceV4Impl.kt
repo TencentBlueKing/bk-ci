@@ -172,4 +172,8 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
     override fun addStockNodeToCC(userId: String) {
         client.get(TencentServiceJobResource::class).addStockNodeToCC(userId)
     }
+
+    override fun writeServerId(userId: String) {
+        client.get(TencentServiceJobResource::class).writeServerId(userId)
+    }
 }
