@@ -93,15 +93,15 @@ class RemoteDevJobActionService @Autowired constructor(
     private fun fetchIpByJobScope(projectId: String, param: JobSchemaParam): Set<String> {
         return when (param.scope) {
             JobScope.ALL -> {
-                workspaceJoinDao.fetchIp(dslContext, projectId, null, null)
+                workspaceJoinDao.fetchRunningIp(dslContext, projectId, null, null)
             }
 
             JobScope.OWNER -> {
-                workspaceJoinDao.fetchIp(dslContext, projectId, null, param.owners)
+                workspaceJoinDao.fetchRunningIp(dslContext, projectId, null, param.owners)
             }
 
             JobScope.MACHINE_TYPE -> {
-                workspaceJoinDao.fetchIp(dslContext, projectId, param.machineType, null)
+                workspaceJoinDao.fetchRunningIp(dslContext, projectId, param.machineType, null)
             }
         }
     }
