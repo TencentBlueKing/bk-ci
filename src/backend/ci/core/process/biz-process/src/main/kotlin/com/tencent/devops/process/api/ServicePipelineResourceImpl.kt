@@ -369,7 +369,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             operationLogType = OperationLogType.UPDATE_PIPELINE_SETTING,
-            savedSetting = savedSetting
+            savedSetting = savedSetting,
+            updateLastModifyUser = updateLastModifyUser
         )
         auditService.createAudit(
             Audit(

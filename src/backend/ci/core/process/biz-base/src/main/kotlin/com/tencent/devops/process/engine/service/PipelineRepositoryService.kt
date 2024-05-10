@@ -1911,7 +1911,8 @@ class PipelineRepositoryService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        savedSetting: PipelineSetting
+        savedSetting: PipelineSetting,
+        updateLastModifyUser: Boolean?
     ): DeployPipelineResult {
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updateSettingVersion#$pipelineId#${savedSetting.version}")
@@ -1975,7 +1976,8 @@ class PipelineRepositoryService constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     userId = userId,
-                    version = version
+                    version = version,
+                    updateLastModifyUser = updateLastModifyUser
                 )
                 watcher.start("deleteEarlyVersion")
                 pipelineResourceDao.deleteEarlyVersion(
