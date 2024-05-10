@@ -25,10 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.project.service.secret
 
-import com.tencent.devops.common.client.pojo.enums.GatewayType
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.project.pojo.ProjectCallbackData
+import com.tencent.devops.project.pojo.SecretRequestParam
+import com.tencent.devops.project.pojo.secret.TokenSecretParam
 
-interface UrlGenerator {
-    fun encode(gatewayType: GatewayType, url: String): String
+class TokenSecretParamService : ISecretTokenService<TokenSecretParam> {
+
+    override fun getSecretRequestParam(
+        userId: String,
+        projectId: String,
+        secretParam: TokenSecretParam
+    ): SecretRequestParam = with(secretParam) {
+        SecretRequestParam(
+            url = url,
+            header = headers,
+            secretType = TokenSecretParam.classType
+        )
+    }
+
+    override fun getRequestBody(secretParam: TokenSecretParam, projectCallbackData: ProjectCallbackData): String {
+        return JsonUtil.toJson(projectCallbackData, false)
+    }
 }

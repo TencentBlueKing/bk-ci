@@ -25,44 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.secret.bkrepo
+package com.tencent.devops.project.pojo.secret
 
-import com.tencent.devops.project.pojo.secret.ISecretParam
 import com.tencent.devops.project.util.SecretParamEncryptUtil
 
-data class BkrepoModelSecretParam(
-    val bkRepoName: String,
-    var storageCredentialsKey: String,
-    val display: Boolean,
-    override var url: String,
-    override val userId: String,
-    override val method: String
-) : BkrepoCommonSecretParam(
-    userId = userId,
-    url = url
-) {
+data class TokenSecretParam(
+    var headers: Map<String, String>,
+    val userId: String,
+    val method: String,
+    override var url: String
+) : ISecretParam {
 
     override fun getSecretType() = classType
 
     override fun encode(aesKey: String): ISecretParam {
-        this.storageCredentialsKey = if (storageCredentialsKey.isNotBlank()) {
-            SecretParamEncryptUtil.encryptCredential(aesKey, storageCredentialsKey)!!
-        } else {
-            ""
+        val encodeMap = mutableMapOf<String, String>()
+        headers.forEach { (key, value) ->
+            encodeMap[key] = SecretParamEncryptUtil.encryptCredential(aesKey, value) ?: ""
         }
+        headers = encodeMap
         return this
     }
 
-    override fun decode(aesKey: String): ISecretParam {
-        this.storageCredentialsKey = if (storageCredentialsKey.isNotBlank()) {
-            SecretParamEncryptUtil.decryptCredential(aesKey, storageCredentialsKey)!!
-        } else {
-            ""
+    override fun decode(aesKey: String) :ISecretParam{
+        val encodeMap = mutableMapOf<String, String>()
+        headers.forEach { (key, value) ->
+            encodeMap[key] = SecretParamEncryptUtil.decryptCredential(aesKey, value) ?: ""
         }
+        headers = encodeMap
         return this
     }
 
     companion object {
-        const val classType = "bkRepoModel"
+        const val classType = "default"
     }
 }

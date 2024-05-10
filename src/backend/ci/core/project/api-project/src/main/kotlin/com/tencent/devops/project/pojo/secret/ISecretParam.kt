@@ -29,22 +29,13 @@ package com.tencent.devops.project.pojo.secret
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoModelSecretParam
-import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = BkrepoProjectSecretParam::class, name = BkrepoProjectSecretParam.classType),
-    JsonSubTypes.Type(value = BkrepoModelSecretParam::class, name = BkrepoModelSecretParam.classType),
-    JsonSubTypes.Type(value = DefaultSecretParam::class, name = DefaultSecretParam.classType),
-    JsonSubTypes.Type(value = PaasCCSecretParam::class, name = PaasCCSecretParam.classType)
+    JsonSubTypes.Type(value = TokenSecretParam::class, name = TokenSecretParam.classType),
 )
 interface ISecretParam {
     var url: String
-
-    val userId: String
-
-    val method: String
 
     fun getSecretType(): String
 

@@ -52,11 +52,6 @@ interface ISecretTokenService<T> {
     fun getRequestBody(secretParam: T, projectCallbackData: ProjectCallbackData): String
 
     /**
-     * 获取请求类型
-     */
-    fun getRequestMethod(secretParam: T, projectCallbackData: ProjectCallbackData) = "POST"
-
-    /**
      * 请求失败回调动作
      */
     fun requestFail(exception: Exception) = Unit

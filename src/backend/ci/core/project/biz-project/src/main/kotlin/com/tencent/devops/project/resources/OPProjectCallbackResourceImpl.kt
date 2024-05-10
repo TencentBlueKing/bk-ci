@@ -36,7 +36,6 @@ import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackPojo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.secret.ISecretParam
-import com.tencent.devops.project.service.UrlGenerator
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,8 +45,7 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class OPProjectCallbackResourceImpl @Autowired constructor(
     val projectCallbackDao: ProjectCallbackDao,
-    val dslContext: DSLContext,
-    val urlGenerator: UrlGenerator
+    val dslContext: DSLContext
 ) : OPProjectCallbackResource {
 
     @Value("\${project.callback.secretParam.aes-key}")
@@ -59,7 +57,6 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         gatewayType: GatewayType,
         secretParam: ISecretParam
     ): Result<Boolean> {
-        secretParam.url = urlGenerator.encode(gatewayType, secretParam.url)
         projectCallbackDao.create(
             dslContext = dslContext,
             event = event.name,
@@ -87,8 +84,7 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         val list = projectCallbackDao.get(
             dslContext = dslContext,
             event = event,
-            url = callbackUrl,
-            ignoreTypes = emptySet()
+            url = callbackUrl
         ).map {
             ProjectCallbackPojo(
                 event = it.event,

@@ -45,7 +45,9 @@ import java.io.CharArrayWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
+import java.net.HttpRetryException
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -81,6 +83,7 @@ object OkhttpUtils {
     private const val connectTimeout = 5L
     private const val readTimeout = 30L
     private const val writeTimeout = 30L
+    private const val MAX_RETRY_COUNT = 3
 
     init {
         logger.info("[OkhttpUtils init]")
@@ -340,6 +343,95 @@ object OkhttpUtils {
         } catch (e: IllegalArgumentException) {
             logger.warn("url Invalid: ${e.message}")
             false
+        }
+    }
+
+    private fun buildRequest(
+        method: String,
+        url: String,
+        requestBodyStr: String,
+        headers: Map<String, String>? = null,
+        params: Map<String, String>? = null
+    ) = Request.Builder()
+        .let { requestBuilder ->
+            val targetUrl = params?.let {
+                url.plus(if (url.contains("?")) "&" else "?")
+                    .plus(params.map { it.key + "=" + it.value }.joinToString("&"))
+            } ?: url
+            requestBuilder.url(targetUrl)
+            val requestBody = RequestBody.create(jsonMediaType, requestBodyStr.ifBlank {
+                "{}"
+            })
+            when (method) {
+                "GET" -> requestBuilder.get()
+                "POST" -> requestBuilder.post(requestBody)
+                "DELETE" -> requestBuilder.delete(requestBody)
+                "PUT" -> requestBuilder.put(requestBody)
+            }
+            headers?.forEach {
+                requestBuilder.header(it.key, it.value)
+            }
+            requestBuilder.build()
+        }
+
+    @SuppressWarnings("TooGenericExceptionThrown", "LongParameterList")
+    fun sendRequest(
+        method: String,
+        url: String,
+        requestBody: String,
+        headers: Map<String, String>? = null,
+        params: Map<String, String>? = null,
+        retryCount: Int = MAX_RETRY_COUNT,
+        failAction: ((exception: Exception) -> Unit) = { },
+        successAction: ((responseBody: String) -> Unit) = { }
+    ) {
+        val request = buildRequest(
+            method = method,
+            url = url,
+            requestBodyStr = requestBody,
+            headers = headers,
+            params = params
+        )
+        try {
+            val response = retry(retryCount) {
+                okHttpClient.newCall(request).execute()
+            }
+            val responseBody = response.body?.string() ?: ""
+            if (response.isSuccessful) {
+                logger.info(("success to send callback request|url[$url]|content[$responseBody]"))
+                successAction.invoke(responseBody)
+            } else {
+                throw RuntimeException(
+                    "exception occurred in callback interface|code[${response.code}]" +
+                            "|content[$responseBody]"
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.warn("fail to send request|url[$url],$ignored")
+            failAction.invoke(ignored)
+        }
+    }
+
+    @Throws(HttpRetryException::class, SocketTimeoutException::class)
+    fun <T> retry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
+        return try {
+            action()
+        } catch (re: SocketTimeoutException) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            retry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        } catch (re: HttpRetryException) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            retry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
         }
     }
 }

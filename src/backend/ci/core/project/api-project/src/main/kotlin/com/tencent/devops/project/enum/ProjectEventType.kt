@@ -4,5 +4,6 @@ enum class ProjectEventType {
     CREATE,
     UPDATE,
     ENABLE,
+    DISABLE,
     UPDATE_LOGO;
 }

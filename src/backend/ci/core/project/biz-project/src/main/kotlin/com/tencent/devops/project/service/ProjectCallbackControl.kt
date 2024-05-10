@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.project.constant.DEVOPS_CALLBACK_FLAG
 import com.tencent.devops.project.constant.DEVOPS_SEND_TIMESTAMP
@@ -35,22 +36,15 @@ import com.tencent.devops.project.dao.ProjectCallbackDao
 import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
-import com.tencent.devops.project.pojo.secret.DefaultSecretParam
+import com.tencent.devops.project.pojo.secret.TokenSecretParam
 import com.tencent.devops.project.pojo.secret.ISecretParam
-import com.tencent.devops.project.pojo.secret.PaasCCSecretParam
-import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoModelSecretParam
-import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
-import com.tencent.devops.project.service.secret.DefaultSecretTokenService
+import com.tencent.devops.project.service.secret.TokenSecretParamService
 import com.tencent.devops.project.service.secret.SecretTokenServiceFactory
-import com.tencent.devops.project.service.secret.bkrepo.BkrepoModelSecretTokenService
-import com.tencent.devops.project.service.secret.bkrepo.BkrepoProjectSecretTokenService
-import com.tencent.devops.project.util.OkHttpUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 import java.time.LocalDateTime
 import javax.annotation.PostConstruct
 
@@ -70,30 +64,21 @@ class ProjectCallbackControl @Autowired constructor(
     }
 
     open fun initSecretTokenService() {
-        SecretTokenServiceFactory.register(BkrepoModelSecretParam::class.java, BkrepoModelSecretTokenService())
-        SecretTokenServiceFactory.register(BkrepoProjectSecretParam::class.java, BkrepoProjectSecretTokenService())
-        SecretTokenServiceFactory.register(DefaultSecretParam::class.java, DefaultSecretTokenService())
+        SecretTokenServiceFactory.register(TokenSecretParam::class.java, TokenSecretParamService())
     }
 
     fun callBackProjectEvent(projectEventType: ProjectEventType, callbackData: ProjectCallbackData) {
-        // 查询事件相关的回调记录，创建事件暂时过滤掉paasCC的回调，否则发布瞬间可能导致项目创建失败
-        // 参考：com.tencent.devops.project.service.impl.TxProjectExtServiceImpl.createExtProjectInfo
         val callBackList = projectCallbackDao.get(
             dslContext = dslContext,
             event = projectEventType.name,
-            url = null,
-            ignoreTypes = if (projectEventType == ProjectEventType.CREATE) {
-                setOf(PaasCCSecretParam.classType)
-            } else {
-                emptySet()
-            }
+            url = null
         )
         callBackList.map {
             val secretParam = JsonUtil.to(it.secretParam, ISecretParam::class.java).decode(aesKey)
             val secretTokenService = SecretTokenServiceFactory.getSecretTokenService(secretParam)
             // 1.获取URL/请求头/URL参数
             val secretRequestParam = secretTokenService.getSecretRequestParam(
-                userId = secretParam.userId,
+                userId = callbackData.userId,
                 projectId = callbackData.projectId,
                 secretParam = secretParam
             )
@@ -101,13 +86,6 @@ class ProjectCallbackControl @Autowired constructor(
             val requestBody = secretTokenService.getRequestBody(
                 secretParam = secretParam,
                 projectCallbackData = callbackData
-            )
-            // 3.处理url占位符
-            secretRequestParam.url = formatUrl(
-                url = secretRequestParam.url,
-                projectId = callbackData.projectId,
-                projectEventType = projectEventType.name,
-                projectEnglishName = callbackData.projectEnglishName
             )
             logger.info(
                 "start send project callback|eventType[${it.event}]|url[${secretRequestParam.url}]|" +
@@ -117,7 +95,7 @@ class ProjectCallbackControl @Autowired constructor(
             send(
                 secretRequestParam = secretRequestParam,
                 requestBody = requestBody,
-                method = secretParam.method,
+                method = "POST",
                 failAction = { exception -> secretTokenService.requestFail(exception) },
                 successAction = { responseBody -> secretTokenService.requestSuccess(responseBody) }
             )
@@ -132,11 +110,11 @@ class ProjectCallbackControl @Autowired constructor(
         successAction: ((responseBody: String) -> Unit) = { }
     ) {
         with(secretRequestParam) {
-            OkHttpUtils.sendRequest(
+            OkhttpUtils.sendRequest(
                 method = method,
                 url = url,
                 headers = insertCommonHeader(header),
-                params = params,
+                params = emptyMap(),
                 requestBody = requestBody,
                 failAction = failAction,
                 successAction = successAction
@@ -157,35 +135,8 @@ class ProjectCallbackControl @Autowired constructor(
         return targetHeaders
     }
 
-    /**
-     * 如果url中包含占位符，则进行替换
-     * {projectId} -> 蓝盾项目Id,32位字符
-     * {eventType} -> 项目事件类型
-     * {englishName} -> 蓝盾项目英文名
-     */
-    private fun formatUrl(
-        url: String,
-        projectId: String,
-        projectEventType: String,
-        projectEnglishName: String
-    ): String {
-        val encodeProjectId = URLEncoder.encode(URL_PLACEHOLDER_PROJECT_ID, "UTF-8")
-        val encodeProjectEnglishName = URLEncoder.encode(URL_PLACEHOLDER_ENGLISH_NAME, "UTF-8")
-        val encodeEventType = URLEncoder.encode(URL_PLACEHOLDER_EVENT_TYPE, "UTF-8")
-        return url
-            .replace(encodeProjectId, projectId)
-            .replace(encodeEventType, projectEventType)
-            .replace(encodeProjectEnglishName, projectEnglishName)
-            .replace(URL_PLACEHOLDER_PROJECT_ID, projectId)
-            .replace(URL_PLACEHOLDER_EVENT_TYPE, projectEventType)
-            .replace(URL_PLACEHOLDER_ENGLISH_NAME, projectEnglishName)
-    }
-
     companion object {
         val logger = LoggerFactory.getLogger(ProjectCallbackControl::class.java)
         const val CALLBACK_FLAG = "devops_project"
-        const val URL_PLACEHOLDER_PROJECT_ID = "{projectId}"
-        const val URL_PLACEHOLDER_ENGLISH_NAME = "{projectEnglishName}"
-        const val URL_PLACEHOLDER_EVENT_TYPE = "{eventType}"
     }
 }

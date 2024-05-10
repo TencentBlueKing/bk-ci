@@ -102,10 +102,15 @@ class SampleProjectEventListener @Autowired constructor(
             params = arrayOf(event.projectId),
             defaultMessage = "project ${event.projectId} is not exist"
         )
+        val eventType = if (event.enabled) {
+            ProjectEventType.ENABLE
+        } else {
+            ProjectEventType.DISABLE
+        }
         projectCallbackControl.callBackProjectEvent(
-            projectEventType = ProjectEventType.ENABLE,
+            projectEventType = eventType,
             callbackData = ProjectCallbackData(
-                event = ProjectEventType.ENABLE,
+                event = eventType,
                 enabled = event.enabled,
                 userId = event.userId,
                 projectId = projectInfo.englishName,

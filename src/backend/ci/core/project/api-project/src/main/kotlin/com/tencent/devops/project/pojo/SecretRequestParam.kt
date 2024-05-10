@@ -33,8 +33,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class SecretRequestParam(
     @get:Schema(title = "请求头参数", required = true)
     val header: Map<String, String>? = null,
-    @get:Schema(title = "URL参数", required = true)
-    val params: Map<String, String>? = null,
     @get:Schema(title = "回调链接", required = true)
     var url: String,
     @get:Schema(title = "鉴权类型", required = true)
