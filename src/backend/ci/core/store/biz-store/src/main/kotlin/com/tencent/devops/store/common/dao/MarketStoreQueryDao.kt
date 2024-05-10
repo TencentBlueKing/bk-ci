@@ -282,7 +282,7 @@ class MarketStoreQueryDao {
             }
         }
 
-        return selectJoinStep.where(conditions)
+        return selectJoinStep.where(subConditions)
     }
 
     fun setStoreVisibleCondition(
