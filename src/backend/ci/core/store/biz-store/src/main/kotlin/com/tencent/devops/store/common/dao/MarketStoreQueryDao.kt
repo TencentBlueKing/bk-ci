@@ -123,9 +123,7 @@ class MarketStoreQueryDao {
                         .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
                 )
         }
-        subquery.where(conditions)
-            .groupBy(tStoreBase.STORE_CODE)
-
+        subquery.where(conditions).groupBy(tStoreBase.STORE_CODE)
         baseStep.join(subquery)
             .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
             .and(tStoreBase.STORE_TYPE.eq(subquery.field(tStoreBase.STORE_TYPE)))
@@ -212,8 +210,8 @@ class MarketStoreQueryDao {
                 tStoreBase.STORE_CODE.`in`(
                     getStoreCodesByCondition(
                         dslContext = dslContext,
-                        storeType = storeType.type.toByte(),
-                        storeInfoQuery = storeInfoQuery
+                        storeInfoQuery = storeInfoQuery,
+                        conditions = conditions
                     )
                 )
             )
@@ -243,8 +241,8 @@ class MarketStoreQueryDao {
 
     private fun getStoreCodesByCondition(
         dslContext: DSLContext,
-        storeType: Byte,
-        storeInfoQuery: StoreInfoQuery
+        storeInfoQuery: StoreInfoQuery,
+        conditions: List<Condition>
     ): SelectConditionStep<Record1<String>> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -252,8 +250,9 @@ class MarketStoreQueryDao {
         val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
         val tClassify = TClassify.T_CLASSIFY
         val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
-        val conditions = mutableListOf<Condition>().apply {
-            add(tStoreBase.STORE_TYPE.eq(storeType))
+        val subConditions = mutableListOf<Condition>()
+        subConditions.addAll(conditions)
+        subConditions.apply {
             if (storeInfoQuery.storeCodes != null) {
                 add(tStoreBase.STORE_CODE.`in`(storeInfoQuery.storeCodes))
             }

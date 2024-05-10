@@ -750,11 +750,21 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         val flag = (storeInfoQuery.installed == true || storeInfoQuery.updateFlag == true)
         if (!storeInfoQuery.projectCode.isNullOrBlank() && flag) {
-            storeInfoQuery.storeCodes = queryInstalledInfoByProject(
+            val storeCodes = queryInstalledInfoByProject(
                 projectCode = storeInfoQuery.projectCode!!,
                 storeInfoQuery = storeInfoQuery,
-                updateFlag = storeInfoQuery.updateFlag ?: false)
+                updateFlag = storeInfoQuery.updateFlag ?: false
+            )
+            val publicComponent = storeBaseFeatureQueryDao.getAllPublicComponent(
+                dslContext = dslContext,
+                storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+            )
+            storeInfoQuery.storeCodes?.let {
+                storeCodes.addAll(publicComponent)
+            }
+            storeInfoQuery.storeCodes = storeCodes
         }
+
         val count = marketStoreQueryDao.count(
             dslContext = dslContext,
             storeInfoQuery = storeInfoQuery
@@ -771,7 +781,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         projectCode: String,
         storeInfoQuery: StoreInfoQuery,
         updateFlag: Boolean
-    ): List<String> {
+    ): MutableList<String> {
         val storeCodes = mutableListOf<String>()
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         // 查询项目已安裝的组件版本信息
@@ -925,7 +935,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 组件是否已安装
             val installed = projectCode?.let { installedInfoMap?.contains(storeCode) }
             // 是否可更新
-            val updateFlag = componentUpdateInfo?.contains(storeCode) ?: true
+            val updateFlag = (componentUpdateInfo?.contains(storeCode) != false)
             val osList = queryComponent(storeId)
             val baseExtResult = storeBaseExtQueryDao.getBaseExtByEnvId(
                 dslContext = dslContext,

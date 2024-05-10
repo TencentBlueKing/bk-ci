@@ -61,6 +61,18 @@ class StoreBaseFeatureQueryDao {
         }
     }
 
+    fun getAllPublicComponent(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum
+    ): List<String> {
+        return with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            return dslContext.select(STORE_CODE)
+                .from(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()).and(PUBLIC_FLAG.eq(true)))
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun isPublic(
         dslContext: DSLContext,
         storeCode: String,
