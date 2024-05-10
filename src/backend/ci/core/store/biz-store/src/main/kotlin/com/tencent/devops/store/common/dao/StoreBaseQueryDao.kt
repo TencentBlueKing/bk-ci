@@ -355,26 +355,19 @@ class StoreBaseQueryDao {
             conditions.add(tStoreLabelRel.LABEL_ID.`in`(it))
             baseStep.leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
         }
+        val processingComponents = getProcessingComponents(
+            dslContext = dslContext,
+            conditions = conditions,
+            tStoreBase = tStoreBase
+        )
         if (queryComponentsParam.processFlag == true) {
             conditions.add(
-                tStoreBase.STORE_CODE.`in`(
-                    getProcessingComponents(
-                        dslContext = dslContext,
-                        conditions = conditions,
-                        tStoreBase = tStoreBase
-                    )
-                )
+                tStoreBase.STORE_CODE.`in`(processingComponents)
             )
         }
         if (queryComponentsParam.processFlag == false) {
             conditions.add(
-                tStoreBase.STORE_CODE.notIn(
-                    getProcessingComponents(
-                        dslContext = dslContext,
-                        conditions = conditions,
-                        tStoreBase = tStoreBase
-                    )
-                )
+                tStoreBase.STORE_CODE.notIn(processingComponents)
             )
         }
         conditions.add(tStoreBase.LATEST_FLAG.eq(true))
