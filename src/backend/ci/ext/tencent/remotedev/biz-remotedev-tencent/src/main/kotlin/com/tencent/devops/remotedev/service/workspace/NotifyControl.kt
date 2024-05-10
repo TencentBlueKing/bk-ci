@@ -156,7 +156,7 @@ class NotifyControl @Autowired constructor(
             params = arrayOf(notifyData.ip?.joinToString(";") ?: "")
         )
 
-        val messageContent = "${notifyData.title}\n${notifyData.desc}"
+        val messageContent = "${notifyData.title}: ${notifyData.desc}"
 
         // 分发到WS
         workspace.forEach { ws ->
@@ -198,6 +198,16 @@ class NotifyControl @Autowired constructor(
             data = Base64.getEncoder().encodeToString(messageContent.toByteArray(StandardCharsets.UTF_8)),
             messageStartTime = now.timestampmilli(),
             messageEndTime = now.plusDays(1).with(LocalTime.MIDNIGHT).timestampmilli()
+        )
+
+        // 发送邮件
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+            SendNotifyMessageTemplateRequest(
+                templateCode = "REMOTEDEV_NOTIFY",
+                receivers = userList.toMutableSet(),
+                titleParams = mapOf("title" to notifyData.title),
+                bodyParams = mapOf("body" to (notifyData.desc ?: ""))
+            )
         )
     }
 
