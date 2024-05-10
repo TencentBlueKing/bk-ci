@@ -35,7 +35,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.stream.api.user.UserStreamProjectResource
@@ -88,70 +87,13 @@ class UserStreamProjectResourceImpl @Autowired constructor(
             permission = AuthPermission.VIEW
         )
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data ?: run {
-            with(client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return@run null) {
-                /*特殊处理，如果没有项目信息则用用户信息进行填充*/
-                ProjectVO(
-                    id = 0,
-                    projectId = projectId,
-                    projectName = projectId,
-                    projectCode = projectId,
-                    projectType = null,
-                    approvalStatus = null,
-                    approvalTime = null,
-                    approver = null,
-                    ccAppId = null,
-                    ccAppName = null,
-                    createdAt = null,
-                    creator = null,
-                    dataId = null,
-                    deployType = null,
-                    bgId = bgId,
-                    bgName = bgName,
-                    centerId = centerId,
-                    centerName = centerName,
-                    deptId = deptId,
-                    deptName = deptName,
-                    businessLineId = businessLineId,
-                    businessLineName = businessLineName,
-                    description = null,
-                    englishName = projectId,
-                    extra = null,
-                    offlined = null,
-                    secrecy = null,
-                    helmChartEnabled = null,
-                    kind = null,
-                    logoAddr = null,
-                    remark = null,
-                    updatedAt = null,
-                    updator = null,
-                    useBk = null,
-                    enabled = null,
-                    gray = false,
-                    hybridCcAppId = null,
-                    enableExternal = null,
-                    enableIdc = null,
-                    pipelineLimit = null,
-                    hybrid_cc_app_id = null,
-                    project_id = null,
-                    project_name = null,
-                    project_code = null,
-                    cc_app_id = null,
-                    cc_app_name = null,
-                    routerTag = null,
-                    relationId = null,
-                    properties = null,
-                    subjectScopes = null,
-                    authSecrecy = null,
-                    tipsStatus = null,
-                    approvalMsg = null,
-                    managePermission = null,
-                    showUserManageIcon = null,
-                    channelCode = null,
-                    productId = null,
-                    canView = null,
-                    pipelineTemplateInstallPerm = null
-                )
-            }
+            streamBasicSettingService.initStreamConf(
+                userId = userId,
+                projectId = projectId,
+                gitProjectId = GitCommonUtils.getGitProjectId(projectId),
+                enabled = false
+            )
+            client.get(ServiceProjectResource::class).get(projectId).data ?: return Result(null)
         }
         return Result(projectInfo)
     }
