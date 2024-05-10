@@ -2,7 +2,7 @@
     <section
         class="pipeline-detail-wrapper"
         @scroll="handlerScroll"
-        v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
+        v-bkloading="{ isLoading: isLoading }"
     >
         <empty-tips
             v-if="hasNoPermission"

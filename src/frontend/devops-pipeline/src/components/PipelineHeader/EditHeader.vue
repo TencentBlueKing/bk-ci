@@ -93,7 +93,6 @@
             </template>
             <!-- <more-actions /> -->
             <release-button
-                v-if="!isTemplatePipeline"
                 :can-release="canRelease && !isEditing"
                 :project-id="projectId"
                 :pipeline-id="pipelineId"
