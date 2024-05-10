@@ -809,11 +809,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
             }
             testComponentMap?.let { componentMap.putAll(testComponentMap) }
+            logger.info("queryInstalledInfoByProject componentMap:$componentMap|installedMap：$installedMap")
             // 比较当前安装的版本与组件最新版本
             componentMap.forEach {
                 if (
                     installedMap[it.key] != null &&
-                    StoreUtils.isGreaterVersion(installedMap[it.key]!!, it.value)
+                    StoreUtils.isGreaterVersion(it.value, installedMap[it.key]!!)
                 ) {
                     storeCodes.add(it.key)
                 }
