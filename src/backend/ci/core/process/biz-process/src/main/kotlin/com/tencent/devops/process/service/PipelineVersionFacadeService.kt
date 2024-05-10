@@ -124,10 +124,11 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        // 有草稿且不是空白的编排才可以发布
-        val canRelease = draftVersion != null && draftVersion.model.stages.size > 1
-        // 存在草稿版本就可以调试
-        val canDebug = draftVersion != null
+        // 有草稿且不是空白的编排才可以发布，如果是模板实例则直接可发布
+        val canRelease = detailInfo.instanceFromTemplate ||
+            (draftVersion != null && draftVersion.model.stages.size > 1)
+        // 存在草稿版本就可以调试，如果是模板实例则永远不可调试
+        val canDebug = !detailInfo.instanceFromTemplate && draftVersion != null
         val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId
@@ -202,11 +203,6 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int
     ): PrefetchReleaseResult {
-        if (templateService.isTemplatePipeline(projectId, pipelineId)) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
-            )
-        }
         val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -610,9 +606,9 @@ class PipelineVersionFacadeService @Autowired constructor(
     ): DeployPipelineResult {
         val pipelineId = modelAndYaml.pipelineId
         val versionStatus = VersionStatus.COMMITTING
-        var model: Model? = null
-        var setting: PipelineSetting? = null
-        var newYaml: YamlWithVersion? = null
+        val model: Model?
+        val setting: PipelineSetting?
+        var newYaml: YamlWithVersion?
         if (modelAndYaml.storageType == PipelineStorageType.YAML) {
             // YAML形式的保存需要所有插件都为支持转换的市场插件
             val transferResult = transferService.transfer(
@@ -670,7 +666,12 @@ class PipelineVersionFacadeService @Autowired constructor(
                 yaml = newYaml
             )
         } else {
-            // 修改已存在的草稿
+            // 修改已存在的草稿，如果是模板实例则不允许这个方式的保存调用
+            if (templateService.isTemplatePipeline(projectId, pipelineId)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
+                )
+            }
             val draft = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
             val savedSetting = pipelineSettingFacadeService.saveSetting(
                 userId = userId,
