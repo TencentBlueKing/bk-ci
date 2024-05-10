@@ -29,12 +29,13 @@ package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "插件校验结果")
-data class ElementCheckResult(
-    @get:Schema(title = "插件校验结果", required = true)
-    val result: Boolean,
-    @get:Schema(title = "失败标题", required = true)
-    val errorTitle: String? = null,
-    @get:Schema(title = "失败详情", required = true)
-    val errorMessage: String? = null
+/**
+ * 流水线校验失败原因
+ */
+@Schema(title = "流水线校验失败原因")
+class PipelineCheckFailedReason(
+    @get:Schema(title = "失败标题,多个插件校验时相同的错误", required = true)
+    val errorTitle: String,
+    @get:Schema(title = "失败详情,具体哪个插件失败详情", required = true)
+    val errorDetails: List<String>
 )
