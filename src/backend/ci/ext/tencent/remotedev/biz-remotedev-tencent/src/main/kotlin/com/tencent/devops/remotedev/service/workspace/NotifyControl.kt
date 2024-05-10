@@ -205,8 +205,7 @@ class NotifyControl @Autowired constructor(
             SendNotifyMessageTemplateRequest(
                 templateCode = "REMOTEDEV_NOTIFY",
                 receivers = userList.toMutableSet(),
-                titleParams = mapOf("title" to notifyData.title),
-                bodyParams = mapOf("body" to (notifyData.desc ?: ""))
+                bodyParams = mapOf("title" to notifyData.title, "body" to (notifyData.desc ?: ""))
             )
         )
     }
