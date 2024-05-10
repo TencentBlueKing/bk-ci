@@ -469,7 +469,7 @@ class WorkspaceService @Autowired constructor(
             if (expertSupId != null) {
                 listOf(expertSupportDao.getSup(dslContext, expertSupId))
             } else {
-                expertSupportDao.fetchSupByWorkspaceName(dslContext, workspaceNames)
+                expertSupportDao.fetchSupByWorkspaceNames(dslContext, workspaceNames)
             }.filterNotNull().forEach {
                 val resp = FetchSupportResp(
                     id = it.id,

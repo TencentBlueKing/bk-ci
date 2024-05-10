@@ -33,6 +33,7 @@ import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -147,22 +148,22 @@ class ExpertSupportService @Autowired constructor(
                 titleParams = null,
                 bodyParams = mapOf(
                     NotifyUtils.WEWORK_GROUP_KEY to
-                        (
-                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
-                            weworkGroupId!!
-                        } else {
-                            personalWeworkGroupId!!
-                        }
-                        ),
+                            (
+                                    if (record.ownerType == WorkspaceOwnerType.PROJECT) {
+                                        weworkGroupId!!
+                                    } else {
+                                        personalWeworkGroupId!!
+                                    }
+                                    ),
                     "id" to id.toString(),
                     "projectId" to
-                        (
-                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
-                                data.projectId + " | " + projectInfo.projectName
-                            } else {
-                                "个人云桌面"
-                            }
-                        ),
+                            (
+                                    if (record.ownerType == WorkspaceOwnerType.PROJECT) {
+                                        data.projectId + " | " + projectInfo.projectName
+                                    } else {
+                                        "个人云桌面"
+                                    }
+                                    ),
                     "workspaceName" to data.workspaceName,
                     "hostIp" to (detail.regionId.toString().plus(":").plus(data.hostIp)),
                     "userId" to (taiUserCN[data.creator] ?: data.creator),
@@ -171,9 +172,9 @@ class ExpertSupportService @Autowired constructor(
                     "machineType" to data.machineType,
                     "city" to data.city,
                     "expiredTime" to
-                        DateTimeUtil.toDateTime(
-                            DateTimeUtil.convertDateToLocalDateTime(expiredTime), "HH:mm:ss"
-                        )
+                            DateTimeUtil.toDateTime(
+                                DateTimeUtil.convertDateToLocalDateTime(expiredTime), "HH:mm:ss"
+                            )
                 ),
                 markdownContent = true
             )
@@ -372,6 +373,20 @@ class ExpertSupportService @Autowired constructor(
         }
 
         return Pair(true, "已发起查询，稍后通知密码")
+    }
+
+    fun fetchSupRecord(
+        workspaceName: String,
+        createLaterTime: LocalDateTime
+    ): List<SupRecordData> {
+        val records = expertSupportDao.fetchSupByWorkspaceName(dslContext, workspaceName, createLaterTime)
+        return records.map {
+            SupRecordData(
+                id = it.id,
+                createTime = it.createTime,
+                content = it.content
+            )
+        }
     }
 
     companion object {

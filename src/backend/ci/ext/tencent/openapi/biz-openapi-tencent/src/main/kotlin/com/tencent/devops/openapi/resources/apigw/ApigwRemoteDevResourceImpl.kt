@@ -8,6 +8,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -15,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 
 @RestResource
 class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Client) :
@@ -201,5 +203,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<WeSecProjectWorkspace?> {
         logger.info("getProjectWorkspace $userId|$projectId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(userId, projectId, workspaceName)
+    }
+
+    override fun getExpertSupRecords(userId: String, workspaceName: String): Result<SupRecordDataResp> {
+        logger.info("getExpertSupRecords $userId|$workspaceName")
+        val records = client.get(ServiceRemoteDevResource::class).fetchExpertSupRecord(
+            userId = userId,
+            workspaceName = workspaceName,
+            createLaterTime = LocalDateTime.now().minusDays(30)
+        ).data ?: emptyList()
+        return Result(
+            SupRecordDataResp(
+                count = records.size,
+                records = records
+            )
+        )
     }
 }

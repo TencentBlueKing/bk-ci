@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -27,6 +28,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -34,6 +36,7 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import java.time.LocalDateTime
 
 @RestResource
 @Suppress("ALL")
@@ -49,7 +52,8 @@ class ServiceRemoteDevResourceImpl(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val workspaceLoginService: WorkspaceLoginService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val expertSupportService: ExpertSupportService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -291,6 +295,14 @@ class ServiceRemoteDevResourceImpl(
                 checkDeleteImmediately = true
             )
         )
+    }
+
+    override fun fetchExpertSupRecord(
+        userId: String,
+        workspaceName: String,
+        createLaterTime: LocalDateTime
+    ): Result<List<SupRecordData>> {
+        return Result(expertSupportService.fetchSupRecord(workspaceName, createLaterTime))
     }
 
     override fun getProjectWorkspace(

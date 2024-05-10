@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -13,6 +14,7 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import java.time.LocalDateTime
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -241,4 +243,19 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "获取专家求助单据数据")
+    @GET
+    @Path("/fetch_expert_sup_record")
+    fun fetchExpertSupRecord(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "从什么时间起的数据", required = true)
+        @QueryParam(" createLaterTime")
+        createLaterTime: LocalDateTime
+    ): Result<List<SupRecordData>>
 }
