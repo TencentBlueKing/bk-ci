@@ -131,24 +131,12 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeType = storeType
         )?.map { it.value1() }
         if (!testProjectCodeList.isNullOrEmpty()) {
-            // 剔除无需安装的调试项目
-            projectCodeList.removeAll(testProjectCodeList)
-            version?.let {
-                testProjectCodeList.forEach { testProjectCode ->
-                    storeProjectRelDao.addStoreProjectRel(
-                        dslContext = dslContext,
-                        userId = userId,
-                        storeCode = storeCode,
-                        projectCode = testProjectCode,
-                        type = StoreProjectTypeEnum.TEST.type.toByte(),
-                        storeType = storeType.type.toByte(),
-                        version = version
-                    )
-                }
+            if (version == null) {
+                // 如果版本号为空则剔除无需安装的调试项目
+                projectCodeList.removeAll(testProjectCodeList)
             }
         }
         if (projectCodeList.isEmpty()) {
-            // 如果全都是调试项目，无需安装
             return Result(true)
         }
         val validateInstallResult = validateInstallPermission(
@@ -167,29 +155,36 @@ class StoreProjectServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             for (projectCode in projectCodeList) {
                 // 判断是否已安装
-                val relCount = storeProjectRelDao.countInstalledProject(
-                    dslContext = context,
-                    projectCode = projectCode,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte(),
-                    version = version
-                )
-                if (relCount > 0) {
-                    continue
-                }
-                // 未安装则入库
-                val result = storeProjectRelDao.addStoreProjectRel(
-                    dslContext = context,
-                    userId = userId,
-                    storeCode = storeCode,
-                    projectCode = projectCode,
-                    type = StoreProjectTypeEnum.COMMON.type.toByte(),
-                    storeType = storeType.type.toByte(),
-                    version = version
-                )
-                // 使用 ON DUPLICATE KEY UPDATE，如果将行作为新行插入，则每行的受影响行值为 1，如果更新现有行，则为 2
-                if (result == 1) {
-                    increment += 1
+                val installStoreLockKey = "store:$projectCode:$storeType:$storeCode:install"
+                val installStoreLock = RedisLock(redisOperation, installStoreLockKey, 10)
+                try {
+                    installStoreLock.lock()
+                    val relCount = storeProjectRelDao.countInstalledProject(
+                        dslContext = context,
+                        projectCode = projectCode,
+                        storeCode = storeCode,
+                        storeType = storeType.type.toByte(),
+                        version = version
+                    )
+                    if (relCount > 0) {
+                        continue
+                    }
+                    // 未安装则入库
+                    val result = storeProjectRelDao.addStoreProjectRel(
+                        dslContext = context,
+                        userId = userId,
+                        storeCode = storeCode,
+                        projectCode = projectCode,
+                        type = StoreProjectTypeEnum.COMMON.type.toByte(),
+                        storeType = storeType.type.toByte(),
+                        version = version
+                    )
+                    // 使用 ON DUPLICATE KEY UPDATE，如果将行作为新行插入，则每行的受影响行值为 1，如果更新现有行，则为 2
+                    if (result == 1) {
+                        increment += 1
+                    }
+                } finally {
+                    installStoreLock.unlock()
                 }
             }
             // 更新安装量
