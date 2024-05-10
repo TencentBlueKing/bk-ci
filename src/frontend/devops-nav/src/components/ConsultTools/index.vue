@@ -28,7 +28,7 @@
              }"
             v-bk-clickoutside="handleHideTabAssistant"
         >
-            <iframe class="help-center-iframe" src="" frameborder="0"></iframe>
+            <iframe class="help-center-iframe" src="https://yst.woa.com/chat/chatComp?web_key=1715309665_4428_joyuezhang" frameborder="0"></iframe>
         </div>
     </div>
 </template>
