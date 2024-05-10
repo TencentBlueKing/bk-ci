@@ -71,7 +71,6 @@ import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
-import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -211,6 +210,7 @@ class PipelineViewGroupService @Autowired constructor(
             .setInstance(pipelineView)
         // 更新视图
         var result = false
+        val oldPipelineIds = pipelineViewGroupDao.listPipelineIdByViewId(dslContext, projectId, viewId).toSet()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             result = pipelineViewService.updateView(userId, projectId, viewId, pipelineView, context)
@@ -228,6 +228,16 @@ class PipelineViewGroupService @Autowired constructor(
                 )
             }
         }
+        val newPipelineIds = pipelineViewGroupDao.listPipelineIdByViewId(dslContext, projectId, viewId).toSet()
+
+        // 记录流水线组的修改
+        newPipelineIds.minus(oldPipelineIds).forEach {
+            saveGroupOperationLog(userId, projectId, it, true, pipelineView.name)
+        }
+        oldPipelineIds.minus(newPipelineIds).forEach {
+            saveGroupOperationLog(userId, projectId, it, false, pipelineView.name)
+        }
+
         return result
     }
 
@@ -839,17 +849,17 @@ class PipelineViewGroupService @Autowired constructor(
                 pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds, ChannelCode.BS)
             summaries.add(
                 0, PipelineNewViewSummary(
-                id = PIPELINE_VIEW_UNCLASSIFIED,
-                projectId = projectId,
-                name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
-                projected = true,
-                createTime = LocalDateTime.now().timestamp(),
-                updateTime = LocalDateTime.now().timestamp(),
-                creator = "admin",
-                top = false,
-                viewType = PipelineViewType.UNCLASSIFIED,
-                pipelineCount = unclassifiedCount
-            )
+                    id = PIPELINE_VIEW_UNCLASSIFIED,
+                    projectId = projectId,
+                    name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
+                    projected = true,
+                    createTime = LocalDateTime.now().timestamp(),
+                    updateTime = LocalDateTime.now().timestamp(),
+                    creator = "admin",
+                    top = false,
+                    viewType = PipelineViewType.UNCLASSIFIED,
+                    pipelineCount = unclassifiedCount
+                )
             )
         }
         return summaries
