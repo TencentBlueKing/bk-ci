@@ -33,33 +33,26 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("STORE_BASE_INSTALL_SERVICE")
 class StoreBaseInstallServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeProjectRelDao: StoreProjectRelDao,
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao
-): StoreBaseInstallService {
+) : StoreBaseInstallService {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(StoreBaseInstallServiceImpl::class.java)
-    }
     override fun installComponentCheck(
         userId: String,
         channelCode: ChannelCode,
         installStoreReq: InstallStoreReq
     ): Result<StoreBaseInfo> {
-
         val componentBaseInfoRecord = storeBaseQueryDao.getNewestComponentByCode(
             dslContext = dslContext,
             storeCode = installStoreReq.storeCode,
