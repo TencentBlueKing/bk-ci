@@ -179,33 +179,52 @@ class ExpertSupportService @Autowired constructor(
                 markdownContent = true
             )
         )
+
         // 异步执行流水线完成其他动作
-
-        try {
-            val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
-            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-
-            val newParam = mutableMapOf<String, String>()
-            val hostIdSub = data.hostIp.split(".")
-            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-            info.buildParam.forEach { (k, v) ->
-                when (v) {
-                    "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
-                    "projectId" -> newParam[k] = data.projectId
-                    else -> newParam[k] = v
-                }
+        /**
+         * redis 中，xxx 为需要替换
+         * {
+         *     "userId": "xxx",
+         *     "projectId": "xxx",
+         *     "pipelineId": "xxx",
+         *     "buildParam": {
+         *         "xxx": "ip",
+         *         "xxx": "projectId",
+         *         "xxx": "projectName",
+         *         "xxx": "ticketId",
+         *         "xxx": "creator",
+         *         "xxx": "content",
+         *         "xxx": "city",
+         *         "xxx": "machineType"
+         *     }
+         * }
+         */
+        val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
+        val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+        val newParam = mutableMapOf<String, String>()
+        val hostIdSub = data.hostIp.split(".")
+        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+        info.buildParam.forEach { (k, v) ->
+            when (v) {
+                "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
+                "projectId" -> newParam[k] = data.projectId
+                "projectName" -> newParam[k] = projectInfo.projectName
+                "ticketId" -> newParam[k] = id.toString()
+                "creator" -> newParam[k] = taiUserCN[data.creator] ?: data.creator
+                "content" -> newParam[k] = data.content
+                "city" -> newParam[k] = data.city
+                "machineType" -> newParam[k] = data.machineType
+                else -> newParam[k] = v
             }
-            AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
-                    userId = info.userId ?: "",
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
-            )
-        } catch (e: Exception) {
-            logger.warn("execute createSupport pipeline error", e)
         }
+        AsyncExecute.dispatch(
+            rabbitTemplate, AsyncPipelineEvent(
+                userId = info.userId ?: "",
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam
+            )
+        )
     }
 
     fun updateSupportStatus(
