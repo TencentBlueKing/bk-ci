@@ -133,8 +133,16 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
-        return subPipeService.getPipelineByName(projectId, pipelineName)
+    override fun getPipelineByName(
+        userId: String?,
+        projectId: String,
+        pipelineName: String
+    ): Result<List<PipelineId?>> {
+        return subPipeService.getPipelineByName(
+            userId = userId,
+            projectId = projectId,
+            pipelineName = pipelineName
+        )
     }
 
     private fun checkParam(userId: String) {

@@ -121,7 +121,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
 
         logger.info(
             "check the sub-pipeline permissions when deploying pipeline|" +
-                    "project:$projectId|elementId:${element.id}|userId:$userId" +
+                    "project:$projectId|elementId:${element.id}|userId:$userId|" +
                     "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
         )
         // 校验流水线修改人是否有子流水线执行权限
@@ -160,6 +160,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         val subPipelineId = element.subPipelineId
         val subPipelineName = element.subPipelineName
         return getSubPipelineInfo(
+            projectId = projectId,
             subProjectId = projectId,
             subPipelineType = subPipelineType,
             subPipelineId = subPipelineId,
@@ -183,6 +184,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
             else -> return null
         }
         return getSubPipelineInfo(
+            projectId = projectId,
             subProjectId = subProjectId,
             subPipelineType = subPipelineType,
             subPipelineId = subPipelineId,
@@ -192,6 +194,7 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     }
 
     private fun getSubPipelineInfo(
+        projectId: String,
         subProjectId: String,
         subPipelineType: SubPipelineType,
         subPipelineId: String?,
@@ -205,7 +208,14 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 }
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                     projectId = subProjectId, pipelineId = subPipelineId
-                ) ?: return null
+                ) ?: run {
+                    logger.info(
+                        "sub-pipeline not found|projectId:$projectId|" +
+                                "$subProjectId:$subProjectId|subPipelineType:$subPipelineType|" +
+                                "subPipelineId:$subPipelineId|subPipelineName:$subPipelineName"
+                    )
+                    return null
+                }
                 Triple(subProjectId, subPipelineId, pipelineInfo.pipelineName)
             }
 
@@ -227,6 +237,11 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                     )?.pipelineName ?: ""
                 }
                 if (finalSubPipelineId.isNullOrBlank() || finalSubPipelineName.isEmpty()) {
+                    logger.info(
+                        "sub-pipeline not found|projectId:$projectId|" +
+                                "$subProjectId:$subProjectId|subPipelineType:$subPipelineType|" +
+                                "subPipelineId:$subPipelineId|subPipelineName:$subPipelineName"
+                    )
                     return null
                 }
                 Triple(subProjectId, finalSubPipelineId, finalSubPipelineName)

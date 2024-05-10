@@ -517,13 +517,29 @@ class SubPipelineStartUpService @Autowired constructor(
         return Result(buildVariableService.getAllVariable(subProjectId, subPipelineId, subBuildId))
     }
 
-    fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
+    fun getPipelineByName(userId: String?, projectId: String, pipelineName: String): Result<List<PipelineId?>> {
         val pipelines = pipelineListFacadeService.getPipelineIdByNames(projectId, setOf(pipelineName), true)
 
         val data: MutableList<PipelineId?> = mutableListOf()
         if (pipelines.isNotEmpty()) {
             pipelines.forEach { (k, v) ->
                 if (k == pipelineName) data.add(PipelineId(id = v))
+            }
+        }
+        // TODO 日志埋点,查看父流水线最后修改人没有子流水线执行权限
+        if (!userId.isNullOrBlank() && data.isNotEmpty() && data[0] != null) {
+            val permission = AuthPermission.EXECUTE
+            val pipelineId = data[0]!!.id
+            val canExecute = pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission
+            )
+            if (!canExecute) {
+                logger.info(
+                    "get sub pipelineId by pipelineName not execute permission|$projectId|$userId|$pipelineId"
+                )
             }
         }
 
