@@ -1912,9 +1912,13 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         savedSetting: PipelineSetting
-    ) {
+    ): DeployPipelineResult {
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updateSettingVersion#$pipelineId#${savedSetting.version}")
+        var pipelineName = ""
+        var version = 0
+        var versionNum = 0
+        var versionName = ""
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1935,15 +1939,16 @@ class PipelineRepositoryService constructor(
                     releaseResource = releaseResource,
                     baseVersion = releaseResource.version
                 )
-                val version = latestVersion.version + 1
-                val versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
-                val newVersionName = PipelineVersionUtils.getVersionName(
+                pipelineName = savedSetting.pipelineName
+                version = latestVersion.version + 1
+                versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
+                versionName = PipelineVersionUtils.getVersionName(
                     versionNum, releaseResource.pipelineVersion,
                     releaseResource.triggerVersion, savedSetting.version
                 ) ?: ""
                 logger.info(
                     "PROCESS|updateSettingVersion|version=$version|" +
-                        "versionNum=$versionNum|versionName=$newVersionName"
+                        "versionNum=$versionNum|versionName=$versionName"
                 )
                 val newModel = releaseResource.model.copy(
                     name = savedSetting.pipelineName, desc = savedSetting.desc
@@ -1989,7 +1994,7 @@ class PipelineRepositoryService constructor(
                     model = newModel,
                     yamlStr = yamlWithVersion?.yamlStr,
                     yamlVersion = yamlWithVersion?.versionTag,
-                    versionName = newVersionName,
+                    versionName = versionName,
                     versionNum = versionNum,
                     pipelineVersion = releaseResource.pipelineVersion,
                     triggerVersion = releaseResource.triggerVersion,
@@ -2005,7 +2010,7 @@ class PipelineRepositoryService constructor(
                     model = newModel,
                     yamlStr = yamlWithVersion?.yamlStr,
                     yamlVersion = yamlWithVersion?.versionTag,
-                    versionName = newVersionName,
+                    versionName = versionName,
                     versionNum = versionNum,
                     pipelineVersion = releaseResource.pipelineVersion,
                     triggerVersion = releaseResource.triggerVersion,
@@ -2022,6 +2027,13 @@ class PipelineRepositoryService constructor(
             LogUtils.printCostTimeWE(watcher)
             lock.unlock()
         }
+        return DeployPipelineResult(
+            pipelineId,
+            pipelineName = pipelineName,
+            version = version,
+            versionNum = versionNum,
+            versionName = versionName
+        )
     }
 
     fun updatePipelineBranchVersion(

@@ -80,6 +80,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -129,7 +130,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
-    private val yamlFacadeService: PipelineYamlFacadeService
+    private val yamlFacadeService: PipelineYamlFacadeService,
+    private val operationLogService: PipelineOperationLogService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1108,6 +1110,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
+            operationLogType = OperationLogType.UPDATE_PIPELINE_SETTING,
             savedSetting = savedSetting
         )
     }
@@ -1116,14 +1119,25 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        operationLogType: OperationLogType,
         savedSetting: PipelineSetting
-    ) {
-        pipelineRepositoryService.updateSettingVersion(
+    ): DeployPipelineResult {
+        val result = pipelineRepositoryService.updateSettingVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             savedSetting = savedSetting
         )
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = result.version,
+            operationLogType = operationLogType,
+            params = result.versionName ?: "",
+            description = null
+        )
+        return result
     }
 
     fun saveAll(
