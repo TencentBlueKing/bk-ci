@@ -12,37 +12,47 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.TGitConfig
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
-import com.tencent.devops.remotedev.pojo.WorkspaceSearch
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
+import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
+import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
+import com.tencent.devops.remotedev.utils.AsyncUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.concurrent.Executors
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
 class GitProxyTGitService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
+    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val projectTGitLinkDao: ProjectTGitLinkDao,
     private val bkitsmService: BKItsmService,
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
     private val tGitConfig: TGitConfig,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -202,24 +212,9 @@ class GitProxyTGitService @Autowired constructor(
         val result = mutableMapOf<Long, Boolean>()
 
         // 获取项目下正在跑的所有机器IP
-        val ips = workspaceJoinDao.limitFetchProjectWorkspace(
-            dslContext = dslContext,
-            null,
-            queryType = QueryType.WEB,
-            search = WorkspaceSearch(
-                projectId = listOf(projectId),
-                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
-                onFuzzyMatch = false
-            )
-        )?.filter { !it.hostName.isNullOrBlank() }?.map {
-            it.hostName?.split(".")?.let { host ->
-                host.subList(1, host.size).joinToString(separator = ".")
-            }!!
-        }?.toSet() ?: emptySet()
-
+        val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
         // 获取项目下正在跑的所有机器的用户
-//        val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
-        val users = emptySet<String>()
+        val users = fetchProjectSpecAclUsers(projectId)
 
         // 获取关联的工蜂仓库
         val repoMap = projectTGitLinkDao.fetch(dslContext, projectId).associate {
@@ -388,8 +383,8 @@ class GitProxyTGitService @Autowired constructor(
                 userId = userId
             )
             if (gitRs?.any {
-                it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
-            } != true
+                    it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
+                } != true
             ) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
@@ -415,36 +410,45 @@ class GitProxyTGitService @Autowired constructor(
     /**
      * 创建和删除云桌面时同步
      */
-    private val executor = Executors.newCachedThreadPool()
     fun addOrRemoveAclIp(
         projectId: String,
         ip: String,
         remove: Boolean
     ) {
-        executor.execute {
-            fetchProjectTGit(projectId) { repo, token ->
-                val config = offshoreTGitApiClient.getProjectAcl(
-                    accessToken = token,
-                    projectId = repo.tgitId.toString()
-                )
-                if (config == null) {
-                    logger.warn("addOrRemoveAclIp|get $projectId|${repo.projectId} acl config error")
-                    return@fetchProjectTGit
-                }
+        AsyncExecute.dispatch(
+            rabbitTemplate, AsyncTGitAclIp(
+                projectId = projectId, ip = ip, remove = remove
+            )
+        )
+    }
 
-                val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
-                if (remove) {
-                    ips.remove(ip)
-                } else {
-                    ips.add(ip)
-                }
-                updateTGitProjectAcl(
-                    token = token,
-                    tGitProjectId = repo.tgitId.toString(),
-                    ips = ips,
-                    users = null
-                )
+    fun doAddOrRemoveAclIp(
+        projectId: String,
+        ip: String,
+        remove: Boolean
+    ) {
+        fetchProjectTGit(projectId) { repo, token ->
+            val config = offshoreTGitApiClient.getProjectAcl(
+                accessToken = token,
+                projectId = repo.tgitId.toString()
+            )
+            if (config == null) {
+                logger.warn("addOrRemoveAclIp|get $projectId|${repo.projectId} acl config error")
+                return@fetchProjectTGit
             }
+
+            val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
+            if (remove) {
+                ips.remove(ip)
+            } else {
+                ips.add(ip)
+            }
+            updateTGitProjectAcl(
+                token = token,
+                tGitProjectId = repo.tgitId.toString(),
+                ips = ips,
+                users = null
+            )
         }
     }
 
@@ -486,34 +490,47 @@ class GitProxyTGitService @Autowired constructor(
     fun refreshProjectTGitSpecUser(
         projectId: String
     ) {
-        executor.execute {
-            // 获取项目下正在跑的所有机器的用户
-//            val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
-            val users = emptySet<String>()
-            fetchProjectTGit(projectId) { repo, token ->
-                offshoreTGitApiClient.updateProjectAclSpecUser(token, repo.tgitId.toString(), users)
-            }
+        AsyncExecute.dispatch(rabbitTemplate, AsyncTGitAclUser(projectId))
+    }
+
+    fun doRefreshProjectTGitSpecUser(
+        projectId: String
+    ) {
+        // 获取项目下正在跑的所有机器的用户
+        val users = fetchProjectSpecAclUsers(projectId)
+        fetchProjectTGit(projectId) { repo, token ->
+            offshoreTGitApiClient.updateProjectAclSpecUser(token, repo.tgitId.toString(), users)
         }
+    }
+
+    private fun fetchProjectSpecAclUsers(projectId: String): Set<String> {
+        return workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId, false)
+            .filter { it.endsWith("@tai") }.map { it.removeSuffix("@tai") }.toSet()
     }
 
     private fun fetchProjectTGit(
         projectId: String,
+        needToken: Boolean = true,
         run: (repo: TProjectTgitIdLinkRecord, token: String) -> Unit
     ) {
         val tokenMap = mutableMapOf<String, String>()
         projectTGitLinkDao.fetch(dslContext, projectId)
             .filter { it.status == TGitRepoStatus.AVAILABLE.name }
             .forEach { repo ->
-                val token = if (tokenMap[repo.oauthUser] != null) {
-                    tokenMap[repo.oauthUser]
-                } else {
-                    val newToken = client.get(ServiceOauthResource::class).tGitGet(repo.oauthUser).data
-                    if (newToken == null) {
-                        logger.warn("fetchProjectTGit|get $projectId|${repo.oauthUser} token is null")
-                        return@forEach
+                val token = if (needToken) {
+                    if (tokenMap[repo.oauthUser] != null) {
+                        tokenMap[repo.oauthUser]
+                    } else {
+                        val newToken = client.get(ServiceOauthResource::class).tGitGet(repo.oauthUser).data
+                        if (newToken == null) {
+                            logger.warn("fetchProjectTGit|get $projectId|${repo.oauthUser} token is null")
+                            return@forEach
+                        }
+                        tokenMap[repo.oauthUser] = newToken.accessToken
+                        newToken.accessToken
                     }
-                    tokenMap[repo.oauthUser] = newToken.accessToken
-                    newToken.accessToken
+                } else {
+                    ""
                 }
 
                 run(repo, token!!)
@@ -650,33 +667,175 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
+    fun getTGitNamespaces(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        svnProject: Boolean
+    ): List<TGitNamespace> {
+        val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitConfig.tGitUrl)
+        )
+        if (!svnProject) {
+            return offshoreTGitApiClient.getNamespaces(token.accessToken, page, pageSize)
+        }
+
+        val userResult = mutableListOf<TGitNamespace>()
+        val result = mutableListOf<TGitNamespace>()
+        var fetchPage = 1
+        val fetchPageSize = 100
+        // 工作空间每次会带一个个人工作空间
+        val maxSize = page * pageSize + 1
+        while (true) {
+            val request = offshoreTGitApiClient.getNamespaces(token.accessToken, fetchPage, fetchPageSize)
+            // 第一次先把个人项目添加进去，后续都不添加
+            if (userResult.isEmpty()) {
+                userResult.addAll(request.filter { it.kind == TGitNamespaceKind.USER.text })
+            }
+
+            result.addAll(request.filter { it.kind != TGitNamespaceKind.USER.text && it.parentId == null })
+
+            // 没有多余的页数就直接退出
+            if ((request.size - userResult.size) < pageSize) {
+                break
+            }
+
+            // 判断筛选的总量是否到达了需要分页的总数
+            if (result.size == maxSize) {
+                break
+            }
+
+            // 都不满足就继续
+            fetchPage += 1
+        }
+
+        val startIndex = (page - 1) * pageSize
+        val endIndex = minOf(startIndex + pageSize, result.size)
+        userResult.addAll(result.subList(startIndex, endIndex))
+
+        return userResult
+    }
+
+    fun createProjectAndLinkTGit(
+        userId: String,
+        info: CreateTGitProjectInfo
+    ): Boolean {
+        val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitConfig.tGitUrl)
+        )
+
+        val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
+
+        // 关联
+        val ips = workspaceDao.fetchProjectIp(dslContext, info.projectId).map { it.substringAfter(".") }.toSet()
+        val users = fetchProjectSpecAclUsers(info.projectId)
+
+        val ok = updateTGitProjectAcl(
+            token = token.accessToken,
+            tGitProjectId = data.id.toString(),
+            ips = ips,
+            users = users
+        )
+
+        val url = data.httpsUrlToRepo ?: data.httpUrlToRepo ?: ""
+
+        projectTGitLinkDao.add(
+            dslContext = dslContext,
+            projectId = info.projectId,
+            tgitId = data.id,
+            status = if (ok) {
+                TGitRepoStatus.AVAILABLE
+            } else {
+                TGitRepoStatus.ABNORMAL
+            },
+            oauthUser = userId,
+            gitType = if (info.svnProject) {
+                TGitProjectType.SVN.name
+            } else {
+                TGitProjectType.GIT.name
+            },
+            url = url.removeHttpPrefix()
+        )
+
+        return ok
+    }
+
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
 
-    fun refreshTGitAcl(projectId: String?) {
-        executor.execute {
-            logger.info("OP|refreshTGitAcl|start refreshTGitAcl")
-            val projects = if (projectId.isNullOrBlank()) {
-                projectTGitLinkDao.fetchAll(dslContext).map { it.projectId }.toSet()
-            } else {
-                setOf(projectId)
-            }
-            projects.forEach { projectId ->
-                logger.info("OP|refreshTGitAcl|$projectId start")
-//                val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
-                val users = emptySet<String>()
-                fetchProjectTGit(projectId) { repo, token ->
-                    val config =
-                        offshoreTGitApiClient.getProjectAcl(token, repo.tgitId.toString()) ?: return@fetchProjectTGit
-                    val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
-                    val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
-                    if (!ok) {
-                        logger.warn("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl false")
-                    } else {
-                        logger.info("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl true")
+    fun refreshTGitAcl(projectId: String?, export: Boolean?): Response? {
+        logger.info("OP|refreshTGitAcl|start refreshTGitAcl")
+        val projects = if (projectId.isNullOrBlank()) {
+            projectTGitLinkDao.fetchAll(dslContext).map { it.projectId }.toSet()
+        } else {
+            setOf(projectId)
+        }
+
+        if (export != true) {
+            AsyncUtil.pool.execute {
+                projects.forEach { projectId ->
+                    logger.info("OP|refreshTGitAcl|$projectId start")
+                    val users = fetchProjectSpecAclUsers(projectId)
+                    val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
+                    fetchProjectTGit(projectId) { repo, token ->
+                        val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
+                        if (!ok) {
+                            logger.warn("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl false")
+                        } else {
+                            logger.info("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl true")
+                        }
                     }
                 }
             }
+            return null
         }
+
+        val workbook = SXSSFWorkbook()
+        val sheet = workbook.createSheet("ACL刷新数据")
+        // 创建标题
+        val titleRow = sheet.createRow(0)
+        titleList.forEachIndexed { index, s ->
+            titleRow.createCell(index).setCellValue(s)
+        }
+        // 创建内容
+        var offset = 1
+        projects.forEach { fProjectId ->
+            val users = fetchProjectSpecAclUsers(fProjectId)
+            val ips = workspaceDao.fetchProjectIp(dslContext, fProjectId).map { it.substringAfter(".") }.toSet()
+            fetchProjectTGit(fProjectId, false) { repo, _ ->
+                val row = sheet.createRow(offset)
+                row.createCell(0).setCellValue(repo.tgitId.toString())
+                row.createCell(1).setCellValue(repo.url.toString())
+                row.createCell(2).setCellValue(ips.joinToString(";"))
+                row.createCell(3).setCellValue("")
+                row.createCell(4).setCellValue(users.joinToString(";"))
+                row.createCell(5).setCellValue(
+                    ips.plus(
+                        publicIpsCache.get(REDIS_REMOTEDEV_PUBLIC_IPS)?.split(";")
+                            ?.filter { it.isNotBlank() }?.toSet()
+                            ?: emptySet()
+                    ).joinToString(";")
+                )
+                offset++
+            }
+        }
+        // 调整宽度
+        titleList.forEachIndexed { index, _ ->
+            sheet.trackAllColumnsForAutoSizing()
+            sheet.autoSizeColumn(index)
+        }
+
+        return Response.ok(
+            StreamingOutput { output ->
+                workbook.write(output)
+                workbook.dispose()
+            },
+            MediaType.APPLICATION_OCTET_STREAM
+        ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
+            .build()
     }
 
     companion object {
@@ -684,5 +843,8 @@ class GitProxyTGitService @Autowired constructor(
 
         //  云桌面公网ip，可能会动态变化所以放redis里
         private const val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
+
+        private val titleList =
+            listOf("项目ID", "项目链接", "IP白名单", "用户白名单", "特定访问人群名单", "特定访问IP名单")
     }
 }

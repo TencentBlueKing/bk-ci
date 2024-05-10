@@ -13,10 +13,10 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.prebuild.PreBuildMessageCode.BK_SYNCHRONIZE_LOCAL_CODE
 import com.tencent.devops.prebuild.PreBuildMessageCode.CODE_CHECKOUT_NOT_SUPPORTED
 import com.tencent.devops.prebuild.PreBuildMessageCode.SERVICES_KEYWORD_NOT_SUPPORTED
-import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.tencent.devops.process.yaml.modelCreate.inner.PreCIData
-import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
-import com.tencent.devops.process.yaml.modelCreate.pojo.PreCIDispatchInfo
+import com.tencent.devops.process.yaml.creator.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.creator.inner.PreCIData
+import com.tencent.devops.process.yaml.creator.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.creator.pojo.PreCIDispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType

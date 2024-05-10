@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "Job数据返回包装模型")
 data class JobResult<out T>(
     @get:Schema(title = "状态码", required = true)
-    val code: Int,
+    val code: Int?,
     @get:Schema(title = "结果bool值")
     val result: Boolean? = null,
     @get:Schema(title = "请求ID", required = true)

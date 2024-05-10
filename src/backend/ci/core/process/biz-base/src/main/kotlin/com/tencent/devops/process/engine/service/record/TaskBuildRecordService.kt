@@ -45,9 +45,10 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
@@ -78,9 +79,10 @@ class TaskBuildRecordService(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
-    pipelineResDao: PipelineResDao,
+    pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
-    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineResourceVersionDao: PipelineResourceVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -92,9 +94,10 @@ class TaskBuildRecordService(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation,
     recordModelService = recordModelService,
-    pipelineResDao = pipelineResDao,
+    pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateTaskStatus(

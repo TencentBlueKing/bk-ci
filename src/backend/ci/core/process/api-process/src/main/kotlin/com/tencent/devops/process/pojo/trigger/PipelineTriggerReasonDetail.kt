@@ -28,16 +28,25 @@
 
 package com.tencent.devops.process.pojo.trigger
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线触发原因详情")
-data class PipelineTriggerReasonDetail(
-    @get:Schema(title = "触发插件ID")
-    val elementId: String?,
-    @get:Schema(title = "触发插件Code")
-    val elementAtomCode: String,
-    @get:Schema(title = "触发插件名称")
-    val elementName: String,
-    @get:Schema(title = "触发原因，JSON字符串，便于国际化")
-    val reasonMsg: String
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "@type"
 )
+@JsonSubTypes(
+    JsonSubTypes.Type(value = PipelineTriggerFailedMatch::class, name = PipelineTriggerFailedMatch.classType),
+    JsonSubTypes.Type(value = PipelineTriggerFailedErrorCode::class, name = PipelineTriggerFailedErrorCode.classType),
+    JsonSubTypes.Type(value = PipelineTriggerFailedMsg::class, name = PipelineTriggerFailedMsg.classType),
+    JsonSubTypes.Type(value = PipelineTriggerFailedFix::class, name = PipelineTriggerFailedFix.classType)
+)
+@Schema(title = "流水线触发事件原因详情-基类")
+@Suppress("UnnecessaryAbstractClass")
+interface PipelineTriggerReasonDetail {
+    @JsonIgnore
+    fun getReasonDetailList(): List<String>?
+}

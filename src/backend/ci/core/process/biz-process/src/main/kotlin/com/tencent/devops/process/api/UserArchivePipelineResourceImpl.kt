@@ -110,7 +110,8 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
     override fun getAllBuildNo(
         userId: String,
         pipelineId: String,
-        projectId: String
+        projectId: String,
+        debugVersion: Int?
     ): Result<List<Map<String, String>>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -122,6 +123,6 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineFacadeService.getAllBuildNo(userId, pipelineId, projectId))
+        return Result(archivePipelineFacadeService.getAllBuildNo(userId, pipelineId, projectId, debugVersion))
     }
 }

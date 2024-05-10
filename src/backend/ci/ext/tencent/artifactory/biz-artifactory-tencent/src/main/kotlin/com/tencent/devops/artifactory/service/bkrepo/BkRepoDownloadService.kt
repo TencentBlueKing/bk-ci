@@ -487,14 +487,15 @@ open class BkRepoDownloadService @Autowired constructor(
         crossProjectId: String?,
         crossPipineId: String?,
         crossBuildNo: String?,
+        crossBuildId: String?,
         region: String?,
         userId: String?
     ): List<String> {
         logger.info(
             "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
                 ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
-                "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, " +
-                "userId: $userId"
+                "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, crossBuildId: $crossBuildId, " +
+                "region：$region, userId: $userId"
         )
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
@@ -503,18 +504,20 @@ open class BkRepoDownloadService @Autowired constructor(
             targetProjectId = crossProjectId
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
-                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
-                    targetProjectId,
-                    targetPipelineId,
-                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                    ChannelCode.BS
-                ).data
-                targetBuildId = (targetBuild ?: throw BadRequestException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BUILD_NOT_EXIST,
-                        params = arrayOf(crossBuildNo)
+                targetBuildId = crossBuildId ?: run {
+                    val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                        targetProjectId,
+                        targetPipelineId,
+                        crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                        ChannelCode.BS
+                    ).data ?: throw BadRequestException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_NOT_EXIST,
+                            params = arrayOf(crossBuildNo)
+                        )
                     )
-                )).id
+                    targetBuild.id
+                }
             }
         }
 
