@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -65,6 +66,23 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         }
         params.block = isBlock(element)
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
+        params.version = element.version
+        when {
+            element.eventType == CodeEventType.PUSH &&
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) -> {
+                params.includePushAction = joinToString(
+                    listOf(
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
+                    )
+                )
+            }
+
+            else -> {
+                params.includeMrAction = joinToString(element.includeMrAction)
+                params.includePushAction = joinToString(element.includePushAction)
+            }
+        }
         params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
         params.pathFilterType = element.pathFilterType
@@ -82,8 +100,6 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.includeNoteTypes = joinToString(element.includeNoteTypes)
         params.includeIssueAction = joinToString(element.includeIssueAction)
         params.fromBranches = EnvUtils.parseEnv(element.fromBranches ?: "", variables)
-        params.includeMrAction = joinToString(element.includeMrAction)
-        params.includePushAction = joinToString(element.includePushAction)
         params.enableThirdFilter = element.enableThirdFilter
         params.thirdUrl = EnvUtils.parseEnv(element.thirdUrl ?: "", variables)
         params.thirdSecretToken = EnvUtils.parseEnv(element.thirdSecretToken ?: "", variables)

@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TGIT_PUSH_EVENT_DESC
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -63,8 +64,8 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -131,6 +132,10 @@ class TGitPushTriggerHandler(
         } else {
             event.commits!![0].message
         }
+    }
+
+    override fun getAction(event: GitPushEvent): String? {
+        return event.action_kind
     }
 
     override fun getEventDesc(event: GitPushEvent): String {
@@ -217,7 +222,7 @@ class TGitPushTriggerHandler(
             var pushChangeFiles: Set<String>? = null
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                    if (ignoredPathFilter(webHookParams, event)) {
                         return true
                     }
                     val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
@@ -250,10 +255,17 @@ class TGitPushTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            val pushKindFilter = PushKindFilter(
+            val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
-                checkCreateAndUpdate = event.create_and_update,
-                actionList = convert(webHookParams.includePushAction)
+                included = convert(includePushAction),
+                triggerOn = getAction(event)?.let {
+                    TGitPushActionKind.convertActionType(it).value
+                } ?: TGitPushActionType.PUSH_FILE.value,
+                filterName = "pushActionFilter",
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.PUSH_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
             )
             val thirdFilter = ThirdFilter(
                 projectId = projectId,
@@ -268,7 +280,7 @@ class TGitPushTriggerHandler(
             )
             return listOf(
                 userFilter, branchFilter, skipCiFilter,
-                pathFilter, commitMessageFilter, pushKindFilter, thirdFilter
+                pathFilter, commitMessageFilter, actionFilter, thirdFilter
             )
         }
     }
@@ -358,5 +370,13 @@ class TGitPushTriggerHandler(
             }
         }
         return changeFileList
+    }
+
+    /**
+     * 匹配条件为空/创建分支事件且监听路径为空，则跳过
+     */
+    private fun ignoredPathFilter(params: WebHookParams, event: GitPushEvent) = with(params) {
+        includePaths.isNullOrBlank() &&
+                (excludePaths.isNullOrBlank() || event.action_kind == TGitPushActionType.NEW_BRANCH.value)
     }
 }

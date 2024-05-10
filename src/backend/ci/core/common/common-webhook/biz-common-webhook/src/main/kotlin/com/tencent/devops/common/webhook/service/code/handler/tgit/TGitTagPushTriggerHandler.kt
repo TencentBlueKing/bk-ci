@@ -103,6 +103,10 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
 
     override fun getEventDesc(event: GitTagPushEvent): String {
         val createFrom = when {
+            event.isDeleteTag() -> {
+                // 删除标签时展示删除前的tag提交点
+                GitUtils.getShortSha(event.before)
+            }
             event.create_from.isNullOrBlank() || event.checkout_sha == event.create_from -> {
                 GitUtils.getShortSha(event.checkout_sha)
             }
@@ -112,7 +116,11 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
             }
         }
         return I18Variable(
-            code = WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC,
+            code = if (event.isDeleteTag()) {
+                WebhookI18nConstants.TGIT_TAG_DELETE_EVENT_DESC
+            } else {
+                WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC
+            },
             params = listOf(
                 "$createFrom",
                 "${event.repository.homepage}/-/tags/${getBranchName(event)}",

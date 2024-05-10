@@ -94,9 +94,9 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "mr事件action")
-    val includeMrAction: List<String>? = null,
+    var includeMrAction: List<String>? = null,
     @get:Schema(title = "push事件action")
-    val includePushAction: List<String>? = null,
+    var includePushAction: List<String>? = null,
     @get:Schema(title = "是否启用第三方过滤")
     val enableThirdFilter: Boolean? = false,
     @get:Schema(title = "第三方应用地址")
@@ -106,6 +106,8 @@ data class CodeGitWebHookTriggerElement(
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"
+        const val PUSH_ACTION_CREATE_BRANCH = "new-branch"
+        const val PUSH_ACTION_PUSH_FILE = "push-file"
     }
 
     override fun getClassType() = classType
