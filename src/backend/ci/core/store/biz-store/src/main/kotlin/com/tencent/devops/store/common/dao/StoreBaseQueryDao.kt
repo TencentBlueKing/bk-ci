@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -51,7 +52,6 @@ import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions")
 @Repository
@@ -128,13 +128,41 @@ class StoreBaseQueryDao {
     fun getLatestComponentByCodes(
         dslContext: DSLContext,
         storeCodes: List<String>,
-        storeType: StoreTypeEnum
-    ): Result<TStoreBaseRecord>? {
+        storeType: StoreTypeEnum,
+        testComponentFlag: Boolean
+    ): Result<out Record> {
         return with(TStoreBase.T_STORE_BASE) {
-            dslContext.selectFrom(this)
-                .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
-                .and(LATEST_FLAG.eq(true))
-                .fetch()
+            val conditions = mutableListOf(STORE_CODE.`in`(storeCodes))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            if (testComponentFlag) {
+                val statusEnumList = listOf(
+                    StoreStatusEnum.RELEASED,
+                    StoreStatusEnum.TESTING,
+                    StoreStatusEnum.AUDITING
+                )
+                conditions.add(STATUS.`in`(statusEnumList))
+                val subquery = dslContext.select(
+                    STORE_CODE,
+                    STORE_TYPE,
+                    DSL.max(CREATE_TIME).`as`(KEY_CREATE_TIME)
+                ).from(this)
+                    .where(conditions)
+                    .groupBy(STORE_CODE)
+                dslContext.select().from(this)
+                    .join(subquery)
+                    .on(
+                        STORE_CODE.eq(subquery.field(STORE_CODE))
+                            .and(STORE_TYPE.eq(subquery.field(STORE_TYPE)))
+                            .and(CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+                    )
+                    .where(conditions)
+                    .fetch()
+            } else {
+                conditions.add(LATEST_FLAG.eq(true))
+                dslContext.selectFrom(this)
+                    .where(conditions)
+                    .fetch()
+            }
         }
     }
 
