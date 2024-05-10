@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -170,7 +171,8 @@ open class DefaultModelCheckPlugin constructor(
         if (elementCheckResults.isNotEmpty()) {
             val elementCheckResultMap = elementCheckResults.filterNot {
                 it.errorTitle.isNullOrBlank() || it.errorMessage.isNullOrBlank()
-            }.groupBy({ it.errorTitle }, { it.errorMessage })
+            }.groupBy({ it.errorTitle!! }, { it.errorMessage!! })
+                .map { PipelineCheckFailedReason(it.key, it.value) }
             if (elementCheckResultMap.isNotEmpty()) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
