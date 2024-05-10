@@ -783,7 +783,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             )?.forEach {
                 if (
                     installedMap[it.storeCode] != null &&
-                    StoreUtils.isGreaterVersion(installedMap[it.storeCode]!!, it.version)
+                    StoreUtils.isGreaterVersion(it.version, installedMap[it.storeCode]!!)
                 ) {
                     storeCodes.add(it.storeCode)
                 }

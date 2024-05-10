@@ -321,7 +321,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             projectCode = projectCode,
             storeType = storeType,
             storeProjectTypes = listOf(
-                StoreProjectTypeEnum.COMMON.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte()
+                StoreProjectTypeEnum.COMMON.type.toByte()
             )
         )?.intoMap({ it.storeCode }, { it.version })
     }
