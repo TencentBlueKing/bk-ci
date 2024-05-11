@@ -1006,7 +1006,10 @@
     "pipelineVersionSaveAt": "Version {0} save at {1}",
     "saveDraftSuccess": "{0} Draft save successfully",
     "every": "Remind every",
-    "remindTime": "hours"
+    "remindTime": "hours",
+    "codelib": "Code Repositories",
+    "branchs": "Branch",
+    "codelibConfigs": "Code Repositories Config"
   },
   "storeMap": {
     "textarea": "Textarea",
