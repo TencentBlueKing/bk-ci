@@ -243,7 +243,9 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 filterName = "mrAction",
                 triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
-                included = convert(includeMrAction),
+                included = convert(includeMrAction).ifEmpty {
+                    listOf("empty-action")
+                },
                 failedReason = I18Variable(
                     code = WebhookI18nConstants.MR_ACTION_NOT_MATCH,
                     params = listOf(getAction(event) ?: "")

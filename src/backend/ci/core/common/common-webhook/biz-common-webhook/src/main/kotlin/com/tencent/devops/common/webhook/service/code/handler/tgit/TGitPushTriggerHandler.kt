@@ -254,7 +254,9 @@ class TGitPushTriggerHandler(
             }
             val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
-                included = convert(includePushAction),
+                included = convert(includePushAction).ifEmpty {
+                    listOf("empty-action")
+                },
                 triggerOn = getAction(event)?.let {
                     TGitPushActionKind.convertActionType(it).value
                 } ?: TGitPushActionType.PUSH_FILE.value,
