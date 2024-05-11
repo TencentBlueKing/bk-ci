@@ -252,8 +252,8 @@ class NotifyControl @Autowired constructor(
         val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
         val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    "${it.value["USER_NAME"] as String }@${it.value["COMPANY_NAME"] as String }"
                 } else it.key
             }.values.plus(
                 userIds.filter { !it.contains("@tai") }
@@ -265,10 +265,10 @@ class NotifyControl @Autowired constructor(
             val taiInfos = taiClient.taiUserInfo(
                 TaiUserInfoRequest(usernames = taiUserNames)
             ).associateBy({
-                it.username
-            }, { user ->
-                user.accountEmail
-            })
+                              it.username
+                          }, { user ->
+                              user.accountEmail
+                          })
             val receivers = userIds.map { taiInfos[it] ?: it }
             logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
             sendNotifyMessageTemplateRequest(

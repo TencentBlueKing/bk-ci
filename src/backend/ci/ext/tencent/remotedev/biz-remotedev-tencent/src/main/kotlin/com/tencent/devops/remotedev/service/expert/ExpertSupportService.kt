@@ -120,11 +120,9 @@ class ExpertSupportService @Autowired constructor(
         )
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
-                } else {
-                    it.key
-                }
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    "${it.value["USER_NAME"] as String }@${it.value["COMPANY_NAME"] as String }"
+                } else it.key
             }
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(data.projectId)

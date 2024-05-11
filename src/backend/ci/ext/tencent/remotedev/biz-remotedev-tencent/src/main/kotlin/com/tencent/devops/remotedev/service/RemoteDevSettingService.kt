@@ -250,17 +250,19 @@ class RemoteDevSettingService @Autowired constructor(
                 limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize),
                 userIds = userIds.filter { UserUtil.isTaiUser(it) }.toSet().ifEmpty { null }
             )
-            val notInit = taiUsers.filter { it.value.first.isBlank() || it.value.second.isBlank() || update }
+            val notInit = taiUsers.filter {
+                (it.value["EMAIL"] as String).isBlank() || (it.value["PHONE"] as String).isBlank() || update
+            }
             val taiInfos = taiClient.taiUserInfo(TaiUserInfoRequest(usernames = notInit.keys))
                 .associateBy({
-                    it.username
-                }, { user ->
-                    Pair(
-                        user.accountName,
-                        user.companyTags.joinToString(",") { it.tagName }
-                    )
-                })
-            remoteDevSettingDao.updateTaiUserInfo(dslContext, taiInfos)
+                                 it.username
+                             }, { user ->
+                                 Pair(
+                                     user.accountEmail,
+                                     user.phone ?: ""
+                                 )
+                             })
+            remoteDevSettingDao.updateTaiUserEmailPhoneInfo(dslContext, taiInfos)
             if (taiUsers.size < pageSize) return
             page++
         }

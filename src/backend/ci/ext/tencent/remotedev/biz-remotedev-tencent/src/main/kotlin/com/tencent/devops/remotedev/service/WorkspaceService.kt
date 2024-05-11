@@ -452,8 +452,8 @@ class WorkspaceService @Autowired constructor(
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    "${it.value["USER_NAME"] as String }@${it.value["COMPANY_NAME"] as String }"
                 } else it.key
             }
 
@@ -711,8 +711,8 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
         ).mapValues {
-            if (it.value.first.isNotBlank()) {
-                "${it.value.first}@${it.value.second}"
+            if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                "${it.value["USER_NAME"] as String }@${it.value["COMPANY_NAME"] as String }"
             } else it.key
         }
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
