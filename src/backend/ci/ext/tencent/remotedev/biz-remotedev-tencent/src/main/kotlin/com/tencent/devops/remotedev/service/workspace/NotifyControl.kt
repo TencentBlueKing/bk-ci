@@ -254,7 +254,9 @@ class NotifyControl @Autowired constructor(
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
                     "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}"
-                } else it.key
+                } else {
+                    it.key
+                }
             }.values.plus(
                 userIds.filter { !it.contains("@tai") }
             )
@@ -265,10 +267,10 @@ class NotifyControl @Autowired constructor(
             val taiInfos = taiClient.taiUserInfo(
                 TaiUserInfoRequest(usernames = taiUserNames)
             ).associateBy({
-                              it.username
-                          }, { user ->
-                              user.accountEmail
-                          })
+                it.username
+                }, { user ->
+                user.accountEmail
+                })
             val receivers = userIds.map { taiInfos[it] ?: it }
             logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
             sendNotifyMessageTemplateRequest(
@@ -325,9 +327,9 @@ class NotifyControl @Autowired constructor(
     }
 
     /*
-    * 通知给系统运维人员
-    * 方式是固定企微群
-    */
+     * 通知给系统运维人员
+     * 方式是固定企微群
+     */
     fun notify4SystemAdministrator(
         notifyTemplateCode: String,
         bodyParams: Map<String, String>
