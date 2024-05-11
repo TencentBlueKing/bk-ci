@@ -35,7 +35,7 @@
         },
         computed: {
             ...mapState('atom', [
-                'pipeline',
+                'pipelineSetting',
                 'pipelineInfo'
             ]),
             ...mapGetters({
@@ -50,12 +50,12 @@
                     }
                 }, this.$route.name === 'pipelineImportEdit'
                     ? {
-                        selectedValue: this.pipeline?.name ?? '--'
+                        selectedValue: this.pipelineSetting?.pipelineName ?? '--'
                     }
                     : {
                         paramId: 'pipelineId',
                         paramName: 'pipelineName',
-                        selectedValue: this.pipelineName ?? this.pipeline?.name ?? '--',
+                        selectedValue: this.pipelineName ?? this.pipelineSetting?.pipelineName ?? '--',
                         records: this.pipelineList,
                         showTips: true,
                         tipsName: 'switch_pipeline_hint',

@@ -68,7 +68,7 @@
             ShowVariable
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion', 'switchingVersion']),
+            ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
             ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline', 'isBranchVersion']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
@@ -252,7 +252,7 @@
                             component: 'BuildHistoryTab',
                             props: {
                                 isDebug: this.isActiveDraftVersion,
-                                pipelineName: this.pipeline?.name
+                                pipelineName: this.pipelineSetting?.pipelineName
                             }
                         }
                 }
