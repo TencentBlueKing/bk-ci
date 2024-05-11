@@ -355,12 +355,12 @@
             <bk-table
                 :data="syncFailedPipelineList"
             >
-                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath">
+                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath" show-overflow-tooltip>
                     <template slot-scope="{ row }">
                         <a :href="row.fileUrl" target="_blank">{{ row.filePath }}</a>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail">
+                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail" show-overflow-tooltip>
                 </bk-table-column>
             </bk-table>
             <template slot="footer">
