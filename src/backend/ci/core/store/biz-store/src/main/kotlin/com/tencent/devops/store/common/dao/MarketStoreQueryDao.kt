@@ -185,7 +185,7 @@ class MarketStoreQueryDao {
             ).from(tStoreBase)
             if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
                 val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-                subquery.leftJoin(tStoreBaseFeature)
+                originalSubquery.leftJoin(tStoreBaseFeature)
                     .on(
                         tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
                             .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
