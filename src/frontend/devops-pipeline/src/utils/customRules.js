@@ -35,6 +35,15 @@ const customeRules = {
             return repeatNum <= 1
         }
     },
+    notInList: {
+        validate: function (value, args) {
+            if (args.indexOf(value) === -1) {
+                return true
+            } else {
+                return false
+            }
+        }
+    },
     // 不同时为空
     atlestNotEmpty: {
         validate: function (value, args) {
@@ -61,6 +70,11 @@ const customeRules = {
     varRule: {
         validate: function (value, args) {
             return /^[a-z_][a-z_\d]*$/gi.test(value)
+        }
+    },
+    constVarRule: {
+        validate: function (value, args) {
+            return /^[A-Z][A-Z_\d]*$/g.test(value)
         }
     },
     excludeEmptyCapital: {

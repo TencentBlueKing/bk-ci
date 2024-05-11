@@ -133,6 +133,7 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
         crossProjectId: String?,
         crossPipineId: String?,
         crossBuildNo: String?,
+        crossBuildId: String?,
         region: String?
     ): Result<List<String>> {
         checkParam(projectId, path)
@@ -147,6 +148,7 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
                 crossProjectId,
                 crossPipineId,
                 crossBuildNo,
+                crossBuildId,
                 region
             )
         )

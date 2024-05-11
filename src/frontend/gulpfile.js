@@ -37,24 +37,17 @@ const svgSpriteConfig = {
         symbol: true
     }
 }
-const isGray = env === 'gray'
-const isRBAC = env === 'rbac'
-const envPrefix = isGray || isRBAC || (env === 'master') ? '' : `${env}.`
+
+const envPrefix = ['dev', 'test'].indexOf(env) > -1 ? `${env}.` : ''
 const BUNDLE_NAME = 'assets_bundle.json'
 const ASSETS_JSON_URL = `http://${envPrefix}devnet.devops.oa.com/${BUNDLE_NAME}`
-const pidMap = {
-    gray: 'grayproject',
-    rbac: 'rbac-project'
-}
 
 async function getAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
-            headers: (isGray || isRBAC)
-                ? {
-                    'X-DEVOPS-PROJECT-ID': pidMap[env] || ''
-                }
-                : {}
+            headers: {
+                'X-GATEWAY-TAG': env || ''
+            }
         })
         const assets = await res.json()
 

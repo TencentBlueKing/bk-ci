@@ -335,7 +335,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                                     buildId = dispatchMessage.event.buildId,
                                     contextName = AgentReuseMutex.genAgentContextKey(dispatchMessage.event.jobId!!),
                                     contextVal = agent.agentId,
-                                    readOnly = true
+                                    readOnly = true,
+                                    rewriteReadOnly = true
                                 )
                             )
                         }
@@ -471,7 +472,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                     buildId = dispatchMessage.event.buildId,
                     contextName = "jobs.${dispatchMessage.event.jobId}.container.node_alias",
                     contextVal = detail.displayName,
-                    readOnly = true
+                    readOnly = true,
+                    rewriteReadOnly = true
                 )
             )
         } catch (e: Exception) {

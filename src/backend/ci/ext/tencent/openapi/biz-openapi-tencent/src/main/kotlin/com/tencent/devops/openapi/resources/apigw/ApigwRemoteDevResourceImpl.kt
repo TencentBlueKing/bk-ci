@@ -119,6 +119,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         notifyData: WorkspaceNotifyData
     ): Result<Boolean> {
         logger.info("notify workspace|notifyData|$notifyData")
+        if (notifyData.projectId.isNullOrEmpty() && notifyData.ip.isNullOrEmpty() && notifyData.owner.isNullOrEmpty()) {
+            return Result(false)
+        }
         return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
             operator = operator,
             notifyData = notifyData
@@ -162,7 +165,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
         logger.info("createPersonalWorkspace $userId|$data")
         return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
     }
@@ -175,5 +178,28 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
         logger.info("getPersonalWorkspace $userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).getPersonalWorkspace(userId, workspaceName)
+    }
+
+    override fun createProjectWorkspace(
+        userId: String,
+        projectId: String,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        logger.info("createProjectWorkspace $userId|$projectId|$data")
+        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(userId, projectId, data)
+    }
+
+    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
+    }
+
+    override fun getProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?> {
+        logger.info("getProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(userId, projectId, workspaceName)
     }
 }

@@ -50,7 +50,7 @@ data class PipelineTriggerDetail(
     @get:Schema(title = "原因")
     var reason: String? = null,
     @get:Schema(title = "原因详情", required = false)
-    var reasonDetailList: List<String>? = null,
+    var reasonDetail: PipelineTriggerReasonDetail? = null,
     @get:Schema(title = "创建时间", required = false)
     val createTime: Long? = null
 )

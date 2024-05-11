@@ -32,7 +32,7 @@
                 v-for="(value, key) in componentList"
                 :key="key"
                 :ref="key"
-                @hidden="hideTab(key)"
+                @toggle="(show) => toggleTab(key, show)"
                 @complete="completeLoading(key)"
                 v-show="currentTab === key"
             ></component>
@@ -72,8 +72,8 @@
                 currentTab: 'log',
                 tabList: [
                     { name: 'log', show: true },
-                    { name: 'artifactory', show: true, completeLoading: false },
-                    { name: 'report', show: true, completeLoading: false },
+                    { name: 'artifactory', show: false, completeLoading: false },
+                    { name: 'report', show: false, completeLoading: false },
                     { name: 'setting', show: true }
                 ]
             }
@@ -159,7 +159,7 @@
                 this.tabList = [
                     { name: 'log', show: true },
                     { name: 'artifactory', show: true, completeLoading: false },
-                    { name: 'report', show: true, completeLoading: false },
+                    { name: 'report', show: false, completeLoading: false },
                     { name: 'setting', show: true }
                 ]
             },
@@ -175,9 +175,9 @@
         },
 
         methods: {
-            hideTab (key) {
+            toggleTab (key, show = false) {
                 const tab = this.tabList.find(tab => tab.name === key)
-                tab.show = false
+                tab.show = show
             },
 
             completeLoading (key) {

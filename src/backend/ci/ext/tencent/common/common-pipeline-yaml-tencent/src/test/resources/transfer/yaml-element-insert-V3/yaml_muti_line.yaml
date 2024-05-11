@@ -1,0 +1,62 @@
+version: v3.0
+name: qqq
+on:
+  manual:
+    can-skip-step: false
+stages:
+- jobs:
+    job_1:
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: |-
+            # 通过./xx.sh的方式调起指定，可通过手动添加shebang的方式指定解释器
+            # 您可以通过setEnv函数设置插件间传递的参数
+            # setEnv "FILENAME" "package.zip"
+            # 然后在后续的插件的表单中使用${FILENAME}引用这个变量
+
+            # 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值
+            # setGateValue "CodeCoverage" $myValue
+            # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住
+
+            # cd ${WORKSPACE} 可进入当前工作空间目录
+        timeout-minutes: "100"
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: |-
+            # 通过./xx.sh的方式调起指定，可通过手动添加shebang的方式指定解释器
+            # 您可以通过setEnv函数设置插件间传递的参数
+            # setEnv "FILENAME" "package.zip"
+            # 然后在后续的插件的表单中使用${FILENAME}引用这个变量
+
+            # 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值
+            # setGateValue "CodeCoverage" $myValue
+            # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住
+
+            # cd ${WORKSPACE} 可进入当前工作空间目录
+        timeout-minutes: "100"
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: |-
+            # 通过./xx.sh的方式调起指定，可通过手动添加shebang的方式指定解释器
+            # 您可以通过setEnv函数设置插件间传递的参数
+            # setEnv "FILENAME" "package.zip"
+            # 然后在后续的插件的表单中使用${FILENAME}引用这个变量
+
+            # 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值
+            # setGateValue "CodeCoverage" $myValue
+            # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住
+
+            # cd ${WORKSPACE} 可进入当前工作空间目录
+        timeout-minutes: "100"
+notices:
+- if: FAILURE
+  type:
+  - email
+  - wework-message
+  receivers:
+  - "${BK_CI_START_USER_NAME}"
+  content: "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。"

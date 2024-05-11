@@ -91,6 +91,9 @@ interface ServiceArtifactoryDownLoadResource {
         @Parameter(description = "构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?,
+        @Parameter(description = "构建id", required = false)
+        @QueryParam("buildId")
+        crossBuildId: String?,
         @Parameter(description = "客户端区域", required = false)
         @HeaderParam(AUTH_HEADER_REGION)
         region: String?

@@ -13,12 +13,14 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.RemoteDevCronJobDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.async.AsyncJobEndEvent
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
 import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
@@ -35,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -51,7 +54,8 @@ class RemoteDevJobService @Autowired constructor(
     private val remoteDevCronJobDao: RemoteDevCronJobDao,
     private val remoteDevActionService: RemoteDevJobActionService,
     private val workspaceDao: WorkspaceDao,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     fun getMachineTypes(projectId: String): Set<String> {
         return workspaceJoinDao.fetchProjectMachineType(dslContext, projectId)
@@ -283,6 +287,12 @@ class RemoteDevJobService @Autowired constructor(
     fun pipelineJobEnd(
         id: Long
     ) {
+        AsyncExecute.dispatch(rabbitTemplate, AsyncJobEndEvent(id))
+    }
+
+    fun doPipelineJobEnd(
+        id: Long
+    ) {
         val record = remoteDevJobExecRecordDao.getRecord(dslContext, id) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
             params = arrayOf(I18nUtil.getCodeLanMessage(REMOTEDEV_JOB_NOT_FOUND, params = arrayOf(id.toString())))
@@ -323,6 +333,7 @@ class RemoteDevJobService @Autowired constructor(
                 errMsg = build.errorInfoList?.joinToString(";"),
                 endTime = LocalDateTime.now()
             )
+            return
         }
         remoteDevJobExecRecordDao.updateStatus(
             dslContext = dslContext,

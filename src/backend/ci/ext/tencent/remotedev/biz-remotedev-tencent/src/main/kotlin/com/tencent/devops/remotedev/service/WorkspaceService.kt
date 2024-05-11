@@ -107,6 +107,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_ASSIGN_AUTO_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_LOGIN_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_3_DAY_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -300,8 +301,9 @@ class WorkspaceService @Autowired constructor(
 
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START) {
+                val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
                 client.get(ServiceStartCloudResource::class)
-                    .createStartCloudUser(sharedUser)
+                    .createStartCloudUser(sharedUser, gameId.first)
             }
             if (workspaceSharedDao.existWorkspaceSharedInfo(workspaceName, sharedUser, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
@@ -316,7 +318,8 @@ class WorkspaceService @Autowired constructor(
                 projectId = workspace.projectId,
                 operator = userId,
                 assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER, null)),
-                mountType = workspace.workspaceMountType
+                mountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -456,7 +459,7 @@ class WorkspaceService @Autowired constructor(
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
-            result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
+            result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }.toSet()
         ).associateBy { it.workspaceName }
 
         // 专家协助
@@ -489,15 +492,16 @@ class WorkspaceService @Autowired constructor(
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
             val detail = detailMap[it.workspaceName]
+            val status = checkStatus(it, userId)
             records.add(
                 ProjectWorkspace(
                     workspaceId = it.workspaceId,
                     workspaceName = it.workspaceName,
                     projectId = it.projectId,
                     displayName = it.displayName,
-                    status = it.status,
+                    status = status,
                     lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                    sleepingTime = if (it.status.checkSleeping()) {
+                    sleepingTime = if (status.checkSleeping()) {
                         it.lastStatusUpdateTime?.timestamp()
                     } else {
                         null
@@ -535,7 +539,12 @@ class WorkspaceService @Autowired constructor(
         hasCurrentUser: Boolean? = null,
         businessLineName: String? = null,
         ownerName: String? = null,
-        workspaceName: String? = null
+        workspaceName: String? = null,
+        notStatus: List<WorkspaceStatus>? = listOf(
+            WorkspaceStatus.DELETED,
+            WorkspaceStatus.PREPARING,
+            WorkspaceStatus.DELIVERING_FAILED
+        )
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 
@@ -546,7 +555,8 @@ class WorkspaceService @Autowired constructor(
             ip = ip,
             businessLineName = businessLineName,
             ownerName = ownerName,
-            workspaceName = workspaceName
+            workspaceName = workspaceName,
+            notStatus = notStatus
         ) ?: emptyList()
 
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
@@ -556,13 +566,12 @@ class WorkspaceService @Autowired constructor(
         val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, workspaceNames)
             .associateBy { it.workspaceName }
 
-        val workspaceWindows = workspaceDao.fetchNotifyWorkspaces(
-            dslContext = dslContext,
-            mountType = WorkspaceMountType.START,
-            workspaceNames = workspaceNames
-        )?.associateBy { it["NAME"] as String }
+        val workspaceWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
+            dslContext, workspaceNames = workspaceNames
+        ).associateBy { it.workspaceName }
 
-        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!!.toString() }
+        val allConfig = windowsResourceConfigService.getAllType(withUnavailable = true, onlySpecModel = null)
+            .associateBy { it.id!!.toString() }
         val fetchDetailEndTime = System.currentTimeMillis()
 
         val tailUsers = if (hasDepartmentsInfo == true) {
@@ -575,12 +584,12 @@ class WorkspaceService @Autowired constructor(
         }
 
         val data = result.map { res ->
-            val workspaceName = res["NAME"] as String
-            val detail = detailMap[workspaceName]?.let { det ->
+            val name = res["NAME"] as String
+            val detail = detailMap[name]?.let { det ->
                 try {
                     objectMapper.readValue<WorkSpaceCacheInfo>(det.detail)
                 } catch (ignore: Exception) {
-                    logger.warn("get workspace detail from redis error|$workspaceName", ignore)
+                    logger.warn("get workspace detail from redis error|$name", ignore)
                     null
                 }
             }
@@ -613,7 +622,7 @@ class WorkspaceService @Autowired constructor(
                 null
             }
             WeSecProjectWorkspace(
-                workspaceName = workspaceName,
+                workspaceName = name,
                 projectId = res["PROJECT_ID"] as String,
                 creator = res["CREATOR"] as String,
                 regionId = detail?.regionId.toString(),
@@ -625,8 +634,8 @@ class WorkspaceService @Autowired constructor(
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
-                machineType = workspaceWindows?.get(workspaceName)
-                    ?.let { win -> allConfig[win["WIN_CONFIG_ID"].toString()]?.size }
+                machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
+                macAddress = workspaceWindows[name]?.macAddress
             )
         }
 
@@ -711,7 +720,7 @@ class WorkspaceService @Autowired constructor(
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
-            result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
+            result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }.toSet()
         ).associateBy { it.workspaceName }
 
         val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, result.map { it.workspaceName }.toSet())
@@ -721,21 +730,7 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = result.count().toLong(),
             records = result.map {
-                var status = it.status
-                run {
-                    if (status.notOk2doNextAction(it.workspaceSystemType) && Duration.between(
-                            it.lastStatusUpdateTime ?: LocalDateTime.now(),
-                            LocalDateTime.now()
-                        ).seconds > DEFAULT_WAIT_TIME
-                    ) {
-                        status = workspaceCommon.fixUnexpectedStatus(
-                            userId = userId,
-                            workspaceName = it.workspaceName,
-                            status = status,
-                            mountType = it.workspaceMountType
-                        )
-                    }
-                }
+                val status = checkStatus(it, userId)
                 val owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
@@ -780,6 +775,25 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
+    }
+
+    private fun checkStatus(
+        it: WorkspaceRecordInf,
+        userId: String
+    ): WorkspaceStatus {
+        if (it.status.notOk2doNextAction(it.workspaceSystemType) && Duration.between(
+                it.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds > DEFAULT_WAIT_TIME
+        ) {
+            return workspaceCommon.fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = it.workspaceName,
+                status = it.status,
+                mountType = it.workspaceMountType
+            )
+        }
+        return it.status
     }
 
     fun getWorkspaceUserDetail(userId: String): WorkspaceUserDetail {
@@ -863,6 +877,12 @@ class WorkspaceService @Autowired constructor(
             },
             winUsageTimeLeft = remoteDevSettingService.userWinTimeLeft(userId)
         )
+    }
+
+    fun getWorkspaceRecord(
+        workspaceName: String
+    ): WorkspaceRecord? {
+        return workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
     }
 
     @ActionAuditRecord(
@@ -979,9 +999,10 @@ class WorkspaceService @Autowired constructor(
         } else {
             workspace.createUserId
         }
+        val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
-            curLaunchId = detail.curLaunchId!!,
+            curLaunchId = gameId.second.toInt(),
             regionId = detail.regionId,
             projectId = workspace.projectId,
             name = workspace.workspaceName,
@@ -1035,8 +1056,10 @@ class WorkspaceService @Autowired constructor(
 
         return workspace?.let {
             workspaceCommon.getOrSaveWorkspaceDetail(
-                workspaceName,
-                workspace.workspaceMountType
+                workspaceName = workspaceName,
+                projectId = workspace.projectId,
+                mountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType
             ).let {
                 WorkspaceProxyDetail(
                     workspaceName = workspaceName,
@@ -1055,7 +1078,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
-            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.workspaceMountType)
+            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.projectId, it.workspaceMountType, it.ownerType)
         }
     }
 
@@ -1264,7 +1287,8 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.STOPPED,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 logger.info(
@@ -1279,7 +1303,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1303,7 +1327,8 @@ class WorkspaceService @Autowired constructor(
         val running = workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.RUNNING,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         ) ?: return
         running.parallelStream().forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay &&
@@ -1321,7 +1346,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1375,7 +1400,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1389,6 +1414,43 @@ class WorkspaceService @Autowired constructor(
                     )
                 )
             }
+        }
+    }
+
+    fun notifyWhenNotAssign() {
+        val limitDay = holidayHelper.getLastWorkingDays(3).last()
+        logger.info("notifyWhenWhenNotAssign|$limitDay")
+        val notifyGroups = mutableMapOf<String, MutableList<Pair<String, String>>>()
+        workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.DISTRIBUTING,
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
+        )?.parallelStream()?.forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) > limitDay) {
+                logger.info(
+                    "ready to notify when not assign " +
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                )
+                val value = Pair(workspace.hostName ?: "", workspace.createUserId)
+                notifyGroups.putIfAbsent(
+                    workspace.projectId,
+                    mutableListOf(value)
+                )?.add(value)
+            }
+        }
+        notifyGroups.forEach { (projectId, values) ->
+            // 邮件通知
+            notifyControl.notify4RemoteDevManager(
+                projectId = projectId,
+                cc = values.mapTo(mutableSetOf()) { it.second },
+                notifyTemplateCode = NOT_ASSIGN_AUTO_NOTIFY,
+                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                bodyParams = mutableMapOf(
+                    "cgsIps" to values.joinToString("\n") { it.first },
+                    "projectId" to projectId
+                )
+            )
         }
     }
 
@@ -1422,7 +1484,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),

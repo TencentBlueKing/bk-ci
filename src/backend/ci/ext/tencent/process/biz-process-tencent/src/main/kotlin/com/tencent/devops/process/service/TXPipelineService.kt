@@ -1178,7 +1178,8 @@ class TXPipelineService @Autowired constructor(
                 params = arrayOf(userId, projectId)
             )
         )
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw CustomException(
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?.model ?: throw CustomException(
             Response.Status.BAD_REQUEST,
             MessageUtil.getMessageByLocale(
                 messageCode = ERROR_PIPELINE_NOT_EXISTS,
