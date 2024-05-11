@@ -182,7 +182,6 @@ interface UserStoreComponentQueryResource {
         pageSize: Int = 8
     ): Result<List<MarketMainItem>>
 
-
     @Operation(summary = "根据条件查询组件列表")
     @Path("/types/{storeType}/component/list")
     @GET
