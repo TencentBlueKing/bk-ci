@@ -748,7 +748,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
-        val pair = if (!storeInfoQuery.projectCode.isNullOrBlank() && storeInfoQuery.queryProjectComponentFlag) {
+        val pair = if (!storeInfoQuery.projectCode.isNullOrBlank()) {
             val storeCodeInfo = queryInstalledInfoByProject(
                 projectCode = storeInfoQuery.projectCode!!,
                 storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType),
@@ -769,6 +769,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             val storeCodes = mutableListOf<String>()
             storeCodes.addAll(first)
             storeCodes.addAll(second)
+            logger.info("getStoreInfos storeCodes:$storeCodes")
             storeInfoQuery.storeCodes = storeCodes
         }
         val count = marketStoreQueryDao.count(

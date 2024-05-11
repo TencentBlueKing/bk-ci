@@ -164,33 +164,9 @@ class MarketStoreQueryDao {
         } else {
             null
         }
-        val subquery = dslContext.select(
-            tStoreBase.STORE_CODE,
-            tStoreBase.STORE_TYPE,
-            DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
-        ).from(tStoreBase)
-        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
-            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-            subquery.leftJoin(tStoreBaseFeature)
-                .on(
-                    tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                        .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
-                )
-        }
+        val subquery = getBaseSubQuery(dslContext, storeInfoQuery)
         return if (storeInfoQuery.queryProjectComponentFlag && storeCodeInfo != null) {
-            val originalSubquery = dslContext.select(
-                tStoreBase.STORE_CODE,
-                tStoreBase.STORE_TYPE,
-                DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
-            ).from(tStoreBase)
-            if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
-                val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-                originalSubquery.leftJoin(tStoreBaseFeature)
-                    .on(
-                        tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                            .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
-                    )
-            }
+            val originalSubquery = getBaseSubQuery(dslContext, storeInfoQuery)
             val firstConditions = formatConditions(
                 dslContext = dslContext,
                 storeType = storeType,
@@ -221,6 +197,27 @@ class MarketStoreQueryDao {
             keywordCondition?.let { conditions.add(it) }
             return subquery.where(conditions).groupBy(tStoreBase.STORE_CODE)
         }
+    }
+
+    private fun getBaseSubQuery(
+        dslContext: DSLContext,
+        storeInfoQuery: StoreInfoQuery
+    ): SelectJoinStep<Record3<String, Byte, LocalDateTime>> {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val query = dslContext.select(
+            tStoreBase.STORE_CODE,
+            tStoreBase.STORE_TYPE,
+            DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
+        ).from(tStoreBase)
+        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+            query.leftJoin(tStoreBaseFeature)
+                .on(
+                    tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                        .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                )
+        }
+        return query
     }
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {
@@ -328,7 +325,7 @@ class MarketStoreQueryDao {
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
                     add(tStoreProjectRel.PROJECT_CODE.eq(it))
-                    selectJoinStep.leftJoin(tStoreProjectRel).on(
+                    selectJoinStep.join(tStoreProjectRel).on(
                         tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE)
                             .and(tStoreBase.STORE_TYPE.eq(tStoreProjectRel.STORE_TYPE))
                     )
