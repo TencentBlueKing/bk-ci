@@ -1303,7 +1303,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1346,7 +1346,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1400,7 +1400,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1484,7 +1484,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
