@@ -80,8 +80,7 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
                     AgentResponse(
                         id = it.envHashId,
                         name = it.name,
-                        label =
-                        "（Agent: $normalName ${it.normalNodeCount}，$exceptionName ${it.abnormalNodeCount}）",
+                        label = "（$normalName: ${it.normalNodeCount}，$exceptionName:${it.abnormalNodeCount}）",
                         sharedProjectId = it.sharedProjectId,
                         sharedUserId = it.sharedUserId
                     )
