@@ -30,6 +30,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
+import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import io.mockk.every
 import io.mockk.justRun
@@ -54,6 +55,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineInfoDao: PipelineInfoDao = mockk()
     private val clientTokenService: ClientTokenService = mockk()
     private val pipelineYamlViewDao: PipelineYamlViewDao = mockk()
+    private val operationLogService: PipelineOperationLogService = mockk()
+
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
@@ -67,7 +70,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             objectMapper = objectMapper,
             client = client,
             clientTokenService = clientTokenService,
-            pipelineYamlViewDao = pipelineYamlViewDao
+            pipelineYamlViewDao = pipelineYamlViewDao,
+            operationLogService = operationLogService
         ),
         recordPrivateCalls = true
     )
