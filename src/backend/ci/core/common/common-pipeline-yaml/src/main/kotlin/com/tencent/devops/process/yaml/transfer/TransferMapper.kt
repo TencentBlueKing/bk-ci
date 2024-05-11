@@ -531,7 +531,7 @@ object TransferMapper {
                     nodeTuple.valueNode.startMark.line, 0
                 ),
                 endMark = TransferMark.Mark(
-                    nodeTuple.valueNode.endMark.line + markFlag, 0
+                    nodeTuple.valueNode.endMark.line - markFlag, 0
                 )
             )
         }

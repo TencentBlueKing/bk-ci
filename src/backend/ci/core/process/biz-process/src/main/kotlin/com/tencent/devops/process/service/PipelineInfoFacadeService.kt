@@ -80,6 +80,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -129,7 +130,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
-    private val yamlFacadeService: PipelineYamlFacadeService
+    private val yamlFacadeService: PipelineYamlFacadeService,
+    private val operationLogService: PipelineOperationLogService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1108,7 +1110,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
+            operationLogType = OperationLogType.UPDATE_PIPELINE_SETTING,
+            savedSetting = savedSetting
         )
     }
 
@@ -1116,14 +1119,27 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        settingVersion: Int
-    ) {
-        pipelineRepositoryService.updateSettingVersion(
+        operationLogType: OperationLogType,
+        savedSetting: PipelineSetting,
+        updateLastModifyUser: Boolean? = true
+    ): DeployPipelineResult {
+        val result = pipelineRepositoryService.updateSettingVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            settingVersion = settingVersion
+            savedSetting = savedSetting,
+            updateLastModifyUser = updateLastModifyUser
         )
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = result.version,
+            operationLogType = operationLogType,
+            params = result.versionName ?: "",
+            description = null
+        )
+        return result
     }
 
     fun saveAll(
@@ -1236,7 +1252,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        pipelineInfo: PipelineInfo?
+        pipelineInfo: PipelineInfo
     ): Model {
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -1255,13 +1271,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                 labels.addAll(it.labels)
             }
             model.labels = labels
-            // 如果传空则表示只拿当前版本的配置
-            pipelineInfo?.let {
-                model.name = pipelineInfo.pipelineName
-                model.desc = pipelineInfo.pipelineDesc
-                model.pipelineCreator = pipelineInfo.creator
-                model.latestVersion = pipelineInfo.version
-            }
+            model.name = pipelineInfo.pipelineName
+            model.desc = pipelineInfo.pipelineDesc
+            model.pipelineCreator = pipelineInfo.creator
+            model.latestVersion = pipelineInfo.version
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
