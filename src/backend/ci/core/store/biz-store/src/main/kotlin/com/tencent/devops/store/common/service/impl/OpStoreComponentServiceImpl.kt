@@ -153,7 +153,7 @@ class OpStoreComponentServiceImpl @Autowired constructor(
         } else {
             redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(storeType.name), storeCode)
         }
-        if(!passFlag) {
+        if (!passFlag) {
             // 审核不通过则发消息告知用户
             storeNotifyService.sendStoreReleaseAuditNotifyMessage(storeId, AuditTypeEnum.AUDIT_REJECT)
         }

@@ -36,9 +36,10 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStoreClassifyResourceImpl  @Autowired constructor(
+class UserStoreClassifyResourceImpl @Autowired constructor(
     private val classifyService: ClassifyService
 ) : UserStoreClassifyResource {
+
     override fun getClassifyList(storeType: String): Result<List<Classify>> {
         return classifyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte())
     }

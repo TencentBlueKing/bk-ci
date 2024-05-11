@@ -88,7 +88,7 @@ class OpStoreComponentResourceImpl @Autowired constructor(
                     labelCodes = labelCodes,
                     sortType = sortType,
                     page = page,
-                    pageSize = pageSize,
+                    pageSize = pageSize
                 )
             )
         )

@@ -107,7 +107,6 @@ interface StoreReleaseService {
         checkPermissionFlag: Boolean = true
     ): Boolean
 
-
     /**
      * 重新构建
      * @param userId userId

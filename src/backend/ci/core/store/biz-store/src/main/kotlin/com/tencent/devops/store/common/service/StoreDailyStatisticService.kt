@@ -48,7 +48,6 @@ interface StoreDailyStatisticService {
         endTime: LocalDateTime
     ): List<StoreDailyStatistic>?
 
-
     /**
      * 更新组件的每日统计信息
      * @param storeCode 组件标识

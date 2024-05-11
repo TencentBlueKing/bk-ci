@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserStoreComponentQueryResourceImpl @Autowired constructor(
     private val storeComponentQueryService: StoreComponentQueryService
 ) : UserStoreComponentQueryResource {
+
     override fun getMyComponents(
         userId: String,
         storeType: String,
@@ -93,7 +94,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentDetailInfoById(
                 userId = userId,
                 storeId = storeId,
-                storeType = StoreTypeEnum.valueOf(storeType),
+                storeType = StoreTypeEnum.valueOf(storeType)
             )
         )
     }

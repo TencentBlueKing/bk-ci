@@ -373,7 +373,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 status = processingStoreRecord[tStoreBase.STATUS] as String,
                 logoUrl = processingStoreRecord[tStoreBase.LOGO_URL],
                 publisher = processingStoreRecord[tStoreBase.PUBLISHER] as String,
-                classifyId = processingStoreRecord[tStoreBase.CLASSIFY_ID] as String,
+                classifyId = processingStoreRecord[tStoreBase.CLASSIFY_ID] as String
             )
             processingVersionInfoMap.getOrPut(storeCode) { mutableListOf() }.add(storeBaseInfo)
         }

@@ -84,7 +84,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentDetailInfoById(
                 userId = userId,
                 storeId = storeId,
-                storeType = StoreTypeEnum.valueOf(storeType),
+                storeType = StoreTypeEnum.valueOf(storeType)
             )
         )
     }

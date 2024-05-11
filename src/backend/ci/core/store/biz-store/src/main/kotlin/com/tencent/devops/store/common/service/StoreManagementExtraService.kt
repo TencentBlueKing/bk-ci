@@ -32,7 +32,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreManagementExtraService {
 
-
     /**
      * 检查组件是否可以删除
      */

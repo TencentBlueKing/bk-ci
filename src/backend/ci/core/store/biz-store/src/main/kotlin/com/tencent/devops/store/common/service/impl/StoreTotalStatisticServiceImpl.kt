@@ -55,7 +55,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import org.jooq.DSLContext
 import org.jooq.Record4
-import org.jooq.Record7
 import org.jooq.Record8
 import org.jooq.Result
 import org.jooq.impl.DSL

@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 class UserStoreComponentManageResourceImpl(
     private val storeComponentManageService: StoreComponentManageServiceImpl
 ) : UserStoreComponentManageResource {
+
     override fun updateComponentBaseInfo(
         userId: String,
         storeType: String,
@@ -49,7 +50,7 @@ class UserStoreComponentManageResourceImpl(
     ): Result<Boolean> {
         return storeComponentManageService.updateComponentBaseInfo(
             userId = userId,
-            storeType =storeType,
+            storeType = storeType,
             storeCode = storeCode,
             storeBaseInfoUpdateRequest = storeBaseInfoUpdateRequest
         )
