@@ -222,9 +222,6 @@ class TGitPushTriggerHandler(
             var pushChangeFiles: Set<String>? = null
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
-                        return true
-                    }
                     val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
                         eventCacheService.getChangeFileList(
                             projectId = projectId,

@@ -55,7 +55,7 @@ abstract class BasePathFilter(
     }
 
     private fun hasNoPathSpecs(): Boolean {
-        return includedPaths.isEmpty() && excludedPaths.isEmpty()
+        return includedPaths.isEmpty() && (excludedPaths.isEmpty() || triggerOnPath.isEmpty())
     }
 
     @SuppressWarnings("NestedBlockDepth", "ReturnCount", "ComplexMethod")

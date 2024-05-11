@@ -74,7 +74,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
             }
 
             element.eventType == CodeEventType.MERGE_REQUEST &&
-                    !WebhookUtils.isCustomP4TriggerVersion(element.version) -> {
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) -> {
                 params.includeMrAction = joinToString(
                     listOf(
                         CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
@@ -85,7 +85,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
             }
 
             element.eventType == CodeEventType.PUSH &&
-                    !WebhookUtils.isCustomP4TriggerVersion(element.version) -> {
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) -> {
                 params.includePushAction = joinToString(
                     listOf(
                         CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
