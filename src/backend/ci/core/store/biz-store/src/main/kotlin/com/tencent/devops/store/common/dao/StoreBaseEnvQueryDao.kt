@@ -31,6 +31,7 @@ import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -53,6 +54,15 @@ class StoreBaseEnvQueryDao {
                 conditions.add(OS_ARCH.eq(osArch))
             }
             dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    fun batchQueryStoreLanguage(dslContext: DSLContext, storeIds: List<String>): Result<Record2<String, String>> {
+        with(TStoreBaseEnv.T_STORE_BASE_ENV) {
+            return dslContext.select(ID, LANGUAGE).from(this)
+                .where(STORE_ID.`in`(storeIds))
+                .groupBy(STORE_ID)
+                .fetch()
         }
     }
 }

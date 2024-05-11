@@ -143,9 +143,13 @@ class ImageCommonDao : AbstractStoreCommonDao() {
                 storeId = imageRecord.id,
                 storeCode = imageRecord.imageCode,
                 storeName = imageRecord.imageName,
+                storeType = StoreTypeEnum.IMAGE,
                 version = imageRecord.version,
                 publicFlag = publicFlag,
-                status = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
+                status = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
+                logoUrl = imageRecord.logoUrl,
+                publisher = imageRecord.publisher,
+                classifyId = imageRecord.classifyId
             )
         } else {
             null

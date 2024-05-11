@@ -60,4 +60,13 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+        archiveStorePkgService.deleteStorePkg(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        return Result(true)
+    }
 }

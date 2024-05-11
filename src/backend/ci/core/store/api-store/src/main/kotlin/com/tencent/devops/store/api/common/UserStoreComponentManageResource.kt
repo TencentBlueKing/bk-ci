@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import io.swagger.v3.oas.annotations.Operation
@@ -74,13 +74,13 @@ interface UserStoreComponentManageResource {
 
     @Operation(summary = "安装组件到项目")
     @POST
-    @Path("/types/{storeType}/component/install")
+    @Path("/component/install")
     fun installComponent(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "安装组件到项目请求报文体", required = true)
-        installAtomReq: InstallAtomReq
+        installStoreReq: InstallStoreReq
     ): Result<Boolean>
 
     @Operation(summary = "卸载组件")

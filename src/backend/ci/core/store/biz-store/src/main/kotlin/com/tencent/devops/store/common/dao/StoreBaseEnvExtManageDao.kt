@@ -29,10 +29,10 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseEnvExt
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreBaseEnvExtManageDao {
@@ -81,6 +81,14 @@ class StoreBaseEnvExtManageDao {
         with(TStoreBaseEnvExt.T_STORE_BASE_ENV_EXT) {
             dslContext.deleteFrom(this)
                 .where(STORE_ID.eq(storeId))
+                .execute()
+        }
+    }
+
+    fun batchDeleteStoreEnvExtInfo(dslContext: DSLContext, storeIds: List<String>) {
+        with(TStoreBaseEnvExt.T_STORE_BASE_ENV_EXT) {
+            dslContext.deleteFrom(this)
+                .where(STORE_ID.`in`(storeIds))
                 .execute()
         }
     }
