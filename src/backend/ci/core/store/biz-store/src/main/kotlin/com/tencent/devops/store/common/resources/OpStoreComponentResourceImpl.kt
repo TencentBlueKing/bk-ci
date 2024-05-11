@@ -135,7 +135,7 @@ class OpStoreComponentResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return storeComponentManageService.updateComponentBaseInfo(
             userId = userId,
-            storeType =storeType,
+            storeType = storeType,
             storeCode = storeCode,
             storeBaseInfoUpdateRequest = storeBaseInfoUpdateRequest,
             checkPermissionFlag = false

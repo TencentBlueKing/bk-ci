@@ -108,7 +108,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentDetailInfoByCode(
                 userId = userId,
                 storeCode = storeCode,
-                storeType = storeType,
+                storeType = storeType
             )
         )
     }
