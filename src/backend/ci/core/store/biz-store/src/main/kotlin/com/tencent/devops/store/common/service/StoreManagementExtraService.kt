@@ -32,7 +32,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreManagementExtraService {
 
-
     /**
      * 检查组件是否可以删除
      */
@@ -44,9 +43,9 @@ interface StoreManagementExtraService {
     fun deleteComponentRepoFile(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
 
     /**
-     * 检查卸载组件请求参数合法性
+     * 检查卸载组件请求合法性
      */
-    fun uninstallComponentParamCheck(
+    fun uninstallComponentCheck(
         userId: String,
         projectCode: String,
         storeType: String,

@@ -41,8 +41,8 @@ class StoreDeleteRepoFileHandler(
     override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
 
         return when (handlerRequest.storeType) {
-            StoreTypeEnum.ATOM.name -> true
-            else -> false
+            StoreTypeEnum.TEMPLATE.name, StoreTypeEnum.IMAGE.name -> false
+            else -> true
         }
     }
 

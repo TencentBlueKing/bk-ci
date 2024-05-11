@@ -121,10 +121,15 @@
         }
 
         async logout (): Promise<void> {
-          await bkLogout.logout()
-          const url = new URL(location.protocol + window.getLoginUrl())
-          url.searchParams.delete('is_signin')
-          window.location.href = url.href
+         try {
+            await bkLogout.logout()
+            const url = new URL(location.protocol + window.getLoginUrl())
+            url.searchParams.delete('is_signin')
+            url.searchParams.append('is_from_logout', '1')
+            window.location.href = url.href
+         } catch (error) {
+            console.error(error)
+         }
         }
     }
 </script>

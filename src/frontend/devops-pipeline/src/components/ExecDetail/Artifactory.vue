@@ -60,7 +60,6 @@
                 </template>
             </bk-table-column>
         </bk-table>
-        
     </article>
 </template>
 
@@ -132,8 +131,8 @@
                                 size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
                             })) || []
                         this.hasPermission = permission
-                        if (this.artifactories.length <= 0) {
-                            this.$emit('hidden')
+                        if (this.artifactories.length > 0) {
+                            this.$emit('toggle', true)
                         }
                     })
                     .catch((err) => {

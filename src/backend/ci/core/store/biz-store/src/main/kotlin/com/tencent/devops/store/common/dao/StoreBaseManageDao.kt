@@ -170,6 +170,7 @@ class StoreBaseManageDao {
         }
     }
 
+    @Suppress("LongParameterList")
     fun offlineComponent(
         dslContext: DSLContext,
         storeCode: String,
@@ -231,10 +232,10 @@ class StoreBaseManageDao {
         }
     }
 
-    fun deleteByComponentCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum) {
+    fun deleteByComponentCode(dslContext: DSLContext, storeCode: String, storeType: Byte) {
         with(TStoreBase.T_STORE_BASE) {
             dslContext.deleteFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .execute()
         }
     }

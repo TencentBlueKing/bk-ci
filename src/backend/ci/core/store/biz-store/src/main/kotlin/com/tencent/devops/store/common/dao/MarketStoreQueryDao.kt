@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -34,11 +35,11 @@ import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -60,11 +61,7 @@ class MarketStoreQueryDao {
         storeInfoQuery: StoreInfoQuery
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val baseStep = dslContext.select(DSL.countDistinct(tStoreBase.ID)).from(tStoreBase)
-            .leftJoin(tStoreBaseFeature)
-            .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+        val baseStep = dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE)).from(tStoreBase)
         val conditions = formatConditions(
             dslContext = dslContext,
             storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType),
@@ -84,7 +81,6 @@ class MarketStoreQueryDao {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val baseStep = createBaseStep(dslContext)
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
-        val keyword = storeInfoQuery.keyword
         val sortType = storeInfoQuery.sortType
         val conditions = formatConditions(
             dslContext = dslContext,
@@ -92,35 +88,28 @@ class MarketStoreQueryDao {
             storeInfoQuery = storeInfoQuery,
             baseStep = baseStep
         )
-        if (!keyword.isNullOrEmpty()) {
-            conditions.add(
-                tStoreBase.NAME.contains(keyword)
-                    .or(tStoreBase.SUMMARY.contains(keyword))
-                    .or(tStoreBase.STORE_CODE.contains(keyword))
-            )
-        }
         if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
-                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+                val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
                 val t =
                     dslContext.select(
-                        tas.STORE_CODE,
-                        tas.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
+                        tStoreStatisticsTotal.STORE_CODE,
+                        tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
                     )
-                        .from(tas).where(tas.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
-                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
+                        .from(tStoreStatisticsTotal)
+                        .where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
+                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java)))
             }
 
             val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
-            baseStep.where(conditions).orderBy(realSortType)
-        } else {
-            baseStep.where(conditions)
+            baseStep.orderBy(realSortType!!.desc())
         }
-        return baseStep.limit(
-            (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
-            storeInfoQuery.pageSize
-        ).fetch()
+        return baseStep.where(conditions)
+            .limit(
+                (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
+                storeInfoQuery.pageSize
+            ).skipCheck().fetch()
     }
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {
@@ -145,10 +134,13 @@ class MarketStoreQueryDao {
             tStoreBaseFeature.RECOMMEND_FLAG,
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
+            tStoreBase.CREATE_TIME
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
-            .on(tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE)))
+            .on(
+                tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                    .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+            )
     }
 
     private fun formatConditions(
@@ -159,20 +151,30 @@ class MarketStoreQueryDao {
     ): MutableList<Condition> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val conditions = setStoreVisibleCondition(tStoreBase, storeType, storeInfoQuery.queryProjectComponentFlag)
-        val queryProjectComponentFlag = storeInfoQuery.queryProjectComponentFlag
-        val classifyId = storeInfoQuery.classifyId
-        val labelId = storeInfoQuery.labelId
-        conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
+        val tStoreLabelRel = TStoreLabelRel.T_STORE_LABEL_REL
+        val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
+        val tClassify = TClassify.T_CLASSIFY
+        val conditions = mutableListOf<Condition>()
         // 缩减查询范围
-        if (queryProjectComponentFlag || !classifyId.isNullOrBlank() || !labelId.isNullOrBlank()) {
+        if (storeInfoQuery.queryProjectComponentFlag) {
             conditions.add(
-                tStoreBase.STORE_CODE.`in`(getStoreCodesByCondition(
-                dslContext = dslContext,
-                storeType = storeType.type.toByte(),
-                storeInfoQuery = storeInfoQuery
-                ))
+                tStoreBase.ID.`in`(
+                    getStoreIdsByCondition(
+                        dslContext = dslContext,
+                        storeInfoQuery = storeInfoQuery
+                    )
+                )
             )
+        } else {
+            conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
+            conditions.add(tStoreBase.LATEST_FLAG.eq(true))
+        }
+        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+            baseStep.leftJoin(tStoreBaseFeature)
+                .on(
+                    tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                        .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                )
         }
         storeInfoQuery.recommendFlag?.let {
             conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
@@ -180,83 +182,116 @@ class MarketStoreQueryDao {
         storeInfoQuery.rdType?.let {
             conditions.add(tStoreBaseFeature.RD_TYPE.eq(it.name))
         }
-        if (storeInfoQuery.score != null) {
-            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-            val t = dslContext.select(
-                tas.STORE_CODE,
-                tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name),
-                tas.SCORE_AVERAGE
-            ).from(tas).asTable("t")
-            baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field("STORE_CODE", String::class.java)))
+        storeInfoQuery.score?.let {
+            val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+            baseStep.leftJoin(tStoreStatisticsTotal).on(tStoreBase.STORE_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+            conditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte()))
             conditions.add(
-                t.field("SCORE_AVERAGE", BigDecimal::class.java)!!
-                    .ge(BigDecimal.valueOf(storeInfoQuery.score!!.toLong()))
+                tStoreStatisticsTotal.SCORE_AVERAGE.ge(it.toBigDecimal())
             )
-            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType.type.toByte()))
+        }
+        val keyword = storeInfoQuery.keyword
+        if (!keyword.isNullOrEmpty()) {
+            conditions.add(tStoreBase.NAME.contains(keyword).or(tStoreBase.SUMMARY.contains(keyword)))
+        }
+        storeInfoQuery.classifyId?.let {
+            baseStep.leftJoin(tClassify).on(tStoreBase.CLASSIFY_ID.eq(tClassify.ID))
+            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
+        }
+
+        storeInfoQuery.labelId?.let {
+            baseStep.leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
+            conditions.add(tStoreLabelRel.LABEL_ID.eq(it))
+        }
+
+        storeInfoQuery.categoryId?.let {
+            baseStep.leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
+            conditions.add(tStoreCategoryRel.CATEGORY_ID.eq(it))
         }
         return conditions
     }
 
-    private fun getStoreCodesByCondition(
+    private fun getStoreIdsByCondition(
         dslContext: DSLContext,
-        storeType: Byte,
         storeInfoQuery: StoreInfoQuery
     ): SelectConditionStep<Record1<String>> {
         val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
-        val tStoreLabelRel = TStoreLabelRel.T_STORE_LABEL_REL
-        val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
-        val tClassify = TClassify.T_CLASSIFY
-        val selectJoinStep = dslContext.select(tStoreBase.STORE_CODE).from(tStoreBase)
-        val conditions = mutableListOf<Condition>().apply {
-            add(tStoreBase.STORE_TYPE.eq(storeType))
-
+        val selectJoinStep = dslContext.selectDistinct(tStoreBase.ID).from(tStoreBase)
+        val subConditions = mutableListOf<Condition>()
+        subConditions.addAll(setStoreVisibleCondition(tStoreBase, tStoreBaseFeature, tStoreProjectRel, storeInfoQuery))
+        subConditions.apply {
             storeInfoQuery.projectCode?.let {
                 if (storeInfoQuery.queryProjectComponentFlag) {
-                    add(tStoreProjectRel.PROJECT_CODE.eq(it))
-                    selectJoinStep.leftJoin(tStoreProjectRel).on(tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE))
+                    selectJoinStep.leftJoin(tStoreBaseFeature).on(
+                        tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                            .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                    )
+                    selectJoinStep.leftJoin(tStoreProjectRel).on(
+                        tStoreBase.STORE_CODE.eq(tStoreProjectRel.STORE_CODE)
+                            .and(tStoreBase.STORE_TYPE.eq(tStoreProjectRel.STORE_TYPE))
+                    )
+                    subConditions.add(tStoreProjectRel.PROJECT_CODE.eq(it).or(tStoreBaseFeature.PUBLIC_FLAG.eq(true)))
                 }
-            }
-
-            storeInfoQuery.classifyId?.let {
-                add(tClassify.ID.eq(it))
-                selectJoinStep.leftJoin(tClassify).on(tStoreBase.CLASSIFY_ID.eq(tClassify.ID))
-            }
-
-            storeInfoQuery.labelId?.let {
-                add(tStoreLabelRel.LABEL_ID.eq(it))
-                selectJoinStep.leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
-            }
-
-            storeInfoQuery.categoryId?.let {
-                add(tStoreCategoryRel.CATEGORY_ID.eq(it))
-                selectJoinStep.leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
             }
         }
 
-        return selectJoinStep.where(conditions)
+        return selectJoinStep.where(subConditions)
     }
 
     fun setStoreVisibleCondition(
         tStoreBase: TStoreBase,
-        storeType: StoreTypeEnum,
-        queryProjectComponentFlag: Boolean
+        tStoreBaseFeature: TStoreBaseFeature,
+        tStoreProjectRel: TStoreProjectRel,
+        storeInfoQuery: StoreInfoQuery
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
+        val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        if (!queryProjectComponentFlag) {
-            conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
+        if (storeInfoQuery.queryProjectComponentFlag) {
+            var testStoreQueryCondition = storeInfoQuery.testStoreCodes?.let { testStoreCodes ->
+                tStoreBase.STORE_CODE.`in`(testStoreCodes).and(
+                    tStoreBase.STATUS.`in`(
+                        listOf(
+                            StoreStatusEnum.TESTING.name,
+                            StoreStatusEnum.AUDITING.name
+                        )
+                    )
+                )
+            }
+
+            storeInfoQuery.projectCode?.let { projectCode ->
+                testStoreQueryCondition = testStoreQueryCondition?.and(
+                    tStoreProjectRel.PROJECT_CODE.eq(projectCode).or(tStoreBaseFeature.PUBLIC_FLAG.eq(true))
+                )
+            }
+
+            var normalStoreQueryCondition = storeInfoQuery.normalStoreCodes?.let { normalStoreCodes ->
+                tStoreBase.STORE_CODE.`in`(normalStoreCodes).and(
+                    tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name)
+                ).and(
+                    tStoreBase.LATEST_FLAG.eq(true)
+                )
+            }
+
+            storeInfoQuery.projectCode?.let { projectCode ->
+                normalStoreQueryCondition = normalStoreQueryCondition?.and(
+                    tStoreProjectRel.PROJECT_CODE.eq(projectCode).or(tStoreBaseFeature.PUBLIC_FLAG.eq(true))
+                )
+            }
+
+            if (testStoreQueryCondition != null && normalStoreQueryCondition != null) {
+                conditions.add(normalStoreQueryCondition!!.or(testStoreQueryCondition))
+            } else if (testStoreQueryCondition != null) {
+                conditions.add(testStoreQueryCondition!!)
+            } else if (normalStoreQueryCondition != null) {
+                conditions.add(normalStoreQueryCondition!!)
+            }
         } else {
-            conditions.add(
-                tStoreBase.STATUS.`in`(listOf(
-                    StoreStatusEnum.RELEASED.name,
-                    StoreStatusEnum.TESTED.name,
-                    StoreStatusEnum.AUDITING.name
-                ))
-            )
+            conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
+            conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         }
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
     }
 }

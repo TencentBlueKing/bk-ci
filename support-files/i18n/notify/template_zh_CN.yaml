@@ -4,7 +4,7 @@
   templateName: "研发商店插件成员添加模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -26,7 +26,7 @@
   templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
   templateName: "人工审核-reject时发送消息"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "WEWORK_GROUP"
   priority: 0
   source: 0
@@ -46,7 +46,7 @@
   templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
   templateName: "使用模板批量更新流水线的通知模板"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -69,7 +69,7 @@
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
   templateName: "质量红线审核消息模板V2"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 0
   source: 0
@@ -93,7 +93,7 @@
   templateName: "扩展服务发布成功消息通知模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -115,7 +115,7 @@
   templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
   templateName: "store评论消息通知模板"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -131,7 +131,7 @@
   templateName: "执行成功的详情通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -158,7 +158,7 @@
   templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
   templateName: "store评论回复消息通知模板"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -191,9 +191,8 @@
   templateName: "人工审核插件通知"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "WEWORK_GROUP"
-  - "MOA"
   priority: 0
   source: 0
   emailTemplate:
@@ -220,7 +219,7 @@
   templateName: "质量红线消息模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -242,7 +241,7 @@
   templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
   templateName: "镜像执行找不到镜像通知管理员"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   weworkTemplate:
@@ -275,7 +274,7 @@
   templateName: "研发商店镜像通过审核发布"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -297,7 +296,7 @@
   templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
   templateName: "流水线webhook注册失败的通知模板代码"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -313,7 +312,7 @@
   templateName: "模板发布审核被拒消息通知模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -336,7 +335,7 @@
   templateName: "执行失败的通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -364,7 +363,7 @@
   templateName: "模板发布审核通过消息通知模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -387,7 +386,7 @@
   templateName: "质量红线消息模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -409,7 +408,7 @@
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
   templateName: "stage人工审核用于发给触发者"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -459,7 +458,7 @@
   templateName: "执行失败的详情通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -487,7 +486,7 @@
   templateName: "研发商店扩展审核拒绝消息"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -510,7 +509,7 @@
   templateName: "扩展服务发布失败消息通知模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -532,7 +531,7 @@
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
   templateName: "启动的详情通知模板代码"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -556,7 +555,7 @@
   templateName: "研发商店插件成员移除模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -578,7 +577,7 @@
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
   templateName: "启动的通知模板代码"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -602,7 +601,7 @@
   templateName: "执行成功的通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -629,7 +628,7 @@
   templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
   templateName: "构建触发审核通知"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -645,7 +644,7 @@
   templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
   templateName: "流水线TASK暂停通知"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   weworkTemplate:
@@ -661,7 +660,7 @@
   templateName: "质量红线拦截消息模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -683,7 +682,7 @@
   templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: "插件发布审核被拒消息通知模板"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 0
   source: 0
@@ -707,7 +706,7 @@
   templateName: "插件发布审核通过消息通知模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -730,7 +729,7 @@
   templateName: "研发商店镜像审核驳回"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -752,7 +751,7 @@
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
   templateName: "质量红线拦截消息模板V2"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 0
   source: 0
@@ -775,7 +774,7 @@
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
   templateName: "阶段审核通知"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   - "WEWORK_GROUP"
   priority: 1
@@ -797,7 +796,7 @@
   templateName: "插件协作开发申请被拒的消息通知模板"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -819,7 +818,7 @@
   templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
   templateName: "流水线callback禁用通知模板代码"
   notifyTypeScope:
-    - "RTX"
+    - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -926,6 +925,21 @@
   creator: "system"
   modifior: "system"
 - index: 45
+  id: "e166ee7f4dfe4d96b2bb32addc6dd34c"
+  templateCode: "THIRDPART_AGENT_REPEAT_INSTALL"
+  templateName: "第三方构建机重复安装告警"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d18a"
+    sender: "DevOps"
+    title: "项目 ${projectId} 第三方构建机 ${agentId} 存在重复安装可能"
+    body: "原 IP ${oldIp} 新启动 IP ${newIp}\n${url}"
+  creator: "system"
+  modifior: "system"
+- index: 46
   id: "dff46cd92eab458b96b25be0d7a62055"
   templateCode: "STORE_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: "研发商店组件发布审核被拒消息通知模板"
@@ -945,10 +959,10 @@
     id: "34a071f8d22f4edaba56624df3a1aae0"
     sender: "DevOps"
     title: "研发商店组件【${name}】V${version} 审核不通过"
-    body: "研发商店组件【${name}】V${version} 审核不通过"
+    body: "研发商店组件【${name}】V${version} 审核不通过，请修改正确后重新发布"
   creator: "system"
   modifior: "system"
-- index: 46
+- index: 47
   id: "e961fd2ccc1c4f5d8eefaac9d51b1cb1"
   templateCode: "STORE_RELEASE_AUDIT_PASS_TEMPLATE"
   templateName: "研发商店组件发布审核通过消息通知模板"
@@ -968,6 +982,6 @@
     id: "48ba65ca230c46f08c6e3ca2da253ae0"
     sender: "DevOps"
     title: "研发商店组件【${name}】V${version} 审核通过，成功发布"
-    body: "研发商店组件【${name}】V${version} 审核通过，成功发布"
+    body: "研发商店组件【${name}】V${version} 已经审核通过，成功发布"
   creator: "system"
   modifior: "system"

@@ -27,7 +27,9 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
@@ -35,17 +37,23 @@ import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.pojo.common.ListComponentsQuery
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
+@Suppress("TooManyFunctions")
 @Repository
 class StoreBaseQueryDao {
 
@@ -114,6 +122,46 @@ class StoreBaseQueryDao {
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
+        }
+    }
+
+    fun getValidComponentsByCodes(
+        dslContext: DSLContext,
+        storeCodes: Collection<String>,
+        storeType: StoreTypeEnum,
+        testComponentFlag: Boolean
+    ): Result<out Record> {
+        return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf(STORE_CODE.`in`(storeCodes))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            if (testComponentFlag) {
+                val statusEnumList = listOf(
+                    StoreStatusEnum.TESTING,
+                    StoreStatusEnum.AUDITING
+                )
+                conditions.add(STATUS.`in`(statusEnumList))
+                val subQuery = dslContext.select(
+                    STORE_CODE,
+                    STORE_TYPE,
+                    DSL.max(CREATE_TIME).`as`(KEY_CREATE_TIME)
+                ).from(this)
+                    .where(conditions)
+                    .groupBy(STORE_CODE)
+                dslContext.select().from(this)
+                    .join(subQuery)
+                    .on(
+                        STORE_CODE.eq(subQuery.field(STORE_CODE))
+                            .and(STORE_TYPE.eq(subQuery.field(STORE_TYPE)))
+                            .and(CREATE_TIME.eq(subQuery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+                    )
+                    .where(conditions)
+                    .fetch()
+            } else {
+                conditions.add(LATEST_FLAG.eq(true))
+                dslContext.selectFrom(this)
+                    .where(conditions)
+                    .fetch()
+            }
         }
     }
 
@@ -191,38 +239,18 @@ class StoreBaseQueryDao {
         }
     }
 
-    fun countReleaseStoreByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeTepe: StoreTypeEnum,
-        version: String? = null
-    ): Int {
-        with(TStoreBase.T_STORE_BASE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_CODE.eq(storeCode))
-            conditions.add(STORE_TYPE.eq(storeTepe.type.toByte()))
-            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
-            if (version != null) {
-                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
-            }
-            return dslContext.selectCount().from(this)
-                .where(conditions)
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun getComponentIds(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): MutableList<String> {
+    fun getComponentIds(dslContext: DSLContext, storeCode: String, storeType: Byte): MutableList<String> {
         with(TStoreBase.T_STORE_BASE) {
             return dslContext.select(ID)
                 .from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .fetchInto(String::class.java)
         }
     }
 
     fun countComponents(
         dslContext: DSLContext,
-        listComponentsQuery: ListComponentsQuery,
+        queryComponentsParam: QueryComponentsParam,
         classifyId: String?,
         categoryIds: List<String>?,
         labelIds: List<String>?
@@ -230,24 +258,27 @@ class StoreBaseQueryDao {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val baseStep = dslContext.selectCount().from(tStoreBase)
         val conditions = generateListComponentsConditions(
-            listComponentsQuery = listComponentsQuery,
-            classifyId = classifyId,
+            dslContext = dslContext,
+            queryComponentsParam = queryComponentsParam,
             categoryIds = categoryIds,
             labelIds = labelIds,
             baseStep = baseStep
         )
+        classifyId?.let {
+            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
+        }
         return baseStep.where(conditions).fetchOne(0, Int::class.java) ?: 0
     }
 
     fun listComponents(
         dslContext: DSLContext,
-        listComponentsQuery: ListComponentsQuery,
+        queryComponentsParam: QueryComponentsParam,
         classifyId: String?,
         categoryIds: List<String>?,
         labelIds: List<String>?
     ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val sortType = listComponentsQuery.sortType
+        val sortType = queryComponentsParam.sortType
         val baseStep = dslContext.select(
             tStoreBase.ID,
             tStoreBase.STORE_CODE,
@@ -261,49 +292,57 @@ class StoreBaseQueryDao {
             tStoreBase.UPDATE_TIME
         ).from(tStoreBase)
         val conditions = generateListComponentsConditions(
-            listComponentsQuery = listComponentsQuery,
-            classifyId = classifyId,
+            dslContext = dslContext,
+            queryComponentsParam = queryComponentsParam,
             categoryIds = categoryIds,
             labelIds = labelIds,
             baseStep = baseStep
         )
+        classifyId?.let {
+            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
+        }
         if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
-            baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name))
+            baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name)!!.desc())
         } else {
             baseStep.where(conditions)
         }
-        return baseStep.limit(
-            (listComponentsQuery.page - 1) * listComponentsQuery.pageSize,
-            listComponentsQuery.pageSize
-        ).fetch()
+        return baseStep
+            .limit(
+                (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
+                queryComponentsParam.pageSize
+            ).fetch()
+    }
+
+    fun getProcessingComponents(
+        dslContext: DSLContext,
+        conditions: List<Condition>,
+        tStoreBase: TStoreBase
+    ): SelectConditionStep<Record1<String>> {
+        val subQueryCondition = mutableListOf<Condition>()
+        val processingStatusList = StoreStatusEnum.getProcessingStatusList()
+        subQueryCondition.addAll(conditions)
+        subQueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
+        return dslContext.selectDistinct(tStoreBase.STORE_CODE).from(tStoreBase).where(subQueryCondition)
     }
 
     private fun generateListComponentsConditions(
-        listComponentsQuery: ListComponentsQuery,
-        classifyId: String?,
+        dslContext: DSLContext,
+        queryComponentsParam: QueryComponentsParam,
         categoryIds: List<String>?,
         labelIds: List<String>?,
         baseStep: SelectJoinStep<out Record>
     ): MutableList<Condition> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val storeType = StoreTypeEnum.valueOf(listComponentsQuery.storeType)
-        val name = listComponentsQuery.name
+        val storeType = StoreTypeEnum.valueOf(queryComponentsParam.storeType)
+        val name = queryComponentsParam.name
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        listComponentsQuery.type?.let {
+        queryComponentsParam.type?.let {
             conditions.add(tStoreBaseFeature.TYPE.eq(it))
         }
         if (null != name) {
             conditions.add(tStoreBase.NAME.contains(name))
-        }
-        listComponentsQuery.processFlag?.let {
-            val processingStatusList = StoreStatusEnum.getProcessingStatusList()
-            conditions.add(tStoreBase.STATUS.`in`(processingStatusList))
-        }
-        classifyId?.let {
-            conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
         }
         categoryIds?.let {
             val tStoreCategoryRel = TStoreCategoryRel.T_STORE_CATEGORY_REL
@@ -315,24 +354,44 @@ class StoreBaseQueryDao {
             conditions.add(tStoreLabelRel.LABEL_ID.`in`(it))
             baseStep.leftJoin(tStoreLabelRel).on(tStoreBase.ID.eq(tStoreLabelRel.STORE_ID))
         }
+        val processingComponents = getProcessingComponents(
+            dslContext = dslContext,
+            conditions = conditions,
+            tStoreBase = tStoreBase
+        )
+        if (queryComponentsParam.processFlag == true) {
+            conditions.add(
+                tStoreBase.STORE_CODE.`in`(processingComponents)
+            )
+        }
+        if (queryComponentsParam.processFlag == false) {
+            conditions.add(
+                tStoreBase.STORE_CODE.notIn(processingComponents)
+            )
+        }
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         return conditions
     }
 
     fun getMyComponents(
         dslContext: DSLContext,
-        userId: String,
-        storeType: StoreTypeEnum,
-        name: String?,
+        conditions: List<Condition>,
         page: Int,
         pageSize: Int
-    ): Result<out Record>? {
+    ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
-        val conditions = generateGetMyComponentConditions(
-            userId = userId,
-            storeName = name,
-            storeType = storeType
+        val subQuery = dslContext.select(
+            tStoreBase.STORE_CODE,
+            tStoreBase.STORE_TYPE,
+            DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
         )
+            .from(tStoreBase)
+            .join(tStoreMember)
+            .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
+            .where(conditions)
+            .groupBy(tStoreBase.STORE_CODE)
+
         val baseStep = dslContext.select(
             tStoreBase.ID,
             tStoreBase.STORE_CODE,
@@ -348,25 +407,22 @@ class StoreBaseQueryDao {
             .from(tStoreBase)
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
+            .join(subQuery)
+            .on(tStoreBase.STORE_CODE.eq(subQuery.field(tStoreBase.STORE_CODE)))
+            .and(tStoreBase.STORE_TYPE.eq(subQuery.field(tStoreBase.STORE_TYPE)))
+            .and(tStoreBase.CREATE_TIME.eq(subQuery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .where(conditions)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
-        return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        return baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
     }
 
     fun countMyComponents(
         dslContext: DSLContext,
-        userId: String,
-        storeType: StoreTypeEnum,
-        name: String?
+        conditions: List<Condition>
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
-        val conditions = generateGetMyComponentConditions(
-            userId = userId,
-            storeName = name,
-            storeType = storeType
-        )
-        return dslContext.selectCount()
+        return dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE))
             .from(tStoreBase)
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
@@ -374,7 +430,7 @@ class StoreBaseQueryDao {
             .fetchOne(0, Int::class.java) ?: 0
     }
 
-    private fun generateGetMyComponentConditions(
+    fun generateGetMyComponentConditions(
         userId: String,
         storeType: StoreTypeEnum,
         storeName: String?
@@ -383,12 +439,18 @@ class StoreBaseQueryDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
+        val statusList = StoreStatusEnum.values().map { it.name }.toMutableList()
+        statusList.removeAll(StoreStatusEnum.getProcessingStatusList())
+        statusList.add(StoreStatusEnum.INIT.name)
+        conditions.add(
+            tStoreBase.STATUS.`in`(statusList)
+                .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION)))
+        )
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        conditions.add(tStoreMember.USERNAME.eq(userId))
         conditions.add(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
+        conditions.add(tStoreMember.USERNAME.eq(userId))
         return conditions
     }
 
@@ -425,33 +487,15 @@ class StoreBaseQueryDao {
         storeCodeList: List<String>,
         storeType: StoreTypeEnum,
         storeStatusList: List<String>? = null
-    ): Result<out Record> {
+    ): Result<TStoreBaseRecord> {
         with(TStoreBase.T_STORE_BASE) {
-            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.`in`(storeCodeList))
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
             if (storeStatusList != null) {
                 conditions.add(STATUS.`in`(storeStatusList))
             }
-            return dslContext.select(
-                this.ID,
-                this.STORE_CODE,
-                this.NAME,
-                this.STORE_TYPE,
-                this.VERSION,
-                tStoreBaseFeature.PUBLIC_FLAG,
-                this.STATUS,
-                this.LOGO_URL,
-                this.PUBLISHER,
-                this.CLASSIFY_ID,
-            )
-                .from(this)
-                .join(tStoreBaseFeature)
-                .on(
-                    this.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                        .and(this.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
-                )
+            return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }

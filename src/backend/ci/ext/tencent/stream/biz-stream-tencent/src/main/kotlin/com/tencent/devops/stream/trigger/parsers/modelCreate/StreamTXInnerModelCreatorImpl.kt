@@ -35,9 +35,9 @@ import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.yaml.modelCreate.ModelCommon
-import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.creator.ModelCommon
+import com.tencent.devops.process.yaml.creator.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.creator.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job

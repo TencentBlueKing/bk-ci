@@ -84,7 +84,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentDetailInfoById(
                 userId = userId,
                 storeId = storeId,
-                storeType = StoreTypeEnum.valueOf(storeType),
+                storeType = StoreTypeEnum.valueOf(storeType)
             )
         )
     }
@@ -98,10 +98,13 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
     ): Result<List<MarketMainItem>> {
         return storeComponentQueryService.getMainPageComponents(
             userId = userId,
-            storeType = storeType,
-            projectCode = projectCode,
-            page = page,
-            pageSize = pageSize
+            storeInfoQuery = StoreInfoQuery(
+                storeType = storeType,
+                projectCode = projectCode,
+                page = page,
+                pageSize = pageSize,
+                queryProjectComponentFlag = false
+            )
         )
     }
 

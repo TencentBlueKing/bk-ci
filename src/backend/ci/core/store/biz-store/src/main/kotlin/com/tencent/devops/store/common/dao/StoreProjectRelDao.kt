@@ -112,13 +112,23 @@ class StoreProjectRelDao {
         }
     }
 
-    fun countInstalledProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Int {
+    fun countInstalledProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCode: String,
+        storeType: Byte,
+        version: String? = null
+    ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            version?.let {
+                conditions.add(VERSION.eq(version))
+            }
             return dslContext.selectCount().from(this)
-                .where(PROJECT_CODE.eq(projectCode)
-                    .and(STORE_CODE.eq(storeCode))
-                    .and(STORE_TYPE.eq(storeType))
-                )
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -233,12 +243,17 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         projectCode: String,
         storeType: Byte,
+        storeProjectTypes: List<Byte>? = null,
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf(PROJECT_CODE.eq(projectCode))
+            storeProjectTypes?.let {
+                conditions.add(TYPE.`in`(storeProjectTypes))
+            }
             val baseQuery = dslContext.selectFrom(this)
-                .where(PROJECT_CODE.eq(projectCode).and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte())))
+                .where(conditions)
                 .and(STORE_TYPE.eq(storeType))
             if (offset != null && offset >= 0) {
                 baseQuery.offset(offset)

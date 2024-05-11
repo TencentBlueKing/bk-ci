@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.AgentPipelineRefInfo
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,13 +46,13 @@ class AgentPipelineRefService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val pipelineResDao: PipelineResDao
+    private val pipelineResourceDao: PipelineResourceDao
 ) {
     fun updateAgentPipelineRef(userId: String, action: String, projectId: String, pipelineId: String) {
         logger.info("updateAgentPipelineRef, [$userId|$action|$projectId|$pipelineId]")
         var model: Model? = null
         if (action != "delete_pipeline") {
-            val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
+            val modelString = pipelineResourceDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
             if (modelString.isNullOrBlank()) {
                 logger.warn("model not found: [$userId|$action|$projectId|$pipelineId]")
                 return

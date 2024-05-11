@@ -42,7 +42,6 @@ interface StorePipelineService {
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean>
 
-
     /**
      * 运行流水线
      * @param storeRunPipelineParam 运行流水线参数

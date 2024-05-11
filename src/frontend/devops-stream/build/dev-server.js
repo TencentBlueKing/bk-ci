@@ -3,20 +3,20 @@
  * @author Blueking
  */
 
-import path from 'path'
+import bodyParser from 'body-parser'
+import history from 'connect-history-api-fallback'
 import express from 'express'
+import fs from 'fs'
+import proxyMiddleware from 'http-proxy-middleware'
+import https from 'https'
 import open from 'open'
+import path from 'path'
 import webpack from 'webpack'
 import webpackDevMiddleware from 'webpack-dev-middleware'
 import webpackHotMiddleware from 'webpack-hot-middleware'
-import proxyMiddleware from 'http-proxy-middleware'
-import bodyParser from 'body-parser'
-import history from 'connect-history-api-fallback'
-import https from 'https'
-import fs from 'fs'
 
-import devConf from './webpack.dev.conf'
 import config from './config'
+import devConf from './webpack.dev.conf'
 
 const port = process.env.PORT || config.dev.port
 
@@ -28,8 +28,7 @@ const app = express()
 const compiler = webpack(devConf)
 
 const devMiddleware = webpackDevMiddleware(compiler, {
-    publicPath: devConf.output.publicPath,
-    quiet: true
+    publicPath: devConf.output.publicPath
 })
 
 const hotMiddleware = webpackHotMiddleware(compiler, {

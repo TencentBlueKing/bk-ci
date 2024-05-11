@@ -56,7 +56,7 @@ class StoreArchiveServiceImpl @Autowired constructor(
     private val storeBaseEnvManageDao: StoreBaseEnvManageDao,
     private val storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao,
     private val storeCommonService: StoreCommonService
-): StoreArchiveService {
+) : StoreArchiveService {
 
     override fun verifyComponentPackage(
         userId: String,

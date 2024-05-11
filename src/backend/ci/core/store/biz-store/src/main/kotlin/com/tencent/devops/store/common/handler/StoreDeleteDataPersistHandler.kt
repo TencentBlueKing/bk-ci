@@ -43,7 +43,7 @@ class StoreDeleteDataPersistHandler(
     }
 
     override fun execute(handlerRequest: StoreDeleteRequest) {
-        // 清理仓库组件关联文件
+        // 持久化删除组件数据
         storeBaseDeleteService.doStoreDeleteDataPersistent(handlerRequest)
     }
 }

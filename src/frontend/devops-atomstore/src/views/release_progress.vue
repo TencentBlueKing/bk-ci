@@ -48,7 +48,7 @@
                                 <div class="retry-bth">
                                     <span class="test-btn"
                                         v-if="entry.code === 'test' && entry.status === 'doing'">
-                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
+                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}`"> {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>
                                 <bk-button :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"

@@ -45,7 +45,7 @@ import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
@@ -54,12 +54,12 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import java.time.LocalDateTime
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongParameterList")
@@ -189,7 +189,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
                 storeBaseFeatureManageDao.saveStoreBaseFeatureData(context, it)
             }
             if (!storeBaseFeatureExtDataPOs.isNullOrEmpty()) {
-                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
+                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType.type.toByte())
                 storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs)
             }
             if (!storeBaseEnvDataPOs.isNullOrEmpty()) {
@@ -230,10 +230,10 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreSpecBusService {
+    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {
         return SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(storeType)
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
     }
 

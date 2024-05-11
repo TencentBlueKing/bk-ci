@@ -99,7 +99,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val allowUploadFileTypeList = allowUploadLogoTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType)) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT,
+                messageCode = StoreMessageCode.USER_LOGO_TYPE_IS_NOT_SUPPORT,
                 params = arrayOf(fileType, allowUploadLogoTypes),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -124,7 +124,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             if (sizeLimitFlag != false) {
                 if (width != height || width < allowUploadLogoWidth.toInt()) {
                     return I18nUtil.generateResponseDataObject(
-                        StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
+                        StoreMessageCode.USER_LOGO_SIZE_IS_INVALID,
                         arrayOf(allowUploadLogoWidth, allowUploadLogoHeight),
                         language = I18nUtil.getLanguage(userId)
                     )

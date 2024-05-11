@@ -1,23 +1,30 @@
 <template>
-    <div class="record-list" v-if="records.length">
+    <div class="record-list">
         <div class="search-area">
             <input :placeholder="$t('searchForMore')" v-bk-focus="1" :disabled="searching" @compositionstart="handleCompositionStart" @compositionend="handleCompositionEnd" @input="handleInput" v-model.trim="searchValue" />
             <i class="devops-icon icon-search"></i>
         </div>
-        <div class="record-list-searching-icon" v-if="searching">
+        <div v-if="searching" class="record-list-searching-icon">
             <i class="devops-icon icon-circle-2-1 spin-icon" />
         </div>
-        <ul v-else>
+        <ul v-else-if="records.length">
             <li v-for="item in records" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': selectedValue === item[paramName] }" @click.stop="handleRecordClick(item)">
                 {{ item[paramName] }}
             </li>
+        </ul>
+        <ul v-else>
+            <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
         </ul>
     </div>
 </template>
 
 <script>
+    import EmptyException from '@/components/common/exception'
     export default {
         name: 'crumb-records',
+        components: {
+            EmptyException
+        },
         props: {
             records: {
                 type: Array,
@@ -53,6 +60,10 @@
                 if (this.isInputZH) return
                 this.$emit('searchInput', this.searchValue, e)
             },
+            clearFilter () {
+                this.searchValue = ''
+                this.$emit('searchInput', this.searchValue)
+            },
             handleCompositionStart () {
                 this.isInputZH = true
             },
@@ -66,11 +77,11 @@
 <style lang="scss">
     @import '../../scss/mixins/ellipsis';
     @import "../../scss/conf";
-    
+
     .record-list {
         position: absolute;
         background: white;
-        width: 222px;
+        width: 280px;
         border-radius: 2px;
         box-shadow: 0 0 8px 1px rgba(0,0,0,0.1);
         z-index: 100;

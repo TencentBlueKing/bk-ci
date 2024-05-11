@@ -37,6 +37,7 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.service.NodeWebsocketService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -54,7 +55,8 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val nodeWebsocketService: NodeWebsocketService
+    private val nodeWebsocketService: NodeWebsocketService,
+    private val thirdpartyAgentService: ThirdPartAgentService
 ) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 3000)
@@ -85,6 +87,7 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                 ?: return@forEach
 
             val escape = System.currentTimeMillis() - heartbeatTime
+            // 50s
             if (escape > 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
@@ -95,11 +98,10 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                         projectId = record.projectId,
                         status = AgentStatus.IMPORT_EXCEPTION
                     )
-                    thirdPartyAgentDao.addAgentAction(
-                        dslContext = context,
+                    thirdpartyAgentService.addAgentAction(
                         projectId = record.projectId,
                         agentId = record.id,
-                        action = AgentAction.OFFLINE.name
+                        action = AgentAction.OFFLINE
                     )
                     if (record.nodeId == null) {
                         return@transaction

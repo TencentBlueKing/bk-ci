@@ -29,10 +29,10 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.ListComponentsQuery
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
+import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -52,14 +52,18 @@ interface StoreComponentQueryService {
         pageSize: Int
     ): Page<MyStoreComponent>?
 
+    /**
+     * 查询所有流程中组件信息
+     */
     fun listComponents(
         userId: String,
-        listComponentsQuery: ListComponentsQuery
+        queryComponentsParam: QueryComponentsParam
     ): Page<MyStoreComponent>?
 
     /**
      * 根据组件标识获取组件版本列表
      */
+    @Suppress("LongParameterList")
     fun getComponentVersionsByCode(
         userId: String,
         storeType: String,
@@ -92,10 +96,7 @@ interface StoreComponentQueryService {
      */
     fun getMainPageComponents(
         userId: String,
-        storeType: String,
-        projectCode: String?,
-        page: Int,
-        pageSize: Int,
+        storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean = false
     ): Result<List<MarketMainItem>>
 

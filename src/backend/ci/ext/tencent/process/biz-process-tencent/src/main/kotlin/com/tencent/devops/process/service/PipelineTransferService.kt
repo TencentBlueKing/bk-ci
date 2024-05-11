@@ -124,11 +124,11 @@ class PipelineTransferService @Autowired constructor(
                     pipelinesPage.records.forEach { pipeline ->
                         if (channel == "ALL" || pipeline.channelCode.name == channel) {
                             val watcher = Watcher("transfer_$projectId")
-                            val model = pipelineRepositoryService.getModel(
+                            val model = pipelineRepositoryService.getPipelineResourceVersion(
                                 projectId = projectId,
                                 pipelineId = pipeline.pipelineId,
                                 version = pipeline.version
-                            ) ?: return@forEach
+                            )?.model ?: return@forEach
                             val stages = transferStages(
                                 id = pipeline.pipelineId, model = model,
                                 projectId = projectId,
@@ -136,14 +136,16 @@ class PipelineTransferService @Autowired constructor(
                                 targetDispatchType = transferDispatchType.targetDispatchType
                             )
                             try {
-                                if (stages != null && stages.isNotEmpty()) {
+                                if (!stages.isNullOrEmpty()) {
                                     pipelineRepositoryService.deployPipeline(
                                         model = model.copy(stages = stages),
                                         projectId = projectId,
                                         signPipelineId = pipeline.pipelineId,
                                         userId = pipeline.lastModifyUser,
                                         channelCode = pipeline.channelCode,
-                                        create = false
+                                        create = false,
+                                        baseVersion = null,
+                                        yaml = null
                                     )
 
                                     pipelineTransferHistoryDao.save(
@@ -334,11 +336,11 @@ class PipelineTransferService @Autowired constructor(
                     )
                     list.forEach {
                         if (it.log.startsWith("SUCCESS")) {
-                            val sourceModel = pipelineRepositoryService.getModel(
+                            val sourceModel = pipelineRepositoryService.getPipelineResourceVersion(
                                 projectId = projectId,
                                 pipelineId = it.pipelineId,
                                 version = it.sourceVersion
-                            ) ?: return@forEach
+                            )?.model ?: return@forEach
                             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                                 projectId = projectId,
                                 pipelineId = it.pipelineId
@@ -350,7 +352,9 @@ class PipelineTransferService @Autowired constructor(
                                     signPipelineId = it.pipelineId,
                                     userId = pipelineInfo.lastModifyUser,
                                     channelCode = pipelineInfo.channelCode,
-                                    create = false
+                                    create = false,
+                                    baseVersion = null,
+                                    yaml = null
                                 )
 
                                 pipelineTransferHistoryDao.save(

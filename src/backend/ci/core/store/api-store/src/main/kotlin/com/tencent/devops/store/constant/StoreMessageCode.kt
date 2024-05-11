@@ -60,8 +60,8 @@ object StoreMessageCode {
     const val USER_ATOM_RELEASE_STEPS_ERROR = "2120008" // 研发商店：插件发布流程状态变更顺序不正确
     const val USER_ATOM_VERSION_IS_NOT_FINISH = "2120009" // 研发商店：插件{0}的{1}版本发布未结束，请稍后再试
     const val USER_ATOM_VERSION_IS_INVALID = "2120010" // 研发商店：插件升级的版本号{0}错误，应为{1}
-    const val USER_ATOM_LOGO_SIZE_IS_INVALID = "2120011" // 研发商店：插件logo的尺寸应为{0}x{1}
-    const val USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT = "2120012" // 研发商店：logo不支持{0}类型，可以上传{1}类型
+    const val USER_LOGO_SIZE_IS_INVALID = "2120011" // logo的尺寸应为{0}x{1}
+    const val USER_LOGO_TYPE_IS_NOT_SUPPORT = "2120012" // logo不支持{0}类型，可以上传{1}类型
     const val UPLOAD_LOGO_IS_TOO_LARGE = "2120013" // 研发商店：上传的logo文件不能超过{0}
     const val USER_ATOM_CONF_INVALID = "2120014" // 研发商店：插件配置文件{0}格式不正确，请检查
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 研发商店：你不在{0}插件的可见范围之内，请联系插件发布者
@@ -157,19 +157,10 @@ object StoreMessageCode {
     const val STORE_BRANCH_NO_NEW_COMMIT = "2120928" // 代码未变更，分支测试版本生成失败
     const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件[{0}]的[{1}]版本发布未结束，请稍后再试
     const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
-    const val STORE_PROJECT_COMPONENT_NO_PERMISSION= "2120931" // 研发商店：项目[{0}]没有组件[{1}]的使用权限，请先安装组件
-    const val STORE_INSTALL_VALIDATE_FAIL = "2120932" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
-    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120933" // 研发商店：组件仓库文件删除失败
-
-    const val BK_OTHER = "bkOther" // 其他
-    const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job
-    const val BK_IMAGE_STORE_ONLINE = "bkImageStoreOnline" // 容器镜像商店上线，历史镜像数据自动生成
-    const val BK_OLD_VERSION_BUILD_IMAGE = "bkOldVersionBuildImage" // 旧版的构建镜像，通过拷贝为构建镜像入口生成
-    const val BK_AUTOMATICALLY_CONVERTED = "bkAutomaticallyConverted" // 已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
-    const val BK_COPY_FOR_BUILD_IMAGE = "bkCopyForBuildImage" // 旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
-    const val BK_AFTER_IMAGE_STORE_ONLINE = "bkAfterImageStoreOnline" // 容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
-    const val BK_PROJECT_MANAGER_CAN_OPERATION = "bkProjectManagerCanOperation" // 项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
-    const val BK_HISTORY_DATA_MIGRATE_PASS = "bkHistoryDataMigratePass" // historyData数据迁移自动通过
-    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
-    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
+    const val STORE_PROJECT_COMPONENT_NO_PERMISSION = "2120931" // 研发商店：项目[{0}]没有组件[{1}]的使用权限，请先安装组件
+    const val STORE_VERSION_IS_INVALID = "2120932" // 研发商店：组件升级的版本号{0}错误，应为{1}
+    const val STORE_INSTALL_VALIDATE_FAIL = "2120933" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
+    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120934" // 研发商店：组件仓库文件删除失败
+    // 当 queryProjectComponentFlag、installed 或 updateFlag 参数不为空时, projectCode 参数必须非空
+    const val STORE_QUERY_PARAM_CHECK_FAIL = "2120935"
 }

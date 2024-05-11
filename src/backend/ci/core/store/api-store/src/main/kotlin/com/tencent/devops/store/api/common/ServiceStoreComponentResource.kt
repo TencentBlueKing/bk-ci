@@ -63,8 +63,10 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/component/main/page/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     fun getMainPageComponents(
         @Parameter(description = "userId", required = true)
@@ -91,8 +93,10 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/component/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     @Suppress("LongParameterList")
     fun queryComponents(
@@ -161,8 +165,10 @@ interface ServiceStoreComponentResource {
     @GET
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     fun getComponentDetailInfoById(
         @Parameter(description = "userId", required = true)

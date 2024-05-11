@@ -59,7 +59,7 @@ class StoreBaseFeatureExtQueryDao {
     fun queryStoreBaseFeatureExt(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum,
+        storeType: StoreTypeEnum
     ): Result<TStoreBaseFeatureExtRecord> {
         with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
             val conditions = mutableListOf<Condition>()

@@ -42,7 +42,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
@@ -308,8 +307,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             client.get(ServiceStoreResource::class).validateProjectComponentPermission(projectId, storeCode, storeType)
         if (validateResult.isNotOk() || validateResult.data == false) {
             throw ErrorCodeException(
-                errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
-                params = arrayOf(projectId, storeCode)
+                errorCode = validateResult.status.toString(),
+                defaultMessage = validateResult.message
             )
         }
         val storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(

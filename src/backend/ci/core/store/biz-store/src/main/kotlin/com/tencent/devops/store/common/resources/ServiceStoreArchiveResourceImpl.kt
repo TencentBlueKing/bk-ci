@@ -32,7 +32,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.common.service.StoreArchiveService
-import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -81,12 +81,12 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
         osName: String?,
         osArch: String?
     ): Result<List<StorePkgEnvInfo>> {
-        val storeSpecBusService = SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(storeType)
+        val storeReleaseSpecBusService = SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
         return Result(
-            storeSpecBusService.getComponentPkgEnvInfo(
+            storeReleaseSpecBusService.getComponentPkgEnvInfo(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,

@@ -4,7 +4,7 @@
   templateName: "Add templates for atom members of the  store"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -26,7 +26,7 @@
   templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
   templateName: "Manual audit-send message when reject"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "WEWORK_GROUP"
   priority: 0
   source: 0
@@ -46,7 +46,7 @@
   templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
   templateName: "Use templates to batch update notification templates for pipelined"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -69,7 +69,7 @@
   templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
   templateName: "Quality red line audit message template V2"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 0
   source: 0
@@ -93,7 +93,7 @@
   templateName: "Extend the service publish success message notification template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -115,7 +115,7 @@
   templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
   templateName: "Store comment message Notification template"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -131,7 +131,7 @@
   templateName: "Successful execution of details notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -158,7 +158,7 @@
   templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
   templateName: "Store comment reply message notification template"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -191,9 +191,8 @@
   templateName: "Manual audit atom notification"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "WEWORK_GROUP"
-  - "MOA"
   priority: 0
   source: 0
   emailTemplate:
@@ -220,7 +219,7 @@
   templateName: "Quality red line message template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -242,7 +241,7 @@
   templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
   templateName: "Mirror execution cannot find mirror to notify administrator"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   weworkTemplate:
@@ -275,7 +274,7 @@
   templateName: "The  store image is released through audit."
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -297,7 +296,7 @@
   templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
   templateName: "Notification template code for failed registration of pipeline webhook"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -313,7 +312,7 @@
   templateName: "Template release Audit rejected message Notification template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -336,7 +335,7 @@
   templateName: "Failed to execute notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -364,7 +363,7 @@
   templateName: "Template release audit through message notification template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -387,7 +386,7 @@
   templateName: "Quality red line message template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -409,7 +408,7 @@
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
   templateName: "Stage manual audit is used to send triggers"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -459,7 +458,7 @@
   templateName: "Failed execution of details notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -487,7 +486,7 @@
   templateName: " store extended audit rejection message"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -510,7 +509,7 @@
   templateName: "Extension Service publish failure message Notification template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -532,7 +531,7 @@
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
   templateName: "Details notification template code for startup"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -556,7 +555,7 @@
   templateName: "Research and development store atom member remove template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -578,7 +577,7 @@
   templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
   templateName: "Started notification template code"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -602,7 +601,7 @@
   templateName: "Successful execution of notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -629,7 +628,7 @@
   templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
   templateName: "Build trigger audit notification"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 1
   source: 0
@@ -645,7 +644,7 @@
   templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
   templateName: "Pipeline TASK pause Notification"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   weworkTemplate:
@@ -661,7 +660,7 @@
   templateName: "Quality Red Line Intercept message template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -683,7 +682,7 @@
   templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: "The atom publishes an audit rejection message notification template"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 0
   source: 0
@@ -707,7 +706,7 @@
   templateName: "atom release audit through message notification template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -730,7 +729,7 @@
   templateName: "Image audit of  store rejected"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 0
   source: 0
   emailTemplate:
@@ -752,7 +751,7 @@
   templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
   templateName: "Quality Red Line Intercept message template V2"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   priority: 0
   source: 0
@@ -775,7 +774,7 @@
   templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
   templateName: "Phase audit notification"
   notifyTypeScope:
-  - "RTX"
+  - "WEWORK"
   - "EMAIL"
   - "WEWORK_GROUP"
   priority: 1
@@ -797,7 +796,7 @@
   templateName: "atom collaborative development application rejected message notification template"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   priority: 1
   source: 0
   emailTemplate:
@@ -819,7 +818,7 @@
   templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
   templateName: "Pipeline callback disables the notification template code"
   notifyTypeScope:
-    - "RTX"
+    - "WEWORK"
   priority: 0
   source: 0
   weworkTemplate:
@@ -926,6 +925,21 @@
   creator: "system"
   modifior: "system"
 - index: 45
+  id: "e166ee7f4dfe4d96b2bb32addc6dd34c"
+  templateCode: "THIRDPART_AGENT_REPEAT_INSTALL"
+  templateName: "Alarm for repeated installation of third-party build machine"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d18a"
+    sender: "DevOps"
+    title: "Project ${projectId} third-party build machine ${agentId} may be repeatedly installed"
+    body: "Original IP ${oldIp} New IP ${newIp}\n${url}"
+  creator: "system"
+  modifior: "system"
+- index: 46
   id: "dff46cd92eab458b96b25be0d7a62055"
   templateCode: "STORE_RELEASE_AUDIT_REFUSE_TEMPLATE"
   templateName: "The component publishes an audit rejection message notification template"
@@ -945,10 +959,10 @@
     id: "34a071f8d22f4edaba56624df3a1aae0"
     sender: "DevOps"
     title: "The  store component [${name}] V${version} failed the audit"
-    body: "The  store component [${name}] V${version} failed the audit"
+    body: "The  store component [${name}] V${version} failed the audit, please modify it correctly and re-publish it"
   creator: "system"
   modifior: "system"
-- index: 46
+- index: 47
   id: "e961fd2ccc1c4f5d8eefaac9d51b1cb1"
   templateCode: "STORE_RELEASE_AUDIT_PASS_TEMPLATE"
   templateName: "component release audit through message notification template"
@@ -967,7 +981,7 @@
   weworkTemplate:
     id: "48ba65ca230c46f08c6e3ca2da253ae0"
     sender: "DevOps"
-    title: "The  store component [${name}] V${version} has been approved and released successfully"
-    body: "The  store component [${name}] V${version} has been approved and released successfully"
+    title: "The store component [${name}] V${version} has been approved and released successfully"
+    body: "The store component [${name}]V${version} has been reviewed and approved and successfully released"
   creator: "system"
   modifior: "system"

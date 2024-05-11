@@ -4,8 +4,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.pojo.async.AsyncJobPipeline
 import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
 import com.tencent.devops.remotedev.pojo.job.JobRecordStatus
 import com.tencent.devops.remotedev.pojo.job.JobSchemaParam
@@ -14,6 +16,8 @@ import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -23,7 +27,8 @@ class RemoteDevJobActionService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevJobExecRecordDao: RemoteDevJobExecRecordDao,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     // 一键通知云桌面
@@ -43,14 +48,19 @@ class RemoteDevJobActionService @Autowired constructor(
         // TODO: 注册定时任务
     }
 
-    // 执行流水线任务
     fun startPipeline(projectId: String, id: Long, param: PipelineParam) {
+        AsyncExecute.dispatch(rabbitTemplate, AsyncJobPipeline(projectId, id, param))
+    }
+
+    // 执行流水线任务，异步
+    fun doStartPipeline(projectId: String, id: Long, param: PipelineParam) {
         val ips = fetchIpByJobScope(projectId, param)
         // 将ID加到启动参数中，方便流水线执行完后回写
         val mVars = param.variables.toMutableMap()
         mVars[PIPELINE_JOB_CALLBACK_ID] = id.toString()
         mVars[PIPELINE_JOB_IPS] = ips.joinToString(",") { it.substringAfter(".") }
 
+        logger.info("remotedev start pipeline job $id ${param.pipelineId}")
         val res = try {
             client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = param.userId,
@@ -99,5 +109,6 @@ class RemoteDevJobActionService @Autowired constructor(
     companion object {
         private const val PIPELINE_JOB_CALLBACK_ID = "REMOTEDEV_PIPELINE_JOB_CALLBACK_ID"
         private const val PIPELINE_JOB_IPS = "REMOTEDEV_PIPELINE_JOB_IPS"
+        private val logger = LoggerFactory.getLogger(RemoteDevJobActionService::class.java)
     }
 }

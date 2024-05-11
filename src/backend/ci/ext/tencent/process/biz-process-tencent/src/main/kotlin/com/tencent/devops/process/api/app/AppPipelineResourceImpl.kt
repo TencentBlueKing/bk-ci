@@ -97,18 +97,20 @@ class AppPipelineResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode?,
-        materialBranch: List<String>?
+        materialBranch: List<String>?,
+        debugVersion: Int?
     ): Result<Page<AppPipelineHistory>> {
         return Result(
             appPipelineService.listPipelineHistory(
-                userId,
-                projectId,
-                pipelineId,
-                page,
-                pageSize,
-                channelCode ?: ChannelCode.BS,
-                true,
-                materialBranch
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize,
+                channelCode = channelCode ?: ChannelCode.BS,
+                checkPermission = true,
+                materialBranch = materialBranch,
+                debugVersion = debugVersion
             )
         )
     }
@@ -117,10 +119,13 @@ class AppPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        alias: List<String>?
+        alias: List<String>?,
+        debugVersion: Int?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(pipelineBuildFacadeService.getHistoryConditionBranch(userId, projectId, pipelineId, alias))
+        return Result(pipelineBuildFacadeService.getHistoryConditionBranch(
+            userId, projectId, pipelineId, alias, debugVersion
+        ))
     }
 
     override fun getHistoryConditionStatus(
@@ -132,9 +137,16 @@ class AppPipelineResourceImpl @Autowired constructor(
         return Result(pipelineBuildFacadeService.getHistoryConditionStatus(userId, projectId, pipelineId))
     }
 
-    override fun getHistoryConditionRepo(userId: String, projectId: String, pipelineId: String): Result<List<String>> {
+    override fun getHistoryConditionRepo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        debugVersion: Int?
+    ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(pipelineBuildFacadeService.getHistoryConditionRepo(userId, projectId, pipelineId))
+        return Result(pipelineBuildFacadeService.getHistoryConditionRepo(
+            userId, projectId, pipelineId, debugVersion
+        ))
     }
 
     override fun listUserCollect(userId: String, page: Int?, pageSize: Int?): Result<Page<AppPipeline>> {

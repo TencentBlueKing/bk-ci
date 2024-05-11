@@ -65,7 +65,7 @@ import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StorePipelineService
-import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
@@ -208,14 +208,14 @@ class StorePipelineServiceImpl @Autowired constructor(
         val storeCode = storeBaseRecord.storeCode
         val storeType = StoreTypeEnum.getStoreTypeObj(storeBaseRecord.storeType.toInt())
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(dslContext, storeCode, storeType)
-        val storeSpecBusService = SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(storeType)
+        val storeReleaseSpecBusService = SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
         )
         val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
         val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
         // 生成流水线启动参数
-        val startParams = storeSpecBusService.getStoreRunPipelineStartParams(storeRunPipelineParam)
+        val startParams = storeReleaseSpecBusService.getStoreRunPipelineStartParams(storeRunPipelineParam)
         if (null == storePipelineRelRecord) {
             val pipelineModelConfig = businessConfigDao.get(
                 dslContext = dslContext,
@@ -256,7 +256,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                         buildId = buildId
                     )
                 }
-                val storeStatus = storeSpecBusService.getStoreRunPipelineStatus(buildId)
+                val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
                 storeStatus?.let {
                     storeBaseManageDao.updateStoreBaseInfo(
                         dslContext = dslContext,
@@ -312,7 +312,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                     buildId = buildId
                 )
             }
-            val storeStatus = storeSpecBusService.getStoreRunPipelineStatus(buildId)
+            val storeStatus = storeReleaseSpecBusService.getStoreRunPipelineStatus(buildId)
             storeStatus?.let {
                 storeBaseManageDao.updateStoreBaseInfo(
                     dslContext = dslContext,

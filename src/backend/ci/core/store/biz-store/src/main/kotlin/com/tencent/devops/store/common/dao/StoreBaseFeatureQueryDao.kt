@@ -48,16 +48,28 @@ class StoreBaseFeatureQueryDao {
         }
     }
 
-    fun getComponentFeatureDataByCode(
+    fun getComponentPublicFlagInfo(
         dslContext: DSLContext,
-        storeCode: String,
+        storeCodes: List<String>,
         storeType: StoreTypeEnum
-    ): TStoreBaseFeatureRecord? {
+    ): Map<String, Boolean> {
         with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
-            return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
-                .limit(1)
-                .fetchOne()
+            return dslContext.select(STORE_CODE, PUBLIC_FLAG)
+                .from(this)
+                .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetch().intoMap({ it.value1() }, { it.value2() as Boolean })
+        }
+    }
+
+    fun getAllPublicComponent(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum
+    ): List<String> {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            return dslContext.select(STORE_CODE)
+                .from(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()).and(PUBLIC_FLAG.eq(true)))
+                .fetchInto(String::class.java)
         }
     }
 

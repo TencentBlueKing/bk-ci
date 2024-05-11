@@ -3,7 +3,8 @@
         :class="{
             'stage-check-icon': true,
             'pointer': true,
-            [reviewStatausIcon]: true
+            [reviewStatausIcon]: true,
+            'is-readonly-check-icon': !isExecDetail && !editable
         }"
         v-bk-tooltips.top="reviewTooltip"
         @click.stop="handleStageCheckIn"
@@ -28,6 +29,7 @@
         },
         mixins: [localeMixins],
         props: {
+            editable: Boolean,
             stageCheck: Object,
             stageIndex: Number,
             userName: String,
@@ -135,6 +137,10 @@
     z-index: 3;
     
     color: $fontWeightColor;
+
+    &.is-readonly-check-icon {
+        filter: grayscale(100%);
+    }
     &.reviewing {
         color: $primaryColor;
         border-color: $primaryColor;

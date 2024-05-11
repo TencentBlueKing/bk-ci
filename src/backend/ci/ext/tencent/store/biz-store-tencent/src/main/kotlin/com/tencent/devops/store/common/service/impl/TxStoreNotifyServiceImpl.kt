@@ -71,8 +71,8 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
     private lateinit var storeMemberDao: StoreMemberDao
 
 
-    @Value("\${store.storeDetailBaseUrl:#{null}}")
-    private var storeDetailBaseUrl: String = ""
+    @Value("\${devopsGateway.host:#{null}}")
+    private var storeHost: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreNotifyServiceImpl::class.java)
@@ -123,6 +123,11 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
         } else {
             StoreTypeEnum.getStoreType(storeType.toInt()).lowercase()
         }
+        val host = if (storeType == StoreTypeEnum.DEVX.type.toByte()) {
+            storeHost.replace("devops", "developer")
+        } else {
+            storeHost
+        }
         val bodyParams = mapOf(
             NAME to name,
             VERSION to version,
@@ -133,7 +138,7 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
             "versionDesc" to (storeVersionLog.content ?: ""),
             "nameInBody" to name,
             "statusMsg" to baseRecord.statusMsg,
-            "url" to "$storeDetailBaseUrl/$storeDetailDir/$storeCode"
+            "url" to "$host/$storeDetailDir/$storeCode/basicInfo"
         )
         val creator = baseRecord.creator
         val receiver: String = creator

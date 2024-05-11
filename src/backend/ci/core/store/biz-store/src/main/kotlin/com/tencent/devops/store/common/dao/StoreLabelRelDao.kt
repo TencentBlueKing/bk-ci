@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreLabelRel
@@ -63,6 +64,7 @@ class StoreLabelRelDao {
             tStoreLabelRel.STORE_ID.`as`(KEY_ID)
         ).from(tLabel).join(tStoreLabelRel).on(tLabel.ID.eq(tStoreLabelRel.LABEL_ID))
             .where(tStoreLabelRel.STORE_ID.`in`(storeIds))
+            .skipCheck()
             .fetch()
     }
 
@@ -105,6 +107,14 @@ class StoreLabelRelDao {
                     )
             }
             dslContext.batch(addStep).execute()
+        }
+    }
+
+    fun batchDeleteByStoreId(dslContext: DSLContext, storeIds: List<String>) {
+        with(TStoreLabelRel.T_STORE_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(STORE_ID.`in`(storeIds))
+                .execute()
         }
     }
 }

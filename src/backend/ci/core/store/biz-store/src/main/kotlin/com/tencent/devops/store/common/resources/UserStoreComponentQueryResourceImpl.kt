@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserStoreComponentQueryResourceImpl @Autowired constructor(
     private val storeComponentQueryService: StoreComponentQueryService
 ) : UserStoreComponentQueryResource {
+
     override fun getMyComponents(
         userId: String,
         storeType: String,
@@ -93,7 +94,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentDetailInfoById(
                 userId = userId,
                 storeId = storeId,
-                storeType = StoreTypeEnum.valueOf(storeType),
+                storeType = StoreTypeEnum.valueOf(storeType)
             )
         )
     }
@@ -107,7 +108,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentDetailInfoByCode(
                 userId = userId,
                 storeCode = storeCode,
-                storeType = storeType,
+                storeType = storeType
             )
         )
     }
@@ -121,10 +122,14 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
     ): Result<List<MarketMainItem>> {
         return storeComponentQueryService.getMainPageComponents(
             userId = userId,
-            storeType = storeType,
-            projectCode = projectCode,
-            page = page,
-            pageSize = pageSize
+            storeInfoQuery = StoreInfoQuery(
+                storeType = storeType,
+                projectCode = projectCode,
+                page = page,
+                pageSize = pageSize,
+                queryProjectComponentFlag = false
+            ),
+            urlProtocolTrim = true
         )
     }
 
@@ -180,7 +185,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentShowVersionInfo(
                 userId = userId,
                 storeCode = storeCode,
-                storeType = storeType,
+                storeType = storeType
             )
         )
     }
