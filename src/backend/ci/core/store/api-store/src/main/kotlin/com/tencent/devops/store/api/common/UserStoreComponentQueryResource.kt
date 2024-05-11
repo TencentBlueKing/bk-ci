@@ -172,6 +172,9 @@ interface UserStoreComponentQueryResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
+        @Parameter(description = "项目代码", required = false)
+        @QueryParam("projectCode")
+        projectCode: String? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
@@ -181,7 +184,6 @@ interface UserStoreComponentQueryResource {
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 8
     ): Result<List<MarketMainItem>>
-
 
     @Operation(summary = "根据条件查询组件列表")
     @Path("/types/{storeType}/component/list")
@@ -214,6 +216,10 @@ interface UserStoreComponentQueryResource {
         @QueryParam("labelId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         labelId: String?,
+        @Parameter(description = "范畴ID", required = false)
+        @QueryParam("categoryId")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
+        categoryId: String?,
         @Parameter(description = "评分", required = false)
         @QueryParam("score")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)

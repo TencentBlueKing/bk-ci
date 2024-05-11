@@ -36,10 +36,10 @@ import com.tencent.devops.store.common.service.ClassifyService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserTemplateClassifyResourceImpl @Autowired constructor(private val classfiyService: ClassifyService) :
+class UserTemplateClassifyResourceImpl @Autowired constructor(private val classifyService: ClassifyService) :
     UserTemplateClassifyResource {
 
     override fun getAllTemplateClassifys(): Result<List<Classify>> {
-        return classfiyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte())
+        return classifyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte())
     }
 }

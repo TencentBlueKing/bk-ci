@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Schema(title = "组件基本特性数据PO")
 data class StoreBaseFeatureDataPO(

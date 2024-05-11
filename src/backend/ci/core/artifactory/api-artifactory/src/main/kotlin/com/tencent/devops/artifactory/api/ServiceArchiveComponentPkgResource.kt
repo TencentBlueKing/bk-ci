@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
@@ -80,4 +81,20 @@ interface ServiceArchiveComponentPkgResource {
         @QueryParam("osArch")
         osArch: String? = null
     ): Result<String>
+
+    @Operation(summary = "删除组件包文件")
+    @DELETE
+    @Path("/types/{storeType}/file/delete")
+    fun deleteStorePkg(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件代码", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 }

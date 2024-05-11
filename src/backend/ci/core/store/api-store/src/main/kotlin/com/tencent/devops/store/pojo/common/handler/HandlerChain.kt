@@ -28,7 +28,7 @@
 package com.tencent.devops.store.pojo.common.handler
 
 interface HandlerChain<T : HandlerRequest> {
-    
+
     fun handleRequest(handlerRequest: T) {
         nextHandler(handlerRequest)?.doExecute(handlerRequest = handlerRequest, chain = this)
     }

@@ -141,6 +141,8 @@ const val KEY_FINISH_KILL_FLAG = "finishKillFlag"
 const val KEY_INDEX_CODE = "indexCode"
 const val KEY_RELEASE_INFO = "releaseInfo"
 const val KEY_VERSION_INFO = "versionInfo"
+const val KEY_RELEASE_TYPE = "releaseType"
+const val KEY_YAML_FLAG = "yamlFlag"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"

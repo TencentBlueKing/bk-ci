@@ -54,12 +54,12 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import java.time.LocalDateTime
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongParameterList")
@@ -189,7 +189,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
                 storeBaseFeatureManageDao.saveStoreBaseFeatureData(context, it)
             }
             if (!storeBaseFeatureExtDataPOs.isNullOrEmpty()) {
-                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
+                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType.type.toByte())
                 storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs)
             }
             if (!storeBaseEnvDataPOs.isNullOrEmpty()) {

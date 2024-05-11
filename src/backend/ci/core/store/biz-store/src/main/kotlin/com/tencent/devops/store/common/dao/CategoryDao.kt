@@ -35,10 +35,10 @@ import com.tencent.devops.model.store.tables.records.TCategoryRecord
 import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.pojo.common.category.CategoryRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository

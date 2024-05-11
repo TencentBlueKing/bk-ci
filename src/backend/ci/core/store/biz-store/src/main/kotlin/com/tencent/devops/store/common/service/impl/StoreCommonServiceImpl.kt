@@ -39,13 +39,20 @@ import com.tencent.devops.store.common.dao.OperationLogDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.SensitiveConfDao
 import com.tencent.devops.store.common.dao.StoreApproveDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
+import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreCommentDao
 import com.tencent.devops.store.common.dao.StoreCommentPraiseDao
 import com.tencent.devops.store.common.dao.StoreCommentReplyDao
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreEnvVarDao
+import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMediaInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
@@ -55,6 +62,7 @@ import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -76,7 +84,7 @@ import org.springframework.beans.factory.annotation.Autowired
  * since: 2019-07-23
  */
 @Suppress("ALL")
-abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonService {
+abstract class StoreCommonServiceImpl : StoreCommonService {
 
     @Autowired
     lateinit var dslContext: DSLContext
@@ -143,6 +151,30 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
 
     @Autowired
     lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
+
+    @Autowired
+    lateinit var storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao
+
+    @Autowired
+    lateinit var storeLabelRelDao: StoreLabelRelDao
+
+    @Autowired
+    lateinit var storeBaseExtManageDao: StoreBaseExtManageDao
+
+    @Autowired
+    lateinit var storeBaseEnvManageDao: StoreBaseEnvManageDao
+
+    @Autowired
+    lateinit var storeBaseManageDao: StoreBaseManageDao
+
+    @Autowired
+    lateinit var storeBaseFeatureManageDao: StoreBaseFeatureManageDao
+
+    @Autowired
+    lateinit var storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao
+
+    @Autowired
+    lateinit var storeVersionLogDao: StoreVersionLogDao
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
 
@@ -315,6 +347,17 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         storeStatisticDao.deleteStoreStatistic(context, storeCode, storeType)
         storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
         storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
+        storeBaseFeatureManageDao.deleteStoreBaseFeature(context, storeCode, storeType)
+        storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
+        storeVersionLogDao.deleteByStoreCode(context, storeCode, storeType)
+        val storeIds = storeBaseQueryDao.getComponentIds(context, storeCode, storeType)
+        if (storeIds.isNotEmpty()) {
+            storeBaseEnvManageDao.batchDeleteStoreEnvInfo(context, storeIds)
+            storeLabelRelDao.batchDeleteByStoreId(context, storeIds)
+            storeBaseExtManageDao.batchDeleteStoreBaseExtInfo(context, storeIds)
+            storeBaseEnvExtManageDao.batchDeleteStoreEnvExtInfo(context, storeIds)
+        }
+        storeBaseManageDao.deleteByComponentCode(context, storeCode, storeType)
         return true
     }
 

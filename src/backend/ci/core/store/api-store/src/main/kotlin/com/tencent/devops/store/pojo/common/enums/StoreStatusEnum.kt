@@ -51,4 +51,20 @@ enum class StoreStatusEnum {
             language = language
         )
     }
+
+    companion object {
+
+        fun getProcessingStatusList(): List<String> {
+            return listOf(
+                INIT.name,
+                COMMITTING.name,
+                BUILDING.name,
+                BUILD_FAIL.name,
+                CHECKING.name,
+                CHECK_FAIL.name,
+                TESTING.name,
+                AUDITING.name
+            )
+        }
+    }
 }
