@@ -185,7 +185,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             storeComponentQueryService.getComponentShowVersionInfo(
                 userId = userId,
                 storeCode = storeCode,
-                storeType = storeType,
+                storeType = storeType
             )
         )
     }
