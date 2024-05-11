@@ -40,6 +40,7 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.client.TaiUserInfo
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -166,16 +167,19 @@ class RemoteDevSettingDao {
         }
     }
 
-    fun updateTaiUserEmailPhoneInfo(
+    fun updateTaiUserInfo(
         dslContext: DSLContext,
-        userInfo: Map<String, Pair<String, String>>
+        userInfo: Map<String, TaiUserInfo>
     ) {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.batched { c ->
-                userInfo.forEach { (t, u) ->
-                    c.dsl().update(this).set(EMAIL, u.first)
-                        .set(PHONE, u.second)
-                        .where(USER_ID.eq(t))
+                userInfo.forEach { it ->
+                    c.dsl().update(this)
+                        .set(EMAIL, it.value.accountEmail)
+                        .set(PHONE, it.value.phone)
+                        .set(USER_NAME, it.value.accountName)
+                        .set(COMPANY_NAME, it.value.companyTags.joinToString(",") { it.tagName })
+                        .where(USER_ID.eq(it.key))
                         .execute()
                 }
             }

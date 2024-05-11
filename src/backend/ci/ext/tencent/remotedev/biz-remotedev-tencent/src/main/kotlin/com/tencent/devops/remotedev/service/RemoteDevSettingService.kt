@@ -254,15 +254,8 @@ class RemoteDevSettingService @Autowired constructor(
                 (it.value["EMAIL"] as String).isBlank() || (it.value["PHONE"] as String).isBlank() || update
             }
             val taiInfos = taiClient.taiUserInfo(TaiUserInfoRequest(usernames = notInit.keys))
-                .associateBy({
-                    it.username
-                }, { user ->
-                Pair(
-                    user.accountEmail,
-                    user.phone ?: ""
-                    )
-                    })
-            remoteDevSettingDao.updateTaiUserEmailPhoneInfo(dslContext, taiInfos)
+                .associateBy({ it.username }, { it })
+            remoteDevSettingDao.updateTaiUserInfo(dslContext, taiInfos)
             if (taiUsers.size < pageSize) return
             page++
         }
