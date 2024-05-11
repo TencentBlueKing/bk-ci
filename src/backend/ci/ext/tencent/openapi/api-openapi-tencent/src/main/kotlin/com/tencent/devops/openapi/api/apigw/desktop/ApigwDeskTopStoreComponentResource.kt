@@ -95,6 +95,10 @@ interface ApigwDeskTopStoreComponentResource {
         @QueryParam("classifyId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         classifyId: String?,
+        @Parameter(description = "范畴ID", required = false)
+        @QueryParam("categoryId")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
+        categoryId: String?,
         @Parameter(description = "标签ID", required = false)
         @QueryParam("labelId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
