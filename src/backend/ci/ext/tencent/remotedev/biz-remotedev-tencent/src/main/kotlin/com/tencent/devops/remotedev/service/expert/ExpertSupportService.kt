@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service.expert
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -53,21 +54,6 @@ class ExpertSupportService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val rabbitTemplate: RabbitTemplate
 ) {
-    @Value("\${expertsupport.rtxtemplate:#{null}}")
-    val rtxTemplate: String? = null
-
-    @Value("\${expertsupport.rtxAssignTemplate:#{null}}")
-    val rtxAssignTemplate: String? = null
-
-    @Value("\${expertsupport.jumpurl:#{null}}")
-    val jumpUrl: String? = null
-
-    @Value("\${expertsupport.personalWeworkGroupId:#{null}}")
-    val personalWeworkGroupId: String? = null
-
-    @Value("\${expertsupport.weworkGroupId:#{null}}")
-    val weworkGroupId: String? = null
-
     @Suppress("ComplexMethod")
     fun createSupport(
         data: CreateSupportData

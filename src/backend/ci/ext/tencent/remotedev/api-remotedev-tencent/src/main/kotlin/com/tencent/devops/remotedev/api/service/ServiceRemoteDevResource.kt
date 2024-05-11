@@ -255,7 +255,7 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @Parameter(description = "从什么时间起的数据", required = true)
-        @QueryParam(" createLaterTime")
+        @QueryParam("createLaterTime")
         createLaterTime: LocalDateTime
     ): Result<List<SupRecordData>>
 }
