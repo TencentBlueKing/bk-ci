@@ -127,7 +127,7 @@ class StoreBaseQueryDao {
 
     fun getValidComponentsByCodes(
         dslContext: DSLContext,
-        storeCodes: List<String>,
+        storeCodes: Collection<String>,
         storeType: StoreTypeEnum,
         testComponentFlag: Boolean
     ): Result<out Record> {
@@ -136,12 +136,11 @@ class StoreBaseQueryDao {
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
             if (testComponentFlag) {
                 val statusEnumList = listOf(
-                    StoreStatusEnum.RELEASED,
                     StoreStatusEnum.TESTING,
                     StoreStatusEnum.AUDITING
                 )
                 conditions.add(STATUS.`in`(statusEnumList))
-                val subquery = dslContext.select(
+                val subQuery = dslContext.select(
                     STORE_CODE,
                     STORE_TYPE,
                     DSL.max(CREATE_TIME).`as`(KEY_CREATE_TIME)
@@ -149,11 +148,11 @@ class StoreBaseQueryDao {
                     .where(conditions)
                     .groupBy(STORE_CODE)
                 dslContext.select().from(this)
-                    .join(subquery)
+                    .join(subQuery)
                     .on(
-                        STORE_CODE.eq(subquery.field(STORE_CODE))
-                            .and(STORE_TYPE.eq(subquery.field(STORE_TYPE)))
-                            .and(CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+                        STORE_CODE.eq(subQuery.field(STORE_CODE))
+                            .and(STORE_TYPE.eq(subQuery.field(STORE_TYPE)))
+                            .and(CREATE_TIME.eq(subQuery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
                     )
                     .where(conditions)
                     .fetch()
@@ -319,11 +318,11 @@ class StoreBaseQueryDao {
         conditions: List<Condition>,
         tStoreBase: TStoreBase
     ): SelectConditionStep<Record1<String>> {
-        val subqueryCondition = mutableListOf<Condition>()
+        val subQueryCondition = mutableListOf<Condition>()
         val processingStatusList = StoreStatusEnum.getProcessingStatusList()
-        subqueryCondition.addAll(conditions)
-        subqueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
-        return dslContext.selectDistinct(tStoreBase.STORE_CODE).from(tStoreBase).where(subqueryCondition)
+        subQueryCondition.addAll(conditions)
+        subQueryCondition.add(tStoreBase.STATUS.`in`(processingStatusList))
+        return dslContext.selectDistinct(tStoreBase.STORE_CODE).from(tStoreBase).where(subQueryCondition)
     }
 
     private fun generateListComponentsConditions(
@@ -382,7 +381,7 @@ class StoreBaseQueryDao {
     ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
-        val subquery = dslContext.select(
+        val subQuery = dslContext.select(
             tStoreBase.STORE_CODE,
             tStoreBase.STORE_TYPE,
             DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
@@ -408,10 +407,10 @@ class StoreBaseQueryDao {
             .from(tStoreBase)
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
-            .join(subquery)
-            .on(tStoreBase.STORE_CODE.eq(subquery.field(tStoreBase.STORE_CODE)))
-            .and(tStoreBase.STORE_TYPE.eq(subquery.field(tStoreBase.STORE_TYPE)))
-            .and(tStoreBase.CREATE_TIME.eq(subquery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+            .join(subQuery)
+            .on(tStoreBase.STORE_CODE.eq(subQuery.field(tStoreBase.STORE_CODE)))
+            .and(tStoreBase.STORE_TYPE.eq(subQuery.field(tStoreBase.STORE_TYPE)))
+            .and(tStoreBase.CREATE_TIME.eq(subQuery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .where(conditions)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
         return baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()

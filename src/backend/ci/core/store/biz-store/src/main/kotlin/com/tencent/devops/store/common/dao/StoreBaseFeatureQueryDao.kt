@@ -53,7 +53,7 @@ class StoreBaseFeatureQueryDao {
         storeCodes: List<String>,
         storeType: StoreTypeEnum
     ): Map<String, Boolean> {
-        return with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
             return dslContext.select(STORE_CODE, PUBLIC_FLAG)
                 .from(this)
                 .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
@@ -65,7 +65,7 @@ class StoreBaseFeatureQueryDao {
         dslContext: DSLContext,
         storeType: StoreTypeEnum
     ): List<String> {
-        return with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
             return dslContext.select(STORE_CODE)
                 .from(this)
                 .where(STORE_TYPE.eq(storeType.type.toByte()).and(PUBLIC_FLAG.eq(true)))

@@ -37,8 +37,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class StoreInfoQuery(
     @get:Schema(title = "组件类型", required = true)
     val storeType: String,
-    @get:Schema(title = "组件代码列表", required = false)
-    var storeCodes: List<String>? = null,
+    @get:Schema(title = "普通组件代码列表", required = false)
+    var normalStoreCodes: Set<String>? = null,
+    @get:Schema(title = "调试组件代码列表", required = false)
+    var testStoreCodes: Set<String>? = null,
     @get:Schema(title = "项目代码", required = false)
     val projectCode: String? = null,
     @get:Schema(title = "搜索关键字", required = false)
