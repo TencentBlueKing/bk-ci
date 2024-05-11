@@ -95,7 +95,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             replaceWithEmpty = true
                         )
                     }.toMutableSet()
-                    if (!emptyGroup(successSubscription.groups)) {
+                    if (!emptyGroup(successSubscription.groups) && successSubscription.wechatGroupFlag) {
                         logger.info("success notify config group: ${successSubscription.groups}")
                         val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
                             serviceCode = pipelineAuthServiceCode,
@@ -133,7 +133,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             replaceWithEmpty = true
                         )
                     }.toMutableSet()
-                    if (!emptyGroup(failSubscription.groups)) {
+                    if (!emptyGroup(failSubscription.groups) && failSubscription.wechatGroupFlag) {
                         logger.info("fail notify config group: ${failSubscription.groups}")
                         val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
                             serviceCode = pipelineAuthServiceCode,
