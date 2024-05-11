@@ -141,7 +141,6 @@
     .Key-value-nomal {
         .param-item {
             display: flex;
-            // justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 10px;
             > span {
