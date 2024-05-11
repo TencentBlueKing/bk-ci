@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_OS
-import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -701,7 +700,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     ): Page<MarketItem> {
         logger.info(
             "queryComponents:Input:" +
-                    "($userId,${storeInfoQuery.storeType},${storeInfoQuery.page},${storeInfoQuery.pageSize})"
+                "($userId,${storeInfoQuery.storeType},${storeInfoQuery.page},${storeInfoQuery.pageSize})"
         )
         storeInfoQuery.validate()
         // 获取用户组织架构
@@ -750,7 +749,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
-        storeInfoQuery.projectCode?.let {
+        if (storeInfoQuery.queryProjectComponentFlag) {
             handleQueryStoreCodes(storeInfoQuery)
         }
         val count = marketStoreQueryDao.count(
@@ -830,9 +829,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             }
             storeInfoQuery.normalStoreCodes = finalNormalStoreCodes
             storeInfoQuery.testStoreCodes = finalTestStoreCodes
-        } else {
-            storeInfoQuery.normalStoreCodes = normalStoreCodes
-            storeInfoQuery.testStoreCodes = testStoreCodes
         }
     }
 
@@ -997,7 +993,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )?.fieldValue
         return os?.let { JsonUtil.to(it, object : TypeReference<List<String>>() {}) }
     }
-
 
     private fun convertLogoUrl(url: String, urlProtocolTrim: Boolean): String? {
         var logoUrl = StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(url) as? String
