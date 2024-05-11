@@ -79,7 +79,8 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
                 }
 
                 eventType == CodeEventType.MERGE_REQUEST &&
-                        !WebhookUtils.isActionGitTriggerVersion(element.version) -> {
+                        !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                        params.includeMrAction.isNullOrBlank() -> {
                     params.includeMrAction = joinToString(
                         listOf(
                             CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
@@ -90,7 +91,8 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
                 }
 
                 eventType == CodeEventType.PUSH &&
-                        !WebhookUtils.isActionGitTriggerVersion(element.version) -> {
+                        !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                        params.includePushAction.isNullOrBlank() -> {
                     params.includePushAction = joinToString(
                         listOf(
                             CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
