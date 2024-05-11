@@ -23,7 +23,10 @@ data class WorkspaceDesktopNotifyData(
     val userIdList: Set<String>,
     @Parameter(description = "发送消息的数据类型", required = true)
     val dataType: StartMessageDataType,
-    @Parameter(description = "发送的消息，需要base64编码", required = true)
+    @Parameter(
+        description = "发送的消息，复杂消息为html的话需按{sender:\"\"， title:\"\"，content:\"\"} base64编码， 跑马灯消息为普通文本的base64编码",
+        required = true
+    )
     val data: String,
     @Parameter(description = "消息开始时间", required = true)
     val messageStartTime: Long,
