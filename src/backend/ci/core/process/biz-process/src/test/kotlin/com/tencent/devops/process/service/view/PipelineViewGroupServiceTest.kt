@@ -37,13 +37,13 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.spyk
-import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import java.time.LocalDateTime
 
 @SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class])
 class PipelineViewGroupServiceTest : BkCiAbstractTest() {
@@ -69,8 +69,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             objectMapper = objectMapper,
             client = client,
             clientTokenService = clientTokenService,
-            pipelineYamlViewDao = pipelineYamlViewDao,
-            operationLogService = operationLogService
+            operationLogService = operationLogService,
+            pipelineYamlViewDao = pipelineYamlViewDao
         ),
         recordPrivateCalls = true
     )
@@ -266,12 +266,22 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any()) }
             every { self["firstInitMark"](any() as String, any() as Long) } returns "test"
             every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
+            every { pipelineViewGroupDao.listPipelineIdByViewId(anyDslContext(), any(), any()) } returns emptyList()
             justRun {
                 self["initViewGroup"](
                     anyDslContext(),
                     pipelineViewFormCopy,
                     any() as String,
                     any() as Long,
+                    any() as String
+                )
+            }
+            justRun {
+                self["saveGroupOperationLog"](
+                    any() as String,
+                    any() as String,
+                    any() as String,
+                    any() as Boolean,
                     any() as String
                 )
             }
