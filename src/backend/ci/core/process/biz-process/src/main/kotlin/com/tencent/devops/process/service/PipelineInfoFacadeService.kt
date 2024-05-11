@@ -1120,13 +1120,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         operationLogType: OperationLogType,
-        savedSetting: PipelineSetting
+        savedSetting: PipelineSetting,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         val result = pipelineRepositoryService.updateSettingVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            savedSetting = savedSetting
+            savedSetting = savedSetting,
+            updateLastModifyUser = updateLastModifyUser
         )
         operationLogService.addOperationLog(
             userId = userId,
