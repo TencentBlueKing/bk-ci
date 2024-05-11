@@ -767,9 +767,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     private fun handleQueryStoreCodes(
         storeInfoQuery: StoreInfoQuery
     ) {
+        val updateFlag = storeInfoQuery.updateFlag ?: return
         val projectCode = storeInfoQuery.projectCode!!
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
-        val updateFlag = storeInfoQuery.updateFlag
         val normalStoreCodes = mutableSetOf<String>()
         // 查询项目已安裝的组件版本信息
         val installedMap = storeProjectService.getInstalledComponent(
@@ -788,48 +788,46 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val publicComponentList = storeBaseFeatureQueryDao.getAllPublicComponent(dslContext, storeType)
         normalStoreCodes.addAll(publicComponentList)
         testStoreCodes?.let { normalStoreCodes.removeAll(it) }
-        if (updateFlag != null) {
-            val tStoreBase = TStoreBase.T_STORE_BASE
-            // 查询非调试项目组件最新发布版本信息
-            val componentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        // 查询非调试项目组件最新发布版本信息
+        val componentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
+            dslContext = dslContext,
+            storeCodes = normalStoreCodes,
+            storeType = storeType,
+            testComponentFlag = false
+        ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] }).toMutableMap()
+        // 查询调试项目组件最新版本信息
+        val testComponentVersionMap = testStoreCodes?.let { list ->
+            storeBaseQueryDao.getValidComponentsByCodes(
                 dslContext = dslContext,
-                storeCodes = normalStoreCodes,
+                storeCodes = list,
                 storeType = storeType,
-                testComponentFlag = false
-            ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] }).toMutableMap()
-            // 查询调试项目组件最新版本信息
-            val testComponentVersionMap = testStoreCodes?.let { list ->
-                storeBaseQueryDao.getValidComponentsByCodes(
-                    dslContext = dslContext,
-                    storeCodes = list,
-                    storeType = storeType,
-                    testComponentFlag = true
-                ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
-            }
-            testComponentVersionMap?.let { componentVersionMap.putAll(testComponentVersionMap) }
-            // 比较当前安装的版本与组件最新版本
-            val finalNormalStoreCodes = mutableSetOf<String>()
-            val finalTestStoreCodes = mutableSetOf<String>()
-            componentVersionMap.forEach {
-                val storeCode = it.key
-                val version = it.value
-                val installedVersion = installedMap[it.key]
-                val shouldAddStoreCode = if (updateFlag) {
-                    installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
-                } else {
-                    installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
-                }
-                if (shouldAddStoreCode) {
-                    if (testStoreCodes?.contains(storeCode) == true) {
-                        finalTestStoreCodes.add(storeCode)
-                    } else {
-                        finalNormalStoreCodes.add(storeCode)
-                    }
-                }
-            }
-            storeInfoQuery.normalStoreCodes = finalNormalStoreCodes
-            storeInfoQuery.testStoreCodes = finalTestStoreCodes
+                testComponentFlag = true
+            ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
         }
+        testComponentVersionMap?.let { componentVersionMap.putAll(testComponentVersionMap) }
+        // 比较当前安装的版本与组件最新版本
+        val finalNormalStoreCodes = mutableSetOf<String>()
+        val finalTestStoreCodes = mutableSetOf<String>()
+        componentVersionMap.forEach {
+            val storeCode = it.key
+            val version = it.value
+            val installedVersion = installedMap[it.key]
+            val shouldAddStoreCode = if (updateFlag) {
+                installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
+            } else {
+                installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
+            }
+            if (shouldAddStoreCode) {
+                if (testStoreCodes?.contains(storeCode) == true) {
+                    finalTestStoreCodes.add(storeCode)
+                } else {
+                    finalNormalStoreCodes.add(storeCode)
+                }
+            }
+        }
+        storeInfoQuery.normalStoreCodes = finalNormalStoreCodes
+        storeInfoQuery.testStoreCodes = finalTestStoreCodes
     }
 
     private fun doList(
