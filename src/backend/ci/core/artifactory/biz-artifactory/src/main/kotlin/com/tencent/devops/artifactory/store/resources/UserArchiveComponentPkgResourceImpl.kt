@@ -71,7 +71,6 @@ class UserArchiveComponentPkgResourceImpl @Autowired constructor(
 
     override fun getComponentPkgDownloadUrl(
         userId: String,
-        projectId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
@@ -81,7 +80,7 @@ class UserArchiveComponentPkgResourceImpl @Autowired constructor(
         return Result(
             archiveStorePkgService.getComponentPkgDownloadUrl(
                 userId = userId,
-                projectId = projectId,
+                projectId = "",
                 storeType = storeType,
                 storeCode = storeCode,
                 version = version,
