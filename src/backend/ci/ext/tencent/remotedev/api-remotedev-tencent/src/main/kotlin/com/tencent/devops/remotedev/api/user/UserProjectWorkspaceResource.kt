@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
@@ -76,7 +76,7 @@ interface UserProjectWorkspaceResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "工作空间描述", required = true)
-        workspace: ProjectWorkspaceCreate
+        workspace: WindowsWorkspaceCreate
     ): Result<Boolean>
 
     @Operation(summary = "删除工作空间")

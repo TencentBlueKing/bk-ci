@@ -85,6 +85,7 @@ class TaskControl @Autowired constructor(
                 containerIdLock.lock()
                 watcher.start("execute")
                 execute()
+                watcher.start("finish")
             } finally {
                 containerIdLock.unlock()
                 watcher.stop()

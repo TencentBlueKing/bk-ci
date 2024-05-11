@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAuthenticationReq
@@ -61,6 +61,8 @@ class ApigwJobCloudApi {
 
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
+        private const val INTERNAL_SERVER_ERROR_CODE = 1240002
+        private val INTERNAL_SERVER_ERROR_STATUS = javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
 
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
@@ -114,7 +116,10 @@ class ApigwJobCloudApi {
             "[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
                 "body: ${logWithLengthLimit(requestContent)}"
         )
-        return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
+        return getResultFromRes(
+            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers),
+            classOfU
+        )
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, vararg args: U): JobCloudResult<T> {
@@ -137,18 +142,25 @@ class ApigwJobCloudApi {
         try {
             val responseBody = response.body?.string()
             logger.info("[$operationName] response body(origin): ${logWithLengthLimit(responseBody.toString())}")
-            val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody!!)
+            if (responseBody.isNullOrEmpty()) {
+                val responseEmptyErrorMsg = "[$operationName] Job response body is empty."
+                throw CustomException(INTERNAL_SERVER_ERROR_STATUS, responseEmptyErrorMsg)
+            }
+            val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody)
             if (!jobCloudResp.result) {
-                logger.error(
-                    "[$operationName] Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
-                        "Error code: ${jobCloudResp.code}, " +
-                        "Error msg: ${jobCloudResp.message}"
-                )
-                throw RemoteServiceException(
-                    "Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
-                        "Error code: ${jobCloudResp.code}, " +
-                        "Error msg: ${jobCloudResp.message}"
-                )
+                if (null == jobCloudResp.code) {
+                    val jobErrorMsg = "Execute failed! Job response exception."
+                    logger.error("[$operationName] $jobErrorMsg")
+                    throw CustomException(INTERNAL_SERVER_ERROR_STATUS, jobErrorMsg)
+                }
+                val errorMsg = "Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
+                    "Error code: ${jobCloudResp.code}, " +
+                    "Error msg: ${jobCloudResp.message}"
+                logger.error("[$operationName] $errorMsg")
+                if (INTERNAL_SERVER_ERROR_CODE == jobCloudResp.code) {
+                    throw CustomException(INTERNAL_SERVER_ERROR_STATUS, errorMsg)
+                }
+                throw CustomException(javax.ws.rs.core.Response.Status.BAD_REQUEST, errorMsg)
             } else {
                 var jsonData = ""
                 val operationResult: T? =

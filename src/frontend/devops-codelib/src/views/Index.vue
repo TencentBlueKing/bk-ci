@@ -88,7 +88,7 @@
             </bk-button>
             <bk-button
                 theme="success"
-                @click="toApplyPermission"
+                @click="applyPermission"
             >
                 {{ $t('codelib.applyPermission') }}
             </bk-button>
@@ -102,25 +102,25 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import CodeLibDetail from '../components/CodeLibDetail'
-    import CodeLibDialog from '../components/CodeLibDialog'
-    import CodeLibTable from '../components/CodeLibTable'
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import layout from '../components/layout'
-    import {
-        CODE_REPOSITORY_CACHE,
-        CODE_REPOSITORY_SEARCH_VAL,
-        codelibTypes,
-        getCodelibConfig,
-        isGit,
-        isGitLab,
-        isGithub,
-        isP4,
-        isSvn,
-        isTGit
-    } from '../config/'
-    import { getOffset } from '../utils/'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+import CodeLibDetail from '../components/CodeLibDetail'
+import CodeLibDialog from '../components/CodeLibDialog'
+import CodeLibTable from '../components/CodeLibTable'
+import LinkCodeLib from '../components/LinkCodeLib'
+import layout from '../components/layout'
+import {
+    CODE_REPOSITORY_CACHE,
+    CODE_REPOSITORY_SEARCH_VAL,
+    codelibTypes,
+    getCodelibConfig,
+    isGit,
+    isGitLab,
+    isGithub,
+    isP4,
+    isSvn,
+    isTGit
+} from '../config/'
+import { getOffset } from '../utils/'
+import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         name: 'codelib-list',
@@ -229,6 +229,12 @@
                         : 'tgit'
                 this.createCodelib(type, true)
                 this.checkOAuth({ projectId: this.projectId, type })
+                const query = { ...this.$route.query }
+                delete query.userId
+                delete query.resetType
+                this.$router.push({
+                    query
+                })
             }
         },
 
@@ -300,13 +306,6 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
-                this.$router.push({
-                    query: {
-                        ...this.$route.query,
-                        sortBy,
-                        sortType
-                    }
-                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -371,13 +370,10 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                if (sortBy && sortType) {
-                    localStorage.setItem('codelibSortType', sortType)
-                    localStorage.setItem('codelibSortBy', sortBy)
-                } else {
-                    localStorage.removeItem('codelibSortType')
-                    localStorage.removeItem('codelibSortBy')
-                }
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
+                const queryKeys = Object.keys(this.$route?.query || {})
+                if (!queryKeys.length) return
                 this.$router.push({
                     query: {
                         ...this.$route.query,

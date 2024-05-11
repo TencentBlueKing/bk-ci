@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
 import com.tencent.devops.remotedev.cron.WorkspaceCheckJob
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -65,16 +66,6 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.deleteSharedWorkspace(id))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_VIEW)
-    override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
-        // 先获取工作空间信息
-        val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)
-            ?: return Result(false)
-
-        workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
-        return Result(true)
-    }
-
     override fun updateStatus(
         userId: String,
         workspaceName: String,
@@ -88,9 +79,16 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         oldWorkspaceName: String?,
         projectId: String?,
+        ownerType: WorkspaceOwnerType?,
         uid: String
     ): Result<Boolean> {
-        val res = createControl.createWinWorkspaceByVm(userId, oldWorkspaceName, projectId, uid)
+        val res = createControl.createWinWorkspaceByVm(
+            userId = userId,
+            oldWorkspaceName = oldWorkspaceName,
+            projectCode = projectId,
+            ownerType = ownerType,
+            uid = uid
+        )
         return Result(res)
     }
 

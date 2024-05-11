@@ -16,13 +16,17 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
@@ -37,10 +41,10 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
@@ -54,10 +58,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val client: Client,
     private val notifyControl: NotifyControl,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate
 ) : OpProjectWorkspaceResource {
-    private val executor = Executors.newCachedThreadPool()
-
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
         subActionIds = [ActionId.CGS_CREATE]
@@ -73,14 +76,109 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
+        logger.info("op assignWorkspace|$userId|$data")
         // 分配之前先同步下最新的数据
         workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
+        when (data.type) {
+            WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(data, userId, cgsData)
+            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data, cgsData)
+        }
+
+        // 启动流水线完成剩下的分配工作
+        if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
+            return Result(true)
+        }
+
+        try {
+            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+            val cgsIps = data.cgsIds?.map {
+                val hostIdSub = it.split(".")
+                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            }?.toSet()
+            val resIps = mutableSetOf<String>()
+            resIps.addAll(cgsIps ?: emptySet())
+            resIps.addAll(data.ips ?: emptySet())
+
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = data.repoId ?: ""
+                    "localDriver" -> newParam[k] = data.localDriver ?: ""
+                    else -> newParam[k] = v
+                }
+            }
+            AsyncExecute.dispatch(
+                rabbitTemplate, AsyncPipelineEvent(
+                    userId = info.userId ?: userId,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("execute assignWorkspace pipeline error", e)
+        }
+
+        return Result(true)
+    }
+
+    private fun doPipelineConfInfo(
+        cgsIds: List<String>?,
+        ips: List<String>?,
+        repoId: String?,
+        localDriver: String?,
+        userId: String
+    ) {
+        try {
+            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+            val cgsIps = cgsIds?.map {
+                val hostIdSub = it.split(".")
+                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            }?.toSet()
+            val resIps = mutableSetOf<String>()
+            resIps.addAll(cgsIps ?: emptySet())
+            resIps.addAll(ips ?: emptySet())
+
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = repoId ?: ""
+                    "localDriver" -> newParam[k] = localDriver ?: ""
+                    else -> newParam[k] = v
+                }
+            }
+            client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = info.userId ?: userId,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam,
+                channelCode = ChannelCode.BS,
+                buildNo = null,
+                startType = StartType.SERVICE
+            )
+        } catch (e: Exception) {
+            logger.warn("execute assignWorkspace pipeline error", e)
+        }
+    }
+
+    private fun assignProjectWorkspace(
+        data: OpProjectWorkspaceAssignData,
+        userId: String,
+        cgsData: List<EnvironmentResourceData>
+    ) {
+        val projectId = checkNotNull(data.projectId)
         // 增加可以分配的配额
         if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = userId,
-                projectCode = data.projectId,
+                projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
                 enable = null
             )
@@ -98,7 +196,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             if (cgs.machineType in allSpecSize) {
                 windowsResourceConfigService.createOrUpdateSpec(
                     WindowsSpecResInfo(
-                        projectId = data.projectId,
+                        projectId = projectId,
                         size = cgs.machineType.trim(),
                         quota = ((allowSpecSize[cgs.machineType.trim()] ?: 0) + 1)
                     )
@@ -120,14 +218,14 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
                 machineType = cgs.machineType
-            ) ?: return Result(false)
+            ) ?: return
             // 调用CreateControl.asyncCreateWorkspace发起创建
-            createControl.asyncCreateWorkspace(
+            createControl.projectCreateWorkspace(
                 pmUserId = userId,
-                projectId = data.projectId,
+                projectId = projectId,
                 cgsId = cgs.cgsId,
                 autoAssign = false,
-                workspaceCreate = ProjectWorkspaceCreate(
+                workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
                     baseImageId = 0,
@@ -136,48 +234,43 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             )
             Thread.sleep(200)
         }
+    }
 
-        // 启动流水线完成剩下的分配工作
-        if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
-            return Result(true)
-        }
-        executor.execute {
-            try {
-                val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
-                val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-
-                val cgsIps = data.cgsIds?.map {
-                    val hostIdSub = it.split(".")
-                    hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-                }?.toSet()
-                val resIps = mutableSetOf<String>()
-                resIps.addAll(cgsIps ?: emptySet())
-                resIps.addAll(data.ips ?: emptySet())
-
-                val newParam = mutableMapOf<String, String>()
-                info.buildParam.forEach { (k, v) ->
-                    when (v) {
-                        "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                        "repoId" -> newParam[k] = data.repoId ?: ""
-                        "localDriver" -> newParam[k] = data.localDriver ?: ""
-                        else -> newParam[k] = v
-                    }
-                }
-                client.get(ServiceBuildResource::class).manualStartupNew(
-                    userId = info.userId ?: userId,
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam,
-                    channelCode = ChannelCode.BS,
-                    buildNo = null,
-                    startType = StartType.SERVICE
+    private fun assignPersonalWorkspace(
+        data: OpProjectWorkspaceAssignData,
+        cgsData: List<EnvironmentResourceData>
+    ) {
+        val owner = checkNotNull(data.owner)
+        cgsData.forEach { cgs ->
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
+            // 先校验该cgsId是否已被申领分配并运行中
+            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
+            // 审计
+            ActionAuditContext.current()
+                .addInstanceInfo(
+                    cgs.cgsId,
+                    cgs.cgsId,
+                    null,
+                    null
                 )
-            } catch (e: Exception) {
-                logger.warn("execute assignWorkspace pipeline error", e)
-            }
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .scopeId = data.projectId
+            // 再根据机型和地域获取硬件资源配置
+            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
+                machineType = cgs.machineType
+            ) ?: return
+            createControl.loadWorkspaceWithPersonalWindows(
+                userId = owner,
+                workspaceCreate = WindowsWorkspaceCreate(
+                    windowsType = windowsResourceConfigId.size,
+                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
+                    baseImageId = 0,
+                    count = 1
+                ),
+                cgsId = cgs.cgsId
+            )
+            Thread.sleep(200)
         }
-
-        return Result(true)
     }
 
     override fun getProjectWorkspaceList(

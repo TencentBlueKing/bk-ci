@@ -7,6 +7,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -118,6 +119,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         notifyData: WorkspaceNotifyData
     ): Result<Boolean> {
         logger.info("notify workspace|notifyData|$notifyData")
+        if (notifyData.projectId.isNullOrEmpty() && notifyData.ip.isNullOrEmpty() && notifyData.owner.isNullOrEmpty()) {
+            return Result(false)
+        }
         return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
             operator = operator,
             notifyData = notifyData
@@ -159,5 +163,43 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ip = null,
             projectId = null
         )
+    }
+
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
+        logger.info("createPersonalWorkspace $userId|$data")
+        return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
+    }
+
+    override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("deletePersonalWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).deletePersonalWorkspace(userId, workspaceName)
+    }
+
+    override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
+        logger.info("getPersonalWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getPersonalWorkspace(userId, workspaceName)
+    }
+
+    override fun createProjectWorkspace(
+        userId: String,
+        projectId: String,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        logger.info("createProjectWorkspace $userId|$projectId|$data")
+        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(userId, projectId, data)
+    }
+
+    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
+    }
+
+    override fun getProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?> {
+        logger.info("getProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(userId, projectId, workspaceName)
     }
 }

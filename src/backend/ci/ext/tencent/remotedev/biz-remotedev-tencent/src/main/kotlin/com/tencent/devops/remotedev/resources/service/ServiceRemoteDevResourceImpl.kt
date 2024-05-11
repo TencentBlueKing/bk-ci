@@ -5,16 +5,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -28,11 +28,12 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import org.slf4j.LoggerFactory
 import java.net.URLDecoder
-import java.util.concurrent.Executors
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 @RestResource
 @Suppress("ALL")
@@ -41,15 +42,15 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceService: WorkspaceService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val createControl: CreateControl,
+    private val deleteControl: DeleteControl,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val notifyControl: NotifyControl,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val workspaceLoginService: WorkspaceLoginService
+    private val workspaceLoginService: WorkspaceLoginService,
+    private val rabbitTemplate: RabbitTemplate
 ) : ServiceRemoteDevResource {
-    private val executor = Executors.newCachedThreadPool()
-
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
@@ -76,7 +77,7 @@ class ServiceRemoteDevResourceImpl(
         ownerName: String?
     ): Result<List<WeSecProjectWorkspace>> {
         return Result(
-            workspaceService.getProjectWorkspaceList4WeSec(
+            workspaceService.getWorkspaceList4WeSec(
                 projectId = projectId,
                 ip = ip,
                 businessLineName = businessLineName,
@@ -89,7 +90,7 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getProjectWorkspaceIp(ip: String): Result<WeSecProjectWorkspace?> {
         return Result(
-            workspaceService.getProjectWorkspaceList4WeSec(
+            workspaceService.getWorkspaceList4WeSec(
                 projectId = null,
                 ip = ip,
                 hasDepartmentsInfo = true,
@@ -118,9 +119,16 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         oldWorkspaceName: String?,
         projectId: String?,
+        ownerType: WorkspaceOwnerType?,
         uid: String
     ): Result<Boolean> {
-        val res = createControl.createWinWorkspaceByVm(userId, oldWorkspaceName, projectId, uid)
+        val res = createControl.createWinWorkspaceByVm(
+            userId = userId,
+            oldWorkspaceName = oldWorkspaceName,
+            projectCode = projectId,
+            ownerType = ownerType,
+            uid = uid
+        )
         return Result(res)
     }
 
@@ -129,13 +137,14 @@ class ServiceRemoteDevResourceImpl(
         owner: String?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
+        val projectId = checkNotNull(data.projectId)
         workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         // 增加可以分配的配额
         if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = operator,
-                projectCode = data.projectId,
+                projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
                 enable = null
             )
@@ -159,12 +168,12 @@ class ServiceRemoteDevResourceImpl(
                 machineType = cgs.machineType
             ) ?: return Result(false)
             // 调用CreateControl.asyncCreateWorkspace发起创建
-            createControl.asyncCreateWorkspace(
+            createControl.projectCreateWorkspace(
                 pmUserId = owner ?: operator,
-                projectId = data.projectId,
+                projectId = projectId,
                 cgsId = cgs.cgsId,
                 autoAssign = !owner.isNullOrEmpty(),
-                workspaceCreate = ProjectWorkspaceCreate(
+                workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
                     baseImageId = 0,
@@ -177,40 +186,37 @@ class ServiceRemoteDevResourceImpl(
         if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
             return Result(true)
         }
-        executor.execute {
-            try {
-                val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
-                val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+        try {
+            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
-                val cgsIps = data.cgsIds?.map {
-                    val hostIdSub = it.split(".")
-                    hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-                }?.toSet()
-                val resIps = mutableSetOf<String>()
-                resIps.addAll(cgsIps ?: emptySet())
-                resIps.addAll(data.ips ?: emptySet())
+            val cgsIps = data.cgsIds?.map {
+                val hostIdSub = it.split(".")
+                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            }?.toSet()
+            val resIps = mutableSetOf<String>()
+            resIps.addAll(cgsIps ?: emptySet())
+            resIps.addAll(data.ips ?: emptySet())
 
-                val newParam = mutableMapOf<String, String>()
-                info.buildParam.forEach { (k, v) ->
-                    when (v) {
-                        "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                        "repoId" -> newParam[k] = data.repoId ?: ""
-                        "localDriver" -> newParam[k] = data.localDriver ?: ""
-                        else -> newParam[k] = v
-                    }
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = data.repoId ?: ""
+                    "localDriver" -> newParam[k] = data.localDriver ?: ""
+                    else -> newParam[k] = v
                 }
-                client.get(ServiceBuildResource::class).manualStartupNew(
+            }
+            AsyncExecute.dispatch(
+                rabbitTemplate, AsyncPipelineEvent(
                     userId = info.userId ?: operator,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
-                    values = newParam,
-                    channelCode = ChannelCode.BS,
-                    buildNo = null,
-                    startType = StartType.SERVICE
+                    values = newParam
                 )
-            } catch (e: Exception) {
-                logger.warn("execute assignWorkspace pipeline error", e)
-            }
+            )
+        } catch (e: Exception) {
+            logger.warn("execute assignWorkspace pipeline error", e)
         }
         return Result(true)
     }
@@ -225,5 +231,83 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>> {
         return Result(windowsResourceConfigService.getAllType(true, null))
+    }
+
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
+        return Result(createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = null))
+    }
+
+    override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PERSONAL) {
+            logger.warn("delete personal workspace with invalid workspace type: $userId|$workspaceName")
+            return Result(false)
+        }
+        return Result(
+            deleteControl.deleteWorkspace(
+                userId = userId,
+                workspaceName = workspaceName,
+                needPermission = true,
+                checkDeleteImmediately = true
+            )
+        )
+    }
+
+    override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PERSONAL) {
+            logger.warn("get personal workspace with invalid workspace type: $userId|$workspaceName")
+            return Result(null)
+        }
+        return Result(
+            workspaceService.getWorkspaceList4WeSec(
+                workspaceName = workspaceName,
+                notStatus = null
+            ).firstOrNull()
+        )
+    }
+
+    override fun createProjectWorkspace(
+        userId: String,
+        projectId: String,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        return Result(
+            createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = projectId)
+        )
+    }
+
+    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+            logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
+            return Result(false)
+        }
+        return Result(
+            deleteControl.deleteWorkspace(
+                userId = userId,
+                workspaceName = workspaceName,
+                needPermission = true,
+                checkDeleteImmediately = true
+            )
+        )
+    }
+
+    override fun getProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?> {
+        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+            logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
+            return Result(null)
+        }
+        return Result(
+            workspaceService.getWorkspaceList4WeSec(
+                workspaceName = workspaceName,
+                notStatus = null
+            ).firstOrNull()
+        )
     }
 }

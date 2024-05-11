@@ -182,7 +182,7 @@ class PipelineJobBean(
                 }
             }
             if (!find) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!")
+                logger.info("[$pipelineId]|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!")
                 schedulerManager.deleteJob(comboKey)
                 return
             }
@@ -193,7 +193,7 @@ class PipelineJobBean(
             val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineId, scheduledFireTime)
             if (redisLock.tryLock()) {
                 try {
-                    logger.info("[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
+                    logger.info("[$projectId]|$pipelineId|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
                     watcher.start("dispatch")
                     pipelineEventDispatcher.dispatch(
                         PipelineTimerBuildEvent(
@@ -203,13 +203,13 @@ class PipelineJobBean(
                     )
                 } catch (ignored: Exception) {
                     logger.error(
-                        "[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, " +
+                        "[$pipelineId]||PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, " +
                             "e=$ignored"
                     )
                 }
             } else {
                 logger.info(
-                    "[$comboKey]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!"
+                    "[$pipelineId]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!"
                 )
             }
         } finally {

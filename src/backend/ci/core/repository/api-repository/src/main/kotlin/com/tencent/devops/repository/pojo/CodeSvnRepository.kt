@@ -50,7 +50,11 @@ data class CodeSvnRepository(
     @get:Schema(title = "仓库hash id", required = false)
     override val repoHashId: String?,
     @get:Schema(title = "SVN类型", required = false)
-    val svnType: String? = SVN_TYPE_SSH // default is ssh svn type
+    val svnType: String? = SVN_TYPE_SSH, // default is ssh svn type
+    @get:Schema(title = "仓库是否开启pac", required = false)
+    override val enablePac: Boolean? = false,
+    @get:Schema(title = "yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
 
     companion object {

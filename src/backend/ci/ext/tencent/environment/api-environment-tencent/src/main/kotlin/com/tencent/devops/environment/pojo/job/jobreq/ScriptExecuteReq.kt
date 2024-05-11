@@ -19,5 +19,7 @@ data class ScriptExecuteReq(
     @get:Schema(title = "机器执行账号别名", description = "和accountId必须存在一个。同时存在时，accountId优先。")
     val accountAlias: String?,
     @get:Schema(title = "机器执行账号ID", description = "和accountAlias必须存在一个。同时存在时，accountId优先。")
-    val accountId: Long?
+    val accountId: Long?,
+    @get:Schema(title = "自定义作业名称")
+    val taskName: String?
 )

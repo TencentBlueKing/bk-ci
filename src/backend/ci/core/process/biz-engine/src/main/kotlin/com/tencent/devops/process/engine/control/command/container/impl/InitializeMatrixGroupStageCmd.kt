@@ -330,7 +330,8 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
@@ -445,7 +446,8 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {

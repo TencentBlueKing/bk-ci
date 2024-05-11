@@ -176,18 +176,17 @@ const handleToApprovalDetails = (applyId: any) => {
   window.open(`/console/permission/my-apply/${applyId}`, '_blank');
 };
 
-const fetchOperationalList = async () => {
+const fetchOperationalList = async (bgName) => {
   isLoading.value = true;
-  await http.getOperationalList().then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-    isLoading.value = false;
-  });
-};
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  isLoading.value = false;
+}
 
 const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
 
@@ -262,7 +261,7 @@ const handleEnabledProject = () => {
   } else if (enabled) {
     showDisableProjectDialog.value = true
   }
-  
+
 };
 
 /**
@@ -355,7 +354,7 @@ watch(() => projectData.value.approvalStatus, (status) => {
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
-  await fetchOperationalList();
+  await fetchOperationalList(projectData.value.bgName);
 });
 </script>
 

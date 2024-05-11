@@ -16,7 +16,7 @@ export default [{
     children: [
         {
             // 详情
-            path: 'detail/:buildNo/:type?',
+            path: 'detail/:buildNo/:type?/:executeCount?',
             name: 'zyPipelinesDetail',
             components: {
                 header: DetailHeader,
@@ -31,7 +31,7 @@ export default [{
         },
         {
             // 流水线编辑
-            path: 'edit/:tab?',
+            path: 'edit/:version?/:tab?',
             name: 'zyPipelinesEdit',
             meta: {
                 icon: 'pipeline',
@@ -46,7 +46,7 @@ export default [{
         },
         {
             // 流水线执行可选插件
-            path: 'preview',
+            path: 'preview/:version?',
             name: 'zyPipelinesPreview',
             meta: {
                 icon: 'pipeline',

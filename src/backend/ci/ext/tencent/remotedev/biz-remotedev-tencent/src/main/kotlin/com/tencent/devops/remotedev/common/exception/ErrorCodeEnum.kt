@@ -79,17 +79,17 @@ enum class ErrorCodeEnum(
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132014",
-        formatErrorMessage = "The workspace has error and cannot be repaired, please choose to destroy."
+        formatErrorMessage = "The workspace has error , please  try again later or contact O2000."
     ),
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
         errorCode = "2132015",
-        formatErrorMessage = "The errored workspace has been restored to [{0}], please try again."
+        formatErrorMessage = "The errored workspace has been restored to [{0}], please try again later."
     ),
     WORKSPACE_NOT_RUNNING(
         errorType = ErrorType.USER,
         errorCode = "2132016",
-        formatErrorMessage = "Workspace [{0}] is not currently running."
+        formatErrorMessage = "Workspace [{0}] is not currently running,please try again later or contact O2000."
     ),
     CHECK_USER_TICKET_FAIL(
         errorType = ErrorType.USER,
@@ -211,6 +211,16 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132040",
         formatErrorMessage = "request bkvision {0} error {1}"
+    ),
+    REMOTEDEV_JOB_ERROR(
+        errorType = ErrorType.SYSTEM,
+        errorCode = "2132041",
+        formatErrorMessage = "do remotedev job error {1}"
+    ),
+    REQ_TGIT_API_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132042",
+        formatErrorMessage = "request tgit api {0} error {1}"
     );
 
     fun getErrorMessage(): String {
