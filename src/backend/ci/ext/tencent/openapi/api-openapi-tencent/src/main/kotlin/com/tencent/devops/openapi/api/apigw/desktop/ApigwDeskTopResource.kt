@@ -45,7 +45,7 @@ interface ApigwDeskTopResource {
         devxGwToken: String
     ): Result<WeSecProjectWorkspace?>
 
-    // TODO: story_117027293 新增添加通知给云桌面，需要校验发送请求的IP所指定的接受用户和IP所属项目为同一项目用户
+    // story_117027293 新增添加通知给云桌面，需要校验发送请求的IP所指定的接受用户和IP所属项目为同一项目用户
     @Operation(summary = "给云桌面发送消息")
     @POST
     @Path("/message/register")
