@@ -76,11 +76,6 @@
                 list: []
             }
         },
-        watch: {
-            options (val) {
-                this.list = val
-            }
-        },
         created () {
             this.list = this.options || []
         },
@@ -100,6 +95,7 @@
                     })
                 }
                 this.list.splice(this.list.length, 0, ...opts)
+                this.handleChangeOptions('options', this.list)
                 this.batchInput = ''
                 this.validateAllOptions()
             },
