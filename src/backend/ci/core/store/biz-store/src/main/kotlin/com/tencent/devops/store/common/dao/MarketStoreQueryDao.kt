@@ -47,7 +47,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
-import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
