@@ -2,7 +2,7 @@
     <section
         class="pipeline-detail-wrapper"
         @scroll="handlerScroll"
-        v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
+        v-bkloading="{ isLoading: isLoading }"
     >
         <empty-tips
             v-if="hasNoPermission"
@@ -377,6 +377,7 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                
                 if (val) {
                     this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
@@ -436,7 +437,7 @@
 
         beforeDestroy () {
             this.setPipelineDetail(null)
-
+            this.isLoading = false
             webSocketMessage.unInstallWsMessage()
         },
 
