@@ -202,7 +202,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                messageCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
@@ -210,7 +210,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val atomRecords = ideAtomDao.getIdeAtomsByAtomCode(dslContext, atomRecord.atomCode)
-            if (null == atomRecords || atomRecords.isEmpty()) {
+            if (atomRecords.isNullOrEmpty()) {
                 storeMemberDao.deleteAll(context, atomCode, StoreTypeEnum.IDE_ATOM.type.toByte())
             }
             ideAtomDao.deleteIdeAtomById(context, atomId)
