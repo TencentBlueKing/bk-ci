@@ -953,7 +953,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 组件是否已安装
             val installed = projectCode?.let { installedInfoMap?.contains(storeCode) }
             // 是否可更新
-            val updateFlag = (componentUpdateInfo?.contains(storeCode) != false)
+            val updateFlag = (componentUpdateInfo?.contains(storeCode) == true) ||
+                    (installedInfoMap?.keys?.contains(storeCode) != true && componentUpdateInfo?.contains(storeCode) != true)
             val osList = queryComponent(storeId)
             val baseExtResult = storeBaseExtQueryDao.getBaseExtByEnvId(
                 dslContext = dslContext,
