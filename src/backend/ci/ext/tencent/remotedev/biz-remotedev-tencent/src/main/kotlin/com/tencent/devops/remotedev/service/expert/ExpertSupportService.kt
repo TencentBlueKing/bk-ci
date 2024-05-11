@@ -122,7 +122,9 @@ class ExpertSupportService @Autowired constructor(
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
                     "${it.value["USER_NAME"] as String }@${it.value["COMPANY_NAME"] as String }"
-                } else it.key
+                } else {
+                    it.key
+                }
             }
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(data.projectId)
@@ -193,7 +195,8 @@ class ExpertSupportService @Autowired constructor(
                 }
             }
             AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
+                rabbitTemplate,
+                    AsyncPipelineEvent(
                     userId = info.userId ?: "",
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
