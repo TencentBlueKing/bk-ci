@@ -610,11 +610,8 @@
                         startTime: item.startTime ? convertTime(item.startTime) : '--',
                         endTime: item.endTime ? convertTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
-                        executeTime: item.executeTime
-                            ? `${convertMStoString(item.executeTime)} (${item.executeCount ?? 1}/${
-                                item.executeCount ?? 1
-                            })`
-                            : '--',
+                        totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
+                        executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
                         visibleMaterial:
                             Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],
                         sumSize: convertFileSize(sumSize, 'B'),
