@@ -1,6 +1,7 @@
 package com.tencent.devops.openapi.resources.apigw
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
@@ -210,7 +211,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         val records = client.get(ServiceRemoteDevResource::class).fetchExpertSupRecord(
             userId = userId,
             workspaceName = workspaceName,
-            createLaterTime = LocalDateTime.now().minusDays(30)
+            createLaterTimestamp = LocalDateTime.now().minusDays(30).timestamp()
         ).data ?: emptyList()
         return Result(
             SupRecordDataResp(

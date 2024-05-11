@@ -36,11 +36,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -316,9 +314,13 @@ class ExpertSupportService @Autowired constructor(
 
     fun fetchSupRecord(
         workspaceName: String,
-        createLaterTime: LocalDateTime
+        createLaterTimestamp: Long
     ): List<SupRecordData> {
-        val records = expertSupportDao.fetchSupByWorkspaceName(dslContext, workspaceName, createLaterTime)
+        val records = expertSupportDao.fetchSupByWorkspaceName(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            createLaterTime = DateTimeUtil.convertTimestampToLocalDateTime(createLaterTimestamp)
+        )
         return records.map {
             SupRecordData(
                 id = it.id,
@@ -331,7 +333,6 @@ class ExpertSupportService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
-        private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日HH:mm:ss")
         private const val PIPELINE_EXPORT_CONFIG_INFO = "remotedev:createExpSupport.pipelineinfo"
         private const val PIPELINE_QUERY_CGS_PWD = "remotedev:queryCgsPwd.pipelineinfo"
     }

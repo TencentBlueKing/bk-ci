@@ -14,7 +14,6 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import java.time.LocalDateTime
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -256,6 +255,6 @@ interface ServiceRemoteDevResource {
         workspaceName: String,
         @Parameter(description = "从什么时间起的数据", required = true)
         @QueryParam("createLaterTime")
-        createLaterTime: LocalDateTime
+        createLaterTimestamp: Long
     ): Result<List<SupRecordData>>
 }

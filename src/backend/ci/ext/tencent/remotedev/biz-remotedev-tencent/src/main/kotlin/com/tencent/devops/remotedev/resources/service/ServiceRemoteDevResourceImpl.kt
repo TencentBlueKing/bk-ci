@@ -36,7 +36,6 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import java.time.LocalDateTime
 
 @RestResource
 @Suppress("ALL")
@@ -300,9 +299,9 @@ class ServiceRemoteDevResourceImpl(
     override fun fetchExpertSupRecord(
         userId: String,
         workspaceName: String,
-        createLaterTime: LocalDateTime
+        createLaterTimestamp: Long
     ): Result<List<SupRecordData>> {
-        return Result(expertSupportService.fetchSupRecord(workspaceName, createLaterTime))
+        return Result(expertSupportService.fetchSupRecord(workspaceName, createLaterTimestamp))
     }
 
     override fun getProjectWorkspace(
