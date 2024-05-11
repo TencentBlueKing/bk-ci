@@ -178,6 +178,19 @@ class MarketStoreQueryDao {
                 )
         }
         return if (storeInfoQuery.queryProjectComponentFlag && storeCodeInfo != null) {
+            val originalSubquery = dslContext.select(
+                tStoreBase.STORE_CODE,
+                tStoreBase.STORE_TYPE,
+                DSL.max(tStoreBase.CREATE_TIME).`as`(KEY_CREATE_TIME)
+            ).from(tStoreBase)
+            if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+                val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+                subquery.leftJoin(tStoreBaseFeature)
+                    .on(
+                        tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                            .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                    )
+            }
             val firstConditions = formatConditions(
                 dslContext = dslContext,
                 storeType = storeType,
@@ -186,7 +199,7 @@ class MarketStoreQueryDao {
                 queryProjectComponentFlag = false
             )
             keywordCondition?.let { firstConditions.add(it) }
-            val firstQuery = subquery.where(firstConditions).groupBy(tStoreBase.STORE_CODE)
+            val firstQuery = originalSubquery.where(firstConditions).groupBy(tStoreBase.STORE_CODE)
 
             val secondConditions = formatConditions(
                 dslContext = dslContext,
