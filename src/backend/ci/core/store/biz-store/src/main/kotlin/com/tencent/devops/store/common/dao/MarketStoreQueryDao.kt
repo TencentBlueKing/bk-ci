@@ -199,7 +199,7 @@ class MarketStoreQueryDao {
                 queryProjectComponentFlag = false
             )
             keywordCondition?.let { firstConditions.add(it) }
-            val firstQuery = originalSubquery.where(firstConditions).groupBy(tStoreBase.STORE_CODE)
+            val firstQuery = subquery.where(firstConditions).groupBy(tStoreBase.STORE_CODE)
 
             val secondConditions = formatConditions(
                 dslContext = dslContext,
@@ -209,7 +209,7 @@ class MarketStoreQueryDao {
                 queryProjectComponentFlag = true
             )
             keywordCondition?.let { secondConditions.add(it) }
-            val secondQuery = subquery.where(secondConditions).groupBy(tStoreBase.STORE_CODE)
+            val secondQuery = originalSubquery.where(secondConditions).groupBy(tStoreBase.STORE_CODE)
             firstQuery.unionAll(secondQuery)
         } else {
             val conditions = formatConditions(
