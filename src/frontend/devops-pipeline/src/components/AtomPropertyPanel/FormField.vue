@@ -83,7 +83,7 @@
                                         ? descMap.map(item => (
                                             <div>{item}</div>
                                         ))
-                                        : { desc }
+                                        : desc
                                     }
                                     { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
                                 </div>
