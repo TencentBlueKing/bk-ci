@@ -754,11 +754,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType),
                 updateFlag = storeInfoQuery.updateFlag ?: false
             )
-            val publicComponent = storeBaseFeatureQueryDao.getAllPublicComponent(
-                dslContext = dslContext,
-                storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
-            )
-            storeCodeInfo.first.addAll(publicComponent)
+            if(storeInfoQuery.updateFlag != true) {
+                val publicComponent = storeBaseFeatureQueryDao.getAllPublicComponent(
+                    dslContext = dslContext,
+                    storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+                )
+                storeCodeInfo.first.addAll(publicComponent)
+            }
             storeCodeInfo
         } else {
             null
