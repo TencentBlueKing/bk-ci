@@ -41,9 +41,8 @@ class TxDevxMemberServiceImpl @Autowired constructor(
     override fun getStoreName(storeCode: String): String {
         return storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,
-            storeCode =storeCode,
+            storeCode = storeCode,
             storeType = StoreTypeEnum.DEVX
         )?.name ?: ""
     }
-
 }

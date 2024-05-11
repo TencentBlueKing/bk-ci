@@ -74,7 +74,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.codecc.CodeccApi

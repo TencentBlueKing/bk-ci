@@ -70,7 +70,6 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
     @Autowired
     private lateinit var storeMemberDao: StoreMemberDao
 
-
     @Value("\${devopsGateway.host:#{null}}")
     private var storeHost: String = ""
 

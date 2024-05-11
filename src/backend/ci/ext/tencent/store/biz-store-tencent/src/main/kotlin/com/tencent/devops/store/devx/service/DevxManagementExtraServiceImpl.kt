@@ -34,9 +34,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -67,7 +65,7 @@ class DevxManagementExtraServiceImpl @Autowired constructor(
         )
     }
 
-    override fun uninstallComponentParamCheck(
+    override fun uninstallComponentCheck(
         userId: String,
         projectCode: String,
         storeType: String,
