@@ -3,16 +3,11 @@ package com.tencent.devops.remotedev.service.expert
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -24,7 +19,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
@@ -46,7 +40,6 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -138,47 +131,6 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
                 params = arrayOf(record.workspaceName)
             )
-
-        val expiredTime = DateTimeUtil.getFutureDateFromNow(Calendar.HOUR, 1)
-        // 发送企业微信群消息
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-            SendNotifyMessageTemplateRequest(
-                templateCode = rtxTemplate ?: return,
-                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                titleParams = null,
-                bodyParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to
-                            (
-                                    if (record.ownerType == WorkspaceOwnerType.PROJECT) {
-                                        weworkGroupId!!
-                                    } else {
-                                        personalWeworkGroupId!!
-                                    }
-                                    ),
-                    "id" to id.toString(),
-                    "projectId" to
-                            (
-                                    if (record.ownerType == WorkspaceOwnerType.PROJECT) {
-                                        data.projectId + " | " + projectInfo.projectName
-                                    } else {
-                                        "个人云桌面"
-                                    }
-                                    ),
-                    "workspaceName" to data.workspaceName,
-                    "hostIp" to (detail.regionId.toString().plus(":").plus(data.hostIp)),
-                    "userId" to (taiUserCN[data.creator] ?: data.creator),
-                    "content" to data.content,
-                    "url" to jumpUrl.toString(),
-                    "machineType" to data.machineType,
-                    "city" to data.city,
-                    "expiredTime" to
-                            DateTimeUtil.toDateTime(
-                                DateTimeUtil.convertDateToLocalDateTime(expiredTime), "HH:mm:ss"
-                            )
-                ),
-                markdownContent = true
-            )
-        )
 
         // 异步执行流水线完成其他动作
         /**
@@ -334,24 +286,6 @@ class ExpertSupportService @Autowired constructor(
                 supporter = sups
             )
         }
-
-        // 发送认领通知
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-            SendNotifyMessageTemplateRequest(
-                templateCode = rtxAssignTemplate ?: return Pair(true, "通知模板为空"),
-                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                titleParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
-                    "id" to id.toString(),
-                    "userId" to userId,
-                    "time" to LocalDateTime.now().format(dateTimeFormatter)
-                ),
-                bodyParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!
-                ),
-                markdownContent = true
-            )
-        )
 
         return Pair(true, null)
     }
