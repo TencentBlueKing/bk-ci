@@ -518,6 +518,11 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int
     ): PipelineVersionWithModel {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -538,7 +543,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             userId = userId,
-            pipelineInfo = null
+            pipelineInfo = pipelineInfo
         )
         /* 兼容存量数据 */
         model.desc = setting.desc

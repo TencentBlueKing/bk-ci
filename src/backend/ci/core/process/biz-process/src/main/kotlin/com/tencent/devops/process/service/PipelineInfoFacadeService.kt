@@ -1252,7 +1252,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        pipelineInfo: PipelineInfo?
+        pipelineInfo: PipelineInfo
     ): Model {
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -1271,13 +1271,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                 labels.addAll(it.labels)
             }
             model.labels = labels
-            // 如果传空则表示只拿当前版本的配置
-            pipelineInfo?.let {
-                model.name = pipelineInfo.pipelineName
-                model.desc = pipelineInfo.pipelineDesc
-                model.pipelineCreator = pipelineInfo.creator
-                model.latestVersion = pipelineInfo.version
-            }
+            model.name = pipelineInfo.pipelineName
+            model.desc = pipelineInfo.pipelineDesc
+            model.pipelineCreator = pipelineInfo.creator
+            model.latestVersion = pipelineInfo.version
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
