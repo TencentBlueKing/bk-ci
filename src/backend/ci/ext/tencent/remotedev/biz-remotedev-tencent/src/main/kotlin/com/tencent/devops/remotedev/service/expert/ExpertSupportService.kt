@@ -150,11 +150,17 @@ class ExpertSupportService @Autowired constructor(
                 "content" -> newParam[k] = data.content
                 "city" -> newParam[k] = data.city
                 "machineType" -> newParam[k] = data.machineType
+                "createTime" -> newParam[k] = DateTimeUtil.toDateTime(
+                    LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                )
+                "zone" -> newParam[k] = detail.regionId.toString()
+                "workspaceName" -> newParam[k] = data.workspaceName
                 else -> newParam[k] = v
             }
         }
         AsyncExecute.dispatch(
-            rabbitTemplate, AsyncPipelineEvent(
+            rabbitTemplate,
+                AsyncPipelineEvent(
                 userId = info.userId ?: "",
                 projectId = info.projectId,
                 pipelineId = info.pipelineId,
