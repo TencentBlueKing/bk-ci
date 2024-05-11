@@ -1514,5 +1514,6 @@
   "editDraft": "编辑原草稿",
   "thinkthink": "再想想",
   "editCurDraft": "编辑草稿",
-  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式。"
+  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式。",
+  "eventID": "事件ID"
 }

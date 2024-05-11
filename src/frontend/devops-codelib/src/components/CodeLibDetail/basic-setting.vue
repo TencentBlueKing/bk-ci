@@ -338,9 +338,8 @@
             <bk-table
                 :data="syncFailedPipelineList"
             >
-                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath"></bk-table-column>
-                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail">
-                </bk-table-column>
+                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail" show-overflow-tooltip></bk-table-column>
             </bk-table>
             <template slot="footer">
                 <bk-button @click="showSyncFailedDetail = !showSyncFailedDetail">{{ $t('codelib.关闭') }}</bk-button>
