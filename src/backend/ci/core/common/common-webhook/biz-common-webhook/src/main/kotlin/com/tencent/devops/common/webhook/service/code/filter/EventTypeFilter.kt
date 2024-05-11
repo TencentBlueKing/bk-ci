@@ -44,10 +44,13 @@ class EventTypeFilter(
         logger.info(
             "$pipelineId|triggerOnEventType:$triggerOnEventType|eventType:$eventType|eventType filter"
         )
-        // MERGE_REQUEST_ACCEPT本质上是MERGE_REQUEST,仅action不同
-        if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT && triggerOnEventType == CodeEventType.MERGE_REQUEST) {
-            return true
+        return when {
+            eventType == null -> true
+            // MERGE_REQUEST_ACCEPT本质上是MERGE_REQUEST,仅action不同
+            eventType == CodeEventType.MERGE_REQUEST_ACCEPT && triggerOnEventType == CodeEventType.MERGE_REQUEST ->
+                true
+            else ->
+                eventType == triggerOnEventType
         }
-        return eventType == triggerOnEventType
     }
 }

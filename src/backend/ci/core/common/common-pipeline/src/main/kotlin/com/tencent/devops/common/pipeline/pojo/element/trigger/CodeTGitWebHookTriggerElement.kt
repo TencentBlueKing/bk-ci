@@ -175,7 +175,7 @@ data class CodeTGitWebHookTriggerInput(
     @get:Schema(title = "用于排除的user id", required = false)
     val excludeUsers: List<String>? = null,
     @get:Schema(title = "事件类型", required = false)
-    var eventType: CodeEventType?,
+    val eventType: CodeEventType?,
     @get:Schema(title = "是否为block", required = false)
     val block: Boolean? = null,
     @get:Schema(title = "新版的git原子的类型")
