@@ -110,7 +110,7 @@ data class MatrixControlOption(
             try {
                 this.addAll(convertCase(excludeCaseStr))
                 if (this.size > 0) {
-                    result["include"] = this
+                    result["exclude"] = this
                 }
             } catch (e: Exception) {
                 logger.warn("this because of formJSON:${e.message}")

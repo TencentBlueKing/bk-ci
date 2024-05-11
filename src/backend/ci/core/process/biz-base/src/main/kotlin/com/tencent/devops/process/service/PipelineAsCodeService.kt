@@ -27,54 +27,43 @@
 
 package com.tencent.devops.process.service
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineAsCodeService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineSettingDao: PipelineSettingDao
+    private val pipelineSettingDao: PipelineSettingDao,
+    private val pipelineBuildDao: PipelineBuildDao
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineAsCodeService::class.java)
-
-        private const val ENABLE_PIPELINE_AS_CODE_CACHE_MAX_SIZE = 100000L
-        private const val ENABLE_PIPELINE_AS_CODE_EXPIRE_MINUTES = 15L
-        private const val CACHE_KEY_DELIMITER = ":as:code:pipeline:"
-        private fun getPipelineCacheKey(projectId: String, buildId: String) = "$projectId$CACHE_KEY_DELIMITER$buildId"
-        private fun getPipelineIdByCacheKey(cacheKey: String): Pair<String, String> {
-            val split = cacheKey.split(CACHE_KEY_DELIMITER)
-            return Pair(split.first(), split.last())
-        }
-    }
-
-    private val asCodeEnabledCache = Caffeine.newBuilder()
-        .maximumSize(ENABLE_PIPELINE_AS_CODE_CACHE_MAX_SIZE)
-        .expireAfterAccess(ENABLE_PIPELINE_AS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build<String/*projectAndPipelineId*/, Boolean/*enabled*/> { pipelineKey ->
-            val (projectId, pipelineId) = getPipelineIdByCacheKey(pipelineKey)
-            val result = getPipelineAsCodeSettings(projectId, pipelineId)?.enable == true
-            logger.info("[$projectId][$pipelineId]|setEnabledCache|$pipelineKey=$result")
-            result
-        }
 
     fun asCodeEnabled(
         projectId: String,
-        pipelineId: String
-    ) = asCodeEnabledCache.get(getPipelineCacheKey(projectId, pipelineId))
+        pipelineId: String,
+        buildId: String,
+        buildInfo: BuildInfo?
+    ): Boolean? {
+        return getPipelineAsCodeSettings(projectId, pipelineId, buildId, buildInfo)?.enable
+    }
 
-    fun getPipelineAsCodeSettings(projectId: String, pipelineId: String): PipelineAsCodeSettings? {
-        return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-            ?.pipelineAsCodeSettings?.let { self ->
-                JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-            }
+    fun getPipelineAsCodeSettings(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildInfo: BuildInfo?
+    ): PipelineAsCodeSettings? {
+        val settings = pipelineSettingDao.getPipelineAsCodeSettings(
+            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+        )
+//        val info = buildInfo ?: pipelineBuildDao.getBuildInfo(
+//            dslContext, projectId, pipelineId, buildId
+//        )
+//        return settings?.copy(enable = info?.yamlVersion == YamlVersion.V3_0.tag)
+        return settings
     }
 }

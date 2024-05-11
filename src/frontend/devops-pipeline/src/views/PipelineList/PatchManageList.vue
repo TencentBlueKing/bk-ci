@@ -2,19 +2,21 @@
     <main class="pipeline-list-main">
         <h5 class="current-pipeline-group-name">{{currentViewName}}</h5>
         <header class="pipeline-list-main-header">
-            <div>
+            <div class="pipeline-list-main-header-left-area">
                 <bk-button
                     :disabled="!isSelected"
                     @click="togglePatchAddTo"
                 >
                     {{$t('patchAddTo')}}
                 </bk-button>
-                <bk-button
-                    :disabled="!isSelected"
-                    @click="toggleDeleteConfirm"
-                >
-                    {{$t('patchDelete')}}
-                </bk-button>
+                <span v-bk-tooltips="notAllowPatchDeleteTips">
+                    <bk-button
+                        :disabled="!isSelected || isPacGroup"
+                        @click="toggleDeleteConfirm"
+                    >
+                        {{$t('patchDelete')}}
+                    </bk-button>
+                </span>
                 <bk-button class="exit-patch-text-btn" text @click="exitPatch">{{$t('exitPatch')}}</bk-button>
 
             </div>
@@ -24,13 +26,16 @@
                 />
             </div>
         </header>
-        <pipeline-table-view
-            ref="pipelineTable"
-            :fetch-pipelines="getPipelines"
-            :filter-params="filters"
-            @selection-change="handleSelectChange"
-            is-patch-view
-        ></pipeline-table-view>
+        <div class="pipeline-list-box" ref="tableBox">
+            <pipeline-table-view
+                ref="pipelineTable"
+                :fetch-pipelines="getPipelines"
+                :filter-params="filters"
+                :max-height="$refs.tableBox?.offsetHeight"
+                @selection-change="handleSelectChange"
+                is-patch-view
+            />
+        </div>
         <add-to-group-dialog
             is-patch
             :add-to-dialog-show="addToDialogShow"
@@ -49,11 +54,11 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
-    import moment from 'moment'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import moment from 'moment'
+    import { mapActions, mapGetters } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
     export default {
         name: 'patch-manage-list',
@@ -79,8 +84,19 @@
             currentViewName () {
                 return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
             },
+            isPacGroup () {
+                return this.groupMap?.[this.$route.params.viewId]?.pac
+            },
             isSelected () {
                 return this.selected.length > 0
+            },
+            notAllowPatchDeleteTips () {
+                return {
+                    content: this.$t('notAllowPatchDeletePacPipelineTips'),
+                    maxWidth: 360,
+                    disabled: !this.isPacGroup,
+                    delay: [300, 0]
+                }
             }
         },
         created () {
