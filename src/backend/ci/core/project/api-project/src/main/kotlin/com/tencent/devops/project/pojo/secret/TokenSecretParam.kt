@@ -47,7 +47,7 @@ data class TokenSecretParam(
         return this
     }
 
-    override fun decode(aesKey: String) :ISecretParam{
+    override fun decode(aesKey: String): ISecretParam {
         val encodeMap = mutableMapOf<String, String>()
         headers.forEach { (key, value) ->
             encodeMap[key] = SecretParamEncryptUtil.decryptCredential(aesKey, value) ?: ""

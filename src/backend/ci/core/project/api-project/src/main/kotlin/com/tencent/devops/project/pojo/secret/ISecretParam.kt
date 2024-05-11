@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = TokenSecretParam::class, name = TokenSecretParam.classType),
+    JsonSubTypes.Type(value = TokenSecretParam::class, name = TokenSecretParam.classType)
 )
 interface ISecretParam {
     var url: String
