@@ -96,6 +96,7 @@
                 this.handleChange(this.name, params)
             },
             getBranchesList () {
+                if (!this.repoHashId) return
                 this.isLoading = true
                 this.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/buildParam/${this.projectId}/${this.repoHashId}/gitRefs`).then(res => {
                     this.branchesList = res.data

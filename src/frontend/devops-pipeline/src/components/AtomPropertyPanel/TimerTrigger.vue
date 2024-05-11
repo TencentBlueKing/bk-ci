@@ -147,7 +147,7 @@
             toggleCodelibConfig (element, show) {
                 this.isShowCodelibConfig = show
                 if (!show) {
-                    this.handleUpdateElement('repoHashId', this.isShowCodelibConfig)
+                    this.handleUpdateElement('repoHashId', '')
                     this.handleUpdateElement('branches', [])
                     this.handleUpdateElement('noScm', false)
                 }
