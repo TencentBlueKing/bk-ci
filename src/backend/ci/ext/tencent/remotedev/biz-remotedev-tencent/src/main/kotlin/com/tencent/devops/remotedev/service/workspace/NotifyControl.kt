@@ -253,7 +253,7 @@ class NotifyControl @Autowired constructor(
         val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
-                    "${it.value["USER_NAME"] as String }@${it.value["COMPANY_NAME"] as String }"
+                    "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}"
                 } else it.key
             }.values.plus(
                 userIds.filter { !it.contains("@tai") }
