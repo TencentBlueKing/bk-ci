@@ -173,6 +173,9 @@ interface ServiceBuildResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
@@ -221,7 +224,10 @@ interface ServiceBuildResource {
         channelCode: ChannelCode,
         @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<BuildId>
 
     @Operation(summary = "重试流水线-重试或者跳过失败插件")
@@ -495,7 +501,10 @@ interface ServiceBuildResource {
         startUser: List<String>? = null,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
+        @QueryParam("version")
+        debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取构建详情")
@@ -644,6 +653,9 @@ interface ServiceBuildResource {
         @Parameter(description = "状态id", required = false)
         @QueryParam("buildStatus")
         buildStatus: Set<BuildStatus>? = null,
+        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
+        @QueryParam("version")
+        debugVersion: Int? = null,
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<List<String>>
@@ -818,7 +830,10 @@ interface ServiceBuildResource {
         buildNo: Int? = null,
         @Parameter(description = "启动类型", required = false)
         @QueryParam("startType")
-        startType: StartType
+        startType: StartType,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")

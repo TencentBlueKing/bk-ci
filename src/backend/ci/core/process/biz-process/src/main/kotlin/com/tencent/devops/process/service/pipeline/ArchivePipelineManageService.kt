@@ -32,12 +32,12 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
-import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -156,7 +156,7 @@ class ArchivePipelineManageService @Autowired constructor(
     private fun generateArchivedPipelineInfo(
         pipelineRecord: TPipelineInfoRecord,
         pipelineBuildSummaryMap: Map<String, TPipelineBuildSummaryRecord>,
-        pipelineBuildMap: Map<String, TPipelineBuildHistoryRecord>,
+        pipelineBuildMap: Map<String, BuildInfo>,
         pipelineInfos: MutableList<PipelineInfo>
     ) {
         val pipelineInfo = pipelineInfoDao.convert(pipelineRecord, null)!!

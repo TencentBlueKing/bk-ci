@@ -157,10 +157,10 @@ const optionConfigMixin = {
                             id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                             name: this.$t('storeMap.varNotMatch')
                         },
-                        // {
-                        //     id: 'CUSTOM_CONDITION_MATCH',
-                        //     name: this.$t('storeMap.customCondition')
-                        // },
+                        {
+                            id: 'CUSTOM_CONDITION_MATCH',
+                            name: this.$t('storeMap.customCondition')
+                        },
                         {
                             id: 'PARENT_TASK_CANCELED_OR_TIMEOUT',
                             name: this.$t('storeMap.userCancelExec')
@@ -191,10 +191,10 @@ const optionConfigMixin = {
                     rule: {},
                     component: 'vuex-input',
                     default: '',
-                    allowNull: false,
-                    label: this.$t('storeMap.customVar'),
+                    required: true,
+                    label: this.$t('storeMap.customConditionExp'),
                     isHidden: (element) => {
-                        return !(element.additionalOptions && element.additionalOptions.runCondition === 'CUSTOM_CONDITION_MATCH')
+                        return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'
                     }
                 },
                 otherTask: {
@@ -205,25 +205,23 @@ const optionConfigMixin = {
         }
     },
     methods: {
-        getAtomOptionDefault (additionalOptions) {
-            const atomValues = Object.keys(this.ATOM_OPTION).reduce((formProps, key) => {
-                if (typeof additionalOptions[key] !== 'undefined') {
-                    formProps[key] = additionalOptions[key]
-                } else if (this.ATOM_OPTION[key] && typeof this.ATOM_OPTION[key].default === 'object') {
-                    formProps[key] = JSON.parse(JSON.stringify(this.ATOM_OPTION[key].default))
-                } else {
-                    formProps[key] = this.ATOM_OPTION[key].default
+        getAtomOptionDefault (additionalOptions = {}) {
+            Object.entries(this.ATOM_OPTION).forEach(([key, option]) => {
+                if (typeof additionalOptions[key] === 'undefined') {
+                    if (option && typeof option.default === 'object') {
+                        additionalOptions[key] = JSON.parse(JSON.stringify(option.default))
+                    } else {
+                        additionalOptions[key] = option.default
+                    }
                 }
-
-                return formProps
-            }, {})
-
-            atomValues.failControl = [
-                ...(atomValues.continueWhenFailed ? ['continueWhenFailed'] : []),
-                ...(atomValues.retryWhenFailed ? ['retryWhenFailed'] : []),
-                ...(atomValues.manualRetry ? ['MANUAL_RETRY'] : [])
+            })
+            console.log(additionalOptions.failControl)
+            additionalOptions.failControl = [
+                ...(additionalOptions.continueWhenFailed ? ['continueWhenFailed'] : []),
+                ...(additionalOptions.retryWhenFailed ? ['retryWhenFailed'] : []),
+                ...(additionalOptions.manualRetry ? ['MANUAL_RETRY'] : [])
             ]
-            return atomValues
+            return additionalOptions
         }
     }
 }

@@ -71,7 +71,9 @@ class BuildRecordTaskDao {
                 TASK_SEQ,
                 ATOM_CODE,
                 TIMESTAMPS,
-                POST_INFO
+                POST_INFO,
+                START_TIME,
+                END_TIME
             ).also { insert ->
                 records.forEach { record ->
                     insert.values(
@@ -90,7 +92,9 @@ class BuildRecordTaskDao {
                         record.taskSeq,
                         record.atomCode,
                         JsonUtil.toJson(record.timestamps, false),
-                        record.elementPostInfo?.let { JsonUtil.toJson(it, false) }
+                        record.elementPostInfo?.let { JsonUtil.toJson(it, false) },
+                        record.startTime,
+                        record.endTime
                     )
                 }
             }.onDuplicateKeyUpdate()
