@@ -773,14 +773,14 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val normalStoreCodes = mutableSetOf<String>()
         // 查询项目已安裝的组件版本信息
         val installedMap = storeProjectService.getInstalledComponent(
-            projectCode,
-            storeType.type.toByte(),
+            projectCode = projectCode,
+            storeType = storeType.type.toByte(),
             storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte())
         ) ?: emptyMap()
         // 查询项目下关联的调试组件
         val testStoreCodes = storeProjectService.getInstalledComponent(
-            projectCode,
-            storeType.type.toByte(),
+            projectCode = projectCode,
+            storeType = storeType.type.toByte(),
             storeProjectTypes = listOf(StoreProjectTypeEnum.TEST.type.toByte())
         )?.keys?.toSet()
         // 非调试组件列表
