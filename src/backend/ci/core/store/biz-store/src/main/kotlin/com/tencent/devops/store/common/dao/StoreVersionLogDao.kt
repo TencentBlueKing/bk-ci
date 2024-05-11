@@ -32,11 +32,10 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreVersionLogRecord
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreVersionLogDao {
@@ -49,7 +48,8 @@ class StoreVersionLogDao {
         versionContent: String
     ) {
         with(TStoreVersionLog.T_STORE_VERSION_LOG) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 STORE_ID,
                 RELEASE_TYPE,
@@ -100,11 +100,11 @@ class StoreVersionLogDao {
     fun deleteByStoreCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: Byte
     ) {
         val tsb = TStoreBase.T_STORE_BASE
         val storeIds = dslContext.select(tsb.ID).from(tsb)
-            .where(tsb.STORE_CODE.eq(storeCode).and(tsb.STORE_TYPE.eq(storeType.type.toByte()))).fetch()
+            .where(tsb.STORE_CODE.eq(storeCode).and(tsb.STORE_TYPE.eq(storeType))).fetch()
         with(TStoreVersionLog.T_STORE_VERSION_LOG) {
             dslContext.deleteFrom(this)
                 .where(STORE_ID.`in`(storeIds))

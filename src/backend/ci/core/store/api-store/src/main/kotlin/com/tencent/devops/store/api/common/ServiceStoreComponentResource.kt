@@ -63,8 +63,10 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/component/main/page/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     fun getMainPageComponents(
         @Parameter(description = "userId", required = true)
@@ -74,6 +76,9 @@ interface ServiceStoreComponentResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
+        @Parameter(description = "项目代码", required = false)
+        @QueryParam("projectCode")
+        projectCode: String? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
@@ -88,8 +93,10 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/component/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     @Suppress("LongParameterList")
     fun queryComponents(
@@ -115,6 +122,10 @@ interface ServiceStoreComponentResource {
         @QueryParam("labelId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         labelId: String?,
+        @Parameter(description = "范畴ID", required = false)
+        @QueryParam("categoryId")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
+        categoryId: String?,
         @Parameter(description = "评分", required = false)
         @QueryParam("score")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
@@ -154,8 +165,10 @@ interface ServiceStoreComponentResource {
     @GET
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     fun getComponentDetailInfoById(
         @Parameter(description = "userId", required = true)
@@ -173,7 +186,7 @@ interface ServiceStoreComponentResource {
 
     @Operation(summary = "安装组件到项目")
     @POST
-    @Path("/types/{storeType}/component/install")
+    @Path("/component/install")
     fun installComponent(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

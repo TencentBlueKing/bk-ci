@@ -109,4 +109,12 @@ class StoreLabelRelDao {
             dslContext.batch(addStep).execute()
         }
     }
+
+    fun batchDeleteByStoreId(dslContext: DSLContext, storeIds: List<String>) {
+        with(TStoreLabelRel.T_STORE_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(STORE_ID.`in`(storeIds))
+                .execute()
+        }
+    }
 }

@@ -28,12 +28,11 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseFeatureExt
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureExtDataPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreBaseFeatureExtManageDao {
@@ -80,10 +79,10 @@ class StoreBaseFeatureExtManageDao {
         }
     }
 
-    fun deleteStoreBaseFeatureExtInfo(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum) {
+    fun deleteStoreBaseFeatureExtInfo(dslContext: DSLContext, storeCode: String, storeType: Byte) {
         with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
             dslContext.deleteFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .execute()
         }
     }

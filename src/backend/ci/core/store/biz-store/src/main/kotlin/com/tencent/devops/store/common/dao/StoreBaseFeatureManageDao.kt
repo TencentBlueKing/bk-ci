@@ -29,10 +29,10 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureDataPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreBaseFeatureManageDao {
@@ -94,6 +94,15 @@ class StoreBaseFeatureManageDao {
                 .set(WEIGHT, DSL.`when`(DSL.condition(weight != null), weight).otherwise(WEIGHT))
                 .set(MODIFIER, storeBaseFeatureDataPO.modifier)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .execute()
+        }
+    }
+
+    fun deleteStoreBaseFeature(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
                 .execute()
         }
     }

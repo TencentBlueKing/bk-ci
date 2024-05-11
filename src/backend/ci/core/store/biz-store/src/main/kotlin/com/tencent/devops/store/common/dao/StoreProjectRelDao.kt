@@ -33,13 +33,13 @@ import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -243,12 +243,17 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         projectCode: String,
         storeType: Byte,
+        storeProjectTypes: List<Byte>? = null,
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf(PROJECT_CODE.eq(projectCode))
+            storeProjectTypes?.let {
+                conditions.add(TYPE.`in`(storeProjectTypes))
+            }
             val baseQuery = dslContext.selectFrom(this)
-                .where(PROJECT_CODE.eq(projectCode))
+                .where(conditions)
                 .and(STORE_TYPE.eq(storeType))
             if (offset != null && offset >= 0) {
                 baseQuery.offset(offset)
