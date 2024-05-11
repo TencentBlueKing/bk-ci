@@ -57,7 +57,6 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineYamlViewDao: PipelineYamlViewDao = mockk()
     private val operationLogService: PipelineOperationLogService = mockk()
 
-
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
             pipelineViewService = pipelineViewService,
