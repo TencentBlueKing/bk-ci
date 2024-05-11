@@ -43,5 +43,7 @@ data class LatestRunningBuild(
     val taskCount: Int = 0,
     val endTime: LocalDateTime? = null,
     val currentTaskId: String? = null,
-    val currentTaskName: String? = null
+    val currentTaskName: String? = null,
+    val executeCount: Int,
+    val debug: Boolean
 )

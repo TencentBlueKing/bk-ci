@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -40,7 +40,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "TGit事件触发", description = CodeTGitWebHookTriggerElement.classType)
 data class CodeTGitWebHookTriggerElement(
     @get:Schema(title = "任务名称", required = true)
-    override val name: String = "TGit变更触发",
+    override val name: String = "TGit事件触发",
     @get:Schema(title = "id", required = false)
     override var id: String? = null,
     @get:Schema(title = "状态", required = false)
@@ -159,53 +159,57 @@ data class CodeTGitWebHookTriggerData(
 @Schema(title = "TGit事件触发数据")
 data class CodeTGitWebHookTriggerInput(
     @get:Schema(title = "仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @get:Schema(title = "分支名称", required = false)
-    val branchName: String?,
+    val branchName: String? = null,
     @get:Schema(title = "用于排除的分支名", required = false)
-    val excludeBranchName: String?,
+    val excludeBranchName: String? = null,
     @get:Schema(title = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @get:Schema(title = "用于包含的路径", required = false)
-    val includePaths: String?,
+    val includePaths: String? = null,
     @get:Schema(title = "用于排除的路径", required = false)
-    val excludePaths: String?,
+    val excludePaths: String? = null,
     @get:Schema(title = "用户白名单", required = false)
     val includeUsers: List<String>? = null,
     @get:Schema(title = "用于排除的user id", required = false)
-    val excludeUsers: List<String>?,
+    val excludeUsers: List<String>? = null,
     @get:Schema(title = "事件类型", required = false)
     val eventType: CodeEventType?,
     @get:Schema(title = "是否为block", required = false)
-    val block: Boolean?,
+    val block: Boolean? = null,
     @get:Schema(title = "新版的git原子的类型")
-    val repositoryType: RepositoryType? = null,
+    val repositoryType: TriggerRepositoryType? = null,
     @get:Schema(title = "新版的git代码库名")
     val repositoryName: String? = null,
     @get:Schema(title = "tag名称", required = false)
     val tagName: String? = null,
     @get:Schema(title = "用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
+    @get:Schema(title = "tag从哪条分支创建", required = false)
+    val fromBranches: String? = null,
     @get:Schema(title = "用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
     @get:Schema(title = "用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
-    @get:Schema(title = "tag从哪条分支创建", required = false)
-    val fromBranches: String? = null,
+    @get:Schema(title = "webhook队列", required = false)
+    val webhookQueue: Boolean? = false,
     @get:Schema(title = "code review 状态", required = false)
     val includeCrState: List<String>? = null,
+    @get:Schema(title = "code review 类型", required = false)
+    val includeCrTypes: List<String>? = null,
     @get:Schema(title = "code note comment", required = false)
     val includeNoteComment: String? = null,
     @get:Schema(title = "code note 类型", required = false)
     val includeNoteTypes: List<String>? = null,
-    @get:Schema(title = "issue事件action")
-    val includeIssueAction: List<String>? = null,
     @get:Schema(title = "是否启用回写")
     val enableCheck: Boolean? = true,
+    @get:Schema(title = "issue事件action")
+    val includeIssueAction: List<String>? = null,
     @get:Schema(title = "mr事件action")
     val includeMrAction: List<String>? = null,
     @get:Schema(title = "push事件action")
     val includePushAction: List<String>? = null,
-    @get:Schema(title = "webhook队列", required = false)
-    val webhookQueue: Boolean? = false
+    @get:Schema(title = "是否启用第三方过滤")
+    val enableThirdFilter: Boolean? = false
 )

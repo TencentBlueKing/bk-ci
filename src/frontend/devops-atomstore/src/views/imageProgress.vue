@@ -26,7 +26,7 @@
                                 </span>
                                 <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo'" @click.stop="readLog"> {{ $t('store.日志') }} </span>
                                 <span class="test-btn" v-if="entry.code === 'test' && entry.status === 'doing'">
-                                    <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
+                                    <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}`"> {{ $t('store.测试') }} </a>
                                 </span>
                             </div>
                             <bk-button class="pass-btn"
@@ -80,10 +80,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import BuildLog from '@/components/Log'
-    import detailInfo from '../components/detailInfo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions } from 'vuex'
+    import detailInfo from '../components/detailInfo'
 
     export default {
         components: {

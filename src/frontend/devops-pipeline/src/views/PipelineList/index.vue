@@ -5,9 +5,7 @@
         }"
     >
         <pipeline-header>
-            <span class="default-subheader-icon" slot="logo">
-                <logo size="32" name="pipeline" />
-            </span>
+            <logo size="24" name="pipeline" slot="logo" />
             <bk-breadcrumb slot="title" separator-class="devops-icon icon-angle-right">
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
@@ -27,19 +25,6 @@
                         {{groupName}}
                     </bk-breadcrumb-item>
                 </template>
-                <!-- <bk-breadcrumb-item
-                    v-if="$route.meta.breadcrumbs"
-                    class="pipeline-breadcrumb-item"
-                    v-for="(item, index) in $route.meta.breadcrumbs"
-                    :key="index"
-                    :to="item"
-                >
-                    {{item}}
-                </bk-breadcrumb-item>
-                <bk-breadcrumb-item
-                >
-                    {{$t($route.name)}}
-                </bk-breadcrumb-item> -->
             </bk-breadcrumb>
 
             <bk-dropdown-menu slot="right" class="default-link-list" trigger="click">
@@ -71,16 +56,15 @@
                 </ul>
             </bk-dropdown-menu>
         </pipeline-header>
-        <router-view></router-view>
+        <router-view />
     </article>
 
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import pipelineHeader from '@/components/devops/pipeline-header'
     import Logo from '@/components/Logo'
-    import { getCacheViewId } from '@/utils/util'
+    import pipelineHeader from '@/components/devops/pipeline-header'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
@@ -121,9 +105,6 @@
                     }
                 }
             },
-            viewId () {
-                return getCacheViewId(this.$route.params.projectId)
-            },
             dropdownMenus () {
                 return [
                     {
@@ -145,17 +126,6 @@
                 ]
             }
 
-        },
-        created () {
-            if (!this.$route.params.viewId) {
-                this.$router.replace({
-                    ...this.$route,
-                    params: {
-                        ...this.$route.params,
-                        viewId: this.viewId
-                    }
-                })
-            }
         },
         methods: {
             go (name) {

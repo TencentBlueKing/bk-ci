@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -111,6 +112,8 @@ data class Pipeline(
     var lastBuildTotalCount: Int? = null,
     @get:Schema(title = "最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
+    @get:Schema(title = "启动类型(新)", required = false)
+    var startType: String? = null,
     @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null,
     @get:Schema(title = "webhook仓库别名", required = false)
@@ -123,6 +126,10 @@ data class Pipeline(
     var webhookType: String? = null,
     @get:Schema(title = "是否已删除", required = false)
     var delete: Boolean? = false,
+    @get:Schema(title = "最新流水线版本状态（如有任何发布版本则为发布版本）", required = false)
+    var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
     @get:Schema(title = "流水线权限", required = false)
-    val permissions: PipelinePermissions? = null
+    val permissions: PipelinePermissions? = null,
+    @get:Schema(title = "yaml在默认分支是否存在", required = false)
+    var yamlExist: Boolean? = false
 )

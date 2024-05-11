@@ -6,7 +6,7 @@
     import Terminal from './Xterm'
     import { pipelines } from '@/http'
     export default {
-        name: 'Console',
+        name: 'MyTerminal',
         props: {
             url: {
                 type: String,

@@ -211,7 +211,7 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun pauseStage(buildStage: PipelineBuildStage) {
+    fun pauseStage(buildStage: PipelineBuildStage, debug: Boolean) {
         with(buildStage) {
             // 兜底保护，若已经被审核过则直接忽略
             if (checkIn?.status == BuildStatus.REVIEW_ABORT.name ||
@@ -246,7 +246,7 @@ class PipelineStageService @Autowired constructor(
                         dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                     )
                     // 被暂停的流水线不占构建队列，在执行数-1
-                    pipelineBuildSummaryDao.updateRunningCount(
+                    if (!debug) pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, projectId = projectId, pipelineId = pipelineId,
                         buildId = buildId, runningIncrement = -1
                     )
@@ -260,7 +260,8 @@ class PipelineStageService @Autowired constructor(
     fun stageManualStart(
         userId: String,
         buildStage: PipelineBuildStage,
-        reviewRequest: StageReviewRequest?
+        reviewRequest: StageReviewRequest?,
+        debug: Boolean
     ): Boolean {
         with(buildStage) {
             val success = checkIn?.reviewGroup(
@@ -314,7 +315,7 @@ class PipelineStageService @Autowired constructor(
                         pipelineBuildDao.updateBuildStageStatus(
                             dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                         )
-                        pipelineBuildSummaryDao.updateRunningCount(
+                        if (!debug) pipelineBuildSummaryDao.updateRunningCount(
                             dslContext = context, projectId = projectId, pipelineId = pipelineId,
                             buildId = buildId, runningIncrement = 1
                         )
@@ -381,7 +382,8 @@ class PipelineStageService @Autowired constructor(
                         id = pauseCheck.groupToReview()?.id,
                         suggest = "CANCEL"
                     ),
-                    timeout = timeout
+                    timeout = timeout,
+                    debug = buildInfo.debug
                 )
             }
         }
@@ -394,7 +396,8 @@ class PipelineStageService @Autowired constructor(
         triggerUserId: String,
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?,
-        timeout: Boolean? = false
+        timeout: Boolean? = false,
+        debug: Boolean
     ): Boolean {
         with(buildStage) {
             checkIn?.reviewGroup(
@@ -425,7 +428,7 @@ class PipelineStageService @Autowired constructor(
                         oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
                     )
                     // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
-                    pipelineBuildSummaryDao.updateRunningCount(
+                    if (!debug) pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, projectId = projectId, pipelineId = pipelineId,
                         buildId = buildId, runningIncrement = 1
                     )

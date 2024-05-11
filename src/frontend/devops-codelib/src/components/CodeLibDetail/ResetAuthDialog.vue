@@ -245,10 +245,10 @@
 </template>
 
 <script>
-    import _ from 'lodash'
+    import { cloneDeep } from 'lodash-es'
     import {
-        mapState,
-        mapActions
+        mapActions,
+        mapState
     } from 'vuex'
     import {
         getCodelibConfig,
@@ -355,7 +355,7 @@
                         ...this.newRepoInfo,
                         ...val
                     }
-                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                    this.cacheRepoInfo = cloneDeep(this.newRepoInfo)
                 },
                 deep: true,
                 immediate: true
@@ -366,7 +366,7 @@
                         ...this.newRepoInfo,
                         ...val
                     }
-                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                    this.cacheRepoInfo = cloneDeep(this.newRepoInfo)
                 },
                 deep: true,
                 immediate: true
