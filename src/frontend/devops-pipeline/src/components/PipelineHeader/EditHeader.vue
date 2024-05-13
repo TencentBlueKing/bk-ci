@@ -46,7 +46,6 @@
     import VersionSideslider from '@/components/VersionSideslider'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
-        handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { HttpError } from '@/utils/util'
@@ -243,11 +242,34 @@
                         data: responses
                     }
                 } catch (e) {
-                    handlePipelineNoPermission({
-                        projectId,
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    })
+                    if (e.code === 2101244) {
+                        const h = this.$createElement
+                        this.$bkMessage({
+                            theme: 'error',
+                            delay: 0,
+                            ellipsisLine: 0,
+                            message: h('div', {
+                                class: 'pipeline-save-error-list-box'
+                            }, e.data.map(item => h('div', {
+                                class: 'pipeline-save-error-list-item'
+                            }, [
+                                h('p', {}, item.errorTitle),
+                                h('ul', {
+                                    class: 'pipeline-save-error-list'
+                                }, item.errorDetails.map(err => h('li', {
+                                    domProps: {
+                                        innerHTML: err
+                                    }
+                                })))
+                            ])))
+                        })
+                    } else {
+                        this.handleError({
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        })
+                    }
                     return {
                         code: e.code,
                         message: e.message
@@ -261,6 +283,7 @@
 </script>
 
 <style lang="scss">
+@import "@/scss/conf";
 .pipeline-edit-header {
   display: flex;
   width: 100%;
@@ -272,5 +295,26 @@
     grid-gap: 10px;
     grid-auto-flow: column;
   }
+}
+.pipeline-save-error-list-box {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 10px;
+    .pipeline-save-error-list-item {
+
+        > p {
+            margin-bottom: 12px;
+        }
+        .pipeline-save-error-list {
+            > li {
+                line-height: 26px;
+                a {
+                    color: $primaryColor;
+                    margin-left: 10px;
+                    text-align: right;
+                }
+            }
+        }
+    }
 }
 </style>
