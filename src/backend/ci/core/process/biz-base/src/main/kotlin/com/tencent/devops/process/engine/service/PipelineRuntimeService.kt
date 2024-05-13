@@ -1157,12 +1157,13 @@ class PipelineRuntimeService @Autowired constructor(
             }
             containerBuildRecords.add(
                 BuildRecordContainer(
-                    projectId = build.projectId, pipelineId = build.pipelineId, resourceVersion = resourceVersion,
-                    buildId = build.buildId, stageId = build.stageId, containerId = build.containerId,
+                    projectId = build.projectId, pipelineId = build.pipelineId,
+                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
-                    status = null, startTime = null, endTime = null, timestamps = mapOf(),
-                    containerVar = containerVar
+                    status = null, startTime = build.startTime,
+                    endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
         }
@@ -1173,12 +1174,14 @@ class PipelineRuntimeService @Autowired constructor(
         stageBuildRecords: MutableList<BuildRecordStage>,
         resourceVersion: Int
     ) {
-        updateStageExistsRecord.forEach {
+        updateStageExistsRecord.forEach { build ->
             stageBuildRecords.add(
                 BuildRecordStage(
-                    projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
-                    buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
-                    executeCount = it.executeCount, stageVar = mutableMapOf(), timestamps = mapOf()
+                    projectId = build.projectId, pipelineId = build.pipelineId,
+                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    stageId = build.stageId, stageSeq = build.seq,
+                    executeCount = build.executeCount, stageVar = mutableMapOf(),
+                    timestamps = mapOf(), startTime = build.startTime, endTime = build.endTime
                 )
             )
         }
@@ -1629,7 +1632,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
         with(latestRunningBuild) {
             val executeTime = try {
-                timeCost?.totalCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
+                timeCost?.executeCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
                 0L
@@ -1964,7 +1967,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                            "a higher priority waiting request</a> for group($groupName) exists",
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = taskId,
                     jobId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1
@@ -1974,7 +1977,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
-                            "a higher priority waiting request</a> for group($groupName) exists",
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = "QueueInterceptor",
                     jobId = "",
                     executeCount = 1

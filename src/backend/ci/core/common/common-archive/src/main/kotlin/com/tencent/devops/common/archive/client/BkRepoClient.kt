@@ -771,7 +771,6 @@ class BkRepoClient constructor(
             projectId = projectId,
             repoName = repoName,
             fullPath = fullPath,
-            scanner = "mstools-wz",
             users = userIds,
             batchSize = batchSize
         )

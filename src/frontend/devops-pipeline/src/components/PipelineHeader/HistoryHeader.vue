@@ -304,7 +304,7 @@
             },
             handleVersionChange (versionId, version) {
                 console.log('handleVersionChange', versionId, version)
-                let routeType = 'history'
+                let routeType = this.$route.params.type || 'history'
 
                 if (version) {
                     this.selectPipelineVersion(version)

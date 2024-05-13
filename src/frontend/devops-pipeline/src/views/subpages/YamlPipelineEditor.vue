@@ -9,6 +9,7 @@
             <YamlEditor
                 ref="editor"
                 show-yaml-plugin
+                :read-only="!pipelineEditable"
                 :value="pipelineYaml"
                 @change="handleYamlChange"
                 :highlight-ranges="yamlHighlightBlock"
@@ -119,6 +120,7 @@
                 return this.element?.atomCode && !this.isPreviewingAtomYAML && !this.isAdding
             },
             pipelineEditable () {
+                console.log(this.instanceFromTemplate)
                 return this.editable && !this.instanceFromTemplate
             }
         },

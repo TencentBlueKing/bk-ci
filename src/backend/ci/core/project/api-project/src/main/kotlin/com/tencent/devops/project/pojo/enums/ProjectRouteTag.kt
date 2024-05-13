@@ -25,37 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.project.pojo.enums
 
-import com.tencent.devops.common.web.utils.I18nUtil
+import io.swagger.v3.oas.annotations.media.Schema
 
-object NotifyTemplateUtils {
+@Schema(title = "项目道代码")
+enum class ProjectRouteTag(val value: String) {
+    AUTO("auto"),
 
-    private const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "commonShutdownSuccessContent"
-    // 【${%s}】- 【${%s}】#${%s} 执行成功，耗时${%s}, 触发人：${%s}。
+    DEVX("devx"),
 
-    private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "commonShutdownFailureContent"
-    // 【${%s}】- 【${%s}】#${%s} 执行失败，耗时${%s}, 触发人：${%s}。
+    RBAC("rbac"),
 
-    fun getCommonShutdownSuccessContent(): String {
-        return String.format(
-            I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_SUCCESS_CONTENT),
-            "ci.project_name",
-            "ci.pipeline_name",
-            "ci.build_num",
-            "ci.pipeline_execute_time",
-            "ci.actor"
-        )
-    }
+    RBAC_GRAY("rbac-gray"),
 
-    fun getCommonShutdownFailureContent(): String {
-        return String.format(
-            I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_FAILURE_CONTENT),
-            "ci.project_name",
-            "ci.pipeline_name",
-            "ci.build_num",
-            "ci.pipeline_execute_time",
-            "ci.actor"
-        )
-    }
+    STREAM("stream"),
+
+    STREAM_GRAY("stream-gray")
 }
