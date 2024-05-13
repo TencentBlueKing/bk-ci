@@ -158,7 +158,7 @@
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
                 isOutdatedVersion: 'atom/isOutdatedVersion',
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
-                pipelineHistoryViewAble: 'atom/pipelineHistoryViewAble',
+                pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
                 onlyBranchPipeline: 'atom/onlyBranchPipeline',
                 pacEnabled: 'atom/pacEnabled'
             }),
@@ -223,6 +223,11 @@
             pipelineInfo: {
                 deep: true,
                 handler (val, oldVal) {
+                    if (val && !this.pipelineHistoryViewable) {
+                        this.$router.replace({
+                            name: 'pipelinesEdit'
+                        })
+                    }
                     if (val?.pipelineId !== oldVal?.pipelineId) {
                         if (val.releaseVersion === oldVal?.releaseVersion) {
                             this.init()
@@ -313,9 +318,8 @@
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
-                console.log('handleVersionChange', this.pipelineHistoryViewAble, versionId)
+                console.log('handleVersionChange', this.pipelineInfo, this.pipelineHistoryViewable, versionId)
                 this.$router.replace({
-                    name: !this.pipelineHistoryViewAble ? 'pipelinesEdit' : this.$route.name,
                     query: this.$route.query,
                     params: {
                         ...this.$route.params,

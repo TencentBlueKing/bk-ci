@@ -32,7 +32,7 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import { areDeeplyEqual, eventBus, hashID, isTriggerContainer } from './util'
+    import { eventBus, hashID, isTriggerContainer } from './util'
 
     import {
         ADD_STAGE,
@@ -153,7 +153,6 @@
                         const name = `stage-${index + 1}`
                         const id = `s-${hashID()}`
                         if (!stage.containers) {
-                            // container
                             return {
                                 id,
                                 name,
@@ -186,16 +185,6 @@
                 }
             }
         },
-        watch: {
-            pipeline: {
-                handler: function (newVal, oldVal) {
-                    if (this.editable && !areDeeplyEqual(newVal, oldVal)) {
-                        console.log('pipeline change', newVal, oldVal)
-                        // this.emitPipelineChange(newVal)
-                    }
-                }
-            }
-        },
         mounted () {
             this.registeCustomEvent()
         },
@@ -225,6 +214,7 @@
             },
             updatePipeline (model, params) {
                 Object.assign(model, params)
+                this.emitPipelineChange(model)
             },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}

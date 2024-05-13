@@ -39,7 +39,7 @@
                 'pipelineInfo'
             ]),
             ...mapGetters({
-                pipelineHistoryViewAble: 'atom/pipelineHistoryViewAble'
+                pipelineHistoryViewable: 'atom/pipelineHistoryViewable'
             }),
             breadCrumbs () {
                 return [{
@@ -60,7 +60,7 @@
                         showTips: true,
                         tipsName: 'switch_pipeline_hint',
                         tipsContent: this.$t('subpage.switchPipelineTooltips'),
-                        to: ['pipelinesHistory'].includes(this.$route.name) || !this.pipelineHistoryViewAble
+                        to: ['pipelinesHistory'].includes(this.$route.name) || !this.pipelineHistoryViewable
                             ? null
                             : {
                                 name: 'pipelinesHistory',
