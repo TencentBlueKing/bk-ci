@@ -6,22 +6,6 @@
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
-            <bk-button
-                :disabled="executeStatus"
-                v-perm="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
-                @click="goBack"
-            >
-                {{ $t("cancel") }}
-            </bk-button>
 
             <bk-button
                 theme="primary"
@@ -40,6 +24,23 @@
                 @click="handleClick"
             >
                 {{ $t(isDebugPipeline ? "debug" : "exec") }}
+            </bk-button>
+
+            <bk-button
+                :disabled="executeStatus"
+                v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goBack"
+            >
+                {{ $t("cancel") }}
             </bk-button>
 
         </aside>
