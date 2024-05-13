@@ -34,6 +34,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 object StoreUtils {
@@ -144,5 +145,21 @@ object StoreUtils {
         } else {
             "i18n"
         }
+    }
+
+    fun getReleaseSpecBusServiceBeanName(storeType: StoreTypeEnum): String {
+        return "${storeType}_RELEASE_SPEC_BUS_SERVICE"
+    }
+
+    fun checkEditCondition(status: String): Boolean {
+        val componentFinalStatusList = listOf(
+            StoreStatusEnum.AUDIT_REJECT.name,
+            StoreStatusEnum.RELEASED.name,
+            StoreStatusEnum.GROUNDING_SUSPENSION.name,
+            StoreStatusEnum.UNDERCARRIAGED.name,
+            StoreStatusEnum.INIT.name
+        )
+        // 判断最近一个组件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
+        return componentFinalStatusList.contains(status)
     }
 }
