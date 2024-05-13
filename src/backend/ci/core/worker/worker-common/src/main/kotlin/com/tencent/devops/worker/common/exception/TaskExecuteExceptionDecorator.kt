@@ -28,16 +28,14 @@ object TaskExecuteExceptionDecorator {
         RemoteServiceException::class to RemoteServiceExceptionD(),
         MismatchedInputException::class to MismatchedInputExceptionD(),
         IOException::class to IOExceptionD(),
-        FileSystemException::class to FileSystemExceptionD(),
-        Throwable::class to defaultExceptionBase
+        FileSystemException::class to FileSystemExceptionD()
     )
 
     @Suppress("UNCHECKED_CAST")
     fun decorate(throwable: Throwable): TaskExecuteException {
-        if (throwable is TaskExecuteException) return throwable
         var exception = throwable
         return (factory[exception::class] as ExceptionDecorator<Throwable>? ?: exception.cause?.let { cause ->
-            (factory[cause::class] as ExceptionDecorator<Throwable>?).let {
+            (factory[cause::class] as ExceptionDecorator<Throwable>?)?.let {
                 exception = cause
                 it
             }
@@ -49,6 +47,7 @@ class DefaultExceptionBase : ExceptionDecorator<Throwable> {
     override fun decorate(exception: Throwable): TaskExecuteException {
         return when {
             exception is TaskExecuteException -> exception
+            // TEE只有一层，所以不遍历cause，防止InputMismatchException 无限循环。
             exception.cause is TaskExecuteException -> exception.cause as TaskExecuteException
             else -> {
                 LOGGER.warn("[Worker Error]: ", exception)
@@ -64,7 +63,8 @@ class DefaultExceptionBase : ExceptionDecorator<Throwable> {
                 TaskExecuteException(
                     errorMsg = exception.message ?: defaultMessage.toString(),
                     errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                    errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR,
+                    cause = exception
                 )
             }
         }
