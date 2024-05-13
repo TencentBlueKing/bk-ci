@@ -266,6 +266,26 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
+    override fun upgradeWorkspaceVm(
+        userId: String,
+        workspaceName: String,
+        machineType: String,
+        pipelineId: String
+    ): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.UPGRADE_VM,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                machineType = machineType,
+                userId = userId,
+                pipelineId = pipelineId
+            )
+        )
+        return resp.taskUid
+    }
+
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }

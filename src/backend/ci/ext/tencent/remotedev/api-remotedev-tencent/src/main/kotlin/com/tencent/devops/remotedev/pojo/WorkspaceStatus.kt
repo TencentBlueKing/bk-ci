@@ -47,7 +47,9 @@ enum class WorkspaceStatus {
     STOPPING, // 12 关机中
     RESTARTING, // 13 重启中
     MAKING_IMAGE, // 14 制作镜像中
-    REBUILDING; // 15 重装系统中
+    REBUILDING, // 15 重装系统中
+    // TODO: 116140983 需要校验下面的状态判断是否一致
+    UPGRADING; // 16 升级配置中
 
     enum class Types {
         USING {
@@ -65,7 +67,8 @@ enum class WorkspaceStatus {
                 STOPPING,
                 RESTARTING,
                 MAKING_IMAGE,
-                REBUILDING
+                REBUILDING,
+                UPGRADING
             )
         };
 
@@ -90,7 +93,7 @@ enum class WorkspaceStatus {
 
     fun checkInUse() = !checkDeleted() && !checkException()
     fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING ||
-        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING
+        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING || this == UPGRADING
 
     /**
      * 当正在做某事时，不能新建任务去执行
@@ -98,7 +101,7 @@ enum class WorkspaceStatus {
     fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
         (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
-            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING
+            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING
 }
 
 @Suppress("ALL")
@@ -120,5 +123,6 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.RESTARTING -> "重启中"
         WorkspaceStatus.MAKING_IMAGE -> "制作镜像中"
         WorkspaceStatus.REBUILDING -> "重装系统中"
+        WorkspaceStatus.UPGRADING -> "升级配置中"
     }
 }

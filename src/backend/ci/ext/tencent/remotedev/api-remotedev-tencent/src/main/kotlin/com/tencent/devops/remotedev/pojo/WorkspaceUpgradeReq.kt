@@ -1,4 +1,4 @@
-/*
+ /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -27,18 +27,10 @@
 
 package com.tencent.devops.remotedev.pojo
 
-enum class WebSocketActionType {
-    WORKSPACE_CREATE, // 创建workspace
-    WORKSPACE_START, // 启动workspace
-    WORKSPACE_STOP, // 停止workspace
-    WORKSPACE_RESTART, // 重启workspace
-    WORKSPACE_REBUILD, // 重装workspace
-    WORKSPACE_SLEEP, // 休眠workspace
-    WORKSPACE_DELETE, // 销毁workspace
-    WORKSPACE_NEED_RENEWAL, // 需要续期workspace
-    WORKSPACE_MAKE_IMAGE, // 根据当前工作空间制作镜像
-    WORKSPACE_DETAIL, // workspace 信息
-    WORKSPACE_NOTIFY, // workspace 通知
-    WORKSPACE_ASSIGN, // 分配workspace
-    WORKSPACE_UPGRADE; // 升级 workspace 配置
-}
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "调整工作空间配额接口请求")
+data class WorkspaceUpgradeReq(
+    @get:Schema(title = "目的机型")
+    val machineType: String
+)

@@ -7,5 +7,6 @@ data class EnvironmentOperate(
     val pipelineId: String? = null,
     val env: Map<String, String>? = null,
     val cgsId: String? = null,
-    val image: String? = null
+    val image: String? = null,
+    val machineType: String? = null
 )

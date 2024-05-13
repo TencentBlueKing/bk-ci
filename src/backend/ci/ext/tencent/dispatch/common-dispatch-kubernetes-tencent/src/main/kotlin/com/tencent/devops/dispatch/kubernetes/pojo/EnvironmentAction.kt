@@ -39,7 +39,8 @@ enum class EnvironmentAction(val action: String) {
     DELETE_VM("deletevm"),
     RESTART("restart"),
     MAKE_IMAGE("copyvm"),
-    REBUILD("rebuild/vm");
+    REBUILD("rebuild/vm"),
+    UPGRADE_VM("upgrade/vm");
 
     @JsonValue
     fun getValue(): String {

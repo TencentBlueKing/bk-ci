@@ -260,6 +260,15 @@ class DevCloudRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
+    override fun upgradeWorkspaceVm(
+        userId: String,
+        workspaceName: String,
+        machineType: String,
+        pipelineId: String
+    ): String {
+        TODO("Not yet implemented")
+    }
+
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }

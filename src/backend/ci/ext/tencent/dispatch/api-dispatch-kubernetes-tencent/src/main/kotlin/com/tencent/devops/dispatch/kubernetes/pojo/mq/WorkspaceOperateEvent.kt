@@ -50,6 +50,8 @@ data class WorkspaceOperateEvent(
     val imageCosFile: String? = null,
     val mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
     val gameId: String?,
+    val machineType: String? = null,
+    val projectId: String? = null,
     override val workspaceName: String,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0

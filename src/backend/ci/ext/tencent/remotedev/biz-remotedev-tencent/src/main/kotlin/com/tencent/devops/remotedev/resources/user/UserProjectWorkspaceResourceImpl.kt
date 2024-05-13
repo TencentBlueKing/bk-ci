@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
@@ -54,6 +55,7 @@ import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHan
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -73,6 +75,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val rebuildWorkspaceHandler: RebuildWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
+    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService,
     private val xlsxExportService: WorkspaceXlsxExportService,
@@ -199,7 +202,23 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun fetchSpec(userId: String, projectId: String?, machineType: String?, page: Int?, pageSize: Int?): Result<Page<WindowsSpecResInfo>> {
+    override fun fetchSpec(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>> {
         return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
+    }
+
+    override fun upgradeWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        upgradeReq: WorkspaceUpgradeReq
+    ): Result<Boolean> {
+        upgradeWorkspaceHandler.upgradeWorkspace(userId, projectId, workspaceName, upgradeReq)
+        return Result(true)
     }
 }
