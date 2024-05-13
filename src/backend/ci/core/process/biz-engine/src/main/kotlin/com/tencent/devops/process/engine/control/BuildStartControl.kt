@@ -83,8 +83,8 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
@@ -254,9 +254,10 @@ class BuildStartControl @Autowired constructor(
                         userId = buildInfo.startUser,
                         status = BuildStatus.RUNNING,
                         taskCount = buildInfo.taskCount,
-                        buildNum = buildInfo.buildNum
-                    ),
-                    executeCount = executeCount
+                        buildNum = buildInfo.buildNum,
+                        executeCount = executeCount,
+                        debug = buildInfo.debug
+                    )
                 )
                 broadcastStartEvent(buildInfo)
             } else {
@@ -425,7 +426,9 @@ class BuildStartControl @Autowired constructor(
                     varValue = buildNo
                 )
 
-                var parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId = buildId)
+                var parameters = pipelineRuntimeService.getBuildParametersFromStartup(
+                    projectId = projectId, buildId = buildId
+                )
                 val startParamMap = mutableMapOf<String, BuildParameters>()
                 parameters.associateByTo(startParamMap) { it.key }
                 startParamMap[BUILD_NO] = BuildParameters(key = BUILD_NO, value = buildNo, readOnly = true)
@@ -444,7 +447,8 @@ class BuildStartControl @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    buildParameters = parameters
+                    buildParameters = parameters,
+                    debug = debug ?: false
                 )
             }
         }
@@ -526,16 +530,17 @@ class BuildStartControl @Autowired constructor(
             ),
             startTime = LocalDateTime.now(), endTime = null
         )
+        val nowMills = now.timestampmilli()
+        val stageElapsed = max(0, nowMills - buildInfo.queueTime)
+        stage.elapsed = stageElapsed
+        stage.status = BuildStatus.SUCCEED.name
         stageRecordService.updateStageRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
             stageVar = mutableMapOf(
-                Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
+                Stage::elapsed.name to stageElapsed
             )
         )
-        val nowMills = now.timestampmilli()
-        stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = max(0, nowMills - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
         container.startEpoch = nowMills
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
@@ -734,8 +739,10 @@ class BuildStartControl @Autowired constructor(
                 varName = PIPELINE_TIME_START,
                 varValue = System.currentTimeMillis().toString()
             )
-            // 增加Model版本引用计数
-            pipelineRepositoryVersionService.addVerRef(buildInfo.projectId, buildInfo.pipelineId, buildInfo.version)
+            // 只有正式版本的构建，增加Model版本引用计数
+            if (!buildInfo.debug) pipelineRepositoryVersionService.addVerRef(
+                buildInfo.projectId, buildInfo.pipelineId, buildInfo.version
+            )
         }
 
         val stages = model.stages

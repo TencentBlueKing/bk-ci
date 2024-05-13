@@ -61,11 +61,12 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -106,9 +107,10 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
     recordModelService: PipelineRecordModelService,
-    pipelineResDao: PipelineResDao,
+    pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
-    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineResourceVersionDao: PipelineResourceVersionDao,
+    pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
@@ -119,9 +121,10 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation,
     recordModelService = recordModelService,
-    pipelineResDao = pipelineResDao,
+    pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:21}")
@@ -190,7 +193,8 @@ class PipelineBuildRecordService @Autowired constructor(
                 fixedExecuteCount = fixedExecuteCount,
                 buildRecordModel = buildRecordModel,
                 executeCount = executeCount,
-                queryDslContext = queryDslContext
+                queryDslContext = queryDslContext,
+                debug = buildInfo.debug
             )
             if (record == null) fixedExecuteCount = buildInfo.executeCount!!
             record
@@ -228,9 +232,12 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         watcher.start("fixModel")
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val buildNo = triggerContainer.buildNo
-        if (buildNo != null) {
-            buildNo.buildNo = buildSummaryRecord?.buildNo ?: buildNo.buildNo
+        triggerContainer.buildNo?.let {
+            it.buildNo = if (buildInfo.debug) {
+                buildSummaryRecord?.debugBuildNo
+            } else {
+                buildSummaryRecord?.buildNo
+            } ?: it.buildNo
         }
         val params = triggerContainer.params
         val newParams = ArrayList<BuildFormProperty>(params.size)
@@ -341,8 +348,13 @@ class PipelineBuildRecordService @Autowired constructor(
             buildNum = buildInfo.buildNum,
             cancelUserId = buildRecordModel?.cancelUser,
             curVersion = buildInfo.version,
+            curVersionName = buildInfo.versionName,
             latestVersion = pipelineInfo.version,
-            latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
+            latestBuildNum = if (buildInfo.debug) {
+                buildSummaryRecord?.debugBuildNum
+            } else {
+                buildSummaryRecord?.buildNum
+            } ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime, // 只为兼容接口，该字段不准确
             errorInfoList = buildRecordModel?.errorInfoList,
@@ -357,6 +369,7 @@ class PipelineBuildRecordService @Autowired constructor(
             ),
             material = buildInfo.material,
             remark = buildInfo.remark,
+            debug = buildInfo.debug,
             webhookInfo = buildInfo.webhookInfo,
             templateInfo = pipelineInfo.templateInfo,
             recordList = recordList
@@ -551,6 +564,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
+            val now = LocalDateTime.now()
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
             // 刷新运行中stage状态，取出所有stage记录还需用于耗时计算
             val recordStages = recordStageDao.getRecords(
@@ -559,6 +573,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordStages.forEach nextStage@{ stage ->
                 if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
+                if (stage.endTime == null) { stage.endTime = now }
             }
             // 刷新运行中的container状态
             val recordContainers = recordContainerDao.getRecords(
@@ -569,6 +584,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordContainers.forEach nextContainer@{ container ->
                 container.status = buildStatus.name
+                if (container.endTime == null) { container.endTime = now }
                 val containerName = container.containerVar[Container::name.name] as String?
                 if (!containerName.isNullOrBlank()) {
                     container.containerVar[Container::name.name] =
@@ -581,6 +597,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordTasks.forEach nextTask@{ task ->
                 task.status = buildStatus.name
+                if (task.endTime == null) { task.endTime = now }
             }
             recordTaskDao.batchSave(context, recordTasks)
             recordContainerDao.batchSave(context, recordContainers)

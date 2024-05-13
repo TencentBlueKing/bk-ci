@@ -42,6 +42,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineTriggerEventReco
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedFix
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
 import org.jooq.Condition
@@ -120,9 +122,7 @@ class PipelineTriggerEventDao {
                 triggerDetail.buildId,
                 triggerDetail.buildNum,
                 triggerDetail.reason,
-                triggerDetail.reasonDetailList?.let {
-                    JsonUtil.toJson(it)
-                },
+                triggerDetail.reasonDetail?.let { JsonUtil.toJson(it, true) },
                 LocalDateTime.now()
             ).execute()
         }
@@ -196,8 +196,7 @@ class PipelineTriggerEventDao {
                     buildId = it.value13(),
                     buildNum = it.value14(),
                     reason = it.value15(),
-                    reasonDetailList = it.value16()
-                        ?.let { r -> JsonUtil.to(r, object : TypeReference<List<String>>() {}) }
+                    reasonDetailList = it.value16()?.let { r -> convertReasonDetail(r) }?.getReasonDetailList()
                 )
             }
     }
@@ -627,9 +626,18 @@ class PipelineTriggerEventDao {
                 buildId = buildId,
                 buildNum = buildNum,
                 reason = reason,
-                reasonDetailList = reasonDetail?.let { JsonUtil.to(it, object : TypeReference<List<String>>() {}) },
+                reasonDetail = reasonDetail?.let { convertReasonDetail(it) },
                 createTime = createTime.timestamp()
             )
+        }
+    }
+
+    fun convertReasonDetail(reasonDetail: String): PipelineTriggerReasonDetail {
+        val jsonNode = JsonUtil.getObjectMapper().readTree(reasonDetail)
+        return if (jsonNode.isArray) {
+            PipelineTriggerFailedFix(JsonUtil.to(reasonDetail, object : TypeReference<List<String>>() {}))
+        } else {
+            JsonUtil.to(reasonDetail, PipelineTriggerReasonDetail::class.java)
         }
     }
 }
