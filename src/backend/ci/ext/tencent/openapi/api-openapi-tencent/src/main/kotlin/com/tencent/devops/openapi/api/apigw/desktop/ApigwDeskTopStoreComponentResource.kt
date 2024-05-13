@@ -163,7 +163,7 @@ interface ApigwDeskTopStoreComponentResource {
 
     @Operation(summary = "安装组件到项目", tags = ["v4_app_desktop_store_component_install"])
     @POST
-    @Path("/types/{storeType}/component/install")
+    @Path("/component/install")
     fun installComponent(
         @Parameter(description = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
