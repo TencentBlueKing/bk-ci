@@ -39,12 +39,14 @@ import java.time.LocalDateTime
 @Repository
 class StorePipelineRelDao {
 
+    @Suppress("LongParameterList")
     fun add(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
         pipelineId: String,
-        busType: StorePipelineBusTypeEnum = StorePipelineBusTypeEnum.BUILD
+        busType: StorePipelineBusTypeEnum = StorePipelineBusTypeEnum.BUILD,
+        projectCode: String = ""
     ) {
         with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
             dslContext.insertInto(
@@ -52,6 +54,7 @@ class StorePipelineRelDao {
                 ID,
                 STORE_CODE,
                 STORE_TYPE,
+                PROJECT_CODE,
                 PIPELINE_ID,
                 BUS_TYPE
             )
@@ -59,6 +62,7 @@ class StorePipelineRelDao {
                     UUIDUtil.generate(),
                     storeCode,
                     storeType.type.toByte(),
+                    projectCode,
                     pipelineId,
                     busType.name
                 ).execute()
