@@ -342,8 +342,9 @@ class BuildCancelControl @Autowired constructor(
                 buildLogPrinter.stopLog(
                     buildId = buildId,
                     tag = VMUtils.genStartVMTaskId(container.id!!),
-                    jobId = container.containerHashId,
-                    executeCount = executeCount
+                    containerHashId = container.containerHashId,
+                    executeCount = executeCount,
+                    jobId = container.jobId
                 )
             }
         } finally {

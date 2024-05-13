@@ -50,7 +50,9 @@ class LogStatusService @Autowired constructor(
         containerHashId: String?,
         executeCount: Int?,
         logStorageMode: LogStorageMode?,
-        finish: Boolean
+        finish: Boolean,
+        jobId: String?,
+        stepId: String?
     ) {
         JooqUtils.retryWhenDeadLock {
             logStatusDao.finish(
@@ -62,7 +64,9 @@ class LogStatusService @Autowired constructor(
                 containerHashId = containerHashId ?: "",
                 executeCount = executeCount ?: 1,
                 logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
-                finish = finish
+                finish = finish,
+                jobId = jobId,
+                stepId = stepId
             )
         }
     }
@@ -107,7 +111,9 @@ class LogStatusService @Autowired constructor(
         tag: String?,
         subTag: String?,
         containerHashId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?
     ) = logStatusDao.isFinish(
         dslContext = dslContext,
         buildId = buildId,
@@ -115,6 +121,8 @@ class LogStatusService @Autowired constructor(
         containerHashId = containerHashId,
         tag = tag ?: "",
         subTags = subTag ?: "",
-        executeCount = executeCount ?: 1
+        executeCount = executeCount ?: 1,
+        jobId = jobId,
+        stepId = stepId
     )
 }

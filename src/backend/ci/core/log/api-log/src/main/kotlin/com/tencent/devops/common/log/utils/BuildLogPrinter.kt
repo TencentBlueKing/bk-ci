@@ -293,9 +293,11 @@ class BuildLogPrinter(
     fun stopLog(
         buildId: String,
         tag: String? = null,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int? = null,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String? = null,
+        stepId: String? = null
     ) {
         try {
             genLogPrintPrintResource().updateLogStatus(
@@ -303,8 +305,10 @@ class BuildLogPrinter(
                 finished = true,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)
@@ -316,7 +320,9 @@ class BuildLogPrinter(
         tag: String?,
         containerHashId: String?,
         executeCount: Int? = null,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String? = null,
+        stepId: String? = null
     ) {
         try {
             genLogPrintPrintResource().addLogStatus(
@@ -324,7 +330,9 @@ class BuildLogPrinter(
                 tag = tag,
                 subTag = subTag,
                 containerHashId = containerHashId,
-                executeCount = executeCount
+                executeCount = executeCount,
+                jobId = jobId,
+                stepId = stepId
             )
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)

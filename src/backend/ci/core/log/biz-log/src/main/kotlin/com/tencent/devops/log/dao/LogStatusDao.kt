@@ -47,7 +47,9 @@ class LogStatusDao {
         containerHashId: String?,
         executeCount: Int,
         logStorageMode: LogStorageMode,
-        finish: Boolean
+        finish: Boolean,
+        jobId: String?,
+        stepId: String?
     ) {
         with(TLogStatus.T_LOG_STATUS) {
             dslContext.insertInto(this)
@@ -58,6 +60,8 @@ class LogStatusDao {
                 .set(JOB_ID, containerHashId)
                 .set(FINISHED, finish)
                 .set(MODE, logStorageMode.name)
+                .set(USER_JOB_ID, jobId)
+                .set(STEP_ID, stepId)
                 .onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
                 .set(MODE, logStorageMode.name)
@@ -104,21 +108,38 @@ class LogStatusDao {
         dslContext: DSLContext,
         buildId: String,
         containerHashId: String?,
-        tag: String?,
-        subTags: String?,
-        executeCount: Int?
+        tag: String,
+        subTags: String,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?
     ): Boolean {
         with(TLogStatus.T_LOG_STATUS) {
             val select = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(EXECUTE_COUNT.eq(executeCount))
-            if (!containerHashId.isNullOrBlank()) {
-                select.and(JOB_ID.eq(containerHashId))
-                    .and(TAG.eq(""))
-                    .and(SUB_TAG.eq(""))
-            } else {
-                select.and(TAG.eq(tag))
-                    .and(SUB_TAG.eq(subTags))
+            when {
+                !containerHashId.isNullOrBlank() -> {
+                    select.and(JOB_ID.eq(containerHashId))
+                        .and(TAG.eq(""))
+                        .and(SUB_TAG.eq(""))
+                }
+
+                tag.isNotBlank() -> {
+                    select.and(TAG.eq(tag))
+                        .and(SUB_TAG.eq(subTags))
+                }
+
+                !jobId.isNullOrBlank() -> {
+                    select.and(USER_JOB_ID.eq(jobId))
+                        .and(TAG.eq(""))
+                        .and(SUB_TAG.eq(""))
+                }
+
+                !stepId.isNullOrBlank() -> {
+                    select.and(STEP_ID.eq(stepId))
+                        .and(SUB_TAG.eq(subTags))
+                }
             }
             return select.fetchOne()?.finished == true
         }
@@ -135,6 +156,7 @@ class LogStatusDao {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .let { if (tag != null) it.and(TAG.eq(tag)) else it }
+                .let { if (stepId != null) it.and(STEP_ID.eq(stepId)) else it }
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchAny()
         }
