@@ -20,6 +20,7 @@
                     <br />
                 </p>
                 <p>{{ entry.label }}</p>
+                <div class="dot" v-if="entry.showReminderDot"></div>
             </a>
         </div>
         <div :class="{
@@ -37,6 +38,7 @@
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { State } from 'vuex-class'
+    const SHOW_O2000_REMINDER_DOT = 'SHOW_O2000_REMINDER_DOT'
 
     @Component
     export default class ConsultTools extends Vue {
@@ -50,7 +52,8 @@
                     label: this.$t('contactUs'),
                     // href: 'wxwork://message?uin=8444250473321980',
                     id: 'contactUs',
-                    target: ''
+                    target: '',
+                    showReminderDot: !localStorage.getItem(SHOW_O2000_REMINDER_DOT)
                 },
                 {
                     icon: 'help',
@@ -71,6 +74,8 @@
 
         handleClickConsult (entry) {
             if (entry.id === 'contactUs') {
+                entry.showReminderDot = false
+                localStorage.setItem(SHOW_O2000_REMINDER_DOT, 'true')
                 this.showTabAssistant = true
             }
         }
@@ -110,6 +115,16 @@
             height: 24px;
             color: #fff;
             font-size: 13px;
+        }
+        .dot {
+            position: absolute;
+            top: 20px;
+            right: 15px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: red;
+            transform: translate(50%, -50%);
         }
     }
 }
