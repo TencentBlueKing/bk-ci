@@ -278,6 +278,7 @@
                 const params = {
                     filePath: dir.path,
                     projectId: this.projectId,
+                    pipelineId: this.$route.params.pipelineId,
                     page: dir.page,
                     pageSize: dir.pageSize
                 }
