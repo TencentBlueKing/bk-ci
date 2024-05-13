@@ -41,8 +41,8 @@ import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
-import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
-import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.MarketAtomStatisticService
 import org.jooq.DSLContext

@@ -108,6 +108,46 @@ BEGIN
         ALTER TABLE T_STORE_APPROVE DROP INDEX `inx_tsa_status`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_STATISTICS_DAILY'
+                    AND COLUMN_NAME = 'DAILY_ACTIVE_DURATION') THEN
+        ALTER TABLE T_STORE_STATISTICS_DAILY ADD COLUMN `DAILY_ACTIVE_DURATION` decimal(15,2) COMMENT '每日活跃时长，单位：小时';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_STATISTICS_TOTAL'
+                    AND COLUMN_NAME = 'RECENT_ACTIVE_DURATION') THEN
+        ALTER TABLE T_STORE_STATISTICS_TOTAL ADD COLUMN `RECENT_ACTIVE_DURATION` decimal(15,2) COMMENT '总活跃时长，单位：小时';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                    AND COLUMN_NAME = 'VERSION') THEN
+        ALTER TABLE T_STORE_PROJECT_REL ADD COLUMN `VERSION` varchar(256) COMMENT '版本号';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_MEMBER'
+                     AND INDEX_NAME = 'UNI_INX_TSM_TYPE_CODE_NAME') THEN
+        ALTER TABLE T_STORE_MEMBER ADD INDEX `UNI_INX_TSM_TYPE_CODE_NAME`(`STORE_TYPE`, `STORE_CODE`,`USERNAME`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_MEMBER'
+                     AND INDEX_NAME = 'uni_inx_tam_code_name_type') THEN
+        ALTER TABLE T_STORE_MEMBER DROP INDEX `uni_inx_tam_code_name_type`;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

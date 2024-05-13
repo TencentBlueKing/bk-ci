@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq

@@ -100,7 +100,7 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
-import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
