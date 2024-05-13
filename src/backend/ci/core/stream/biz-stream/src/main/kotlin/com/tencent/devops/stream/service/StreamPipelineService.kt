@@ -108,6 +108,7 @@ class StreamPipelineService @Autowired constructor(
                         gitProjectId = gitProjectId,
                         pipelineId = pipelineId
                     ) ?: return@run
+                    if (filePath != null && pipeline.directory != filePath) return@run
                     pipelines.add(0, pipeline)
                 }
             }
