@@ -94,9 +94,9 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "mr事件action")
-    var includeMrAction: List<String>? = null,
+    val includeMrAction: List<String>? = null,
     @get:Schema(title = "push事件action")
-    var includePushAction: List<String>? = null,
+    val includePushAction: List<String>? = null,
     @get:Schema(title = "是否启用第三方过滤")
     val enableThirdFilter: Boolean? = false,
     @get:Schema(title = "第三方应用地址")
