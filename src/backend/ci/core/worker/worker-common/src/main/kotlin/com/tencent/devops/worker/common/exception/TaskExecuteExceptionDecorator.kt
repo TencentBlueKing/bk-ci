@@ -34,6 +34,7 @@ object TaskExecuteExceptionDecorator {
 
     @Suppress("UNCHECKED_CAST")
     fun decorate(throwable: Throwable): TaskExecuteException {
+        if (throwable is TaskExecuteException) return throwable
         var exception = throwable
         return (factory[exception::class] as ExceptionDecorator<Throwable>? ?: exception.cause?.let { cause ->
             (factory[cause::class] as ExceptionDecorator<Throwable>?).let {
