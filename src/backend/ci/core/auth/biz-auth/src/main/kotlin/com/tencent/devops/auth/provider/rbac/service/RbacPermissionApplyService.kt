@@ -130,6 +130,7 @@ class RbacPermissionApplyService @Autowired constructor(
         )
         logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
         val managerRoleGroupVO: V2ManagerRoleGroupVO
+        val groupInfoList: List<ManagerRoleGroupInfo>
         try {
             managerRoleGroupVO = getGradeManagerRoleGroup(
                 searchGroupInfo = searchGroupInfo,
@@ -137,17 +138,17 @@ class RbacPermissionApplyService @Autowired constructor(
                 relationId = projectInfo.relationId
             )
             logger.info("RbacPermissionApplyService|listGroups: managerRoleGroupVO=$managerRoleGroupVO")
+            groupInfoList = buildGroupInfoList(
+                userId = userId,
+                projectId = projectId,
+                projectName = projectInfo.resourceName,
+                managerRoleGroupInfoList = managerRoleGroupVO.results
+            )
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL
             )
         }
-        val groupInfoList = buildGroupInfoList(
-            userId = userId,
-            projectId = projectId,
-            projectName = projectInfo.resourceName,
-            managerRoleGroupInfoList = managerRoleGroupVO.results
-        )
         return ManagerRoleGroupVO(
             count = managerRoleGroupVO.count,
             results = groupInfoList
