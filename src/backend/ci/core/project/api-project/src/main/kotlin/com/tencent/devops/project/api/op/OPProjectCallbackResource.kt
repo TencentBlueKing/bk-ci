@@ -28,7 +28,6 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackPojo
 import com.tencent.devops.project.pojo.Result

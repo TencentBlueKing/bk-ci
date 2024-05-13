@@ -28,7 +28,6 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectCallbackResource
 import com.tencent.devops.project.dao.ProjectCallbackDao
