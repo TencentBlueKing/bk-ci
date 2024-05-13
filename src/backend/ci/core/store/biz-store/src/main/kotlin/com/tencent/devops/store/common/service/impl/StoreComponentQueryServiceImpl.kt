@@ -767,7 +767,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     private fun handleQueryStoreCodes(
         storeInfoQuery: StoreInfoQuery
     ) {
-        val updateFlag = storeInfoQuery.updateFlag ?: return
         val projectCode = storeInfoQuery.projectCode!!
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         val normalStoreCodes = mutableSetOf<String>()
@@ -812,11 +811,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         componentVersionMap.forEach {
             val storeCode = it.key
             val version = it.value
-            val installedVersion = installedMap[it.key]
-            val shouldAddStoreCode = if (updateFlag) {
-                installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
-            } else {
-                installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
+            val updateFlag = storeInfoQuery.updateFlag
+            val installedVersion = installedMap[storeCode]
+            val shouldAddStoreCode = when {
+                updateFlag == null -> true
+                updateFlag -> installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
+                else -> installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
             }
             if (shouldAddStoreCode) {
                 if (testStoreCodes?.contains(storeCode) == true) {

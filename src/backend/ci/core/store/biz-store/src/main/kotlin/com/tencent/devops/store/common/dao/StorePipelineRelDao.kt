@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StorePipelineRelDao {
@@ -92,6 +93,20 @@ class StorePipelineRelDao {
             dslContext.deleteFrom(this)
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
+
+    fun updateStorePipelineProject(
+        dslContext: DSLContext,
+        pipelineId: String,
+        projectCode: String
+    ) {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            dslContext.update(this)
+                .set(PROJECT_CODE, projectCode)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }
