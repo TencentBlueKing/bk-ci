@@ -1,18 +1,12 @@
 <template>
     <h3 class="component-tip pointer-events-auto">
-        <span class="tip-icon">
-            <i class="devops-icon icon-info-circle-shape"></i>
-        </span>
         <span class="tip-message" v-html="tip"></span>
     </h3>
 </template>
 
 <script>
-    // import mixins from '../mixins'
-
     export default {
         name: 'date-picker',
-        // mixins: [mixins],
         props: {
             tipStr: {
                 type: String
@@ -53,7 +47,6 @@
 
         methods: {
             initData () {
-                this.list = []
                 if (this.url) {
                     const url = this.handleDeepValue(/\$\{([^\}]+)\}/gim, this.url)
                     this.$ajax.get(url).then((res) => {
@@ -85,6 +78,7 @@
                     return res
                 })
 
+                this.list = []
                 this.tip = str.replace(/{([^\{\}]+)}/gim, (str, key) => {
                     const exisParamKey = typeof this.paramValues[key] !== 'undefined'
                     const value = exisParamKey ? this.paramValues[key] : str
@@ -153,25 +147,13 @@
         font-size: 12px;
         display: flex;
         border: 1px solid #e6e6e6;
-        .tip-icon {
-            min-width: 44px;
-            background-color: #ffb400;
-            position: relative;
-            .devops-icon {
-                font-size: 18px;
-                color: #fff;
-                display: inline-block;
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate3d(-50%, -50%, 0);
-            }
-        }
         .tip-message {
             flex: 1;
             padding: 10px 18px;
             line-height: 22px;
             word-break: break-all;
+            background: #f5f7fa;
+            color: #63656e;
             .text-link {
                 font-size: 12px;
                 margin: 0;

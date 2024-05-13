@@ -24,7 +24,7 @@
                         :name="key"
                         v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
                         :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
-                        :value="element[key] || atomPropsModel[key]?.default"
+                        :value="element[key]"
                         :element="element"
                         v-bind="obj">
                     </component>
@@ -92,6 +92,8 @@
             handleMethods (name, value) {
                 // 兼容逻辑，后续该需求上线后可删除
                 if (this.atomPropsModel?.repositoryType?.list) {
+                    console.log(name, value, 123)
+
                     this.handleUpdateElement(name, value)
                 } else {
                     if (name === 'repositoryType') {

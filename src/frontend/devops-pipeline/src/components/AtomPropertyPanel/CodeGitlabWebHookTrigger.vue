@@ -24,7 +24,7 @@
                         :name="key"
                         v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
                         :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
-                        :value="element[key] || atomPropsModel[key]?.default"
+                        :value="element[key]"
                         :element="element"
                         v-bind="obj">
                     </component>
