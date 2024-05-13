@@ -76,6 +76,10 @@
                 }
             }
         },
+<<<<<<< HEAD
+=======
+
+>>>>>>> 466f5fc222fcfee17f93e2fe289aa13d49a5c011
         created () {
             this.getBranchesList()
             if (this.value.length) {
@@ -84,6 +88,10 @@
                 this.curValue = ['']
             }
         },
+<<<<<<< HEAD
+=======
+
+>>>>>>> 466f5fc222fcfee17f93e2fe289aa13d49a5c011
         methods: {
             handleChangeBranch (val, index) {
                 this.curValue[index] = val
@@ -106,6 +114,10 @@
                 this.curValue.push('')
                 this.handleChange(this.name, this.curValue)
             },
+<<<<<<< HEAD
+=======
+
+>>>>>>> 466f5fc222fcfee17f93e2fe289aa13d49a5c011
             /**
              * 删除一行参数
              */

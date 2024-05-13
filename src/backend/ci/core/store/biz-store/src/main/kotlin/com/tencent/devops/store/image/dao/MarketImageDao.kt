@@ -27,6 +27,7 @@
 package com.tencent.devops.store.image.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
@@ -1295,7 +1296,7 @@ class MarketImageDao @Autowired constructor() {
         } else {
             baseQuery.offset(validOffset)
         }
-        return finalQuery.fetch()
+        return finalQuery.skipCheck().fetch()
     }
 
     fun countJobMarketImagesWithExtraConditions(
@@ -1350,7 +1351,7 @@ class MarketImageDao @Autowired constructor() {
                 )
             )
             .where(conditions)
-        return baseQuery.fetchOne(0, Int::class.java)!!
+        return baseQuery.skipCheck().fetchOne(0, Int::class.java)!!
     }
 
     /**

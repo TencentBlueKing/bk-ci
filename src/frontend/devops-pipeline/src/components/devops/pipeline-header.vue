@@ -52,7 +52,6 @@
         width: 100%;
         height: 60px;
         padding: 0 30px;
-        border-bottom: 1px solid $borderWeightColor;
         box-shadow: 0 2px 5px rgba(0, 0, 0, .03);
         display: flex;
         justify-content: space-between;
@@ -61,6 +60,10 @@
         &-left {
             display: flex;
             flex: 1;
+            align-items: center;
+        }
+        .fl {
+            display: flex;
             align-items: center;
         }
         &-right {
@@ -76,7 +79,6 @@
         .default-title {
             flex: 1;
             letter-spacing: .5px;
-            font-size: 16px;
             color: #333948;
         }
     }

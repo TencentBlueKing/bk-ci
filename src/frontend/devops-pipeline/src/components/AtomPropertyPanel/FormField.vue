@@ -23,6 +23,10 @@
                 type: String,
                 default: ''
             },
+            hideColon: {
+                type: Boolean,
+                default: false
+            },
             desc: {
                 type: String,
                 default: ''
@@ -59,7 +63,7 @@
             }
         },
         render (h) {
-            const { label, inline, required, $slots, isError, errorMsg, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider } = this
+            const { label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider } = this
             const descMap = desc.split('\n')
             return (
                 <div class={{
@@ -70,12 +74,12 @@
                     'is-required': required,
                     'is-danger': isError
                 }} >
-                    { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>{label}：
+                    { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>{label}{hideColon ? '' : '：'}
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
                         { label.trim() && desc.trim() && <bk-popover placement="top">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
                             <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
                                 <div>
                                     {

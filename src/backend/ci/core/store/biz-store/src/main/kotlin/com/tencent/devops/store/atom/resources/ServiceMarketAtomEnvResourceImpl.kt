@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
-import com.tencent.devops.store.pojo.common.StoreVersion
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import org.springframework.beans.factory.annotation.Autowired
 

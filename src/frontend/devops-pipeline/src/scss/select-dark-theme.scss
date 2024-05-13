@@ -1,0 +1,55 @@
+.dark-theme-select-trigger {
+    border-color: #63656E !important;
+    width: 280px;
+    color: #C4C6CC !important;
+    &.is-focus {
+        border-color: #C4C6CC !important;
+    }
+    .pipeline-version-dropmenu-trigger {
+        color: #C4C6CC !important;
+        background: #242424 !important;
+        &:hover {
+            color: #C4C6CC !important;
+        }
+    }
+    .pipeline-release-version-tag {
+        background: #27633D !important;
+        color: #3FC362 !important;
+        border: 1px solid #27633D !important;
+    }
+
+}
+.dark-theme-select-menu {
+    background: #1d1d1d !important;
+    color: #C4C6CC !important;
+    .bk-options.bk-options-single .bk-option {
+        &:hover,
+        &.is-selected {
+            background: #242424 !important;
+        }
+    }
+    .pipeline-release-version-tag {
+        background: #27633D !important;
+        color: #3FC362 !important;
+        border: 1px solid #27633D !important;
+    }
+    .pipeline-version-option-item {
+        &:hover,
+        &.pipeline-version-active {
+            background: #242424 !important;
+            color: #C4C6CC !important;
+        }
+    }
+    .bk-select-search-wrapper {
+        > input {
+            background: #242424 !important;
+        }
+    }
+
+    .bk-options .bk-option {
+        &:hover,
+        &.is-selected {
+            color: white !important;
+        }
+    }
+}

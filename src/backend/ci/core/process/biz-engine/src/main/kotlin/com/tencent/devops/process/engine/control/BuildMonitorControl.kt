@@ -376,7 +376,8 @@ class BuildMonitorControl @Autowired constructor(
                         id = pauseCheck.groupToReview()?.id,
                         suggest = "TIMEOUT"
                     ),
-                    timeout = true
+                    timeout = true,
+                    debug = buildInfo.debug
                 )
             }
         }

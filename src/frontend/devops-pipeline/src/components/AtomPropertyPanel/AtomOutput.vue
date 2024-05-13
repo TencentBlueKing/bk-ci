@@ -87,9 +87,6 @@
                 }
             }
         },
-        created () {
-            console.log('create output', this.atomPropsModel.output, this.element)
-        },
         methods: {
             editNamespace () {
                 this.showEditNamespace = !this.showEditNamespace

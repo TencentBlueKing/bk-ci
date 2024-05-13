@@ -84,11 +84,13 @@
                         <bk-radio
                             class="mr20"
                             value="SSH"
+                            :disabled="repoInfo.enablePac"
                         >
                             SSH
                         </bk-radio>
                         <bk-radio
                             value="HTTP"
+                            :disabled="repoInfo.enablePac"
                         >
                             {{ $t('codelib.用户名+密码') }}
                         </bk-radio>
@@ -243,10 +245,10 @@
 </template>
 
 <script>
-    import _ from 'lodash'
+    import { cloneDeep } from 'lodash-es'
     import {
-        mapState,
-        mapActions
+        mapActions,
+        mapState
     } from 'vuex'
     import {
         getCodelibConfig,
@@ -353,7 +355,7 @@
                         ...this.newRepoInfo,
                         ...val
                     }
-                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                    this.cacheRepoInfo = cloneDeep(this.newRepoInfo)
                 },
                 deep: true,
                 immediate: true
@@ -364,7 +366,7 @@
                         ...this.newRepoInfo,
                         ...val
                     }
-                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                    this.cacheRepoInfo = cloneDeep(this.newRepoInfo)
                 },
                 deep: true,
                 immediate: true
@@ -391,7 +393,6 @@
                     }
 
                     if (this.isGit) {
-                        console.log(val, 11)
                         if (['OAUTH', 'HTTP'].includes(val) && this.cacheRepoInfo.authType === 'SSH') {
                             const { url } = this.newRepoInfo
                             this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')

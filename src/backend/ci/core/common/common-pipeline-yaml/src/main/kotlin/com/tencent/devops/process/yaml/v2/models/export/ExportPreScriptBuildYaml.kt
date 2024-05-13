@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v2.models.export
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.Extends
 import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.process.yaml.v2.models.Resources
@@ -48,6 +49,7 @@ data class ExportPreScriptBuildYaml(
     var version: String?,
     var name: String?,
     var label: List<String>? = null,
+    @JsonProperty("on")
     var triggerOn: PreTriggerOn?,
     var variables: Map<String, String>? = null,
     var stages: List<PreStage>? = null,

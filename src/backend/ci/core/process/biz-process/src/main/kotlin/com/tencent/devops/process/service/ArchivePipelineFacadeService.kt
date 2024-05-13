@@ -52,10 +52,15 @@ class ArchivePipelineFacadeService @Autowired constructor(
         return pipelineListFacadeService.listPermissionPipelineName(projectId, userId)
     }
 
-    fun getAllBuildNo(userId: String, pipelineId: String, projectId: String): List<Map<String, String>> {
+    fun getAllBuildNo(
+        userId: String,
+        pipelineId: String,
+        projectId: String,
+        debugVersion: Int?
+    ): List<Map<String, String>> {
         checkPermission(userId, projectId, pipelineId)
 
-        return pipelineListFacadeService.getAllBuildNo(projectId, pipelineId)
+        return pipelineListFacadeService.getAllBuildNo(projectId, pipelineId, debugVersion)
     }
 
     fun migrateArchivePipelineData(

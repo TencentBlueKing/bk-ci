@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreSensitiveApi
 import com.tencent.devops.model.store.tables.records.TStoreSensitiveApiRecord
-import com.tencent.devops.store.pojo.common.SensitiveApiCreateDTO
-import com.tencent.devops.store.pojo.common.SensitiveApiInfo
-import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
-import com.tencent.devops.store.pojo.common.SensitiveApiUpdateDTO
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiCreateDTO
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiSearchDTO
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiUpdateDTO
 import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
