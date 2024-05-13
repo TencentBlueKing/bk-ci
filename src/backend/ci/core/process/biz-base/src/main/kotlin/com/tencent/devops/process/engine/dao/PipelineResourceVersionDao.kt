@@ -37,7 +37,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionR
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
