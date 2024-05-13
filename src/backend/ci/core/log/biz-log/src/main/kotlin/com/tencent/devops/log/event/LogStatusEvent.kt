@@ -37,7 +37,11 @@ data class LogStatusEvent(
     val finished: Boolean,
     val tag: String?,
     val subTag: String?,
+    /*此 jobId 实际为 container id*/
     val jobId: String?,
+    /*此 jobId 将是用户可选填的 job id*/
+    val userJobId: String?,
+    val stepId: String?,
     val executeCount: Int?,
     val logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
     override var retryTime: Int = 2,

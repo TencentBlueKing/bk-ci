@@ -175,8 +175,10 @@ object Runner {
         val retryCount = variables[PIPELINE_RETRY_COUNT] ?: "0"
         val executeCount = retryCount.toInt() + 1
         LoggerService.executeCount = executeCount
-        LoggerService.jobId = buildVariables.containerHashId
+        LoggerService.containerHashId = buildVariables.containerHashId
+        LoggerService.jobId = buildVariables.jobId ?: ""
         LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
+        LoggerService.stepId = VMUtils.genStartVMTaskId(buildVariables.containerId)
         LoggerService.buildVariables = buildVariables
 
         showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
@@ -221,6 +223,7 @@ object Runner {
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                     try {
                         LoggerService.elementId = buildTask.taskId!!
+                        LoggerService.stepId = buildTask.stepId ?: ""
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
                         CredentialUtils.signToken = buildTask.signToken ?: ""
 
@@ -243,6 +246,7 @@ object Runner {
                         LoggerService.finishTask()
                         LoggerService.elementId = ""
                         LoggerService.elementName = ""
+                        LoggerService.stepId = ""
                         waitCount = 0
                     }
                 }
