@@ -365,8 +365,9 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        elementId: String,
-        params: ReviewParam
+        elementId: String?,
+        params: ReviewParam,
+        stepId: String?
     ): Result<Boolean> {
         logger.info("OPENAPI_BUILD_V4|$userId|manual review|$projectId|$pipelineId|$buildId|$elementId|$params")
         return client.get(ServiceBuildResource::class).manualReview(
@@ -376,7 +377,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            stepId = stepId
         )
     }
 
