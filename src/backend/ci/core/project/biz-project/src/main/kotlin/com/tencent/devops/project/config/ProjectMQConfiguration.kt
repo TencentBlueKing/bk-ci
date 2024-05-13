@@ -66,6 +66,9 @@ class ProjectMQConfiguration {
     fun projectUpdateLogoQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_LOGO_EVENT)
 
     @Bean
+    fun projectEnableQueue() = Queue(MQ.QUEUE_PROJECT_ENABLE_EVENT)
+
+    @Bean
     fun projectCreateExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
         fanoutExchange.isDelayed = true
@@ -115,6 +118,13 @@ class ProjectMQConfiguration {
         .to(projectUpdateLogoExchange)
 
     @Bean
+    fun projectEnableQueueBind(
+        @Autowired projectEnableQueue: Queue,
+        @Autowired projectEnableExchange: FanoutExchange
+    ): Binding = BindingBuilder.bind(projectEnableQueue)
+        .to(projectEnableExchange)
+
+    @Bean
     fun projectCreateListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired projectCreateQueue: Queue,
@@ -162,6 +172,25 @@ class ProjectMQConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(projectUpdateLogoQueue.name)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(10)
+        container.setAmqpAdmin(rabbitAdmin)
+        val adapter = MessageListenerAdapter(listener, listener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.setMessageListener(adapter)
+        return container
+    }
+
+    @Bean
+    fun projectEnableListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired projectEnableQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: ProjectEventListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(projectEnableQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
         container.setAmqpAdmin(rabbitAdmin)

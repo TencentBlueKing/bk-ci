@@ -54,7 +54,6 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
     override fun create(
         userId: String,
         event: ProjectEventType,
-        gatewayType: GatewayType,
         secretParam: ISecretParam
     ): Result<Boolean> {
         projectCallbackDao.create(
