@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.template
 
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模版发布进度信息")

@@ -35,8 +35,8 @@ import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.common.dao.StoreApproveDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.ATOM_COLLABORATOR_APPLY_REFUSE_TEMPLATE
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum

@@ -28,8 +28,9 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.classify.Classify
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -125,4 +126,28 @@ interface ServiceStoreResource {
         @QueryParam("errorCodeType")
         errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean>
+
+    @GET
+    @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/permission/validate")
+    @Operation(summary = "校验项目是否有使用该组件的权限")
+    fun validateProjectComponentPermission(
+        @PathParam("projectCode")
+        @Parameter(description = "项目编码", required = true)
+        projectCode: String,
+        @Parameter(description = "标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
+
+    @Operation(summary = "获取组件分类信息列表")
+    @GET
+    @Path("/classifies/types/{storeType}/list")
+    fun getClassifyList(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<List<Classify>>
 }

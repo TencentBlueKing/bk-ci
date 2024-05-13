@@ -27,11 +27,13 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 
 /**
@@ -129,4 +131,19 @@ interface StoreCommonService {
         releaseType: ReleaseTypeEnum?,
         version: String?
     ): StoreShowVersionInfo
+
+    /**
+     * 校验组件版本号
+     */
+    fun validateStoreVersion(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        versionInfo: VersionModel,
+        name: String
+    )
+
+    /**
+     * 获取普通升级标识
+     */
+    fun getNormalUpgradeFlag(storeCode: String, storeType: StoreTypeEnum, status: StoreStatusEnum): Boolean
 }

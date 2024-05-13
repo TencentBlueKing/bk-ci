@@ -38,7 +38,7 @@ enum class TemplateStatusEnum(val status: Int) {
     companion object {
 
         fun getTemplateStatus(name: String): TemplateStatusEnum? {
-            TemplateStatusEnum.values().forEach { enumObj ->
+            values().forEach { enumObj ->
                 if (enumObj.name == name) {
                     return enumObj
                 }
@@ -47,15 +47,12 @@ enum class TemplateStatusEnum(val status: Int) {
         }
 
         fun getTemplateStatus(status: Int): String {
-            return when (status) {
-                0 -> INIT.name
-                1 -> AUDITING.name
-                2 -> AUDIT_REJECT.name
-                3 -> RELEASED.name
-                4 -> GROUNDING_SUSPENSION.name
-                5 -> UNDERCARRIAGED.name
-                else -> INIT.name
+            values().forEach { enumObj ->
+                if (enumObj.status == status) {
+                    return enumObj.name
+                }
             }
+            return INIT.name
         }
     }
 }

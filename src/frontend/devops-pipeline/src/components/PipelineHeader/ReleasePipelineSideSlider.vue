@@ -206,7 +206,7 @@
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
-                'pipeline'
+                'pipelineSetting'
             ]),
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
@@ -215,7 +215,7 @@
                 return this.pipelineInfo?.baseVersionName || '--'
             },
             pipelineName () {
-                return this.pipeline?.name
+                return this.pipelineSetting?.pipelineName
             },
             viewNames () {
                 return this.pipelineInfo?.viewNames || []

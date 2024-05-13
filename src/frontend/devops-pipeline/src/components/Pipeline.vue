@@ -100,7 +100,7 @@
 <script>
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { areDeeplyEqual, isObject } from '../utils/util'
+    import { isObject } from '../utils/util'
     import AtomPropertyPanel from './AtomPropertyPanel'
     import AtomSelector from './AtomSelector'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
@@ -246,17 +246,6 @@
                         ...(this.isInstanceEditable ? this.ruleList : [])
                     ]
                     : [...this.ruleList]
-            }
-        },
-        watch: {
-            pipeline: {
-                handler (val, old) {
-                    if (this.pipelineEditable) {
-                        console.log(areDeeplyEqual(val, old))
-                        // this.setPipelineEditing(true)
-                    }
-                },
-                deep: true
             }
         },
         created () {
