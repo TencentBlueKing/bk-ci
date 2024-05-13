@@ -41,6 +41,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -291,10 +292,31 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid)
         workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
+        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: return false
+        if (task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING) {
+            if (taskStatus.status == TaskStatusEnum.successed) {
+                dispatchWorkspaceOpHisDao.update(
+                    dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
+                )
+                // 更新db状态
+                dispatchWorkspaceDao.updateWorkspaceStatus(
+                    workspaceName = task.workspaceName,
+                    status = EnvStatusEnum.running,
+                    dslContext = dslContext
+                )
+
+                return true
+            } else {
+                dispatchWorkspaceOpHisDao.update(
+                    dslContext, task.uid, EnvironmentActionStatus.FAILED
+                )
+                logger.error("workspaceTaskCallback $task error $taskStatus")
+            }
+        }
+        if ((task.status.needFix() && task.action == EnvironmentAction.CREATE) ||
+            (task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING)
+        ) {
             val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
                 logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
                 return false

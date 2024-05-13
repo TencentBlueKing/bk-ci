@@ -273,6 +273,7 @@ class RemoteDevService @Autowired constructor(
         taskStatus: TaskStatus,
         mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
     ): Boolean {
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
         return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 
@@ -450,38 +451,11 @@ class RemoteDevService @Autowired constructor(
     fun upgradeWorkspace(event: WorkspaceOperateEvent) {
         // 需要生成一个新的 pipelineId 进行操作
         val orderId = "${event.projectId}_${event.projectId}_${UUIDUtil.generate().takeLast(16)}"
-        remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .upgradeWorkspaceVm(
-                userId = event.userId,
-                workspaceName = event.workspaceName,
-                machineType = event.machineType!!,
-                pipelineId = orderId
-            )
-        // TODO: 116140983 回写需要这个信息，最后删掉
-//        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-//            .waitTaskFinish(event.userId, taskId, event.type)
-//        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-//            dispatchWorkspaceOpHisDao.update(
-//                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
-//            )
-//            // 更新db状态
-//            dispatchWorkspaceDao.updateWorkspaceStatus(
-//                workspaceName = event.workspaceName,
-//                status = EnvStatusEnum.running,
-//                dslContext = dslContext
-//            )
-//
-//            return true
-//        } else {
-//            dispatchWorkspaceOpHisDao.update(
-//                dslContext, taskId, EnvironmentActionStatus.FAILED
-//            )
-//            throw BuildFailureException(
-//                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorType,
-//                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorCode,
-//                ErrorCodeEnum.BASE_STOP_VM_ERROR.getErrorMessage(),
-//                "errorMessage:$failedMsg"
-//            )
-//        }
+        remoteDevServiceFactory.loadRemoteDevService(event.mountType).upgradeWorkspaceVm(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            machineType = event.machineType!!,
+            pipelineId = orderId
+        )
     }
 }
