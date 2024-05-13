@@ -814,7 +814,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             "ENGINE|$buildId|BCT_DONE|$projectId|j($vmSeqId)|${result.taskId}|$buildStatus|" +
                 "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
         )
-        buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = task?.containerHashId)
+        buildLogPrinter.stopLog(
+            buildId = buildId,
+            tag = result.elementId,
+            containerHashId = task?.containerHashId,
+            stepId = task?.stepId
+        )
     }
 
     private fun getCompleteTaskBuildStatus(

@@ -179,7 +179,7 @@ class BuildStartControl @Autowired constructor(
             stepId = TAG
         )
 
-        buildLogPrinter.stopLog(buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount)
+        buildLogPrinter.stopLog(buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount)
         startPipelineCount()
     }
 
@@ -517,7 +517,7 @@ class BuildStartControl @Autowired constructor(
                         operation = "updateTriggerElement#$taskId"
                     )
                     it.status = BuildStatus.SUCCEED.name
-                    buildLogPrinter.stopLog(buildInfo.buildId, taskId, jobId = JOB_ID, executeCount)
+                    buildLogPrinter.stopLog(buildInfo.buildId, taskId, containerHashId = JOB_ID, executeCount)
                     return@lit
                 }
             }

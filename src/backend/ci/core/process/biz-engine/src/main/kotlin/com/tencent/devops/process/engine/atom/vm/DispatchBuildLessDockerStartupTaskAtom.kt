@@ -95,8 +95,10 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = param.jobId,
+                stepId = task.stepId
             )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(

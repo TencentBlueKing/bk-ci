@@ -345,7 +345,15 @@ class BuildLogQueryService @Autowired constructor(
             archiveFlag = archiveFlag
         )
         val lastLineNum = indexService.getLastLineNum(buildId)
-        val finished = logStatusService.isFinish(buildId, null, null, null, null)
+        val finished = logStatusService.isFinish(
+            buildId = buildId,
+            tag = null,
+            subTag = null,
+            containerHashId = null,
+            executeCount = null,
+            jobId = null,
+            stepId = null
+        )
         return Result(
             QueryLogLineNum(
                 buildId = buildId,

@@ -178,7 +178,9 @@ class LogServiceESImpl(
                 containerHashId = jobId,
                 executeCount = executeCount,
                 logStorageMode = logStorageMode,
-                finish = finished
+                finish = finished,
+                jobId = userJobId,
+                stepId = stepId
             )
         }
     }
@@ -227,7 +229,9 @@ class LogServiceESImpl(
             containerHashId = containerHashId,
             tag = tag,
             subTag = subTag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
@@ -345,7 +349,15 @@ class LogServiceESImpl(
         jobId: String?,
         stepId: String?
     ): Response {
-        val (_, index) = getQueryLogs(buildId, containerHashId, tag, subTag, executeCount)
+        val (_, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        )
         if (index.isNullOrBlank()) return Response.status(Response.Status.NOT_FOUND).build()
         val query = getQuery(
             buildId = buildId,
@@ -490,7 +502,15 @@ class LogServiceESImpl(
         jobId: String?,
         stepId: String?
     ): PageQueryLogs {
-        var (queryLogs, index) = getQueryLogs(buildId, containerHashId, tag, subTag, executeCount)
+        var (queryLogs, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        )
         if (index.isNullOrBlank()) return PageQueryLogs(
             buildId = queryLogs.buildId,
             finished = queryLogs.finished,
@@ -586,7 +606,9 @@ class LogServiceESImpl(
             containerHashId = containerHashId,
             tag = tag,
             subTag = subTag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         if (index.isNullOrBlank()) return queryLogs
 
@@ -658,7 +680,9 @@ class LogServiceESImpl(
             containerHashId = containerHashId,
             tag = tag,
             subTag = subTag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
@@ -734,7 +758,9 @@ class LogServiceESImpl(
             containerHashId = containerHashId,
             tag = tag,
             subTag = subTag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
@@ -817,7 +843,9 @@ class LogServiceESImpl(
             containerHashId = containerHashId,
             tag = tag,
             subTag = subTag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
@@ -927,7 +955,9 @@ class LogServiceESImpl(
             containerHashId = containerHashId,
             tag = tag,
             subTag = subTag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
@@ -1045,14 +1075,18 @@ class LogServiceESImpl(
         containerHashId: String?,
         tag: String?,
         subTag: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?
     ): Pair<QueryLogs, String?> {
         val finished = logStatusService.isFinish(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
             containerHashId = containerHashId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         val indexName = indexService.getBuildIndexName(buildId)
         val (status, msg) = if (indexName.isNullOrBlank() || !isExistIndex(buildId, indexName)) {

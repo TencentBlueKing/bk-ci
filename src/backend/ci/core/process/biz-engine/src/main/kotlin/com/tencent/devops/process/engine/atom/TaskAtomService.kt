@@ -277,8 +277,9 @@ class TaskAtomService @Autowired(required = false) constructor(
         buildLogPrinter.stopLog(
             buildId = task.buildId,
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount,
+            stepId = task.stepId
         )
     }
 
