@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
+import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
@@ -59,7 +60,7 @@ object Tools {
     ): SimpleMessageListenerContainer {
         logger.info(
             "createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=$concurrency" +
-                "|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|interval=$startConsumerMinInterval"
+                    "|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|interval=$startConsumerMinInterval"
         )
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
@@ -88,13 +89,18 @@ object Tools {
         prefetchCount: Int = 1
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(queue.name)
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
+        container.setQueues(queue)
+        if (PropertyUtil.isLocalRun()) {
+            container.lazyLoad()
+            container.setMismatchedQueuesFatal(false)
+        } else {
+            container.setConcurrentConsumers(concurrency)
+            container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
+            container.setMismatchedQueuesFatal(true)
+        }
         container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(startConsumerMinInterval)
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)
-        container.setMismatchedQueuesFatal(true)
         container.setMessageListener(adapter)
         container.setPrefetchCount(prefetchCount)
         container.addAfterReceivePostProcessors(traceMessagePostProcessor)

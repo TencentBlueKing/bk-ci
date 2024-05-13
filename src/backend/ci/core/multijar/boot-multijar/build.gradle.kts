@@ -24,26 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.service
 
-import com.google.common.cache.CacheBuilder
-import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-
-@Service
-class IndexService {
-    private val indexCache = CacheBuilder.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*buildId*/, String>()
-
-    fun getHandle(buildId: String, action: () -> String): String {
-        var index = indexCache.getIfPresent(buildId)
-        if (index != null) {
-            return index
-        }
-        index = action()
-        indexCache.put(buildId, index)
-        return index
-    }
+dependencies {
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-db-base"))
+    api(project(":core:common:common-util"))
+    api("mysql:mysql-connector-java")
+    api("com.tencent.devops.leaf:leaf-boot-starter")
+    implementation(kotlin("stdlib"))
 }
+plugins {
+    `task-render-template`
+    `task-multi-boot-jar`
+    `task-multi-boot-run`
+}
+
+tasks.getByName("multiBootRun").dependsOn("replacePlaceholders")

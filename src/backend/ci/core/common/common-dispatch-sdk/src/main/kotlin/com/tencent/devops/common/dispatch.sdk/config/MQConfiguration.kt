@@ -48,9 +48,11 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.context.annotation.Bean
 
 @Suppress("ALL")
+@ConditionalOnMissingClass("com.tencent.devops.multijar.MultijarDslContextConfiguration")
 class MQConfiguration @Autowired constructor() {
 
     @Value("\${dispatch.demoteQueue.concurrency:2}")

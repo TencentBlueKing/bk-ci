@@ -15,6 +15,13 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-- 本地运行
+if config.local_run and config.local_run.enabled == true then
+    ngx.var.target = config.local_run.target
+    return
+end
+
 -- 获取服务名称
 local service_name = ngx.var.service
 if config.service_name ~= nil and config.service_name ~= "" then

@@ -25,28 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.misc.dao.project
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
-import com.tencent.devops.project.pojo.DataSource
+import com.tencent.devops.model.project.tables.TDataSource
+import com.tencent.devops.model.project.tables.records.TDataSourceRecord
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-interface DataSourceService {
+@Repository
+class MiscDataSourceDao {
 
-    fun addDataSource(userId: String, dataSource: DataSource): Boolean
-
-    fun deleteDataSource(userId: String, id: String): Boolean
-
-    fun updateDataSource(userId: String, id: String, dataSource: DataSource): Boolean
-
-    fun getDataSourceById(id: String): DataSource?
-
-    fun getDataBasePiecewiseById(
-        projectId: String,
-        moduleCode: SystemModuleEnum,
+    fun listByModule(
+        dslContext: DSLContext,
         clusterName: String,
-        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
-        tableName: String? = null
-    ): DataBasePiecewiseInfo?
+        moduleCode: SystemModuleEnum,
+        fullFlag: Boolean? = false,
+        dataTag: String? = null
+    ): Result<TDataSourceRecord>? {
+        return with(TDataSource.T_DATA_SOURCE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(CLUSTER_NAME.eq(clusterName))
+            conditions.add(MODULE_CODE.eq(moduleCode.name))
+            if (fullFlag != null) {
+                conditions.add(FULL_FLAG.eq(fullFlag))
+            }
+            if (dataTag != null) {
+                conditions.add(TAG.eq(dataTag))
+            } else {
+                conditions.add(TAG.isNull)
+            }
+            dslContext.selectFrom(this).where(conditions).orderBy(DATA_SOURCE_NAME.asc()).fetch()
+        }
+    }
 }

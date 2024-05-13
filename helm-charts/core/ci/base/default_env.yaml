@@ -54,3 +54,5 @@ bkCiSm4Enabled: false
 bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
+bkCiLocalRunEnabled: false
+bkCiLocalRunTarget: host.docker.internal:8081

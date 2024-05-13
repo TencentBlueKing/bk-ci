@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    active:
+      - common
+      - auth
+      - image
+      - process
+      - environment
+      - ticket
+      - repository
+      - project
+      - notify
+      - dispatch
+      - dispatch-docker
+      - dispatch-kubernetes
+      - artifactory
+      - plugin
+      - worker
+      - websocket
+      - misc
+      - store
+      - quality
+      - log
+  application:
+    name: multijar
+    desc: DevOps MultiJar Service
+    version: 4.0.0
+    packageName: com.tencent.devops.multijar

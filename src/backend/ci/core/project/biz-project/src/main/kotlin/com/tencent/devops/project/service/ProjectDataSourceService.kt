@@ -24,52 +24,29 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.resources
+
+package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OPDataSourceResource
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
-import com.tencent.devops.project.service.ProjectDataSourceService
-import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class OPDataSourceResourceImpl @Autowired constructor(
-    private val projectDataSourceService: ProjectDataSourceService
-) : OPDataSourceResource {
+interface ProjectDataSourceService {
 
-    override fun addDataSource(userId: String, dataSource: DataSource): Result<Boolean> {
-        return Result(projectDataSourceService.addDataSource(userId, dataSource))
-    }
+    fun addDataSource(userId: String, dataSource: DataSource): Boolean
 
-    override fun updateDataSource(userId: String, id: String, dataSource: DataSource): Result<Boolean> {
-        return Result(projectDataSourceService.updateDataSource(userId, id, dataSource))
-    }
+    fun deleteDataSource(userId: String, id: String): Boolean
 
-    override fun getDataSourceById(id: String): Result<DataSource?> {
-        return Result(projectDataSourceService.getDataSourceById(id))
-    }
+    fun updateDataSource(userId: String, id: String, dataSource: DataSource): Boolean
 
-    override fun deleteDataSourceById(userId: String, id: String): Result<Boolean> {
-        return Result(projectDataSourceService.deleteDataSource(userId, id))
-    }
+    fun getDataSourceById(id: String): DataSource?
 
-    override fun getDataBasePiecewiseById(
+    fun getDataBasePiecewiseById(
         projectId: String,
         moduleCode: SystemModuleEnum,
         clusterName: String,
-        ruleType: ShardingRuleTypeEnum,
-        tableName: String?
-    ): Result<DataBasePiecewiseInfo?> {
-        return Result(projectDataSourceService.getDataBasePiecewiseById(
-            projectId = projectId,
-            moduleCode = moduleCode,
-            clusterName = clusterName,
-            ruleType = ruleType,
-            tableName = tableName
-        ))
-    }
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
+        tableName: String? = null
+    ): DataBasePiecewiseInfo?
 }

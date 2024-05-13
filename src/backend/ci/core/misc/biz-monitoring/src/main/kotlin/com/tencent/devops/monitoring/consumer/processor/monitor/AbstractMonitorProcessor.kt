@@ -28,7 +28,7 @@
 package com.tencent.devops.monitoring.consumer.processor.monitor
 
 import com.tencent.devops.common.api.pojo.AtomMonitorData
-import com.tencent.devops.monitoring.client.InfluxdbClient
+import com.tencent.devops.monitoring.client.MonitoringInfluxdbClient
 import org.slf4j.LoggerFactory
 
 /**
@@ -46,7 +46,7 @@ abstract class AbstractMonitorProcessor {
      */
     protected abstract fun process(extData: Map<String, Any>, monitorDatas: ArrayList<MonitorData>)
 
-    fun process(influxdbClient: InfluxdbClient, atomMonitorData: AtomMonitorData) {
+    fun process(monitoringInfluxdbClient: MonitoringInfluxdbClient, atomMonitorData: AtomMonitorData) {
 
         val extData = atomMonitorData.extData
 
@@ -71,7 +71,7 @@ abstract class AbstractMonitorProcessor {
             it.fields["vmSeqId"] = atomMonitorData.vmSeqId
             it.fields["channel"] = atomMonitorData.channel ?: ""
             it.fields["starter"] = atomMonitorData.starter
-        }.forEach { influxdbClient.insert(this.measurement(), it.tags, it.fields) }
+        }.forEach { monitoringInfluxdbClient.insert(this.measurement(), it.tags, it.fields) }
     }
 
     companion object {
