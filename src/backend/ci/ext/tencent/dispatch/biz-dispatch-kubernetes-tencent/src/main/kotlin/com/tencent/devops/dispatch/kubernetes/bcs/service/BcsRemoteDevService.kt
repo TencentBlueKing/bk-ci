@@ -269,25 +269,26 @@ class BcsRemoteDevService @Autowired constructor(
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: return false
+        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
+            logger.warn("workspaceTaskCallback|fail with wrong task|$taskStatus")
+            return false
+        }
         if (task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING) {
             if (taskStatus.status == TaskStatusEnum.successed) {
                 dispatchWorkspaceOpHisDao.update(
                     dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
                 )
-                // 更新db状态
                 dispatchWorkspaceDao.updateWorkspaceStatus(
                     workspaceName = task.workspaceName,
                     status = EnvStatusEnum.running,
                     dslContext = dslContext
                 )
-
-                return true
             } else {
                 dispatchWorkspaceOpHisDao.update(
                     dslContext, task.uid, EnvironmentActionStatus.FAILED
                 )
                 logger.error("workspaceTaskCallback $task error $taskStatus")
+                return true
             }
         }
         if ((task.status.needFix() && task.action == EnvironmentAction.CREATE) ||

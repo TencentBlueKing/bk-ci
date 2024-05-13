@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsRemoteDevService
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
@@ -293,25 +294,26 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: return false
+        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
+            BcsRemoteDevService.logger.warn("workspaceTaskCallback|fail with wrong task|$taskStatus")
+            return false
+        }
         if (task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING) {
             if (taskStatus.status == TaskStatusEnum.successed) {
                 dispatchWorkspaceOpHisDao.update(
                     dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
                 )
-                // 更新db状态
                 dispatchWorkspaceDao.updateWorkspaceStatus(
                     workspaceName = task.workspaceName,
                     status = EnvStatusEnum.running,
                     dslContext = dslContext
                 )
-
-                return true
             } else {
                 dispatchWorkspaceOpHisDao.update(
                     dslContext, task.uid, EnvironmentActionStatus.FAILED
                 )
                 logger.error("workspaceTaskCallback $task error $taskStatus")
+                return true
             }
         }
         if ((task.status.needFix() && task.action == EnvironmentAction.CREATE) ||
