@@ -245,7 +245,8 @@ class StorePipelineServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     storeCode = storeCode,
                     storeType = storeType,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    projectCode = innerPipelineProject
                 )
                 val buildId = storeInitPipelineResp.buildId
                 if (!buildId.isNullOrBlank()) {
