@@ -108,7 +108,6 @@
                 isShowBasicRule: this.notEmptyArray('newExpression'),
                 advance: this.notEmptyArray('advanceExpression'),
                 isShowCodelibConfig: this.element.repoHashId || this.element.noScm,
-<<<<<<< HEAD
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
                 repositoryType: 'ID'
             }
@@ -144,21 +143,6 @@
                         key: ''
                     }
                 ]
-=======
-                advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || ''
->>>>>>> 466f5fc222fcfee17f93e2fe289aa13d49a5c011
-            }
-        },
-        computed: {
-            getCodeUrl () {
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000`
-            },
-            codelibOption () {
-                return {
-                    paramId: 'repositoryHashId',
-                    paramName: 'aliasName',
-                    searchable: true
-                }
             }
         },
         watch: {
