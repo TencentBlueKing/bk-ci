@@ -61,7 +61,15 @@ class MarketStoreQueryDao {
         storeInfoQuery: StoreInfoQuery
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
         val baseStep = dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE)).from(tStoreBase)
+        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
+            baseStep.leftJoin(tStoreBaseFeature)
+                .on(
+                    tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                        .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                )
+        }
         val conditions = formatConditions(
             dslContext = dslContext,
             storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType),
@@ -168,13 +176,6 @@ class MarketStoreQueryDao {
         } else {
             conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
             conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        }
-        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
-            baseStep.leftJoin(tStoreBaseFeature)
-                .on(
-                    tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
-                        .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
-                )
         }
         storeInfoQuery.recommendFlag?.let {
             conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
