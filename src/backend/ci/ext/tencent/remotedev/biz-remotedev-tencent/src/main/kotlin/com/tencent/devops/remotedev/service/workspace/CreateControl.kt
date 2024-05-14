@@ -49,6 +49,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
@@ -75,6 +76,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.BkTicketService
@@ -240,7 +242,9 @@ class CreateControl @Autowired constructor(
         // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡
         var newNum = 0
         if (workspaceCreate.imageCosFile.isBlank()) {
-            val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
+            val resourceCount = startCloudResourceCountCheck(
+                workspaceCreate.windowsType, workspaceCreate.windowsZone, QuotaType.OFFSHORE
+            )
             if (cgsId != null || resourceCount >= workspaceCreate.count) {
                 doCreateWorkspace(
                     workspaceCreate = workspaceCreate,
@@ -260,7 +264,12 @@ class CreateControl @Autowired constructor(
             newNum = workspaceCreate.count
         }
 
-        createCheckWhenWinNotAlready(windowsZone, windowsConfig, newNum)
+        createCheckWhenWinNotAlready(
+            windowsZone = windowsZone,
+            windowsConfig = windowsConfig,
+            newNum = newNum,
+            quotaType = QuotaType.OFFSHORE
+        )
 
         doCreateWorkspace(
             workspaceCreate = workspaceCreate,
@@ -277,14 +286,28 @@ class CreateControl @Autowired constructor(
     private fun createCheckWhenWinNotAlready(
         windowsZone: WindowsResourceZoneConfig,
         windowsConfig: WindowsResourceTypeConfig,
-        newNum: Int
+        newNum: Int,
+        quotaType: QuotaType
     ) {
-        val data = client.get(ServiceStartCloudResource::class).getResourceVm(
-            ResourceVmReq(
-                zoneId = windowsZone.zoneShortName,
-                machineType = windowsConfig.size
+        val data = kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class).getResourceVm(
+                ResourceVmReq(
+                    zoneId = windowsZone.zoneShortName,
+                    machineType = windowsConfig.size,
+                    internal = quotaType.getInternal()
+                )
+            ).data
+        }.getOrElse {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "unkown",
+                    newNum.toString()
+                )
             )
-        ).data
+        }
         val free = sumResourceVmFree(
             res = data,
             zoneShortName = windowsZone.zoneShortName,
@@ -324,9 +347,13 @@ class CreateControl @Autowired constructor(
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         val gameId = workspaceCommon.getGameIdAndAppId(projectId, WorkspaceOwnerType.PROJECT)
+
+        val workspaceNames = workspaceCreate.assignNames.ifEmpty {
+            buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(projectId)) } }
+        }
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
-            val workspaceName = generateWorkspaceName(projectId)
+            val workspaceName = workspaceNames[i]
             val ws = Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
@@ -378,7 +405,8 @@ class CreateControl @Autowired constructor(
                         machineType = windowsConfig.size,
                         cgsId = cgsId,
                         autoAssign = autoAssign,
-                        imageCosFile = workspaceCreate.imageCosFile
+                        imageCosFile = workspaceCreate.imageCosFile,
+                        quotaType = QuotaType.OFFSHORE
                     ),
                     settingEnvs = emptyMap(),
                     projectId = projectId,
@@ -394,12 +422,21 @@ class CreateControl @Autowired constructor(
 
     fun devcloudCreateWorkspace(
         userId: String,
-        workspaceCreate: WindowsWorkspaceCreate
+        workspaceCreate: WindowsWorkspaceCreate,
+        projectId: String?
     ): Boolean {
-        logger.info("create workspace from devcloud |$userId|$workspaceCreate")
-        loadWorkspaceWithPersonalWindows(
-            userId, "_$userId", workspaceCreate
-        )
+        logger.info("create workspace from devcloud |$userId|$workspaceCreate|$projectId")
+        if (projectId != null) {
+            projectCreateWorkspace(
+                pmUserId = userId,
+                projectId = projectId,
+                cgsId = null,
+                autoAssign = null,
+                workspaceCreate = workspaceCreate
+            )
+        } else {
+            loadWorkspaceWithPersonalWindows(userId, workspaceCreate)
+        }
         return true
     }
 
@@ -432,7 +469,7 @@ class CreateControl @Autowired constructor(
 
         val workspace = if (workspaceCreate.windowsType != null) {
             loadWorkspaceWithPersonalWindows(
-                userId = userId, projectId = projectId, workspaceCreate = WindowsWorkspaceCreate(
+                userId = userId, workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = checkNotNull(workspaceCreate.windowsType),
                     windowsZone = checkNotNull(workspaceCreate.windowsZone),
                     baseImageId = 0,
@@ -953,7 +990,6 @@ class CreateControl @Autowired constructor(
 
     fun loadWorkspaceWithPersonalWindows(
         userId: String,
-        projectId: String,
         workspaceCreate: WindowsWorkspaceCreate,
         cgsId: String? = null
     ): List<Workspace> {
@@ -984,15 +1020,24 @@ class CreateControl @Autowired constructor(
             )
         }
 
+        val projectId = checkOrInitPersonalProject(userId)
+
         val workspaceNames = workspaceCreate.assignNames.ifEmpty {
             buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(userId)) } }
         }
 
         windowsGpuCheck(userId, workspaceNames.size)
         workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
-        val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
-        if (workspaceNames.size - resourceCount > 0) {
-            createCheckWhenWinNotAlready(windowsZone, windowsConfig, workspaceNames.size - resourceCount)
+        val resourceCount = startCloudResourceCountCheck(
+            type = workspaceCreate.windowsType, zone = workspaceCreate.windowsZone, quotaType = QuotaType.DEVCLOUD
+        )
+        if (cgsId == null && workspaceNames.size - resourceCount > 0) {
+            createCheckWhenWinNotAlready(
+                windowsZone = windowsZone,
+                windowsConfig = windowsConfig,
+                newNum = workspaceNames.size - resourceCount,
+                quotaType = QuotaType.DEVCLOUD
+            )
         }
         val res = mutableListOf<Workspace>()
         repeat(workspaceNames.size) { index ->
@@ -1030,7 +1075,8 @@ class CreateControl @Autowired constructor(
                         zoneId = windowsZone.zoneShortName,
                         machineType = windowsConfig.size,
                         imageCosFile = workspaceCreate.imageCosFile,
-                        cgsId = cgsId
+                        cgsId = cgsId,
+                        quotaType = QuotaType.DEVCLOUD
                     ),
                     settingEnvs = emptyMap(),
                     projectId = projectId,
@@ -1044,6 +1090,42 @@ class CreateControl @Autowired constructor(
         }
 
         return res
+    }
+
+    private fun checkOrInitPersonalProject(userId: String): String {
+        val userProjectId = "_$userId"
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(userProjectId)
+        }.onFailure { logger.warn("get project $userProjectId info error|${it.message}") }
+            .getOrThrow().data
+        if (projectInfo == null) {
+            /*初始化项目*/
+            kotlin.runCatching {
+                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
+            }.getOrElse {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
+                    params = arrayOf("load user project fail.")
+                )
+            }
+            /*初始化bkrepo*/
+            val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
+                userId = userId,
+                projectCode = userProjectId,
+                addcloudDesktopNum = null,
+                enable = true
+            ).data
+
+            if (ok != true) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
+                    params = arrayOf("init user project fail.")
+                )
+            }
+            /*初始化setting*/
+            remoteDevSettingDao.fetchOneSetting(dslContext, userId)
+        }
+        return userProjectId
     }
 
     private fun windowsGpuCheck(userId: String, count: Int) {
@@ -1060,12 +1142,12 @@ class CreateControl @Autowired constructor(
         )
     }
 
-    private fun startCloudResourceCountCheck(type: String, zone: String) =
+    private fun startCloudResourceCountCheck(type: String, zone: String, quotaType: QuotaType) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
                 it.machineType == type &&
                 it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                it.locked != true
+                it.locked != true && it.internal == quotaType.getInternal()
         }
 
     private fun doPreparing(workspace: Workspace) {

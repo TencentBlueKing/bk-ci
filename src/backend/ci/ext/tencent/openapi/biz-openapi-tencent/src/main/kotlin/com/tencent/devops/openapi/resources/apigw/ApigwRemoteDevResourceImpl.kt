@@ -8,6 +8,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -178,5 +179,33 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
         logger.info("getPersonalWorkspace $userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).getPersonalWorkspace(userId, workspaceName)
+    }
+
+    override fun createProjectWorkspace(
+        userId: String,
+        projectId: String,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        logger.info("createProjectWorkspace $userId|$projectId|$data")
+        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(userId, projectId, data)
+    }
+
+    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
+    }
+
+    override fun getProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?> {
+        logger.info("getProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(userId, projectId, workspaceName)
+    }
+
+    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+        logger.info("getWindowsQuota $userId|$type")
+        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type)
     }
 }
