@@ -60,7 +60,8 @@ data class ThirdPartyAgentDetail(
     val slaveVersion: String,
     @get:Schema(title = "agent安装路径", required = true)
     val agentInstallPath: String,
-    @get:Schema(title = "已废弃", required = true)
+    @Deprecated(message = "已废弃，使用 parallelTaskCount")
+    @get:Schema(title = "已废弃，使用 parallelTaskCount", required = true)
     val maxParallelTaskCount: String,
     @get:Schema(title = "最大构建并发数", required = true)
     val parallelTaskCount: String,
