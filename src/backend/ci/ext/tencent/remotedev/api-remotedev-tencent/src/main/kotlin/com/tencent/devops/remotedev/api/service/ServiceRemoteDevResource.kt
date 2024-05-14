@@ -6,6 +6,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -257,4 +258,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("createLaterTime")
         createLaterTimestamp: Long
     ): Result<List<SupRecordData>>
+
+    @Operation(summary = "获取windows空闲资源数据")
+    @GET
+    @Path("/get_all_windows_resource_quota")
+    fun getWindowsQuota(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "获取类型", required = true)
+        @QueryParam("type")
+        type: QuotaType
+    ): Result<Map<String, Map<String, Int>>>
 }
