@@ -77,12 +77,12 @@ open class TencentAgentUrlServiceImpl constructor(
         return if (agentRecord.fileGateway.isNullOrBlank()) {
             genGateway(agentRecord)
         } else {
-            agentRecord.fileGateway.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+            agentRecord.fileGateway.removeSuffix("/")
         }
     }
 
     override fun fixGateway(gateway: String?): String {
         val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway!! else gateway!!
-        return gw.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+        return gw.removeSuffix("/")
     }
 }
