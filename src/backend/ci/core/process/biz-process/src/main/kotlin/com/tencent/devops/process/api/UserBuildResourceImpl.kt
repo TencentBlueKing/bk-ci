@@ -196,7 +196,8 @@ class UserBuildResourceImpl @Autowired constructor(
             elementId = elementId,
             params = params,
             channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS)
+            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS),
+            stepId = null
         )
         return Result(true)
     }
@@ -572,7 +573,8 @@ class UserBuildResourceImpl @Autowired constructor(
                 taskId = taskId,
                 element = element,
                 stageId = stageId,
-                containerId = containerId
+                containerId = containerId,
+                stepId = null
             )
         )
     }

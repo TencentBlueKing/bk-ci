@@ -124,8 +124,10 @@ object AtomUtils {
                 buildId = task.buildId,
                 message = "Prepare ${element.name}(${atomRunInfo.atomName})",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atoms[atomCode] = atomRunInfo.initProjectCode
         }

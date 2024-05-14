@@ -429,7 +429,7 @@
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, getQueryParamString } from '@/utils/util'
+    import { convertFileSize, convertMStoString, convertTime, flatSearchKey } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -641,6 +641,15 @@
             },
             currentBuildId () {
                 return this.activeBuild.id
+            },
+            historyQuerys () {
+                const { historyPageStatus: { query, searchKey, page, pageSize } } = this
+                return {
+                    query,
+                    searchKey,
+                    page,
+                    pageSize
+                }
             }
         },
         watch: {
@@ -656,19 +665,34 @@
             },
             pipelineId () {
                 this.pipelineChanged = true
+            },
+            historyQuerys: {
+                handler (val) {
+                    const { query, searchKey, page, pageSize } = val
+                
+                    const queryMap = new URLSearchParams({
+                        page,
+                        pageSize,
+                        ...query,
+                        ...flatSearchKey(searchKey)
+                    })
+
+                    console.log(1111, flatSearchKey(searchKey))
+                    this.$router.push({
+                        query: Object.fromEntries(queryMap.entries())
+                    })
+                },
+                deep: true
             }
         },
         created () {
-            if (location.search) { // 路径上带有参数，需要将参数传递给store
+            if (this.$route.query) {
                 this.setHistoryPageStatus({
-                    queryStr: getQueryParamString(this.$route.query),
-                    query: {
-                        ...(this.historyPageStatus?.query ?? {})
-                    }
+                    page: this.$route.query?.page ? parseInt(this.$route.query?.page, 10) : 1,
+                    pageSize: this.$route.query?.pageSize ? parseInt(this.$route.query?.pageSize, 10) : 20
                 })
             }
         },
-
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
             if (this.routePipelineVersion) {
@@ -747,6 +771,14 @@
                 this.setHistoryPageStatus({
                     page: 1,
                     pageSize: limit
+                })
+                this.$router.push({
+                    params: this.$route.params,
+                    query: {
+                        ...this.$route.query,
+                        page: 1,
+                        pageSize: limit
+                    }
                 })
                 this.$nextTick(() => {
                     this.requestHistory()

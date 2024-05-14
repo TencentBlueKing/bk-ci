@@ -85,20 +85,26 @@ class AcrossProjectDistributionAtom @Autowired constructor(
             )
 
         return if (result.isOk()) {
-            buildLogPrinter.addLine(buildId,
-                I18nUtil.getCodeLanMessage(
+            buildLogPrinter.addLine(
+                buildId = buildId,
+                message = I18nUtil.getCodeLanMessage(
                     messageCode = BK_SUCCESSFULLY_DISTRIBUTED,
                     params = arrayOf(result.data.toString()),
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ), task.taskId, task.containerHashId, task.executeCount ?: 1)
+                ), tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                jobId = null, stepId = task.stepId
+            )
             AtomResponse(BuildStatus.SUCCEED)
         } else {
             buildLogPrinter.addRedLine(
-                buildId,
-                I18nUtil.getCodeLanMessage(
+                buildId = buildId,
+                message = I18nUtil.getCodeLanMessage(
                     messageCode = BK_SUCCESSFULLY_FAILED,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ) + "$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                ) + "$result", tag = task.taskId, containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null, stepId = task.stepId
+            )
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
