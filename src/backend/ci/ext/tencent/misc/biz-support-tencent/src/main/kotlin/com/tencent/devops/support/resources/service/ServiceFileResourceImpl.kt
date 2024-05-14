@@ -41,7 +41,8 @@ class ServiceFileResourceImpl @Autowired constructor(private val fileService: Fi
     override fun uploadFile(
         userId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        fileRepoPath: String?
     ): Result<String?> {
         return fileService.uploadFile(userId, inputStream, disposition)
     }

@@ -45,10 +45,13 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
 
     private val logger = LoggerFactory.getLogger(TxStoreLogoServiceImpl::class.java)
 
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
+    override fun uploadStoreLogo(userId: String, file: File, fileRepoPath: String?): Result<String?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val serviceUrl =
+        var serviceUrl =
             "$serviceUrlPrefix/service/file/upload?userId=$userId"
+        fileRepoPath.let {
+            serviceUrl += "&fileRepoPath=$fileRepoPath"
+        }
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
