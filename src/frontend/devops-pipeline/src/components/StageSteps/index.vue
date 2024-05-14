@@ -13,7 +13,7 @@
 
 <script>
     import Logo from '@/components/Logo'
-import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     export default {
         name: 'stage-steps',
         components: {
