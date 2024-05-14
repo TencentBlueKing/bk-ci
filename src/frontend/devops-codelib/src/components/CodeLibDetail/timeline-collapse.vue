@@ -55,6 +55,18 @@
                         </div>
                         
                     </div>
+                    <div v-if="activeIndex === index" class="filter-tab">
+                        <div
+                            v-for="(tab, tabIndex) in filterTabList"
+                            :key="tabIndex"
+                            :class="{
+                                'tab-item': true,
+                                'active': filterTab === tab.id
+                            }"
+                            @click="filterTab = tab.id">
+                            {{ tab.name }}
+                        </div>
+                    </div>
                     <div
                         class="trigger-list-table"
                         v-if="activeIndex === index && eventDetailList.length"
@@ -180,12 +192,20 @@
                     limit: 10,
                     count: 0
                 },
-                isZH: true
+                isZH: true,
+                filterTab: 'TRIGGER_SUCCESS'
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            filterTabList () {
+                return [
+                    { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS' },
+                    { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED' },
+                    { name: this.$t('codelib.触发不匹配'), id: 'TRIGGER_NOT_MATCH' }
+                ]
             }
         },
         created () {
@@ -266,6 +286,7 @@
                     eventId: this.eventId,
                     page: this.pagination.current,
                     pageSize: this.pagination.limit,
+                    reason: this.filterTab,
                     pipelineId
                 }).then(res => {
                     this.eventDetailList = res.records
@@ -380,9 +401,33 @@
                 color: red;
             }
         }
+        .filter-tab {
+            display: flex;
+            align-items: center;
+            width: fit-content;
+            height: 42px;
+            border: 1px solid #dfe0e5;
+            border-bottom: none;
+            .tab-item {
+                height: 42px;
+                line-height: 42px;
+                padding: 0 15px;
+                border-right: 1px solid #dfe0e5;
+                cursor: pointer;
+                &:last-child {
+                    border: none
+                }
+                &:hover {
+                    color: #3a84ff;
+                }
+                &.active {
+                    color: #3a84ff;
+                }
+            }
+        }
         .trigger-list-table {
             width: 100%;
-            margin: 8px 0;
+            margin-bottom: 8px;
             border: 1px solid #dfe0e5;
             border-radius: 2px;
             transition: opacity 3s linear;

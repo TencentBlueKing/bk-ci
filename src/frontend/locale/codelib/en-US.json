@@ -214,5 +214,8 @@
     "重放此事件，符合条件的流水线将触发执行": "Replay this event will trigger the execution of pipelines that meet the conditions",
     "重放此事件，仅触发当前流水线": "Replay this event, will only trigger the current pipeline",
     "相同代码库只支持在一个蓝盾项目下开启 PAC 模式": "The same repository only supports enabling PAC mode under one Blue Shield project.",
-    "去开启PAC": "To enable PAC"
+    "去开启PAC": "To enable PAC",
+    "触发成功": "Trigger Success",
+    "触发失败": "Trigger Failed",
+    "触发不匹配": "Trigger Not Match"
 }
