@@ -26,7 +26,6 @@
  */
 
 package com.tencent.devops.store.image.resources
-
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -38,7 +37,7 @@ import com.tencent.devops.store.image.service.ImageReleaseService
 import com.tencent.devops.store.image.service.ImageService
 import com.tencent.devops.store.image.service.OpImageService
 import com.tencent.devops.store.image.service.impl.TxImageRepoService
-import com.tencent.devops.store.pojo.common.approval.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest

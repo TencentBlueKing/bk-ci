@@ -25,32 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.resources
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.TxOpAtomResource
-import com.tencent.devops.store.atom.service.TxOpAtomService
-import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class TxOpAtomResourceImpl @Autowired constructor(
-    private val storeVisibleDeptService: StoreVisibleDeptService,
-    private val opAtomService: TxOpAtomService
-) : TxOpAtomResource {
-
-    override fun moveGitProjectToGroup(userId: String, atomCode: String, groupCode: String?): Result<Boolean> {
-        return opAtomService.moveGitProjectToGroup(userId, groupCode, atomCode)
-    }
-
-    override fun getVisibleDept(atomCode: String): Result<StoreVisibleDeptResp?> {
-        return storeVisibleDeptService.getVisibleDept(atomCode, StoreTypeEnum.ATOM, null)
-    }
-
-    override fun refreshAtomCodeRepoGitCIProjectProduct(userId: String): Result<Boolean> {
-        return Result(opAtomService.refreshAllRelationAtomProjectProduct(userId))
-    }
-}
+@Schema(title = "store组件可见范围响应报文体")
+data class StoreVisibleDeptResp(
+    @get:Schema(title = "机构列表", required = true)
+    val deptInfos: List<DeptInfo>
+)
