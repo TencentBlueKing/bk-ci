@@ -18,6 +18,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -303,6 +304,7 @@ class ServiceRemoteDevResourceImpl(
         projectId: String,
         data: WindowsWorkspaceCreate
     ): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(
             createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = projectId)
         )
@@ -314,11 +316,12 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
+
         return Result(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = true,
+                needPermission = !permissionService.hasUserManager(userId, projectId),
                 checkDeleteImmediately = true
             )
         )
@@ -342,11 +345,16 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(null)
         }
+        permissionService.checkViewerPermission(userId, workspaceName, projectId)
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspaceName,
                 notStatus = null
             ).firstOrNull()
         )
+    }
+
+    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
     }
 }

@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -313,4 +314,16 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<SupRecordDataResp>
+
+    @Operation(summary = "获取windows空闲资源数据", tags = ["v4_app_remotedev_win_quota"])
+    @GET
+    @Path("/get_all_windows_resource_quota")
+    fun getWindowsQuota(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "获取类型", required = true)
+        @QueryParam("type")
+        type: QuotaType
+    ): Result<Map<String, Map<String, Int>>>
 }
