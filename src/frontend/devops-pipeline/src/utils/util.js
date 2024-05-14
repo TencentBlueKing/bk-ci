@@ -842,3 +842,28 @@ export function weekAgo () {
     const end = new Date(now.setHours(23, 59, 59))
     return [start, end]
 }
+
+export function isEmptyObj (obj) {
+    try {
+        return Object.keys(obj).length === 0
+    } catch (error) {
+        console.error(error)
+        return false
+    }
+}
+
+export function flatSearchKey (searchKey) {
+    return searchKey.reduce((searchMap, item) => {
+        if (Array.isArray(item.values)) {
+            if (typeof searchMap[item.id] === 'undefined') {
+                searchMap[item.id] = Array.from(new Set(item.values.map(v => v.id)))
+            } else {
+                searchMap[item.id] = Array.from(new Set([
+                    ...searchMap[item.id],
+                    ...item.values.map(v => v.id)
+                ]))
+            }
+        }
+        return searchMap
+    }, {})
+}

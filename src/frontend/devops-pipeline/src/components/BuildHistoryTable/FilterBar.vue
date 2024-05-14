@@ -117,6 +117,7 @@
             }
         },
         created () {
+            this.init()
             this.handlePathQuery()
         },
         methods: {
@@ -147,6 +148,14 @@
                         name: item.value,
                         id: item.id
                     }))
+                    this.historyPageStatus.searchKey.forEach(item => {
+                        if (this.conditionsMap[item.id]) {
+                            item.values = item.values.map(item => ({
+                                id: item,
+                                name: this.conditionsMap[item.id].find(val => val.id === item)?.name ?? 'unknown'
+                            }))
+                        }
+                    })
                 } catch (error) {
                     console.error(error)
                 }
@@ -156,24 +165,21 @@
                 const { $route, historyPageStatus } = this
                 const pathQuery = $route.query
                 const queryArr = Object.keys(pathQuery)
-                await this.init()
+    
                 if (queryArr.length) {
-                    console.log(queryArr)
                     const hasTimeRange = queryArr.includes('startTimeStartTime') && queryArr.includes('endTimeEndTime')
                     const newSearchKey = queryArr.map(key => {
                         const newItem = this.filterData.find(item => item.id === key)
                         if (!newItem) return null
-
-                        const conditionVal = typeof pathQuery[key] === 'string' ? pathQuery[key].split(',') : pathQuery[key]
-                        newItem.values = this.conditionsMap[key]
-                            ? conditionVal.map(item => ({
-                                id: item,
-                                name: this.conditionsMap[key].find(val => val.id === item)?.name ?? 'unknown'
+                        newItem.values = newItem.multiable
+                            ? pathQuery[key].split(',').map(v => ({
+                                id: v,
+                                name: v
                             }))
                             : [{ id: pathQuery[key], name: pathQuery[key] }]
                         return newItem
                     }).filter(item => !!item)
-
+                    
                     this.setHistoryPageStatus({
                         dateTimeRange: hasTimeRange
                             ? [
@@ -206,14 +212,16 @@
                 const { startTimeStartTime, endTimeEndTime, ...newQuery } = this.historyPageStatus.query
                 const startTime = this.formatTime(value[0])
                 const endTime = this.formatTime(value[1])
-
-                newQuery.startTimeStartTime = startTime ? [startTime] : []
-                newQuery.endTimeEndTime = endTime ? [endTime] : []
+                if (startTime) {
+                    newQuery.startTimeStartTime = [startTime]
+                }
+                if (endTime) {
+                    newQuery.endTimeEndTime = [endTime]
+                }
                 this.setHistoryPageStatus({
                     [name]: value,
                     query: newQuery
                 })
-
                 this.startQuery()
             },
 

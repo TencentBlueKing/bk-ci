@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -162,13 +163,18 @@ data class PacNotices(
         return Subscription(
             types = parseType.map { toPipelineSubscriptionType(it) }.toSet(),
             groups = groups?.toSet() ?: emptySet(),
-            users = receivers?.joinToString(",") ?: "",
+            users = receivers?.joinToString(",") ?: "\${{ci.actor}}",
             wechatGroupFlag = parseType.contains(NotifyType.RTX_GROUP.yamlText),
             wechatGroup = chatId?.joinToString(",") ?: "",
             wechatGroupMarkdownFlag = notifyMarkdown == ContentFormat.MARKDOWN.text,
             detailFlag = notifyDetail ?: false,
-            content = content ?: ""
+            content = content ?: defaultContent()
         )
+    }
+
+    private fun defaultContent() = when {
+        checkNotifyForSuccess() -> NotifyTemplateUtils.getCommonShutdownSuccessContent()
+        else -> NotifyTemplateUtils.getCommonShutdownFailureContent()
     }
 
     override fun checkNotifyForSuccess(): Boolean {

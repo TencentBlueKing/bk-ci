@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpReasonResource
-import com.tencent.devops.store.pojo.common.Reason
-import com.tencent.devops.store.pojo.common.ReasonReq
+import com.tencent.devops.store.pojo.common.reason.Reason
+import com.tencent.devops.store.pojo.common.reason.ReasonReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.common.service.ReasonService
 import org.springframework.beans.factory.annotation.Autowired

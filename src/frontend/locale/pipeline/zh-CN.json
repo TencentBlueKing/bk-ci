@@ -1005,7 +1005,10 @@
     "pipelineVersionSaveAt": "版本{0}保存于{1}",
     "saveDraftSuccess": "{0} 草稿保存成功",
     "every": "每隔",
-    "remindTime": "小时提醒一次"
+    "remindTime": "小时提醒一次",
+    "codelib": "代码库",
+    "branches": "分支",
+    "codelibConfigs": "代码库配置"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1514,5 +1517,7 @@
   "newVersion": "新建版本",
   "editDraft": "编辑原草稿",
   "thinkthink": "再想想",
-  "editCurDraft": "编辑草稿"
+  "editCurDraft": "编辑草稿",
+  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式。",
+  "eventID": "事件ID"
 }
