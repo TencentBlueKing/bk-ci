@@ -137,6 +137,7 @@ class PipelineTriggerEventDao {
         triggerUser: String? = null,
         pipelineId: String? = null,
         pipelineName: String? = null,
+        reason: String?,
         startTime: Long? = null,
         endTime: Long? = null,
         limit: Int,
@@ -155,7 +156,8 @@ class PipelineTriggerEventDao {
             pipelineId = pipelineId,
             pipelineName = pipelineName,
             startTime = startTime,
-            endTime = endTime
+            endTime = endTime,
+            reason = reason
         )
         return dslContext.select(
             t2.DETAIL_ID,
@@ -210,6 +212,7 @@ class PipelineTriggerEventDao {
         triggerUser: String? = null,
         pipelineId: String? = null,
         pipelineName: String? = null,
+        reason: String?,
         startTime: Long? = null,
         endTime: Long? = null
     ): Long {
@@ -225,6 +228,7 @@ class PipelineTriggerEventDao {
             triggerType = triggerType,
             pipelineId = pipelineId,
             pipelineName = pipelineName,
+            reason = reason,
             startTime = startTime,
             endTime = endTime
         )
@@ -323,6 +327,7 @@ class PipelineTriggerEventDao {
         eventSource: String? = null,
         projectId: String,
         eventType: String? = null,
+        reason: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
         startTime: Long? = null,
@@ -337,6 +342,7 @@ class PipelineTriggerEventDao {
             eventSource = eventSource,
             eventId = eventId,
             eventType = eventType,
+            reason = reason,
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
@@ -359,6 +365,7 @@ class PipelineTriggerEventDao {
         eventSource: String? = null,
         projectId: String,
         eventType: String? = null,
+        reason: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
         startTime: Long? = null,
@@ -375,6 +382,7 @@ class PipelineTriggerEventDao {
             eventSource = eventSource,
             eventId = eventId,
             eventType = eventType,
+            reason = reason,
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
@@ -491,7 +499,8 @@ class PipelineTriggerEventDao {
         eventId: Long? = null,
         pipelineName: String? = null,
         projectId: String,
-        pipelineId: String? = null
+        pipelineId: String? = null,
+        reason: String? = null
     ): List<Condition> {
         val conditions = mutableListOf<Condition>()
         with(t2) {
@@ -506,6 +515,9 @@ class PipelineTriggerEventDao {
             }
             if (!pipelineId.isNullOrBlank()) {
                 conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!reason.isNullOrBlank()) {
+                conditions.add(REASON.eq(reason))
             }
         }
         return conditions
@@ -560,6 +572,7 @@ class PipelineTriggerEventDao {
         eventSource: String? = null,
         eventId: Long? = null,
         eventType: String? = null,
+        reason: String? = null,
         triggerUser: String? = null,
         triggerType: String? = null,
         pipelineId: String? = null,
@@ -586,7 +599,8 @@ class PipelineTriggerEventDao {
                 eventId = eventId,
                 projectId = projectId,
                 pipelineName = pipelineName,
-                pipelineId = pipelineId
+                pipelineId = pipelineId,
+                reason = reason
             )
         )
         return conditions

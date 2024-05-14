@@ -137,6 +137,8 @@ class PipelineTriggerEventService @Autowired constructor(
         eventType: String?,
         triggerType: String?,
         triggerUser: String?,
+        eventId: Long?,
+        reason: String?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -152,6 +154,8 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerType = triggerType,
             triggerUser = triggerUser,
             pipelineId = pipelineId,
+            eventId = eventId,
+            reason = reason,
             startTime = startTime,
             endTime = endTime
         )
@@ -162,6 +166,8 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
+            eventId = eventId,
+            reason = reason,
             startTime = startTime,
             endTime = endTime,
             limit = sqlLimit.limit,
@@ -181,6 +187,7 @@ class PipelineTriggerEventService @Autowired constructor(
         pipelineId: String?,
         eventId: Long?,
         pipelineName: String?,
+        reason: String?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -190,9 +197,10 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val language = I18nUtil.getLanguage(userId)
+        // 仅查询Event表
+        val queryEvent = pipelineName.isNullOrBlank() && pipelineId.isNullOrBlank() && reason == null
         // 事件ID to 总数
-        val (eventIds, count) = if (pipelineName.isNullOrBlank() && pipelineId.isNullOrBlank()) {
+        val (eventIds, count) = if (queryEvent) {
             val eventIds = pipelineTriggerEventDao.getEventIdsByEvent(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -225,6 +233,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 eventSource = repoHashId,
                 eventId = eventId,
                 eventType = eventType,
+                reason = reason,
                 triggerUser = triggerUser,
                 triggerType = triggerType,
                 startTime = startTime,
@@ -240,6 +249,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 eventSource = repoHashId,
                 eventId = eventId,
                 eventType = eventType,
+                reason = reason,
                 triggerUser = triggerUser,
                 triggerType = triggerType,
                 startTime = startTime,
@@ -281,6 +291,7 @@ class PipelineTriggerEventService @Autowired constructor(
         eventId: Long,
         pipelineId: String?,
         pipelineName: String?,
+        reason: String?,
         page: Int?,
         pageSize: Int?,
         userId: String
@@ -297,6 +308,7 @@ class PipelineTriggerEventService @Autowired constructor(
             eventId = eventId,
             pipelineId = pipelineId,
             pipelineName = pipelineName,
+            reason = reason,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
@@ -307,7 +319,8 @@ class PipelineTriggerEventService @Autowired constructor(
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,
-            pipelineName = pipelineName
+            pipelineName = pipelineName,
+            reason = reason
         )
         return SQLPage(count = count, records = records)
     }

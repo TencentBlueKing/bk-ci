@@ -35,10 +35,13 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.media.SchemaProperties
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -101,6 +104,12 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "触发用户", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
+        @Parameter(description = "事件ID", required = false)
+        @QueryParam("eventId")
+        eventId: Long?,
+        @Parameter(description = "触发状态", required = false)
+        @QueryParam("reason")
+        reason: PipelineTriggerReason?,
         @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
@@ -146,6 +155,9 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "流水线名称", required = false)
         @QueryParam("pipelineName")
         pipelineName: String?,
+        @Parameter(description = "触发状态", required = false)
+        @QueryParam("reason")
+        reason: PipelineTriggerReason?,
         @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
@@ -179,6 +191,8 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "流水线名", required = false)
         @QueryParam("pipelineName")
         pipelineName: String?,
+        @QueryParam("reason")
+        reason: PipelineTriggerReason?,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,

@@ -37,6 +37,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineTriggerEventResource
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -82,6 +83,8 @@ class UserPipelineTriggerEventResourceImpl(
         eventType: String?,
         triggerType: String?,
         triggerUser: String?,
+        eventId: Long?,
+        reason: PipelineTriggerReason?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -95,6 +98,8 @@ class UserPipelineTriggerEventResourceImpl(
                 eventType = eventType,
                 triggerType = triggerType,
                 triggerUser = triggerUser,
+                eventId = eventId,
+                reason = reason?.name,
                 startTime = startTime,
                 endTime = endTime,
                 page = page,
@@ -113,6 +118,7 @@ class UserPipelineTriggerEventResourceImpl(
         pipelineId: String?,
         eventId: Long?,
         pipelineName: String?,
+        reason: PipelineTriggerReason?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -127,6 +133,7 @@ class UserPipelineTriggerEventResourceImpl(
                 triggerUser = triggerUser,
                 pipelineId = pipelineId,
                 eventId = eventId,
+                reason = reason?.name,
                 pipelineName = pipelineName,
                 startTime = startTime,
                 endTime = endTime,
@@ -143,6 +150,7 @@ class UserPipelineTriggerEventResourceImpl(
         eventId: Long,
         pipelineId: String?,
         pipelineName: String?,
+        reason: PipelineTriggerReason?,
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>> {
@@ -152,6 +160,7 @@ class UserPipelineTriggerEventResourceImpl(
                 eventId = eventId,
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
+                reason = reason?.name,
                 page = page,
                 pageSize = pageSize,
                 userId = userId
