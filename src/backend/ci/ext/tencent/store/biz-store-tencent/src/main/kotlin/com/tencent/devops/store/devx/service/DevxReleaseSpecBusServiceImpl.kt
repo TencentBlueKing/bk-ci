@@ -184,7 +184,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 val pkgPath = baseEnvRecord.pkgPath
                 val fileType = pkgPath.substringAfterLast(".")
                 val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
-                osRunInfos?.add("$osName $pkgPath $signFlag")
+                osRunInfos?.add("$osName:$pkgPath:$signFlag")
             }
         }
         return mutableMapOf(

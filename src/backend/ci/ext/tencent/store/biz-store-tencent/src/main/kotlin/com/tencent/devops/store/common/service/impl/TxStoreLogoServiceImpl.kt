@@ -49,7 +49,7 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         var serviceUrl =
             "$serviceUrlPrefix/service/file/upload?userId=$userId"
-        fileRepoPath.let {
+        fileRepoPath?.let {
             serviceUrl += "&fileRepoPath=$fileRepoPath"
         }
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
