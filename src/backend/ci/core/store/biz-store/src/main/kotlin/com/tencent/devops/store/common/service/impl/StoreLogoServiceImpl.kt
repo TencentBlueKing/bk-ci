@@ -157,7 +157,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             }
         }
         val fileRepoPath = if (storeType != null) {
-            "${storeType.name.lowercase()}/$fileType/${file.name}"
+            "file/${storeType.name.lowercase()}/$fileType/${file.name}"
         } else {
             null
         }
