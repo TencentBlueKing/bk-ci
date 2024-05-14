@@ -1519,5 +1519,7 @@
   "thinkthink": "再想想",
   "editCurDraft": "编辑草稿",
   "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式。",
-  "eventID": "事件ID"
+  "eventID": "事件ID",
+  "runningSteps": "正在运行的步骤：",
+  "completeness": "完成度："
 }

@@ -45,7 +45,10 @@
                     {{ atom.atomCode ? atom.name : t("pendingAtom") }}
                 </span>
             </p>
-            <span class="atom-execounter" v-if="isExecuting">{{ execTime }}</span>
+            <template v-if="isExecuting">
+                <span class="atom-execounter">{{ execTime }}</span>
+                <span class="atom-execounter" v-if="Number.isInteger(atom.progressRate)">{{ Math.min(1, atom.progressRate) * 100 }}%</span>
+            </template>
             <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
             <bk-popover :delay="[300, 0]" v-else-if="isReviewing" placement="top">
                 <span

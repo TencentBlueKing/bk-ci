@@ -109,6 +109,7 @@
                         <stage-steps
                             v-if="props.row.stageStatus"
                             :steps="props.row.stageStatus"
+                            :build-id="props.row.id"
                         ></stage-steps>
                         <span v-else>--</span>
                     </template>
