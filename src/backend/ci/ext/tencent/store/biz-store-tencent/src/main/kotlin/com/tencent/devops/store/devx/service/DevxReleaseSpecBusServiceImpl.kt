@@ -176,14 +176,15 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         var osRunInfos: MutableSet<String>? = null
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
-            val pkgPath = baseEnvRecord.pkgPath
-            val fileType = pkgPath.substringAfterLast(".")
-            if (osName == OSType.WINDOWS.name.lowercase() && windowsSupportFileTypes.split(",").contains(fileType)) {
+            if (osName == OSType.WINDOWS.name.lowercase()) {
                 if (osRunInfos == null) {
                     osRunInfos = mutableSetOf()
                 }
                 // 暂时只支持签windows操作系统的exe软件包
-                osRunInfos?.add("$osName=$pkgPath")
+                val pkgPath = baseEnvRecord.pkgPath
+                val fileType = pkgPath.substringAfterLast(".")
+                val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
+                osRunInfos?.add("$osName $pkgPath $signFlag")
             }
         }
         return mutableMapOf(
