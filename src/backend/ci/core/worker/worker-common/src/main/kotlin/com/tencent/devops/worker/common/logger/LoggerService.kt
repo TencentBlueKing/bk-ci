@@ -34,7 +34,7 @@ import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.service.utils.ZipUtil
-import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.common.api.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.LOG_DEBUG_FLAG

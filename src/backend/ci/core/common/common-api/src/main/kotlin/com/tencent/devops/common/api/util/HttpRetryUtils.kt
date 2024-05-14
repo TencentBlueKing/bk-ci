@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.util
+package com.tencent.devops.common.api.util
 
 import java.net.HttpRetryException
 import java.net.SocketTimeoutException

@@ -29,7 +29,7 @@ package com.tencent.devops.worker.common.service
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.common.api.util.HttpRetryUtils
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult

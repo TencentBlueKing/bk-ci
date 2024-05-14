@@ -27,7 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.common.api.util.HttpRetryUtils
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.net.HttpRetryException

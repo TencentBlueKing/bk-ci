@@ -3,7 +3,7 @@ package com.tencent.devops.common.webhook.service.code.filter
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.common.api.util.HttpRetryUtils
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.pojo.ThirdFilterBody

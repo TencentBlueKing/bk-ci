@@ -51,7 +51,7 @@ import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.common.pipeline.event.StreamEnabledEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.common.api.util.HttpRetryUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
