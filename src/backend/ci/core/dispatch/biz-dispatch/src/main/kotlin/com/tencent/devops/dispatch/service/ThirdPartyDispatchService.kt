@@ -584,14 +584,16 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         val disableAgentIds = agentResData.filter { !it.enableNode }.map { it.agent.agentId }.toSet()
-        log(
-            dispatchMessage.event,
-            I18nUtil.getCodeLanMessage(
-                messageCode = BK_ENV_NODE_DISABLE,
-                language = I18nUtil.getDefaultLocaleLanguage(),
-                params = arrayOf(disableAgentIds.joinToString(","))
+        if (disableAgentIds.isNotEmpty()) {
+            log(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ENV_NODE_DISABLE,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf(disableAgentIds.joinToString(","))
+                )
             )
-        )
+        }
 
         /**
          * 1. 现获取当前正常的agent列表
