@@ -59,7 +59,6 @@ class ProjectCallbackMQConfiguration {
     @Bean
     fun projectUpdateLogoListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectUpdateLogoQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired listener: ProjectCallbackEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -78,7 +77,6 @@ class ProjectCallbackMQConfiguration {
     @Bean
     fun projectEnableListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectEnableQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired listener: ProjectCallbackEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
