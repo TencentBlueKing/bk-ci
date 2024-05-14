@@ -148,6 +148,14 @@ BEGIN
         ALTER TABLE T_STORE_MEMBER DROP INDEX `uni_inx_tam_code_name_type`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                    AND COLUMN_NAME = 'PROJECT_CODE') THEN
+       ALTER TABLE T_STORE_PROJECT_REL ADD COLUMN `PROJECT_CODE` varchar(32) NOT NULL DEFAULT '' COMMENT '项目代码';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
