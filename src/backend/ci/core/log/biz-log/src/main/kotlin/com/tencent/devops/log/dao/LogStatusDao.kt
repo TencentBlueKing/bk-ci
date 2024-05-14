@@ -125,11 +125,6 @@ class LogStatusDao {
                         .and(SUB_TAG.eq(""))
                 }
 
-                tag.isNotBlank() -> {
-                    select.and(TAG.eq(tag))
-                        .and(SUB_TAG.eq(subTags))
-                }
-
                 !jobId.isNullOrBlank() -> {
                     select.and(USER_JOB_ID.eq(jobId))
                         .and(TAG.eq(""))
@@ -140,8 +135,13 @@ class LogStatusDao {
                     select.and(STEP_ID.eq(stepId))
                         .and(SUB_TAG.eq(subTags))
                 }
+
+                else -> {
+                    select.and(TAG.eq(tag))
+                        .and(SUB_TAG.eq(subTags))
+                }
             }
-            return select.fetchOne()?.finished == true
+            return select.fetchAny()?.finished == true
         }
     }
 
