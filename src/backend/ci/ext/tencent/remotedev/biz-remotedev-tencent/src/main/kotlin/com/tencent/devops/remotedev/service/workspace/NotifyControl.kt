@@ -201,12 +201,11 @@ class NotifyControl @Autowired constructor(
         )
 
         // 发送邮件
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-            SendNotifyMessageTemplateRequest(
-                templateCode = "REMOTEDEV_NOTIFY",
-                receivers = userList.toMutableSet(),
-                bodyParams = mapOf("title" to notifyData.title, "body" to (notifyData.desc ?: ""))
-            )
+        notify4User(
+            userIds = userList.toMutableSet(),
+            notifyTemplateCode = "REMOTEDEV_NOTIFY",
+            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+            bodyParams = mutableMapOf("title" to notifyData.title, "body" to (notifyData.desc ?: ""))
         )
     }
 
