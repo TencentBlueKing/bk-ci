@@ -42,7 +42,9 @@ import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.BuildEvent
 import com.tencent.devops.common.pipeline.event.CallBackData
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallbackConstants.PROJECT_CALLBACK_FLAG
 import com.tencent.devops.common.pipeline.event.PipelineEvent
+import com.tencent.devops.common.pipeline.event.ProjectCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.event.SimpleJob
 import com.tencent.devops.common.pipeline.event.SimpleModel
@@ -119,6 +121,26 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
     }
 
+    fun projectCreate(projectId: String, projectName: String) {
+        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_CREATE)
+    }
+
+    fun projectUpdate(projectId: String, projectName: String) {
+        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_UPDATE)
+    }
+
+    fun projectUpdateLogo(projectId: String, projectName: String) {
+        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_UPDATE_LOGO)
+    }
+
+    fun projectEnable(projectId: String, projectName: String) {
+        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_ENABLE)
+    }
+
+    fun projectDisable(projectId: String, projectName: String) {
+        callBackProjectEvent(projectId, projectName, false, CallBackEvent.PROJECT_DISABLE)
+    }
+
     fun pipelineStreamEnabledEvent(event: PipelineStreamEnabledEvent) {
         with(event) {
             logger.info("$projectId|STREAM_ENABLED|callback stream enable event")
@@ -161,6 +183,32 @@ class CallBackControl @Autowired constructor(
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = pipelineEvent), list)
+    }
+
+    private fun callBackProjectEvent(
+        projectId: String,
+        projectName: String,
+        enable: Boolean,
+        callBackEvent: CallBackEvent
+    ) {
+        logger.info("$projectId|$projectName|$callBackEvent|callback project event")
+        val list = projectPipelineCallBackService.listProjectCallBack(
+            projectId = PROJECT_CALLBACK_FLAG,
+            events = callBackEvent.name
+        )
+        if (list.isEmpty()) {
+            logger.info("no [$callBackEvent] project callback")
+            return
+        }
+
+        val projectEvent = ProjectCallbackEvent(
+            projectId = projectId,
+            projectName = projectName,
+            enable = enable,
+            event = callBackEvent
+        )
+
+        sendToCallBack(CallBackData(event = callBackEvent, data = projectEvent), list)
     }
 
     fun callBackBuildEvent(event: PipelineBuildStatusBroadCastEvent) {
@@ -276,6 +324,13 @@ class CallBackControl @Autowired constructor(
             .header("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")
             .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, TraceTag.buildBiz())
             .post(RequestBody.create(JSON, requestBody))
+            .let { builder ->
+                // 回调填自定义header
+                callBack.secretParam?.run {
+                    secret(builder)
+                }
+                builder
+            }
             .build()
 
         var errorMsg: String? = null

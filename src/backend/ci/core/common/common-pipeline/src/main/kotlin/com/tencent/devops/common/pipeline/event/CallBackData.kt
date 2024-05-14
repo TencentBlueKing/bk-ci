@@ -97,7 +97,12 @@ enum class CallBackEvent {
     BUILD_TASK_END,
     BUILD_STAGE_START,
     BUILD_STAGE_END,
-    BUILD_TASK_PAUSE
+    BUILD_TASK_PAUSE,
+    PROJECT_CREATE,
+    PROJECT_UPDATE,
+    PROJECT_ENABLE,
+    PROJECT_DISABLE,
+    PROJECT_UPDATE_LOGO
 }
 
 data class PipelineEvent(
@@ -161,3 +166,15 @@ data class SimpleTask(
     val startTime: Long = 0,
     val endTime: Long = 0
 )
+
+data class ProjectCallbackEvent(
+    val projectId: String,
+    val projectName: String,
+    val enable: Boolean,
+    val event: CallBackEvent
+)
+
+object CallbackConstants {
+    // 项目级回调标志位
+    const val PROJECT_CALLBACK_FLAG = "devops_project_callback_flag"
+}
