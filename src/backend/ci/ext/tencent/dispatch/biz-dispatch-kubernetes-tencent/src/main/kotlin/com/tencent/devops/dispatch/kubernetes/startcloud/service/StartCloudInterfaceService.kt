@@ -156,7 +156,8 @@ class StartCloudInterfaceService @Autowired constructor(
                     image = it.basic?.image,
                     cpu = it.basic?.cpuCores.toString(),
                     mem = it.basic?.memoryLimit,
-                    registerCgsTime = null
+                    registerCgsTime = null,
+                    internal = it.basic?.internal
                 )
             )
         }
@@ -202,7 +203,8 @@ class StartCloudInterfaceService @Autowired constructor(
                 image = it.image,
                 cpu = it.cpu,
                 mem = it.memory,
-                registerCgsTime = it.registerTime
+                registerCgsTime = it.registerTime,
+                internal = ByteUtils.byte2Bool(it.internal)
             )
         }
     }
@@ -247,7 +249,7 @@ class StartCloudInterfaceService @Autowired constructor(
     // 获取vm空闲资源
     fun getAllVmResource() {
         val resList = mutableListOf<ResourceVmRespDataMachineResource>()
-        val cgs = workspaceStartCloudClient.getResourceVm(ResourceVmReq(null, null))
+        val cgs = workspaceStartCloudClient.getResourceVm(ResourceVmReq(null, null, false))
         cgs?.forEach { resource ->
             resource.machineResources?.forEach { mas ->
                 resList.add(

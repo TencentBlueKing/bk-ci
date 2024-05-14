@@ -30,13 +30,12 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
@@ -45,6 +44,8 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import org.glassfish.jersey.server.ChunkedOutput
+import java.util.concurrent.Executors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
@@ -110,28 +111,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
-        // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
-        val res = mutableMapOf<String, MutableMap<String, Int>>()
-
-        if (searchCustom != true) {
-            workspaceCommon.syncStartCloudResourceList().forEach {
-                val key = it.zoneId.replace(Regex("\\d+"), "")
-                val map = res.getOrPut(key) { mutableMapOf() }
-                if (it.status == 11 && it.locked != true) {
-                    map[it.machineType] = (map[it.machineType] ?: 0) + 1
-                }
-            }
-        }
-
-        client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
-            ?.forEach { resource ->
-                val key = resource.zoneId.replace(Regex("\\d+"), "")
-                val map = res.getOrPut(key) { mutableMapOf() }
-                resource.machineResources?.forEach { mas ->
-                    map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
-                }
-            }
-        return Result(res)
+        return Result(windowsResourceConfigService.allWindowsQuota(userId, searchCustom, QuotaType.OFFSHORE))
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {

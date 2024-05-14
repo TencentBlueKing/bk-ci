@@ -74,7 +74,8 @@ class WindowsGpuResourceDao {
                     IMAGE,
                     CPU,
                     MEMORY,
-                    REGISTER_TIME
+                    REGISTER_TIME,
+                    INTERNAL
                 ).values(
                     it.cgsId,
                     it.zoneId,
@@ -91,7 +92,8 @@ class WindowsGpuResourceDao {
                     it.image ?: "",
                     it.cpu ?: "",
                     it.mem ?: "",
-                    it.registerCgsTime
+                    it.registerCgsTime,
+                    ByteUtils.bool2Byte(it.internal ?: false)
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
