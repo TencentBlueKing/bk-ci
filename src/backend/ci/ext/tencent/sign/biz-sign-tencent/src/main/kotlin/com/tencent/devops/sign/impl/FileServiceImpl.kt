@@ -112,20 +112,4 @@ class FileServiceImpl : FileService {
                 "/${ipaSignInfo.buildId}/$resignId/"
         )
     }
-
-    override fun deleteDir(dir: File) {
-        if (dir.isFile) {
-            dir.delete()
-        } else if (dir.isDirectory) {
-            val fileList = dir.listFiles()
-            if (fileList != null && fileList.isNotEmpty()) {
-                for (one in fileList) {
-                    deleteDir(one)
-                }
-            }
-            dir.delete()
-        } else {
-            logger.error("file does not exist: $dir")
-        }
-    }
 }

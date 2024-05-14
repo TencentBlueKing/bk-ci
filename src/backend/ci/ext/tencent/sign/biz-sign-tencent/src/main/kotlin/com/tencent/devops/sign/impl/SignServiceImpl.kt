@@ -47,6 +47,7 @@ import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
+import com.tencent.devops.sign.utils.IpaFileUtil
 import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
@@ -204,7 +205,7 @@ class SignServiceImpl
                     )
                 }
                 var ipaTmpDir = fileService.getIpaTmpDir(ipaSignInfo, resignId)
-                fileService.deleteDir(ipaTmpDir)
+                IpaFileUtil.deleteDir(ipaTmpDir)
             }
             return finished
         }
