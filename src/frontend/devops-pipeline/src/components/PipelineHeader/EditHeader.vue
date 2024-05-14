@@ -1,6 +1,6 @@
 <template>
     <div class="pipeline-edit-header">
-        <pipeline-bread-crumb :pipeline-name="pipelineSetting?.pipelineName">
+        <pipeline-bread-crumb :is-loading="!isPipelineNameReady" :pipeline-name="pipelineSetting?.pipelineName">
             <span class="pipeline-edit-header-tag">
                 <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
                 <bk-tag>
@@ -121,8 +121,12 @@
             ModeSwitch,
             PacTag
         },
+        props: {
+            isSwitchPipeline: Boolean
+        },
         data () {
             return {
+                isLoading: false,
                 isReleaseSliderShow: false
             }
         },
@@ -184,6 +188,9 @@
             },
             currentVersion () {
                 return this.pipelineInfo?.version ?? ''
+            },
+            isPipelineNameReady () {
+                return this.pipelineSetting?.pipelineId === this.$route.params.pipelineId
             }
         },
         watch: {

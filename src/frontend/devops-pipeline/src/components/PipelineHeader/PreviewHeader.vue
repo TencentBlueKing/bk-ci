@@ -1,6 +1,6 @@
 <template>
     <div v-if="pipelineName" class="pipeline-preview-header">
-        <pipeline-bread-crumb :pipeline-name="pipelineName">
+        <pipeline-bread-crumb :is-loading="!pipelineName" :pipeline-name="pipelineName">
             <span class="build-num-switcher-wrapper">
                 {{ title }}
             </span>
@@ -62,7 +62,7 @@
         data () {
             return {
                 paramsValid: true,
-                pipelineName: '--'
+                pipelineName: ''
             }
         },
         computed: {
