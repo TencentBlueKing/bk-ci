@@ -56,7 +56,7 @@
                             ? `<p>${this.$t('runningSteps')}</p>
                                 ${data.taskProgressList.map(item =>
                                     `<p style="text-indent: 12px">${[
-                                        `[${item.taskOrder}] `,
+                                        `[${item.jobExecutionOrder}] `,
                                         item.taskName,
                                         `: ${Math.min(1, item.taskProgressRete ?? 0) * 100}%`
                                     ].join('')}</p>`
