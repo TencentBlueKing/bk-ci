@@ -98,7 +98,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                     path = path,
                     file = it,
                     gatewayFlag = false,
-                    bkrepoApiUrl = "${getRepoPrefixUrl(storeType)}/api/generic",
+                    bkrepoApiUrl = "${bkRepoClientConfig.bkRepoIdcHost}/api/generic",
                     userName = bkRepoStoreConfig.bkrepoStoreUserName,
                     password = bkRepoStoreConfig.bkrepoStorePassword
                 )
