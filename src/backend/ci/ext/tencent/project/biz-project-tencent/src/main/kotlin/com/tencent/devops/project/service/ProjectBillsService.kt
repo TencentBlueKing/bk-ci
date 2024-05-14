@@ -312,8 +312,8 @@ class ProjectBillsService constructor(
 
     private fun clearCacheAfterCheck() {
         disabledProjectList.clear()
-        project2Status.cleanUp()
-        manager2projectList.cleanUp()
+        project2Status.invalidateAll()
+        manager2projectList.invalidateAll()
     }
 
     fun reportBillsData(): Boolean {
