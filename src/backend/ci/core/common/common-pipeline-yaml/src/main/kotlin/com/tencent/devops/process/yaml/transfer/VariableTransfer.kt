@@ -67,18 +67,15 @@ class VariableTransfer @Autowired constructor() {
                 // 不带
                 it.type == BuildFormPropertyType.STRING && it.desc.isNullOrEmpty() -> null
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
-                    type = VariablePropType.VUEX_INPUT.value,
-                    description = it.desc.nullIfDefault("")
+                    type = VariablePropType.VUEX_INPUT.value
                 )
 
                 it.type == BuildFormPropertyType.TEXTAREA -> VariableProps(
-                    type = VariablePropType.VUEX_TEXTAREA.value,
-                    description = it.desc.nullIfDefault("")
+                    type = VariablePropType.VUEX_TEXTAREA.value
                 )
 
                 it.type == BuildFormPropertyType.ENUM -> VariableProps(
                     type = VariablePropType.SELECTOR.value,
-                    description = it.desc.nullIfDefault(""),
                     options = it.options?.map { form ->
                         VariablePropOption(id = form.value, label = form.key)
                     },
@@ -88,20 +85,17 @@ class VariableTransfer @Autowired constructor() {
                 it.type == BuildFormPropertyType.DATE -> null // not use
                 it.type == BuildFormPropertyType.LONG -> null // not use
                 it.type == BuildFormPropertyType.BOOLEAN -> VariableProps(
-                    type = VariablePropType.BOOLEAN.value,
-                    description = it.desc.nullIfDefault("")
+                    type = VariablePropType.BOOLEAN.value
                 )
 
                 it.type == BuildFormPropertyType.SVN_TAG -> null // not use
                 it.type == BuildFormPropertyType.GIT_REF -> VariableProps(
                     type = VariablePropType.GIT_REF.value,
-                    repoHashId = it.repoHashId,
-                    description = it.desc.nullIfDefault("")
+                    repoHashId = it.repoHashId
                 )
 
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
-                    description = it.desc.nullIfDefault(""),
                     options = it.options?.map { form ->
                         VariablePropOption(id = form.value, label = form.key)
                     },
@@ -110,8 +104,7 @@ class VariableTransfer @Autowired constructor() {
 
                 it.type == BuildFormPropertyType.CODE_LIB -> VariableProps(
                     type = VariablePropType.CODE_LIB.value,
-                    scmType = it.scmType?.alis,
-                    description = it.desc.nullIfDefault("")
+                    scmType = it.scmType?.alis
                 )
 
                 it.type == BuildFormPropertyType.CONTAINER_TYPE -> VariableProps(
@@ -122,22 +115,18 @@ class VariableTransfer @Autowired constructor() {
                                 buildType, os
                             )
                         }
-                    },
-                    description = it.desc.nullIfDefault("")
+                    }
                 ) // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
                 it.type == BuildFormPropertyType.ARTIFACTORY -> VariableProps(
                     type = VariablePropType.ARTIFACTORY.value,
                     glob = it.glob,
-                    properties = it.properties?.ifEmpty { null },
-                    description = it.desc.nullIfDefault("")
+                    properties = it.properties?.ifEmpty { null }
                 ) // 版本仓库
                 it.type == BuildFormPropertyType.SUB_PIPELINE -> VariableProps(
-                    type = VariablePropType.SUB_PIPELINE.value,
-                    description = it.desc.nullIfDefault("")
+                    type = VariablePropType.SUB_PIPELINE.value
                 ) // 子流水线
                 it.type == BuildFormPropertyType.CUSTOM_FILE -> VariableProps(
-                    type = VariablePropType.CUSTOM_FILE.value,
-                    description = it.desc.nullIfDefault("")
+                    type = VariablePropType.CUSTOM_FILE.value
                 ) // 自定义仓库文件
                 it.type == BuildFormPropertyType.PASSWORD -> null // not use
                 it.type == BuildFormPropertyType.TEMPORARY -> null // not use
@@ -146,13 +135,26 @@ class VariableTransfer @Autowired constructor() {
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
                 value = it.defaultValue.toString(),
-                name = it.name,
-                readonly = if (const == true) true else it.readOnly.nullIfDefault(false),
+                readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
-                valueNotEmpty = it.valueNotEmpty.nullIfDefault(false),
                 const = const,
                 props = props
             )
+
+            if (it.name?.isNotEmpty() == true) {
+                val p = result[it.id]?.props ?: VariableProps()
+                p.label = it.name
+            }
+
+            if (it.valueNotEmpty.nullIfDefault(false) != null) {
+                val p = result[it.id]?.props ?: VariableProps()
+                p.required = it.valueNotEmpty
+            }
+
+            if (it.desc.nullIfDefault("") != null) {
+                val p = result[it.id]?.props ?: VariableProps()
+                p.description = it.desc
+            }
         }
         return if (result.isEmpty()) {
             null
@@ -204,7 +206,7 @@ class VariableTransfer @Autowired constructor() {
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
-                    name = variable.name,
+                    name = variable.props?.label,
                     required = variable.allowModifyAtStartup ?: true,
                     constant = variable.const ?: false,
                     type = type,
@@ -231,8 +233,10 @@ class VariableTransfer @Autowired constructor() {
                     },
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
-                    readOnly = variable.readonly ?: false,
-                    valueNotEmpty = variable.valueNotEmpty ?: false
+                    readOnly = if (variable.const == true) true else {
+                        variable.readonly ?: false
+                    },
+                    valueNotEmpty = variable.props?.required ?: false
                 )
             )
         }

@@ -218,8 +218,10 @@ class UpdateStateContainerCmdFinally(
                 buildId = buildId,
                 message = "[$executeCount]| Finish Job#${this.containerId}| ${commandContext.latestSummary}",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId ?: "",
-                executeCount = executeCount
+                containerHashId = containerHashId ?: "",
+                executeCount = executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
         }
     }

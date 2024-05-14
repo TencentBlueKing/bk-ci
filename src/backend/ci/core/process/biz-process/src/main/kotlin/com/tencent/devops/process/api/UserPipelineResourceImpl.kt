@@ -77,6 +77,7 @@ import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.service.PipelineRepositoryService.Companion.checkParam
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRecentUseService
@@ -327,7 +328,8 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
+            operationLogType = OperationLogType.UPDATE_PIPELINE_SETTING,
+            savedSetting = savedSetting
         )
         auditService.createAudit(
             Audit(
@@ -352,17 +354,40 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         val origin = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
         // 暂时无法回溯关闭前的配置，先采用支持并发的配置
+        val operationLogType: OperationLogType
         val setting = if (enable) {
+            operationLogType = OperationLogType.ENABLE_PIPELINE
             origin.copy(runLockType = PipelineRunLockType.MULTIPLE)
         } else {
+            operationLogType = OperationLogType.DISABLE_PIPELINE
             origin.copy(runLockType = PipelineRunLockType.LOCK)
         }
-        return saveSetting(
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            setting = setting
+            setting = setting,
+            checkPermission = true
         )
+        pipelineInfoFacadeService.updatePipelineSettingVersion(
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            operationLogType = operationLogType,
+            savedSetting = savedSetting
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = setting.pipelineName,
+                userId = userId,
+                action = "edit",
+                actionContent = "Update Setting",
+                projectId = projectId
+            )
+        )
+        return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)

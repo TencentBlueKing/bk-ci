@@ -84,12 +84,24 @@ class LuceneClient constructor(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        size: Int? = null
+        size: Int? = null,
+        jobId: String?,
+        stepId: String?
     ): MutableList<LogLine> {
         val lineNum = size ?: Constants.SCROLL_MAX_LINES
-        val query = prepareQueryBuilder(buildId, debug, logType, tag, subTag, jobId, executeCount).build()
+        val query = prepareQueryBuilder(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        ).build()
         logger.info("[$buildId] fetchInitLogs with query: $query")
         return doQueryLogsInSize(buildId, query, lineNum)
     }
@@ -100,16 +112,28 @@ class LuceneClient constructor(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         start: Long? = null,
         before: Long? = null,
-        size: Int? = null
+        size: Int? = null,
+        jobId: String?,
+        stepId: String?
     ): MutableList<LogLine> {
         val lower = start ?: 0
         val upper = before ?: Long.MAX_VALUE
         val logSize = size ?: Constants.SCROLL_MAX_LINES
-        val query = prepareQueryBuilder(buildId, debug, logType, tag, subTag, jobId, executeCount)
+        val query = prepareQueryBuilder(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        )
             .add(NumericDocValuesField.newSlowRangeQuery("lineNo", lower, upper), BooleanClause.Occur.MUST)
             .build()
         logger.info("[$buildId] fetchLogsInRange with query: $query")
@@ -122,10 +146,22 @@ class LuceneClient constructor(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): Int {
-        val query = prepareQueryBuilder(buildId, debug, logType, tag, subTag, jobId, executeCount).build()
+        val query = prepareQueryBuilder(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        ).build()
         logger.info("[$buildId] fetchLogsCount with query: $query")
         return doQueryLogsCount(buildId, query)
     }
@@ -136,11 +172,23 @@ class LuceneClient constructor(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): StreamingOutput {
         val searcher = prepareSearcher(buildId)
-        val query = prepareQueryBuilder(buildId, debug, logType, tag, subTag, jobId, executeCount).build()
+        val query = prepareQueryBuilder(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        ).build()
         val sort = getQuerySort()
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
         try {
@@ -176,13 +224,25 @@ class LuceneClient constructor(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        jobId: String?,
+        stepId: String?
     ): List<LogLine> {
 
-        val builder = prepareQueryBuilder(buildId, debug, logType, tag, subTag, jobId, executeCount)
+        val builder = prepareQueryBuilder(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        )
         if (page != -1 && pageSize != -1) {
             val endLineNo = pageSize * page
             val beginLineNo = endLineNo - pageSize + 1
@@ -305,8 +365,10 @@ class LuceneClient constructor(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): BooleanQuery.Builder {
         val query = BooleanQuery.Builder()
 
@@ -316,8 +378,14 @@ class LuceneClient constructor(
         if (!subTag.isNullOrBlank()) {
             query.add(TermQuery(Term("subTag", subTag)), BooleanClause.Occur.MUST)
         }
+        if (!containerHashId.isNullOrBlank()) {
+            query.add(TermQuery(Term("containerHashId", containerHashId)), BooleanClause.Occur.MUST)
+        }
         if (!jobId.isNullOrBlank()) {
             query.add(TermQuery(Term("jobId", jobId)), BooleanClause.Occur.MUST)
+        }
+        if (!stepId.isNullOrBlank()) {
+            query.add(TermQuery(Term("stepId", stepId)), BooleanClause.Occur.MUST)
         }
         if (logType != null) {
             query.add(TermQuery(Term("logType", logType.name)), BooleanClause.Occur.MUST)
@@ -337,7 +405,9 @@ class LuceneClient constructor(
             tag = document.getField("tag").stringValue(),
             subTag = document.getField("subTag").stringValue(),
             jobId = document.getField("jobId").stringValue(),
-            executeCount = document.getField("executeCount").stringValue().toInt()
+            executeCount = document.getField("executeCount").stringValue().toInt(),
+            containerHashId = document.getField("containerHashId").stringValue(),
+            stepId = document.getField("stepId").stringValue()
         )
     }
 

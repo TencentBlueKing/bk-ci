@@ -473,7 +473,7 @@ class WorkspaceJoinDao {
             ).fetch().map { it["SIZE"].toString() }.toSet()
     }
 
-    fun fetchIp(
+    fun fetchRunningIp(
         dslContext: DSLContext,
         projectId: String,
         size: String?,
@@ -481,6 +481,8 @@ class WorkspaceJoinDao {
     ): Set<String> {
         val dsl = dslContext.select(TWorkspace.T_WORKSPACE.HOST_NAME).from(TWorkspace.T_WORKSPACE)
         if (!size.isNullOrEmpty()) {
+            dsl.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
             dsl.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
                 .on(
                     TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
@@ -492,13 +494,8 @@ class WorkspaceJoinDao {
             dsl.leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
                 .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
         }
-        val stepDsl = dsl.where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId)).and(
-            TWorkspace.T_WORKSPACE.STATUS.notIn(
-                WorkspaceStatus.PREPARING.ordinal,
-                WorkspaceStatus.DELETED.ordinal,
-                WorkspaceStatus.DELIVERING_FAILED.ordinal
-            )
-        )
+        val stepDsl = dsl.where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .and(TWorkspace.T_WORKSPACE.STATUS.eq(WorkspaceStatus.RUNNING.ordinal))
         if (!size.isNullOrBlank()) {
             stepDsl.and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
         }

@@ -63,10 +63,10 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
-    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
     import { REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'timer-trigger',
@@ -147,7 +147,7 @@
             toggleCodelibConfig (element, show) {
                 this.isShowCodelibConfig = show
                 if (!show) {
-                    this.handleUpdateElement('repoHashId', this.isShowCodelibConfig)
+                    this.handleUpdateElement('repoHashId', '')
                     this.handleUpdateElement('branches', [])
                     this.handleUpdateElement('noScm', false)
                 }

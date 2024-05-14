@@ -89,12 +89,18 @@ interface ServiceLogPrintResource {
         @Parameter(description = "插件内的分类的子tag，默认为空", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(description = "job id或者container的34位id", required = false)
+        @Parameter(description = "container的34位id", required = false)
         @QueryParam("jobId")
-        jobId: String?,
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @Parameter(description = "job id", required = false)
+        @QueryParam("userJobId")
+        jobId: String?,
+        @Parameter(description = "step id", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(summary = "更新日志状态")
@@ -115,12 +121,18 @@ interface ServiceLogPrintResource {
         subTag: String?,
         @Parameter(description = "job id或者container的34位id", required = false)
         @QueryParam("jobId")
-        jobId: String?,
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
         @Parameter(description = "插件的存储模式", required = false)
         @QueryParam("logStorageMode")
-        logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD
+        logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
+        @Parameter(description = "job id", required = false)
+        @QueryParam("userJobId")
+        jobId: String?,
+        @Parameter(description = "step id", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 }

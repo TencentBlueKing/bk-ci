@@ -339,8 +339,10 @@ class PipelineBuildQualityService(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
 
                 checkResult.resultList.forEach {
@@ -348,16 +350,20 @@ class PipelineBuildQualityService(
                         buildId = buildId,
                         message = "rules：${it.ruleName}",
                         tag = elementId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
+                        containerHashId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1,
+                        jobId = null,
+                        stepId = task.stepId
                     )
                     it.messagePairs.forEach { message ->
                         buildLogPrinter.addLine(
                             buildId = buildId,
                             message = message.first + " " + message.second,
                             tag = elementId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
+                            containerHashId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1,
+                            jobId = null,
+                            stepId = task.stepId
                         )
                     }
                 }
@@ -374,8 +380,10 @@ class PipelineBuildQualityService(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
 
                 checkResult.resultList.forEach {
@@ -383,8 +391,10 @@ class PipelineBuildQualityService(
                         buildId = buildId,
                         message = "rules：${it.ruleName}",
                         tag = elementId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
+                        containerHashId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1,
+                        jobId = null,
+                        stepId = task.stepId
                     )
                     it.messagePairs.forEach { message ->
                         if (message.third) {
@@ -392,16 +402,20 @@ class PipelineBuildQualityService(
                                 buildId = buildId,
                                 message = message.first + " " + message.second,
                                 tag = elementId,
-                                jobId = task.containerHashId,
-                                executeCount = task.executeCount ?: 1
+                                containerHashId = task.containerHashId,
+                                executeCount = task.executeCount ?: 1,
+                                jobId = null,
+                                stepId = task.stepId
                             )
                         } else {
                             buildLogPrinter.addRedLine(
                                 buildId = buildId,
                                 message = message.first + " " + message.second,
                                 tag = elementId,
-                                jobId = task.containerHashId,
-                                executeCount = task.executeCount ?: 1
+                                containerHashId = task.containerHashId,
+                                executeCount = task.executeCount ?: 1,
+                                jobId = null,
+                                stepId = task.stepId
                             )
                         }
                     }
@@ -444,8 +458,10 @@ class PipelineBuildQualityService(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
             }
@@ -518,8 +534,10 @@ class PipelineBuildQualityService(
                             language = I18nUtil.getDefaultLocaleLanguage()
                         ),
                         tag = elementId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
+                        containerHashId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1,
+                        jobId = null,
+                        stepId = task.stepId
                     )
                     Thread.sleep(gap * 1000L)
                 }
@@ -533,8 +551,10 @@ class PipelineBuildQualityService(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
                 tag = elementId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             check(buildCheckParams, position)
         }
@@ -575,8 +595,10 @@ class PipelineBuildQualityService(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 AtomResponse(
                     buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
@@ -599,8 +621,10 @@ class PipelineBuildQualityService(
                                 language = I18nUtil.getDefaultLocaleLanguage()
                             ),
                             tag = taskId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
+                            containerHashId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1,
+                            jobId = null,
+                            stepId = task.stepId
                         )
                         AtomResponse(BuildStatus.SUCCEED)
                     }
@@ -613,8 +637,10 @@ class PipelineBuildQualityService(
                                 language = I18nUtil.getDefaultLocaleLanguage()
                             ),
                             tag = taskId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
+                            containerHashId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1,
+                            jobId = null,
+                            stepId = task.stepId
                         )
                         AtomResponse(
                             buildStatus = BuildStatus.REVIEW_ABORT,

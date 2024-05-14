@@ -25,37 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.enums.AuthSystemType
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-object NotifyTemplateUtils {
+@Tag(name = "OP_PIPELINE_VERSIONS", description = "OP-流水线-版本")
+@Path("/op/pipeline/versions")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineVersionResource {
 
-    private const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "commonShutdownSuccessContent"
-    // 【${%s}】- 【${%s}】#${%s} 执行成功，耗时${%s}, 触发人：${%s}。
-
-    private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "commonShutdownFailureContent"
-    // 【${%s}】- 【${%s}】#${%s} 执行失败，耗时${%s}, 触发人：${%s}。
-
-    fun getCommonShutdownSuccessContent(): String {
-        return String.format(
-            I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_SUCCESS_CONTENT),
-            "ci.project_name",
-            "ci.pipeline_name",
-            "ci.build_num",
-            "ci.pipeline_execute_time",
-            "ci.actor"
-        )
-    }
-
-    fun getCommonShutdownFailureContent(): String {
-        return String.format(
-            I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_FAILURE_CONTENT),
-            "ci.project_name",
-            "ci.pipeline_name",
-            "ci.build_num",
-            "ci.pipeline_execute_time",
-            "ci.actor"
-        )
-    }
+    @Operation(summary = "更新流水线版本记录关联标识")
+    @PUT
+    @Path("/referFlag/async/batch/update")
+    fun asyncBatchUpdateReferFlag(
+        @Parameter(description = "项目渠道代码", required = true)
+        @QueryParam("projectChannelCode")
+        projectChannelCode: String,
+        @Parameter(description = "项目路由TAG", required = false)
+        @QueryParam("routerTag")
+        routerTag: AuthSystemType? = null
+    ): Result<Boolean>
 }
