@@ -205,7 +205,7 @@ class NotifyControl @Autowired constructor(
             userIds = userList.toMutableSet(),
             notifyTemplateCode = "REMOTEDEV_NOTIFY",
             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-            bodyParams = mutableMapOf("title" to notifyData.title, "body" to (notifyData.desc ?: "")),
+            bodyParams = mutableMapOf("title" to notifyData.title, "body" to (notifyData.desc ?: ""))
         )
     }
 
