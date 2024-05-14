@@ -473,17 +473,16 @@ class WorkspaceJoinDao {
             ).fetch().map { it["SIZE"].toString() }.toSet()
     }
 
-    fun fetchIp(
+    fun fetchRunningIp(
         dslContext: DSLContext,
         projectId: String,
         size: String?,
         owners: Set<String>?
     ): Set<String> {
-        val dsl = dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
-            .from(TWorkspace.T_WORKSPACE)
-            .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+        val dsl = dslContext.select(TWorkspace.T_WORKSPACE.HOST_NAME).from(TWorkspace.T_WORKSPACE)
         if (!size.isNullOrEmpty()) {
+            dsl.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
             dsl.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
                 .on(
                     TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
@@ -495,26 +494,16 @@ class WorkspaceJoinDao {
             dsl.leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
                 .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
         }
-        dsl.where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId)).and(
-            TWorkspace.T_WORKSPACE.STATUS.notIn(
-                WorkspaceStatus.PREPARING.ordinal,
-                WorkspaceStatus.DELETED.ordinal,
-                WorkspaceStatus.DELIVERING_FAILED.ordinal
-            )
-        )
+        val stepDsl = dsl.where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .and(TWorkspace.T_WORKSPACE.STATUS.eq(WorkspaceStatus.RUNNING.ordinal))
         if (!size.isNullOrBlank()) {
-            dsl.and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
+            stepDsl.and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
         }
         if (!owners.isNullOrEmpty()) {
-            dsl.and(
-                TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                    .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-            ).or(
-                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                    .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
-            )
+            stepDsl.and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+                .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
         }
-        return dsl.fetch().map { it["HOST_IP"] as String }.toSet()
+        return stepDsl.fetch().map { it["HOST_NAME"] as String }.toSet()
     }
 
     companion object {

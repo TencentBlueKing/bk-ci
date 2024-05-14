@@ -60,9 +60,8 @@ import java.time.LocalDateTime
 
 @Repository
 class CmdbNodeDao {
-    /**
-     * batch update node record(s)
-     */
+    // -------------------------------batch update node record(s)-------------------------------
+
     fun batchUpdateNodeSeverIdByIp(
         dslContext: DSLContext,
         nodeIpToServerIdMap: Map<String, Long?>
@@ -185,9 +184,27 @@ class CmdbNodeDao {
         }
     }
 
+    // -------------------------------update node record(s)-------------------------------
+
     /**
-     * update node record(s)
+     * 将在CMDB中但被误更新为NOT_IN_CMDB的节点对应状态改为NOT_IN_CC
+     * @param ipList 在CMDB中但被误更新为NOT_IN_CMDB的节点ip
      */
+    fun updateStatusIncorrectNodeByIpList(
+        dslContext: DSLContext,
+        ipList: Set<String>
+    ) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
+                .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
+                .where(NODE_IP.`in`(ipList))
+                .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .execute()
+        }
+    }
+
     fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
@@ -230,21 +247,23 @@ class CmdbNodeDao {
     fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
+        val serverIdDefault: Long? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.name)
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
+                .set(SERVER_ID, serverIdDefault)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(ipList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .execute()
         }
     }
 
-    /**
-     * count node record(s)
-     */
+    // -------------------------------count node record(s)-------------------------------
+
     fun countCmdbNodes(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
@@ -263,11 +282,23 @@ class CmdbNodeDao {
         }
     }
 
+    fun countDeployNodesServerIdNull(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(SERVER_ID.isNull)
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun countDeployNodesInCmdb(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
                 .from(TNode.T_NODE)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -297,9 +328,8 @@ class CmdbNodeDao {
         }
     }
 
-    /**
-     * batch insert node(s)
-     */
+    // -------------------------------batch insert node(s)-------------------------------
+
     fun batchInsertNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {
         if (nodes.isEmpty()) return
         val now = LocalDateTime.now()
@@ -393,9 +423,8 @@ class CmdbNodeDao {
         }
     }
 
-    /**
-     * get node record(s)
-     */
+    // -------------------------------get node record(s)-------------------------------
+
     fun getCmdbNodesByIpAndProjectId(
         dslContext: DSLContext,
         projectId: String,
@@ -449,6 +478,7 @@ class CmdbNodeDao {
                 OS_TYPE.`as`(T_NODE_OS_TYPE)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .orderBy(NODE_ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()

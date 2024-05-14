@@ -66,8 +66,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -82,8 +84,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 finished = false,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
+                jobId = containerHashId,
+                executeCount = executeCount,
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(true)
@@ -94,9 +98,11 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         finished: Boolean,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        logStorageMode: LogStorageMode?
+        logStorageMode: LogStorageMode?,
+        jobId: String?,
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -108,9 +114,11 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 finished = finished,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                logStorageMode = logStorageMode
+                logStorageMode = logStorageMode,
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(true)

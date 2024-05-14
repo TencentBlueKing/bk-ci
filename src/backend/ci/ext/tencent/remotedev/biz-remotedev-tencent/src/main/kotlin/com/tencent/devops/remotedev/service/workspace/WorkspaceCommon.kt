@@ -571,7 +571,7 @@ class WorkspaceCommon @Autowired constructor(
             remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
             if (it.type == WorkspaceShared.AssignType.OWNER) {
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = mutableSetOf(it.userId),
                     workspaceName = workspaceName,
                     cc = mutableSetOf(operator),

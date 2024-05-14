@@ -1667,10 +1667,14 @@
         "required" : [ "type" ],
         "properties" : {
           "type" : {
-            "type" : "array",
-            "items" : {
-              "enum" : [ "email", "wework-message", "wework-chat", "sms", "voice" ]
-            }
+            "anyOf" : [ {
+              "type" : "string"
+            }, {
+              "type" : "array",
+              "items" : {
+                "enum" : [ "email", "wework-message", "wework-chat", "sms", "voice" ]
+              }
+            } ]
           },
           "receivers" : {
             "type" : "array",
@@ -2194,7 +2198,7 @@
             "retry-times" : {
               "type" : "integer",
               "minimum" : 0,
-              "maximum" : 180
+              "maximum" : 5
             },
             "env" : {
               "$ref" : "#/definitions/env"

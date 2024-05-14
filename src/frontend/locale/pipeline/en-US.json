@@ -1528,5 +1528,7 @@
   "newVersion": "New Version",
   "editDraft": "Edit Draft",
   "thinkthink": "Thinking again",
-  "editCurDraft": "Edit Draft"
+  "editCurDraft": "Edit Draft",
+  "templateYamlNotSupport": "Constraint pattern pipeline (template instance) is not supported by Code currently.",
+  "eventID": "Event ID"
 }
