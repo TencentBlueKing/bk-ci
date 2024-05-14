@@ -25,18 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.common
+package com.tencent.devops.dispatch.kubernetes.pojo.base
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "k8s仓库信息")
-data class KubernetesRepo(
-    @get:Schema(title = "仓库地址", required = true)
-    val registryUrl: String,
-    @get:Schema(title = "用户名", required = true)
-    val username: String,
-    @get:Schema(title = "密码", required = true)
-    val password: String,
-    @get:Schema(title = "邮箱", required = false)
-    val email: String?
+data class CreateImagePullSecretRequest(
+    @get:Schema(title = "bcs请求路径", required = true)
+    val bcsUrl: String,
+    @get:Schema(title = "请求token", required = true)
+    val token: String,
+    @get:Schema(title = "k8s仓库信息", required = true)
+    val kubernetesRepo: KubernetesRepo
 )

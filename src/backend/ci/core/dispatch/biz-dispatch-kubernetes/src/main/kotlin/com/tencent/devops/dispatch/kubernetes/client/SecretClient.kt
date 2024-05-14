@@ -33,8 +33,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
+import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.common.KubernetesRepo
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.SecretBuilder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
