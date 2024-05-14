@@ -28,7 +28,7 @@
 package com.tencent.devops.store.ideatom.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.label.Label
 
 interface IdeAtomLabelService {
 

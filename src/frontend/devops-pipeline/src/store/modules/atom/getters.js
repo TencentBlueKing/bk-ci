@@ -36,7 +36,7 @@ export default {
     getDraftBaseVersionName: (state, getters) => {
         return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
     },
-    pipelineHistoryViewAble: state => {
+    pipelineHistoryViewable: state => {
         return [
             VERSION_STATUS_ENUM.BRANCH,
             VERSION_STATUS_ENUM.RELEASED

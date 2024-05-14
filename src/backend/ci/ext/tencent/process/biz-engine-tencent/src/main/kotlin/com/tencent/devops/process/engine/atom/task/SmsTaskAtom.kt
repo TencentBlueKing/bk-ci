@@ -75,8 +75,10 @@ class SmsTaskAtom @Autowired constructor(
                 buildId = buildId,
                 message = "The receivers is not init of build",
                 tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -109,8 +111,10 @@ class SmsTaskAtom @Autowired constructor(
             buildId = buildId,
             message = "send SMS message (${message.body}) to $receiversStr",
             tag = taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
         )
 
         message.addAllReceivers(receiversStr.split(",").toSet())

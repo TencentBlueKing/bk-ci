@@ -49,6 +49,10 @@ data class LogLine(
     val subTag: String = "",
     @get:Schema(title = "日志jobId", required = true)
     val jobId: String = "",
+    @get:Schema(title = "日志containerHashId", required = true)
+    val containerHashId: String?,
+    @get:Schema(title = "日志stepId", required = true)
+    val stepId: String?,
     @get:Schema(title = "日志执行次数", required = true)
     val executeCount: Int? = 1
 ) {

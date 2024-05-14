@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.service.workspace
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
@@ -58,16 +59,21 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
+import com.tencent.devops.remotedev.pojo.start.StartMessageDataType
+import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.nio.charset.StandardCharsets
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.util.Base64
 
 @Service
 @Suppress("LongMethod")
@@ -80,7 +86,9 @@ class NotifyControl @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val taiClient: TaiClient,
     private val notifyDao: ProjectNotifyDao,
-    private val sharedDao: WorkspaceSharedDao
+    private val sharedDao: WorkspaceSharedDao,
+    private val startWorkspaceService: StartWorkspaceService,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -134,7 +142,8 @@ class NotifyControl @Autowired constructor(
 
     fun notifyWorkspaceInfo(
         userId: String,
-        notifyData: WorkspaceNotifyData
+        notifyData: WorkspaceNotifyData,
+        enableSendDesktop: Boolean
     ) {
         val workspace = workspaceDao.fetchNotifyWorkspaces(
             dslContext = dslContext,
@@ -147,13 +156,15 @@ class NotifyControl @Autowired constructor(
             params = arrayOf(notifyData.ip?.joinToString(";") ?: "")
         )
 
+        val messageContent = "${notifyData.title}: ${notifyData.desc}"
+
         // 分发到WS
         workspace.forEach { ws ->
             dispatchWebsocketPushEvent(
                 userId = ADMIN_NAME,
                 workspaceName = ws["NAME"] as String,
                 workspaceHost = null,
-                errorMsg = "${notifyData.title}\n${notifyData.desc}",
+                errorMsg = messageContent,
                 type = WebSocketActionType.WORKSPACE_NOTIFY,
                 status = true,
                 action = WorkspaceAction.NOTIFY,
@@ -164,6 +175,38 @@ class NotifyControl @Autowired constructor(
             )
         }
         notifyDao.add(dslContext, userId, notifyData)
+
+        // 发送消息给云桌面
+        if (!enableSendDesktop) {
+            return
+        }
+
+        val userList = if (!notifyData.owner.isNullOrEmpty()) {
+            notifyData.owner!!.toSet()
+        } else {
+            workspaceSharedDao.fetchWorkspaceOwner(
+                dslContext = dslContext,
+                workspaceNames = workspace.map { it["NAME"] as String }.toSet().ifEmpty { return }
+            )
+        }
+
+        val now = LocalDateTime.now()
+        startWorkspaceService.sendMessage(
+            operator = userId,
+            userIdList = userList,
+            dataType = StartMessageDataType.MARQUEE,
+            data = Base64.getEncoder().encodeToString(messageContent.toByteArray(StandardCharsets.UTF_8)),
+            messageStartTime = now.timestampmilli(),
+            messageEndTime = now.plusDays(1).with(LocalTime.MIDNIGHT).timestampmilli()
+        )
+
+        // 发送邮件
+        notify4User(
+            userIds = userList.toMutableSet(),
+            notifyTemplateCode = "REMOTEDEV_NOTIFY",
+            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+            bodyParams = mutableMapOf("title" to notifyData.title, "body" to (notifyData.desc ?: ""))
+        )
     }
 
     fun notify4RemoteDevManager(

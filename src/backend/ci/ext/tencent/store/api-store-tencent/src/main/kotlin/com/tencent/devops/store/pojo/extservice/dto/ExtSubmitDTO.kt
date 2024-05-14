@@ -28,7 +28,7 @@
 package com.tencent.devops.store.pojo.extservice.dto
 
 import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.pojo.common.MediaInfoReq
+import com.tencent.devops.store.pojo.common.media.MediaInfoReq
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtSubmitDTO(

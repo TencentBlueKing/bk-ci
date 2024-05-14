@@ -111,7 +111,7 @@ class ExpertSupportDao {
         }
     }
 
-    fun fetchSupByWorkspaceName(
+    fun fetchSupByWorkspaceNames(
         dslContext: DSLContext,
         workspaceNames: Set<String>
     ): List<TRemotedevExpertSupportRecord> {
@@ -131,6 +131,18 @@ class ExpertSupportDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
                 .fetchAny()
+        }
+    }
+
+    fun fetchSupByWorkspaceName(
+        dslContext: DSLContext,
+        workspaceName: String,
+        createLaterTime: LocalDateTime
+    ): List<TRemotedevExpertSupportRecord> {
+        with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
+            return dslContext.selectFrom(this).where(WORKSPACE_NAME.eq(workspaceName))
+                .and(CREATE_TIME.greaterOrEqual(createLaterTime))
+                .fetch()
         }
     }
 

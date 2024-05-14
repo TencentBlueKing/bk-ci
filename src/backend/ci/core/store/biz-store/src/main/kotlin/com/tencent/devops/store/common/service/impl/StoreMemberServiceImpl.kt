@@ -43,8 +43,8 @@ import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.STORE_MEMBER_ADD_NOTIFY_TEMPLATE
 import com.tencent.devops.store.pojo.common.STORE_MEMBER_DELETE_NOTIFY_TEMPLATE
-import com.tencent.devops.store.pojo.common.StoreMemberItem
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.member.StoreMemberItem
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum

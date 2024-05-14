@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.PASS
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.approval.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.template.service.TemplateVisibleDeptService

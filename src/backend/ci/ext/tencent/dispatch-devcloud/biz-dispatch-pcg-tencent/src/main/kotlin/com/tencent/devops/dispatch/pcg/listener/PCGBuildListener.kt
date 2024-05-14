@@ -213,12 +213,13 @@ class PCGBuildListener @Autowired constructor(
         }
 
         log(
-            buildLogPrinter,
-            dispatchMessage.event.buildId,
-            dispatchMessage.event.containerHashId,
-            dispatchMessage.event.vmSeqId,
-            "Success to start up pcg docker on ${getHost(dispatchMessage, jsonResponse)}",
-            dispatchMessage.event.executeCount
+            buildLogPrinter = buildLogPrinter,
+            buildId = dispatchMessage.event.buildId,
+            containerHashId = dispatchMessage.event.containerHashId,
+            vmSeqId = dispatchMessage.event.vmSeqId,
+            message = "Success to start up pcg docker on ${getHost(dispatchMessage, jsonResponse)}",
+            executeCount = dispatchMessage.event.executeCount,
+            jobId = dispatchMessage.event.jobId
         )
     }
 
@@ -248,12 +249,13 @@ class PCGBuildListener @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("[${dispatchMessage.event.buildId}] Fail to get the pcg docker host - $jsonResponse", t)
             logRed(
-                buildLogPrinter,
-                dispatchMessage.event.buildId,
-                dispatchMessage.event.containerHashId,
-                dispatchMessage.event.vmSeqId,
-                "Fail to get the pcg docker host",
-                dispatchMessage.event.executeCount
+                buildLogPrinter = buildLogPrinter,
+                buildId = dispatchMessage.event.buildId,
+                containerHashId = dispatchMessage.event.containerHashId,
+                vmSeqId = dispatchMessage.event.vmSeqId,
+                message = "Fail to get the pcg docker host",
+                executeCount = dispatchMessage.event.executeCount,
+                jobId = dispatchMessage.event.jobId
             )
             ""
         }

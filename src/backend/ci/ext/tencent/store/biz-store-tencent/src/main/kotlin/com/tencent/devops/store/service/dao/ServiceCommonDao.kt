@@ -160,7 +160,10 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
                 storeCode = serviceRecord.serviceCode,
                 storeName = serviceRecord.serviceName,
                 version = serviceRecord.version,
-                publicFlag = publicFlag
+                publicFlag = publicFlag,
+                classifyId = serviceRecord.classifyId,
+                publisher = serviceRecord.publisher,
+                storeType = StoreTypeEnum.SERVICE
             )
         } else {
             null
