@@ -68,6 +68,9 @@ class DevCloudMQConfiguration @Autowired constructor() {
     @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
     private val agentStartQueueMaxConcurrency: Int = 100
 
+    @Value("\${dispatch.agentShutdownQueue.concurrency:300}")
+    private val agentShutdownQueueConcurrency: Int = 300
+
     @Bean
     @ConditionalOnMissingBean(RabbitAdmin::class)
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
@@ -194,8 +197,8 @@ class DevCloudMQConfiguration @Autowired constructor() {
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
-            concurrency = 100,
-            maxConcurrency = 100,
+            concurrency = agentShutdownQueueConcurrency,
+            maxConcurrency = agentShutdownQueueConcurrency,
             adapter = adapter,
             prefetchCount = 1
         )
