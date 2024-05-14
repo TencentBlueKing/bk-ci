@@ -388,7 +388,7 @@
                 }
             },
             progressRate () {
-                return Number.isInteger(this.atom.progressRate)
+                return typeof this.atom.progressRate === 'number'
                     ? (Math.min(1, this.atom.progressRate) * 100).toFixed(2)
                     : ''
             }

@@ -13,7 +13,7 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     export default {
         name: 'stage-steps',
         components: {
@@ -42,8 +42,9 @@
             getRunningCls (statusCls) {
                 return statusCls === 'RUNNING' ? ' spin-icon' : ''
             },
-            calcProgress (progess) {
-                return `${(Math.min(1, progess) * 100).toFixed(2)}%`
+            calcProgress (progress) {
+                if (typeof progress !== 'number') return '100%'
+                return `${(Math.min(1, progress) * 100).toFixed(2)}%`
             },
             async getProgress (step) {
                 try {
