@@ -34,9 +34,12 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.KubernetesRepo
 import io.fabric8.kubernetes.api.model.Secret
+import io.fabric8.kubernetes.api.model.SecretBuilder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import org.apache.commons.codec.binary.Base64
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -111,6 +114,57 @@ class SecretClient @Autowired constructor(
                 )
             }
             return objectMapper.readValue(responseContent)
+        }
+    }
+
+    /**
+     * 创建k8s拉取镜像secret
+     * @param namespaceName 命名空间名称
+     * @param secretName 秘钥名称
+     * @param kubernetesRepoInfo k8s仓库信息
+     */
+    fun createImagePullSecret(
+        userId: String,
+        secretName: String,
+        namespaceName: String,
+        kubernetesRepoInfo: KubernetesRepo
+    ) {
+        var secret = getSecretByName(userId, secretName).data
+        logger.info("the secret is: $secret")
+        if (secret == null) {
+            val secretData: HashMap<String, String> = HashMap(1)
+            val basicAuth = String(
+                Base64.encodeBase64("${kubernetesRepoInfo.username}:${kubernetesRepoInfo.password}".toByteArray())
+            )
+            var dockerCfg = String.format(
+                "{ " +
+                    " \"auths\": { " +
+                    "  \"%s\": { " +
+                    "   \"username\": \"%s\", " +
+                    "   \"password\": \"%s\", " +
+                    "   \"email\": \"%s\", " +
+                    "   \"auth\": \"%s\" " +
+                    "  } " +
+                    " } " +
+                    "}",
+                kubernetesRepoInfo.registryUrl,
+                kubernetesRepoInfo.username,
+                kubernetesRepoInfo.password,
+                kubernetesRepoInfo.email,
+                basicAuth
+            )
+            dockerCfg = String(Base64.encodeBase64(dockerCfg.toByteArray(Charsets.UTF_8)), Charsets.UTF_8)
+            secretData[".dockerconfigjson"] = dockerCfg
+            secret = SecretBuilder()
+                .withNewMetadata()
+                .withName(secretName)
+                .withNamespace(namespaceName)
+                .endMetadata()
+                .addToData(secretData)
+                .withType("kubernetes.io/dockerconfigjson")
+                .build()
+            createSecret(userId, secret)
+            logger.info("create new secret: $secret")
         }
     }
 }
