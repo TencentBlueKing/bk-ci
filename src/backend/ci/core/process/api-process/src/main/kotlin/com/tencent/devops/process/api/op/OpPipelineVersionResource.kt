@@ -25,21 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildVariables
-import java.io.File
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.enums.AuthSystemType
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-class EmptyTask(private val type: String) : ITask() {
-    override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        throw TaskExecuteException(
-            errorMsg = "Received unimplemented build task: $type",
-            errorCode = ErrorCode.USER_INPUT_INVAILD,
-            errorType = ErrorType.USER
-        )
-    }
+@Tag(name = "OP_PIPELINE_VERSIONS", description = "OP-流水线-版本")
+@Path("/op/pipeline/versions")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineVersionResource {
+
+    @Operation(summary = "更新流水线版本记录关联标识")
+    @PUT
+    @Path("/referFlag/async/batch/update")
+    fun asyncBatchUpdateReferFlag(
+        @Parameter(description = "项目渠道代码", required = true)
+        @QueryParam("projectChannelCode")
+        projectChannelCode: String,
+        @Parameter(description = "项目路由TAG", required = false)
+        @QueryParam("routerTag")
+        routerTag: AuthSystemType? = null
+    ): Result<Boolean>
 }

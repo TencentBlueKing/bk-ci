@@ -162,8 +162,10 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: continue",
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
         )
     }
 
@@ -188,8 +190,10 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: terminate",
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
         )
         val containerRecord = pipelineContainerService.getContainer(
             projectId = task.projectId,

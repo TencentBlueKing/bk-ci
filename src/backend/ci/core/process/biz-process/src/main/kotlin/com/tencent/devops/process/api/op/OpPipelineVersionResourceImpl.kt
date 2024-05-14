@@ -25,21 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildVariables
-import java.io.File
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
+import org.springframework.beans.factory.annotation.Autowired
 
-class EmptyTask(private val type: String) : ITask() {
-    override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        throw TaskExecuteException(
-            errorMsg = "Received unimplemented build task: $type",
-            errorCode = ErrorCode.USER_INPUT_INVAILD,
-            errorType = ErrorType.USER
-        )
+@RestResource
+class OpPipelineVersionResourceImpl @Autowired constructor(
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService
+) : OpPipelineVersionResource {
+
+    override fun asyncBatchUpdateReferFlag(
+        projectChannelCode: String,
+        routerTag: AuthSystemType?
+    ): Result<Boolean> {
+        return Result(pipelineRepositoryVersionService.asyncBatchUpdateReferFlag(projectChannelCode, routerTag))
     }
 }
