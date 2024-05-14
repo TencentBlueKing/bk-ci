@@ -43,7 +43,7 @@
                 return statusCls === 'RUNNING' ? ' spin-icon' : ''
             },
             calcProgress (progress) {
-                if (typeof progress !== 'number') return '100%'
+                if (typeof progress !== 'number') return ''
                 return `${(Math.min(1, progress) * 100).toFixed(2)}%`
             },
             async getProgress (step) {
