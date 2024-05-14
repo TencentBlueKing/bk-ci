@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.pojo.po.MetricsUserPO
 import groovy.util.ObservableMap
 import java.beans.PropertyChangeEvent
+import java.time.LocalDateTime
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,7 +66,7 @@ class MetricsCacheService @Autowired constructor(
         val logger: Logger = LoggerFactory.getLogger(MetricsCacheService::class.java)
     }
 
-    fun init() {
+    fun init(checkStatusSet: MutableSet<String>) {
         cache.addPropertyChangeListener { change: PropertyChangeEvent ->
             when {
                 change is ObservableMap.PropertyAddedEvent && this::addFunction.isInitialized -> {
@@ -85,7 +86,14 @@ class MetricsCacheService @Autowired constructor(
                 }
             }
         }
-        Thread(CacheUpdateProcess(metricsHeartBeatService.getPodName(), cache, redisHashOperation)).start()
+        Thread(
+            CacheUpdateProcess(
+                podHashKey = metricsHeartBeatService.getPodName(),
+                cache = cache,
+                checkStatusSet = checkStatusSet,
+                redisOperation = redisHashOperation
+            )
+        ).start()
         metricsHeartBeatService.init()
     }
 
@@ -178,6 +186,7 @@ class MetricsCacheService @Autowired constructor(
     private class CacheUpdateProcess(
         private val podHashKey: String,
         private val cache: ObservableMap,
+        private val checkStatusSet: MutableSet<String>,
         private val redisOperation: RedisOperation
     ) : Runnable {
 
@@ -193,6 +202,9 @@ class MetricsCacheService @Autowired constructor(
                 }
                 kotlin.runCatching { executeAdd() }.onFailure {
                     logger.error("metrics execute add process find a error|${it.message}", it)
+                }
+                kotlin.runCatching { executeCheck() }.onFailure {
+                    logger.error("metrics execute check process find a error|${it.message}", it)
                 }
                 Thread.sleep(SLEEP)
             }
@@ -225,6 +237,18 @@ class MetricsCacheService @Autowired constructor(
             snapshot.parallelStream().forEach { already ->
                 if (already !in add) {
                     cache.remove(already)
+                }
+            }
+        }
+
+        private fun executeCheck() {
+            /* 运行超过一个小时的，加入检查队列 */
+            val limit = LocalDateTime.now().plusHours(-1)
+            val snapshot = cache.keys.toList()
+            snapshot.parallelStream().forEach { key ->
+                val value = cache[key] as MetricsUserPO? ?: return@forEach
+                if (value.buildId !in checkStatusSet && value.startTime < limit) {
+                    checkStatusSet.add(value.buildId)
                 }
             }
         }

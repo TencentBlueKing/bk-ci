@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-基础信息")
@@ -38,5 +39,7 @@ data class BuildBasicInfo(
     @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
     @get:Schema(title = "流水线版本", required = true)
-    val pipelineVersion: Int
+    val pipelineVersion: Int,
+    @get:Schema(title = "构建状态", required = false)
+    val status: BuildStatus?
 )

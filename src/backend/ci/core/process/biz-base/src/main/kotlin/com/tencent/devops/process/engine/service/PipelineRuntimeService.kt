@@ -136,15 +136,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -521,11 +521,11 @@ class PipelineRuntimeService @Autowired constructor(
         }
 
         buildIds.forEach { buildId ->
-            result[buildId] = BuildBasicInfo(buildId, "", "", 0)
+            result[buildId] = BuildBasicInfo(buildId, "", "", 0, null)
         }
         records.forEach {
             with(it) {
-                result[it.buildId] = BuildBasicInfo(buildId, projectId, pipelineId, version)
+                result[it.buildId] = BuildBasicInfo(buildId, projectId, pipelineId, version, status)
             }
         }
         return result
@@ -1964,7 +1964,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                            "a higher priority waiting request</a> for group($groupName) exists",
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = taskId,
                     jobId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1
@@ -1974,7 +1974,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
-                            "a higher priority waiting request</a> for group($groupName) exists",
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = "QueueInterceptor",
                     jobId = "",
                     executeCount = 1

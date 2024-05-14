@@ -28,12 +28,16 @@
 
 package com.tencent.devops.metrics.service.builds
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.common.collect.MapMaker
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.metrics.config.MetricsUserConfig
 import com.tencent.devops.metrics.pojo.po.MetricsLocalPO
 import com.tencent.devops.metrics.pojo.po.MetricsUserPO
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.Meter
 import io.micrometer.prometheus.PrometheusMeterRegistry
@@ -41,27 +45,73 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
 class MetricsUserService @Autowired constructor(
     @Qualifier("userPrometheusMeterRegistry")
     private val registry: PrometheusMeterRegistry,
-    private val metricsCacheService: MetricsCacheService
+    private val metricsCacheService: MetricsCacheService,
+    private val metricsUserConfig: MetricsUserConfig,
+    private val client: Client
 ) {
     private val local = MapMaker()
         .concurrencyLevel(10)
         .makeMap<String, MetricsLocalPO>()
+
+    /* 延迟删除队列 */
     val delayArray: LinkedList<MutableList<Pair<String, MetricsLocalPO>>> =
         LinkedList(MutableList(DELAY_LIMIT) { mutableListOf() })
+
+    /* 疑似构建状态未同步队列,以buildId为单位 */
+    val uncheckArray: MutableSet<String> = mutableSetOf()
+
+    private val buildMetricsCache = Caffeine.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, Boolean> { key ->
+            kotlin.runCatching {
+                client.get(ServiceProjectResource::class).get(
+                    englishName = key
+                ).data?.properties?.buildMetrics
+            }.getOrNull() ?: false
+        }
+
+    /* 每10分钟检测一次执行状态 */
+    @Scheduled(cron = "0 0/10 * * * ?")
+    fun checkBuildStatusJob() {
+        logger.info("=========>> check build status job start <<=========")
+        // 生成快照
+        val unchecks = uncheckArray.toList()
+        val ready2delete = mutableListOf<String>()
+        unchecks.chunked(CHUNK_SIZE).forEach { chunk ->
+            val res = kotlin.runCatching {
+                client.get(ServiceBuildResource::class).batchServiceBasic(
+                    buildIds = chunk.toSet()
+                ).data
+            }.getOrNull() ?: return@forEach
+            ready2delete.addAll(res.filter { it.value.status?.isFinish() == true }.map { it.key })
+        }
+
+        // 生成local快照
+        val keys = local.keys.toList()
+        keys.forEach { key ->
+            val value = local[key] ?: return@forEach
+            if (value.data.buildId !in ready2delete) return@forEach
+            metricsCacheService.removeCache(key)
+        }
+    }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(MetricsUserService::class.java)
         const val DELAY_LIMIT = 5
+        const val CHUNK_SIZE = 100
     }
 
     class DeleteDelayProcess(
@@ -97,11 +147,16 @@ class MetricsUserService @Autowired constructor(
         metricsCacheService.addFunction = this::metricsAdd
         metricsCacheService.removeFunction = this::metricsRemove
         metricsCacheService.updateFunction = this::metricsUpdate
-        metricsCacheService.init()
+        metricsCacheService.init(uncheckArray)
         Thread(DeleteDelayProcess(delayArray, registry, local)).start()
     }
 
+    private fun check(event: PipelineBuildStatusBroadCastEvent): Boolean {
+        return buildMetricsCache.get(event.projectId) ?: false
+    }
+
     fun execute(event: PipelineBuildStatusBroadCastEvent) {
+        if (!check(event)) return
         val date = MetricsUserPO(event)
         when (date.eventType) {
             CallBackEvent.BUILD_START -> {
@@ -176,7 +231,8 @@ class MetricsUserService @Autowired constructor(
         }
     }
 
-    fun metricsAdd(key: String, value: MetricsUserPO) {
+    /* 请勿直接调用该方法 */
+    private fun metricsAdd(key: String, value: MetricsUserPO) {
         local[key] = MetricsLocalPO(value)
         logger.debug("metricsAdd|key={}|value={}|localSize={}", key, value, local.size)
         with(value) {
@@ -244,7 +300,8 @@ class MetricsUserService @Autowired constructor(
         }
     }
 
-    fun metricsRemove(key: String, value: MetricsUserPO) {
+    /* 请勿直接调用该方法 */
+    private fun metricsRemove(key: String, value: MetricsUserPO) {
         val metrics = local[key]
         logger.debug("metricsRemove|key={}|value={}|metrics={}", key, value, metrics)
         if (metrics != null) {
@@ -253,7 +310,8 @@ class MetricsUserService @Autowired constructor(
         }
     }
 
-    fun metricsUpdate(key: String, oldValue: MetricsUserPO, newValue: MetricsUserPO) {
+    /* 请勿直接调用该方法 */
+    private fun metricsUpdate(key: String, oldValue: MetricsUserPO, newValue: MetricsUserPO) {
         val metrics = local[key]
         logger.debug("metricsUpdate|key={}|oldValue={}|newValue={}|metrics={}", key, oldValue, newValue, metrics)
         if (metrics != null) {
@@ -316,9 +374,10 @@ class MetricsUserService @Autowired constructor(
             local
         ) { cache -> cache[key]?.let { computeStartTime(it) } ?: 0.0 }
             .tags(
-                "bk_project_id", projectId,
+                "projectId", projectId,
                 "pipeline_id", pipelineId,
-                "build_id", buildId
+                "build_id", buildId,
+                "bk_biz_id", metricsUserConfig.bkBizId
             )
             .description(description)
             .register(registry)
@@ -335,10 +394,11 @@ class MetricsUserService @Autowired constructor(
             MetricsUserConfig.gaugeBuildStatusKey
         ) { 1 }
             .tags(
-                "bk_project_id", projectId,
+                "projectId", projectId,
                 "pipeline_id", pipelineId,
                 "build_id", buildId,
-                "status", status
+                "status", status,
+                "bk_biz_id", metricsUserConfig.bkBizId
             )
             .description(description)
             .register(registry)
@@ -357,10 +417,11 @@ class MetricsUserService @Autowired constructor(
             local
         ) { cache -> cache[key]?.let { computeStartTime(it) } ?: 0.0 }
             .tags(
-                "bk_project_id", projectId,
+                "projectId", projectId,
                 "pipeline_id", pipelineId,
                 "build_id", buildId,
-                "job_id", jobId
+                "job_id", jobId,
+                "bk_biz_id", metricsUserConfig.bkBizId
             )
             .description(description)
             .register(registry)
@@ -382,12 +443,13 @@ class MetricsUserService @Autowired constructor(
             local
         ) { cache -> cache[key]?.let { computeStartTime(it) } ?: 0.0 }
             .tags(
-                "bk_project_id", projectId,
+                "projectId", projectId,
                 "pipeline_id", pipelineId,
                 "build_id", buildId,
                 "job_id", jobId,
                 "step_id", stepId,
-                "plugin_id", atomCode
+                "plugin_id", atomCode,
+                "bk_biz_id", metricsUserConfig.bkBizId
             )
             .description(description)
             .register(registry)
@@ -406,12 +468,13 @@ class MetricsUserService @Autowired constructor(
             MetricsUserConfig.gaugeBuildStepStatusKey
         ) { 1 }
             .tags(
-                "bk_project_id", projectId,
+                "projectId", projectId,
                 "pipeline_id", pipelineId,
                 "build_id", buildId,
                 "job_id", jobId,
                 "step_id", stepId,
-                "status", status
+                "status", status,
+                "bk_biz_id", metricsUserConfig.bkBizId
             )
             .description(description)
             .register(registry)
