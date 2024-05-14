@@ -28,8 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Classify
-import com.tencent.devops.store.pojo.common.ClassifyRequest
+import com.tencent.devops.store.pojo.common.classify.Classify
+import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
 
 /**
  * 分类业务逻辑类

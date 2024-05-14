@@ -115,6 +115,13 @@
                             yamlInvalidMsg: this.yamlInvalidMsg
                         }
                     }
+                    // TODO: 模板不支持YAML
+                    if (this.pipeline?.instanceFromTemplate) {
+                        return {
+                            yamlSupported: false,
+                            yamlInvalidMsg: this.$t('templateYamlNotSupport')
+                        }
+                    }
                     const pipeline = Object.assign({}, this.pipeline, {
                         stages: [
                             this.pipeline.stages[0],
@@ -153,6 +160,7 @@
                         this.$bkInfo({
                             type: 'error',
                             width: 500,
+                            zIndex: 2020,
                             title: this.$t('invalidCodeMode'),
                             subHeader: this.$createElement(
                                 'pre',

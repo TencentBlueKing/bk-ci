@@ -440,14 +440,16 @@ const actions = {
         page,
         pageSize,
         eventType,
-        triggerConditionMd5
+        triggerConditionMd5,
+        taskRepoType
     }) {
         return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listRepoPipelineRef`, {
             params: {
                 page,
                 pageSize,
                 eventType,
-                triggerConditionMd5
+                triggerConditionMd5,
+                taskRepoType
             }
         })
     },
@@ -581,6 +583,16 @@ const actions = {
     }) {
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listSyncFailedYaml`)
     },
+
+    getYamlPipelines ({ commit }, {
+        projectId,
+        repositoryHashId,
+        page,
+        pageSize
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listYamlPipeline?page=${page}&pageSize=${pageSize}`)
+    },
+    
     fetchPipelinesByName ({ commit }, {
         projectId,
         keyword = ''

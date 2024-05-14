@@ -263,21 +263,23 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String,
+        elementId: String?,
         params: ReviewParam,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        stepId: String?
     ): Result<Boolean> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        if (elementId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
+        if (elementId.isNullOrBlank() && stepId.isNullOrBlank()) {
+            throw ParamBlankException("Invalid elementId&stepId")
         }
         pipelineBuildFacadeService.buildManualReview(
-            userId, projectId, pipelineId, buildId, elementId,
-            params, channelCode, ChannelCode.isNeedAuth(channelCode)
+            userId = userId, projectId = projectId, pipelineId = pipelineId, buildId = buildId, elementId = elementId,
+            params = params, channelCode = channelCode, checkPermission = ChannelCode.isNeedAuth(channelCode),
+            stepId = stepId
         )
         return Result(true)
     }
@@ -734,7 +736,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 taskId = taskPauseExecute.taskId,
                 element = taskPauseExecute.element,
                 stageId = taskPauseExecute.stageId,
-                containerId = taskPauseExecute.containerId
+                containerId = taskPauseExecute.containerId,
+                stepId = taskPauseExecute.stepId
             )
         )
     }

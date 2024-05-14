@@ -48,7 +48,7 @@
                     <section v-show="showPacCodelibSetting">
                         <label class="yaml-info-codelib-label" for="yamlCodelib">
                             {{ $t("yamlCodeLib") }}
-                            <i class="devops-icon icon-question-circle-shape" v-bk-tooltips="$t('yamlCodeLibDesc')" />
+                            <i class="devops-icon icon-info-circle-shape" v-bk-tooltips="$t('yamlCodeLibDesc')" />
                         </label>
                         <bk-form-item required property="repoHashId">
                             <bk-select id="yamlCodelib" :disabled="pacEnabled" searchable enable-scroll-load
@@ -76,7 +76,7 @@
                         </bk-form-item>
                         <label class="yaml-info-codelib-label" for="yamlFilePath">
                             {{ $t("yamlDir") }}
-                            <i class="devops-icon icon-question-circle-shape" v-bk-tooltips="$t('yamlDirDesc')" />
+                            <i class="devops-icon icon-info-circle-shape" v-bk-tooltips="$t('yamlDirDesc')" />
                         </label>
                         <bk-form-item required property="filePath">
                             <bk-input :disabled="pacEnabled" v-model="releaseParams.filePath" id="yamlFilePath"
@@ -152,6 +152,7 @@
     import PacTag from '@/components/PacTag.vue'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -205,7 +206,7 @@
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
-                'pipeline'
+                'pipelineSetting'
             ]),
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
@@ -214,7 +215,7 @@
                 return this.pipelineInfo?.baseVersionName || '--'
             },
             pipelineName () {
-                return this.pipeline?.name
+                return this.pipelineSetting?.pipelineName
             },
             viewNames () {
                 return this.pipelineInfo?.viewNames || []
@@ -456,7 +457,8 @@
                         baseVersionName: versionName,
                         releaseVersionName: versionName,
                         canDebug: false,
-                        canRelease: false
+                        canRelease: false,
+                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
                     })
 
                     const tipsI18nKey = this.releaseParams.enablePac
@@ -848,7 +850,7 @@
         position: absolute;
         display: inline-block;
         right: 28px;
-        top: 2px;
+        top: 10px;
         color: #ea3636;
     }
 

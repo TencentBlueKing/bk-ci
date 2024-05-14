@@ -1104,13 +1104,15 @@ class ThirdPartyDispatchService @Autowired constructor(
         return sortQ
     }
 
-    private fun log(event: PipelineAgentStartupEvent, message: String) {
+    private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
         buildLogPrinter.addLine(
             buildId = event.buildId,
-            message = message,
+            message = logMessage,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
         )
     }
 
@@ -1119,8 +1121,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = event.buildId,
             message = logMessage,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = null
         )
     }
 
@@ -1129,8 +1133,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = event.buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
         )
     }
 
