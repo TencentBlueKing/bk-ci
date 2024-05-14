@@ -148,11 +148,11 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     userId = userId,
                     callbackUrl = projectPipelineCallBack.callBackUrl,
                     secretToken = projectPipelineCallBack.secretToken,
-                    id = client.get(ServiceAllocIdResource::class) .generateSegmentId(
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(
                         "PROJECT_PIPELINE_CALLBACK"
                     ).data,
                     secretParam = secretParam?.let {
-                        AESUtil.encrypt(aesKey, JsonUtil.toJson(secretParam))
+                        AESUtil.encrypt(aesKey, JsonUtil.toJson(secretParam, false))
                     }
                 )
                 successEvents.add(it.name)
@@ -187,9 +187,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     secretParam = if (it.secretParam.isNullOrBlank()) {
                         null
                     } else {
-                        JsonUtil.anyTo(
-                            any = AESUtil.decrypt(aesKey, it.secretParam),
-                            object : TypeReference<ISecretParam>() {})
+                        JsonUtil.to(AESUtil.decrypt(aesKey, it.secretParam), ISecretParam::class.java)
                     }
                 )
             )

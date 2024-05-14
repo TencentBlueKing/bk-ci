@@ -25,22 +25,26 @@ class ProjectCallbackEventListener @Autowired constructor(
      */
     override fun execute(event: ProjectBroadCastEvent) {
         logger.info("Receive ProjectEvent from MQ [$event]")
-        when (event) {
-            is ProjectUpdateBroadCastEvent -> {
-                onReceiveProjectUpdate(event)
-            }
+        try {
+            when (event) {
+                is ProjectUpdateBroadCastEvent -> {
+                    onReceiveProjectUpdate(event)
+                }
 
-            is ProjectUpdateLogoBroadCastEvent -> {
-                onReceiveProjectUpdateLogo(event)
-            }
+                is ProjectUpdateLogoBroadCastEvent -> {
+                    onReceiveProjectUpdateLogo(event)
+                }
 
-            is ProjectEnableStatusBroadCastEvent -> {
-                onReceiveProjectEnable(event)
-            }
+                is ProjectEnableStatusBroadCastEvent -> {
+                    onReceiveProjectEnable(event)
+                }
 
-            is ProjectCreateBroadCastEvent -> {
-                onReceiveProjectCreate(event)
+                is ProjectCreateBroadCastEvent -> {
+                    onReceiveProjectCreate(event)
+                }
             }
+        } catch (ignored: Exception) {
+            logger.error("BKSystemMonitor| project callback listener execute error", ignored)
         }
     }
 
