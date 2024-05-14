@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.desktop.ApigwDeskTopResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,5 +26,16 @@ class ApigwDeskTopResourceImpl @Autowired constructor(private val client: Client
     ): Result<WeSecProjectWorkspace?> {
         logger.info("$apigwType|$appCode|desktop_getProjectWorkspace|desktopIP=$desktopIP")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = desktopIP)
+    }
+
+    override fun messageRegister(
+        appCode: String?,
+        apigwType: String?,
+        desktopIP: String,
+        devxGwToken: String,
+        data: WorkspaceDesktopNotifyData
+    ): Result<Boolean> {
+        logger.info("$apigwType|$appCode|desktop_messageRegister|desktopIP=$desktopIP|$data")
+        return client.get(ServiceRemoteDevResource::class).notifyDesktopCheckIp(desktopIP, data)
     }
 }

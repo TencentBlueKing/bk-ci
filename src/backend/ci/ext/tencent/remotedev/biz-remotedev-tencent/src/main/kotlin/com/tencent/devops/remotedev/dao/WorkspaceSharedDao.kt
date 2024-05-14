@@ -151,6 +151,18 @@ class WorkspaceSharedDao {
         }
     }
 
+    fun fetchWorkspaceOwner(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): Set<String> {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.`in`(workspaceNames))
+                .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+                .fetch().map { it.sharedUser }.toSet()
+        }
+    }
+
     class TSharedRecordJooqMapper : RecordMapper<TWorkspaceSharedRecord, WorkspaceShared> {
         override fun map(record: TWorkspaceSharedRecord?): WorkspaceShared? {
             return record?.run {

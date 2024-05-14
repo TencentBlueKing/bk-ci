@@ -1040,6 +1040,25 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchWorkspaceByIp(
+        dslContext: DSLContext,
+        ip: String
+    ): List<TWorkspaceRecord> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(
+                    STATUS.notIn(
+                        WorkspaceStatus.PREPARING.ordinal,
+                        WorkspaceStatus.DELETED.ordinal,
+                        WorkspaceStatus.DELIVERING_FAILED.ordinal
+                    )
+                )
+                .and(HOST_NAME.like("%.$ip"))
+                .fetch()
+        }
+    }
+
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
     }

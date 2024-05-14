@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
@@ -157,6 +158,17 @@ interface ServiceRemoteDevResource {
         operator: String,
         @Parameter(description = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
+    ): Result<Boolean>
+
+    @Operation(summary = "用来通知云桌面消息, 附带发送机器IP校验")
+    @POST
+    @Path("/notify/desktop")
+    fun notifyDesktopCheckIp(
+        @Parameter(description = "发送机器IP，必填", required = true)
+        @QueryParam("ip")
+        ip: String,
+        @Parameter(description = "通知信息", required = true)
+        notifyData: WorkspaceDesktopNotifyData
     ): Result<Boolean>
 
     @Operation(summary = "获取windows硬件配置")

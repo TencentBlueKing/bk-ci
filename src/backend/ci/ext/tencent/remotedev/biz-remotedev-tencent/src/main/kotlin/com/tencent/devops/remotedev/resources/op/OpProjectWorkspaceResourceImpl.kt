@@ -302,7 +302,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     override fun notify(userId: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         notifyControl.notifyWorkspaceInfo(
             userId = userId,
-            notifyData = notifyData
+            notifyData = notifyData,
+            enableSendDesktop = true
         )
         return Result(true)
     }
