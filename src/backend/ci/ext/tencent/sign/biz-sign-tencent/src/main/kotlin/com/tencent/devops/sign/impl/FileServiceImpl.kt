@@ -114,19 +114,15 @@ class FileServiceImpl : FileService {
     }
 
     override fun deleteDir(dir: File) {
-
         if (dir.isFile) {
             dir.delete()
-
         } else if (dir.isDirectory) {
             val fileList = dir.listFiles()
             if (fileList != null && fileList.isNotEmpty()) {
                 for (one in fileList) {
-                    //递归删除
                     deleteDir(one)
                 }
             }
-            //最后删除空根目录
             dir.delete()
         } else {
             logger.error("file does not exist: $dir")
