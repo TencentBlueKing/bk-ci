@@ -694,7 +694,13 @@ abstract class ImageReleaseService {
                 .initStorePipeline(userId, projectCode!!, storeInitPipelineReq).data
             logger.info("runCheckImagePipeline storeInitPipelineResp is:$storeInitPipelineResp")
             if (null != storeInitPipelineResp) {
-                storePipelineRelDao.add(context, imageCode, StoreTypeEnum.IMAGE, storeInitPipelineResp.pipelineId)
+                storePipelineRelDao.add(
+                    dslContext = context,
+                    storeCode = imageCode,
+                    storeType = StoreTypeEnum.IMAGE,
+                    pipelineId = storeInitPipelineResp.pipelineId,
+                    projectCode = projectCode
+                )
                 val buildId = storeInitPipelineResp.buildId
                 val imageStatus = if (buildId.isNullOrBlank()) {
                     ImageStatusEnum.CHECK_FAIL
