@@ -68,6 +68,7 @@ import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.version.StoreVersion
 import org.slf4j.LoggerFactory
 
+@Suppress("ComplexMethod", "ComplexCondition")
 open class DefaultModelCheckPlugin constructor(
     open val client: Client,
     open val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
@@ -243,6 +244,25 @@ open class DefaultModelCheckPlugin constructor(
                     errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(name!!, container.name)
                 )
             )
+
+            // 检查 jobId 不超过 128 位，以及使用了包含jobId功能的不能为空
+            if (!container.jobId.isNullOrBlank() && container.jobId!!.length > 128) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                    params = arrayOf((container.id ?: ""), "128")
+                )
+            }
+            if (container is VMBuildContainer &&
+                container.jobId.isNullOrBlank() &&
+                (container.jobControlOption?.allNodeConcurrency != null ||
+                        container.jobControlOption?.singleNodeConcurrency != null)
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                    params = arrayOf((container.id ?: ""), "128")
+                )
+            }
+
             container.elements.forEach { e ->
                 container.checkElement(e, elementCnt, atomVersions, atomInputParamList, contextMap)
             }

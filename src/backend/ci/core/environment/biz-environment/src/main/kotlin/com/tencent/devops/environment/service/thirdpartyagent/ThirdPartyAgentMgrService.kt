@@ -90,6 +90,7 @@ import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentTask
+import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.HeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
@@ -718,10 +719,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
-    fun getAgentByEnvName(projectId: String, envName: String): Pair<Long?, List<ThirdPartyAgent>> {
+    fun getAgentByEnvName(projectId: String, envName: String): Pair<Long?, List<EnvNodeAgent>> {
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
-        val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
+        val thirdPartyAgentList = mutableListOf<EnvNodeAgent>()
 
         // 因为环境名称有可能也含有@所以只有 仅包含一个@的才是绝对的共享环境
         // 共享环境也有情况是共享环境自己使用，这种情况则直接走下面的逻辑
@@ -761,7 +762,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         sharedProjectId: String,
         sharedEnvName: String?,
         sharedEnvId: Long?
-    ): Pair<Long?, List<ThirdPartyAgent>> {
+    ): Pair<Long?, List<EnvNodeAgent>> {
         logger.info("[$projectId|$sharedProjectId|$sharedEnvName|$sharedEnvId]get shared third party agent list")
         val sharedEnvRecord = when {
             !sharedEnvName.isNullOrBlank() -> {
@@ -826,7 +827,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
-        val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
+        val sharedThirdPartyAgents = mutableListOf<EnvNodeAgent>()
 
         run outSide@{
             // 优先进行单个项目的匹配
@@ -875,7 +876,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         return Pair(sharedEnvRecord.getOrNull(0)?.envId, sharedThirdPartyAgents)
     }
 
-    fun getAgentByEnvId(projectId: String, envHashId: String): List<ThirdPartyAgent> {
+    fun getAgentByEnvId(projectId: String, envHashId: String): List<EnvNodeAgent> {
         logger.info("[$projectId|$envHashId] Get the agents by envId")
         run {
             val sharedProjEnv = envHashId.split("@") // sharedProjId@poolName
@@ -899,12 +900,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 I18nUtil.getCodeLanMessage(ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST) + "($projectId:$envHashId)"
             )
         }
-        val nodeIds = nodes.map {
-            it.nodeId
-        }.toSet()
+        val nodeIdMap = nodes.associate {
+            it.nodeId to it.enableNode
+        }
         val agents = thirdPartyAgentDao.getAgentsByNodeIds(
             dslContext = dslContext,
-            nodeIds = nodeIds,
+            nodeIds = nodeIdMap.keys,
             projectId = projectId
         )
         return agents.map {
@@ -913,20 +914,23 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             } else {
                 null
             }
-            ThirdPartyAgent(
-                agentId = HashUtil.encodeLongId(it.id),
-                projectId = projectId,
-                nodeId = nodeId,
-                status = AgentStatus.fromStatus(it.status),
-                hostname = it.hostname,
-                os = it.os,
-                ip = it.ip,
-                secretKey = SecurityUtil.decrypt(it.secretKey),
-                createUser = it.createdUser,
-                createTime = it.createdTime.timestamp(),
-                parallelTaskCount = it.parallelTaskCount,
-                dockerParallelTaskCount = it.dockerParallelTaskCount,
-                masterVersion = it.masterVersion
+            EnvNodeAgent(
+                ThirdPartyAgent(
+                    agentId = HashUtil.encodeLongId(it.id),
+                    projectId = projectId,
+                    nodeId = nodeId,
+                    status = AgentStatus.fromStatus(it.status),
+                    hostname = it.hostname,
+                    os = it.os,
+                    ip = it.ip,
+                    secretKey = SecurityUtil.decrypt(it.secretKey),
+                    createUser = it.createdUser,
+                    createTime = it.createdTime.timestamp(),
+                    parallelTaskCount = it.parallelTaskCount,
+                    dockerParallelTaskCount = it.dockerParallelTaskCount,
+                    masterVersion = it.masterVersion
+                ),
+                enableNode = nodeIdMap[it.nodeId] ?: true
             )
         }
     }
