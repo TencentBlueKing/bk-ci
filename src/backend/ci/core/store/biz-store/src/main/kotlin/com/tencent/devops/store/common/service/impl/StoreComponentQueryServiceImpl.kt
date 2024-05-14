@@ -363,6 +363,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 return@forEach
             }
             val storeCode = processingStoreRecord[tStoreBase.STORE_CODE] as String
+            val logoUrl = processingStoreRecord[tStoreBase.LOGO_URL]
             val storeBaseInfo = StoreBaseInfo(
                 storeId = processingStoreRecord[tStoreBase.ID] as String,
                 storeCode = storeCode,
@@ -371,7 +372,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 version = version,
                 publicFlag = publicFlagInfoMap[storeCode] ?: false,
                 status = processingStoreRecord[tStoreBase.STATUS] as String,
-                logoUrl = processingStoreRecord[tStoreBase.LOGO_URL],
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 publisher = processingStoreRecord[tStoreBase.PUBLISHER] as String,
                 classifyId = processingStoreRecord[tStoreBase.CLASSIFY_ID] as String
             )
@@ -533,6 +536,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeCode = storeCode,
             storeType = storeType
         )
+        val logoUrl = storeBaseRecord.logoUrl
         return StoreDetailInfo(
             storeId = storeId,
             storeCode = storeCode,
@@ -541,7 +545,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             version = storeBaseRecord.version,
             status = storeBaseRecord.status,
             classify = classify,
-            logoUrl = storeBaseRecord.logoUrl,
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            },
             versionInfo = versionLog,
             downloads = statistic.downloads,
             score = statistic.score,
