@@ -42,29 +42,28 @@
             getRunningCls (statusCls) {
                 return statusCls === 'RUNNING' ? ' spin-icon' : ''
             },
+            calcProgress (progess) {
+                return `${(Math.min(1, progess) * 100).toFixed(2)}%`
+            },
             async getProgress (step) {
                 try {
-                    console.log(step)
-
                     const { projectId, pipelineId } = this.$route.params
                     const { data } = await this.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/getStageProgressRate?buildId=${this.buildId}&stageId=${step.stageId}`)
-                    console.log(data)
                     this.progressTooltips = {
                         ...this.progressTooltips,
-                        content: `<p>${this.$t('completeness')}${Math.min(1, data.stageProgressRete) * 100}%</p>
+                        content: `<p>${this.$t('completeness')}${this.calcProgress(data.stageProgressRete)}</p>
                             ${data.taskProgressList.length > 0
                             ? `<p>${this.$t('runningSteps')}</p>
                                 ${data.taskProgressList.map(item =>
                                     `<p style="text-indent: 12px">${[
                                         `[${item.jobExecutionOrder}] `,
                                         item.taskName,
-                                        `: ${Math.min(1, item.taskProgressRete ?? 0) * 100}%`
+                                        `: ${this.calcProgress(item.taskProgressRete)}`
                                     ].join('')}</p>`
                                 ).join('  ')
                                 }`
                         : ''}`
                     }
-                    console.log(this.progressTooltips)
                 } catch (error) {
                     this.$showTips({
                         theme: 'error',
