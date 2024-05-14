@@ -74,6 +74,19 @@ object RepositoryMessageCode {
     const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
     const val NOT_AUTHORIZED_BY_OAUTH = "2115026" // 用户[{0}]尚未进行OAUTH授权，请先授权。
     const val CAN_NOT_SWITCH_REPO_URL = "2115027" // 不可切换代码库地址
+    const val ERROR_REPO_ENABLE_PAC_FAIL = "2115028" // 代码库开启PAC失败。
+    const val ERROR_REPO_CI_DIR_EXISTS = "2115029" // 代码库关闭PAC失败，CI文件夹仍存在。
+    const val ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION = "2115030" // 工蜂项目({0})不存在或没有权限访问
+    const val ERROR_REPO_URL_HAS_ENABLED_PAC = "2115031" // 代码库已在项目[{0}]开启pac
+    const val ERROR_REPO_NOT_ENABLED_PAC = "2115032" // 代码库没有开启pac
+    const val ERROR_AUTH_TYPE_ENABLED_PAC = "2115033" // pac模式需要使用oauth
+    const val ERROR_MEMBER_NOT_FOUND = "2115034" // 仓库成员{0}不存在
+    const val ERROR_MEMBER_LEVEL_LOWER_MASTER = "2115035" // 开启pac需要master以上权限
+    const val ERROR_DEFAULT_BRANCH_IS_EMPTY = "2115036" // 默认分支不能为空
+    const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115037" // 代码库已开启PAC。
+    const val PAC_REPO_CAN_NOT_DELETE = "2115038" // 代码库已开启PAC,不能删除
+    const val PAC_REPO_CAN_NOT_RENAME = "2115039" // 代码库已开启PAC,不能重命名
+
     const val ATOM_REPO_CAN_NOT_EDIT = "2115040" // 插件仓库不得修改
     const val ATOM_REPO_CAN_NOT_DELETE = "2115041" // 插件仓库不得删除
 

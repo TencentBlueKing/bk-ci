@@ -64,13 +64,15 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo> {
         logger.info("OPENAPI_BUILD_V4|$userId|manual startup info|$projectId|$pipelineId")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            version = debugVersion,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }
@@ -363,8 +365,9 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        elementId: String,
-        params: ReviewParam
+        elementId: String?,
+        params: ReviewParam,
+        stepId: String?
     ): Result<Boolean> {
         logger.info("OPENAPI_BUILD_V4|$userId|manual review|$projectId|$pipelineId|$buildId|$elementId|$params")
         return client.get(ServiceBuildResource::class).manualReview(
@@ -374,7 +377,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            stepId = stepId
         )
     }
 

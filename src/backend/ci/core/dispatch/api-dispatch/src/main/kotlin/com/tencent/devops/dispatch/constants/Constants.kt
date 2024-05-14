@@ -65,3 +65,6 @@ const val BK_QUEUE_TIMEOUT_MINUTES = "bkQueueTimeoutMinutes" //  构建环境无
 const val BK_AGENT_IS_BUSY = "bkAgentIsBusy" // 构建机繁忙，继续重试(Agent is busy)
 const val BK_BUILD_AGENT_DETAIL_LINK_ERROR = "bkBuildAgentDetailLinkError" // 构建机Agent详情链接
 const val BK_ENV_WORKER_ERROR_IGNORE = "bkEnvWorkerErrorIgnore" // 构建机环境中{0}节点启动构建进程失败，自动切换其他节点重试
+const val AGENT_REUSE_MUTEX_REDISPATCH = "agentReuseMuteXRedispatch" // 构建机复用互斥，节点 {0} 已被 {1} 构建使用，重新调度
+// 构建机复用互斥，等待被依赖的节点 {0} 调度到具体节点后再进行复用调度
+const val AGENT_REUSE_MUTEX_WAIT_REUSED_ENV = "agentReuseMuteXWaitReusedEnv"

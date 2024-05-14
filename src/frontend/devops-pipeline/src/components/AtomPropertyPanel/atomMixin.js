@@ -122,7 +122,6 @@ const atomMixin = {
         ...mapActions('atom', [
             'updateAtomInput',
             'updateWholeAtomInput',
-            'updateAtomOutput',
             'updateAtomOutputNameSpace',
             'updateAtom',
             'deleteAtomProps'
@@ -134,9 +133,10 @@ const atomMixin = {
                 propKey
             })
         },
-        handleUpdateElement (name, value) {
+        handleUpdateElement (name, value, changeEditStatus = true) {
             this.updateAtom({
                 element: this.element,
+                changeEditStatus,
                 newParam: {
                     [name]: value
                 }
@@ -154,14 +154,6 @@ const atomMixin = {
             this.updateWholeAtomInput({
                 atom: this.element,
                 newInput
-            })
-        },
-        handleUpdateAtomOutput (name, value) {
-            this.updateAtomOutput({
-                atom: this.element,
-                newParam: {
-                    [name]: value
-                }
             })
         },
         handleUpdateAtomOutputNameSpace (name, value) {

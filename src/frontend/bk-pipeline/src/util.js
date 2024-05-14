@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
 import Vue from 'vue'
 import {
-    VM_CONTAINER_TYPE,
     NORMAL_CONTAINER_TYPE,
+    STATUS_MAP,
     TRIGGER_CONTAINER_TYPE,
-    STATUS_MAP
+    VM_CONTAINER_TYPE
 } from './constants'
 
 export const eventBus = new Vue()
@@ -99,7 +99,7 @@ export function convertMStoString (ms) {
 }
 
 export function checkContainerType (typeName) {
-    return (container) => container['@type'] === typeName
+    return (container) => container?.['@type'] === typeName
 }
 
 /**
@@ -177,4 +177,49 @@ export function getStatusCls (status) {
         default:
             return ''
     }
+}
+
+export function areDeeplyEqual (obj1, obj2) {
+    const stack = [[obj1, obj2]]
+    let current, left, right
+
+    while (stack.length > 0) {
+        current = stack.pop()
+        left = current[0]
+        right = current[1]
+
+        if (left === right) {
+            continue
+        }
+
+        if (typeof left !== 'object' || left === null
+            || typeof right !== 'object' || right === null) {
+            return false
+        }
+
+        const ignoreKeys = ['isError', 'id', 'pipelineCreator', 'containerHashId', 'containerId', 'executeCount']
+        // 排除 isError 字段
+        const leftKeys = Object.keys(left).filter(key => !ignoreKeys.includes(key))
+        const rightKeys = Object.keys(right).filter(key => !ignoreKeys.includes(key))
+        if (leftKeys.length !== rightKeys.length) {
+            return false
+        }
+
+        for (let i = 0; i < leftKeys.length; i++) {
+            const key = leftKeys[i]
+            if (!Object.hasOwnProperty.call(right, key)) {
+                return false
+            }
+            if (left[key] === right[key]) {
+                continue
+            }
+            if (typeof left[key] === 'object' && typeof right[key] === 'object') {
+                stack.push([left[key], right[key]])
+            } else {
+                return false
+            }
+        }
+    }
+
+    return true
 }

@@ -103,7 +103,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
         // 同步Job执行状态
         buildLogPrinter.stopLog(
             buildId = buildId,
-            jobId = task.containerHashId,
+            containerHashId = task.containerHashId,
             executeCount = task.executeCount
         )
 

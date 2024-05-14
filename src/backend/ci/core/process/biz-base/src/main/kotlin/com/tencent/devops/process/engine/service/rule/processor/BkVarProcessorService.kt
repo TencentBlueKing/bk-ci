@@ -43,7 +43,12 @@ class BkVarProcessorService : ProcessorService {
 
     override fun getRuleValue(projectId: String, ruleName: String, pipelineId: String?, buildId: String?): String? {
         return if (buildId != null) {
-            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, ruleName)
+            val varMap = pipelineBuildVarDao.getVars(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                keys = setOf(ruleName)
+            )
             varMap[ruleName]
         } else {
             null
