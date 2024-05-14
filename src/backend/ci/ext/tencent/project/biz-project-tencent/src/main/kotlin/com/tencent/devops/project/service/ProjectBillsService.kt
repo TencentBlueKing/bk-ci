@@ -46,6 +46,7 @@ class ProjectBillsService constructor(
         private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE =
             "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
         private const val PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE = "PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE"
+        private const val IS_DISABLE_FLAG = "is_disable_flag"
     }
 
     private val project2Status = Caffeine.newBuilder()
@@ -97,7 +98,7 @@ class ProjectBillsService constructor(
                 templateCode = PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE
             )
             clearCacheAfterCheck()
-            logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList")
+            logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList|$project2Status")
         }
         return true
     }
@@ -113,6 +114,7 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE
             )
+            logger.info("check inactive project finished|$disabledProjectList")
             clearCacheAfterCheck()
         }
         return true
@@ -139,12 +141,14 @@ class ProjectBillsService constructor(
 
             val status = calculateProjectStatus(projectInfo.productId)
             logger.info("project($englishName) status is ${status.value}")
-            // todo 待数据确认无问题后，再做禁用
-            projectService.updateUsableStatus(
-                englishName = englishName,
-                enabled = false,
-                checkPermission = false
-            )
+            val isDisableFlag = redisOperation.get(IS_DISABLE_FLAG)?.toBoolean() ?: false
+            if (isDisableFlag) {
+                projectService.updateUsableStatus(
+                    englishName = englishName,
+                    enabled = false,
+                    checkPermission = false
+                )
+            }
             project2Status.put(englishName, status)
             addProjectToManagerList(projectInfo)
             disabledProjectList.add(englishName)
@@ -186,7 +190,7 @@ class ProjectBillsService constructor(
                 templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
             )
             clearCacheAfterCheck()
-            logger.info("check project related product start, total: $totalCount|$disabledProjectList")
+            logger.info("check project related product finished, total: $totalCount|$disabledProjectList")
         }
         return true
     }
@@ -202,6 +206,7 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
             )
+            logger.info("check project related product finished|$disabledProjectList")
             clearCacheAfterCheck()
         }
         return true
@@ -219,13 +224,18 @@ class ProjectBillsService constructor(
                 )
                 return
             }
-            if (shouldDisableProject(englishName)) {
-                disableProject(englishName)
-                return
+            val isDisableFlag = redisOperation.get(IS_DISABLE_FLAG)?.toBoolean() ?: false
+            if (isDisableFlag) {
+                if (shouldDisableProject(englishName)) {
+                    disableProject(englishName)
+                    return
+                }
+                project2Status.put(englishName, ProjectRelateOBSProductStatusEnum.NOT_RELATE_PRODUCT)
+                addProjectToManagerList(projectInfo)
+                updateProjectNotRelatedProductCheck(englishName)
+            } else {
+                disabledProjectList.add(englishName)
             }
-            project2Status.put(englishName, ProjectRelateOBSProductStatusEnum.NOT_RELATE_PRODUCT)
-            addProjectToManagerList(projectInfo)
-            updateProjectNotRelatedProductCheck(englishName)
         } catch (ex: Exception) {
             logger.warn("check project related product failed: $englishName | ${ex.message}")
         }
