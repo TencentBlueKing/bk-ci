@@ -27,9 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.bcs.util
 
+import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
 import com.tencent.devops.dispatch.pojo.KubernetesLabel
 import com.tencent.devops.dispatch.pojo.KubernetesLimitRange
-import com.tencent.devops.dispatch.pojo.KubernetesRepo
 import io.fabric8.kubernetes.api.model.LimitRangeBuilder
 import io.fabric8.kubernetes.api.model.LimitRangeItem
 import io.fabric8.kubernetes.api.model.Namespace

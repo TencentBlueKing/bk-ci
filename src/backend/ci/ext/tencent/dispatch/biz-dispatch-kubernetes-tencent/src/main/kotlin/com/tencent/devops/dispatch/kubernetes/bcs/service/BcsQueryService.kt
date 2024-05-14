@@ -28,7 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.util.BcsClientUtils
+import com.tencent.devops.dispatch.kubernetes.bcs.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

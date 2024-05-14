@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
@@ -50,6 +51,7 @@ import javax.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_BCS", description = "BCS服务")
 @Path("/service/bcs")
+@ServiceInterface("dispatch")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBcsResource {

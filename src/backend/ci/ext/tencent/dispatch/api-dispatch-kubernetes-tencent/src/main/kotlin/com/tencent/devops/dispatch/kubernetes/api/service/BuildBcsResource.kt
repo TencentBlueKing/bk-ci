@@ -25,34 +25,60 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.bcs.resources
+package com.tencent.devops.dispatch.kubernetes.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.service.BuildBcsResource
-import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsDeployService
-import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsQueryService
 import com.tencent.devops.dispatch.pojo.DeployApp
 import io.fabric8.kubernetes.api.model.apps.Deployment
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class BuildBcsResourceImpl @Autowired constructor(
-    private val bcsDeployService: BcsDeployService,
-    private val bcsQueryService: BcsQueryService
-) : BuildBcsResource {
+@Tag(name = "BUILD_BCS", description = "BCS服务")
+@Path("/build/bcs")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildBcsResource {
 
-    override fun getBcsDeploymentInfo(
+    @Operation(summary = "bcs部署应用")
+    @Path("/deploy/app")
+    @POST
+    fun bcsDeployApp(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        namespaceName: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
-    ): Result<Deployment> {
-        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
-    }
+        @Parameter(description = "部署请求对象")
+        deployApp: DeployApp
+    ): Result<Boolean>
 
-    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
-        return bcsDeployService.deployApp(userId, deployApp)
-    }
+    @Operation(summary = "获取deployment信息")
+    @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
+    @GET
+    fun getBcsDeploymentInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "命名空间名称")
+        @PathParam("namespaceName")
+        namespaceName: String,
+        @Parameter(description = "deployment名称")
+        @PathParam("deploymentName")
+        deploymentName: String,
+        @Parameter(description = "bcs请求路径")
+        @QueryParam("bcsUrl")
+        bcsUrl: String,
+        @Parameter(description = "请求token")
+        @QueryParam("token")
+        token: String
+    ): Result<Deployment>
 }
