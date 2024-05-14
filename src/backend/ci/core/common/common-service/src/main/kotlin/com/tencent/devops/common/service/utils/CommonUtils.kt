@@ -151,7 +151,7 @@ object CommonUtils {
     ): Result<String?> {
         var serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
             "?userId=$userId&fileChannelType=$fileChannelType&staticFlag=$staticFlag"
-        fileRepoPath.let {
+        fileRepoPath?.let {
             serviceUrl += "&filePath=$fileRepoPath"
         }
         logger.info("serviceUploadFile serviceUrl is:$serviceUrl")
