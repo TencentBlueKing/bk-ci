@@ -283,7 +283,7 @@
                 showLog: false,
                 retryTaskId: '',
                 skipTask: false,
-                isExpandAllMatrix: true,
+                isExpandAllMatrix: this.$route.hash.indexOf('collapsedAllJob') === -1,
                 failedContainer: false,
                 activeTab: 'errors',
                 currentAtom: {},
@@ -489,9 +489,7 @@
                 viewportContent.style.height = `${parent?.scrollHeight}px`
                 this.scrollElement = '.pipeline-model-scroll-viewport'
                 this.initMiniMapScroll()
-                if (this.$route.hash.indexOf('collapsedAllJob') === -1) {
-                    this.expandAllMatrix()
-                }
+                this.expandAllMatrix()
             })
         },
         beforeDestroy () {
