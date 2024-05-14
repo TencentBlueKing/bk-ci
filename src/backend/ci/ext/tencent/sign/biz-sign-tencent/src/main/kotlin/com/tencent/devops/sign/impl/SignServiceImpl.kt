@@ -203,6 +203,8 @@ class SignServiceImpl
                         message = "Task exit with unknown error"
                     )
                 }
+                var ipaTmpDir = fileService.getIpaTmpDir(ipaSignInfo, resignId)
+                fileService.deleteDir(ipaTmpDir)
             }
             return finished
         }

@@ -59,4 +59,6 @@ interface FileService {
         ipaSignInfo: IpaSignInfo,
         resignId: String? = null
     ): File
+
+    fun deleteDir(dir: File)
 }
