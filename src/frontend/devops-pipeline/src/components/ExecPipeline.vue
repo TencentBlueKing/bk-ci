@@ -489,7 +489,9 @@
                 viewportContent.style.height = `${parent?.scrollHeight}px`
                 this.scrollElement = '.pipeline-model-scroll-viewport'
                 this.initMiniMapScroll()
-                this.expandAllMatrix()
+                if (this.$route.hash.indexOf('collapsedAllJob') === -1) {
+                    this.expandAllMatrix()
+                }
             })
         },
         beforeDestroy () {
