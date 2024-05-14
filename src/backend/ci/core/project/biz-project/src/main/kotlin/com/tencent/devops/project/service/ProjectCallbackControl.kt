@@ -73,29 +73,31 @@ class ProjectCallbackControl @Autowired constructor(
             event = projectEventType.name,
             url = null
         )
-        callBackList.map {
-            val secretParam = JsonUtil.to(it.secretParam, ISecretParam::class.java).decode(aesKey)
+        callBackList.map { callbackInfo ->
+            val secretParam = JsonUtil.to(callbackInfo.secretParam, ISecretParam::class.java).decode(aesKey)
             val secretTokenService = SecretTokenServiceFactory.getSecretTokenService(secretParam)
             // 1.获取URL/请求头/URL参数
             val secretRequestParam = secretTokenService.getSecretRequestParam(
                 userId = callbackData.userId,
                 projectId = callbackData.projectId,
                 secretParam = secretParam
-            )
+            ).let {
+                it.url = callbackInfo.callbackUrl
+                it
+            }
             // 2.获取请求体
             val requestBody = secretTokenService.getRequestBody(
                 secretParam = secretParam,
                 projectCallbackData = callbackData
             )
             logger.info(
-                "start send project callback|eventType[${it.event}]|url[${secretRequestParam.url}]|" +
-                        "secretType[${it.secretType}]"
+                "start send project callback|eventType[${callbackInfo.eventType}]|url[${callbackInfo.callbackUrl}]|" +
+                        "secretType[${callbackInfo.secretType}]"
             )
             // 4.发请求
             send(
                 secretRequestParam = secretRequestParam,
                 requestBody = requestBody,
-                method = "POST",
                 failAction = { exception -> secretTokenService.requestFail(exception) },
                 successAction = { responseBody -> secretTokenService.requestSuccess(responseBody) }
             )
@@ -105,13 +107,11 @@ class ProjectCallbackControl @Autowired constructor(
     private fun send(
         secretRequestParam: SecretRequestParam,
         requestBody: String,
-        method: String,
         failAction: ((exception: Exception) -> Unit) = { },
         successAction: ((responseBody: String) -> Unit) = { }
     ) {
         with(secretRequestParam) {
             OkhttpUtils.sendRequest(
-                method = method,
                 url = url,
                 headers = insertCommonHeader(header),
                 params = emptyMap(),

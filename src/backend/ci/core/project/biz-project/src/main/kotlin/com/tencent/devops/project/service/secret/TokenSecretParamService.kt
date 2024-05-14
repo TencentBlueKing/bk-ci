@@ -40,7 +40,6 @@ class TokenSecretParamService : ISecretTokenService<TokenSecretParam> {
         secretParam: TokenSecretParam
     ): SecretRequestParam = with(secretParam) {
         SecretRequestParam(
-            url = url,
             header = headers,
             secretType = TokenSecretParam.classType
         )

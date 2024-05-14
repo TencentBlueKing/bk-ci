@@ -28,6 +28,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectCallbackResource
 import com.tencent.devops.project.dao.ProjectCallbackDao
@@ -35,6 +36,7 @@ import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackPojo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.secret.ISecretParam
+import com.tencent.devops.project.service.UrlGenerator
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +46,8 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class OPProjectCallbackResourceImpl @Autowired constructor(
     val projectCallbackDao: ProjectCallbackDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val urlGenerator: UrlGenerator
 ) : OPProjectCallbackResource {
 
     @Value("\${project.callback.secretParam.aes-key}")
@@ -52,13 +55,16 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
 
     override fun create(
         userId: String,
-        event: ProjectEventType,
+        eventType: ProjectEventType,
+        url: String,
+        region: GatewayType?,
         secretParam: ISecretParam
     ): Result<Boolean> {
+        val targetUrl = urlGenerator.generate(region ?: GatewayType.DEVNET, url)
         projectCallbackDao.create(
             dslContext = dslContext,
-            event = event.name,
-            url = secretParam.url,
+            eventType = eventType.name,
+            url = targetUrl,
             secretParam = JsonUtil.toJson(secretParam.encode(aesKey), false),
             secretType = secretParam.getSecretType()
         )
@@ -85,7 +91,7 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
             url = callbackUrl
         ).map {
             ProjectCallbackPojo(
-                event = it.event,
+                event = it.eventType,
                 callbackUrl = it.callbackUrl,
                 secretType = it.secretType,
                 id = it.id

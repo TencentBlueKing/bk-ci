@@ -30,6 +30,7 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.util.HttpRetryUtils
 import okhttp3.ConnectionPool
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -47,9 +48,7 @@ import java.io.CharArrayWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
-import java.net.HttpRetryException
 import java.net.HttpURLConnection
-import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -387,7 +386,6 @@ object OkhttpUtils {
     }
 
     private fun buildRequest(
-        method: String,
         url: String,
         requestBodyStr: String,
         headers: Map<String, String>? = null,
@@ -402,12 +400,7 @@ object OkhttpUtils {
             val requestBody = RequestBody.create(jsonMediaType, requestBodyStr.ifBlank {
                 "{}"
             })
-            when (method) {
-                "GET" -> requestBuilder.get()
-                "POST" -> requestBuilder.post(requestBody)
-                "DELETE" -> requestBuilder.delete(requestBody)
-                "PUT" -> requestBuilder.put(requestBody)
-            }
+            requestBuilder.post(requestBody)
             headers?.forEach {
                 requestBuilder.header(it.key, it.value)
             }
@@ -416,7 +409,6 @@ object OkhttpUtils {
 
     @SuppressWarnings("TooGenericExceptionThrown", "LongParameterList")
     fun sendRequest(
-        method: String,
         url: String,
         requestBody: String,
         headers: Map<String, String>? = null,
@@ -426,14 +418,13 @@ object OkhttpUtils {
         successAction: ((responseBody: String) -> Unit) = { }
     ) {
         val request = buildRequest(
-            method = method,
             url = url,
             requestBodyStr = requestBody,
             headers = headers,
             params = params
         )
         try {
-            val response = retry(retryCount) {
+            val response = HttpRetryUtils.retry(retryCount) {
                 okHttpClient.newCall(request).execute()
             }
             val responseBody = response.body?.string() ?: ""
@@ -449,29 +440,6 @@ object OkhttpUtils {
         } catch (ignored: Exception) {
             logger.warn("fail to send request|url[$url],$ignored")
             failAction.invoke(ignored)
-        }
-    }
-
-    @Throws(HttpRetryException::class, SocketTimeoutException::class)
-    fun <T> retry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
-        return try {
-            action()
-        } catch (re: SocketTimeoutException) {
-            if (retryTime - 1 < 0) {
-                throw re
-            }
-            if (retryPeriodMills > 0) {
-                Thread.sleep(retryPeriodMills)
-            }
-            retry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
-        } catch (re: HttpRetryException) {
-            if (retryTime - 1 < 0) {
-                throw re
-            }
-            if (retryPeriodMills > 0) {
-                Thread.sleep(retryPeriodMills)
-            }
-            retry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
         }
     }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackPojo
 import com.tencent.devops.project.pojo.Result
@@ -62,7 +63,13 @@ interface OPProjectCallbackResource {
         userId: String,
         @Parameter(description = "事件类型", required = true)
         @QueryParam("event")
-        event: ProjectEventType,
+        eventType: ProjectEventType,
+        @Parameter(description = "回调地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "region", required = false)
+        @QueryParam("region")
+        region: GatewayType?,
         @Parameter(description = "回调凭证", required = true)
         secretParam: ISecretParam
     ): Result<Boolean>

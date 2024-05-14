@@ -25,19 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.secret
+package com.tencent.devops.project.service.impl
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.tencent.devops.common.client.pojo.enums.GatewayType
+import com.tencent.devops.project.service.UrlGenerator
+import org.springframework.stereotype.Service
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = TokenSecretParam::class, name = TokenSecretParam.classType)
-)
-interface ISecretParam {
-    fun getSecretType(): String
-
-    fun encode(aesKey: String): ISecretParam
-
-    fun decode(aesKey: String): ISecretParam
+@Service
+class UrlGeneratorImpl : UrlGenerator {
+    override fun generate(gatewayType: GatewayType, url: String) = url
 }

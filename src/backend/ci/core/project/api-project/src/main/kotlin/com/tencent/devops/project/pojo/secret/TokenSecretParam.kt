@@ -32,8 +32,7 @@ import com.tencent.devops.project.util.SecretParamEncryptUtil
 data class TokenSecretParam(
     var headers: Map<String, String>,
     val userId: String,
-    val method: String,
-    override var url: String
+    val method: String
 ) : ISecretParam {
 
     override fun getSecretType() = classType

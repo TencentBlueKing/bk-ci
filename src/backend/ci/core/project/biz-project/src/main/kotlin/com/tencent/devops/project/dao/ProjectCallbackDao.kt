@@ -39,14 +39,14 @@ class ProjectCallbackDao {
         url: String?
     ) = with(TProjectCallback.T_PROJECT_CALLBACK) {
         dslContext.selectFrom(this)
-            .where(EVENT.eq(event).let {
+            .where(EVENT_TYPE.eq(event).let {
                 if (url.isNullOrBlank()) it else it.and(CALLBACK_URL.eq(url))
             }).fetch()
     }
 
     fun create(
         dslContext: DSLContext,
-        event: String,
+        eventType: String,
         url: String,
         secretType: String,
         secretParam: String
@@ -54,12 +54,12 @@ class ProjectCallbackDao {
         with(TProjectCallback.T_PROJECT_CALLBACK) {
             dslContext.insertInto(
                 this,
-                EVENT,
+                EVENT_TYPE,
                 CALLBACK_URL,
                 SECRET_TYPE,
                 SECRET_PARAM
             ).values(
-                event,
+                eventType,
                 url,
                 secretType,
                 secretParam
