@@ -270,7 +270,7 @@
             },
             expandMatrix (stageId, matrixId, containerId, expand = true) {
                 console.log('expandMatrix', stageId, matrixId, containerId)
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     try {
                         const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
                         jobInstance?.toggleMatrixOpen?.(expand)
@@ -278,6 +278,19 @@
                             jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand)
                             resolve(true)
                         })
+                    } catch (error) {
+                        console.error(error)
+                        resolve(false)
+                    }
+                })
+            },
+            expandJob (stageId, containerId, expand = true) {
+                console.log('expandJob', stageId, containerId)
+                return new Promise((resolve) => {
+                    try {
+                        const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+                        jobInstance?.toggleShowAtom(expand)
+                        resolve(true)
                     } catch (error) {
                         console.error(error)
                         resolve(false)

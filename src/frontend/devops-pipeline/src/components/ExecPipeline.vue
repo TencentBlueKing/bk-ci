@@ -75,7 +75,7 @@
                     @change="expandAllMatrix"
                     style="margin-right: 16px;"
                 >
-                    {{ $t("details.isExpandMatrix") }}
+                    {{ $t("details.isExpandJob") }}
                 </bk-checkbox>
                 <bk-button text theme="primary" @click="showCompleteLog">
                     <i class="devops-icon icon-txt"></i>
@@ -889,6 +889,8 @@
                                     const container = matrix.groupContainers[k]
                                     this.$refs.bkPipeline.expandMatrix(stage.id, matrix.id, container.id, this.isExpandAllMatrix)
                                 }
+                            } else {
+                                this.$refs.bkPipeline.expandJob(stage.id, matrix.id, this.isExpandAllMatrix)
                             }
                         }
                     }

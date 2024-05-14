@@ -60,16 +60,16 @@
     import draggable from 'vuedraggable'
     import Atom from './Atom'
     import Logo from './Logo'
-    import { eventBus } from './util'
-    import { localeMixins } from './locale'
     import {
-        DELETE_EVENT_NAME,
-        COPY_EVENT_NAME,
         ATOM_ADD_EVENT_NAME,
-        STATUS_MAP,
+        COPY_EVENT_NAME,
+        DELETE_EVENT_NAME,
         QUALITY_IN_ATOM_CODE,
-        QUALITY_OUT_ATOM_CODE
+        QUALITY_OUT_ATOM_CODE,
+        STATUS_MAP
     } from './constants'
+    import { localeMixins } from './locale'
+    import { eventBus } from './util'
     export default {
         name: 'atom-list',
         components: {
@@ -269,8 +269,7 @@
   .add-atom-entry {
     position: absolute;
     bottom: -10px;
-    left: 111px;
-    background-color: white;
+    left: calc(50% - 9px);
     cursor: pointer;
     z-index: 3;
     .add-plus-icon {

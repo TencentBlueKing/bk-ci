@@ -25,7 +25,6 @@
             " name="matrix" size="16" class="matrix-flag-icon">
             </Logo>
             <Logo
-                v-if="showMatrixFold"
                 name="angle-circle-down"
                 size="18"
                 @click.stop="toggleShowAtom()"
@@ -38,7 +37,7 @@
             <Logo v-if="container.locateActive" name="location-right" class="container-locate-icon" size="18" />
         </h3>
         <atom-list
-            v-if="showAtomList || !showMatrixFold"
+            v-if="showAtomList"
             ref="atomList"
             :stage="stage"
             :container="container"
@@ -353,15 +352,12 @@
             background: white;
             border-radius: 50%;
             bottom: -10px;
-            left: 111px;
+            left: calc(50% - 9px);
+            color: #c4cdd6;
             transition: all 0.3s ease;
 
             &.open {
                 transform: rotate(-180deg);
-            }
-
-            &.readonly {
-                color: $fontWeightColor;
             }
         }
 
