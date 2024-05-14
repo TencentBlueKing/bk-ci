@@ -300,8 +300,8 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
             val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(
                 dslContext = dslContext,
                 pipelineId = pipelineId
-            ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
-            var projectCode = storePipelineRelRecord.projectCode
+            )
+            var projectCode = storePipelineRelRecord?.projectCode
             if (projectCode.isNullOrBlank()) {
                 projectCode =
                     client.get(ServicePipelineResource::class).getPipelineInfoByPipelineId(pipelineId)?.data?.projectId

@@ -167,7 +167,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         )
         return when {
             temporaryAccessUrls.isEmpty() -> ""
-            !idcFlag && storeType == StoreTypeEnum.DEVX ->
+            !idcFlag && storeType == StoreTypeEnum.DEVX && bkRepoClientConfig.bkRepoDevxDevnetHost.isNotBlank() ->
                 temporaryAccessUrls[0].url.replace(repoPrefixUrl, bkRepoClientConfig.bkRepoDevxDevnetHost)
             else -> temporaryAccessUrls[0].url
         }
