@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.dispatch.kubernetes.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.util.BcsClientUtils

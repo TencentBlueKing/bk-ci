@@ -25,18 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.dispatch.kubernetes.bcs.resources
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.BuildBcsResource
+import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsDeployService
+import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsQueryService
+import com.tencent.devops.dispatch.pojo.DeployApp
+import io.fabric8.kubernetes.api.model.apps.Deployment
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "k8s仓库信息")
-data class KubernetesRepo(
-    @get:Schema(title = "仓库地址", required = true)
-    val registryUrl: String,
-    @get:Schema(title = "用户名", required = true)
-    val username: String,
-    @get:Schema(title = "密码", required = true)
-    val password: String,
-    @get:Schema(title = "邮箱", required = false)
-    val email: String?
-)
+@RestResource
+class BuildBcsResourceImpl @Autowired constructor(
+    private val bcsDeployService: BcsDeployService,
+    private val bcsQueryService: BcsQueryService
+) : BuildBcsResource {
+
+    override fun getBcsDeploymentInfo(
+        userId: String,
+        namespaceName: String,
+        deploymentName: String,
+        bcsUrl: String,
+        token: String
+    ): Result<Deployment> {
+        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
+    }
+
+    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
+        return bcsDeployService.deployApp(userId, deployApp)
+    }
+}

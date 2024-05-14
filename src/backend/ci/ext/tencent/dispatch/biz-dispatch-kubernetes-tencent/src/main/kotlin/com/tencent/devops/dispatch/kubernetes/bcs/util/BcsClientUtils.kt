@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.util
+package com.tencent.devops.dispatch.kubernetes.bcs.util
 
 import com.tencent.devops.dispatch.pojo.KubernetesLabel
 import com.tencent.devops.dispatch.pojo.KubernetesLimitRange

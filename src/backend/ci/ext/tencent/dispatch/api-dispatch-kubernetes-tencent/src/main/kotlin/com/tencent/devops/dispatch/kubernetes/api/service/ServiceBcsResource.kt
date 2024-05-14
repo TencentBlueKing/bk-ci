@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.api
+package com.tencent.devops.dispatch.kubernetes.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
 import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
-import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
 import io.fabric8.kubernetes.api.model.apps.Deployment
@@ -69,14 +69,17 @@ interface ServiceBcsResource {
     @Path("/bcs/namespaces/{namespaceName}/secrets/{secretName}/create")
     @POST
     fun createImagePullSecretTest(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
         @Parameter(description = "命名空间名称")
         @PathParam("secretName")
         secretName: String,
-        @Parameter(description = "创建拉取镜像secret请求对象")
-        createImagePullSecretRequest: CreateImagePullSecretRequest
+        @Parameter(description = "k8s仓库信息")
+        kubernetesRepo: KubernetesRepo
     ): Result<Boolean>
 
     @Operation(summary = "bcs部署应用")

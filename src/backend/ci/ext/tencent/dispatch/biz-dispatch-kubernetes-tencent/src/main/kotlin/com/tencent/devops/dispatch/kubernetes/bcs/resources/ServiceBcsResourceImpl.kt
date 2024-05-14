@@ -25,25 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.resources
+package com.tencent.devops.dispatch.kubernetes.bcs.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsDeployService
+import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsQueryService
+import com.tencent.devops.dispatch.kubernetes.bcs.util.BcsClientUtils
+import com.tencent.devops.dispatch.kubernetes.client.SecretClient
+import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
 import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
-import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
-import com.tencent.devops.dispatch.service.BcsDeployService
-import com.tencent.devops.dispatch.service.BcsQueryService
-import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceBcsResourceImpl @Autowired constructor(
     private val bcsDeployService: BcsDeployService,
-    private val bcsQueryService: BcsQueryService
+    private val bcsQueryService: BcsQueryService,
+    private val secretClient: SecretClient
 ) : ServiceBcsResource {
 
     override fun createNamespace(
@@ -61,16 +63,16 @@ class ServiceBcsResourceImpl @Autowired constructor(
     }
 
     override fun createImagePullSecretTest(
+        userId: String,
         namespaceName: String,
         secretName: String,
-        createImagePullSecretRequest: CreateImagePullSecretRequest
+        kubernetesRepo: KubernetesRepo
     ): Result<Boolean> {
-        BcsClientUtils.createImagePullSecret(
-            bcsUrl = createImagePullSecretRequest.bcsUrl,
-            token = createImagePullSecretRequest.token,
+        secretClient.createImagePullSecret(
+            userId = userId,
             secretName = secretName,
             namespaceName = namespaceName,
-            kubernetesRepoInfo = createImagePullSecretRequest.kubernetesRepo
+            kubernetesRepoInfo = kubernetesRepo
         )
         return Result(true)
     }

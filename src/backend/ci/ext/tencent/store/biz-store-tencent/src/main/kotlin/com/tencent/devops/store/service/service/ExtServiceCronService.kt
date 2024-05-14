@@ -30,7 +30,7 @@ package com.tencent.devops.store.service.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.api.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBcsResource
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
@@ -41,13 +41,13 @@ import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConf
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class ExtServiceCronService @Autowired constructor(
@@ -86,7 +86,7 @@ class ExtServiceCronService @Autowired constructor(
                     pageSize = 20,
                     timeDescFlag = false
                 )
-                if (serviceRecords == null || serviceRecords.isEmpty()) {
+                if (serviceRecords.isNullOrEmpty()) {
                     return
                 }
                 val serviceCodes = serviceRecords.map { it.serviceCode }.toSet().joinToString(",")

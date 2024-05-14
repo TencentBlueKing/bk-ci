@@ -25,14 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.dispatch.kubernetes.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.client.DeploymentClient
+import com.tencent.devops.dispatch.kubernetes.client.IngressClient
+import com.tencent.devops.dispatch.kubernetes.client.ServiceClient
 import com.tencent.devops.dispatch.pojo.AppIngress
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
-import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.kubernetes.api.model.ServiceBuilder
@@ -41,22 +43,26 @@ import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy
 import io.fabric8.kubernetes.api.model.apps.RollingUpdateDeployment
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
-import io.fabric8.kubernetes.api.model.extensions.Ingress
-import io.fabric8.kubernetes.api.model.extensions.IngressBackend
-import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
-import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
-import io.fabric8.kubernetes.api.model.extensions.IngressRule
-import io.fabric8.kubernetes.client.KubernetesClient
+import io.fabric8.kubernetes.api.model.networking.v1.HTTPIngressPathBuilder
+import io.fabric8.kubernetes.api.model.networking.v1.HTTPIngressRuleValue
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBackend
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBackendBuilder
+import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder
+import io.fabric8.kubernetes.api.model.networking.v1.IngressRule
+import java.text.MessageFormat
+import java.util.Collections
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.util.Collections
 
 @Service
-class BcsDeployService @Autowired constructor(private val redisOperation: RedisOperation) {
+class BcsDeployService @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val deploymentClient: DeploymentClient,
+    private val ingressClient: IngressClient,
+    private val serviceClient: ServiceClient
+) {
 
     private val logger = LoggerFactory.getLogger(BcsDeployService::class.java)
 
@@ -73,8 +79,6 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         deployApp: DeployApp
     ): Result<Boolean> {
         logger.info("deployApp userId is: $userId,app is: $deployApp")
-        val bcsUrl = deployApp.bcsUrl
-        val token = deployApp.token
         val namespaceName = deployApp.namespaceName
         val serviceCode = deployApp.appCode
         val appDeployment = deployApp.appDeployment
@@ -130,7 +134,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .endSelector()
             .endSpec()
             .build()
-        BcsClientUtils.createDeployment(bcsUrl, token, namespaceName, deployment)
+        deploymentClient.createDeployment(userId, deployment)
         logger.info("created deployment:$deployment")
         val servicePort = appService.servicePort
         val service = ServiceBuilder()
@@ -148,14 +152,19 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withType("NodePort")
             .endSpec()
             .build()
-        BcsClientUtils.createService(bcsUrl, token, namespaceName, service)
+        serviceClient.createService(userId, service)
         logger.info("created service:$service")
         // 创建ingress
         // generate ingress backend
-        val ingressBackend: IngressBackend = IngressBackendBuilder()
-            .withServiceName(getServiceName(serviceCode))
-            .withNewServicePort(servicePort)
-            .build()
+        val ingressBackend: IngressBackend =
+            IngressBackendBuilder()
+                .withNewService()
+                .withName(getServiceName(serviceCode))
+                .withNewPort()
+                .withNumber(servicePort)
+                .endPort()
+                .endService()
+                .build()
         // generate ingress path
         val ingressPath = HTTPIngressPathBuilder()
             .withBackend(ingressBackend)
@@ -171,8 +180,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         logger.info("deployApp ingressName is: $ingressName")
         if (ingressName.isNullOrBlank()) {
             val ingress = createIngress(
-                bcsUrl = bcsUrl,
-                token = token,
+                userId = userId,
                 namespaceName = namespaceName,
                 serviceCode = serviceCode,
                 appIngress = appIngress,
@@ -181,14 +189,11 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             )
             logger.info("created ingress:$ingress")
         } else {
-            val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
-            var ingress =
-                bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).withName(ingressName).get()
+            var ingress = ingressClient.getIngressByName(userId, ingressName).data
             logger.info("deployApp ingress is: $ingress")
             if (ingress == null) {
                 ingress = createIngress(
-                    bcsUrl = bcsUrl,
-                    token = token,
+                    userId = userId,
                     namespaceName = namespaceName,
                     serviceCode = serviceCode,
                     appIngress = appIngress,
@@ -201,7 +206,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
                     ingress.spec.rules.contains(ingressRule) -> return Result(true)
                     else -> {
                         ingress.spec.rules.add(ingressRule)
-                        BcsClientUtils.createIngress(bcsUrl, token, namespaceName, ingress)
+                        ingressClient.createIngress(userId, ingress)
                         logger.info("update ingress:$ingressName success")
                     }
                 }
@@ -223,8 +228,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
     private fun getServiceName(serviceCode: String) = "$serviceCode-service"
 
     private fun createIngress(
-        bcsUrl: String,
-        token: String,
+        userId: String,
         namespaceName: String,
         serviceCode: String,
         appIngress: AppIngress,
@@ -241,13 +245,15 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withRules(ingressRule)
             .endSpec()
             .build()
-        BcsClientUtils.createIngress(bcsUrl, token, namespaceName, ingress)
-        redisOperation.set(
-            key = ingressRedisKey,
-            value = getIngressName(namespaceName),
-            expiredInSecond = null,
-            expired = false
-        )
+        val result = ingressClient.createIngress(userId, ingress)
+        if (result.isOk()) {
+            redisOperation.set(
+                key = ingressRedisKey,
+                value = getIngressName(namespaceName),
+                expiredInSecond = null,
+                expired = false
+            )
+        }
         return ingress
     }
 
@@ -258,63 +264,59 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         stopApp: StopApp
     ): Result<Boolean> {
         logger.info("bcsStopApp userId is: $userId,stopApp is: $stopApp")
-        val bcsUrl = stopApp.bcsUrl
-        val token = stopApp.token
-        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
         val deploymentName = stopApp.deploymentName
         // 停止灰度命名空间的应用
         val grayNamespaceName = stopApp.grayNamespaceName
         var deployment: Deployment?
         if (grayNamespaceName.isNotEmpty()) {
-            deployment = bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName)
-                .withName(deploymentName).get()
+            deployment = deploymentClient.getDeploymentByName(userId, deploymentName).data
             if (deployment != null) {
                 // 删除deployment
-                bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName)
-                    .withName(deploymentName).delete()
+                deploymentClient.deleteDeploymentByName(userId, deploymentName)
                 // 删除service
-                bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
+                serviceClient.deleteServiceByName(userId, stopApp.serviceName)
                 // 更新ingress规则
                 deleteIngressRule(
-                    bcsKubernetesClient = bcsKubernetesClient,
+                    userId = userId,
                     namespaceName = grayNamespaceName,
                     host = stopApp.grayHost,
-                    deploymentName = deploymentName,
-                    bcsUrl = bcsUrl,
-                    token = token
+                    deploymentName = deploymentName
                 )
             }
         }
         // 停止正式命名空间的应用
         val namespaceName = stopApp.namespaceName
         if (namespaceName.isNotEmpty()) {
-            deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName)
-                .withName(deploymentName).get()
+            deployment = deploymentClient.getDeploymentByName(userId, deploymentName).data
             if (deployment != null) {
                 // 删除deployment
-                bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).delete()
+                deploymentClient.deleteDeploymentByName(userId, deploymentName)
                 // 删除service
-                bcsKubernetesClient.services().inNamespace(namespaceName).withName(stopApp.serviceName).delete()
+                serviceClient.deleteServiceByName(userId, stopApp.serviceName)
                 // 更新ingress规则
-                deleteIngressRule(bcsKubernetesClient, namespaceName, stopApp.host, deploymentName, bcsUrl, token)
+                deleteIngressRule(
+                    userId = userId,
+                    namespaceName = namespaceName,
+                    host = stopApp.host,
+                    deploymentName = deploymentName
+                )
             }
         }
         return Result(true)
     }
 
     private fun deleteIngressRule(
-        bcsKubernetesClient: KubernetesClient,
+        userId: String,
         namespaceName: String,
         host: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
+        deploymentName: String
     ) {
         val ingressRedisKey = "$ingressRedisPrefixKey:$namespaceName"
         val ingressName = redisOperation.get(ingressRedisKey)
-        val ingress =
-            bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).withName(ingressName).get()
-        ingress.spec.rules.removeIf { rule -> rule.host == MessageFormat(host).format(arrayOf(deploymentName)) }
-        BcsClientUtils.createIngress(bcsUrl, token, namespaceName, ingress)
+        ingressName?.let { name ->
+            val ingress = ingressClient.getIngressByName(userId, name).data
+            ingress?.spec?.rules?.removeIf { rule -> rule.host == MessageFormat(host).format(arrayOf(deploymentName)) }
+            ingress?.let { it -> ingressClient.createIngress(userId, it) }
+        }
     }
 }

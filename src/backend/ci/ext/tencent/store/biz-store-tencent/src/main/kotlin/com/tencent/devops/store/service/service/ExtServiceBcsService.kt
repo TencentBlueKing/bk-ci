@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.api.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.AppDeployment
 import com.tencent.devops.dispatch.pojo.AppIngress
 import com.tencent.devops.dispatch.pojo.AppService
@@ -40,6 +40,8 @@ import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreEnvVarService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.extservice.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.service.configuration.ExtServiceBcsConfig
 import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.service.configuration.ExtServiceDeploymentConfig
@@ -47,8 +49,6 @@ import com.tencent.devops.store.service.configuration.ExtServiceImageSecretConfi
 import com.tencent.devops.store.service.configuration.ExtServiceIngressConfig
 import com.tencent.devops.store.service.configuration.ExtServiceServiceConfig
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.pojo.extservice.ExtServiceFeatureUpdateInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus
 import java.text.MessageFormat
@@ -104,7 +104,7 @@ class ExtServiceBcsService {
         checkPermissionFlag: Boolean = true
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
-        val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
+        val grayFlag = namespaceName == "dev-base"
         val host = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
         val scopes = "ALL," + if (grayFlag) "TEST" else "PRD"
         val storeEnvVarInfoListResult = storeEnvVarService.getLatestEnvVarList(
