@@ -168,7 +168,9 @@ class BcsDeployService @Autowired constructor(
         // generate ingress path
         val ingressPath = HTTPIngressPathBuilder()
             .withBackend(ingressBackend)
-            .withPath(appIngress.contextPath).build()
+            .withPath(appIngress.contextPath)
+            .withPathType("Prefix")
+            .build()
         val ingressRule = IngressRule(
             appIngress.host,
             HTTPIngressRuleValue(
