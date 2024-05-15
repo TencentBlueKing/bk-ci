@@ -65,10 +65,11 @@ type AgentResult struct {
 }
 
 func (a *AgentResult) IsAgentDelete() bool {
-	if a.AgentStatus == "" {
-		return false
-	}
 	return a.AgentStatus == config.AgentStatusDelete
+}
+
+func (a *AgentResult) IsAgentDisabled() bool {
+	return a.AgentStatus == config.AgentStatusDisabled
 }
 
 func (r *HttpResult) IntoDevopsResult() (*DevopsResult, error) {

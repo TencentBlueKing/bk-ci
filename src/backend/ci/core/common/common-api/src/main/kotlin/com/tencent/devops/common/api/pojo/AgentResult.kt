@@ -49,20 +49,4 @@ data class AgentResult<out T>(
     fun isNotOk(): Boolean {
         return status != 0
     }
-
-    @JsonIgnore
-    fun isAgentNotOK(): Boolean {
-        if (agentStatus == null) {
-            return true
-        }
-        return isAgentDelete()
-    }
-
-    @JsonIgnore
-    fun isAgentDelete(): Boolean {
-        if (agentStatus == null) {
-            return false
-        }
-        return agentStatus == AgentStatus.DELETE
-    }
 }

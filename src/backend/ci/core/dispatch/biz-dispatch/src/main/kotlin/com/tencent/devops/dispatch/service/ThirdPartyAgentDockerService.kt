@@ -50,7 +50,7 @@ class ThirdPartyAgentDockerService @Autowired constructor(
                 return AgentResult(1, e.message ?: "Fail to get the agent")
             }
 
-            if (agentResult.agentStatus == AgentStatus.DELETE) {
+            if (agentResult.agentStatus?.isDisabled() == true) {
                 return AgentResult(AgentStatus.DELETE, null)
             }
 
