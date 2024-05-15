@@ -78,6 +78,7 @@ class StreamPipelineService @Autowired constructor(
         private const val ymlVersion = "v2.0"
     }
 
+    @Suppress("NestedBlockDepth")
     fun getPipelineList(
         userId: String,
         gitProjectId: Long,
