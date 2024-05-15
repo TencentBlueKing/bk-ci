@@ -413,7 +413,6 @@ class PipelineTriggerEventService @Autowired constructor(
     }
 
     fun triggerReasonStatistics(
-        userId: String,
         projectId: String,
         eventId: Long,
         pipelineId: String?,
@@ -421,7 +420,6 @@ class PipelineTriggerEventService @Autowired constructor(
     ): PipelineTriggerReasonStatistics {
         return pipelineTriggerEventDao.triggerReasonStatistics(
             dslContext = dslContext,
-            triggerUser = userId,
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,

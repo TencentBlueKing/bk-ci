@@ -178,7 +178,6 @@ class UserPipelineTriggerEventResourceImpl(
     ): Result<PipelineTriggerReasonStatistics> {
         return Result(
             pipelineTriggerEventService.triggerReasonStatistics(
-                userId = userId,
                 projectId = projectId,
                 eventId = eventId,
                 pipelineId = pipelineId,
