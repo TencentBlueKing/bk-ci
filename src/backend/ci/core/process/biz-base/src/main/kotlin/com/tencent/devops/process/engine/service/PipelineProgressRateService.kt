@@ -59,7 +59,7 @@ class PipelineProgressRateService constructor(
     ): BuildStageProgressInfo {
         val buildInfo = pipelineRuntimeService.getBuildInfo(
             projectId = projectId,
-            buildId = buildId,
+            buildId = buildId
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
