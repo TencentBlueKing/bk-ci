@@ -608,6 +608,7 @@ class MarketTemplateDao {
         if (null != templateName) {
             conditions.add(tTemplate.TEMPLATE_NAME.contains(templateName))
         }
+        conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.TEMPLATE.type.toByte()))
         return conditions
     }
 

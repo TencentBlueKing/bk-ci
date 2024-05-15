@@ -104,7 +104,8 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
     override fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String
+        pkgPath: String,
+        idcFlag: Boolean
     ): String {
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         return "$host/ms/artifactory/api/user/artifactories/file/download/local?filePath=$pkgPath"
