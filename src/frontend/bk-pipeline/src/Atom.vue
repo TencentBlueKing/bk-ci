@@ -388,8 +388,9 @@
                 }
             },
             progressRate () {
+                const precision = 1000
                 return typeof this.atom.progressRate === 'number'
-                    ? (Math.min(1, this.atom.progressRate) * 100).toFixed(2)
+                    ? (Math.min(1, this.atom.progressRate) * precision * 100) / precision
                     : ''
             }
         },
