@@ -101,6 +101,9 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "触发用户", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
+        @Parameter(description = "事件ID", required = false)
+        @QueryParam("eventId")
+        eventId: Long?,
         @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
