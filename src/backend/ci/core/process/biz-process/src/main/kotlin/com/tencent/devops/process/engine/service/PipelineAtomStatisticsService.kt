@@ -34,7 +34,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
-import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

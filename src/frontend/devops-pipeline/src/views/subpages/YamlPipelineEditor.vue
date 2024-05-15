@@ -6,8 +6,15 @@
             </bk-button>
         </header>
         <section class="edit-pipeline-yaml-editor">
-            <YamlEditor ref="editor" show-yaml-plugin :value="pipelineYaml" @change="handleYamlChange"
-                :highlight-ranges="yamlHighlightBlock" @step-click="handleStepClick" />
+            <YamlEditor
+                ref="editor"
+                show-yaml-plugin
+                :read-only="!pipelineEditable"
+                :value="pipelineYaml"
+                @change="handleYamlChange"
+                :highlight-ranges="yamlHighlightBlock"
+                @step-click="handleStepClick"
+            />
         </section>
         <template v-if="container">
             <YamlPreviewPopup v-if="showAtomYaml" @close="resetPreviewAtomYaml" :yaml="atomYaml" />
@@ -113,6 +120,7 @@
                 return this.element?.atomCode && !this.isPreviewingAtomYAML && !this.isAdding
             },
             pipelineEditable () {
+                console.log(this.instanceFromTemplate)
                 return this.editable && !this.instanceFromTemplate
             }
         },
@@ -149,14 +157,15 @@
                 'addStage',
                 'addContainer',
                 'deleteAtom',
-                'deleteStage'
+                'deleteStage',
+                'setPipelineYaml'
             ]),
             getStageByIndex (stageIndex) {
                 const { getStage, editingModel } = this
                 return getStage(editingModel.stages, stageIndex)
             },
             handleYamlChange (yaml) {
-                this.$store.commit('atom/SET_PIPELINE_YAML', yaml)
+                this.setPipelineYaml(yaml)
                 this.yamlHighlightBlock = []
                 this.setPipelineEditing(true)
             },

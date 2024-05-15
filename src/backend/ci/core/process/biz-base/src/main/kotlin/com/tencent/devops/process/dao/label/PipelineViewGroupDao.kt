@@ -138,6 +138,19 @@ class PipelineViewGroupDao {
         }
     }
 
+    fun listPipelineIdByViewId(
+        dslContext: DSLContext,
+        projectId: String,
+        viewId: Long
+    ): List<String> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.select(PIPELINE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
+                .fetch(0, String::class.java)
+        }
+    }
+
     fun listByPipelineIds(
         dslContext: DSLContext,
         projectId: String,

@@ -11,8 +11,14 @@
         >
             {{ item.label }}
         </bk-button>
-        <bk-dialog render-directive="if" v-model="leaveConfirmVisisble" :title="$t('tips')" header-position="left"
-            width="500">
+        <bk-dialog
+            render-directive="if"
+            header-position="left"
+            v-model="leaveConfirmVisisble"
+            :width="500"
+            :title="$t('tips')"
+            :z-index="2020"
+        >
             {{ $t('saveBeforeSwitch') }}
             <template slot="footer">
                 <bk-button theme="primary" :loading="isSaving" @click="handleConfirm(false)">{{ $t('saveDraft&Switch')
@@ -35,6 +41,7 @@
                 type: [Boolean, null],
                 default: null
             },
+            draft: Boolean,
             yamlInvalidMsg: String,
             readOnly: {
                 type: Boolean,
@@ -80,7 +87,8 @@
         methods: {
             ...mapActions({
                 updatePipelineMode: 'updatePipelineMode',
-                canSwitchToYaml: 'atom/canSwitchToYaml'
+                canSwitchToYaml: 'atom/canSwitchToYaml',
+                setPipelineYaml: 'atom/setPipelineYaml'
             }),
             async handleConfirm (isDrop = false) {
                 let result = true
@@ -107,13 +115,20 @@
                             yamlInvalidMsg: this.yamlInvalidMsg
                         }
                     }
+                    // TODO: 模板不支持YAML
+                    if (this.pipeline?.instanceFromTemplate) {
+                        return {
+                            yamlSupported: false,
+                            yamlInvalidMsg: this.$t('templateYamlNotSupport')
+                        }
+                    }
                     const pipeline = Object.assign({}, this.pipeline, {
                         stages: [
                             this.pipeline.stages[0],
                             ...(this.pipelineWithoutTrigger?.stages ?? [])
                         ]
                     })
-                    const { yamlSupported, yamlInvalidMsg } = await this.canSwitchToYaml({
+                    const { yamlSupported, yamlInvalidMsg, newYaml } = await this.canSwitchToYaml({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
                         modelAndSetting: {
@@ -123,7 +138,8 @@
                     })
                     return {
                         yamlSupported,
-                        yamlInvalidMsg
+                        yamlInvalidMsg,
+                        newYaml
                     }
                 } catch (error) {
                     console.log(error)
@@ -139,11 +155,12 @@
                 }
                 if (mode === CODE_MODE) {
                     this.isSwitching = true
-                    const { yamlSupported, yamlInvalidMsg } = await this.detectYamlSupport()
+                    const { yamlSupported, yamlInvalidMsg, newYaml } = await this.detectYamlSupport()
                     if (!yamlSupported && yamlInvalidMsg) {
                         this.$bkInfo({
                             type: 'error',
                             width: 500,
+                            zIndex: 2020,
                             title: this.$t('invalidCodeMode'),
                             subHeader: this.$createElement(
                                 'pre',
@@ -167,10 +184,12 @@
                         })
                         this.isSwitching = false
                         return
+                    } else if (this.draft) {
+                        this.setPipelineYaml(newYaml)
                     }
                     this.isSwitching = false
                 }
-                if (this.isEditing) {
+                if (!this.draft && this.isEditing) {
                     this.leaveConfirmVisisble = true
                     this.newMode = mode
                     return

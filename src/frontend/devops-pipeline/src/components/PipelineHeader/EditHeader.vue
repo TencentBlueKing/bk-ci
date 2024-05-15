@@ -10,7 +10,9 @@
                 </bk-tag>
             </span>
         </pipeline-bread-crumb>
-        <mode-switch :save="saveDraft" />
+        <mode-switch
+            :save="saveDraft"
+        />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus"
@@ -19,52 +21,76 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
-            <bk-button
-                :disabled="saveStatus || !isEditing"
-                :loading="saveStatus"
-                outline
-                theme="primary"
-                @click="saveDraft"
-                v-perm="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
-            >
-                {{ $t("saveDraft") }}
-            </bk-button>
-            <bk-button
-                :disabled="!canDebug"
-                :loading="executeStatus"
-                v-perm="{
-                    hasPermission: canExecute,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EXECUTE
-                    }
-                }"
-                @click="exec(true)"
-            >
-                <span class="debug-pipeline-draft-btn">
-                    {{ $t("debug") }}
-                    <b>|</b>
-                    <i
-                        v-bk-tooltips="$t('draftRecordEntryTitle')"
-                        :class="['devops-icon icon-txt', {
-                            'icon-txt-disabled': !canDebug
-                        }]"
-                        @click.stop="goDraftDebugRecord"
-                    />
-                </span>
-            </bk-button>
+            <template v-if="isTemplatePipeline">
+                <bk-button
+                    :disabled="saveStatus || !isEditing"
+                    :loading="saveStatus"
+                    outline
+                    theme="primary"
+                    style="margin-right: 10px"
+                    @click="saveSetting"
+                    v-perm="{
+                        hasPermission: canEdit,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                >
+                    {{ $t("save") }}
+                </bk-button>
+            </template>
+            <template v-else>
+                <bk-button
+                    :disabled="saveStatus || !isEditing"
+                    :loading="saveStatus"
+                    outline
+                    theme="primary"
+                    @click="saveDraft"
+                    v-perm="{
+                        hasPermission: canEdit,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                >
+                    {{ $t("saveDraft") }}
+                </bk-button>
+                <bk-button
+                    :disabled="!canDebug"
+                    :loading="executeStatus"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    @click="exec(true)"
+                >
+                    <span class="debug-pipeline-draft-btn">
+                        {{ $t("debug") }}
+                        <b>|</b>
+                        <i
+                            v-bk-tooltips="$t('draftRecordEntryTitle')"
+                            :class="['devops-icon icon-txt', {
+                                'icon-txt-disabled': !canDebug
+                            }]"
+                            @click.stop="goDraftDebugRecord"
+                        />
+                    </span>
+                </bk-button>
+            </template>
             <!-- <more-actions /> -->
             <release-button
                 :can-release="canRelease && !isEditing"
@@ -83,6 +109,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { UI_MODE } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
@@ -159,7 +186,20 @@
                 return this.pipelineInfo?.version ?? ''
             }
         },
+        watch: {
+            isTemplatePipeline: {
+                handler (val) {
+                    if (val) {
+                        this.updatePipelineMode(UI_MODE)
+                    }
+                },
+                immediate: true
+            }
+        },
         methods: {
+            ...mapActions({
+                updatePipelineMode: 'updatePipelineMode'
+            }),
             ...mapActions('atom', [
                 'setPipelineEditing',
                 'saveDraftPipeline',
@@ -253,24 +293,64 @@
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params
 
-                    this.handleError(e, {
-                        projectId,
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }, 10000)
+                    if (e.code === 2101244) {
+                        const h = this.$createElement
+                        this.$bkMessage({
+                            theme: 'error',
+                            delay: 0,
+                            ellipsisLine: 0,
+                            message: h('div', {
+                                class: 'pipeline-save-error-list-box'
+                            }, e.data.map(item => h('div', {
+                                class: 'pipeline-save-error-list-item'
+                            }, [
+                                h('p', {}, item.errorTitle),
+                                h('ul', {
+                                    class: 'pipeline-save-error-list'
+                                }, item.errorDetails.map(err => h('li', {
+                                    domProps: {
+                                        innerHTML: err
+                                    }
+                                })))
+                            ])))
+                        })
+                    } else {
+                        this.handleError({
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        })
+                    }
                     return false
                 } finally {
                     this.setSaveStatus(false)
                 }
             },
 
-            saveSetting () {
-                const pipelineSetting = this.getPipelineSetting()
-                const { projectId, pipelineId } = this.$route.params
-                return this.$ajax.post(
-                    `/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`,
-                    pipelineSetting
-                )
+            async saveSetting () {
+                try {
+                    this.setSaveStatus(true)
+                    const pipelineSetting = this.pipelineSetting
+                    const { projectId, pipelineId } = this.$route.params
+                    await this.$ajax.post(
+                        `/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`,
+                        pipelineSetting
+                    )
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: `${pipelineSetting.pipelineName}${this.$t('saveSuc')}`,
+                        limit: 1
+                    })
+                    this.setPipelineEditing(false)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message,
+                        limit: 1
+                    })
+                } finally {
+                    this.setSaveStatus(false)
+                }
             },
             goDraftDebugRecord () {
                 if (this.canDebug) {
@@ -335,5 +415,26 @@
     align-items: center;
   }
 }
+.pipeline-save-error-list-box {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 10px;
+    .pipeline-save-error-list-item {
 
-  </style>
+        > p {
+            margin-bottom: 12px;
+        }
+        .pipeline-save-error-list {
+            > li {
+                line-height: 26px;
+                a {
+                    color: $primaryColor;
+                    margin-left: 10px;
+                    text-align: right;
+                }
+            }
+        }
+    }
+}
+
+</style>

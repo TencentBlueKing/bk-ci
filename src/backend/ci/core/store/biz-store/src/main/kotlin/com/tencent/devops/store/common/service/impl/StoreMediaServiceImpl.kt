@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.store.common.dao.StoreMediaInfoDao
-import com.tencent.devops.store.pojo.common.StoreMediaInfo
-import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreMediaService
 import org.jooq.DSLContext

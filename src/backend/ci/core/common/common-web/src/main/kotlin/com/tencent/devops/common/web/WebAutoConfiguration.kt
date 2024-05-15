@@ -93,7 +93,7 @@ class WebAutoConfiguration {
 
     @Bean
     @Primary
-    fun objectMapper() = JsonUtil.getObjectMapper()
+    fun objectMapper() = JsonUtil.getObjectMapper(formatted = false)
 
     @Bean("jasyptStringEncryptor")
     @Primary

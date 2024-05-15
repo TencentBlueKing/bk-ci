@@ -29,7 +29,7 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.pojo.common.KEY_ID
-import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.common.service.LabelService
 import org.jooq.DSLContext

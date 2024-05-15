@@ -150,7 +150,6 @@
                             successSubscriptionList: this.getPipelineSubscriptions('success'),
                             updateSubscription: (name, value) => {
                                 this.setPipelineEditing(true)
-                                console.log(name, value)
                                 this.updatePipelineSetting({
                                     setting: this.pipelineSetting,
                                     param: {

@@ -91,12 +91,19 @@ class BuildVariableService @Autowired constructor(
     fun getAllVariable(
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        keys: Set<String>? = null
     ): Map<String, String> {
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = keys
+        )
         return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, null) == true) {
-            pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId)
+            dataMap
         } else {
-            PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
+            PipelineVarUtil.mixOldVarAndNewVar(dataMap)
         }
     }
 
@@ -186,7 +193,7 @@ class BuildVariableService @Autowired constructor(
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
-            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, name)
+            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, setOf(name))
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
                     dslContext = dslContext,

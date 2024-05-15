@@ -62,9 +62,6 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
-            queryStr () {
-                return this.historyPageStatus?.queryStr ?? ''
-            },
             emptyTipsConfig () {
                 const { hasNoPermission } = this
                 const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
@@ -113,17 +110,6 @@
                 }
             }
         },
-        watch: {
-            queryStr (newStr) {
-                let hashParam = ''
-                if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
-                const url = `${this.$route.path}${newStr ? `?${newStr}` : ''}${hashParam}`
-                if (url !== this.$route.fullPath) {
-                    this.$router.push(url)
-                }
-            }
-        },
-
         async mounted () {
             if (this.$route.hash) { // 带上buildId时，弹出日志弹窗
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId

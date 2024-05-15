@@ -20,6 +20,9 @@ export default {
 
     resolve: {
         extensions: ['.js', '.vue', '.json'],
+        fallback: {
+            path: false
+        },
         alias: {
             vue$: 'vue/dist/vue.esm.js',
             '@': resolve('src'),
@@ -30,8 +33,7 @@ export default {
     module: {
         noParse: [
             /\/node_modules\/jquery\/dist\/jquery\.min\.js$/,
-            /\/node_modules\/echarts\/dist\/echarts\.min\.js$/,
-            /\/bk-pipeline\/dist\/bk-pipeline\.min\.js$/
+            /\/node_modules\/echarts\/dist\/echarts\.min\.js$/
         ],
         rules: [
             {
@@ -55,7 +57,6 @@ export default {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        include: [resolve('src')],
                         // include: [resolve('src'), resolve('node_modules/@tencent/bk-magic-vue')],
                         cacheDirectory: './webpack_cache/',
                         // 确保 JS 的转译应用到 node_modules 的 Vue 单文件组件
