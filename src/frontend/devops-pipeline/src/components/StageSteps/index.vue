@@ -43,7 +43,7 @@
                 return statusCls === 'RUNNING' ? ' spin-icon' : ''
             },
             calcProgress (progress) {
-                const precision = 1000
+                const precision = 10000
                 if (typeof progress !== 'number') return ''
                 return `${(Math.min(1, progress) * precision * 100) / precision}%`
             },

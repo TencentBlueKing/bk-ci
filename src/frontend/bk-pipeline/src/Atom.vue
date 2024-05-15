@@ -388,7 +388,7 @@
                 }
             },
             progressRate () {
-                const precision = 1000
+                const precision = 10000
                 return typeof this.atom.progressRate === 'number'
                     ? (Math.min(1, this.atom.progressRate) * precision * 100) / precision
                     : ''
