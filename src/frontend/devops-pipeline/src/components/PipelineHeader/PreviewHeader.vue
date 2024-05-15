@@ -1,67 +1,127 @@
 <template>
-    <div class="pipeline-preview-header">
-        <pipeline-bread-crumb>
+    <div v-if="pipelineName" class="pipeline-preview-header">
+        <pipeline-bread-crumb :pipeline-name="pipelineName">
             <span class="build-num-switcher-wrapper">
-                {{ $t("details.execPreview") }}
+                {{ title }}
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
-            <bk-button
-                :disabled="executeStatus"
-                v-perm="{
-                    permissionData: {
-                        projectId: $route.params.projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
-                @click="goEdit"
-            >
-                {{ $t("cancel") }}
-            </bk-button>
+
             <bk-button
                 theme="primary"
                 :disabled="executeStatus"
                 :loading="executeStatus"
                 v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId: projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
                 @click="handleClick"
             >
-                {{ $t("exec") }}
+                {{ $t(isDebugPipeline ? "debug" : "exec") }}
             </bk-button>
+
+            <bk-button
+                :disabled="executeStatus"
+                v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goBack"
+            >
+                {{ $t("cancel") }}
+            </bk-button>
+
         </aside>
     </div>
+    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
 </template>
 
 <script>
-    import { bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapState } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
             PipelineBreadCrumb
         },
-        computed: {
-            ...mapState('atom', ['executeStatus', 'execDetail']),
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
+        data () {
+            return {
+                paramsValid: true,
+                pipelineName: '--'
             }
         },
+        computed: {
+            ...mapState('pipelines', ['executeStatus']),
+            ...mapGetters({
+                isEditing: 'atom/isEditing',
+                canManualStartup: 'pipelines/canManualStartup'
+            }),
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
+            title () {
+                return this.$t(`details.${this.isDebugPipeline ? 'debug' : 'exec'}Preview`)
+            },
+            isDebugPipeline () {
+                return Object.prototype.hasOwnProperty.call(this.$route.query, 'debug')
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions.canExecute ?? true
+            }
+        },
+        watch: {
+            pipelineId (pipelineId) {
+                this.$router.push({
+                    name: 'pipelinesHistory',
+                    params: {
+                        projectId: this.projectId,
+                        pipelineId,
+                        type: 'history'
+                    }
+                })
+            }
+        },
+        mounted () {
+            bus.$on(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+        },
+        beforeDestroy () {
+            bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+        },
         methods: {
+            updatePipelineName (name) {
+                this.pipelineName = name
+            },
             handleClick () {
                 bus.$emit('start-execute')
             },
-            goEdit () {
+            goBack () {
                 this.$router.back()
             }
         }
@@ -80,10 +140,15 @@
     grid-auto-flow: column;
     grid-gap: 6px;
   }
+  .pipeline-execute-step {
+    width: 300px;
+    flex-shrink: 0;
+  }
   .pipeline-preview-right-aside {
     display: grid;
     grid-gap: 10px;
     grid-auto-flow: column;
+    flex-shrink: 0;
   }
 }
 </style>

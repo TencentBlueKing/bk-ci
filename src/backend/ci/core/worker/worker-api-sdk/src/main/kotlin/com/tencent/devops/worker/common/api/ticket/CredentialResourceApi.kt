@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.api.ticket
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -43,7 +42,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
-                method = HttpMethod.GET.name,
+                method = "GET",
                 url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
                 token = signToken
             )
@@ -68,8 +67,8 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
             "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
-                method = HttpMethod.GET.name,
-                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                method = "GET",
+                url = path.removePrefix("/ms/ticket"),
                 token = signToken
             )
         } else {

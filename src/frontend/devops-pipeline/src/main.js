@@ -23,12 +23,12 @@
 
 import Vue from 'vue'
 import App from './App'
+import enClass from './directives/focus/en-class'
+import enStyle from './directives/focus/en-style'
 import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
 
-import '@icon-cool/bk-icon-devops'
-import '@icon-cool/bk-icon-devops/src/index'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 import PortalVue from "portal-vue"; // eslint-disable-line
@@ -39,34 +39,32 @@ import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
-import bkMagic from 'bk-magic-vue'
-import BkPipeline from 'bkui-pipeline'
-import { pipelineDocs } from '../../common-lib/docs'
 import {
     handlePipelineNoPermission,
     RESOURCE_ACTION
 } from '@/utils/permission'
-// 权限指令
-import { PermissionDirective, BkPermission } from 'bk-permission'
-import 'bk-permission/dist/main.css'
-import VueCompositionAPI from '@vue/composition-api'
+import bkMagic from 'bk-magic-vue'
 
-// 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
+import { pipelineDocs } from '../../common-lib/docs'
+// 权限指令
+import 'bk-magic-vue/dist/bk-magic-vue.min.css'
+import { BkPermission, PermissionDirective } from 'bk-permission'
+import 'bk-permission/dist/main.css'
 
 const { i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
 )
+const isInIframe = window.self !== window.parent
 
 Vue.use(focus)
-Vue.use(bkMagic)
+Vue.use(enClass)
+Vue.use(enStyle)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
 Vue.use(PermissionDirective(handlePipelineNoPermission))
 Vue.use(BkPermission, {
     i18n
 })
-Vue.use(VueCompositionAPI)
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
@@ -79,10 +77,6 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
-console.log(i18n.locale)
-Vue.use(BkPipeline, {
-    i18n
-})
 
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
@@ -100,12 +94,13 @@ String.prototype.isBkVar = function () {
 
 Vue.mixin({
     methods: {
-        handleError (e, data) {
+        handleError (e, data, delay = 3000) {
             if (e.code === 403) { // 没有权限编辑
                 handlePipelineNoPermission(data)
             } else {
                 this.$showTips({
                     message: e.message || e,
+                    delay,
                     theme: 'error'
                 })
             }
@@ -113,13 +108,14 @@ Vue.mixin({
     }
 })
 
-if (window.top === window.self) { // 只能以iframe形式嵌入
-    location.href = `${WEB_URL_PREFIX}${location.pathname}`
+if (!isInIframe) {
+    // 只能以iframe形式嵌入
+    location.href = `${WEB_URL_PREFIX}${location.pathname}`;
 }
 
 global.pipelineVue = new Vue({
-    el: '#app',
-    router: createRouter(store),
+    el: "#app",
+    router: createRouter(store, isInIframe),
     i18n,
     store,
     components: {

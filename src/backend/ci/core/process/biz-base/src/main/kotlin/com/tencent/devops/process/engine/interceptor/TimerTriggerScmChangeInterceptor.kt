@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.RepositoryTypeNew
+import com.tencent.devops.common.api.enums.CheckoutRepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_NON_TIMED_TRIGGER_SKIP
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_RETRY_TIMED_TRIGGER_SKIP
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
 import com.tencent.devops.process.constant.ProcessMessageCode.OK
@@ -74,6 +75,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         if (task.startType != StartType.TIME_TRIGGER) {
             return Response(OK, I18nUtil.getCodeLanMessage(BK_NON_TIMED_TRIGGER_SKIP))
         }
+        // 定时触发，如果流水线执行失败，此时重试流水线不校验源码是否变更
+        if (task.retry == true) {
+            return Response(OK, I18nUtil.getCodeLanMessage(BK_RETRY_TIMED_TRIGGER_SKIP))
+        }
 
         val pipelineId = task.pipelineInfo.pipelineId
         val projectId = task.pipelineInfo.projectId
@@ -94,6 +99,14 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                             if (ele is TimerTriggerElement) {
                                 noScm = ele.noScm ?: false
                                 if (!noScm) {
+                                    return@outer
+                                }
+                                // 如果插件配置代码库信息,已在PipelineTimerBuildListener已校验源代码是否有变更
+                                if (!ele.repoHashId.isNullOrBlank() ||
+                                    !ele.repoName.isNullOrBlank() ||
+                                    !ele.branches.isNullOrEmpty()
+                                ) {
+                                    noScm = false
                                     return@outer
                                 }
                             }
@@ -414,7 +427,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         if (input !is Map<*, *>) return false
 
         // checkout插件[按仓库URL输入]不校验代码变更
-        if (ele.getAtomCode() == "checkout" && input["repositoryType"] == RepositoryTypeNew.URL.name) return true
+        if (
+            ele.getAtomCode() == "checkout" &&
+            CheckoutRepositoryType.skipTimerTriggerChange(input["repositoryType"]?.toString())
+        ) return true
         val repositoryConfig = getMarketBuildRepoConfig(input, variables) ?: return false
 
         val gitPullMode = EnvUtils.parseEnv(input["pullType"] as String?, variables)

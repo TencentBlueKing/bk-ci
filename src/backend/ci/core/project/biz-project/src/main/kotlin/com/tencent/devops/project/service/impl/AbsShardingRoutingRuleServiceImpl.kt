@@ -28,24 +28,32 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
+import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
+import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
     val redisOperation: RedisOperation,
-    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
+    private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : ShardingRoutingRuleService {
+    companion object {
+        private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(14) // 分片规则在redis默认缓存时间
+    }
 
     /**
      * 添加分片路由规则
@@ -83,7 +91,11 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             redisOperation.set(
                 key = key,
                 value = shardingRoutingRule.routingRule,
-                expired = false
+                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
+            )
+            // 发送规则新增事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
             )
         } finally {
             lock.unlock()
@@ -112,6 +124,10 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 tableName = shardingRoutingRuleRecord.tableName
             )
             redisOperation.delete(key)
+            // 发送规则删除事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.DELETE)
+            )
         }
         return true
     }
@@ -120,7 +136,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
      * 更新分片路由规则
      * @param userId 用户ID
      * @param id 规则ID
-     * @param shardingRoutingRule 片路由规则
+     * @param shardingRoutingRule 路由规则
      * @return 布尔值
      */
     override fun updateShardingRoutingRule(
@@ -163,10 +179,42 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             redisOperation.set(
                 key = key,
                 value = shardingRoutingRule.routingRule,
-                expired = false
+                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
+            )
+            // 发送规则更新事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(
+                    routingName = key,
+                    routingRule = shardingRoutingRule.routingRule,
+                    actionType = CrudEnum.UPDATE
+                )
             )
         } finally {
             lock.unlock()
+        }
+        return true
+    }
+
+    /**
+     * 更新分片路由规则
+     * @param userId 用户ID
+     * @param shardingRoutingRule 片路由规则
+     * @return 布尔值
+     */
+    override fun updateShardingRoutingRule(
+        userId: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): Boolean {
+        val record = shardingRoutingRuleDao.get(
+            dslContext = dslContext,
+            clusterName = shardingRoutingRule.clusterName,
+            moduleCode = shardingRoutingRule.moduleCode,
+            type = shardingRoutingRule.type,
+            routingName = shardingRoutingRule.routingName,
+            tableName = shardingRoutingRule.tableName
+        )
+        record?.let {
+            updateShardingRoutingRule(userId, record.id, shardingRoutingRule)
         }
         return true
     }
@@ -233,7 +281,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 redisOperation.set(
                     key = key,
                     value = record.routingRule,
-                    expired = false
+                    expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
                 )
                 ShardingRoutingRule(
                     clusterName = record.clusterName ?: "",
@@ -260,23 +308,46 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
             } else {
                 // 生成数据库表的分片规则
-                val dbShardingRoutingRule = getShardingRoutingRuleByName(
+                generateTableShardingRoutingRule(
                     moduleCode = moduleCode,
-                    ruleType = ShardingRuleTypeEnum.DB,
-                    routingName = routingName
+                    ruleType = ruleType,
+                    routingName = routingName,
+                    routingRule = routingRule,
+                    tableName = tableName
                 )
-                dbShardingRoutingRule?.let {
-                    ShardingRoutingRule(
-                        clusterName = clusterName,
-                        moduleCode = moduleCode,
-                        dataSourceName = it.dataSourceName,
-                        tableName = tableName,
-                        type = ruleType,
-                        routingName = routingName,
-                        routingRule = routingRule
-                    )
-                }
             }
+        }
+    }
+
+    private fun generateTableShardingRoutingRule(
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        routingName: String,
+        routingRule: String,
+        tableName: String?
+    ): ShardingRoutingRule? {
+        val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
+            ShardingRuleTypeEnum.ARCHIVE_DB
+        } else {
+            ShardingRuleTypeEnum.DB
+        }
+        val dbShardingRoutingRule = getShardingRoutingRuleByName(
+            moduleCode = moduleCode,
+            ruleType = dbRuleType,
+            routingName = routingName
+        )
+        return if (dbShardingRoutingRule != null) {
+            ShardingRoutingRule(
+                clusterName = CommonUtils.getDbClusterName(),
+                moduleCode = moduleCode,
+                dataSourceName = dbShardingRoutingRule.dataSourceName,
+                tableName = tableName,
+                type = ruleType,
+                routingName = routingName,
+                routingRule = routingRule
+            )
+        } else {
+            null
         }
     }
 }

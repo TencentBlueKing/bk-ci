@@ -28,26 +28,26 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_AGENT"], description = "服务-Agent")
+@Tag(name = "SERVICE_AGENT", description = "服务-Agent")
 @Path("/service/dipsatch/jobs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceDispatchJobResource {
 
-    @ApiOperation("监控")
+    @Operation(summary = "监控")
     @POST
     @Path("/monitor")
     fun monitor(
-        @ApiParam("agent 事件", required = true)
+        @Parameter(description = "agent 事件", required = true)
         agentStartMonitor: AgentStartMonitor
     )
 }

@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -41,7 +41,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_STORE"], description = "open-store")
+@Tag(name = "OPEN_STORE", description = "open-store")
 @Path("/open/store")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -49,18 +49,18 @@ interface OpenStoreResource {
 
     @GET
     @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/permission/validate")
-    @ApiOperation("校验项目是否有使用该组件的权限")
-    fun validateProjectAtomPermission(
+    @Operation(summary = "校验项目是否有使用该组件的权限")
+    fun validateProjectComponentPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @PathParam("projectCode")
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         projectCode: String,
-        @ApiParam("标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("类型", required = true)
+        @Parameter(description = "类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>

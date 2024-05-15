@@ -44,6 +44,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -51,7 +52,6 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -100,18 +100,43 @@ class PipelineBuildSummaryDao {
         }
     }
 
-    fun updateBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String, buildNo: Int) {
-
+    fun resetDebugInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
-                .set(BUILD_NO, buildNo)
+                .set(DEBUG_BUILD_NO, 0)
+                .set(DEBUG_BUILD_NUM, 0)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 
-    fun getBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String): Int? {
+    fun updateBuildNo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildNo: Int,
+        debug: Boolean
+    ) {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            val noColumn = if (debug) DEBUG_BUILD_NO else BUILD_NO
+            dslContext.update(this)
+                .set(noColumn, buildNo)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
+        }
+    }
+
+    fun getBuildNo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        debug: Boolean
+    ): Int? {
         return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.select(BUILD_NO)
+            val noColumn = if (debug) DEBUG_BUILD_NO else BUILD_NO
+            dslContext.select(noColumn)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)
@@ -122,25 +147,37 @@ class PipelineBuildSummaryDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        buildId: String,
+        debug: Boolean,
         buildNum: Int = 0,
         buildNumAlias: String? = null
     ): Int {
-
         with(T_PIPELINE_BUILD_SUMMARY) {
+            val numColumn = if (debug) DEBUG_BUILD_NUM else BUILD_NUM
             if (buildNum == 0) {
                 dslContext.update(this)
-                    .set(BUILD_NUM, BUILD_NUM + 1)
+                    .set(numColumn, numColumn + 1)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
+                    .let {
+                        /* debug 模式构建不需要更新状态 */
+                        if (!debug) {
+                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
+                        } else it
+                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
-                    .set(BUILD_NUM, buildNum)
+                    .set(numColumn, buildNum)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
+                    .let {
+                        /* debug 模式构建不需要更新状态 */
+                        if (!debug) {
+                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
+                        } else it
+                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
-        }
-        return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.select(BUILD_NUM)
+            return dslContext.select(numColumn)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!
@@ -150,7 +187,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummaryCount(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>? = null,
         viewId: String? = null,
         favorPipelines: List<String> = emptyList(),
@@ -180,7 +217,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummary(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         sortType: PipelineSortType? = null,
         pipelineIds: Collection<String>? = null,
         favorPipelines: List<String> = emptyList(),
@@ -221,7 +258,7 @@ class PipelineBuildSummaryDao {
 
     private fun generatePipelineFilterCondition(
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>?,
         viewId: String?,
         favorPipelines: List<String>,
@@ -233,7 +270,9 @@ class PipelineBuildSummaryDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
-        conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        if (channelCode != null) {
+            conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        }
         if (includeDelete == false) {
             conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
         }

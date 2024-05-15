@@ -17,23 +17,10 @@
             :key="index">
             <bk-option
                 :value="project.englishName"
-                :disabled="!['rbac', 'dev-rbac', 'test-rbac'].includes(project.routerTag) || !project.managePermission"
+                :disabled="!project.managePermission"
                 :label="project.projectName"
             >
               <div
-                v-if="!['rbac', 'dev-rbac', 'test-rbac'].includes(project.routerTag)"
-                class="option-item">
-                {{ project.projectName }}
-                <i
-                  v-if="!['rbac', 'dev-rbac', 'test-rbac'].includes(project.routerTag)"
-                  v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心操作')"
-                  class="permission-icon permission-icon-edit edit-icon"
-                  @click="handleToProjectManage(project)"
-                >
-                </i>
-              </div>
-              <div
-                v-else
                 v-bk-tooltips="{
                   disabled: project.managePermission,
                   content: $t('非项目管理员，无操作权限')
@@ -48,6 +35,7 @@
     <div class="line-split" />
     <span class="group-title">{{ $t('权限角色') }}</span>
     <scroll-load-list
+      v-if="projectCode"
       class="group-list"
       ref="loadList"
       :list="groupList"
@@ -242,7 +230,7 @@ export default {
     },
     projectList(list) {
       const project = list.find(i => i.projectCode === this.projectCode);
-      if (project && (project.managePermission === false || !['dev-rbac', 'test-rbac', 'rbac'].includes(project.routerTag))) {
+      if (project && (project.managePermission === false)) {
         this.projectCode = ''
       }
     },

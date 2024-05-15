@@ -28,7 +28,9 @@
 package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
@@ -38,11 +40,15 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.RepoFileService
+import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
@@ -55,6 +61,7 @@ import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitListMergeRequest
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -63,13 +70,15 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
-import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class ServiceGitResourceImpl @Autowired constructor(
-    private val gitService: IGitService
+    private val gitService: IGitService,
+    private val repositoryService: RepositoryService,
+    private val repoFileService: RepoFileService
 ) : ServiceGitResource {
 
     override fun moveProjectToGroup(
@@ -263,13 +272,28 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun downloadGitRepoFile(
-        repoName: String,
+        repoId: String,
+        repositoryType: RepositoryType?,
         sha: String?,
-        token: String,
         tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
     ) {
-        return gitService.downloadGitRepoFile(repoName, sha, token, tokenType, response)
+        val repo = repositoryService.serviceGet(
+                "",
+            RepositoryConfigUtils.buildConfig(repoId, repositoryType)
+        )
+        repoFileService.downloadTGitRepoFile(
+            repo = repo,
+            sha = sha,
+            tokenType = tokenType,
+            filePath = filePath,
+            format = format,
+            isProjectPathWrapped = isProjectPathWrapped ?: false,
+            response = response
+        )
     }
 
     override fun getMergeRequestReviewersInfo(
@@ -567,6 +591,20 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
+    override fun gitUpdateFile(
+        gitProjectId: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.gitUpdateFile(
+            gitProjectId = gitProjectId,
+            token = token,
+            gitOperationFile = gitOperationFile,
+            tokenType = tokenType
+        )
+    }
+
     override fun getUserInfoByToken(
         token: String,
         tokenType: TokenTypeEnum
@@ -642,6 +680,48 @@ class ServiceGitResourceImpl @Autowired constructor(
             sha = sha,
             path = path,
             ignoreWhiteSpace = ignoreWhiteSpace
+        )
+    }
+
+    override fun createBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean> {
+        return gitService.createBranch(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitCreateBranch = gitCreateBranch
+        )
+    }
+
+    override fun listMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>> {
+        return gitService.listMergeRequest(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitListMergeRequest = gitListMergeRequest
+        )
+    }
+
+    override fun createMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo> {
+        return gitService.createMergeRequest(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitCreateMergeRequest = gitCreateMergeRequest
         )
     }
 }

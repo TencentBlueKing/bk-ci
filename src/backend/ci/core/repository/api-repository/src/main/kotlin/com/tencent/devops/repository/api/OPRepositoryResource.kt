@@ -28,11 +28,14 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -41,39 +44,75 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPRepositoryResource {
-    @ApiOperation("用于对数据库表填充哈希值")
+    @Operation(summary = "用于对数据库表填充哈希值")
     @POST
     @Path("/addhashid")
     fun addHashId()
 
-    @ApiOperation("修改工蜂老域名")
+    @Operation(summary = "修改工蜂老域名")
     @POST
     @Path("/updateGitDomain")
     fun updateGitDomain(
-        @ApiParam(value = "git老域名", required = true)
+        @Parameter(description = "git老域名", required = true)
         @QueryParam("oldGitDomain")
         oldGitDomain: String,
-        @ApiParam(value = "git新域名", required = true)
+        @Parameter(description = "git新域名", required = true)
         @QueryParam("newGitDomain")
         newGitDomain: String,
-        @ApiParam(value = "灰度项目列表,多个用,分割", required = true)
+        @Parameter(description = "灰度项目列表,多个用,分割", required = true)
         @QueryParam("grayProject")
         grayProject: String?,
-        @ApiParam(value = "灰度权重", required = true)
+        @Parameter(description = "灰度权重", required = true)
         @QueryParam("grayWeight")
         grayWeight: Int?,
-        @ApiParam(value = "灰度白名单,多个用,分割", required = true)
+        @Parameter(description = "灰度白名单,多个用,分割", required = true)
         @QueryParam("grayWhiteProject")
         grayWhiteProject: String?
     ): Result<Boolean>
 
-    @ApiOperation("更新git项目ID")
+    @Operation(summary = "更新git项目ID")
     @POST
     @Path("/updateGitProjectId")
     fun updateGitProjectId()
 
-    @ApiOperation("更新github项目ID")
+    @Operation(summary = "更新github项目ID")
     @POST
     @Path("/updateGithubProjectId")
     fun updateGithubProjectId()
+
+    @Operation(summary = "设置工蜂webhook路由到灰度")
+    @PUT
+    @Path("/{projectId}/{repositoryId}/setGrayGitHookUrl")
+    fun setGrayGitHookUrl(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库ID", required = true)
+        @PathParam("repositoryId")
+        repositoryId: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "移除工蜂webhook路由到灰度")
+    @PUT
+    @Path("/{projectId}/{repositoryId}/removeGrayGitHookUrl")
+    fun removeGrayGitHookUrl(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库ID", required = true)
+        @PathParam("repositoryId")
+        repositoryId: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "批量移除代码库与流水线关联关系")
+    @DELETE
+    @Path("/{projectId}/{repoHashId}/removeRepositoryPipelineRef")
+    fun removeRepositoryPipelineRef(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库ID", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
+    ): Result<Boolean>
 }

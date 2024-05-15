@@ -33,8 +33,11 @@ import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.metrics.dao.DispatchJobMetricsDao
 import com.tencent.devops.metrics.dao.MetricsDataQueryDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
 import com.tencent.devops.metrics.dao.ProjectInfoDao
@@ -57,6 +60,7 @@ import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
@@ -84,9 +88,11 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
     private val projectInfoDao: ProjectInfoDao,
+    private val dispatchJobMetricsDao: DispatchJobMetricsDao,
     private val metricsDataClearService: MetricsDataClearService,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val projectBuildSummaryService: ProjectBuildSummaryService
 ) : MetricsDataReportService {
 
     companion object {
@@ -203,11 +209,35 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     }
                 }
             }
+            if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name) {
+                projectBuildSummaryService.saveProjectBuildCount(
+                    projectId = projectId,
+                    trigger = buildEndPipelineMetricsData.trigger
+                )
+            }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         } finally {
             lock.unlock()
         }
 
+        return true
+    }
+
+    override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
+        // 批量插入时获取批量的自增ID
+        val idList = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_DISPATCH_JOB_DAILY_METRICS", (dispatchJobMetricsDataList.size))
+            .data?.toMutableList()
+        if (idList == null || idList.size != dispatchJobMetricsDataList.size) {
+            logger.error("SaveDispatchJobMetrics fail to get idList. " +
+                    "${idList?.size ?: 0}|${dispatchJobMetricsDataList.size}")
+            return false
+        }
+
+        val newDispatchJobMetricsDataList = dispatchJobMetricsDataList.map {
+            it.copy(id = idList.removeAt(0) ?: 0)
+        }
+        dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, newDispatchJobMetricsDataList)
         return true
     }
 
@@ -498,7 +528,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 projectId = projectId,
                 atomCode = atomCode,
                 atomName = taskMetricsData.atomCode
-            ) <= 0) {
+            ) <= 0
+        ) {
             saveProjectAtomRelationPOs.add(
                 SaveProjectAtomRelationDataPO(
                     id = client.get(ServiceAllocIdResource::class)
@@ -899,7 +930,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val currentTotalAvgCostTime = currentTotalCostTime.toDouble().div(currentTotalExecuteCount).roundToLong()
             val currentSuccessAvgCostTime = if (buildSuccessFlag) {
                 val currentSuccessCostTime = originSuccessAvgCostTime * originSuccessExecuteCount +
-                    pipelineBuildCostTime
+                        pipelineBuildCostTime
                 currentSuccessCostTime.toDouble().div(currentSuccessExecuteCount).roundToLong()
             } else {
                 originSuccessAvgCostTime
@@ -966,12 +997,15 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             errorCodePrefix.startsWith("8") -> {
                 ErrorCodeTypeEnum.ATOM
             }
+
             errorCodePrefix.startsWith("100") -> {
                 ErrorCodeTypeEnum.GENERAL
             }
+
             errorCodePrefix.toInt() in 101..599 -> {
                 ErrorCodeTypeEnum.PLATFORM
             }
+
             else -> return false
         }
         return client.get(ServiceStoreResource::class).isComplianceErrorCode(

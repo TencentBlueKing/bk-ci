@@ -72,6 +72,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.net.HttpRetryException
 import java.net.URLEncoder
 import java.util.Base64
 import java.util.Locale
@@ -169,12 +170,21 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             UPLOAD_FILE_FAILED,
             AgentEnv.getLocaleLanguage()
         )
-        val response = request(request, message)
+        val response = try {
+            request(request, message)
+        } catch (e: RemoteServiceException) {
+            val obj = objectMapper.readTree(e.responseContent)
+            if (obj.has("code") && obj["code"].asInt() == CODE_CREATE_NODE_TIMEOUT) {
+                throw HttpRetryException(obj["message"].asText(), CODE_CREATE_NODE_TIMEOUT)
+            }
+            throw e
+        }
         try {
             val obj = objectMapper.readTree(response)
             if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
+            throw e
         }
     }
 
@@ -514,5 +524,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
         private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"
         private const val METADATA_DISPLAY_NAME = "displayName"
+
+        private const val CODE_CREATE_NODE_TIMEOUT = 251030
     }
 }

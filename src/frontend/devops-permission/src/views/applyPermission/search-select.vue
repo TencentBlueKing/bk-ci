@@ -275,12 +275,6 @@ export default {
       },
       deep: true
     },
-    projectCode: {
-      handler (val) {
-        this.searchSelectValue = []
-      },
-      deep: true
-    },
     curProject: {
       async handler (val) {
         if (val && val.englishName !== this.$route.query.project_code) {
@@ -330,7 +324,7 @@ export default {
       if (resourceType && iamResourceCode && action) {
         this.resourceType = resourceType;
         if (groupId) {
-          await this.getResourceList(1, 10, resourceName);
+          await this.getResourceList(1, 200, resourceName);
           await this.getActionsList();
           const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
           const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
@@ -373,7 +367,7 @@ export default {
         }
       } else if (resourceType && iamResourceCode) {
         this.resourceType = resourceType;
-        await this.getResourceList(1, 10, resourceName);
+        await this.getResourceList(1, 200, resourceName);
         await this.getActionsList();
         const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
         const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);

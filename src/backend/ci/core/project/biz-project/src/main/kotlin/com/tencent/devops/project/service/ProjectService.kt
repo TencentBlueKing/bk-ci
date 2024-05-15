@@ -32,13 +32,18 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -156,7 +161,9 @@ interface ProjectService {
         userId: String,
         accessToken: String?,
         enabled: Boolean? = null,
-        unApproved: Boolean
+        unApproved: Boolean,
+        sortType: ProjectSortType? = null,
+        collation: ProjectCollation? = null
     ): List<ProjectVO>
 
     fun listProjectsForApply(
@@ -170,7 +177,7 @@ interface ProjectService {
 
     fun list(userId: String): List<ProjectVO>
 
-    fun list(projectCodes: Set<String>): List<ProjectVO>
+    fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
 
     fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO>
 
@@ -178,7 +185,7 @@ interface ProjectService {
 
     fun list(limit: Int, offset: Int): Page<ProjectVO>
 
-    fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO>
+    fun listByChannel(limit: Int, offset: Int, projectChannelCode: List<String>): Page<ProjectVO>
 
     fun getAllProject(): List<ProjectVO>
 
@@ -195,7 +202,12 @@ interface ProjectService {
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
 
-    fun updateUsableStatus(userId: String, englishName: String /* englishName is projectId */, enabled: Boolean)
+    fun updateUsableStatus(
+        userId: String? = null,
+        englishName: String /* englishName is projectId */,
+        enabled: Boolean,
+        checkPermission: Boolean = true
+    )
 
     fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
 
@@ -222,7 +234,7 @@ interface ProjectService {
 
     fun getProjectByName(projectName: String): ProjectVO?
 
-    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
+    fun updateProjectProperties(userId: String? = null, projectCode: String, properties: ProjectProperties): Boolean
 
     fun cancelCreateProject(userId: String, projectId: String): Boolean
 
@@ -236,4 +248,36 @@ interface ProjectService {
     ): Boolean
 
     fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean
+
+    fun getOperationalProducts(): List<OperationalProductVO>
+
+    fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO>
+
+    fun updateProjectProductId(
+        englishName: String,
+        productName: String? = null,
+        productId: Int? = null
+    )
+
+    fun updateOrganizationByEnglishName(
+        englishName: String,
+        projectOrganizationInfo: ProjectOrganizationInfo
+    )
+
+    fun fixProjectOrganization(
+        tProjectRecord: TProjectRecord
+    ): ProjectOrganizationInfo
+
+    fun getProjectListByProductId(
+        productId: Int
+    ): List<ProjectBaseInfo>
+
+    fun getExistedEnglishName(
+        englishNameList: List<String>
+    ): List<String>?
+
+    fun remindUserOfRelatedProduct(
+        userId: String,
+        englishName: String
+    ): Boolean
 }

@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -57,7 +56,6 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
-import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.process.service.BuildVariableService
@@ -181,7 +179,8 @@ class PipelineTaskService @Autowired constructor(
                     "taskId" to it.taskId,
                     "containerId" to it.containerId,
                     "status" to it.status,
-                    "executeCount" to (it.executeCount ?: 1)
+                    "executeCount" to (it.executeCount ?: 1),
+                    "stepId" to (it.stepId ?: "")
                 )
             )
         }
@@ -200,14 +199,6 @@ class PipelineTaskService @Autowired constructor(
         return JooqUtils.retryWhenDeadLock {
             pipelineBuildTaskDao.batchUpdate(transactionContext ?: dslContext, taskList)
         }
-    }
-
-    fun deletePipelineBuildTasks(transactionContext: DSLContext?, projectId: String, pipelineId: String) {
-        pipelineBuildTaskDao.deletePipelineBuildTasks(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
     }
 
     fun deleteTasksByContainerSeqId(
@@ -230,13 +221,15 @@ class PipelineTaskService @Autowired constructor(
         transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
-        taskId: String
+        taskId: String?,
+        stepId: String? = null
     ): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             buildId = buildId,
-            taskId = taskId
+            taskId = taskId,
+            stepId = stepId
         )
     }
 
@@ -301,12 +294,13 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun getBuildTask(projectId: String, buildId: String, taskId: String): PipelineBuildTask? {
+    fun getBuildTask(projectId: String, buildId: String, taskId: String?, stepId: String? = null): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            taskId = taskId
+            taskId = taskId,
+            stepId = stepId
         )
     }
 
@@ -329,35 +323,14 @@ class PipelineTaskService @Autowired constructor(
         }
     }
 
-    fun setTaskErrorInfo(
-        transactionContext: DSLContext?,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        errorType: ErrorType,
-        errorCode: Int,
-        errorMsg: String
-    ) {
-        JooqUtils.retryWhenDeadLock {
-            pipelineBuildTaskDao.setTaskErrorInfo(
-                dslContext = transactionContext ?: dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
-            )
-        }
-    }
-
     fun updateTaskStatusInfo(userId: String? = null, task: PipelineBuildTask?, updateTaskInfo: UpdateTaskInfo) {
         val taskRecord by lazy {
             task ?: pipelineBuildTaskDao.get(
                 dslContext = dslContext,
                 projectId = updateTaskInfo.projectId,
                 buildId = updateTaskInfo.buildId,
-                taskId = updateTaskInfo.taskId
+                taskId = updateTaskInfo.taskId,
+                stepId = null
             )
         }
         if (updateTaskInfo.taskStatus.isFinish()) {
@@ -480,8 +453,10 @@ class PipelineTaskService @Autowired constructor(
                 buildId = buildId,
                 message = "[${taskRecord.taskName}] failed, and retry $nextCount",
                 tag = taskRecord.taskId,
-                jobId = taskRecord.containerId,
-                executeCount = 1
+                containerHashId = taskRecord.containerId,
+                executeCount = 1,
+                jobId = null,
+                stepId = taskRecord.stepId
             )
         }
         return isRry
@@ -513,7 +488,13 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
-        val alreadyPause = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId = buildId, taskId = taskId))
+        val alreadyPause = taskBuildRecordService.taskAlreadyPause(
+            projectId = taskRecord.projectId,
+            pipelineId = taskRecord.pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = taskRecord.executeCount ?: 1
+        )
         return ControlUtils.pauseBeforeExec(taskRecord.additionalOptions, alreadyPause)
     }
 
@@ -522,8 +503,10 @@ class PipelineTaskService @Autowired constructor(
             buildId = buildId,
             message = "[${taskRecord.taskName}] pause, waiting ...",
             tag = taskRecord.taskId,
-            jobId = taskRecord.containerId,
-            executeCount = taskRecord.executeCount ?: 1
+            containerHashId = taskRecord.containerId,
+            executeCount = taskRecord.executeCount ?: 1,
+            jobId = null,
+            stepId = taskRecord.stepId
         )
 
         pauseBuild(task = taskRecord)
@@ -548,6 +531,13 @@ class PipelineTaskService @Autowired constructor(
         )
         try {
             val errorElement = findElementMsg(model, taskRecord)
+
+            // 存在的不重复添加 fix：流水线设置的变量重试一次就会叠加一次变量值 #6058
+            if (inFailTasks(failTasks = failTask, failTask = errorElement.first)) {
+                logger.info("$projectId|$buildId|$taskId| skip_createFailTaskVar: ${errorElement.first}")
+                return
+            }
+
             val errorElements = if (failTask.isNullOrBlank()) {
                 errorElement.first
             } else {
@@ -575,19 +565,23 @@ class PipelineTaskService @Autowired constructor(
 
     fun removeFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val failTaskRecord = redisOperation.get(failTaskRedisKey(buildId = buildId, taskId = taskId))
+        if (failTaskRecord.isNullOrBlank()) {
+            return
+        }
         val failTaskNameRecord = redisOperation.get(failTaskNameRedisKey(buildId = buildId, taskId = taskId))
-        if (failTaskRecord.isNullOrBlank() || failTaskNameRecord.isNullOrBlank()) {
+        if (failTaskNameRecord.isNullOrBlank()) {
             return
         }
         try {
             val failTask = pipelineVariableService.getVariable(
                 projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
-            )
+            ) ?: return
+            val newFailTask = delTaskString(strings = failTask, string = failTaskRecord, " \n")
+
             val failTaskNames = pipelineVariableService.getVariable(
                 projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
-            )
-            val newFailTask = failTask!!.replace(failTaskRecord, "")
-            val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord, "")
+            ) ?: return
+            val newFailTaskNames = delTaskString(strings = failTaskNames, string = failTaskNameRecord, ",")
             if (newFailTask != failTask || newFailTaskNames != failTaskNames) {
                 val valueMap = mutableMapOf<String, Any>()
                 valueMap[BK_CI_BUILD_FAIL_TASKS] = newFailTask
@@ -602,6 +596,15 @@ class PipelineTaskService @Autowired constructor(
             logger.warn("$buildId|$taskId|removeFailVarWhenSuccess error, msg: $ignored")
         }
     }
+
+    private fun inFailTasks(failTasks: String?, failTask: String) =
+        failTasks?.split(" \n")?.contains(failTask.replace(" \n", "")) ?: false
+
+    private fun delTaskString(strings: String, string: String, delimiter: String) =
+        strings.split(delimiter).toMutableList().let {
+            it.remove(string.replace(delimiter, ""))
+            it.joinToString(separator = delimiter)
+        }
 
     private fun failTaskRedisKey(buildId: String, taskId: String): String {
         return "devops:failTask:redis:key:$buildId:$taskId"
@@ -647,12 +650,6 @@ class PipelineTaskService @Autowired constructor(
             containerId = task.containerId,
             taskId = task.taskId,
             executeCount = task.executeCount ?: 1
-        )
-
-        redisOperation.set(
-            key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
-            value = "true",
-            expiredInSecond = Timeout.CONTAINER_MAX_MILLS / 1000
         )
     }
 

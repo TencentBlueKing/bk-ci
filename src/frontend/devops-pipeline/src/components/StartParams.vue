@@ -8,7 +8,7 @@
                     </span>
                     <i
                         v-if="param.desc"
-                        v-bk-tooltips="param.desc"
+                        v-bk-tooltips="{ content: param.desc, allowHTML: false }"
                         class="devops-icon icon-question-circle"
                     />
                 </span>

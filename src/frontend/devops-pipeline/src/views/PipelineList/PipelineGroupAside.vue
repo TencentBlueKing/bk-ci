@@ -1,17 +1,12 @@
 <template>
-    <aside
-        :class="{
-            'pipeline-group-aside': true,
-            'expended': isOpen
-        }"
-    >
+    <aside class="pipeline-group-aside">
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
                 <div :class="{
                     'pipeline-group-item': true,
                     active: $route.params.viewId === sumView.id
                 }" @click="switchViewId(sumView.id)">
-                    <logo class="pipeline-group-item-icon" size="12" :name="sumView.icon" />
+                    <logo class="pipeline-group-item-icon" size="14" :name="sumView.icon" />
                     <span class="pipeline-group-item-name">
                         {{$t(sumView.name)}}
                     </span>
@@ -63,7 +58,8 @@
                             :key="item.id"
                             @click="switchViewId(item.id)"
                         >
-                            <logo v-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
+                            <i v-if="item.pac" class="pipeline-group-item-icon devops-icon icon-pac" />
+                            <logo v-else-if="item.icon" size="14" class="pipeline-group-item-icon" :name="item.icon" />
                             <bk-input
                                 v-if="item.id === editingGroupId"
                                 v-bk-focus="1"
@@ -96,10 +92,12 @@
                 </template>
             </article>
         </div>
-        <footer v-show="isOpen" :class="['recycle-pipeline-group-footer', {
-            active: $route.params.viewId === DELETED_VIEW_ID,
-            'expended': isOpen
-        }]" @click="goRecycleBin">
+        <footer
+            :class="['recycle-pipeline-group-footer', {
+                active: $route.params.viewId === DELETED_VIEW_ID
+            }]"
+            @click="goRecycleBin"
+        >
             <logo class="pipeline-group-item-icon" name="delete" size="16"></logo>
             <span>{{$t('restore.recycleBin')}}</span>
         </footer>
@@ -115,7 +113,7 @@
         >
             <bk-form ref="newPipelineGroupForm" :label-width="200" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
-                    <bk-input v-model.trim="newPipelineGroup.name" :placeholder="$t('groupNamePlaceholder')" />
+                    <bk-input v-model.trim="newPipelineGroup.name" :maxlength="32" :placeholder="$t('groupNamePlaceholder')" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
                     <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">
@@ -143,45 +141,29 @@
                 </bk-button>
             </footer>
         </bk-dialog>
-        <div class="toggle-button" @click="handleToggle">
-            <i :class="{
-                'devops-icon': true,
-                'icon-angle-right': true,
-                'toggle-arrow': true,
-                'open': isOpen
-            }" />
-        </div>
     </aside>
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import {
-        DELETED_VIEW_ID,
-        UNCLASSIFIED_PIPELINE_VIEW_ID,
-        CACHE_PIPELINE_GROUP_NAV_STATUS,
-        PIPELINE_ASIDE_PANEL_TOGGLE
-    } from '@/store/constants'
-    import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import {
+        CACHE_PIPELINE_GROUP_NAV_STATUS,
+        DELETED_VIEW_ID,
+        UNCLASSIFIED_PIPELINE_VIEW_ID
+    } from '@/store/constants'
+    import {
         PROJECT_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { cacheViewId } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             Logo,
             ExtMenu
         },
         data () {
-            let isOpen = localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE)
-            if (!isOpen) {
-                isOpen = true
-            } else {
-                isOpen = JSON.parse(isOpen)
-            }
             return {
-                isOpen,
                 DELETED_VIEW_ID,
                 isLoading: false,
                 isPatchOperate: false,
@@ -219,7 +201,7 @@
                         switch (true) {
                             case val.length === 0:
                                 return this.$t('groupNameNotAllowEmpty')
-                            case val.length > 16:
+                            case val.length > 32:
                                 return this.$t('groupNameTooLong')
                             default:
                                 return this.$t('pipelineGroupRepeatTips', [val])
@@ -304,7 +286,7 @@
                 'requestGroupPipelineCount'
             ]),
             checkGroupNameValid (name) {
-                const valid = this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected && name.length <= 16 && name.length > 0
+                const valid = this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected && name.length <= 32 && name.length > 0
                 this.isValidGroupName = valid
                 return valid
             },
@@ -321,7 +303,7 @@
                 if (this.fixedGroupIdSet.has(group.id)) return []
                 const hasPermission = !group.projected || this.isManage
                 return [
-                    ...(hasPermission
+                    ...(hasPermission && !group.pac
                         ? [
                             {
                                 text: this.$t('rename'),
@@ -359,13 +341,12 @@
                             ]
                             : []
                     ),
-                    
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,
                         handler: () => this.stickTop(group)
                     },
-                    ...(hasPermission
+                    ...(hasPermission && !group.pac
                         ? [
                             {
                                 text: this.$t('delete'),
@@ -498,7 +479,6 @@
 
                     cacheViewId(this.$route.params.projectId, viewId)
                     this.$router.push({
-                        name: 'PipelineManageList',
                         params: {
                             ...this.$route.params,
                             viewId
@@ -538,10 +518,6 @@
                         theme
                     })
                 }
-            },
-            handleToggle () {
-                this.isOpen = !this.isOpen
-                localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(this.isOpen))
             }
         }
     }
@@ -559,11 +535,9 @@
         width: 0px;
         background: white;
         padding: 0;
-        border-right: 1px solid #DCDEE5;
         transition: width 0.2s linear;
-        &.expended {
-            width: 280px;
-        }
+        width: 100%;
+        height: 100%;
         .pipeline-group-item-icon {
             display: inline-flex;
             margin-right: 10px;
@@ -574,6 +548,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            overflow: auto;
             overflow: overlay;
         }
         .pipeline-group-aside-header {
@@ -618,7 +593,7 @@
                 border-bottom: 1px solid #DCDEE5;
             }
         }
-        
+
         .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;
@@ -627,7 +602,8 @@
             padding: 0 0 0 32px;
             cursor: pointer;
             font-size: 14px;
-            width: 0;
+            width: 100%;
+            flex-shrink: 0;
             &.expended {
                 width: 100%;
             }
@@ -710,33 +686,6 @@
                 }
             }
 
-        }
-        .toggle-button {
-            position: absolute;
-            top: 50%;
-            right: -15px;
-            display: flex;
-            width: 14px;
-            height: 64px;
-            font-size: 14px;
-            color: #fff;
-            cursor: pointer;
-            background: #dcdee5;
-            border-top-right-radius: 6px;
-            border-bottom-right-radius: 6px;
-            transform: translateY(-50%);
-            align-items: center;
-            justify-content: center;
-
-            &:hover {
-                background: #c4c6cc;
-            }
-
-            .toggle-arrow {
-                &.open {
-                    transform: rotateZ(-180deg);
-                }
-            }
         }
     }
 

@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
+    <bk-sideslider class="bkci-property-panel" :class="{ 'with-variable-open': showVariable }" :z-index="2016" width="640" :is-show.sync="visible" :quick-close="true">
         <header :title="stageTitle" class="stage-panel-header" slot="header">
             {{ stageTitle }}
         </header>
@@ -22,6 +22,7 @@
         },
         computed: {
             ...mapState('atom', [
+                'showVariable',
                 'isPropertyPanelVisible'
             ]),
             stageTitle () {

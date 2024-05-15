@@ -38,6 +38,7 @@
             class="group-more-option"
             placement="bottom"
             theme="light dot-menu"
+            :popoverDelay="[100, 0]"
             :arrow="false"
             offset="15"
             :distance="0">
@@ -259,7 +260,8 @@ export default {
     handleChooseGroup(group) {
       this.$router.replace({
         query: {
-          groupId: group.groupId
+          ...this.$route.query,
+          groupId: group.groupId,
         }
       })
       this.activeTab = group.groupId;

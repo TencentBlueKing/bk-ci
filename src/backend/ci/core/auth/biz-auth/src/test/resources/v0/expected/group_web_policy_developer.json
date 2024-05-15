@@ -1,0 +1,71 @@
+[
+  {
+    "system": "bk_ci_rbac",
+    "actions": [
+      {
+        "id": "pipeline_view"
+      }
+    ],
+    "resources": [
+      {
+        "system": "bk_ci_rbac",
+        "type": "pipeline",
+        "paths": [
+          [
+            {
+              "system": "bk_ci_rbac",
+              "type": "project",
+              "id": "bkdevops",
+              "name": "bkdevops"
+            },
+            {
+              "system": "bk_ci_rbac",
+              "type": "pipeline",
+              "id": "p-73b497705e2c431cb0bdbef523ba2033",
+              "name": "pipeline_1"
+            }
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "system": "bk_ci_rbac",
+    "actions": [
+      {
+        "id": "pipeline_create"
+      },
+      {
+        "id": "credential_create"
+      },
+      {
+        "id": "cert_create"
+      },
+      {
+        "id": "repertory_create"
+      },
+      {
+        "id": "environment_create"
+      },
+      {
+        "id": "env_node_create"
+      }
+    ],
+    "resources": [
+      {
+        "system": "bk_ci_rbac",
+        "type": "project",
+        "paths": [
+          [
+            {
+              "system": "bk_ci_rbac",
+              "type": "project",
+              "id": "bkdevops",
+              "name": "bkdevops"
+            }
+          ]
+        ]
+      }
+    ]
+  }
+]

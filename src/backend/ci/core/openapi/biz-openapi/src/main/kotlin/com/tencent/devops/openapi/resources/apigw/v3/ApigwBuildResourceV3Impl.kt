@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -45,22 +46,26 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("TooManyFunctions")
 class ApigwBuildResourceV3Impl @Autowired constructor(
     private val client: Client,
     private val apiGatewayUtil: ApiGatewayUtil
 ) : ApigwBuildResourceV3 {
+
     override fun manualStartupInfo(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo> {
         logger.info("OPENAPI_BUILD_V3|$userId|manual startup info|$projectId|$pipelineId")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            version = debugVersion,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }
@@ -91,7 +96,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        updateTimeDesc: Boolean?
+        updateTimeDesc: Boolean?,
+        archiveFlag: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("OPENAPI_BUILD_V3|$userId|get history build|$projectId|$pipelineId|$page|$pageSize|$updateTimeDesc")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
@@ -99,7 +105,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             updateTimeDesc = updateTimeDesc,
             materialAlias = null,
@@ -121,7 +127,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             buildNoStart = null,
             buildNoEnd = null,
             buildMsg = null,
-            startUser = null
+            startUser = null,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -177,7 +184,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     ): Result<BuildId> {
         logger.info(
             "OPENAPI_BUILD_V3|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
-                "|$skipFailedTask"
+                    "|$skipFailedTask"
         )
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
@@ -223,7 +230,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "OPENAPI_BUILD_V3|$userId|manual start stage|$projectId|$pipelineId|$buildId|$stageId|$cancel" +
-                "|$reviewRequest"
+                    "|$reviewRequest"
         )
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,

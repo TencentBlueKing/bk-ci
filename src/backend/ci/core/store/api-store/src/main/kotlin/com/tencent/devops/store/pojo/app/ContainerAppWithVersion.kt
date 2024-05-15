@@ -27,17 +27,17 @@
 
 package com.tencent.devops.store.pojo.app
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("容器环境变量列表及版本列表")
+@Schema(title = "容器环境变量列表及版本列表")
 data class ContainerAppWithVersion(
-    @ApiModelProperty("name", required = true)
+    @get:Schema(title = "name", required = true)
     val name: String,
-    @ApiModelProperty("versions", required = true)
+    @get:Schema(title = "versions", required = true)
     val versions: List<String>,
-    @ApiModelProperty("bin路径", required = false)
+    @get:Schema(title = "bin路径", required = false)
     val binPath: String?,
-    @ApiModelProperty("Home 变量")
+    @get:Schema(title = "Home 变量")
     val env: List<BuildEnvParameters>
 )

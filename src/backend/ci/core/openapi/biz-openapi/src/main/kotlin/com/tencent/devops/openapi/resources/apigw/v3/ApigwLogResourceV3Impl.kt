@@ -39,11 +39,11 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwLogResourceV3
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @RestResource
 class ApigwLogResourceV3Impl @Autowired constructor(
@@ -62,12 +62,15 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         buildId: String,
         debug: Boolean?,
         elementId: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
-            "OPENAPI_LOG_V3|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$jobId" +
-                    "|$executeCount"
+            "OPENAPI_LOG_V3|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$containerHashId" +
+                "|$executeCount"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -75,9 +78,12 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = elementId,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
-            debug = debug
+            debug = debug,
+            jobId = jobId,
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -94,12 +100,15 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get more logs|$projectId|$pipelineId|$buildId|$debug|$num|$fromStart" +
-                    "|$start|$end|$tag|$jobId|$executeCount"
+                "|$start|$end|$tag|$containerHashId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
             userId = userId,
@@ -112,8 +121,11 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             start = start,
             end = end,
             tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -127,12 +139,15 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         start: Long,
         debug: Boolean?,
         tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get after logs|$projectId|$pipelineId|$buildId|$start|$debug|$tag" +
-                    "|$jobId|$executeCount"
+                "|$containerHashId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
@@ -142,8 +157,11 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             start = start,
             debug = debug,
             tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -155,16 +173,23 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Response {
-        logger.info("OPENAPI_LOG_V3|$userId|download logs|$projectId|$pipelineId|$buildId|$tag|$jobId|$executeCount")
+        logger.info("OPENAPI_LOG_V3|$userId|download logs|$projectId|$pipelineId|$buildId|" +
+            "$tag|$containerHashId|$executeCount")
         val path = StringBuilder("$gatewayUrl/log/api/service/logs/")
         path.append(projectId)
         path.append("/$pipelineId/$buildId/download?executeCount=${executeCount ?: 1}")
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
+        if (!containerHashId.isNullOrBlank()) path.append("&containerHashId=$containerHashId")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
+        if (!stepId.isNullOrBlank()) path.append("&stepId=$stepId")
+        if (archiveFlag != null) path.append("&archiveFlag=$archiveFlag")
 
         val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
 
@@ -191,8 +216,10 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        tag: String,
-        executeCount: Int?
+        executeCount: Int?,
+        tag: String?,
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogStatus> {
         logger.info("OPENAPI_LOG_V3|$userId|get log mode|$projectId|$pipelineId|$buildId|$tag|$executeCount")
         return client.get(ServiceLogResource::class).getLogMode(
@@ -201,7 +228,9 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -209,14 +238,16 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        archiveFlag: Boolean?
     ): Result<QueryLogLineNum> {
         logger.info("OPENAPI_LOG_V3|$userId|get log last line num|$projectId|$pipelineId|$buildId")
         return client.get(ServiceLogResource::class).getLogLastLineNum(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId
+            buildId = buildId,
+            archiveFlag = archiveFlag
         )
     }
 

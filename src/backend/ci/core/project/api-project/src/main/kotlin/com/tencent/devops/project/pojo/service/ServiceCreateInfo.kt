@@ -27,51 +27,52 @@
 
 package com.tencent.devops.project.pojo.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *   Date on 2018-12-05.
  */
-@ApiModel("服务-创建模型")
+@Schema(title = "服务-创建模型")
 data class ServiceCreateInfo(
-    @ApiModelProperty("服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
+    @get:Schema(title = "服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
     var englishName: String?,
-    @ApiModelProperty("服务名称，中文名, 例如 流水线(Pipeline)", required = true)
+    @get:Schema(title = "服务名称，中文名, 例如 流水线(Pipeline)", required = true)
     val name: String,
-    @ApiModelProperty("服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
+    @get:Schema(title = "服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
     val serviceTypeId: Long,
-    @ApiModelProperty("是否展示项目列表")
+    @get:Schema(title = "是否展示项目列表")
     val showProjectList: Boolean = true,
-    @ApiModelProperty("是否在服务导航条上显示")
+    @get:Schema(title = "是否在服务导航条上显示")
     val showNav: Boolean = true,
-    @ApiModelProperty("服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
+    @get:Schema(title = "服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
     val status: String = "ok",
 
-    @ApiModelProperty("链接1，例如 /pipeline/")
+    @get:Schema(title = "链接1，例如 /pipeline/")
     val link: String?,
-    @ApiModelProperty("链接2与链接1保持一样，例如 /pipeline/")
+    @get:Schema(title = "链接2与链接1保持一样，例如 /pipeline/")
     val linkNew: String?,
-    @ApiModelProperty("注入类型：amd/iframe")
+    @get:Schema(title = "注入类型：amd/iframe")
     val injectType: String?,
-    @ApiModelProperty("iframeUrl")
+    @get:Schema(title = "iframeUrl")
     val iframeUrl: String?,
-    @ApiModelProperty("grayIframeUrl")
+    @get:Schema(title = "grayIframeUrl")
     val grayIframeUrl: String?,
-    @ApiModelProperty("cssUrl")
+    @get:Schema(title = "cssUrl")
     val cssUrl: String?,
-    @ApiModelProperty("jsUrl")
+    @get:Schema(title = "jsUrl")
     val jsUrl: String?,
-    @ApiModelProperty("grayCssUrl")
+    @get:Schema(title = "grayCssUrl")
     val grayCssUrl: String?,
-    @ApiModelProperty("grayJsUrl")
+    @get:Schema(title = "grayJsUrl")
     val grayJsUrl: String?,
-    @ApiModelProperty("projectIdType")
+    @get:Schema(title = "projectIdType")
     val projectIdType: String?,
-    @ApiModelProperty("权重")
+    @get:Schema(title = "权重")
     val weight: Int,
-    @ApiModelProperty("logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @ApiModelProperty("支持webSocket的页面")
-    val webSocket: String?
+    @get:Schema(title = "支持webSocket的页面")
+    val webSocket: String?,
+    @get:Schema(title = "集群类型")
+    val clusterType: String? = ""
 )

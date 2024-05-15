@@ -2,7 +2,7 @@
     <section style="pointer-events: all; position: relative" v-bkloading="{ isLoading }">
         <div :class="['ace-fullscreen', { 'active': isFullScreen }]" :alt="$t('editPage.isFullScreen')" :title="$t('editPage.isFullScreen')"
             @click="setFullScreen">
-            <i class="devops-icon" :class="isFullScreen ? &quot;icon-un-full-screen&quot; : &quot;icon-full-screen&quot;"></i>
+            <i class="devops-icon" :class="isFullScreen ? 'icon-un-full-screen' : 'icon-full-screen'"></i>
         </div>
         <ace
             class="ace-wrapper"

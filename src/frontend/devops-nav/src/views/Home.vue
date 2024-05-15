@@ -17,7 +17,6 @@
                                     v-for="service in recentVisitService"
                                     :key="service.key"
                                     :to="addConsole(service.link_new)"
-                                    @click.native="updateDocumnetTitle(service.link_new)"
                                 >
                                     <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
                                     <Logo
@@ -53,7 +52,6 @@
                             slot="content"
                             class="all-service-list"
                             column-width="190px"
-                            :get-document-title="getDocumentTitle"
                             :with-hover="false"
                             :services="services"
                         />
@@ -151,7 +149,6 @@
 </template>
 
 <script lang="ts">
-    import { mapDocumnetTitle } from '@/utils/constants'
     import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
@@ -199,10 +196,12 @@
 
         get serviceCount (): number {
             // 减去1是因为项目管理服务是隐藏的
-            return this.services.reduce((sum, service) => {
+            const count = this.services.reduce((sum, service) => {
                 sum += (service.children.length - 1)
                 return sum
             }, 0)
+            // 我的项目服务不展示，所以减去1
+            return count - 1
         }
 
         updateShowAllService (show: boolean): void {
@@ -211,15 +210,6 @@
 
         addConsole (link: string): string {
             return urlJoin('/console/', link)
-        }
-        
-        getDocumentTitle (linkNew) {
-            const title = linkNew.split('/')[1]
-            return this.$t(mapDocumnetTitle(title)) as string
-        }
-
-        updateDocumnetTitle (linkNew) {
-            document.title = this.getDocumentTitle(linkNew)
         }
 
         serviceName (name = ''): string {

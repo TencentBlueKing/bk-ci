@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -46,6 +47,25 @@ data class GithubPullRequestEvent(
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "pull_request"
+    }
+
+    /**
+     * 是否合并
+     */
+    fun isMerged() = action == "closed" && pullRequest.merged
+
+    /**
+     * 根据当前event获取Pr的实际action
+     */
+    fun getRealAction(): String? {
+        return when {
+            isMerged() -> TGitMrEventAction.MERGE.value
+            action == "opened" -> TGitMrEventAction.OPEN.value
+            action == "reopened" -> TGitMrEventAction.REOPEN.value
+            action == "synchronize" -> TGitMrEventAction.PUSH_UPDATE.value
+            action == "closed" -> TGitMrEventAction.CLOSE.value
+            else -> null
+        }
     }
 }
 
@@ -106,13 +126,13 @@ data class GithubPullRequest(
     @JsonProperty("locked")
     val locked: Boolean, // false
     @JsonProperty("maintainer_can_modify")
-    val maintainerCanModify: Boolean, // false
+    val maintainerCanModify: Boolean? = false, // false
     @JsonProperty("merge_commit_sha")
     val mergeCommitSha: String?, // null
     @JsonProperty("mergeable")
-    val mergeable: String?, // null
+    var mergeable: Boolean?, // null
     @JsonProperty("mergeable_state")
-    val mergeableState: String, // unknown
+    var mergeableState: String?, // unknown
     @JsonProperty("merged")
     val merged: Boolean, // false
     @JsonProperty("merged_at")
@@ -163,7 +183,7 @@ data class GithubMilestone(
     @JsonProperty("creator")
     val creator: GithubUser,
     @JsonProperty("description")
-    val description: String, // Tracking milestone for version 1.0
+    val description: String?, // Tracking milestone for version 1.0
     @JsonProperty("due_on")
     val dueOn: String?, // 2012-10-09T23:39:01Z
     @JsonProperty("html_url")

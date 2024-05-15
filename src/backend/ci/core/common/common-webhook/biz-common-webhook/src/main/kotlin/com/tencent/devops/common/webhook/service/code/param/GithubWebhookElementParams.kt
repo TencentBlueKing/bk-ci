@@ -46,23 +46,39 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
         variables: Map<String, String>
     ): WebHookParams? {
         val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+            repositoryConfig = RepositoryConfigUtils.buildWebhookConfig(
+                element = element,
                 variables = variables
-            )
+            ).third
         )
-        params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
+        with(element) {
+            params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(excludeUsers!!, variables)
+            }
+            params.branchName = if (element.branchName.isNullOrEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(element.branchName!!, variables)
+            }
+            params.eventType = element.eventType
+            params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+            params.codeType = CodeType.GITHUB
+            params.includeCrState = joinToString(includeCrState)
+            params.includeNoteComment = includeNoteComment
+            params.includeNoteTypes = joinToString(includeNoteTypes)
+            params.includeIssueAction = joinToString(includeIssueAction)
+            params.includeMrAction = joinToString(includeMrAction)
+        }
+        return params
+    }
+
+    fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
             ""
         } else {
-            EnvUtils.parseEnv(element.excludeUsers!!, variables)
+            list.joinToString(",")
         }
-        if (element.branchName == null) {
-            return null
-        }
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-        params.eventType = element.eventType
-        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-        params.codeType = CodeType.GITHUB
-        return params
     }
 }

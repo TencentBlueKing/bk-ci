@@ -121,6 +121,10 @@ const jobOptionConfigMixin = {
                 {
                     id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                     name: this.$t('storeMap.varNotMatch')
+                },
+                {
+                    id: 'CUSTOM_CONDITION_MATCH',
+                    name: this.$t('storeMap.customCondition')
                 }
             ],
             finallyRunConditionList: [
@@ -230,8 +234,13 @@ const jobOptionConfigMixin = {
                     }
                 },
                 customCondition: {
-                    isHidden: true,
-                    default: ''
+                    component: 'vuex-input',
+                    default: '',
+                    required: true,
+                    label: this.$t('storeMap.customConditionExp'),
+                    isHidden: (container) => {
+                        return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'
+                    }
                 }
             }
         },

@@ -28,28 +28,31 @@
 package com.tencent.devops.common.log.pojo.message
 
 import com.tencent.devops.common.log.pojo.enums.LogType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("日志模型")
+@Schema(title = "日志模型")
 data class LogMessage(
-    @ApiModelProperty("日志内容信息")
+    @get:Schema(title = "日志内容信息")
     var message: String,
-    @ApiModelProperty("时间戳")
+    @get:Schema(title = "时间戳")
     val timestamp: Long,
-    @ApiModelProperty("标签")
+    @get:Schema(title = "标签")
     val tag: String = "",
-    @ApiModelProperty("job id")
+    @get:Schema(title = "step Id")
+    val stepId: String = "",
+    @get:Schema(title = "job id")
     val jobId: String = "",
-    @ApiModelProperty("日志类型")
+    @get:Schema(title = "container Hash Id")
+    val containerHashId: String = "",
+    @get:Schema(title = "日志类型")
     val logType: LogType = LogType.LOG,
-    @ApiModelProperty("执行次数")
+    @get:Schema(title = "执行次数")
     val executeCount: Int? = null,
-    @ApiModelProperty("子标签")
+    @get:Schema(title = "子标签")
     val subTag: String? = null
 ) {
     override fun toString(): String {

@@ -27,12 +27,14 @@
 
 package com.tencent.devops.repository.service.permission
 
+import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
+import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.repository.service.RepositoryPermissionService
@@ -59,7 +61,7 @@ class RbacRepositoryPermissionService(
         authPermission: AuthPermission
     ): List<Long> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
@@ -78,7 +80,7 @@ class RbacRepositoryPermissionService(
         }
 
         val permissionResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             action = actions,
@@ -98,15 +100,25 @@ class RbacRepositoryPermissionService(
         } else {
             Pair(projectId, AuthResourceType.PROJECT.value)
         }
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+        val action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY)
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
             resourceType = resourceType,
-            relationResourceType = null,
-            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY),
+            action = action,
+            projectCode = projectId,
             resourceCode = resourceCode
-        ).data ?: false
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceType = resourceType,
+                relationResourceType = null,
+                action = action,
+                resourceCode = resourceCode
+            ).data ?: false
+        }
     }
 
     override fun createResource(
@@ -117,7 +129,7 @@ class RbacRepositoryPermissionService(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = HashUtil.encodeOtherLongId(repositoryId),
@@ -131,7 +143,7 @@ class RbacRepositoryPermissionService(
         repositoryName: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = HashUtil.encodeOtherLongId(repositoryId),
@@ -144,7 +156,7 @@ class RbacRepositoryPermissionService(
         repositoryId: Long
     ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = HashUtil.encodeOtherLongId(repositoryId)

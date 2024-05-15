@@ -128,12 +128,15 @@ class HeartbeatControl @Autowired constructor(
             if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true
                 val executeCount = taskMap["executeCount"]?.toString()?.toInt() ?: 1
+                val stepId = taskMap["stepId"]?.toString() ?: ""
                 buildLogPrinter.addRedLine(
                     buildId = container.buildId,
                     message = tipMessage,
                     tag = taskMap["taskId"].toString(),
-                    jobId = container.containerHashId,
-                    executeCount = executeCount
+                    containerHashId = container.containerHashId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
                 )
             }
         }
@@ -144,8 +147,10 @@ class HeartbeatControl @Autowired constructor(
                 buildId = container.buildId,
                 message = tipMessage,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                jobId = container.containerHashId,
-                executeCount = container.executeCount
+                containerHashId = container.containerHashId,
+                executeCount = container.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         }
         // 终止当前容器下的任务
@@ -161,6 +166,7 @@ class HeartbeatControl @Autowired constructor(
                 containerHashId = container.containerHashId,
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
+                executeCount = container.executeCount,
                 reason = tipMessage,
                 errorTypeName = ErrorType.THIRD_PARTY.name,
                 errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR

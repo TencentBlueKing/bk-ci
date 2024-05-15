@@ -27,31 +27,37 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-Code平台Git")
+@Schema(title = "代码库模型-Code平台Git")
 data class CodeGitRepository(
-    @ApiModelProperty("代码库别名", required = true)
+    @get:Schema(title = "代码库别名", required = true)
     override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @get:Schema(title = "URL", required = true)
     override val url: String,
-    @ApiModelProperty("凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
+    @get:Schema(title = "凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
     override val credentialId: String,
-    @ApiModelProperty("git项目名称", example = "devops/devops_ci_example_proj", required = true)
+    @get:Schema(title = "git项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     override var userName: String,
-    @ApiModelProperty("仓库认证类型", required = false)
+    @get:Schema(title = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
-    @ApiModelProperty("项目id", required = true)
+    @get:Schema(title = "项目id", required = true)
     override var projectId: String?,
-    @ApiModelProperty("仓库hash id", required = false)
+    @get:Schema(title = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @ApiModelProperty("Git仓库ID", required = false)
-    val gitProjectId: Long?
+    @get:Schema(title = "Git仓库ID", required = false)
+    val gitProjectId: Long?,
+    @get:Schema(title = "是否为插件库", required = false)
+    val atom: Boolean? = false,
+    @get:Schema(title = "仓库是否开启pac", required = false)
+    override val enablePac: Boolean? = false,
+    @get:Schema(title = "yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
     companion object {
         const val classType = "codeGit"
@@ -75,4 +81,8 @@ data class CodeGitRepository(
                 GitUtils.isLegalSshUrl(url)
         }
     }
+
+    override fun getScmType() = ScmType.CODE_GIT
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

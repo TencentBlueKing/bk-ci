@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -122,8 +124,10 @@ class InitializeMatrixGroupStageCmd(
                 buildId = parentContainer.buildId,
                 message = "Start preparing to generate build matrix...",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                jobId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount
+                containerHashId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
             )
             commandContext.buildStatus = BuildStatus.RUNNING
             val stageLock = StageMatrixLock(redisOperation, parentContainer.buildId, parentContainer.stageId)
@@ -143,8 +147,10 @@ class InitializeMatrixGroupStageCmd(
                 buildId = parentContainer.buildId,
                 message = "Abnormal matrix calculation: ${ignore.message}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                jobId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount
+                containerHashId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
             )
             0
         }
@@ -242,11 +248,11 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-                    val contextPair = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
-                    } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
+                    val contextPair = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(allContext)
+                    } else null
 
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
@@ -297,10 +303,11 @@ class InitializeMatrixGroupStageCmd(
                         baseOS = customBaseOS ?: modelContainer.baseOS,
                         vmNames = modelContainer.vmNames,
                         dockerBuildVersion = modelContainer.dockerBuildVersion,
-                        dispatchType = customDispatchType ?: modelContainer.dispatchType?.let { itd ->
-                            itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
-                            itd
-                        },
+                        dispatchType = customDispatchType
+                            ?: modelContainer.dispatchType?.deepCopy<DispatchType>()?.let { itd ->
+                                itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
+                                itd
+                            },
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
                             EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
@@ -327,16 +334,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
@@ -398,7 +407,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
                     val replacement = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                        EnvReplacementParser.getCustomExecutionContextByMap(contextCase)
                     } else null
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
@@ -441,16 +450,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
@@ -574,22 +585,28 @@ class InitializeMatrixGroupStageCmd(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Successfully saved count: ${buildContainerList.size}",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-            jobId = parentContainer.containerHashId,
-            executeCount = context.executeCount
+            containerHashId = parentContainer.containerHashId,
+            executeCount = context.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
         )
         buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-            jobId = parentContainer.containerHashId,
-            executeCount = context.executeCount
+            containerHashId = parentContainer.containerHashId,
+            executeCount = context.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
         )
         buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Start to run...",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-            jobId = parentContainer.containerHashId,
-            executeCount = context.executeCount
+            containerHashId = parentContainer.containerHashId,
+            executeCount = context.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
         )
 
         // 在详情中刷新所有分裂后的矩阵
@@ -673,41 +690,57 @@ class InitializeMatrixGroupStageCmd(
         // 打印参数矩阵
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         buildLogPrinter.addFoldStartLine(
             buildId = buildId, groupName = "[MATRIX] Job strategy:",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         this.strategy?.forEach { (key, valueList) ->
             buildLogPrinter.addLine(
                 buildId = buildId, message = "$key: $valueList",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
         buildLogPrinter.addFoldEndLine(
             buildId = buildId, groupName = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
 
         // 打印追加参数
         if (!this.include.isNullOrEmpty()) {
             buildLogPrinter.addFoldStartLine(
                 buildId = buildId, groupName = "[MATRIX] Include cases:",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
             buildLogPrinter.addFoldEndLine(
                 buildId = buildId, groupName = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
 
@@ -715,27 +748,37 @@ class InitializeMatrixGroupStageCmd(
         if (!this.exclude.isNullOrEmpty()) {
             buildLogPrinter.addFoldStartLine(
                 buildId = buildId, groupName = "[MATRIX] Exclude cases:",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
             buildLogPrinter.addFoldEndLine(
                 buildId = buildId, groupName = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
 
         // 打印最终结果
         buildLogPrinter.addFoldStartLine(
             groupName = "[MATRIX] After calculated, ${contextCaseList.size} jobs are generated:",
-            buildId = buildId, tag = taskId, jobId = containerHashId, executeCount = executeCount
+            buildId = buildId, tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         contextCaseList.forEach { contextCase ->
             val nameBuilder = StringBuilder("$containerName(")
@@ -747,12 +790,16 @@ class InitializeMatrixGroupStageCmd(
             nameBuilder.append(")")
             buildLogPrinter.addLine(
                 buildId = buildId, message = nameBuilder.toString(),
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
         buildLogPrinter.addFoldEndLine(
             buildId = buildId, groupName = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
     }
 
@@ -768,10 +815,14 @@ class InitializeMatrixGroupStageCmd(
             case.forEach { (key, value) ->
                 if (index++ == 0) buildLogPrinter.addLine(
                     buildId = buildId, message = "- $key: $value",
-                    tag = taskId, jobId = containerHashId, executeCount = executeCount
+                    tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                    jobId = null,
+                    stepId = taskId
                 ) else buildLogPrinter.addLine(
                     buildId = buildId, message = "  $key: $value",
-                    tag = taskId, jobId = containerHashId, executeCount = executeCount
+                    tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                    jobId = null,
+                    stepId = taskId
                 )
             }
         }

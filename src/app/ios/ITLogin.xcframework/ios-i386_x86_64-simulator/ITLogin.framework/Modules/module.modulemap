@@ -1,6 +1,0 @@
-framework module ITLogin {
-  umbrella header "ITLogin.h"
-
-  export *
-  module * { export * }
-}

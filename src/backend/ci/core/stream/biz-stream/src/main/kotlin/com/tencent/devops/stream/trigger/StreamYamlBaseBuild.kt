@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -46,7 +45,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
@@ -156,7 +155,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 // md5不一致时更新蓝盾的model
                 if (oldMd5 != md5) {
                     // 编辑流水线model
-                    processClient.edit(
+                    processClient.editPipeline(
                         userId = userId,
                         projectId = projectCode,
                         pipelineId = pipeline.pipelineId,
@@ -182,7 +181,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 }
             } else {
                 // 编辑流水线model
-                processClient.edit(
+                processClient.editPipeline(
                     userId = userId,
                     projectId = projectCode,
                     pipelineId = pipeline.pipelineId,
@@ -516,7 +515,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     state = StreamCommitCheckState.PENDING,
                     block = action.data.setting.enableMrBlock &&
                         action.metaData.isStreamMr(),
-                    context = "${pipeline.filePath}@${action.metaData.streamObjectKind.name}",
+                    context = "${pipeline.displayName}@${action.metaData.streamObjectKind.name}",
                     targetUrl = StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                             I18nUtil.getCodeLanMessage(
@@ -641,14 +640,6 @@ class StreamYamlBaseBuild @Autowired constructor(
                 if (webhookCommitList.size < pageSize) break
                 page++
             }
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildCommitFinishEvent(
-                    source = "build_commits",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
-                )
-            )
         } catch (ignore: Throwable) {
             logger.warn("StreamYamlBaseBuild|savePipelineBuildCommit|error", ignore)
         }

@@ -27,10 +27,11 @@
 
 package com.tencent.devops.quality.api.v2
 
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.POST
@@ -40,13 +41,13 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_METADATA_MARKET"], description = "服务-质量红线-插件市场")
+@Tag(name = "SERVICE_METADATA_MARKET", description = "服务-质量红线-插件市场")
 @Path("/service/metadata/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceQualityMetadataMarketResource {
 
-    @ApiOperation("注册插件指标的元数据")
+    @Operation(summary = "注册插件指标的测试元数据")
     @Path("/setMetadata")
     @POST
     fun setTestMetadata(
@@ -54,10 +55,12 @@ interface ServiceQualityMetadataMarketResource {
         userId: String,
         @QueryParam("atomCode")
         atomCode: String,
+        @QueryParam("extra")
+        extra: String = IN_READY_TEST,
         metadataList: List<QualityMetaData>
     ): Result<Map<String/* dataId */, Long/* metadataId */>>
 
-    @ApiOperation("刷新插件指标的元数据")
+    @Operation(summary = "刷新插件指标的元数据")
     @Path("/refreshMetadata")
     @PUT
     fun refreshMetadata(
@@ -65,11 +68,13 @@ interface ServiceQualityMetadataMarketResource {
         elementType: String
     ): Result<Map<String, String>>
 
-    @ApiOperation("删除插件指标的测试元数据")
+    @Operation(summary = "删除插件指标的测试元数据")
     @Path("/deleteTestMetadata")
     @DELETE
     fun deleteTestMetadata(
         @QueryParam("elementType")
-        elementType: String
+        elementType: String,
+        @QueryParam("extra")
+        extra: String = IN_READY_TEST
     ): Result<Int>
 }

@@ -86,11 +86,9 @@ BK-CI后台主要技术栈
       |- common                   # 通用模块
         |- common-auth            # 权限模块
           |- common-auth-api      # 权限模块的接口抽象
-          |- common-auth-sample   # 权限模块示例实现
-          |- common-auth-blueking # 对接蓝鲸权限中心的实现
+          |- common-auth-provider   # 权限模块提供者
       |- artifactory 							# 对接制品仓库微服务
-      |- dispatch    							# 第三方构建机调度微服务
-      |- dispatch-docker   				# Docker公共构建机调度微服务
+      |- dispatch    							# 第三方构建机调度,Docker公共构建机调度微服务
       |- dockerhost     					# Docker公共构建机&无编译环境 母机上运行的类似Agent的服务，用于接收构建任务并与Docker进行交互拉起构建任务
       |- environment 							# 构建机环境管理微服务
       |- image                 	  # 与Docker镜像对接的服务
@@ -217,4 +215,3 @@ BK-CI基于Spring框架构建，其Web后台服务是典型的3层结构：web�
 - boot-process:  用于管理并构建springboot微服务包，包含了启动类XXXApplication.kt 文件， 与一般的java项目一样，可以根据自己的实现修改build.gradle文件进行定制打包范围，比如开发新增了一个biz-process-xxxx的扩展，可以加入一起打包。
 - boot-engine: 预留给大规模场景下，构建出单独的引擎微服务包。 目前默认在build.gradle关闭了该配置，避免微服务规模过大。
 - 
-

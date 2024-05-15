@@ -37,7 +37,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -51,11 +51,11 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class StreamPipelineService @Autowired constructor(
@@ -78,13 +78,15 @@ class StreamPipelineService @Autowired constructor(
         private const val ymlVersion = "v2.0"
     }
 
+    @Suppress("NestedBlockDepth")
     fun getPipelineList(
         userId: String,
         gitProjectId: Long,
         keyword: String?,
         page: Int?,
         pageSize: Int?,
-        filePath: String?
+        filePath: String?,
+        pipelineId: String?
     ): Page<StreamGitProjectPipeline> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
@@ -96,7 +98,22 @@ class StreamPipelineService @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit,
             filePath = filePath
-        )
+        ).toMutableList()
+        if (pipelineId != null) {
+            pipelines.removeIf { it.pipelineId == pipelineId }
+            run {
+                /* 兼容前端，如果传入pipelineId 固定在第一页返回数据，后面的去除 */
+                if (page == 1) {
+                    val pipeline = gitPipelineResourceDao.getPipelineById(
+                        dslContext = dslContext,
+                        gitProjectId = gitProjectId,
+                        pipelineId = pipelineId
+                    ) ?: return@run
+                    if (filePath != null && pipeline.directory != filePath) return@run
+                    pipelines.add(0, pipeline)
+                }
+            }
+        }
         if (pipelines.isEmpty()) return Page(
             count = 0L,
             page = pageNotNull,
@@ -435,8 +452,8 @@ class StreamPipelineService @Autowired constructor(
         val pipelineNoBuild: Map<String, String>? = if (noBuildPipelines.isEmpty()) {
             emptyMap()
         } else {
-            gitRequestEventNotBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, noBuildPipelines)
-                ?.associate { it.pipelineId to it.branch }
+            gitRequestEventNotBuildDao.getPipelinesLastBuild(dslContext, noBuildPipelines)
+                ?.associate { it.first to it.second }
         }
         pipelineIds.forEach { pipelineId ->
             if (!pipelineBuild?.get(pipelineId).isNullOrBlank()) {
@@ -505,7 +522,7 @@ class StreamPipelineService @Autowired constructor(
         model: Model
     ): Boolean? {
         try {
-            val response = processClient.edit(
+            val response = processClient.editPipeline(
                 userId = userId,
                 projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,

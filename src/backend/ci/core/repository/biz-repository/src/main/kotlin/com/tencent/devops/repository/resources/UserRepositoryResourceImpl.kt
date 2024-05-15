@@ -27,17 +27,24 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.pojo.RepoPipelineRefVo
+import com.tencent.devops.repository.pojo.RepoRename
+import com.tencent.devops.repository.pojo.RepoTriggerRefVo
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -45,7 +52,9 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.service.CommitService
+import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +64,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val commitService: CommitService,
-    private val repositoryPermissionService: RepositoryPermissionService
+    private val repositoryPermissionService: RepositoryPermissionService,
+    private val repoPipelineService: RepoPipelineService
 ) : UserRepositoryResource {
 
     companion object {
@@ -85,6 +95,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "create"])
+    @AuditEntry(actionId = ActionId.REPERTORY_CREATE)
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -101,6 +112,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
     }
 
+    @AuditEntry(actionId = ActionId.REPERTORY_VIEW)
     @BkTimed(extraTags = ["operate", "get"])
     override fun get(
         userId: String,
@@ -120,6 +132,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(repositoryService.userGet(userId, projectId, buildConfig(repositoryId, repositoryType)))
     }
 
+    @AuditEntry(actionId = ActionId.REPERTORY_EDIT)
     override fun edit(
         userId: String,
         projectId: String,
@@ -174,7 +187,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         permission: Permission,
         page: Int?,
         pageSize: Int?,
-        aliasName: String?
+        aliasName: String?,
+        enablePac: Boolean?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -200,11 +214,13 @@ class UserRepositoryResourceImpl @Autowired constructor(
             authPermission = bkAuthPermission,
             offset = limit.offset,
             limit = limit.limit,
-            aliasName = aliasName
+            aliasName = aliasName,
+            enablePac = enablePac
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
+    @AuditEntry(actionId = ActionId.REPERTORY_DELETE)
     override fun delete(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -264,6 +280,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.REPERTORY_EDIT)
     override fun lock(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -278,6 +295,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.REPERTORY_EDIT)
     override fun unlock(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -290,5 +308,101 @@ class UserRepositoryResourceImpl @Autowired constructor(
         }
         repositoryService.userUnLock(userId, projectId, repositoryHashId)
         return Result(true)
+    }
+
+    override fun listRepoPipelineRef(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        eventType: String?,
+        triggerConditionMd5: String?,
+        taskRepoType: RepositoryType?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<RepoPipelineRefVo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageSize
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            repoPipelineService.listPipelineRef(
+                projectId = projectId,
+                repositoryHashId = repositoryHashId,
+                eventType = eventType,
+                triggerConditionMd5 = triggerConditionMd5,
+                taskRepoType = taskRepoType,
+                limit = limit.limit,
+                offset = limit.offset
+            )
+        )
+    }
+
+    override fun listTriggerRef(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        triggerType: String?,
+        eventType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<RepoTriggerRefVo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageSize
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            repoPipelineService.listTriggerRef(
+                projectId = projectId,
+                repositoryHashId = repositoryHashId,
+                triggerType = triggerType,
+                eventType = eventType,
+                limit = limit.limit,
+                offset = limit.offset
+            )
+        )
+    }
+
+    @AuditEntry(actionId = ActionId.REPERTORY_EDIT)
+    override fun rename(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        repoRename: RepoRename
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (repositoryHashId.isBlank()) {
+            throw ParamBlankException("Invalid repositoryHashId")
+        }
+        if (repoRename.name.isBlank()) {
+            throw ParamBlankException("Invalid repoName")
+        }
+        repositoryService.rename(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            repoRename = repoRename
+        )
+        return Result(true)
+    }
+
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        repositoryType: ScmType
+    ): Result<AuthorizeResult> {
+        return Result(
+            repositoryService.isOAuth(
+                userId = userId,
+                projectId = projectId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl,
+                repositoryType = repositoryType
+            )
+        )
     }
 }

@@ -40,11 +40,10 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import io.swagger.annotations.Example
-import io.swagger.annotations.ExampleProperty
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ExampleObject
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -56,175 +55,180 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_PROJECT_TEMPLATE_V4"], description = "OPENAPI-项目模板资源")
+@Tag(name = "OPENAPI_PROJECT_TEMPLATE_V4", description = "OPENAPI-项目模板资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/templates/templateInstances")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwTemplateInstanceResourceV4 {
-    @ApiOperation("批量实例化流水线模板", tags = ["v4_app_templateInstance_create", "v4_user_templateInstance_create"])
+    @Operation(
+        summary = "批量实例化流水线模板",
+        tags = ["v4_app_templateInstance_create", "v4_user_templateInstance_create"]
+    )
     @POST
     @Path("/")
     fun createTemplateInstances(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String,
-        @ApiParam("模板版本（可通过v3_app_template_list接口获取）", required = true)
+        @Parameter(description = "模板版本（可通过v3_app_template_list接口获取）", required = true)
         @QueryParam("version")
         version: Long,
-        @ApiParam("是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @ApiParam(
-            "创建实例", required = true, examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "如果我想简单的实例化两条无启动变量的流水线1和2",
-                        value = """
-                            [
-                                {
-                                    "pipelineName": "1",
-                                    "param": []
-                                },
-                                {
-                                    "pipelineName": "2",
-                                    "param": []
-                                }
-                            ]
-                                """
-                    ),
-                    ExampleProperty(
-                        mediaType = "如果我想实例化一条带启动变量param1的流水线3",
-                        value = """
-                            [
-                                {
-                                    "pipelineName": "3",
-                                    "param": [
-                                        {
-                                            "id": "param1",
-                                            "required": true,
-                                            "type": "STRING //可以是其他类型，以实际情况为准",
-                                            "defaultValue": "param1的值",
-                                            "desc": "",
-                                            "readOnly": false
-                                        }
-                                    ]
-                                }
-                            ]
-                                """
-                    )
-                ]
-            )
+        @Parameter(
+            description = "创建实例", required = true, examples = [
+                ExampleObject(
+                    description = "如果我想简单的实例化两条无启动变量的流水线1和2",
+                    value = """
+                        [
+                            {
+                                "pipelineName": "1",
+                                "param": []
+                            },
+                            {
+                                "pipelineName": "2",
+                                "param": []
+                            }
+                        ]"""
+                ),
+                ExampleObject(
+                    description = "如果我想实例化一条带启动变量param1的流水线3",
+                    value = """
+                        [
+                            {
+                                "pipelineName": "3",
+                                "param": [
+                                    {
+                                        "id": "param1",
+                                        "required": true,
+                                        "type": "STRING //可以是其他类型，以实际情况为准",
+                                        "defaultValue": "param1的值",
+                                        "desc": "",
+                                        "readOnly": false
+                                    }
+                                ]
+                            }
+                        ]"""
+                )
+            ]
         )
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 
-    @ApiOperation("批量更新流水线模板实例", tags = ["v4_user_templateInstance_update", "v4_app_templateInstance_update"])
+    @Operation(
+        summary = "批量更新流水线模板实例",
+        tags = ["v4_user_templateInstance_update", "v4_app_templateInstance_update"]
+    )
     @PUT
     @Path("/")
     fun updateTemplateInstances(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String,
-        @ApiParam("版本名（可通过v3_app_template_list接口获取）", required = true)
+        @Parameter(description = "版本名（可通过v3_app_template_list接口获取）", required = true)
         @QueryParam("version")
         version: Long,
-        @ApiParam("是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @ApiParam("模板实例", required = true)
+        @Parameter(description = "模板实例", required = true)
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
-    @ApiOperation(
-        "批量更新流水线模板实例",
+    @Operation(
+        summary = "批量更新流水线模板实例",
         tags = ["v4_user_templateInstance_update_versionName", "v4_app_templateInstance_update_versionName"]
     )
     @PUT
     @Path("/update")
     fun updateTemplateInstances(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String,
-        @ApiParam("版本名", required = true)
+        @Parameter(description = "版本名", required = true)
         @QueryParam("versionName")
         versionName: String,
-        @ApiParam("是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @ApiParam("模板实例", required = true)
+        @Parameter(description = "模板实例", required = true)
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
-    @ApiOperation("获取流水线模板的实例列表", tags = ["v4_app_templateInstance_get", "v4_user_templateInstance_get"])
+    @Operation(
+        summary = "获取流水线模板的实例列表",
+        tags = ["v4_app_templateInstance_get", "v4_user_templateInstance_get"]
+    )
     @GET
     @Path("/")
     fun listTemplateInstances(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = 1,
-        @ApiParam("每页多少条", required = false, defaultValue = "30")
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
-        pageSize: Int? = 30,
-        @ApiParam("名字搜索的关键字", required = false)
+        pageSize: Int? = 20,
+        @Parameter(description = "名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @ApiParam("排序字段", required = false)
+        @Parameter(description = "排序字段", required = false)
         @QueryParam("sortType")
         sortType: TemplateSortTypeEnum?,
-        @ApiParam("是否降序", required = false)
+        @Parameter(description = "是否降序", required = false)
         @QueryParam("desc")
         desc: Boolean?
     ): Result<TemplateInstancePage>

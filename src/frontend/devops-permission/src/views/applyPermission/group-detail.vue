@@ -8,7 +8,7 @@ import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
-import { Error } from 'bkui-vue/lib/icon'
+import { DownShape, RightShape } from 'bkui-vue/lib/icon'
 const emits = defineEmits(['hidden-detail']);
 
 const props = defineProps({
@@ -17,26 +17,42 @@ const props = defineProps({
   isDetailLoading: Boolean,
 });
 const showDetail = ref(false);
-const showInstancesDetail = ref(false);
 const isLoading= ref(false);
-const groupPermissionDetail = ref([]);
-const relatedResourceInfo = ref({});
+const groupPermissionDetailMap = ref({});
+const showPermFlagMap = ref([true, false]);
 
-const fetchGroupPermissionDetail = async () => {
+const fetchGroupPermissionDetailMap = async () => {
   const { id } = props.groupInfo;
   if (id) {
     await http.getGroupPermissionDetail(props.groupInfo.id).then(res => {
-      groupPermissionDetail.value = res;
+      for (var item in res) {
+        groupPermissionDetailMap.value[item] = res[item].map(i => {
+          return {
+              ...i,
+              expand: false,
+          }
+        });
+      }
     }).catch(() => {
-      groupPermissionDetail.value = [];
+      groupPermissionDetailMap.value = {};
     });
     isLoading.value = false;
   }
 };
+
+const toggleContent = (index) => {
+  showPermFlagMap.value[index] = !showPermFlagMap.value[index]
+};
+
 watch(() => props.isShow, (val) => {
   showDetail.value = props.isShow;
   isLoading.value = props.isDetailLoading;
-  if (val) fetchGroupPermissionDetail();
+  if (val) {
+    fetchGroupPermissionDetailMap();
+  } else {
+    showPermFlagMap.value = [true, false];
+    groupPermissionDetailMap.value = {};
+  }
 }, { 
   immediate: true,
 });
@@ -44,18 +60,13 @@ watch(() => props.isShow, (val) => {
 const handleHidden = () => {
   emits('hidden-detail', false);
 };
-
-const handleShowInstances = (data, name) => {
-  relatedResourceInfo.value = { ...data, actionName: name };
-  showInstancesDetail.value = true;
-}
 </script>
 
 <template>
   <section>
     <bk-sideslider
       v-model:isShow="showDetail"
-      :width="750"
+      :width="800"
       quick-close
       ext-cls="detail-side"
       @hidden="handleHidden"
@@ -69,86 +80,68 @@ const handleShowInstances = (data, name) => {
       <template #default>
         <div class="detail-content">
           <bk-loading :loading="isLoading">
-            <bk-table
-              :data="groupPermissionDetail"
-              :border="['row', 'outer']">
-              <bk-table-column :label="t('操作')" width="150" show-overflow-tooltip>
-                <template #default="{ data }">
-                  {{ data?.name }}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="t('资源实例')">
-                <template #default="{ data }">
-                  <div v-if="data?.relatedResourceInfo" class="resources-info">
-                    <bk-popover
-                      theme="light"
-                    >
-                      <span class="resources-content" v-if="data.relatedResourceInfo?.instances?.path.length > 1">
-                        {{ data.relatedResourceInfo?.name }}: {{ t('已选择个流水线', [data.relatedResourceInfo?.instances?.path.length]) }}
-                      </span>
-                      <span class="resources-content" v-else>
-                        {{ data.relatedResourceInfo?.name }}:
-                        <span v-for="(item, index) in data.relatedResourceInfo?.instances?.path[0]" :key="item.id">
-                          {{ item.name }}{{ index !== data.relatedResourceInfo?.instances?.path[0].length - 1 ? ' / ' : '' }} 
-                        </span>
-                      </span>
-                      <template #content>
-                        <div v-if="data.relatedResourceInfo?.instances?.path.length > 1" class="resources-tips">
-                          <div v-for="(path, pathIndex) in data.relatedResourceInfo?.instances?.path" :key="pathIndex" class="path-item">
-                            <span v-for="(item, index) in path" :key="item.id">
-                              {{ item.name }} {{ index !== path.length -1 ? ' / ' : '' }} 
-                            </span>
+            <div class="user-group-perm">
+              <div class="perm-item" v-for="(item, key, index) in groupPermissionDetailMap" :key="index">
+                <header class="header" @click="toggleContent(index)">
+                  <down-shape v-if="showPermFlagMap[index]" />
+                  <right-shape v-else />
+                  <span class="name">{{ key }}</span>
+                </header>
+                <div class="content" v-show="showPermFlagMap[index]">
+                  <bk-table
+                      v-bkloading="{ isLoading: !showPermFlagMap[index] }"
+                      class="resources-table"
+                      :data="item"
+                      :border="['row', 'outer']">
+                      <bk-table-column :label="t('操作')" width="250" show-overflow-tooltip>
+                          <template #default="{ data }">
+                          {{ data?.name }}
+                          </template>
+                      </bk-table-column>
+                      <bk-table-column :label="t('操作对象')" width="430">
+                          <template #default="{ data }">
+                          <div v-if="data?.relatedResourceInfo" :class="{
+                              'resources-info': true,
+                              'show': data.expand
+                          }">
+                              <div class="resources-content">
+                                  <span v-if="data.relatedResourceInfo?.instances.type.includes('pipeline')">
+                                      {{ t('共N条XX', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.instances.name]) }}
+                                  </span>
+                                  <span v-else-if="data.relatedResourceInfo?.instances.type.includes('project')">
+                                      {{ t('共N个XX', [1, data.relatedResourceInfo?.instances.name]) }}
+                                  </span>
+                                  <span v-else-if="data.relatedResourceInfo?.instances.type.includes('space')">
+                                    {{ t('共N个监控平台空间', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.instances.name]) }}
+                                  </span>
+                                  <span v-else>
+                                      {{ t('共N个XX', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.name]) }}
+                                  </span>
+                              </div>
+                              <div v-if="data.relatedResourceInfo?.instances.type.includes('project')" class="resources-content" >
+                                  <div>
+                                        {{ data.relatedResourceInfo?.instances?.path[0][0].name }}
+                                  </div>
+                              </div>
+                              <div v-else class="resources-content" v-for="(path, pathIndex) in data.relatedResourceInfo?.instances?.path" :key="pathIndex">
+                                  <div class="item">
+                                      <span v-for="(item, index) in path" :key="item.id">
+                                        {{ item.name }} {{ index !== path.length -1 ? ' / ' : '' }} 
+                                      </span>
+                                      <bk-button class="expand-btn" v-if="!data.expand && data.relatedResourceInfo?.instances?.path.length > 3 && pathIndex === 2" text @click="data.expand = true">{{ t('展开') }}</bk-button>
+                                  </div>
+                              </div>
+                              <bk-button class="expand-btn" v-if="data.expand && data.relatedResourceInfo?.instances?.path.length > 3" text @click="data.expand = false">{{ t('收起') }}</bk-button>
                           </div>
-                        </div>
-                        <div v-else class="resources-tips">
-                          <span v-for="(item, index) in data.relatedResourceInfo?.instances?.path[0]" :key="item.id">
-                            {{ item.name }} {{ index !== data.relatedResourceInfo?.instances?.path[0].length -1 ? ' / ' : '' }} 
-                          </span> 
-                        </div>
-                      </template>
-                    </bk-popover>
-                    <i class="permission-icon permission-icon-review review-icon" @click="handleShowInstances(data.relatedResourceInfo, data.name)"></i>
-                  </div>
-                  <span v-else>--</span>
-                </template>
-              </bk-table-column>
-            </bk-table>
-          </bk-loading>
-        </div>
-      </template>
-    </bk-sideslider>
-    <bk-sideslider
-      v-model:isShow="showInstancesDetail"
-      :width="500"
-      :title="t('操作【】的资源实例', [relatedResourceInfo.actionName])"
-      quick-close
-    >
-      <template #default>
-        <bk-tab
-          active="instances"
-          type="unborder-card"
-        >
-          <bk-tab-panel
-            name="instances"
-            :label="`${relatedResourceInfo.name} ${t('实例')}`"
-          >
-            <div class="resource-instance">
-              <div class="header">
-                {{ t('拓扑实例') }}:
-              </div>
-              <div class="content">
-                <p class="instance-title">{{ relatedResourceInfo.instances.name}}({{ relatedResourceInfo.instances.path.length }})</p>
-                <div class="instance-item">
-                  <div v-for="(path, pathIndex) in relatedResourceInfo?.instances?.path" :key="pathIndex">
-                    <span v-for="(item, index) in path" :key="item.id">
-                      {{ item.name }} {{ index !== path.length -1 ? ' / ' : '' }} 
-                    </span>
-                  </div>
+                          <span v-else>--</span>
+                          </template>
+                      </bk-table-column>
+                  </bk-table>
                 </div>
               </div>
             </div>
-          </bk-tab-panel>
-        </bk-tab>
+          </bk-loading>
+        </div>
       </template>
     </bk-sideslider>
   </section>
@@ -170,6 +163,10 @@ const handleShowInstances = (data, name) => {
   :deep(.bk-popover-content) {
     z-index: 99 !important;
   }
+
+  :deep(.bk-modal-content) {
+    background-color: #f5f7fb;
+  }
   .group-name {
     padding-top: 8px;
     font-size: 16px;
@@ -182,70 +179,75 @@ const handleShowInstances = (data, name) => {
   }
   .detail-content {
     padding: 20px;
-    height: 100%;
+  }
+  .resources-table {
+      width: 682px !important;
+      ::v-deep .cell {
+      line-height: 30px !important;
+    }
+  }
+  .resources-info {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal !important;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    &.show {
+      -webkit-line-clamp: 1000;
+    }
+  }
+  .resources-content {
+      .item {
+          position: relative;
+          display: inline-block;
+          max-width: 380px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+      }
+      .expand-btn {
+          position: absolute;
+          top: 10px;
+          left: calc(100% + 20px);
+      }
+  }
+  .expand-btn {
+      color: #3c96ff;
   }
   .resources-tips {
     padding: 10px;
   }
-  .resources-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    .resources-content {
-      overflow: hidden;
-      margin-right: 10px;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .path-item {
-      height: 30px;
-      line-height: 30px;
-    }
-  }
-  .review-icon {
-    margin-right: 20px;
-    color: #3a84ff;
-    cursor: pointer;
-  }
-  .detail-side {
-    z-index: 1111;
-  }
-  .resource-instance {
-    position: relative;
-    border: 1px solid #dcdee5;
-    border-radius: 2px;
+
+  .perm-item {
     background: #fff;
-    box-shadow: 0 1px 2px 0 hsl(0deg 0% 100% / 30%);
-    z-index: 1;
-    &:before {
-      content: "";
-      position: absolute;
-      top: 20px;
-      width: 3px;
-      height: 14px;
-      background: #3a84ff;
-    }
+    border-radius: 2px;
+    border: 1px solid #fff;
+    box-shadow: 0 1px 2px 0 rgba(49,50,56,.1);
+    margin-bottom: 20px;
     .header {
-      padding: 19px 20px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        position: relative;
+        padding: 0 10px;
+        height: 40px;
+        line-height: 40px;
+        font-size: 12px;
+        color: #63656e;
+        border-radius: 2px;
+        cursor: pointer;
     }
     .content {
-      padding: 0 20px 19px;
+      padding: 0 30px 20px;
     }
-    .instance-title {
-      font-size: 12px;
-      color: #63656e;
+    .shape-icon {
+      position: relative;
+      bottom: 1px;
     }
-    .instance-item {
-      margin-top: 10px;
-      padding: 13px 16px;
-      max-height: 186px;
-      overflow-y: auto;
-      background: #f7f9fb;
-      font-size: 12px;
-      color: #63656e;
+    .name {
+      margin-left: 8px;
     }
-  }
+}
 </style>

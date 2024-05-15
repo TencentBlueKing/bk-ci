@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 @JsonSubTypes(
     JsonSubTypes.Type(value = PipelineViewFilterByName::class, name = PipelineViewFilterByName.classType),
     JsonSubTypes.Type(value = PipelineViewFilterByCreator::class, name = PipelineViewFilterByCreator.classType),
-    JsonSubTypes.Type(value = PipelineViewFilterByLabel::class, name = PipelineViewFilterByLabel.classType)
+    JsonSubTypes.Type(value = PipelineViewFilterByLabel::class, name = PipelineViewFilterByLabel.classType),
+    JsonSubTypes.Type(value = PipelineViewFilterByPacRepo::class, name = PipelineViewFilterByPacRepo.classType)
 )
 abstract class PipelineViewFilter

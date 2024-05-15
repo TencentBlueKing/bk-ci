@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
+import com.tencent.devops.process.engine.service.RepoPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,6 +53,7 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
     private val pipelineWebhookService: PipelineWebhookService,
+    private val repoPipelineRefService: RepoPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
@@ -60,7 +62,10 @@ class MQPipelineUpdateListener @Autowired constructor(
 
         if (event.buildNo != null) {
             watcher.safeAround("updateBuildNo") {
-                pipelineRuntimeService.updateBuildNo(event.projectId, event.pipelineId, event.buildNo!!.buildNo)
+                pipelineRuntimeService.updateBuildNo(
+                    projectId = event.projectId, pipelineId = event.pipelineId,
+                    buildNo = event.buildNo!!.buildNo, debug = false
+                )
             }
         }
 
@@ -85,6 +90,12 @@ class MQPipelineUpdateListener @Autowired constructor(
                 version = event.version,
                 userId = event.userId
             )
+        }
+
+        watcher.safeAround("updateAgentPipelineRef") {
+            with(event) {
+                repoPipelineRefService.updateRepoPipelineRef(userId, "update_pipeline", projectId, pipelineId)
+            }
         }
 
         LogUtils.printCostTimeWE(watcher)

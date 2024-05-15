@@ -28,19 +28,20 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线暂停操作实体类")
+@Schema(title = "流水线暂停操作实体类")
 data class BuildTaskPauseInfo(
-    @ApiModelProperty("任务ID")
-    val taskId: String,
-    @ApiModelProperty("element信息,若插件内有变量变更需给出变更后的element")
+    @get:Schema(title = "任务ID")
+    val taskId: String?,
+    @get:Schema(title = "插件ID")
+    val stepId: String?,
+    @get:Schema(title = "element信息,若插件内有变量变更需给出变更后的element")
     val element: Element?,
-    @ApiModelProperty("是否继续 true:继续构建 false：停止构建")
+    @get:Schema(title = "是否继续 true:继续构建 false：停止构建")
     val isContinue: Boolean,
-    @ApiModelProperty("当前stageId")
+    @get:Schema(title = "当前stageId")
     val stageId: String,
-    @ApiModelProperty("当前containerId")
+    @get:Schema(title = "当前containerId")
     val containerId: String
 )

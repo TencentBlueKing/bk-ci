@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.openapi.pojo.AppCodeGroup
 import com.tencent.devops.openapi.pojo.AppCodeGroupResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -44,56 +44,56 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_APP_CODE_GROUP"], description = "OP-AppCode组织架构资源")
+@Tag(name = "OP_APP_CODE_GROUP", description = "OP-AppCode组织架构资源")
 @Path("/op/appCodeGroup/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface OpAppCodeGroupResource {
 
-    @ApiOperation("设置appCode的组织架构")
+    @Operation(summary = "设置appCode的组织架构")
     @POST
     @Path("{appCode}")
     fun setGroup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @ApiParam("appCode", required = true)
+        @Parameter(description = "appCode", required = true)
         @PathParam("appCode")
         appCode: String,
-        @ApiParam("appCodeGroup", required = true)
+        @Parameter(description = "appCodeGroup", required = true)
         appCodeGroup: AppCodeGroup
     ): Result<Boolean>
 
-    @ApiOperation("获取appCode的组织架构")
+    @Operation(summary = "获取appCode的组织架构")
     @GET
     @Path("{appCode}")
     fun getGroup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @ApiParam("appCode", required = true)
+        @Parameter(description = "appCode", required = true)
         @PathParam("appCode")
         appCode: String
     ): Result<AppCodeGroupResponse?>
 
-    @ApiOperation("获取appCode的组织架构列表")
+    @Operation(summary = "获取appCode的组织架构列表")
     @GET
     @Path("")
     fun listGroup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String
     ): Result<List<AppCodeGroupResponse>>
 
-    @ApiOperation("删除appCode的组织架构")
+    @Operation(summary = "删除appCode的组织架构")
     @DELETE
     @Path("{appCode}")
     fun deleteGroup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @ApiParam("appCode", required = true)
+        @Parameter(description = "appCode", required = true)
         @PathParam("appCode")
         appCode: String
     ): Result<Boolean>

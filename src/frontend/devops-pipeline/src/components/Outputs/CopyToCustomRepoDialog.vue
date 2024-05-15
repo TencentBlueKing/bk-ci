@@ -22,11 +22,12 @@
         />
         <section class="copy-custom-repo-tree">
             <bk-big-tree
+                v-if="isCopyDialogShow"
                 ref="customRepoTree"
                 selectable
                 :expand-on-click="false"
-                :options="repoOptions"
                 :default-expanded-nodes="[customRootFolder.fullPath]"
+                :options="repoOptions"
                 @select-change="handleSelect"
                 :data="customFolders"
                 :lazy-method="getFolders"
@@ -35,8 +36,8 @@
     </bk-dialog>
 </template>
 <script>
-    import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -58,6 +59,7 @@
                 customRootFolder: {
                     fullPath: '/',
                     name: this.$t('details.customRepo'),
+                    expanded: true,
                     level: 0,
                     children: []
                 }
@@ -94,26 +96,14 @@
                     }
                 })
                 return {
-                    data:
-          res.children?.map((item) => ({
-            ...item,
-            level: folder.level + 1
-          })) ?? []
+                    data: res.children?.map((item) => ({
+                        ...item,
+                        level: folder.level + 1
+                    })) ?? []
                 }
             },
-            async search (keyword) {
-                const res = await this.requestCustomRepo({
-                    projectId: this.$route.params.projectId,
-                    params: {
-                        name: `*${keyword}*`
-                    }
-                })
-      this.$refs?.customRepoTree?.setData?.([
-        {
-          ...this.customRootFolder,
-          children: res.children
-        }
-      ])
+            search (keyword) {
+                this.$refs?.customRepoTree.filter(keyword)
             },
             handleSelect (folder) {
                 this.activeFolder = folder.id
@@ -133,9 +123,12 @@
 
                     })
                     if (res) {
-                        message = this.$createElement('span', {}, [
+                        const h = this.$createElement
+                        message = h('p', {
+                            class: 'copy-to-custom-suc-message'
+                        }, [
                             this.$t('details.copyToCustomSuc', [this.artifact.name, this.activeFolder]),
-                            this.$createElement(
+                            h(
                                 'bk-link',
                                 {
                                     domProps: {
@@ -143,30 +136,24 @@
                                     },
                                     props: {
                                         theme: 'primary',
-                                        href: `${WEB_URL_PREFIX}/repo/${
-                                            this.$route.params.projectId
-                                        }/generic?repoName=custom&path=${encodeURIComponent(
-                                            `${this.activeFolder}/default`
-                                        )}`
+                                        href: `${WEB_URL_PREFIX}/repo/${this.$route.params.projectId}/generic?repoName=custom&path=${encodeURIComponent(`${self.activeFolder}/default`)}`
                                     }
                                 },
-                                [
-                                    this.$createElement(
-                                        'span',
-                                        {
-                                            class: 'go-dist-link'
-                                        },
-                                        [
-                                            this.$createElement(Logo, {
-                                                props: {
-                                                    name: 'tiaozhuan',
-                                                    size: 14
-                                                }
-                                            }),
-                                            this.$t('details.goDistFolder')
-                                        ]
-                                    )
-                                ]
+                                [h(
+                                    'span',
+                                    {
+                                        class: 'go-dist-link'
+                                    },
+                                    [
+                                        h(Logo, {
+                                            props: {
+                                                name: 'tiaozhuan',
+                                                size: 14
+                                            }
+                                        }),
+                                        this.$t('details.goDistFolder')
+                                    ]
+                                )]
                             )
                         ])
                         theme = 'success'
@@ -179,7 +166,8 @@
                     this.$bkMessage({
                         message,
                         theme,
-                        delay: 5000
+                        delay: 5000,
+                        limit: 1
                     })
                 }
             }

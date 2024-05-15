@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -37,9 +38,9 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -51,169 +52,204 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ENVIRONMENT"], description = "服务-环境服务")
+@Tag(name = "SERVICE_ENVIRONMENT", description = "服务-环境服务")
 @Path("/service/environment")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceEnvironmentResource {
-    @ApiOperation("获取环境列表")
+    @Operation(summary = "获取环境列表")
     @GET
     @Path("/projects/{projectId}")
     fun list(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
 
-    @ApiOperation("创建环境")
+    @Operation(summary = "创建环境")
     @POST
     @Path("/projects/{projectId}")
     fun create(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "环境信息", required = true)
+        @Parameter(description = "环境信息", required = true)
         environment: EnvCreateInfo
     ): Result<EnvironmentId>
 
-    @ApiOperation("删除环境")
+    @Operation(summary = "获取环境信息")
+    @GET
+    @Path("/projects/{projectId}/envs/{envHashId}")
+    fun get(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<EnvWithPermission>
+
+    @Operation(summary = "删除环境")
     @DELETE
     @Path("/projects/{projectId}/envs/{envHashId}")
     fun delete(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("环境 hashId", required = true)
+        @Parameter(description = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("添加节点到环境")
+    @Operation(summary = "添加节点到环境")
     @POST
     @Path("/projects/{projectId}/envs/{envHashId}/add_nodes")
     fun addNodes(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("环境 hashId", required = true)
+        @Parameter(description = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @ApiParam("节点 HashId", required = true)
+        @Parameter(description = "节点 HashId", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
 
-    @ApiOperation("从环境删除节点")
+    @Operation(summary = "从环境删除节点")
     @POST
     @Path("/projects/{projectId}/envs/{envHashId}/delete_nodes")
     fun deleteNodes(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("环境 hashId", required = true)
+        @Parameter(description = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @ApiParam("节点 HashId", required = true)
+        @Parameter(description = "节点 HashId", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
 
-    @ApiOperation("获取环境（多个）的节点列表")
+    @Operation(summary = "获取环境（多个）的节点列表")
     @POST
     @Path("/projects/{projectId}/listNodesByEnvIds")
     fun listNodesByEnvIds(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("环境 hashId(s)", required = true)
+        @Parameter(description = "环境 hashId(s)", required = true)
         envHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
-    @ApiOperation("获取用户有权限使用的环境列表")
+    @Operation(summary = "获取环境（多个）的节点列表")
+    @POST
+    @Path("/projects/{projectId}/listNodesByEnvIdsNew")
+    fun listNodesByEnvIdsNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "环境 hashId(s)", required = true)
+        envHashIds: List<String>
+    ): Result<Page<NodeBaseInfo>>
+
+    @Operation(summary = "获取用户有权限使用的环境列表")
     @GET
     @Path("/projects/{projectId}/listUsableServerEnvs")
     fun listUsableServerEnvs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
 
-    @ApiOperation("根据hashId(多个)获取环境信息(不校验权限)")
+    @Operation(summary = "根据hashId(多个)获取环境信息(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("环境 hashId(s)", required = true)
+        @Parameter(description = "环境 hashId(s)", required = true)
         envHashIds: List<String>
     ): Result<List<EnvWithPermission>>
 
-    @ApiOperation("根据环境名称获取环境信息(不校验权限)")
+    @Operation(summary = "根据环境名称获取环境信息(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByEnvNames")
     fun listRawByEnvNames(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("环境名称(s)", required = true)
+        @Parameter(description = "环境名称(s)", required = true)
         envNames: List<String>
     ): Result<List<EnvWithPermission>>
 
-    @ApiOperation("根据OS获取第三方构建环境列表")
+    @Operation(summary = "根据OS获取第三方构建环境列表")
     @GET
     @Path("/projects/{projectId}/buildEnvs")
     fun listBuildEnvs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @QueryParam("os")
         os: OS
     ): Result<List<EnvWithNodeCount>>
 
-    @ApiOperation("设置环境共享")
+    @Operation(summary = "设置环境共享")
     @POST
     @Path("/{projectId}/{envHashId}/share")
     fun setShareEnv(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("环境 hashId", required = true)
+        @Parameter(description = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @ApiParam(value = "共享的项目列表", required = true)
+        @Parameter(description = "共享的项目列表", required = true)
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean>
 }

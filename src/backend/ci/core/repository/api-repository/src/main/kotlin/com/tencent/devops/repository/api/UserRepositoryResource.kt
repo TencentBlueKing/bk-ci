@@ -31,8 +31,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.RepoPipelineRefVo
+import com.tencent.devops.repository.pojo.RepoRename
+import com.tencent.devops.repository.pojo.RepoTriggerRefVo
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -40,9 +45,10 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -55,437 +61,319 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_REPOSITORY"], description = "用户-代码库")
+@Tag(name = "USER_REPOSITORY", description = "用户-代码库")
 @Path("/user/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserRepositoryResource {
 
-    @ApiOperation("是否拥有创建代码库权限")
+    @Operation(summary = "是否拥有创建代码库权限")
     @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("是否拥有创建代码库别名")
+    @Operation(summary = "是否拥有创建代码库别名")
     @Path("/{projectId}/hasAliasName")
     @GET
     fun hasAliasName(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = false)
+        @Parameter(description = "代码库哈希ID", required = false)
         @QueryParam("repositoryHashId")
         repositoryHashId: String?,
-        @ApiParam("代码库别名", required = true)
+        @Parameter(description = "代码库别名", required = true)
         @QueryParam("aliasName")
         aliasName: String
     ): Result<Boolean>
 
-    @ApiOperation("关联代码库")
+    @Operation(summary = "关联代码库")
     @POST
     @Path("/{projectId}/")
     fun create(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "代码库模型", required = true)
+        @Parameter(description = "代码库模型", required = true)
         repository: Repository
     ): Result<RepositoryId>
 
-    @ApiOperation("获取代码库详情")
+    @Operation(summary = "获取代码库详情")
     @GET
     @Path("/{projectId}/{repositoryId}/")
     fun get(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @ApiParam("代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<Repository>
 
-    @ApiOperation("编辑关联代码库")
+    @Operation(summary = "编辑关联代码库")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/")
     fun edit(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @ApiParam(value = "代码库模型", required = true)
+        @Parameter(description = "代码库模型", required = true)
         repository: Repository
     ): Result<Boolean>
 
-    @ApiOperation("代码库列表")
+    @Operation(summary = "代码库列表")
     @GET
     @Path("/{projectId}/")
     fun list(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
 
-    @ApiOperation("代码库列表根据别名模糊查询")
+    @Operation(summary = "代码库列表根据别名模糊查询")
     @GET
     @Path("/{projectId}/search/")
     fun fuzzySearchByAliasName(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType?,
-        @ApiParam("仓库类型", required = false)
+        @Parameter(description = "仓库别名", required = false)
         @QueryParam("aliasName")
         aliasName: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("排序字段", required = false)
+        @Parameter(description = "排序字段", required = false)
         @QueryParam("sortBy")
         sortBy: String? = null,
-        @ApiParam("排序方式，升序降序", required = false)
+        @Parameter(description = "排序方式，升序降序", required = false)
         @QueryParam("sortType")
         sortType: String? = null
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
 
-    @ApiOperation("代码库列表")
+    @Operation(summary = "代码库列表")
     @GET
     @Path("/{projectId}/hasPermissionList")
     fun hasPermissionList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: String?,
-        @ApiParam("对应权限", required = true, defaultValue = "")
+        @Parameter(description = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("别名", required = false)
+        @Parameter(description = "别名", required = false)
         @QueryParam("aliasName")
-        aliasName: String? = null
+        aliasName: String? = null,
+        @Parameter(description = "是否开启pac", required = false)
+        @QueryParam("enablePac")
+        enablePac: Boolean? = null
     ): Result<Page<RepositoryInfo>>
 
-    @ApiOperation("删除代码库")
+    @Operation(summary = "删除代码库")
     @DELETE
     @Path("/{projectId}/{repositoryHashId}")
     fun delete(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("根据构建ID获取提交记录")
+    @Operation(summary = "根据构建ID获取提交记录")
     @GET
     @Path("/{buildId}/commit/get/record")
     fun getCommit(
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<CommitResponse>>
 
-    @ApiOperation("锁定代码库")
+    @Operation(summary = "锁定代码库")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/lock")
     fun lock(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("解锁代码库")
+    @Operation(summary = "解锁代码库")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/unlock")
     fun unlock(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
 
-    //
-//
-//    @ApiOperation("是否拥有创建代码库权限")
-// //    @Path("/{projectId}/hasCreatePermission")
-//    @Path("/projectId/{projectId}/hasCreatePermission")
-//    @GET
-//    fun hasCreatePermissionV2(
-//            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String
-//    ): Result<Boolean>
-//
-//    @ApiOperation("是否拥有创建代码库别名")
-// //    @Path("/{projectId}/hasAliasName")
-//    @Path("/projectId/{projectId}/hasAliasName")
-//    @GET
-//    fun hasAliasNameV2(
-//            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("代码库哈希ID", required = false)
-//            @QueryParam("repositoryHashId")
-//            repositoryHashId: String?,
-//            @ApiParam("代码库别名", required = true)
-//            @QueryParam("aliasName")
-//            aliasName: String
-//    ): Result<Boolean>
-//
-//    @ApiOperation("关联代码库")
-//    @POST
-// //    @Path("/{projectId}/")
-//    @Path("/projectId/{projectId}/")
-//    fun createV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam(value = "代码库模型", required = true)
-//            repository: Repository
-//    ): Result<RepositoryId>
-//
-//    @ApiOperation("获取代码库详情")
-//    @GET
-// //    @Path("/{projectId}/{repositoryId}/")
-//    @Path("/projectId/{projectId}/repositoryId/{repositoryId}/")
-//    fun getV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("代码库哈希ID", required = true)
-//            @PathParam("repositoryId")
-//            repositoryId: String,
-//            @ApiParam("代码库请求类型", required = true)
-//            @QueryParam("repositoryType")
-//            repositoryType: RepositoryType?
-//    ): Result<Repository>
-//
-//    @ApiOperation("编辑关联代码库")
-//    @PUT
-// //    @Path("/{projectId}/{repositoryHashId}/")
-//    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}/")
-//    fun editV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("代码库哈希ID", required = true)
-//            @PathParam("repositoryHashId")
-//            repositoryHashId: String,
-//            @ApiParam(value = "代码库模型", required = true)
-//            repository: Repository
-//    ): Result<Boolean>
-//
-//    @ApiOperation("代码库列表")
-//    @GET
-// //    @Path("/{projectId}/")
-//    @Path("/projectId/{projectId}/")
-//    fun listV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("仓库类型", required = false)
-//            @QueryParam("repositoryType")
-//            repositoryType: ScmType?,
-//            @ApiParam("第几页", required = false, defaultValue = "1")
-//            @QueryParam("page")
-//            page: Int?,
-//            @ApiParam("每页多少条", required = false, defaultValue = "20")
-//            @QueryParam("pageSize")
-//            pageSize: Int?
-//    ): Result<RepositoryPage<RepositoryInfoWithPermission>>
-//
-//    @ApiOperation("代码库列表")
-//    @GET
-// //    @Path("/{projectId}/hasPermissionList")
-//    @Path("/projectId/{projectId}/hasPermissionList")
-//    fun hasPermissionListV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("仓库类型", required = false)
-//            @QueryParam("repositoryType")
-//            repositoryType: ScmType?,
-//            @ApiParam("对应权限", required = true, defaultValue = "")
-//            @QueryParam("permission")
-//            permission: Permission,
-//            @ApiParam("第几页", required = false, defaultValue = "1")
-//            @QueryParam("page")
-//            page: Int?,
-//            @ApiParam("每页多少条", required = false, defaultValue = "20")
-//            @QueryParam("pageSize")
-//            pageSize: Int?
-//    ): Result<Page<RepositoryInfo>>
-//
-//    @ApiOperation("删除代码库")
-//    @DELETE
-// //    @Path("/{projectId}/{repositoryHashId}")
-//    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}")
-//    fun deleteV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("代码库哈希ID", required = true)
-//            @PathParam("repositoryHashId")
-//            repositoryHashId: String
-//    ): Result<Boolean>
-//
-//    @ApiOperation("根据构建ID获取提交记录")
-//    @GET
-// //    @Path("/{buildId}/commit/get/record")
-//    @Path("/buildId/{buildId}/commit/get/record")
-//    fun getCommitV2(
-//            @ApiParam(value = "构建ID", required = true)
-//            @PathParam("buildId")
-//            buildId: String
-//    ): Result<List<CommitResponse>>
-//
-//    @ApiOperation("锁定代码库")
-//    @PUT
-// //    @Path("/{projectId}/{repositoryHashId}/lock")
-//    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}/lock")
-//    fun lockV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("代码库哈希ID", required = true)
-//            @PathParam("repositoryHashId")
-//            repositoryHashId: String
-//    ): Result<Boolean>
-//
-//    @ApiOperation("代码库列表根据别名模糊查询")
-//    @GET
-// //    @Path("/{projectId}/search/")
-//    @Path("/projectId/{projectId}/search/")
-//    fun fuzzySearchByAliasNameV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("仓库类型", required = false)
-//            @QueryParam("repositoryType")
-//            repositoryType: ScmType?,
-//            @ApiParam("仓库类型", required = false)
-//            @QueryParam("aliasName")
-//            aliasName: String?,
-//            @ApiParam("第几页", required = false, defaultValue = "1")
-//            @QueryParam("page")
-//            page: Int?,
-//            @ApiParam("每页多少条", required = false, defaultValue = "20")
-//            @QueryParam("pageSize")
-//            pageSize: Int?
-//    ): Result<RepositoryPage<RepositoryInfoWithPermission>>
-//
-//    @ApiOperation("解锁代码库")
-//    @PUT
-// //    @Path("/{projectId}/{repositoryHashId}/unlock")
-//    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}/unlock")
-//    fun unlockV2(
-//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_USER_ID)
-//            userId: String,
-//            @ApiParam("项目ID", required = true)
-//            @PathParam("projectId")
-//            projectId: String,
-//            @ApiParam("代码库哈希ID", required = true)
-//            @PathParam("repositoryHashId")
-//            repositoryHashId: String
-//    ): Result<Boolean>
+    @Operation(summary = "关联代码库的流水线列表")
+    @GET
+    @Path("/{projectId}/{repositoryHashId}/listRepoPipelineRef")
+    fun listRepoPipelineRef(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @Parameter(description = "事件类型", required = false)
+        @QueryParam("eventType")
+        eventType: String?,
+        @Parameter(description = "触发条件MD5", required = false)
+        @QueryParam("triggerConditionMd5")
+        triggerConditionMd5: String?,
+        @Parameter(description = "插件配置的代码库类型", required = false)
+        @QueryParam("taskRepoType")
+        taskRepoType: RepositoryType?,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<RepoPipelineRefVo>>
+
+    @Operation(summary = "关联代码库的流水线列表")
+    @GET
+    @Path("/{projectId}/{repositoryHashId}/listTriggerRef")
+    fun listTriggerRef(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @Parameter(description = "触发类型", required = false)
+        @QueryParam("triggerType")
+        triggerType: String?,
+        @Parameter(description = "事件类型", required = false)
+        @QueryParam("eventType")
+        eventType: String?,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<RepoTriggerRefVo>>
+
+    @Operation(summary = "重命名")
+    @PUT
+    @Path("/{projectId}/{repositoryHashId}/rename")
+    fun rename(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @Parameter(description = "代码库重命名")
+        repoRename: RepoRename
+    ): Result<Boolean>
+
+    @Operation(summary = "根据用户ID判断用户是否已经oauth认证")
+    @GET
+    @Path("/{projectId}/isOauth")
+    fun isOAuth(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum? = null,
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String? = null,
+        @Parameter(description = "仓库类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: ScmType
+    ): Result<AuthorizeResult>
 }

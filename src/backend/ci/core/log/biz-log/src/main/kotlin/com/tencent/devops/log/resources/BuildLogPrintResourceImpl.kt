@@ -28,8 +28,10 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
@@ -37,6 +39,7 @@ import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.BuildLogQueryService
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogStatusService
 import io.micrometer.core.annotation.Timed
@@ -55,7 +58,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
     private val buildLogPrintService: BuildLogPrintService,
     private val logStatusService: LogStatusService,
     private val indexService: IndexService,
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
+    private val buildLogQueryService: BuildLogQueryService
 ) : BuildLogPrintResource {
 
     @Value("\${spring.application.name:#{null}}")
@@ -121,9 +125,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        logMode: String?
+        logMode: String?,
+        jobId: String?,
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -138,9 +144,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 finished = false,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                logStorageMode = LogStorageMode.parse(logMode)
+                logStorageMode = LogStorageMode.parse(logMode),
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(true)
@@ -151,9 +159,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         finished: Boolean,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        logMode: String?
+        logMode: String?,
+        jobId: String?,
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -165,9 +175,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
                 finished = finished,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                logStorageMode = LogStorageMode.parse(logMode)
+                logStorageMode = LogStorageMode.parse(logMode),
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(false)
@@ -188,6 +200,69 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             propertyList = propertyList
         )
         return Result(true)
+    }
+
+    override fun getInitLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        val initLogs = buildLogQueryService.getInitLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null
+        )
+        recordMultiLogCount(initLogs.data?.logs?.size ?: 0)
+        return initLogs
+    }
+
+    override fun getAfterLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        debug: Boolean?,
+        logType: LogType?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        val afterLogs = buildLogQueryService.getAfterLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null
+        )
+        recordMultiLogCount(afterLogs.data?.logs?.size ?: 0)
+
+        return afterLogs
     }
 
     /**

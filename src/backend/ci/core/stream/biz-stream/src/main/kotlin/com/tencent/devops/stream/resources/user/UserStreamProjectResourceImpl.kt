@@ -27,20 +27,33 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.stream.api.user.UserStreamProjectResource
+import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamProjectService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStreamProjectResourceImpl @Autowired constructor(
-    private val streamProjectService: StreamProjectService
+    private val client: Client,
+    private val streamProjectService: StreamProjectService,
+    private val permissionService: StreamPermissionService,
+    private val streamBasicSettingService: StreamBasicSettingService
 ) : UserStreamProjectResource {
     override fun getProjects(
         userId: String,
@@ -65,6 +78,54 @@ class UserStreamProjectResourceImpl @Autowired constructor(
     override fun getProjectsHistory(userId: String, size: Long?): Result<List<StreamProjectCIInfo>> {
         val fixPageSize = size?.coerceAtMost(maxPageSize)?.coerceAtLeast(defaultPageSize) ?: defaultPageSize
         return Result(streamProjectService.getUserProjectHistory(userId, size = fixPageSize) ?: emptyList())
+    }
+
+    override fun getProjectInfo(userId: String, projectId: String): Result<ProjectVO?> {
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data ?: run {
+            streamBasicSettingService.initStreamConf(
+                userId = userId,
+                projectId = projectId,
+                gitProjectId = GitCommonUtils.getGitProjectId(projectId),
+                enabled = false
+            )
+            client.get(ServiceProjectResource::class).get(projectId).data ?: return Result(null)
+        }
+        return Result(projectInfo)
+    }
+
+    override fun updateProjectOrganization(
+        userId: String,
+        projectId: String,
+        productId: Int,
+        productName: String,
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean> {
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT
+        )
+        kotlin.runCatching {
+            client.get(ServiceProjectResource::class).updateProjectProductId(projectId, productName)
+            client.get(ServiceProjectResource::class).updateOrganizationByEnglishName(projectId, organization)
+        }.onFailure {
+            if (it is RemoteServiceException && it.httpStatus == HTTP_404) {
+                streamBasicSettingService.initStreamConf(
+                    userId = userId,
+                    projectId = projectId,
+                    gitProjectId = GitCommonUtils.getGitProjectId(projectId),
+                    enabled = false
+                )
+                client.get(ServiceProjectResource::class).updateProjectProductId(projectId, productName)
+                client.get(ServiceProjectResource::class).updateOrganizationByEnglishName(projectId, organization)
+            }
+        }
+        return Result(true)
     }
 
     private val maxPageSize = 10L

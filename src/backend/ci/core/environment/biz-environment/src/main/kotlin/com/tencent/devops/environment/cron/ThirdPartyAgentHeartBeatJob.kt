@@ -34,9 +34,10 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.service.NodeWebsocketService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -54,7 +55,8 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val nodeWebsocketService: NodeWebsocketService
+    private val nodeWebsocketService: NodeWebsocketService,
+    private val thirdpartyAgentService: ThirdPartAgentService
 ) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 3000)
@@ -62,7 +64,6 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
         RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600).use { lock ->
 
             if (!lock.tryLock()) {
-                logger.info("get heartbeat lock failed, skip")
                 return
             }
             checkOKAgent()
@@ -86,6 +87,7 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                 ?: return@forEach
 
             val escape = System.currentTimeMillis() - heartbeatTime
+            // 50s
             if (escape > 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
@@ -96,14 +98,12 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                         projectId = record.projectId,
                         status = AgentStatus.IMPORT_EXCEPTION
                     )
-                    thirdPartyAgentDao.addAgentAction(
-                        dslContext = context,
+                    thirdpartyAgentService.addAgentAction(
                         projectId = record.projectId,
                         agentId = record.id,
-                        action = AgentAction.OFFLINE.name
+                        action = AgentAction.OFFLINE
                     )
                     if (record.nodeId == null) {
-                        logger.info("[${record.projectId}|${record.id}|${record.ip}] The node id is null")
                         return@transaction
                     }
                     val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)
@@ -112,9 +112,6 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                     }
                     nodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
                 }
-                webSocketDispatcher.dispatch(
-                    nodeWebsocketService.buildDetailMessage(record.projectId, "")
-                )
             }
         }
     }

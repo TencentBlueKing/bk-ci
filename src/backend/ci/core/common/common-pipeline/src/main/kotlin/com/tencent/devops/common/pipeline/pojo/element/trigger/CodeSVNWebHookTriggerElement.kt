@@ -27,35 +27,37 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
+@Schema(title = "SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
 data class CodeSVNWebHookTriggerElement(
-    @ApiModelProperty("任务名称", required = true)
-    override val name: String = "SVN变更触发",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "任务名称", required = true)
+    override val name: String = "SVN事件触发",
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
-    @ApiModelProperty("路径过滤类型", required = true)
+    @get:Schema(title = "仓库ID", required = true)
+    val repositoryHashId: String? = null,
+    @get:Schema(title = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @ApiModelProperty("相对路径", required = true)
+    @get:Schema(title = "相对路径", required = true)
     val relativePath: String?,
-    @ApiModelProperty("排除的路径", required = false)
+    @get:Schema(title = "排除的路径", required = false)
     val excludePaths: String?,
-    @ApiModelProperty("用户黑名单", required = false)
+    @get:Schema(title = "用户黑名单", required = false)
     val excludeUsers: List<String>?,
-    @ApiModelProperty("用户白名单", required = false)
+    @get:Schema(title = "用户白名单", required = false)
     val includeUsers: List<String>?,
-    @ApiModelProperty("新版的svn原子的类型")
-    val repositoryType: RepositoryType? = null,
-    @ApiModelProperty("新版的svn代码库名")
+    @get:Schema(title = "新版的svn原子的类型")
+    val repositoryType: TriggerRepositoryType? = null,
+    @get:Schema(title = "新版的svn代码库名")
     val repositoryName: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
@@ -70,5 +72,15 @@ data class CodeSVNWebHookTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): List<ElementProp> {
+        return listOfNotNull(
+            vuexInput(name = "relativePath", value = relativePath),
+            vuexInput(name = "excludePaths", value = excludePaths),
+            staffInput(name = "includeUsers", value = includeUsers),
+            staffInput(name = "excludeUsers", value = excludeUsers)
+        )
     }
 }

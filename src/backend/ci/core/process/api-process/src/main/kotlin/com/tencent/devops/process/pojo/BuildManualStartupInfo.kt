@@ -29,17 +29,18 @@ package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建模型-流水线手动启动信息")
+@Schema(title = "构建模型-流水线手动启动信息")
 data class BuildManualStartupInfo(
-    @ApiModelProperty("是否可手工启动", required = true)
+    @get:Schema(title = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
-    @ApiModelProperty("是否可跳过插件", required = true)
+    @get:Schema(title = "是否可跳过插件", required = true)
     val canElementSkip: Boolean,
-    @ApiModelProperty("启动表单元素列表", required = true)
+    @get:Schema(title = "启动表单元素列表", required = true)
     val properties: List<BuildFormProperty> = listOf(),
-    @ApiModelProperty("指定的构建号", required = true)
-    val buildNo: BuildNo?
+    @get:Schema(title = "指定的构建号", required = true)
+    val buildNo: BuildNo?,
+    @get:Schema(title = "是否使用最近一次的参数进行构建", required = false)
+    var useLatestParameters: Boolean?
 )

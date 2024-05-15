@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.dao.project
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TProject
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -37,7 +38,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProjectMiscDao {
-
     fun getMinId(
         dslContext: DSLContext,
         projectIdList: List<String>? = null
@@ -47,7 +47,7 @@ class ProjectMiscDao {
             if (!projectIdList.isNullOrEmpty()) {
                 baseStep.where(ENGLISH_NAME.`in`(projectIdList))
             }
-            return baseStep.fetchOne(0, Long::class.java)!!
+            return baseStep.skipCheck().fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -60,7 +60,7 @@ class ProjectMiscDao {
             if (!projectIdList.isNullOrEmpty()) {
                 baseStep.where(ENGLISH_NAME.`in`(projectIdList))
             }
-            return baseStep.fetchOne(0, Long::class.java)!!
+            return baseStep.skipCheck().fetchOne(0, Long::class.java)!!
         }
     }
 

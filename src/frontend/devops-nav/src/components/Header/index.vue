@@ -4,7 +4,6 @@
             <router-link
                 class="header-logo"
                 to="/console/"
-                @click.native="setDocumentTitle"
             >
                 <span>
                     <Logo
@@ -98,8 +97,11 @@
                 v-if="!isInIframe"
                 theme="light navigation-message"
                 placement="bottom"
+                trigger="click"
                 :arrow="false"
                 ref="popoverRef"
+                :on-hide="handleHide"
+                :on-show="handleShow"
             >
                 <div class="flag-box">
                     <Icon :name="curLang.icon" size="20" />
@@ -118,8 +120,11 @@
             <bk-popover
                 theme="light navigation-message"
                 placement="bottom"
+                trigger="click"
                 :arrow="false"
-                ref="popoverRef">
+                ref="popoverRef"
+                :on-hide="handleHide"
+                :on-show="handleShow">
                 <div class="flag-box">
                     <Icon name="help-fill" size="20" />
                 </div>
@@ -368,14 +373,18 @@
             this.isShowTooltip = false
         }
 
-        setDocumentTitle () {
-            document.title = String(this.$t('documentTitleHome'))
-        }
-
         handleChangeLang (item) {
-            this.$setLocale(item.id).then(() => {
+            this.$setLocale(item.id, true).then(() => {
                 location.reload()
             })
+        }
+
+        handleShow () {
+            this.togglePopupShow(true)
+        }
+
+        handleHide () {
+            this.togglePopupShow(false)
         }
     }
 </script>
@@ -579,7 +588,7 @@
         align-items: center;
         height: 32px;
         line-height: 33px;
-        padding: 0 16px;
+        padding: 0 20px;
         color: #63656e;
         font-size: 12px;
         text-decoration: none;

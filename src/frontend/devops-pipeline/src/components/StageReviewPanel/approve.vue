@@ -96,7 +96,7 @@
                     }).then(() => {
                         this.cancelApprove()
                         this.$emit('approve')
-                        this.$bkMessage({ theme: 'success', message: this.$t('editPage.operateSuc') })
+                        this.$bkMessage({ theme: 'success', message: this.$t('editPage.operateSuc'), limit: 1 })
                     })
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })

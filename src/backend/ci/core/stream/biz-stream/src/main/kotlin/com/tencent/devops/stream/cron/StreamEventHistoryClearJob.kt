@@ -223,8 +223,8 @@ class StreamEventHistoryClearJob @Autowired constructor(
                 } finally {
                     // 释放redis集合中的线程编号
                     redisOperation.sremove(
-                        key = STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY,
-                        values = threadNo.toString(),
+                        STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY,
+                        threadNo.toString(),
                         isDistinguishCluster = true
                     )
                 }

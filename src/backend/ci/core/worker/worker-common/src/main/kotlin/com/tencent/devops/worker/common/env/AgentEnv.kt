@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -60,6 +61,8 @@ object AgentEnv {
     const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
     const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
     const val BK_TAG = "devops_bk_tag"
+    const val PUBLIC_HOST_MAX_FILE_CACHE_SIZE = "devops.public.host.maxFileCacheSize"
+    const val THIRD_HOST_MAX_FILE_CACHE_SIZE = "devops.public.third.maxFileCacheSize"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -109,29 +112,18 @@ object AgentEnv {
                 }
             }
         }
+
+        agentId?.let { SensitiveValueService.addSensitiveValue(it) }
         return agentId!!
     }
 
     fun getEnv(): Env {
-        if (env == null) {
-            synchronized(this) {
-                if (env == null) {
-                    val landunEnv = System.getProperty(AGENT_ENV)
-                    env = if (!landunEnv.isNullOrEmpty()) {
-                        Env.parse(landunEnv)
-                    } else {
-                        // Get it from .agent.property
-                        try {
-                            Env.parse(PropertyUtil.getPropertyValue(AGENT_ENV, "/$AGENT_PROPERTIES_FILE_NAME"))
-                        } catch (t: Throwable) {
-                            logger.warn("Fail to get the agent env, use prod as default", t)
-                            Env.PROD
-                        }
-                    }
-                }
-            }
+        return try {
+            Env.parse(PropertyUtil.getPropertyValue(AGENT_ENV, "/$AGENT_PROPERTIES_FILE_NAME"))
+        } catch (t: Throwable) {
+            logger.warn("Fail to get the agent env, use prod as default", t)
+            Env.PROD
         }
-        return env!!
     }
 
     @Suppress("UNUSED")
@@ -158,6 +150,8 @@ object AgentEnv {
                 }
             }
         }
+
+        secretKey?.let { SensitiveValueService.addSensitiveValue(it) }
         return secretKey!!
     }
 
@@ -233,7 +227,7 @@ object AgentEnv {
     @Suppress("UNUSED")
     fun is32BitSystem() = System.getProperty("sun.arch.data.model") == "32"
 
-    private fun getProperty(prop: String): String? {
+    fun getProperty(prop: String): String? {
         val buildType = BuildEnv.getBuildType()
         if (buildType == BuildType.DOCKER || buildType == BuildType.MACOS || buildType == BuildType.MACOS_NEW) {
             logger.info("buildType is $buildType")

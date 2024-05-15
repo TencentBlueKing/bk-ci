@@ -1,16 +1,17 @@
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("申请加入用户组实体")
+@Schema(title = "申请加入用户组实体")
 data class ApplyJoinGroupInfo(
-    @ApiModelProperty("用户组id")
+    @get:Schema(title = "项目Code")
+    val projectCode: String,
+    @get:Schema(title = "用户组id")
     val groupIds: List<Int>,
-    @ApiModelProperty("过期时间")
+    @get:Schema(title = "过期时间")
     val expiredAt: String,
-    @ApiModelProperty("申请人")
+    @get:Schema(title = "申请人")
     val applicant: String,
-    @ApiModelProperty("申请理由")
+    @get:Schema(title = "申请理由")
     val reason: String
 )

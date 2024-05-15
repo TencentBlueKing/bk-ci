@@ -41,8 +41,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -79,7 +79,7 @@ enum class ErrorCodeEnum(
         ErrorType.SYSTEM,
         2103011,
         "第三方构建机Agent正在升级中或排队重试超时，请检查agent（{0}）并发任务数设置并稍后重试."
-        ),
+    ),
     THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR(
         ErrorType.USER,
         2103012,
@@ -113,6 +113,16 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2103020,
         "获取登录调试容器链接失败 ({0})"
+    ),
+    BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR(
+        ErrorType.USER,
+        2103021,
+        "构建机环境中所有可用节点{0}启动构建进程失败，暂无可用节点"
+    ),
+    AGENT_REUSE_MUTEX_AGENT_NOT_FOUND(
+        ErrorType.USER,
+        2103022,
+        "构建机复用互斥，未找到Job: {0}对应的构建节点"
     );
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

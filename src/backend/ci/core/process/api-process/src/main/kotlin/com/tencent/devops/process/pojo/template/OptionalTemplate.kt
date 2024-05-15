@@ -28,41 +28,63 @@
 package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.container.Stage
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模板列表")
+@Schema(title = "模板列表")
 data class OptionalTemplateList(
-    @ApiModelProperty("数量", required = false)
+    @get:Schema(title = "数量", required = false)
     val count: Int,
-    @ApiModelProperty("页数", required = false)
+    @get:Schema(title = "页数", required = false)
     val page: Int?,
-    @ApiModelProperty("每页数量", required = false)
+    @get:Schema(title = "每页数量", required = false)
     val pageSize: Int?,
-    @ApiModelProperty("模板列表", required = false)
+    @get:Schema(title = "模板列表", required = false)
     val templates: Map<String, OptionalTemplate>
 )
 
-@ApiModel("模板")
+@Schema(title = "模板")
 data class OptionalTemplate(
-    @ApiModelProperty("模版名称", required = true)
+    @get:Schema(title = "模版名称", required = true)
     val name: String,
-    @ApiModelProperty("模版ID", required = true)
+    @get:Schema(title = "模版ID", required = true)
     val templateId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("版本ID", required = true)
+    @get:Schema(title = "版本ID", required = true)
     val version: Long,
-    @ApiModelProperty("最新版本号", required = true)
+    @get:Schema(title = "最新版本号", required = true)
     val versionName: String,
-    @ApiModelProperty("模板类型", required = true)
+    @get:Schema(title = "模板类型", required = true)
     val templateType: String,
-    @ApiModelProperty("模板类型描述", required = true)
+    @get:Schema(title = "模板类型描述", required = true)
     val templateTypeDesc: String,
-    @ApiModelProperty("应用范畴", required = true)
+    @get:Schema(title = "应用范畴", required = true)
     val category: List<String?>,
-    @ApiModelProperty("模版logo", required = true)
+    @get:Schema(title = "模版logo", required = true)
     val logoUrl: String,
-    @ApiModelProperty("阶段集合", required = true)
-    val stages: List<Stage>
+    @get:Schema(title = "阶段集合", required = true)
+    val stages: List<Stage>,
+    @get:Schema(title = "克隆模板设置项是否存在", required = false)
+    val cloneTemplateSettingExist: CloneTemplateSettingExist? = null
 )
+
+@Schema(title = "克隆模板设置")
+data class CloneTemplateSettingExist(
+    val notifySettingExist: Boolean,
+    val concurrencySettingExist: Boolean,
+    val labelSettingExist: Boolean
+) {
+    companion object {
+        fun fromSetting(setting: PipelineSetting?, pipelinesWithLabels: Set<String>?): CloneTemplateSettingExist {
+            if (setting == null) {
+                return CloneTemplateSettingExist(false, false, false)
+            }
+            return CloneTemplateSettingExist(
+                notifySettingExist = !setting.notifySettingIsNull(),
+                concurrencySettingExist = !setting.concurrencySettingIsNull(),
+                labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false
+            )
+        }
+    }
+}

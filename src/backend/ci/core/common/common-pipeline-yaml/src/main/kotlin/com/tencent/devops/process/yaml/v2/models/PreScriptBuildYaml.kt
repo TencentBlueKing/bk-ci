@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v2.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
@@ -51,7 +52,7 @@ interface PreScriptBuildYamlI {
     var resources: Resources?
     var notices: List<GitNotices>?
     var finally: Map<String, PreJob>?
-    val concurrency: Concurrency?
+    var concurrency: Concurrency?
 }
 
 /**
@@ -65,6 +66,7 @@ data class PreScriptBuildYaml(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
+    @JsonProperty("on")
     override var triggerOn: PreTriggerOn?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
@@ -74,5 +76,5 @@ data class PreScriptBuildYaml(
     override var resources: Resources?,
     override var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
-    override val concurrency: Concurrency? = null
+    override var concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI

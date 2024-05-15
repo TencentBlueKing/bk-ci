@@ -32,41 +32,41 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.version.VersionModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件发布部署模型")
+@Schema(title = "插件发布部署模型")
 data class ReleaseInfo(
-    @ApiModelProperty("项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     var projectId: String = "",
-    @ApiModelProperty("插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     var name: String,
-    @ApiModelProperty("开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     var language: String,
-    @ApiModelProperty("插件logo地址", required = true)
+    @get:Schema(title = "插件logo地址", required = true)
     @field:BkField(maxLength = 1024)
     var logoUrl: String,
-    @ApiModelProperty("支持的操作系统", required = true)
+    @get:Schema(title = "支持的操作系统", required = true)
     val os: ArrayList<String>,
-    @ApiModelProperty(value = "插件配置信息", required = true)
+    @get:Schema(title = "插件配置信息", required = true)
     val configInfo: AtomConfigInfo,
-    @ApiModelProperty("插件所属范畴", required = true)
+    @get:Schema(title = "插件所属范畴", required = true)
     val category: AtomCategoryEnum,
-    @ApiModelProperty("所属插件分类代码", required = true)
+    @get:Schema(title = "所属插件分类代码", required = true)
     val classifyCode: String,
-    @ApiModelProperty("适用Job类型", required = true)
+    @get:Schema(title = "适用Job类型", required = true)
     val jobType: JobTypeEnum,
     @JsonProperty(value = "labelCodes", required = false)
-    @ApiModelProperty("标签标识集合", name = "labelCodes")
+    @get:Schema(title = "标签标识集合", description = "labelCodes")
     val labelCodes: ArrayList<String>? = null,
-    @ApiModelProperty("版本信息", required = true)
-    val versionInfo: VersionInfo,
-    @ApiModelProperty("插件简介", required = true)
+    @get:Schema(title = "版本信息", required = true)
+    val versionInfo: VersionModel,
+    @get:Schema(title = "插件简介", required = true)
     @field:BkField(maxLength = 256)
     val summary: String,
-    @ApiModelProperty("插件描述", required = true)
+    @get:Schema(title = "插件描述", required = true)
     @field:BkField(maxLength = 65535)
     var description: String
 )

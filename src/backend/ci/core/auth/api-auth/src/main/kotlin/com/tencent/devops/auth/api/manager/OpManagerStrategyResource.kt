@@ -31,9 +31,9 @@ import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -46,7 +46,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_MANAGER_STRATEGY"], description = "权限-管理员-策略")
+@Tag(name = "AUTH_MANAGER_STRATEGY", description = "权限-管理员-策略")
 @Path("/op/auth/manager/strategys")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -54,58 +54,58 @@ interface OpManagerStrategyResource {
 
     @POST
     @Path("/")
-    @ApiOperation("新增管理员权限策略")
+    @Operation(summary = "新增管理员权限策略")
     fun createManagerStrategy(
-        @ApiParam(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "name", required = true)
+        @Parameter(description = "name", required = true)
         @QueryParam("name")
         name: String,
-        @ApiParam(value = "策略内容", required = true)
+        @Parameter(description = "策略内容", required = true)
         strategy: ManageStrategyDTO
     ): Result<String>
 
     @PUT
     @Path("/{strategyId}")
-    @ApiOperation("修改管理员权限策略")
+    @Operation(summary = "修改管理员权限策略")
     fun updateManagerStrategy(
-        @ApiParam(name = "策略Id", required = true)
+        @Parameter(description = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int,
-        @ApiParam(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "userId", required = false)
+        @Parameter(description = "userId", required = false)
         @QueryParam("name")
         name: String?,
-        @ApiParam(value = "策略内容", required = true)
+        @Parameter(description = "策略内容", required = true)
         strategy: ManageStrategyDTO
     ): Result<Boolean>
 
     @DELETE
     @Path("/{strategyId}")
-    @ApiOperation("删除管理员权限策略")
+    @Operation(summary = "删除管理员权限策略")
     fun deleteManagerStrategy(
-        @ApiParam(name = "策略Id", required = true)
+        @Parameter(description = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int,
-        @ApiParam(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
 
     @GET
     @Path("/{strategyId}")
-    @ApiOperation("获取管理员权限策略")
+    @Operation(summary = "获取管理员权限策略")
     fun getManagerStrategy(
-        @ApiParam(name = "策略Id", required = true)
+        @Parameter(description = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int
     ): Result<StrategyEntity?>
 
     @GET
     @Path("/list")
-    @ApiOperation("获取管理员权限策略列表")
+    @Operation(summary = "获取管理员权限策略列表")
     fun listManagerStrategy(): Result<List<StrategyEntity>?>
 }

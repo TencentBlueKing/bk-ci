@@ -28,31 +28,42 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-基本信息")
+@Schema(title = "代码库模型-基本信息")
 data class RepositoryInfoWithPermission(
-    @ApiModelProperty("仓库哈希ID", required = true)
+    @get:Schema(title = "仓库哈希ID", required = true)
     val repositoryHashId: String,
-    @ApiModelProperty("仓库别名", required = true)
+    @get:Schema(title = "仓库别名", required = true)
     val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @get:Schema(title = "URL", required = true)
     val url: String,
-    @ApiModelProperty("类型", required = true)
+    @get:Schema(title = "类型", required = true)
     val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
+    @get:Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
-    @ApiModelProperty("能否被编辑", required = true)
+    @get:Schema(title = "最后更新用户", required = false)
+    val updatedUser: String?,
+    @get:Schema(title = "创建时间", required = true)
+    val createTime: Long,
+    @get:Schema(title = "创建人", required = true)
+    val createUser: String,
+    @get:Schema(title = "能否被编辑", required = true)
     val canEdit: Boolean,
-    @ApiModelProperty("能否被删除", required = true)
+    @get:Schema(title = "能否被删除", required = true)
     val canDelete: Boolean,
-    @ApiModelProperty("能否被使用", required = true)
+    @get:Schema(title = "能否被查看", required = true)
+    val canView: Boolean? = null,
+    @get:Schema(title = "能否被使用", required = true)
     val canUse: Boolean? = null,
-    @ApiModelProperty("认证类型", required = false)
+    @get:Schema(title = "认证类型", required = false)
     val authType: String = "",
-    @ApiModelProperty("svn的protocal类型（http|ssh）", required = false)
+    @get:Schema(title = "svn的protocal类型（http|ssh）", required = false)
     val svnType: String? = null,
-    @ApiModelProperty("授权身份", required = true)
-    val authIdentity: String? = null
+    @get:Schema(title = "授权身份", required = true)
+    val authIdentity: String? = null,
+    @get:Schema(title = "插件仓库", required = true)
+    val atom: Boolean? = false,
+    @get:Schema(title = "是否启用pac", required = true)
+    val enablePac: Boolean? = false
 )

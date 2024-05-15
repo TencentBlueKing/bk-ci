@@ -26,9 +26,5 @@
  */
 
 dependencies {
-    api(project(":core:ticket:biz-ticket-sample"))
-    api(project(":core:common:common-auth:common-auth-mock"))
-    api(project(":core:common:common-auth:common-auth-blueking"))
-    api(project(":core:common:common-auth:common-auth-v3"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+    api(project(":core:ticket:biz-ticket"))
 }

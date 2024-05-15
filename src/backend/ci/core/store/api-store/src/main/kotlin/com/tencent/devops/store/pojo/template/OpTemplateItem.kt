@@ -27,56 +27,55 @@
 
 package com.tencent.devops.store.pojo.template
 
-import com.tencent.devops.store.pojo.common.Category
-import com.tencent.devops.store.pojo.common.Label
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.category.Category
+import com.tencent.devops.store.pojo.common.label.Label
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模板详情")
+@Schema(title = "模板详情")
 data class OpTemplateItem(
-    @ApiModelProperty("模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     val templateId: String,
-    @ApiModelProperty("模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @ApiModelProperty("模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val templateName: String,
-    @ApiModelProperty("模板logo", required = false)
+    @get:Schema(title = "模板logo", required = false)
     val logoUrl: String?,
-    @ApiModelProperty("所属模板分类Id", required = false)
+    @get:Schema(title = "所属模板分类Id", required = false)
     val classifyId: String?,
-    @ApiModelProperty("所属模板分类Code", required = false)
+    @get:Schema(title = "所属模板分类Code", required = false)
     val classifyCode: String?,
-    @ApiModelProperty("所属模板分类名称", required = false)
+    @get:Schema(title = "所属模板分类名称", required = false)
     val classifyName: String?,
-    @ApiModelProperty("简介", required = false)
+    @get:Schema(title = "简介", required = false)
     val summary: String?,
-    @ApiModelProperty(
+    @get:Schema(title =
         "模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
         required = true
     )
     val templateStatus: String,
-    @ApiModelProperty("模板描述", required = false)
+    @get:Schema(title = "模板描述", required = false)
     val description: String?,
-    @ApiModelProperty("版本号", required = false)
+    @get:Schema(title = "版本号", required = false)
     val version: String?,
-    @ApiModelProperty("模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
+    @get:Schema(title = "模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
     val templateType: String,
-    @ApiModelProperty("范畴列表", required = false)
+    @get:Schema(title = "范畴列表", required = false)
     val categoryList: List<Category>?,
-    @ApiModelProperty("标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labelList: List<Label>?,
-    @ApiModelProperty("是否为最新版本模板 true：最新 false：非最新", required = true)
+    @get:Schema(title = "是否为最新版本模板 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @ApiModelProperty("发布者", required = false)
+    @get:Schema(title = "发布者", required = false)
     val publisher: String?,
-    @ApiModelProperty("发布者描述", required = false)
+    @get:Schema(title = "发布者描述", required = false)
     val pubDescription: String?,
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String
 )

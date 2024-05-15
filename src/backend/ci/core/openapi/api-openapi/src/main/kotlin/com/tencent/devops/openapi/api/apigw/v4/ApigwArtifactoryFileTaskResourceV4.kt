@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -47,78 +47,84 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_ARTIFACTORY_FILE_TASK_V4"], description = "OPENAPI-构建产物托管任务资源")
+@Tag(name = "OPENAPI_ARTIFACTORY_FILE_TASK_V4", description = "OPENAPI-构建产物托管任务资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/artifactory/projects/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwArtifactoryFileTaskResourceV4 {
 
-    @ApiOperation("创建文件托管任务", tags = ["v4_app_file_task_create", "v4_user_file_task_create"])
+    @Operation(summary = "创建文件托管任务", tags = ["v4_app_file_task_create", "v4_user_file_task_create"])
     @Path("/file_task")
     @POST
     fun createFileTask(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam(value = "taskId", required = true)
+        @Parameter(description = "taskId", required = true)
         createFileTaskReq: CreateFileTaskReq
     ): Result<String>
 
-    @ApiOperation("查询文件托管任务状态", tags = ["v4_app_file_task_status", "v4_user_file_task_status"])
+    @Operation(summary = "查询文件托管任务状态", tags = ["v4_app_file_task_status", "v4_user_file_task_status"])
     @Path("/file_task")
     @GET
     fun getStatus(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam(value = "taskId", required = true)
+        @Parameter(description = "taskId", required = false)
         @QueryParam("taskId")
-        taskId: String
+        taskId: String?,
+        @Parameter(description = "stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<FileTaskInfo?>
 
-    @ApiOperation("清理文件托管任务", tags = ["v4_app_file_task_clear", "v4_user_file_task_clear"])
+    @Operation(summary = "清理文件托管任务", tags = ["v4_app_file_task_clear", "v4_user_file_task_clear"])
     @Path("/file_task")
     @DELETE
     fun clearFileTask(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam(value = "taskId", required = true)
+        @Parameter(description = "taskId", required = false)
         @QueryParam("taskId")
-        taskId: String
+        taskId: String?,
+        @Parameter(description = "stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 }

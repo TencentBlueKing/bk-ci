@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -51,7 +50,8 @@ import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.PipelineGroupPermissionService
+import com.tencent.devops.process.permission.group.PipelineGroupPermissionService
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewClassify
@@ -59,6 +59,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByLabel
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
+import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
@@ -91,6 +92,7 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client,
     private val pipelineGroupPermissionService: PipelineGroupPermissionService
@@ -435,6 +437,29 @@ class PipelineViewService @Autowired constructor(
         }
     }
 
+    fun checkPipelineViewCount(
+        projectId: String,
+        userId: String,
+        projected: Boolean,
+        addCount: Int
+    ) {
+        val countForLimit = pipelineViewDao.countForLimit(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = projected,
+            userId = userId
+        )
+        val limit = if (projected) PROJECT_VIEW_LIMIT else PERSONAL_VIEW_LIMIT
+
+        if (countForLimit + addCount >= limit) {
+            logger.warn("exceed the limit for create , project:$projectId , user:$userId, addCount:$addCount")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_EXCEED_THE_LIMIT,
+                defaultMessage = "exceed the limit for create , the limit is : $limit"
+            )
+        }
+    }
+
     private fun checkForUpset(
         context: DSLContext?,
         projectId: String,
@@ -443,11 +468,11 @@ class PipelineViewService @Autowired constructor(
         isCreate: Boolean,
         viewId: Long? = null
     ) {
-        if (pipelineView.name.isEmpty() || pipelineView.name.length > 16) {
+        if (pipelineView.name.isEmpty() || pipelineView.name.length > PIPELINE_VIEW_NAME_LENGTH_MAX) {
             logger.warn("pipeline view name is illegal , user:$userId , project:$projectId")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_NAME_ILLEGAL,
-                defaultMessage = "pipeline group name is illegal , the length is limited to 1~16"
+                defaultMessage = "pipeline group name is illegal , the length is limited to 1~32"
             )
         }
         if (isCreate) {
@@ -497,7 +522,7 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getFilters(pipelineNewView: PipelineNewView):
-        Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
+            Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
         val filterByNames = mutableListOf<PipelineViewFilterByName>()
         val filterByCreators = mutableListOf<PipelineViewFilterByCreator>()
         val filterByLabels = mutableListOf<PipelineViewFilterByLabel>()
@@ -522,7 +547,10 @@ class PipelineViewService @Autowired constructor(
 
     fun matchView(
         pipelineView: TPipelineViewRecord,
-        pipelineInfo: TPipelineInfoRecord
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        creator: String
     ): Boolean {
         val filters = getFilters(
             filterByName = pipelineView.filterByPipeineName,
@@ -531,14 +559,22 @@ class PipelineViewService @Autowired constructor(
         )
         for (filter in filters) {
             val match = if (filter is PipelineViewFilterByName) {
-                StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName)
+                StringUtils.containsIgnoreCase(pipelineName, filter.pipelineName)
             } else if (filter is PipelineViewFilterByCreator) {
-                filter.userIds.contains(pipelineInfo.creator)
+                filter.userIds.contains(creator)
             } else if (filter is PipelineViewFilterByLabel) {
                 pipelineGroupService.getViewLabelToPipelinesMap(
-                    pipelineInfo.projectId,
+                    pipelineView.projectId ?: projectId,
                     filter.labelIds
-                ).values.asSequence().flatten().contains(pipelineInfo.pipelineId)
+                ).values.asSequence().flatten().contains(pipelineId)
+            } else if (filter is PipelineViewFilterByPacRepo) {
+                val pipelineIds = pipelineYamlInfoDao.listPipelineIdWithDirectory(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    repoHashId = filter.repoHashId,
+                    directory = filter.directory
+                )
+                pipelineIds.contains(pipelineId)
             } else {
                 continue
             }
@@ -586,6 +622,7 @@ class PipelineViewService @Autowired constructor(
             PIPELINE_VIEW_FAVORITE_PIPELINES -> {
                 I18nUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
             }
+
             PIPELINE_VIEW_MY_PIPELINES -> I18nUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
             PIPELINE_VIEW_ALL_PIPELINES -> I18nUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
             else -> throw ErrorCodeException(
@@ -757,5 +794,6 @@ class PipelineViewService @Autowired constructor(
             listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
         private const val PROJECT_VIEW_LIMIT = 200
         private const val PERSONAL_VIEW_LIMIT = 100
+        const val PIPELINE_VIEW_NAME_LENGTH_MAX = 32
     }
 }
