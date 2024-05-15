@@ -34,7 +34,7 @@
                 progressTooltips: {
                     content: '<i class="devops-icon icon-circle-2-1 spin-icon"/>',
                     placement: 'bottom',
-                    trigger: 'click'
+                    delay: [500, 0]
                 }
             }
         },
