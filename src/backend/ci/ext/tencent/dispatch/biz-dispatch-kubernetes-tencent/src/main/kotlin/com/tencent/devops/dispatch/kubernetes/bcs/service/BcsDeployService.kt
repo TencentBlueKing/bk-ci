@@ -130,7 +130,7 @@ class BcsDeployService @Autowired constructor(
             .endSpec()
             .endTemplate()
             .withNewSelector()
-            .addToMatchLabels(defaultLabelKey, serviceCode)
+            .addToMatchLabels("bkci.dispatch.kubenetes", serviceCode)
             .endSelector()
             .endSpec()
             .build()

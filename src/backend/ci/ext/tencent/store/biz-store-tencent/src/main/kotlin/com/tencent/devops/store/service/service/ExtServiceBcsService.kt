@@ -249,23 +249,19 @@ class ExtServiceBcsService {
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
         }
-        var grayNamespaceName = ""
+        var grayNamespaceName = "dev-base"
         var grayHost = ""
-        var namespaceName = ""
+        var namespaceName = "dev-base"
         var host = ""
         when {
             grayFlag == null -> {
-                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName
                 grayHost = extServiceIngressConfig.grayHost
-                namespaceName = extServiceBcsNameSpaceConfig.namespaceName
                 host = extServiceIngressConfig.host
             }
             grayFlag -> {
-                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName
                 grayHost = extServiceIngressConfig.grayHost
             }
             else -> {
-                namespaceName = extServiceBcsNameSpaceConfig.namespaceName
                 host = extServiceIngressConfig.host
             }
         }
