@@ -13,7 +13,7 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     export default {
         name: 'stage-steps',
         components: {
@@ -43,7 +43,7 @@
                     content: '<i class="devops-icon icon-circle-2-1 spin-icon"/>',
                     placement: 'bottom',
                     delay: [500, 0],
-                    onShow: this.getProgress(step)
+                    onShow: () => this.getProgress(step)
                 }
             },
             async getProgress (step) {
