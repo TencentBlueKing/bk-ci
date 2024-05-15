@@ -214,7 +214,7 @@
             this.requestMatchTemplateRules()
         },
         beforeDestroy () {
-            this.setPipeline()
+            this.setPipeline(null)
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -225,6 +225,7 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
+            // TODO: 优化
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',
@@ -347,8 +348,8 @@
                 if (this.template.hasPermission && this.currentVersionId !== row.version && this.template.templateType !== 'CONSTRAINT') {
                     const content = `${this.$t('delete')}${row.versionName}`
                     navConfirm({ type: 'warning', content, cancelText: this.$t('cancel') })
-                        .then(() => {
-                            this.confirmDeleteVersion(row)
+                        .then((val) => {
+                            val && this.confirmDeleteVersion(row)
                         }).catch(() => {})
                 }
             },

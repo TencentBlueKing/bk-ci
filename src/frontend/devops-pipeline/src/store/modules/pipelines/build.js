@@ -17,56 +17,26 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX
 } from '@/store/constants'
-import { getQueryParamList } from '../../../utils/util'
+import ajax from '@/utils/request'
+import { flatSearchKey, isEmptyObj } from '@/utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
 const pluginPrefix = 'plugin/api'
 
 const state = {
     historyPageStatus: {
-        currentPage: 1,
-        scrollTop: 0,
-        queryStr: false,
-        hasNext: false,
         isQuerying: false,
-        queryMap: {
-            query: {
-                status: [],
-                materialAlias: [],
-                materialBranch: [],
-                dateTimeRange: []
-            },
-            searchKey: []
+        count: 0,
+        page: 1,
+        pageSize: 20,
+        dateTimeRange: [],
+        query: {
         },
-        pageSize: 24
+        searchKey: []
     }
-}
-
-function flatSearchKey (searchKey) {
-    return searchKey.reduce((searchMap, item) => {
-        if (Array.isArray(item.values)) {
-            if (typeof searchMap[item.id] === 'undefined') {
-                searchMap[item.id] = Array.from(new Set(item.values.map(v => v.id)))
-            } else {
-                searchMap[item.id] = Array.from(new Set([
-                    ...searchMap[item.id],
-                    ...item.values.map(v => v.id)
-                ]))
-            }
-        }
-        return searchMap
-    }, {})
-}
-
-function generateQueryString (query) {
-    return Object.keys(query).map(key => {
-        const val = key !== 'dateTimeRange' && query[key]
-        return getQueryParamList(val, key)
-    }).filter(item => item).join('&')
 }
 
 const getters = {
@@ -79,12 +49,6 @@ const mutations = {
             ...state.historyPageStatus,
             ...status
         }
-    },
-    updateCurrentRouterQuery (state, queryStr) {
-        state.historyPageStatus = {
-            ...state.historyPageStatus,
-            ...queryStr
-        }
     }
 }
 
@@ -92,20 +56,14 @@ const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
         commit('updateHistoryPageStatus', newStatus)
     },
-    setRouterQuery ({ commit, state }, query) {
-        commit('updateCurrentRouterQuery', query)
-    },
     resetHistoryFilterCondition ({ commit }) {
         commit('updateHistoryPageStatus', {
-            queryMap: {
-                query: {
-                    status: [],
-                    materialAlias: [],
-                    materialBranch: [],
-                    dateTimeRange: []
-                },
-                searchKey: []
-            }
+            count: 0,
+            dateTimeRange: [],
+            page: 1,
+            pageSize: 20,
+            query: {},
+            searchKey: []
         })
     },
     /**
@@ -119,8 +77,10 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestStartupInfo ({ commit, state, dispatch }, { projectId, pipelineId }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/manualStartupInfo`).then(response => {
+    requestStartupInfo ({ commit, state, dispatch }, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/manualStartupInfo`, {
+            params
+        }).then(response => {
             return response.data
         })
     },
@@ -135,14 +95,20 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, params }) {
-        let url = `${prefix}${projectId}/${pipelineId}`
+    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, params }) {
+        const url = `${prefix}${projectId}/${pipelineId}`
+        const query = {
+            version
+        }
         if (params.buildNo && typeof params.buildNo.buildNo !== 'undefined') {
-            url += `?buildNo=${params.buildNo.buildNo}`
+            Object.assign(query, {
+                buildNo: params.buildNo.buildNo
+            })
             delete params.buildNo
         }
-        return ajax.post(url, {
-            ...params
+        console.log('exec', query)
+        return ajax.post(url, params, {
+            params: query
         }).then(response => {
             return response.data
         })
@@ -191,20 +157,28 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, page, pageSize }) {
-        const { historyPageStatus: { queryMap } } = state
-        const filterStr = generateQueryString({
-            ...queryMap.query,
-            ...flatSearchKey(queryMap.searchKey)
+    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, version }) {
+        const { historyPageStatus: { query, searchKey, page, pageSize } } = state
+        const conditions = {
+            ...query,
+            ...flatSearchKey(searchKey)
+        }
+        const queryMap = new URLSearchParams()
+        Object.entries(conditions).forEach(([k, v]) => {
+            if (Array.isArray(v)) {
+                v.forEach(vv => queryMap.append(k, vv))
+            } else queryMap.append(k, v)
         })
         dispatch('setHistoryPageStatus', {
-            isQuerying: !!filterStr
+            isQuerying: !isEmptyObj(conditions)
         })
-        dispatch('setRouterQuery', {
-            queryStr: filterStr
-        })
-
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?page=${page}&pageSize=${pageSize}&${filterStr}`).then(response => {
+        if (version) {
+            queryMap.append('version', version)
+        }
+        queryMap.append('page', page)
+        queryMap.append('pageSize', pageSize)
+        console.log(conditions, queryMap, `${queryMap}`)
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryMap}`).then(response => {
             return response.data
         })
     },

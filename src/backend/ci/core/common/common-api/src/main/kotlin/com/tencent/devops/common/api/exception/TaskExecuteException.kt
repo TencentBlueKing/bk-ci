@@ -32,5 +32,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 open class TaskExecuteException(
     open val errorType: ErrorType,
     open val errorCode: Int,
-    open val errorMsg: String
-) : RuntimeException(errorMsg)
+    open val errorMsg: String,
+    override val cause: Throwable? = null
+) : RuntimeException(errorMsg, cause)

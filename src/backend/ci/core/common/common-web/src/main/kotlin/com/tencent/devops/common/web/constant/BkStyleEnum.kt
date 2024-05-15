@@ -45,6 +45,8 @@ enum class BkStyleEnum(val style: String) {
     SCOPE_STYLE("^TEST|PRD|ALL\$"), // 适用范围正则表达式
     SERVICE_CODE_STYLE("^[a-z][([-a-z-0-9]*[a-z-0-9])?]{0,31}\$"), // 研发商店扩展服务标识正则表达式
     BUILD_NUM_RULE_STYLE("^[\\w-{}() +?.:$\"]{1,256}\$"), // 自定义构建号生成规则正则表达式
+    PIPELINE_CONCURRENCY_GROUP_STYLE("^.{1,128}\$"), // 流水线并发组名称正则表达式
     STORE_FIELD_TYPE_STYLE("^BACKEND|FRONTEND|ALL\$"), // 研发商店私有配置字段类型正则表达式
-    PAGE_SIZE_STYLE("^100\$|^([1-9]|[1-9]\\d)\$") // 页码正则表达式
+    PAGE_SIZE_STYLE("^100\$|^([1-9]|[1-9]\\d)\$"), // 页码正则表达式
+    IP_STYLE("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$") // IPv4
 }

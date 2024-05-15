@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
-import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentActionRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.Record2
@@ -408,55 +406,6 @@ class ThirdPartyAgentDao {
                 .set(AGENT_ENVS, envStr)
                 .where(ID.eq(agentId))
                 .execute()
-        }
-    }
-
-    fun addAgentAction(
-        dslContext: DSLContext,
-        projectId: String,
-        agentId: Long,
-        action: String
-    ) {
-        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                AGENT_ID,
-                ACTION,
-                ACTION_TIME
-            )
-                .values(
-                    projectId,
-                    agentId,
-                    action,
-                    LocalDateTime.now()
-                ).execute()
-        }
-    }
-
-    fun listAgentActions(
-        dslContext: DSLContext,
-        projectId: String,
-        agentId: Long,
-        offset: Int,
-        limit: Int
-    ): Result<TEnvironmentThirdpartyAgentActionRecord> {
-        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(AGENT_ID.eq(agentId))
-                .orderBy(ACTION_TIME.desc(), ID.desc()) // fix 时间相同时，增加ID排序
-                .limit(offset, limit)
-                .fetch()
-        }
-    }
-
-    fun getAgentActionsCount(dslContext: DSLContext, projectId: String, agentId: Long): Long {
-        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
-            return dslContext.selectCount().from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(AGENT_ID.eq(agentId))
-                .fetchOne(0, Long::class.java)!!
         }
     }
 

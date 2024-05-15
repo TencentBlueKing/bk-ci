@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.RepoTriggerRefVo
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -44,6 +45,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -220,7 +222,10 @@ interface UserRepositoryResource {
         pageSize: Int?,
         @Parameter(description = "别名", required = false)
         @QueryParam("aliasName")
-        aliasName: String? = null
+        aliasName: String? = null,
+        @Parameter(description = "是否开启pac", required = false)
+        @QueryParam("enablePac")
+        enablePac: Boolean? = null
     ): Result<Page<RepositoryInfo>>
 
     @Operation(summary = "删除代码库")
@@ -296,6 +301,9 @@ interface UserRepositoryResource {
         @Parameter(description = "触发条件MD5", required = false)
         @QueryParam("triggerConditionMd5")
         triggerConditionMd5: String?,
+        @Parameter(description = "插件配置的代码库类型", required = false)
+        @QueryParam("taskRepoType")
+        taskRepoType: RepositoryType?,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
@@ -347,4 +355,25 @@ interface UserRepositoryResource {
         @Parameter(description = "代码库重命名")
         repoRename: RepoRename
     ): Result<Boolean>
+
+    @Operation(summary = "根据用户ID判断用户是否已经oauth认证")
+    @GET
+    @Path("/{projectId}/isOauth")
+    fun isOAuth(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum? = null,
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String? = null,
+        @Parameter(description = "仓库类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: ScmType
+    ): Result<AuthorizeResult>
 }

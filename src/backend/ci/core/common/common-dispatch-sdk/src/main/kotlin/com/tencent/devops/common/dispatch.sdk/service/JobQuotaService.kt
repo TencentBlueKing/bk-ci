@@ -129,8 +129,10 @@ class JobQuotaService constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -146,8 +148,10 @@ class JobQuotaService constructor(
                     params = arrayOf(jobType.displayName, "${startupEvent.retryTime}")
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -167,8 +171,10 @@ class JobQuotaService constructor(
                     params = arrayOf(jobType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}")
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1

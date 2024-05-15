@@ -44,9 +44,9 @@ import com.tencent.devops.store.common.dao.StoreCommentReplyDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
 import com.tencent.devops.store.pojo.common.STORE_COMMENT_NOTIFY_TEMPLATE
-import com.tencent.devops.store.pojo.common.StoreCommentInfo
-import com.tencent.devops.store.pojo.common.StoreCommentRequest
-import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
+import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
