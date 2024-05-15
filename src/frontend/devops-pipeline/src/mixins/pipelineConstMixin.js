@@ -47,13 +47,13 @@ const pipelineConstMixin = {
                 totalTime: {
                     index: 7,
                     id: 'totalTime',
-                    label: 'details.totalCost',
+                    label: this.$t('details.totalCost'),
                     width: localStorage.getItem('totalTimeWidth') ?? 120
                 },
                 executeTime: {
                     index: 8,
                     prop: 'executeTime',
-                    label: this.$t('details.totalCost'),
+                    label: this.$t('details.executeTime'),
                     width: localStorage.getItem('executeTimeWidth') ? localStorage.getItem('executeTimeWidth') : 120
                 },
                 artifactList: {
