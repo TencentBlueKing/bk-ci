@@ -124,8 +124,10 @@ class InitializeMatrixGroupStageCmd(
                 buildId = parentContainer.buildId,
                 message = "Start preparing to generate build matrix...",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                jobId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount
+                containerHashId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
             )
             commandContext.buildStatus = BuildStatus.RUNNING
             val stageLock = StageMatrixLock(redisOperation, parentContainer.buildId, parentContainer.stageId)
@@ -145,8 +147,10 @@ class InitializeMatrixGroupStageCmd(
                 buildId = parentContainer.buildId,
                 message = "Abnormal matrix calculation: ${ignore.message}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                jobId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount
+                containerHashId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
             )
             0
         }
@@ -330,7 +334,8 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
@@ -445,7 +450,8 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
@@ -579,22 +585,28 @@ class InitializeMatrixGroupStageCmd(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Successfully saved count: ${buildContainerList.size}",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-            jobId = parentContainer.containerHashId,
-            executeCount = context.executeCount
+            containerHashId = parentContainer.containerHashId,
+            executeCount = context.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
         )
         buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-            jobId = parentContainer.containerHashId,
-            executeCount = context.executeCount
+            containerHashId = parentContainer.containerHashId,
+            executeCount = context.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
         )
         buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Start to run...",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-            jobId = parentContainer.containerHashId,
-            executeCount = context.executeCount
+            containerHashId = parentContainer.containerHashId,
+            executeCount = context.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
         )
 
         // 在详情中刷新所有分裂后的矩阵
@@ -678,41 +690,57 @@ class InitializeMatrixGroupStageCmd(
         // 打印参数矩阵
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         buildLogPrinter.addFoldStartLine(
             buildId = buildId, groupName = "[MATRIX] Job strategy:",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         this.strategy?.forEach { (key, valueList) ->
             buildLogPrinter.addLine(
                 buildId = buildId, message = "$key: $valueList",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
         buildLogPrinter.addFoldEndLine(
             buildId = buildId, groupName = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
 
         // 打印追加参数
         if (!this.include.isNullOrEmpty()) {
             buildLogPrinter.addFoldStartLine(
                 buildId = buildId, groupName = "[MATRIX] Include cases:",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
             buildLogPrinter.addFoldEndLine(
                 buildId = buildId, groupName = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
 
@@ -720,27 +748,37 @@ class InitializeMatrixGroupStageCmd(
         if (!this.exclude.isNullOrEmpty()) {
             buildLogPrinter.addFoldStartLine(
                 buildId = buildId, groupName = "[MATRIX] Exclude cases:",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
             printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
             buildLogPrinter.addFoldEndLine(
                 buildId = buildId, groupName = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
 
         // 打印最终结果
         buildLogPrinter.addFoldStartLine(
             groupName = "[MATRIX] After calculated, ${contextCaseList.size} jobs are generated:",
-            buildId = buildId, tag = taskId, jobId = containerHashId, executeCount = executeCount
+            buildId = buildId, tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
         contextCaseList.forEach { contextCase ->
             val nameBuilder = StringBuilder("$containerName(")
@@ -752,12 +790,16 @@ class InitializeMatrixGroupStageCmd(
             nameBuilder.append(")")
             buildLogPrinter.addLine(
                 buildId = buildId, message = nameBuilder.toString(),
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
+                tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                jobId = null,
+                stepId = taskId
             )
         }
         buildLogPrinter.addFoldEndLine(
             buildId = buildId, groupName = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+            jobId = null,
+            stepId = taskId
         )
     }
 
@@ -773,10 +815,14 @@ class InitializeMatrixGroupStageCmd(
             case.forEach { (key, value) ->
                 if (index++ == 0) buildLogPrinter.addLine(
                     buildId = buildId, message = "- $key: $value",
-                    tag = taskId, jobId = containerHashId, executeCount = executeCount
+                    tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                    jobId = null,
+                    stepId = taskId
                 ) else buildLogPrinter.addLine(
                     buildId = buildId, message = "  $key: $value",
-                    tag = taskId, jobId = containerHashId, executeCount = executeCount
+                    tag = taskId, containerHashId = containerHashId, executeCount = executeCount,
+                    jobId = null,
+                    stepId = taskId
                 )
             }
         }

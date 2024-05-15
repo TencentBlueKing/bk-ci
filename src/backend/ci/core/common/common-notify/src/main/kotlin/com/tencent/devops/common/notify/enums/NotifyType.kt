@@ -42,7 +42,7 @@ enum class NotifyType {
      */
     companion object {
         fun opEditable(): List<NotifyType> {
-            return listOf(EMAIL, RTX, WECHAT)
+            return listOf(EMAIL, RTX, WECHAT, WEWORK_GROUP)
         }
     }
 }

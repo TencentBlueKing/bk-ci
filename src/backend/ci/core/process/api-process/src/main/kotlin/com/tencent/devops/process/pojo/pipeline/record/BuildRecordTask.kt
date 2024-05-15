@@ -94,7 +94,8 @@ data class BuildRecordTask(
                         taskVar = element.initTaskVar(), timestamps = mapOf(),
                         elementPostInfo = it.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != it.taskId
-                        }
+                        },
+                        startTime = it.startTime, endTime = it.endTime
                     )
                 )
             }

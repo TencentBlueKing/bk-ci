@@ -144,7 +144,7 @@ interface ApigwBuildResourceV3 {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "要重试或跳过的插件ID，或者StageId", required = false)
+        @Parameter(description = "要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @Parameter(description = "仅重试所有失败Job", required = false)
@@ -239,7 +239,10 @@ interface ApigwBuildResourceV3 {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "构建详情", tags = ["v3_app_build_detail", "v3_user_build_detail"])

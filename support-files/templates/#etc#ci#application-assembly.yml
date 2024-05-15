@@ -323,6 +323,12 @@ store:
   templateApproveSwitch: close
   imageApproveSwitch: close
   defaultStaticFileFormat: jpg,png,svg,gif,jpeg
+  atom:
+    maxTimeout: 10080   # 最大插件超时时间
+    defaultTimeout: 900  # 默认插件超时时间
+    minTimeout: 1  # 最小插件超时时间
+    maxRetryNum: 5  # 最大插件自动重试次数
+    minRetryNum: 1
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 
 interface StoreNotifyService {
 
@@ -51,4 +52,11 @@ interface StoreNotifyService {
         cc: MutableSet<String>? = null,
         bcc: MutableSet<String>? = null
     ): Result<Boolean>
+
+    /**
+     * 发送组件发布审核结果通知消息
+     * @param storeId 组件ID
+     * @param auditType 审核类型
+     */
+    fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum)
 }

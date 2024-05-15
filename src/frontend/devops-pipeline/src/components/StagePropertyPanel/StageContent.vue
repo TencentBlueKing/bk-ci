@@ -16,12 +16,12 @@
                 </bk-select>
             </div>
         </form-field>
-        <stage-control v-if="stageIndex > 0" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :is-finally="stage.finally === true" :handle-stage-change="handleStageChange"></stage-control>
+        <stage-control v-if="!isTriggerStage" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :is-finally="stage.finally === true" :handle-stage-change="handleStageChange"></stage-control>
     </section>
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     import Vue from 'vue'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
@@ -42,6 +42,9 @@
             ...mapState('atom', [
                 'stageTagList'
             ]),
+            ...mapGetters('atom', [
+                'isTriggerContainer'
+            ]),
             stageTag: {
                 get () {
                     return this.stage.tag
@@ -52,6 +55,9 @@
             },
             stageTitle () {
                 return typeof this.stage !== 'undefined' ? this.stage.name : 'stage'
+            },
+            isTriggerStage () {
+                return this.isTriggerContainer(this.stage?.containers?.[0]) ?? false
             },
             stageControl () {
                 if (this.stage && this.stage.stageControlOption) {
@@ -67,11 +73,16 @@
             errors: {
                 deep: true,
                 handler: function (errors, old) {
+                    if (!this.editable) {
+                        return
+                    }
                     const isError = errors.any()
+
                     this.handleStageChange('isError', isError)
                 }
             }
         },
+
         methods: {
             ...mapActions('atom', [
                 'updateStage'

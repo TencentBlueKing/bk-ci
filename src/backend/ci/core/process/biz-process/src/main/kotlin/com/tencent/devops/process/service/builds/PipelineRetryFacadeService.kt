@@ -97,7 +97,14 @@ class PipelineRetryFacadeService @Autowired constructor(
         if (taskId.isNullOrEmpty()) {
             return false
         }
-        val targetTask = pipelineTaskService.getBuildTask(projectId, buildId, taskId) ?: return false
+        val targetTask = pipelineTaskService.getBuildTask(
+            projectId = projectId, buildId = buildId, taskId = taskId, stepId = null
+        ) ?: pipelineTaskService.getBuildTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = null,
+            stepId = taskId
+        ) ?: return false
         // 刷新当前job的开关机以及job状态， container状态， detail数据, record数据
         ContainerIdLock(redisOperation, buildId, targetTask.containerId).use {
             it.lock()
@@ -136,7 +143,8 @@ class PipelineRetryFacadeService @Autowired constructor(
             },
             tag = targetTask.taskId,
             jobId = targetTask.containerId,
-            executeCount = targetTask.executeCount ?: 1
+            executeCount = targetTask.executeCount ?: 1,
+            stepId = targetTask.stepId
         )
         return true
     }

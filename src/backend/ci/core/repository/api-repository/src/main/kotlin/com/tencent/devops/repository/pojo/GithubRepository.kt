@@ -48,7 +48,11 @@ data class GithubRepository(
     @get:Schema(title = "Git仓库ID", required = false)
     val gitProjectId: Long? = null,
     @get:Schema(title = "仓库凭证ID", required = false, hidden = true, nullable = true)
-    override val credentialId: String = ""
+    override val credentialId: String = "",
+    @get:Schema(title = "仓库是否开启pac", required = false)
+    override val enablePac: Boolean? = false,
+    @get:Schema(title = "yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
     companion object {
         const val classType = "github"

@@ -66,12 +66,15 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         buildId: String,
         debug: Boolean?,
         elementId: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
-            "OPENAPI_LOG_V4|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$jobId" +
+            "OPENAPI_LOG_V4|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|" +
+                "$containerHashId|$jobId|$stepId" +
                 "|$executeCount"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
@@ -80,9 +83,11 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             tag = elementId,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
             debug = debug,
+            jobId = jobId,
+            stepId = stepId,
             archiveFlag = archiveFlag
         )
     }
@@ -100,8 +105,10 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
@@ -119,8 +126,10 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             start = start,
             end = end,
             tag = tag,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId,
             archiveFlag = archiveFlag
         )
     }
@@ -135,8 +144,10 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         start: Long,
         debug: Boolean?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
@@ -151,8 +162,10 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             start = start,
             debug = debug,
             tag = tag,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId,
             archiveFlag = archiveFlag
         )
     }
@@ -165,8 +178,10 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         pipelineId: String?,
         buildId: String,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
         archiveFlag: Boolean?
     ): Response {
         logger.info("OPENAPI_LOG_V4|$userId|download logs|$projectId|$pipelineId|$buildId|$tag|$jobId|$executeCount")
@@ -176,7 +191,9 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         path.append("/$pipelineId/$buildId/download?executeCount=${executeCount ?: 1}")
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
+        if (!containerHashId.isNullOrBlank()) path.append("&containerHashId=$containerHashId")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
+        if (!stepId.isNullOrBlank()) path.append("&stepId=$stepId")
         if (archiveFlag != null) path.append("&archiveFlag=$archiveFlag")
         val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
         val devopsToken = EnvironmentUtil.gatewayDevopsToken()
@@ -201,8 +218,9 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        tag: String,
+        tag: String?,
         executeCount: Int?,
+        stepId: String?,
         archiveFlag: Boolean?
     ): Result<QueryLogStatus> {
         logger.info("OPENAPI_LOG_V4|$userId|get log mode|$projectId|$pipelineId|$buildId|$tag|$executeCount")
@@ -213,6 +231,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount,
+            stepId = stepId,
             archiveFlag = archiveFlag
         )
     }
