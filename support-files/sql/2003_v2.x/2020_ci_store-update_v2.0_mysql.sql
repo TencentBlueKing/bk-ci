@@ -151,9 +151,25 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                 FROM information_schema.COLUMNS
                 WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PIPELINE_REL'
+                    AND COLUMN_NAME = 'PROJECT_CODE') THEN
+       ALTER TABLE T_STORE_PIPELINE_REL ADD COLUMN `PROJECT_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '项目代码';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_STORE_PROJECT_REL'
                     AND COLUMN_NAME = 'PROJECT_CODE') THEN
-       ALTER TABLE T_STORE_PROJECT_REL ADD COLUMN `PROJECT_CODE` varchar(32) NOT NULL DEFAULT '' COMMENT '项目代码';
+       ALTER TABLE T_STORE_PROJECT_REL MODIFY COLUMN PROJECT_CODE varchar(64) NOT NULL COMMENT '所属项目';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_APPROVE_REL'
+                    AND COLUMN_NAME = 'TEST_PROJECT_CODE') THEN
+       ALTER TABLE T_ATOM_APPROVE_REL MODIFY COLUMN TEST_PROJECT_CODE varchar(64) NOT NULL COMMENT '调试项目编码';
     END IF;
 
     COMMIT;
