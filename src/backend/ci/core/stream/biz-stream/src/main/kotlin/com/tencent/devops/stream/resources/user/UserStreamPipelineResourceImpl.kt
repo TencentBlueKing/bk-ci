@@ -52,7 +52,8 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
         keyword: String?,
         page: Int?,
         pageSize: Int?,
-        filePath: String?
+        filePath: String?,
+        pipelineId: String?
     ): Result<Page<StreamGitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
@@ -68,7 +69,8 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
                 keyword = keyword,
                 page = page,
                 pageSize = pageSize,
-                filePath = filePath
+                filePath = filePath,
+                pipelineId = pipelineId
             )
         )
     }
