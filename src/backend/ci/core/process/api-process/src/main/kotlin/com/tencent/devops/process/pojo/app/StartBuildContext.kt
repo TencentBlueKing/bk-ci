@@ -85,6 +85,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.utils.PipelineVarUtil.CONTEXT_PREFIX
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -403,8 +404,6 @@ data class StartBuildContext(
             debugModel = null,
             yamlVersion = null
         )
-
-        private const val CONTEXT_PREFIX = "variables."
 
         /**
          * 根据[realStartParamKeys]启动参数Key列表读取[pipelineParamMap]参数值来生成流水线启动变量列表，不包含其他

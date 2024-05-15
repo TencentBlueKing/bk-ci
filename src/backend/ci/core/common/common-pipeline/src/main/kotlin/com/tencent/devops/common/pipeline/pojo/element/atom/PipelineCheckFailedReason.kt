@@ -25,33 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import com.tencent.devops.common.web.utils.I18nUtil
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
-import org.slf4j.LoggerFactory
+import io.swagger.v3.oas.annotations.media.Schema
 
-@BkExceptionMapper
-    class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(ErrorCodeExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: ErrorCodeException): Response {
-        logger.warn("Failed with errorCode client exception:$exception")
-        val errorResult = I18nUtil.generateResponseDataObject(
-            messageCode = exception.errorCode,
-            params = exception.params,
-            data = exception.data,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-            defaultMessage = exception.defaultMessage
-        )
-
-        return Response.status(exception.statusCode).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(errorResult).build()
-    }
-}
+/**
+ * 流水线校验失败原因
+ */
+@Schema(title = "流水线校验失败原因")
+class PipelineCheckFailedReason(
+    @get:Schema(title = "失败标题,多个插件校验时相同的错误", required = true)
+    val errorTitle: String,
+    @get:Schema(title = "失败详情,具体哪个插件失败详情", required = true)
+    val errorDetails: List<String>
+)

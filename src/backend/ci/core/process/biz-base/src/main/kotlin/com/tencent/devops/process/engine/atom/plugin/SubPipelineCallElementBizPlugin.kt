@@ -30,36 +30,20 @@ package com.tencent.devops.process.engine.atom.plugin
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import org.springframework.beans.factory.annotation.Autowired
 
 @ElementBiz
-class MarketBuildAtomElementBizPlugin @Autowired constructor(
+class SubPipelineCallElementBizPlugin @Autowired constructor(
     private val elementBizPluginServices: List<IElementBizPluginService>
-) : ElementBizPlugin<MarketBuildAtomElement> {
+) : ElementBizPlugin<SubPipelineCallElement> {
 
-    override fun elementClass(): Class<MarketBuildAtomElement> {
-        return MarketBuildAtomElement::class.java
-    }
-
-    override fun afterCreate(
-        element: MarketBuildAtomElement,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode,
-        create: Boolean,
-        container: Container
-    ) = Unit
-
-    override fun beforeDelete(element: MarketBuildAtomElement, param: BeforeDeleteParam) {
-        val inputMap = element.data["input"] as Map<String, Any>
-        MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), element.version, param)
+    override fun elementClass(): Class<SubPipelineCallElement> {
+        return SubPipelineCallElement::class.java
     }
 
     override fun check(
@@ -67,7 +51,7 @@ class MarketBuildAtomElementBizPlugin @Autowired constructor(
         userId: String,
         stage: Stage,
         container: Container,
-        element: MarketBuildAtomElement,
+        element: SubPipelineCallElement,
         contextMap: Map<String, String>,
         appearedCnt: Int
     ): ElementCheckResult {
@@ -83,4 +67,17 @@ class MarketBuildAtomElementBizPlugin @Autowired constructor(
             appearedCnt = appearedCnt
         ) ?: ElementCheckResult(true)
     }
+
+    override fun beforeDelete(element: SubPipelineCallElement, param: BeforeDeleteParam) = Unit
+
+    override fun afterCreate(
+        element: SubPipelineCallElement,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode,
+        create: Boolean,
+        container: Container
+    ) = Unit
 }
