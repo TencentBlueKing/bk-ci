@@ -15,7 +15,7 @@
         @change="handleSelect"
     >
     </bk-tag-input>
-    
+
 </template>
 
 <script>
@@ -92,7 +92,7 @@
                     </div>
                 )
             },
-            
+
             localCoverAvatar (data) {
                 const member = data.isBkVar() ? 'un_know' : data
                 return `${USER_IMG_URL}/avatars/${member}/avatar.jpg`
@@ -109,7 +109,7 @@
                         acc[item] = true
                         return acc
                     }, {})
-                    
+
                     const res = await Promise.all(value.map(item => {
                         if (currentValueMap[item] || item.isBkVar()) {
                             return true

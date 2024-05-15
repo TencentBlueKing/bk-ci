@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionModel
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件发布部署模型")
@@ -61,7 +62,7 @@ data class ReleaseInfo(
     @get:Schema(title = "标签标识集合", description = "labelCodes")
     val labelCodes: ArrayList<String>? = null,
     @get:Schema(title = "版本信息", required = true)
-    val versionInfo: VersionInfo,
+    val versionInfo: VersionModel,
     @get:Schema(title = "插件简介", required = true)
     @field:BkField(maxLength = 256)
     val summary: String,

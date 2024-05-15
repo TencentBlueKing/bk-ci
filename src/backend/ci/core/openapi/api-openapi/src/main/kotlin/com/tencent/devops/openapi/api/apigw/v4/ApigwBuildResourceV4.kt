@@ -153,7 +153,7 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "构建号(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildNumber")
         buildNumber: Int?,
-        @Parameter(description = "要重试或跳过的插件ID，或者StageId", required = false)
+        @Parameter(description = "要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @Parameter(description = "仅重试所有失败Job", required = false)
@@ -308,7 +308,10 @@ interface ApigwBuildResourceV4 {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "构建详情", tags = ["v4_app_build_detail", "v4_user_build_detail"])
@@ -491,11 +494,14 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "构建ID（b-开头）", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "步骤Id（e-开头）", required = true)
+        @Parameter(description = "步骤Id（e-开头）", required = false)
         @QueryParam("elementId")
-        elementId: String,
+        elementId: String?,
         @Parameter(description = "审核信息", required = true)
-        params: ReviewParam
+        params: ReviewParam,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(

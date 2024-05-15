@@ -37,7 +37,7 @@ dependencies {
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":ext:tencent:auth:api-auth-tencent"))
     api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
+    api(project(":ext:tencent:misc:api-support-tencent"))
     api(project(":core:notify:api-notify"))
     api(project(":core:metrics:api-metrics"))
 }

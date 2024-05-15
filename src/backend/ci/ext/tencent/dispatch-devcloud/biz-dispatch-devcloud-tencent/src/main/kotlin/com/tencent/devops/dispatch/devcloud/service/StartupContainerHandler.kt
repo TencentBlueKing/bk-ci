@@ -212,8 +212,10 @@ abstract class StartupContainerHandler @Autowired constructor(
                 buildId = buildId,
                 message = message,
                 tag = VMUtils.genStartVMTaskId(vmSeqId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = jobId,
+                stepId = VMUtils.genStartVMTaskId(vmSeqId)
             )
         }
     }

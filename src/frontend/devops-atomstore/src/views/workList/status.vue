@@ -25,6 +25,7 @@
         vertical-align: text-top;
         margin-right: 2px;
         &.bk-spin-loading {
+            display: inline-block !important;
             width: 14px;
             height: 14px;
         }

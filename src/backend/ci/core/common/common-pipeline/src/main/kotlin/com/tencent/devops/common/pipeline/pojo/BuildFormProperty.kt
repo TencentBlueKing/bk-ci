@@ -35,12 +35,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class BuildFormProperty(
     @get:Schema(title = "元素ID-标识符", required = true)
     var id: String,
+    @get:Schema(title = "元素名称", required = true)
+    var name: String? = null,
     @get:Schema(title = "是否必须", required = true)
     var required: Boolean,
+    @get:Schema(title = "是否为常量", required = true)
+    var constant: Boolean? = false,
     @get:Schema(title = "元素类型", required = true)
     val type: BuildFormPropertyType,
     @get:Schema(title = "默认值", required = true)
     var defaultValue: Any,
+    @get:Schema(title = "上次构建的取值", required = true)
+    var value: Any? = null,
     @get:Schema(title = "下拉框列表", required = false)
     var options: List<BuildFormValue>?,
     @get:Schema(title = "描述", required = false)
@@ -79,5 +85,9 @@ data class BuildFormProperty(
     @get:Schema(title = "替换搜索url中的搜素关键字", required = false)
     var replaceKey: String? = null,
     @get:Schema(title = "是否只读", required = false)
-    val readOnly: Boolean? = false
+    var readOnly: Boolean? = false,
+    @get:Schema(title = "参数值是否必填", required = false)
+    val valueNotEmpty: Boolean? = false,
+    @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
+    val payload: Any? = null
 )

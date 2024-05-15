@@ -60,7 +60,9 @@ data class WorkspaceSearch(
     @get:Schema(title = "协助工单，仅op有效")
     var expertSupId: List<Long>? = null,
     @get:Schema(title = "是否模糊匹配，可以关闭，查询会更快。")
-    val onFuzzyMatch: Boolean = true
+    val onFuzzyMatch: Boolean = true,
+    @get:Schema(title = "是否匹配owner类型")
+    val workspaceOwnerType: List<WorkspaceOwnerType>? = null
 ) {
     fun onlyNeedCheckWorkspace() = !needCheckDetail() &&
             owner.isNullOrEmpty() &&

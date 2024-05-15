@@ -966,15 +966,17 @@ class PipelineContainerService @Autowired constructor(
                     if (context.currentBuildNo == null) { // 兼容buildNo为空的情况
 
                         context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(
-                            dslContext = dslContext, projectId = context.projectId, pipelineId = context.pipelineId
-                        )
-                            ?: let {
-                                if (needAddCurrentBuildNo) {
-                                    0
-                                } else {
-                                    buildNoObj.buildNo
-                                }
+                            dslContext = dslContext,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
+                            debug = context.debug
+                        ) ?: let {
+                            if (needAddCurrentBuildNo) {
+                                0
+                            } else {
+                                buildNoObj.buildNo
                             }
+                        }
                     }
 
                     if (needAddCurrentBuildNo) { // buildNo根据数据库的记录值每次新增1
@@ -986,7 +988,8 @@ class PipelineContainerService @Autowired constructor(
                             dslContext = dslContext,
                             projectId = context.projectId,
                             pipelineId = context.pipelineId,
-                            buildNo = context.currentBuildNo!!
+                            buildNo = context.currentBuildNo!!,
+                            debug = context.debug
                         )
                     }
                 }
@@ -1048,8 +1051,10 @@ class PipelineContainerService @Autowired constructor(
                     message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
                             " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
                     tag = context.firstTaskId,
-                    jobId = container.id,
-                    executeCount = context.executeCount
+                    containerHashId = container.id,
+                    executeCount = context.executeCount,
+                    jobId = container.jobId,
+                    stepId = atomElement.stepId
                 )
                 return
             }

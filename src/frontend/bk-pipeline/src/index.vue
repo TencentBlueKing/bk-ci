@@ -35,18 +35,18 @@
     import { eventBus, hashID, isTriggerContainer } from './util'
 
     import {
-        CLICK_EVENT_NAME,
-        DELETE_EVENT_NAME,
-        COPY_EVENT_NAME,
-        ATOM_REVIEW_EVENT_NAME,
-        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ADD_STAGE,
+        ATOM_ADD_EVENT_NAME,
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
-        ATOM_ADD_EVENT_NAME,
-        ADD_STAGE,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
+        CLICK_EVENT_NAME,
+        COPY_EVENT_NAME,
+        DEBUG_CONTAINER,
+        DELETE_EVENT_NAME,
         STAGE_CHECK,
-        STAGE_RETRY,
-        DEBUG_CONTAINER
+        STAGE_RETRY
     } from './constants'
 
     const customEvents = [
@@ -131,7 +131,10 @@
             })
 
             return {
-                reactiveData
+                reactiveData,
+                emitPipelineChange: () => {
+                    this.emitPipelineChange(this.pipeline)
+                }
             }
         },
         data () {
@@ -143,16 +146,13 @@
         computed: {
             computedStages: {
                 get () {
-                    return this.pipeline?.stages?.map((stage) => Object.assign(stage, {
-                        isTrigger: this.checkIsTriggerStage(stage)
-                    })) ?? []
+                    return this.pipeline?.stages ?? []
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
                         const name = `stage-${index + 1}`
                         const id = `s-${hashID()}`
                         if (!stage.containers) {
-                            // container
                             return {
                                 id,
                                 name,
@@ -185,21 +185,6 @@
                 }
             }
         },
-        watch: {
-            'pipeline.stages': {
-                deep: true,
-                handler: function () {
-                    this.$emit('input', this.pipeline)
-                    this.$emit('change', this.pipeline)
-                }
-            },
-            'pipeline.name': {
-                handler: function () {
-                    this.$emit('input', this.pipeline)
-                    this.$emit('change', this.pipeline)
-                }
-            }
-        },
         mounted () {
             this.registeCustomEvent()
         },
@@ -208,6 +193,10 @@
             this.registeCustomEvent(true)
         },
         methods: {
+            emitPipelineChange (newVal) {
+                this.$emit('input', newVal)
+                this.$emit('change', newVal)
+            },
             registeCustomEvent (destory = false) {
                 customEvents.forEach((eventName) => {
                     const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
@@ -225,6 +214,7 @@
             },
             updatePipeline (model, params) {
                 Object.assign(model, params)
+                this.emitPipelineChange(model)
             },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
@@ -249,9 +239,11 @@
             },
             handleCopyStage ({ stageIndex, stage }) {
                 this.pipeline.stages.splice(stageIndex + 1, 0, stage)
+                this.emitPipelineChange()
             },
             handleDeleteStage (stageId) {
                 this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
+                this.emitPipelineChange()
             },
             expandPostAction (stageId, matrixId, containerId) {
                 return new Promise((resolve, reject) => {

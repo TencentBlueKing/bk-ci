@@ -57,3 +57,15 @@ data class TGitSvnAuth(
 data class TGitSvnAuthUser(
     val username: String?
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TGitGroupInfo(
+    val id: Long,
+    @JsonProperty("full_path")
+    val fullPath: String
+)
+
+enum class TGitNamespaceKind(val text: String) {
+    GROUP("Group"),
+    USER("User")
+}

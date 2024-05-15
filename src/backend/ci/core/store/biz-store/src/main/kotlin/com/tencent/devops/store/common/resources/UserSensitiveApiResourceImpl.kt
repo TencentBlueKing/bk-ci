@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserSensitiveApiResource
-import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
-import com.tencent.devops.store.pojo.common.SensitiveApiInfo
-import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
-import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiApplyReq
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiNameInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiSearchDTO
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.SensitiveApiService
 import org.springframework.beans.factory.annotation.Autowired

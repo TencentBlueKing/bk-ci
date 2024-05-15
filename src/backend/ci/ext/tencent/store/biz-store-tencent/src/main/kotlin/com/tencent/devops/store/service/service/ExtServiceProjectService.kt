@@ -40,6 +40,7 @@ import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.service.dao.ExtItemServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
@@ -98,10 +99,12 @@ class ExtServiceProjectService @Autowired constructor(
         logger.info("installService serviceId=${serviceRecord.id},publicFlag=${serviceFeature?.publicFlag}")
         return storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = projectCodeList,
             storeId = serviceRecord.id,
-            storeCode = serviceRecord.serviceCode,
-            storeType = StoreTypeEnum.SERVICE,
+            installStoreReq = InstallStoreReq(
+                projectCodes = projectCodeList,
+                storeCode = serviceRecord.serviceCode,
+                storeType = StoreTypeEnum.SERVICE
+            ),
             publicFlag = serviceFeature?.publicFlag ?: false,
             channelCode = channelCode
         )

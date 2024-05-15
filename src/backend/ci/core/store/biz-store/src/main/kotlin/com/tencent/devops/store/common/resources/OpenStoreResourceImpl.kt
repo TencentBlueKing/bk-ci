@@ -48,7 +48,7 @@ class OpenStoreResourceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : OpenStoreResource {
 
-    override fun validateProjectAtomPermission(
+    override fun validateProjectComponentPermission(
         token: String,
         projectCode: String,
         storeCode: String,
@@ -72,7 +72,7 @@ class OpenStoreResourceImpl @Autowired constructor(
                 storeProjectService.isInstalledByProject(
                     projectCode = projectCode,
                     storeCode = storeCode,
-                    storeType = StoreTypeEnum.ATOM.type.toByte()
+                    storeType = storeType.type.toByte()
                 )
         )
     }

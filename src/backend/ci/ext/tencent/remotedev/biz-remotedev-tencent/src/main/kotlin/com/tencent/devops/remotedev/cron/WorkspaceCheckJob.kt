@@ -307,6 +307,12 @@ class WorkspaceCheckJob @Autowired constructor(
                 }.onFailure {
                     logger.warn("notifyWhenNotActiveIn14Days fail ${it.message}", it)
                 }
+                // 云桌面处于待分配没有超过3天的邮件提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWhenNotAssign()
+                }.onFailure {
+                    logger.warn("notifyWhenNotAssign fail ${it.message}", it)
+                }
             }
         } catch (e: Throwable) {
             logger.error("projectWinJob failed", e)

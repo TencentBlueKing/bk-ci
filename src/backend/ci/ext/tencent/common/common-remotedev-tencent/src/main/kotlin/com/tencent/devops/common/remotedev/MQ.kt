@@ -11,4 +11,9 @@ object MQ {
     const val QUEUE_WORKSPACE_CREATE_STARTUP = "q.engine.remotedev.workspace.listener.create"
     const val ROUTE_WORKSPACE_OPERATE_STARTUP = "r.engine.remotedev.workspace.listener.operate"
     const val QUEUE_WORKSPACE_OPERATE_STARTUP = "q.engine.remotedev.workspace.listener.operate"
+
+    // 服务内异步事件实现
+    const val EXCHANGE_REMOTE_DEV_ASYNC_EXECUTE = "e.remotedev.async.execute"
+    const val ROUTE_REMOTE_DEV_ASYNC_EXECUTE = "r.remotedev.async.execute"
+    const val QUEUE_REMOTE_DEV_ASYNC_EXECUTE = "q.remotedev.async.execute"
 }

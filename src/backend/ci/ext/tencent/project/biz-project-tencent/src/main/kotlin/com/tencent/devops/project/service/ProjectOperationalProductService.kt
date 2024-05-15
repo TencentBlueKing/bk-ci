@@ -24,6 +24,9 @@ class ProjectOperationalProductService constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectOperationalProductService::class.java)
+        private const val IEG_CHINESE_NAME = "IEG互动娱乐事业群"
+        private const val TEG_CHINESE_NAME = "TEG技术工程事业群"
+        private const val WXG_CHINESE_NAME = "WXG微信事业群"
     }
 
     private val executor = Executors.newSingleThreadExecutor()
@@ -54,6 +57,9 @@ class ProjectOperationalProductService constructor(
             val bgList = getOperationalProductsByDictType(
                 dictType = ProjectProductDictType.BG
             )
+            // 同步时，清空缓存，防止数据重复
+            productInfoList.clear()
+            bgName2ProductList.clear()
             obsProductList.forEach { obsProductInfo ->
                 val planProductInfo = planProductList.firstOrNull {
                     it.planProductId == obsProductInfo.planProductId
@@ -90,7 +96,8 @@ class ProjectOperationalProductService constructor(
     }
 
     fun listProductByBgName(bgName: String): List<OperationalProductVO>? {
-        return if (bgName2ProductList.containsKey(bgName)) {
+        // 由于历史原因，用户注册OBS运营产品时的BG名称，有些已经和现在现存的BG对应不上了，所以需要进行特殊处理。
+        return if (bgName == IEG_CHINESE_NAME || bgName == WXG_CHINESE_NAME || bgName == TEG_CHINESE_NAME) {
             bgName2ProductList[bgName]
         } else {
             bgName2ProductList["all"]

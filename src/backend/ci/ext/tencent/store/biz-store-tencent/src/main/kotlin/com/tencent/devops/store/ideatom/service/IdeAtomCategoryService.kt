@@ -28,7 +28,7 @@
 package com.tencent.devops.store.ideatom.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.category.Category
 
 interface IdeAtomCategoryService {
 

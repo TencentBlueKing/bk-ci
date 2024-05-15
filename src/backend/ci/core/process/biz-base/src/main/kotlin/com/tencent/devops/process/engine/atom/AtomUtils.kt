@@ -55,7 +55,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
-import com.tencent.devops.store.pojo.common.StoreVersion
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 
 object AtomUtils {
 
@@ -124,8 +124,10 @@ object AtomUtils {
                 buildId = task.buildId,
                 message = "Prepare ${element.name}(${atomRunInfo.atomName})",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atoms[atomCode] = atomRunInfo.initProjectCode
         }
@@ -171,12 +173,14 @@ object AtomUtils {
                 version = "1.*"
             }
             val atomCode = element.getAtomCode()
-            atomVersions.add(StoreVersion(
+            atomVersions.add(
+                StoreVersion(
                 storeCode = atomCode,
                 storeName = element.name,
                 version = version,
                 historyFlag = false
-            ))
+            )
+            )
         }
         return atomVersions
     }

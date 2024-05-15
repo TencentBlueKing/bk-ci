@@ -5,8 +5,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
@@ -158,6 +161,17 @@ interface ServiceRemoteDevResource {
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 
+    @Operation(summary = "用来通知云桌面消息, 附带发送机器IP校验")
+    @POST
+    @Path("/notify/desktop")
+    fun notifyDesktopCheckIp(
+        @Parameter(description = "发送机器IP，必填", required = true)
+        @QueryParam("ip")
+        ip: String,
+        @Parameter(description = "通知信息", required = true)
+        notifyData: WorkspaceDesktopNotifyData
+    ): Result<Boolean>
+
     @Operation(summary = "获取windows硬件配置")
     @GET
     @Path("/resourceType/list")
@@ -197,4 +211,75 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "创建windows工作空间-项目")
+    @POST
+    @Path("/project_win_workspace")
+    fun createProjectWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "创建内容", required = true)
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean>
+
+    @Operation(summary = "删除windows工作空间-项目")
+    @DELETE
+    @Path("/project_win_workspace")
+    fun deleteProjectWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间-项目")
+    @GET
+    @Path("/project_win_workspace")
+    fun getProjectWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "获取专家求助单据数据")
+    @GET
+    @Path("/fetch_expert_sup_record")
+    fun fetchExpertSupRecord(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "从什么时间起的数据", required = true)
+        @QueryParam("createLaterTime")
+        createLaterTimestamp: Long
+    ): Result<List<SupRecordData>>
+
+    @Operation(summary = "获取windows空闲资源数据")
+    @GET
+    @Path("/get_all_windows_resource_quota")
+    fun getWindowsQuota(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "获取类型", required = true)
+        @QueryParam("type")
+        type: QuotaType
+    ): Result<Map<String, Map<String, Int>>>
 }

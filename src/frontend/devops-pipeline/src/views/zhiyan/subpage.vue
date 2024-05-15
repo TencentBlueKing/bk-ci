@@ -48,7 +48,7 @@
                     return
                 }
 
-                this.$refs.pipeline[action](...args)
+                this.$refs.pipeline?.[action]?.(...args)
             },
             onPipelineUpdate (name, value) {
                 if (!this.$refs.pipeline) {

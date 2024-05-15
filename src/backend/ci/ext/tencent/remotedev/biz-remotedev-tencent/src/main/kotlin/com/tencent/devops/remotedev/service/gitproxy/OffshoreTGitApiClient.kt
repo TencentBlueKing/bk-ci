@@ -2,10 +2,13 @@ package com.tencent.devops.remotedev.service.gitproxy
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.TGitConfig
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import okhttp3.Dns
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -39,14 +42,14 @@ class OffshoreTGitApiClient @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?,
         type: TGitProjectType
     ): List<TGitProjectInfo> {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects?access_token=$accessToken&page=$page&per_page=$pageSize"
-            .addParams(
-                mapOf(
-                    "search" to search,
-                    "min_access_level" to minAccessLevel?.level,
-                    "type" to type.name
-                )
-            )
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects".addQuery(
+            "access_token" to accessToken,
+            "page" to page,
+            "per_page" to pageSize,
+            "search" to search,
+            "min_access_level" to minAccessLevel?.level,
+            "type" to type.name
+        )
         val request = Request.Builder()
             .url(url)
             .get()
@@ -74,7 +77,10 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         userId: String
     ): List<TGitProjectMember>? {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/members/all?access_token=$accessToken&query=$userId"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/members/all".addQuery(
+            "access_token" to accessToken,
+            "query" to userId
+        )
         val request = Request.Builder()
             .url(url)
             .get()
@@ -106,7 +112,10 @@ class OffshoreTGitApiClient @Autowired constructor(
         accessToken: String,
         projectId: String
     ): TGitSvnAuth? {
-        val url = "${tGitConfig.tGitUrl}/api/v3/svn/projects/$projectId/authority?access_token=$accessToken&dir_path=/"
+        val url = "${tGitConfig.tGitUrl}/api/v3/svn/projects/$projectId/authority".addQuery(
+            "access_token" to accessToken,
+            "dir_path" to "/"
+        )
         val request = Request.Builder()
             .url(url)
             .get()
@@ -126,12 +135,102 @@ class OffshoreTGitApiClient @Autowired constructor(
         }
     }
 
+    fun getNamespaces(
+        accessToken: String,
+        page: Int,
+        pageSize: Int
+    ): List<TGitNamespace> {
+        val url = "${tGitConfig.tGitUrl}/api/v3/namespaces".addQuery(
+            "access_token" to accessToken,
+            "page" to page,
+            "per_page" to pageSize,
+            "min_access_level" to GitAccessLevelEnum.MASTER.level
+        )
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        try {
+            doRetryHttp(request).use { response ->
+                val data = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("getNamespaces fail|{}|{}", response.code, data)
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.REQ_TGIT_API_ERROR.errorCode,
+                        params = arrayOf("/api/v3/namespaces", data)
+                    )
+                }
+                return JsonUtil.to(data, object : TypeReference<List<TGitNamespace>>() {})
+            }
+        } catch (e: ErrorCodeException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("getNamespaces error", e)
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.REQ_TGIT_API_ERROR.errorCode,
+                params = arrayOf("/api/v3/namespaces", e.localizedMessage)
+            )
+        }
+    }
+
+    fun createProject(
+        accessToken: String,
+        name: String,
+        namespaceId: Long?,
+        svnProject: Boolean
+    ): TGitProjectInfo {
+        val uri = if (svnProject) {
+            "api/v3/svn/projects"
+        } else {
+            "api/v3/projects"
+        }
+        val url = "${tGitConfig.tGitUrl}/$uri".addQuery(
+            "policy" to "offshore",
+            "access_token" to accessToken
+        )
+
+        val body = mutableMapOf(
+            "name" to name
+        )
+        if (namespaceId != null) {
+            body["namespace_id"] = namespaceId.toString()
+        }
+
+        val request = Request.Builder()
+            .url(url)
+            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        try {
+            doRetryHttp(request).use { response ->
+                val data = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("createProject fail|{}|{}|{}", uri, response.code, data)
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.REQ_TGIT_API_ERROR.errorCode,
+                        params = arrayOf(uri, data)
+                    )
+                }
+                return JsonUtil.to(data, object : TypeReference<TGitProjectInfo>() {})
+            }
+        } catch (e: ErrorCodeException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("createProject $uri error", e)
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.REQ_TGIT_API_ERROR.errorCode,
+                params = arrayOf(uri, e.localizedMessage)
+            )
+        }
+    }
+
     fun getProjectAcl(
         accessToken: String,
         projectId: String
     ): TGitAclConfig? {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config" +
-                "?policy=offshore&access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config".addQuery(
+            "policy" to "offshore",
+            "access_token" to accessToken
+        )
         val request = Request.Builder()
             .url(url)
             .get()
@@ -156,8 +255,10 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         ips: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_ips" +
-                "?policy=offshore&access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_ips".addQuery(
+            "policy" to "offshore",
+            "access_token" to accessToken
+        )
         val body = mapOf(
             "allow_ips" to ips.joinToString(";")
         )
@@ -185,8 +286,10 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         users: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_users" +
-                "?policy=offshore&access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_users".addQuery(
+            "policy" to "offshore",
+            "access_token" to accessToken
+        )
         val body = mapOf(
             "allow_users" to users.joinToString(";")
         )
@@ -214,8 +317,10 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         ips: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_allow_ips" +
-                "?policy=offshore&access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_allow_ips".addQuery(
+            "policy" to "offshore",
+            "access_token" to accessToken
+        )
         val body = mapOf(
             "spec_allow_ips" to ips.joinToString(";")
         )
@@ -243,8 +348,10 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         users: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_hit_users" +
-                "?policy=offshore&access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_hit_users".addQuery(
+            "policy" to "offshore",
+            "access_token" to accessToken
+        )
         val body = mapOf(
             "spec_hit_users" to users.joinToString(";")
         )
@@ -280,11 +387,17 @@ class OffshoreTGitApiClient @Autowired constructor(
         }
     }
 
-    private fun String.addParams(args: Map<String, Any?>): String {
+    private fun String.addQuery(vararg pairs: Pair<String, Any?>): String {
         val sb = StringBuilder(this)
-        args.forEach { (name, value) ->
+        var flag = 0
+        pairs.forEach { (name, value) ->
             if (value != null) {
-                sb.append("&$name=$value")
+                flag += 1
+                if (flag == 1) {
+                    sb.append("?$name=$value")
+                } else {
+                    sb.append("&$name=$value")
+                }
             }
         }
         return sb.toString()

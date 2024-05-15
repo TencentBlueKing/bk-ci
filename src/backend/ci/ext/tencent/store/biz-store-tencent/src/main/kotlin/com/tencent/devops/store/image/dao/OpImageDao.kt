@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.image.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
@@ -146,7 +147,7 @@ class OpImageDao @Autowired constructor() {
             baseStep = baseStep.join(tImageLabelRel).on(tImage.ID.eq(tImageLabelRel.IMAGE_ID))
             conditions.add(tImageLabelRel.LABEL_ID.`in`(labelIdList))
         }
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
+        return baseStep.where(conditions).skipCheck().fetchOne(0, Int::class.java)!!
     }
 
     fun listOpImages(
@@ -266,7 +267,7 @@ class OpImageDao @Autowired constructor() {
             baseStep
         }
         logger.info("$interfaceName:listOpImages:SQL:${limitStep.getSQL(true)}")
-        return limitStep.fetch()
+        return limitStep.skipCheck().fetch()
     }
 
     private fun generateQueryOpImageCondition(

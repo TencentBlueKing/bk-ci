@@ -50,5 +50,7 @@ data class PipelineNewViewSummary(
     @get:Schema(title = "流水线组类型,1--动态,2--静态", required = true)
     val viewType: Int,
     @get:Schema(title = "流水线个数", required = true)
-    val pipelineCount: Int
+    val pipelineCount: Int,
+    @get:Schema(title = "是否是PAC流水线组", required = true)
+    val pac: Boolean? = false
 )
