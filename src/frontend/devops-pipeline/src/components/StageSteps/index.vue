@@ -4,7 +4,7 @@
             <span v-if="step.tooltip" v-bk-tooltips="step.tooltip" :class="`stage-step ${step.statusCls}`" :key="step.icon">
                 <logo :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`" :name="step.icon" size="16" />
             </span>
-            <span v-else v-bk-tooltips="progressTooltips" @click.stop="getProgress(step)" :class="`stage-step ${step.statusCls}`" :key="step.icon">
+            <span v-else v-bk-tooltips="progressTooltips(step)" :class="`stage-step ${step.statusCls}`" :key="step.icon">
                 <logo :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`" :name="step.icon" size="16" />
             </span>
         </template>
@@ -29,15 +29,6 @@
                 required: true
             }
         },
-        data () {
-            return {
-                progressTooltips: {
-                    content: '<i class="devops-icon icon-circle-2-1 spin-icon"/>',
-                    placement: 'bottom',
-                    delay: [500, 0]
-                }
-            }
-        },
         methods: {
             getRunningCls (statusCls) {
                 return statusCls === 'RUNNING' ? ' spin-icon' : ''
@@ -46,6 +37,14 @@
                 const precision = 10000
                 if (typeof progress !== 'number') return ''
                 return `${parseInt(Math.min(1, progress) * precision * 100, 10) / precision}%`
+            },
+            progressTooltips (step) {
+                return {
+                    content: '<i class="devops-icon icon-circle-2-1 spin-icon"/>',
+                    placement: 'bottom',
+                    delay: [500, 0],
+                    onShow: this.getProgress(step)
+                }
             },
             async getProgress (step) {
                 try {
