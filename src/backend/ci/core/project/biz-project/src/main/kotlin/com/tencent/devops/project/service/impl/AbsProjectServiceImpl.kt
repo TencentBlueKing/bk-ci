@@ -1557,11 +1557,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         deptName: String?
     )
 
-    override fun getByProjectId(projectId: String): ProjectVO? {
-        val record = projectDao.get(dslContext, projectId) ?: return null
-        return ProjectUtils.packagingBean(record)
-    }
-
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!

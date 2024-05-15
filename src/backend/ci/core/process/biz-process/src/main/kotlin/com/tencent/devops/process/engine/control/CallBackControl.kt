@@ -42,7 +42,7 @@ import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.BuildEvent
 import com.tencent.devops.common.pipeline.event.CallBackData
 import com.tencent.devops.common.pipeline.event.CallBackEvent
-import com.tencent.devops.common.pipeline.event.CallbackConstants.PROJECT_CALLBACK_FLAG
+import com.tencent.devops.common.pipeline.event.CallbackConstants.DEVOPS_ALL_PROJECT
 import com.tencent.devops.common.pipeline.event.PipelineEvent
 import com.tencent.devops.common.pipeline.event.ProjectCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
@@ -129,10 +129,6 @@ class CallBackControl @Autowired constructor(
         callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_UPDATE)
     }
 
-    fun projectUpdateLogo(projectId: String, projectName: String) {
-        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_UPDATE_LOGO)
-    }
-
     fun projectEnable(projectId: String, projectName: String) {
         callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_ENABLE)
     }
@@ -193,7 +189,7 @@ class CallBackControl @Autowired constructor(
     ) {
         logger.info("$projectId|$projectName|$callBackEvent|callback project event")
         val list = projectPipelineCallBackService.listProjectCallBack(
-            projectId = PROJECT_CALLBACK_FLAG,
+            projectId = DEVOPS_ALL_PROJECT,
             events = callBackEvent.name
         )
         if (list.isEmpty()) {

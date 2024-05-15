@@ -9,7 +9,6 @@ import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -29,10 +28,6 @@ class ProjectCallbackEventListener @Autowired constructor(
             when (event) {
                 is ProjectUpdateBroadCastEvent -> {
                     onReceiveProjectUpdate(event)
-                }
-
-                is ProjectUpdateLogoBroadCastEvent -> {
-                    onReceiveProjectUpdateLogo(event)
                 }
 
                 is ProjectEnableStatusBroadCastEvent -> {
@@ -65,19 +60,6 @@ class ProjectCallbackEventListener @Autowired constructor(
     }
 
     /**
-     *  处理更新Logo项目事件
-     *  @param event ProjectUpdateLogoBroadCastEvent
-     */
-    fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
-        // 此处的projectId为项目的ID
-        // 参考：com.tencent.devops.project.service.impl.AbsProjectServiceImpl.update
-        // 参考：com.tencent.devops.project.service.impl.AbsProjectServiceImpl.updateLogo
-        getProject(projectId = event.projectId)?.let {
-            callbackControl.projectUpdateLogo(event.projectId, it.projectName)
-        }
-    }
-
-    /**
      *  处理项目禁用事件
      *  @param event ProjectEnableStatusBroadCastEvent
      */
@@ -93,24 +75,13 @@ class ProjectCallbackEventListener @Autowired constructor(
         }
     }
 
-    private fun getProject(projectId: String? = null, projectEnglishName: String? = null): ProjectVO? {
+    private fun getProject(projectEnglishName: String? = null): ProjectVO? {
+        if (projectEnglishName.isNullOrBlank()) return null
         return try {
-            client.get(ServiceProjectResource::class).let {
-                when {
-                    !projectId.isNullOrBlank() -> {
-                        it.getById(projectId).data
-                    }
-
-                    !projectEnglishName.isNullOrBlank() -> {
-                        it.get(projectEnglishName).data
-                    }
-
-                    else -> null
-                }
-            }
+            client.get(ServiceProjectResource::class).get(projectEnglishName).data
         } catch (ignored: Exception) {
             logger.warn(
-                "fail to get project info|projectId[$projectId]|projectEnglishName[$projectEnglishName]",
+                "fail to get project info|projectEnglishName[$projectEnglishName]",
                 ignored
             )
             null

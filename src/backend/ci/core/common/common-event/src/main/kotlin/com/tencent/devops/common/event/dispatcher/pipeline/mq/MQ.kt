@@ -269,7 +269,6 @@ object MQ {
     const val QUEUE_PROJECT_ENABLE_EVENT = "q.project.enable.project.queue"
     const val QUEUE_PROJECT_CREATE_CALLBACK_EVENT = "q.project.create.project.callback.queue"
     const val QUEUE_PROJECT_UPDATE_CALLBACK_EVENT = "q.project.update.project.callback.queue"
-    const val QUEUE_PROJECT_UPDATE_LOGO_CALLBACK_EVENT = "q.project.update.logo.project.callback.queue"
     const val QUEUE_PROJECT_ENABLE_CALLBACK_EVENT = "q.project.enable.project.callback.queue"
 
     // 蓝盾监控数据上报事件广播

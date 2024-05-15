@@ -101,8 +101,7 @@ enum class CallBackEvent {
     PROJECT_CREATE,
     PROJECT_UPDATE,
     PROJECT_ENABLE,
-    PROJECT_DISABLE,
-    PROJECT_UPDATE_LOGO
+    PROJECT_DISABLE
 }
 
 data class PipelineEvent(
@@ -176,5 +175,5 @@ data class ProjectCallbackEvent(
 
 object CallbackConstants {
     // 项目级回调标志位
-    const val PROJECT_CALLBACK_FLAG = "devops_project_callback_flag"
+    const val DEVOPS_ALL_PROJECT = "DEVOPS_ALL_PROJECT"
 }

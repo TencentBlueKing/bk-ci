@@ -276,10 +276,4 @@ class ServiceProjectResourceImpl @Autowired constructor(
             projectService.getExistedEnglishName(englishName)
         )
     }
-
-    override fun getById(projectId: String): Result<ProjectVO?> {
-        return Result(
-            projectService.getByProjectId(projectId)
-        )
-    }
 }

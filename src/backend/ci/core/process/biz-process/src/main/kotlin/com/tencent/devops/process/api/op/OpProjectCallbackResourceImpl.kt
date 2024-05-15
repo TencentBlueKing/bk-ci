@@ -30,7 +30,7 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
-import com.tencent.devops.common.pipeline.event.CallbackConstants.PROJECT_CALLBACK_FLAG
+import com.tencent.devops.common.pipeline.event.CallbackConstants.DEVOPS_ALL_PROJECT
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.pojo.secret.ISecretParam
 import com.tencent.devops.common.web.RestResource
@@ -55,7 +55,7 @@ class OpProjectCallbackResourceImpl @Autowired constructor(
         return Result(
             projectPipelineCallBackService.createCallBack(
                 userId = userId,
-                projectId = PROJECT_CALLBACK_FLAG,
+                projectId = DEVOPS_ALL_PROJECT,
                 region = region,
                 event = eventType.name,
                 secretParam = secretParam,
@@ -69,7 +69,7 @@ class OpProjectCallbackResourceImpl @Autowired constructor(
     override fun delete(userId: String, id: Long): Result<Boolean> {
         projectPipelineCallBackService.delete(
             userId = userId,
-            projectId = PROJECT_CALLBACK_FLAG,
+            projectId = DEVOPS_ALL_PROJECT,
             id = id,
             needCheckPermission = false
         )
@@ -79,7 +79,7 @@ class OpProjectCallbackResourceImpl @Autowired constructor(
     override fun list(userId: String, event: CallBackEvent): Result<List<ProjectPipelineCallBack>> {
         return Result(
             projectPipelineCallBackService.listProjectCallBack(
-                projectId = PROJECT_CALLBACK_FLAG,
+                projectId = DEVOPS_ALL_PROJECT,
                 events = event.name
             )
         )

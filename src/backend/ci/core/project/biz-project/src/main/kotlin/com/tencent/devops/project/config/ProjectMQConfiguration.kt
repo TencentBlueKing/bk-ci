@@ -66,9 +66,6 @@ class ProjectMQConfiguration {
     fun projectUpdateLogoQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_LOGO_EVENT)
 
     @Bean
-    fun projectEnableQueue() = Queue(MQ.QUEUE_PROJECT_ENABLE_EVENT)
-
-    @Bean
     fun projectCreateExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
         fanoutExchange.isDelayed = true
@@ -116,13 +113,6 @@ class ProjectMQConfiguration {
         @Autowired projectUpdateLogoExchange: FanoutExchange
     ): Binding = BindingBuilder.bind(projectUpdateLogoQueue)
         .to(projectUpdateLogoExchange)
-
-    @Bean
-    fun projectEnableQueueBind(
-        @Autowired projectEnableQueue: Queue,
-        @Autowired projectEnableExchange: FanoutExchange
-    ): Binding = BindingBuilder.bind(projectEnableQueue)
-        .to(projectEnableExchange)
 
     @Bean
     fun projectCreateListenerContainer(

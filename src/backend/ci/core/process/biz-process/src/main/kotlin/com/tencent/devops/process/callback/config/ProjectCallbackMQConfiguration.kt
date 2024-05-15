@@ -36,9 +36,6 @@ class ProjectCallbackMQConfiguration {
     fun projectUpdateCallbackQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_CALLBACK_EVENT)
 
     @Bean
-    fun projectUpdateLogoCallbackQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_LOGO_CALLBACK_EVENT)
-
-    @Bean
     fun projectEnableCallbackQueue() = Queue(MQ.QUEUE_PROJECT_ENABLE_CALLBACK_EVENT)
 
     @Bean
@@ -51,13 +48,6 @@ class ProjectCallbackMQConfiguration {
     @Bean
     fun projectUpdateExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun projectUpdateLogoExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
@@ -82,13 +72,6 @@ class ProjectCallbackMQConfiguration {
         @Autowired projectUpdateExchange: FanoutExchange
     ): Binding = BindingBuilder.bind(projectUpdateCallbackQueue)
         .to(projectUpdateExchange)
-
-    @Bean
-    fun projectUpdateLogoQueueBind(
-        @Autowired projectUpdateLogoCallbackQueue: Queue,
-        @Autowired projectUpdateLogoExchange: FanoutExchange
-    ): Binding = BindingBuilder.bind(projectUpdateLogoCallbackQueue)
-        .to(projectUpdateLogoExchange)
 
     @Bean
     fun projectEnableQueueBind(
@@ -126,25 +109,6 @@ class ProjectCallbackMQConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(projectUpdateCallbackQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
-    }
-
-    @Bean
-    fun projectUpdateLogoCallbackQueue(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectUpdateLogoCallbackQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: ProjectCallbackEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectUpdateLogoCallbackQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
         container.setAmqpAdmin(rabbitAdmin)

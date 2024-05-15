@@ -280,6 +280,4 @@ interface ProjectService {
         userId: String,
         englishName: String
     ): Boolean
-
-    fun getByProjectId(projectId: String): ProjectVO?
 }

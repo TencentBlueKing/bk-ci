@@ -14,6 +14,6 @@ data class HeaderSecretParam(
     }
 
     companion object {
-        const val classType = "default"
+        const val classType = "header"
     }
 }

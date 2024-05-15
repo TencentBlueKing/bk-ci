@@ -378,13 +378,4 @@ interface ServiceProjectResource {
         @QueryParam("englishName")
         englishName: List<String>
     ): Result<List<String>?>
-
-    @GET
-    @Path("/id/{projectId}")
-    @Operation(summary = "查询指定ID的项目")
-    fun getById(
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<ProjectVO?>
 }

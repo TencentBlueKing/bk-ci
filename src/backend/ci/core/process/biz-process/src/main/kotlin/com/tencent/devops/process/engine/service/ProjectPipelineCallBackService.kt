@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
