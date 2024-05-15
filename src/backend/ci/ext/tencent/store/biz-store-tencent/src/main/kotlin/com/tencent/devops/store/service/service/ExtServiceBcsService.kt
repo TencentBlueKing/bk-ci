@@ -192,11 +192,7 @@ class ExtServiceBcsService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val namespaceName = if (!grayFlag) {
-            extServiceBcsNameSpaceConfig.namespaceName
-        } else {
-            extServiceBcsNameSpaceConfig.grayNamespaceName
-        }
+        val namespaceName = "dev-base"
         val deployApp = generateDeployApp(
             userId = userId,
             namespaceName = namespaceName,
