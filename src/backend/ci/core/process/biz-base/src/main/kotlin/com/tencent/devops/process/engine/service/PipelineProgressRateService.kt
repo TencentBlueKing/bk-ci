@@ -24,13 +24,13 @@ class PipelineProgressRateService constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildRecordService: ContainerBuildRecordService,
     private val buildRecordTaskDao: BuildRecordTaskDao,
-    private val dslContext: DSLContext,
+    private val dslContext: DSLContext
 ) {
     fun reportProgressRate(
         projectId: String,
         buildId: String,
         executeCount: Int = 1,
-        jobHeartbeatRequest: JobHeartbeatRequest?,
+        jobHeartbeatRequest: JobHeartbeatRequest?
     ) {
         logger.info("report progress rate:$projectId|$buildId|$executeCount|$jobHeartbeatRequest")
         val task2ProgressRate = jobHeartbeatRequest?.task2ProgressRate ?: return
@@ -55,7 +55,7 @@ class PipelineProgressRateService constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        stageId: String,
+        stageId: String
     ): BuildStageProgressInfo {
         val buildInfo = pipelineRuntimeService.getBuildInfo(
             projectId = projectId,
@@ -115,7 +115,7 @@ class PipelineProgressRateService constructor(
         buildId: String,
         executeCount: Int,
         stageId: String,
-        containerId: String,
+        containerId: String
     ): String {
         val stageOrder = stageId.replace("stage-", "").toInt() - 1
         val jobOrder = buildRecordService.getContainerOrderInStage(
