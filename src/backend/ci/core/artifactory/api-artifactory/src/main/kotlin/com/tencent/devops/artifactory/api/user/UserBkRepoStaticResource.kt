@@ -29,6 +29,8 @@ package com.tencent.devops.artifactory.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -63,6 +65,7 @@ interface UserBkRepoStaticResource {
         disposition: FormDataContentDisposition,
         @Parameter(description = "类型", required = false)
         @QueryParam("type")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE, required = false)
         type: String? = null
     ): Result<String?>
 }
