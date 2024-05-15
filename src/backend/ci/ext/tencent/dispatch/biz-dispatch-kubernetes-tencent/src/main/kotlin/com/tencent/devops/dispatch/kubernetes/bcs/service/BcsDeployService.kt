@@ -92,8 +92,8 @@ class BcsDeployService @Autowired constructor(
         // 创建deployment无状态部署
         val deployment = DeploymentBuilder()
             .withNewMetadata()
-            .addToLabels("bkci.dispatch.kubenetes", serviceCode)
             .withName(serviceCode)
+            .addToLabels("bkci.dispatch.kubenetes", serviceCode)
             .endMetadata()
             .withNewSpec()
             .withReplicas(appDeployment.replicas)
