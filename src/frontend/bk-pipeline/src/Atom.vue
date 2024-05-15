@@ -390,7 +390,7 @@
             progressRate () {
                 const precision = 10000
                 return typeof this.atom.progressRate === 'number'
-                    ? (Math.min(1, this.atom.progressRate) * precision * 100) / precision
+                    ? parseInt(Math.min(1, this.atom.progressRate) * precision * 100, 10) / precision
                     : ''
             }
         },

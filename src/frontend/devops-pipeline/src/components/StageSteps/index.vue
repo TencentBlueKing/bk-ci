@@ -45,7 +45,7 @@
             calcProgress (progress) {
                 const precision = 10000
                 if (typeof progress !== 'number') return ''
-                return `${(Math.min(1, progress) * precision * 100) / precision}%`
+                return `${parseInt(Math.min(1, progress) * precision * 100, 10) / precision}%`
             },
             async getProgress (step) {
                 try {
