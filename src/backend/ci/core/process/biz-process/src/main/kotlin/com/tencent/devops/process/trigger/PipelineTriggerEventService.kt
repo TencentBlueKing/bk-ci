@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
