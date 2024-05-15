@@ -552,7 +552,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             downloads = statistic.downloads,
             score = statistic.score,
             summary = storeBaseRecord.summary,
-            description = storeBaseRecord.description,
+            description = storeBaseRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                 dslContext = dslContext,
                 userId = userId,
