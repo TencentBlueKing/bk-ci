@@ -63,7 +63,7 @@
                                 'tab-item': true,
                                 'active': filterTab === tab.id
                             }"
-                            @click="filterTab = tab.id">
+                            @click="handleToggleTab(tab)">
                             {{ tab.name }}
                         </div>
                     </div>
@@ -306,6 +306,10 @@
             },
             getEventDescTitle (str) {
                 return str.replace(/(<\/?font.*?>)|(<\/?span.*?>)|(<\/?a.*?>)/gi, '')
+            },
+            handleToggleTab (tab) {
+                this.filterTab = tab.id
+                this.getEventDetail()
             }
         }
     }
@@ -409,6 +413,7 @@
             border: 1px solid #dfe0e5;
             border-bottom: none;
             .tab-item {
+                font-size: 12px;
                 height: 42px;
                 line-height: 42px;
                 padding: 0 15px;
