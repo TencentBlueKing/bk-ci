@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.TxStoreVisibleDeptResource
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.approval.StoreVisibleDeptReq
-import com.tencent.devops.store.pojo.common.approval.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptReq
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 

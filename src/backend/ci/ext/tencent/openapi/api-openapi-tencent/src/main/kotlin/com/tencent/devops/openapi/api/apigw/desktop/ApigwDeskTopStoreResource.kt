@@ -36,6 +36,7 @@ interface ApigwDeskTopStoreResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
         storeType: StoreTypeEnum
     ): Result<List<Classify>>
 }

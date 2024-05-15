@@ -27,17 +27,13 @@
 
 package com.tencent.devops.store.api.template
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.approval.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.approval.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -48,20 +44,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpTemplateResource {
-
-    @Operation(summary = "审核可见范围")
-    @PUT
-    @Path("/{templateCode}/visible/approve/")
-    fun approveVisibleDept(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "标识", required = true)
-        @PathParam("templateCode")
-        templateCode: String,
-        @Parameter(description = "可见范围审核请求报文", required = true)
-        visibleApproveReq: VisibleApproveReq
-    ): Result<Boolean>
 
     @Operation(summary = "查看可见范围")
     @GET

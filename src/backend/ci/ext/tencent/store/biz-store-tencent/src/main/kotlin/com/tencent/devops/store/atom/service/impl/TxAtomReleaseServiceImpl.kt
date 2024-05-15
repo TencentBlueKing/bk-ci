@@ -771,7 +771,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     )
                     AtomStatusEnum.BUILDING
                 }
-                storePipelineRelDao.add(context, atomCode, StoreTypeEnum.ATOM, atomMarketInitPipelineResp.pipelineId)
+                storePipelineRelDao.add(
+                    dslContext = context,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM,
+                    pipelineId = atomMarketInitPipelineResp.pipelineId,
+                    projectCode = initProjectCode
+                )
                 marketAtomDao.setAtomStatusById(
                     dslContext = context,
                     atomId = atomId,

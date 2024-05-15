@@ -29,12 +29,13 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.logo.Logo
 import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -45,6 +46,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_STORE_LOGO", description = "STORE-LOGO")
@@ -68,7 +70,10 @@ interface UserStoreLogoResource {
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        @Parameter(description = "store组件类型", required = false)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum? = null
     ): Result<StoreLogoInfo?>
 
     @Operation(summary = "获取logo列表")
