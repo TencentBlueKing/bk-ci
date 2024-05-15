@@ -99,7 +99,7 @@ class BcsDeployService @Autowired constructor(
             .withStrategy(deploymentStrategy)
             .withNewTemplate()
             .withNewMetadata()
-            .addToLabels(defaultLabelKey, serviceCode)
+//            .addToLabels(defaultLabelKey, serviceCode)
             .addToLabels("bkci.dispatch.kubenetes", serviceCode)
             .addToAnnotations("dummy", "du_" + System.currentTimeMillis()) // 保证滚动更新时每次从仓库拉取最新镜像
             .endMetadata()
@@ -132,7 +132,7 @@ class BcsDeployService @Autowired constructor(
             .endTemplate()
             .withNewSelector()
             .addToMatchLabels("bkci.dispatch.kubenetes", serviceCode)
-            .addToMatchLabels(defaultLabelKey, serviceCode)
+//            .addToMatchLabels(defaultLabelKey, serviceCode)
             .endSelector()
             .endSpec()
             .build()
