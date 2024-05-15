@@ -27,27 +27,38 @@
 
 package com.tencent.devops.store.common.resources
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
-import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreBuildService
+import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreErrorCodeService
 import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.classify.Classify
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("LongParameterList")
 class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val sensitiveConfService: UserSensitiveConfService,
     private val storeBuildService: StoreBuildService,
-    private val storeErrorCodeService: StoreErrorCodeService
+    private val storeErrorCodeService: StoreErrorCodeService,
+    private val storeCommonService: StoreCommonService,
+    private val storeMemberService: StoreMemberService,
+    private val classifyService: ClassifyService,
+    private val redisOperation: RedisOperation
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -68,10 +79,9 @@ class ServiceStoreResourceImpl @Autowired constructor(
 
     override fun isStoreMember(storeCode: String, storeType: StoreTypeEnum, userId: String): Result<Boolean> {
         return Result(
-            SpringContextUtil.getBean(
-                clazz = StoreMemberService::class.java,
-                beanName = "${storeType.name.lowercase()}MemberService"
-            ).isStoreMember(userId, storeCode, storeType.type.toByte())
+            storeMemberService.isStoreMember(
+                userId, storeCode, storeType.type.toByte()
+            )
         )
     }
 
@@ -89,5 +99,34 @@ class ServiceStoreResourceImpl @Autowired constructor(
                 errorCodeType = errorCodeType
             )
         )
+    }
+
+    override fun validateProjectComponentPermission(
+        projectCode: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean> {
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
+        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+            // 如果从缓存中查出该组件是公共组件则无需权限校验
+            return Result(true)
+        }
+        val checkFlag = storeCommonService.getStorePublicFlagByCode(storeCode, storeType) ||
+            storeProjectService.isInstalledByProject(
+                projectCode = projectCode,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        if (!checkFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
+                params = arrayOf(projectCode, storeCode)
+            )
+        }
+        return Result(true)
+    }
+
+    override fun getClassifyList(storeType: StoreTypeEnum): Result<List<Classify>> {
+        return classifyService.getAllClassify(storeType.type.toByte())
     }
 }

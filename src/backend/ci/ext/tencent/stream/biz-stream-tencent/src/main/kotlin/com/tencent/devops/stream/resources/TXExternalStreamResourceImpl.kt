@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.stream.api.TXExternalStreamResource
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -88,6 +89,7 @@ class TXExternalStreamResourceImpl(
                             language = I18nUtil.getLanguage(userId)
                         ), data = exception.message)).build()
                 }
+                val enabled = client.get(ServiceProjectResource::class).get(projectId).data?.productId != null
 
                 val setting = streamBasicSettingService.getStreamConf(gitProjectId)
                 if (setting == null) {
@@ -95,14 +97,14 @@ class TXExternalStreamResourceImpl(
                         userId = userId,
                         projectId = projectId,
                         gitProjectId = gitProjectId,
-                        enabled = true
+                        enabled = enabled
                     )
                 } else {
                     streamBasicSettingService.updateProjectSetting(
                         gitProjectId = gitProjectId,
                         authUserId = oauthUserId,
                         userId = userId,
-                        enableCi = true
+                        enableCi = enabled
                     )
 
                     // 更新项目信息

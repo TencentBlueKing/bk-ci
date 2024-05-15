@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.common.service.StoreNotifyService
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
@@ -44,5 +45,9 @@ class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService
     ): Result<Boolean> {
         // 开源版暂不支持消息服务
         return Result(true)
+    }
+
+    override fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum) {
+        // 开源版暂不支持消息服务
     }
 }

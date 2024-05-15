@@ -50,7 +50,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
-import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import io.mockk.every
 import io.mockk.mockk

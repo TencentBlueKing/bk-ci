@@ -28,8 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Category
-import com.tencent.devops.store.pojo.common.CategoryRequest
+import com.tencent.devops.store.pojo.common.category.Category
+import com.tencent.devops.store.pojo.common.category.CategoryRequest
 import org.jooq.Record
 
 /**
@@ -69,4 +69,14 @@ interface CategoryService {
      * 为范畴集合添加范畴
      */
     fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>)
+
+    /**
+     * 根据组件关联获取范畴信息
+     */
+    fun getByRelStoreId(storeId: String): List<Category>
+
+    /**
+     * 根据组件关联获取范畴信息
+     */
+    fun getByRelStoreIds(storeIds: List<String>): Map<String, List<Category>>
 }

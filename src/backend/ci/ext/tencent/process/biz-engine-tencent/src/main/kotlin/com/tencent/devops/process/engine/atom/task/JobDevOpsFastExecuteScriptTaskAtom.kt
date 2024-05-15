@@ -106,7 +106,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 taskInstanceId = taskInstanceId,
                 operator = operator,
                 buildId = buildId,
-                executeCount = executeCount
+                executeCount = executeCount,
+                stepId = task.stepId
             )
         )
     }
@@ -126,7 +127,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
 
         if (param.content.isBlank()) {
             logger.warn("content is not init of build($buildId)")
-            buildLogPrinter.addRedLine(buildId, "content is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "content is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -138,7 +147,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
 
         if (param.type < 0) {
             logger.warn("type is not init of build($buildId)")
-            buildLogPrinter.addRedLine(buildId, "type is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "type is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -148,7 +165,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         }
         if (param.envType.isBlank()) {
             logger.warn("envType is not init of build($buildId)")
-            buildLogPrinter.addRedLine(buildId, "envType is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "envType is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -160,7 +185,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val envTypeValue = parseVariable(param.envType, runVariables)
         if (envTypeValue == "ENV" && (param.envId == null || param.envId!!.isEmpty())) {
             logger.warn("EnvId is not init of build($buildId)")
-            buildLogPrinter.addRedLine(buildId, "EnvId is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "EnvId is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -170,7 +203,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         }
         if (envTypeValue == "ENV_NAME" && (param.envName == null || param.envName!!.isEmpty())) {
             logger.warn("EnvName is not init of build($buildId)")
-            buildLogPrinter.addRedLine(buildId, "EnvName is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "EnvName is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -180,7 +221,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         }
         if (envTypeValue == "NODE" && (param.nodeId == null || param.nodeId!!.isEmpty())) {
             logger.warn("NodeId is not init of build($buildId)")
-            buildLogPrinter.addRedLine(buildId, "NodeId is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "NodeId is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -192,7 +241,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         if (param.account.isBlank()) {
             logger.warn("ipList is not init of build($buildId)")
 
-            buildLogPrinter.addRedLine(buildId, "account is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "account is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -220,11 +277,13 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         } catch (e: IllegalArgumentException) {
             logger.warn("Invalid content, it's not in valid Base64 scheme")
             buildLogPrinter.addRedLine(
-                buildId,
-                "Invalid content, it's not in valid Base64 scheme",
-                taskId,
-                containerId,
-                executeCount
+                buildId = buildId,
+                message = "Invalid content, it's not in valid Base64 scheme",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
             )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -245,11 +304,13 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
             logger.info("operator:$operator, lastModifyUser:$lastModifyUser")
             buildLogPrinter.addLine(
-                buildId,
-                "Will use $lastModifyUser to distribute file...",
-                taskId,
-                containerId,
-                executeCount
+                buildId = buildId,
+                message = "Will use $lastModifyUser to distribute file...",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
             )
 
             operator = lastModifyUser
@@ -258,7 +319,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val envSet = when (envTypeValue) {
             "NODE" -> {
                 if (param.nodeId == null || param.nodeId!!.isEmpty()) {
-                    buildLogPrinter.addRedLine(buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = "EnvId is not init",
+                        tag = taskId,
+                        containerHashId = containerId,
+                        executeCount = executeCount,
+                        jobId = null,
+                        stepId = task.stepId
+                    )
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
@@ -269,7 +338,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             }
             "ENV" -> {
                 if (param.envId == null || param.envId!!.isEmpty()) {
-                    buildLogPrinter.addRedLine(buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = "EnvId is not init",
+                        tag = taskId,
+                        containerHashId = containerId,
+                        executeCount = executeCount,
+                        jobId = null,
+                        stepId = task.stepId
+                    )
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
@@ -281,18 +358,44 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             }
             "ENV_NAME" -> {
                 if (param.envName == null || param.envName!!.isEmpty()) {
-                    buildLogPrinter.addRedLine(buildId, "EnvName is not init", taskId, containerId, executeCount)
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = "EnvName is not init",
+                        tag = taskId,
+                        containerHashId = containerId,
+                        executeCount = executeCount,
+                        jobId = null,
+                        stepId = task.stepId
+                    )
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL.toInt(),
                         errorMsg = "EnvName is not init"
                     ) }
                 val targetEnvName = parseVariable(param.envName!!.joinToString(","), runVariables).split(",").toList()
-                val envIdList = checkAuth(buildId, taskId, containerId, executeCount, operator, projectId, targetEnvName, client)
+                val envIdList = checkAuth(
+                    buildId = buildId,
+                    taskId = taskId,
+                    containerId = containerId,
+                    executeCount = executeCount,
+                    operator = operator,
+                    projectId = projectId,
+                    envNameList = targetEnvName,
+                    client = client,
+                    stepId = task.stepId
+                )
                 EnvSet(envIdList, listOf(), listOf())
             }
             else -> {
-                buildLogPrinter.addRedLine(buildId, "Unsupported EnvType: $type ", taskId, containerId, executeCount)
+                buildLogPrinter.addRedLine(
+                    buildId = buildId,
+                    message = "Unsupported EnvType: $type ",
+                    tag = taskId,
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = task.stepId
+                )
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -302,17 +405,32 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             }
         }
 
-        checkEnvNodeExists(buildId, taskId, containerId, executeCount, operator, projectId, envSet, client)
+        checkEnvNodeExists(
+            buildId = buildId,
+            taskId = taskId,
+            containerId = containerId,
+            executeCount = executeCount,
+            operator = operator,
+            projectId = projectId,
+            envSet = envSet,
+            client = client,
+            stepId = task.stepId
+        )
 
         val fastExecuteScriptReq = FastExecuteScriptRequest(
             operator, contentValue, scriptTimeout, scriptParamsValue,
             if (isParamSensitive) 1 else 0, type, envSet, account
         )
         val taskInstanceId = jobClient.fastExecuteScriptDevops(fastExecuteScriptReq, projectId)
-        buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
-            messageCode = BK_VIEW_RESULT,
-            language = I18nUtil.getDefaultLocaleLanguage()
-        ) + jobClient.getDetailUrl(projectId, taskInstanceId), task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(
+            buildId = buildId, message = MessageUtil.getMessageByLocale(
+                messageCode = BK_VIEW_RESULT,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + jobClient.getDetailUrl(projectId, taskInstanceId), tag = task.taskId,
+            containerHashId = containerId, executeCount = executeCount,
+            jobId = null,
+            stepId = task.stepId
+        )
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -324,7 +442,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            stepId = task.stepId
         )
 
         task.taskParams[STARTER] = operator
@@ -332,7 +451,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            buildLogPrinter.addLine(buildId, "Waiting for job:$taskInstanceId", task.taskId, containerId, executeCount)
+            buildLogPrinter.addLine(
+                buildId = buildId,
+                message = "Waiting for job:$taskInstanceId",
+                tag = task.taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
         }
 
         return AtomResponse(buildStatus)
@@ -347,17 +474,20 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         buildId: String,
         taskId: String,
         containerId: String?,
-        executeCount: Int
+        executeCount: Int,
+        stepId: String?
     ): BuildStatus {
 
         if (System.currentTimeMillis() - startTime > maxRunningMills) {
             logger.warn("job getTimeout. getTimeout minutes:${maxRunningMills / 60000}")
             buildLogPrinter.addRedLine(
-                buildId,
-                "Job getTimeout: ${maxRunningMills / 60000} Minutes",
-                taskId,
-                containerId,
-                executeCount
+                buildId = buildId,
+                message = "Job getTimeout: ${maxRunningMills / 60000} Minutes",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = stepId
             )
             return BuildStatus.EXEC_TIMEOUT
         }
@@ -367,11 +497,27 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                buildLogPrinter.addLine(buildId, taskResult.msg, taskId, containerId, executeCount)
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = taskResult.msg,
+                    tag = taskId,
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
+                )
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                buildLogPrinter.addRedLine(buildId, taskResult.msg, taskId, containerId, executeCount)
+                buildLogPrinter.addRedLine(
+                    buildId = buildId,
+                    message = taskResult.msg,
+                    tag = taskId,
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
+                )
                 BuildStatus.FAILED
             }
         } else {
@@ -387,7 +533,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         operator: String,
         projectId: String,
         envNameList: List<String>,
-        client: Client
+        client: Client,
+        stepId: String?
     ): MutableList<String> {
         val envList =
             client.get(ServiceEnvironmentResource::class).listRawByEnvNames(operator, projectId, envNameList).data
@@ -400,10 +547,14 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
-            buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
-                messageCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ) + "$noExistsEnvNames", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId, message = MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$noExistsEnvNames", tag = taskId, containerHashId = containerId, executeCount = executeCount,
+                jobId = null,
+                stepId = stepId
+            )
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS.toInt(),
@@ -424,10 +575,14 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
-            buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
-                messageCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ) + "$noAuthEnvIds", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId, message = MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$noAuthEnvIds", tag = taskId, containerHashId = containerId, executeCount = executeCount,
+                jobId = null,
+                stepId = stepId
+            )
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI.toInt(),
@@ -448,7 +603,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         operator: String,
         projectId: String,
         envSet: EnvSet,
-        client: Client
+        client: Client,
+        stepId: String?
     ) {
         if (envSet.envHashIds.isNotEmpty()) {
             val envList = client.get(ServiceEnvironmentResource::class)
@@ -461,14 +617,16 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             if (noExistsEnvIds.isNotEmpty()) {
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 buildLogPrinter.addRedLine(
-                    buildId,
-                    MessageUtil.getMessageByLocale(
+                    buildId = buildId,
+                    message = MessageUtil.getMessageByLocale(
                         messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$noExistsEnvIds",
-                    taskId,
-                    containerId,
-                    executeCount
+                    tag = taskId,
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
@@ -491,14 +649,16 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             if (noExistsNodeIds.isNotEmpty()) {
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 buildLogPrinter.addRedLine(
-                    buildId,
-                    MessageUtil.getMessageByLocale(
+                    buildId = buildId,
+                    message = MessageUtil.getMessageByLocale(
                         messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$noExistsNodeIds",
-                    taskId,
-                    containerId,
-                    executeCount
+                    tag = taskId,
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,

@@ -44,6 +44,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -51,7 +52,6 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -158,15 +158,23 @@ class PipelineBuildSummaryDao {
                 dslContext.update(this)
                     .set(numColumn, numColumn + 1)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
-                    .set(LATEST_BUILD_ID, buildId)
-                    .set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
+                    .let {
+                        /* debug 模式构建不需要更新状态 */
+                        if (!debug) {
+                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
+                        } else it
+                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
                     .set(numColumn, buildNum)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
-                    .set(LATEST_BUILD_ID, buildId)
-                    .set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
+                    .let {
+                        /* debug 模式构建不需要更新状态 */
+                        if (!debug) {
+                            it.set(LATEST_BUILD_ID, buildId).set(LATEST_STATUS, BuildStatus.QUEUE.ordinal)
+                        } else it
+                    }
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
             return dslContext.select(numColumn)

@@ -82,8 +82,12 @@
                 }
             },
 
-            fullScreen () {
+            fullScreen (val) {
                 this.$el.classList.toggle('ace-full-screen')
+                const parent = document.querySelector('.bk-sideslider.bkci-property-panel')
+                if (parent) {
+                    parent.classList.toggle('with-ace-full-screen')
+                }
             }
         },
         async mounted () {

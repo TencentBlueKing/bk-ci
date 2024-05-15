@@ -28,7 +28,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum

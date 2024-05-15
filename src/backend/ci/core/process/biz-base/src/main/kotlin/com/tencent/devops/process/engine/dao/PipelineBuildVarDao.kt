@@ -96,14 +96,14 @@ class PipelineBuildVarDao @Autowired constructor() {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        key: String? = null
+        keys: Set<String>? = null
     ): MutableMap<String, String> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-            if (key != null) {
-                where.and(KEY.eq(key))
+            if (!keys.isNullOrEmpty()) {
+                where.and(KEY.`in`(keys))
             }
             val result = where.fetch()
             val map = mutableMapOf<String, String>()

@@ -92,4 +92,20 @@ class ServiceVarResourceImpl @Autowired constructor(
             rewriteReadOnly = data.rewriteReadOnly
         )
     }
+
+    override fun getBuildVars(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        keys: Set<String>?
+    ): Result<Map<String, String>> {
+        return Result(
+            buildVariableService.getAllVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                keys = keys
+            )
+        )
+    }
 }

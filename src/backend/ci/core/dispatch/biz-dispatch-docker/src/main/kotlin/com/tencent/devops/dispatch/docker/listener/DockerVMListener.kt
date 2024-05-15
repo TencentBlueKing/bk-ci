@@ -241,8 +241,10 @@ class DockerVMListener @Autowired constructor(
             buildId = event.buildId,
             message = "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
         )
 
         var poolNo = 0

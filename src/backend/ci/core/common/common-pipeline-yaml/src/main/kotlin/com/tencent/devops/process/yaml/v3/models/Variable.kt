@@ -74,13 +74,10 @@ interface IVariable
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
     val value: String?,
-    val name: String? = null,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = false,
+    val allowModifyAtStartup: Boolean? = true,
     val const: Boolean? = null,
-    @JsonProperty("required")
-    val valueNotEmpty: Boolean? = false,
     val props: VariableProps? = null
 ) : IVariable
 
@@ -101,13 +98,13 @@ data class TemplateVariable(private val list: List<Extends>) : List<Extends> by 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class VariableProps(
-    val label: String? = null,
-    val type: String,
+    var label: String? = null,
+    val type: String? = null,
     val options: List<VariablePropOption>? = null,
     val datasource: VariableDatasource? = null,
-    val description: String? = null,
+    var description: String? = null,
     val multiple: Boolean? = null,
-    val required: Boolean? = null,
+    var required: Boolean? = null,
     @JsonProperty("repo-id")
     @get:Schema(title = "repo-id")
     val repoHashId: String? = null,

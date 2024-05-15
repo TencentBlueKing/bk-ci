@@ -168,9 +168,15 @@ class TencentStockDataUpdateService @Autowired constructor(
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(
             nodeIpList, COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME
         )
-        // 2.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
+        // 2.1.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
         val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
         cmdbNodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
+        // 2.1.2 在CMDB中，但是节点状态是NOT_IN_CMDB，此类节点，此处更新为NOT_IN_CC，后面在checkDeployNodesIsInCC函数中再进一步更新
+        // （正常不应出现这种情况，该逻辑是为防止CMDB接口返回的数据不稳定，导致将一些在CMDB中的节点更新为NOT_IN_CMDB）
+        val inCmdbIpList = ipToCmdbInfoMap?.keys
+        if (!inCmdbIpList.isNullOrEmpty()) {
+            cmdbNodeDao.updateStatusIncorrectNodeByIpList(dslContext, inCmdbIpList)
+        }
     }
 
     /**
@@ -404,8 +410,8 @@ class TencentStockDataUpdateService @Autowired constructor(
     private fun writeServerId() {
         logger.info("Write deploy nodes server id task starts...")
         val startTime = LocalDateTime.now()
-        val cmdbNodesCount = cmdbNodeDao.countDeployNodes(dslContext)
-        logger.info("Write deploy nodes server id, node(s) count:$cmdbNodesCount.")
+        val cmdbNodesCount = cmdbNodeDao.countDeployNodesServerIdNull(dslContext)
+        logger.info("Write deploy nodes server id, server id null node(s) count:$cmdbNodesCount.")
         cmdbNodesCount.takeIf { it > 0 }.run {
             val totalPage = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, cmdbNodesCount.toLong())
             val time1 = LocalDateTime.now()
@@ -446,16 +452,16 @@ class TencentStockDataUpdateService @Autowired constructor(
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("[taskWithRedisLock]Locked.")
+                logger.info("[taskWithRedisLock]Locked. key:$lockKey")
                 operation()
             } else {
-                logger.info("[taskWithRedisLock]Lock failed.")
+                logger.info("[taskWithRedisLock]Lock failed. key:$lockKey")
             }
         } catch (e: Throwable) {
-            logger.error("[taskWithRedisLock]exception: ", e)
+            logger.error("[taskWithRedisLock]exception associated with $lockKey, error: ", e)
         } finally {
             redisLock.unlock()
-            logger.info("[taskWithRedisLock]Unlocked.")
+            logger.info("[taskWithRedisLock]Unlocked. key:$lockKey")
         }
     }
 }

@@ -21,10 +21,12 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
@@ -39,9 +41,9 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -56,10 +58,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val client: Client,
     private val notifyControl: NotifyControl,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate
 ) : OpProjectWorkspaceResource {
-    private val executor = Executors.newCachedThreadPool()
-
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
         subActionIds = [ActionId.CGS_CREATE]
@@ -88,43 +89,83 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
             return Result(true)
         }
-        executor.execute {
-            try {
-                val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
-                val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
-                val cgsIps = data.cgsIds?.map {
-                    val hostIdSub = it.split(".")
-                    hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-                }?.toSet()
-                val resIps = mutableSetOf<String>()
-                resIps.addAll(cgsIps ?: emptySet())
-                resIps.addAll(data.ips ?: emptySet())
+        try {
+            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
-                val newParam = mutableMapOf<String, String>()
-                info.buildParam.forEach { (k, v) ->
-                    when (v) {
-                        "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                        "repoId" -> newParam[k] = data.repoId ?: ""
-                        "localDriver" -> newParam[k] = data.localDriver ?: ""
-                        else -> newParam[k] = v
-                    }
+            val cgsIps = data.cgsIds?.map {
+                val hostIdSub = it.split(".")
+                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            }?.toSet()
+            val resIps = mutableSetOf<String>()
+            resIps.addAll(cgsIps ?: emptySet())
+            resIps.addAll(data.ips ?: emptySet())
+
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = data.repoId ?: ""
+                    "localDriver" -> newParam[k] = data.localDriver ?: ""
+                    else -> newParam[k] = v
                 }
-                client.get(ServiceBuildResource::class).manualStartupNew(
+            }
+            AsyncExecute.dispatch(
+                rabbitTemplate, AsyncPipelineEvent(
                     userId = info.userId ?: userId,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
-                    values = newParam,
-                    channelCode = ChannelCode.BS,
-                    buildNo = null,
-                    startType = StartType.SERVICE
+                    values = newParam
                 )
-            } catch (e: Exception) {
-                logger.warn("execute assignWorkspace pipeline error", e)
-            }
+            )
+        } catch (e: Exception) {
+            logger.warn("execute assignWorkspace pipeline error", e)
         }
 
         return Result(true)
+    }
+
+    private fun doPipelineConfInfo(
+        cgsIds: List<String>?,
+        ips: List<String>?,
+        repoId: String?,
+        localDriver: String?,
+        userId: String
+    ) {
+        try {
+            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+            val cgsIps = cgsIds?.map {
+                val hostIdSub = it.split(".")
+                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            }?.toSet()
+            val resIps = mutableSetOf<String>()
+            resIps.addAll(cgsIps ?: emptySet())
+            resIps.addAll(ips ?: emptySet())
+
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = repoId ?: ""
+                    "localDriver" -> newParam[k] = localDriver ?: ""
+                    else -> newParam[k] = v
+                }
+            }
+            client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = info.userId ?: userId,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam,
+                channelCode = ChannelCode.BS,
+                buildNo = null,
+                startType = StartType.SERVICE
+            )
+        } catch (e: Exception) {
+            logger.warn("execute assignWorkspace pipeline error", e)
+        }
     }
 
     private fun assignProjectWorkspace(
@@ -261,7 +302,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     override fun notify(userId: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         notifyControl.notifyWorkspaceInfo(
             userId = userId,
-            notifyData = notifyData
+            notifyData = notifyData,
+            enableSendDesktop = true
         )
         return Result(true)
     }

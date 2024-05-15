@@ -28,9 +28,9 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
+import com.tencent.devops.store.pojo.common.logo.Logo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoReq
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
 
