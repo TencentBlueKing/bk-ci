@@ -38,6 +38,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineTriggerEventResource
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -164,6 +165,24 @@ class UserPipelineTriggerEventResourceImpl(
                 page = page,
                 pageSize = pageSize,
                 userId = userId
+            )
+        )
+    }
+
+    override fun triggerReasonStatistics(
+        userId: String,
+        projectId: String,
+        eventId: Long,
+        pipelineId: String?,
+        pipelineName: String?
+    ): Result<PipelineTriggerReasonStatistics> {
+        return Result(
+            pipelineTriggerEventService.triggerReasonStatistics(
+                userId = userId,
+                projectId = projectId,
+                eventId = eventId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName
             )
         )
     }

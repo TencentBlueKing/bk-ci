@@ -43,7 +43,9 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedFix
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
 import org.jooq.Condition
@@ -653,5 +655,57 @@ class PipelineTriggerEventDao {
         } else {
             JsonUtil.to(reasonDetail, PipelineTriggerReasonDetail::class.java)
         }
+    }
+
+    fun triggerReasonStatistics(
+        dslContext: DSLContext,
+        projectId: String,
+        eventId: Long? = null,
+        eventType: String? = null,
+        triggerType: String? = null,
+        triggerUser: String? = null,
+        pipelineId: String? = null,
+        pipelineName: String? = null,
+        startTime: Long? = null,
+        endTime: Long? = null
+    ): PipelineTriggerReasonStatistics {
+        val t1 = T_PIPELINE_TRIGGER_EVENT.`as`("t1")
+        val t2 = T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
+        val conditions = buildConditions(
+            t1 = t1,
+            t2 = t2,
+            projectId = projectId,
+            eventId = eventId,
+            eventType = eventType,
+            triggerUser = triggerUser,
+            triggerType = triggerType,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            startTime = startTime,
+            endTime = endTime
+        )
+        return dslContext.select(
+            count(
+                `when`(t2.REASON.eq(PipelineTriggerReason.TRIGGER_SUCCESS.name), 1)
+            ).`as`("triggerSuccess"),
+            count(
+                `when`(t2.REASON.eq(PipelineTriggerReason.TRIGGER_FAILED.name), 1)
+            ).`as`("triggerFailed"),
+            count(
+                `when`(t2.REASON.eq(PipelineTriggerReason.TRIGGER_NOT_MATCH.name), 1)
+            ).`as`("triggerNotMatch")
+        )
+            .from(t2)
+            .leftJoin(t1)
+            .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
+            .where(conditions)
+            .groupBy(t2.EVENT_ID)
+            .fetchOne().let {
+                PipelineTriggerReasonStatistics(
+                    triggerSuccess = it?.value1() ?: 0,
+                    triggerFailed = it?.value2() ?: 0,
+                    triggerNotMatch = it?.value3() ?: 0
+                )
+            }
     }
 }

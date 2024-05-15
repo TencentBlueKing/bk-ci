@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
@@ -409,6 +410,23 @@ class PipelineTriggerEventService @Autowired constructor(
             )
         )
         return true
+    }
+
+    fun triggerReasonStatistics(
+        userId: String,
+        projectId: String,
+        eventId: Long,
+        pipelineId: String?,
+        pipelineName: String?
+    ): PipelineTriggerReasonStatistics {
+        return pipelineTriggerEventDao.triggerReasonStatistics(
+            dslContext = dslContext,
+            triggerUser = userId,
+            projectId = projectId,
+            eventId = eventId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName
+        )
     }
 
     /**
