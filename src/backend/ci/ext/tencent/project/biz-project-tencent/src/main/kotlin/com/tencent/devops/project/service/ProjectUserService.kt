@@ -29,6 +29,7 @@ package com.tencent.devops.project.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectSeniorUserDao
@@ -36,7 +37,10 @@ import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.SeniorUserDTO
+import com.tencent.devops.project.pojo.taihu.TaiUserInfoRequest
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.taihu.TaiHuService
+import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,7 +53,9 @@ class ProjectUserService @Autowired constructor(
     val userDao: UserDao,
     val projectUserDao: ProjectUserDao,
     val seniorUserDao: ProjectSeniorUserDao,
-    val projectDao: ProjectDao
+    val projectDao: ProjectDao,
+    val tofService: TOFService,
+    val taiHuService: TaiHuService
 ) {
     private val seniorUserCache = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -59,6 +65,24 @@ class ProjectUserService @Autowired constructor(
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
         return packagingBean(userRecord)
+    }
+
+    fun getUserDeptDetail(userId: String): UserDeptDetail {
+        var userDeptDetail = getUserDept(userId)
+        if (userDeptDetail == null) {
+            userDeptDetail = if (UserUtil.isTaiUser(userId)) {
+                val taiUserInfo = taiHuService.getTaiUserInfo(TaiUserInfoRequest(setOf(userId)))[0]
+                val departmentsInfo = taiUserInfo.departments?.get(0)
+                tofService.generateUserDeptDetail(
+                    userId = userId,
+                    userGroupId = departmentsInfo?.id?.toInt(),
+                    userChineseName = taiUserInfo.accountName
+                )
+            } else {
+                tofService.getUserDeptDetail(userId)
+            }
+        }
+        return userDeptDetail
     }
 
     fun getPublicAccount(userId: String): UserDeptDetail? {

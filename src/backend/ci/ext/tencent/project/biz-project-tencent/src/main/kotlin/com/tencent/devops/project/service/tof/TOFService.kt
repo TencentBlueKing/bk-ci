@@ -527,9 +527,21 @@ class TOFService @Autowired constructor(
             userCache = userCache
         )
         if (checkUserLeave(staffInfo)) return null
-        val parentDeptInfo = getParentDeptInfo(staffInfo.groupId, 10)
+        return generateUserDeptDetail(userId, staffInfo.groupId.toInt(), staffInfo.chineseName)
+    }
+
+    fun generateUserDeptDetail(
+        userId: String,
+        userGroupId: Int?,
+        userChineseName: String
+    ): UserDeptDetail {
         // 获取用户当前部门及祖先部门
-        val deptInfos = parentDeptInfo.plus(getDeptInfo(id = staffInfo.groupId.toInt()))
+        val deptInfos = if (userGroupId != null) {
+            val parentDeptInfo = getParentDeptInfo(userGroupId.toString(), 10)
+            parentDeptInfo.plus(getDeptInfo(id = userGroupId))
+        } else {
+            emptyList()
+        }
         var groupId = "0"
         var groupName = ""
         var bgId = ""
@@ -540,7 +552,7 @@ class TOFService @Autowired constructor(
         var centerName = ""
         var businessLineId = "0"
         var businessLineName = ""
-        for (deptInfo in deptInfos) {
+        deptInfos.forEach { deptInfo ->
             val typeId = deptInfo.typeId.toInt()
             val name = deptInfo.name
             val id = deptInfo.id
@@ -549,10 +561,12 @@ class TOFService @Autowired constructor(
                     bgName = name
                     bgId = id
                 }
+
                 OrganizationType.businessLine.typeId -> {
                     businessLineName = name
                     businessLineId = id
                 }
+
                 OrganizationType.dept.typeId -> {
                     deptName = name
                     deptId = id
@@ -562,6 +576,7 @@ class TOFService @Autowired constructor(
                     centerName = name
                     centerId = id
                 }
+
                 OrganizationType.group.typeId -> {
                     groupName = name
                     groupId = id
@@ -582,7 +597,7 @@ class TOFService @Autowired constructor(
             groupName = groupName,
             // 该字段只返回部门及部门以上的层级，若不包含部门，将直接置空
             deptInfos = filterDeptInfos(deptInfos = deptInfos),
-            name = staffInfo.chineseName,
+            name = userChineseName,
             userId = userId
         )
     }
