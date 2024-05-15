@@ -83,11 +83,17 @@ interface ApigwLogResourceV4 {
         @QueryParam("tag")
         elementId: String?,
         @Parameter(description = "对应containerHashId (c-开头)", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -134,11 +140,17 @@ interface ApigwLogResourceV4 {
         @QueryParam("tag")
         tag: String?,
         @Parameter(description = "对应containerHashId (c-开头)", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -176,11 +188,17 @@ interface ApigwLogResourceV4 {
         @QueryParam("tag")
         tag: String?,
         @Parameter(description = "对应containerHashId (c-开头)", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -216,11 +234,17 @@ interface ApigwLogResourceV4 {
         @QueryParam("tag")
         tag: String?,
         @Parameter(description = "对应containerHashId (c-开头)", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -250,10 +274,13 @@ interface ApigwLogResourceV4 {
         buildId: String,
         @Parameter(description = "对应elementId (e-开头)", required = true)
         @QueryParam("tag")
-        tag: String,
+        tag: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false

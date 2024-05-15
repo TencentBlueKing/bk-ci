@@ -65,7 +65,7 @@ import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.StoreParam
-import com.tencent.devops.store.pojo.common.StoreVersion
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 import org.slf4j.LoggerFactory
 
 open class DefaultModelCheckPlugin constructor(

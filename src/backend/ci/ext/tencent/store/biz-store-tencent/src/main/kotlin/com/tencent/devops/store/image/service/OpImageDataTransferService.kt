@@ -54,21 +54,21 @@ import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.image.dao.ImageFeatureDao
 import com.tencent.devops.store.image.dao.OpImageDao
-import com.tencent.devops.store.pojo.common.ClassifyRequest
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
-import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 
 @Service
 class OpImageDataTransferService @Autowired constructor(

@@ -35,11 +35,11 @@
         },
         computed: {
             ...mapState('atom', [
-                'pipeline',
+                'pipelineSetting',
                 'pipelineInfo'
             ]),
             ...mapGetters({
-                pipelineHistoryViewAble: 'atom/pipelineHistoryViewAble'
+                pipelineHistoryViewable: 'atom/pipelineHistoryViewable'
             }),
             breadCrumbs () {
                 return [{
@@ -50,24 +50,24 @@
                     }
                 }, this.$route.name === 'pipelineImportEdit'
                     ? {
-                        selectedValue: this.pipeline?.name ?? '--'
+                        selectedValue: this.pipelineSetting?.pipelineName ?? '--'
                     }
                     : {
                         paramId: 'pipelineId',
                         paramName: 'pipelineName',
-                        selectedValue: this.pipelineName ?? this.pipeline?.name ?? '--',
+                        selectedValue: this.pipelineName ?? this.pipelineSetting?.pipelineName ?? '--',
                         records: this.pipelineList,
                         showTips: true,
                         tipsName: 'switch_pipeline_hint',
                         tipsContent: this.$t('subpage.switchPipelineTooltips'),
-                        to: ['pipelinesHistory'].includes(this.$route.name) || !this.pipelineHistoryViewAble
+                        to: ['pipelinesHistory'].includes(this.$route.name) || !this.pipelineHistoryViewable
                             ? null
                             : {
                                 name: 'pipelinesHistory',
                                 params: {
                                     ...this.$route.params,
                                     type: 'history',
-                                    version: this.$route.params.version ?? this.pipelineInfo?.releaseVersion
+                                    version: this.pipelineInfo?.releaseVersion
                                 }
                             },
                         handleSelected: this.doSelectPipeline,

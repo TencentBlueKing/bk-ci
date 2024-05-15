@@ -945,16 +945,16 @@ class WorkspaceDao {
                 lower = false,
                 removeDoubleQuotes = true
             ).`as`("REG_ID")
-        ).from(TWorkspace.T_WORKSPACE)
-            .leftJoin(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
+        ).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
+            .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
 
         if (!projectId.isNullOrBlank()) {
             sql.and(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+        } else {
+            sql.and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
         }
 
-        return sql.and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
-            .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+        return sql.and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
             .skipCheck()
             .fetch()
             .map { Triple(it["PROJECT_ID"] as String, it["IP"] as String?, (it["REG_ID"] as String?)?.toInt()) }
@@ -1037,6 +1037,25 @@ class WorkspaceDao {
                         WorkspaceStatus.DELIVERING_FAILED.ordinal
                     )
                 ).fetch().map { it.hostName }.filter { !it.isNullOrBlank() }.toSet()
+        }
+    }
+
+    fun fetchWorkspaceByIp(
+        dslContext: DSLContext,
+        ip: String
+    ): List<TWorkspaceRecord> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(
+                    STATUS.notIn(
+                        WorkspaceStatus.PREPARING.ordinal,
+                        WorkspaceStatus.DELETED.ordinal,
+                        WorkspaceStatus.DELIVERING_FAILED.ordinal
+                    )
+                )
+                .and(HOST_NAME.like("%.$ip"))
+                .fetch()
         }
     }
 

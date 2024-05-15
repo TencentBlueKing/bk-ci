@@ -20,8 +20,8 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
     import { hashID } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
     export default {
         name: 'import-pipeline-popup',
         props: {
@@ -49,9 +49,6 @@
             }
         },
         methods: {
-            ...mapActions([
-                'updatePipelineMode'
-            ]),
             ...mapActions('atom', [
                 'setEditFrom',
                 'setPipelineEditing',

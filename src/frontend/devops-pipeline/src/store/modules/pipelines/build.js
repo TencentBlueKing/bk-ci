@@ -21,14 +21,13 @@ import {
     PROCESS_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
-import { getQueryParamList } from '../../../utils/util'
+import { flatSearchKey, isEmptyObj } from '@/utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
 const pluginPrefix = 'plugin/api'
 
 const state = {
     historyPageStatus: {
-        queryStr: '',
         isQuerying: false,
         count: 0,
         page: 1,
@@ -38,29 +37,6 @@ const state = {
         },
         searchKey: []
     }
-}
-
-function flatSearchKey (searchKey) {
-    return searchKey.reduce((searchMap, item) => {
-        if (Array.isArray(item.values)) {
-            if (typeof searchMap[item.id] === 'undefined') {
-                searchMap[item.id] = Array.from(new Set(item.values.map(v => v.id)))
-            } else {
-                searchMap[item.id] = Array.from(new Set([
-                    ...searchMap[item.id],
-                    ...item.values.map(v => v.id)
-                ]))
-            }
-        }
-        return searchMap
-    }, {})
-}
-
-function generateQueryString (query) {
-    return Object.keys(query).map(key => {
-        const val = key !== 'dateTimeRange' && query[key]
-        return getQueryParamList(val, key)
-    }).filter(item => item).join('&')
 }
 
 const getters = {
@@ -78,29 +54,16 @@ const mutations = {
 
 const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
-        if ((newStatus.query || newStatus.searchKey || newStatus.page || newStatus.pageSize) && !newStatus.queryStr) {
-            const newQuery = newStatus.query ?? state.historyPageStatus.query
-            const newSearchKey = newStatus.searchKey ?? state.historyPageStatus.searchKey
-            newStatus.queryStr = generateQueryString({
-                page: newStatus.page ?? state.historyPageStatus.page,
-                pageSize: newStatus.pageSize ?? state.historyPageStatus.pageSize,
-                ...state.historyPageStatus.query,
-                ...newQuery,
-                ...flatSearchKey(newSearchKey)
-            })
-        }
         commit('updateHistoryPageStatus', newStatus)
     },
     resetHistoryFilterCondition ({ commit }) {
         commit('updateHistoryPageStatus', {
             count: 0,
             dateTimeRange: [],
-            query: {
-                page: 1,
-                pageSize: 20
-            },
-            searchKey: [],
-            queryStr: ''
+            page: 1,
+            pageSize: 20,
+            query: {},
+            searchKey: []
         })
     },
     /**
@@ -195,16 +158,27 @@ const actions = {
      * @return {Promise} promise 对象
      */
     requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, version }) {
-        let { historyPageStatus: { queryStr, page, pageSize } } = state
+        const { historyPageStatus: { query, searchKey, page, pageSize } } = state
+        const conditions = {
+            ...query,
+            ...flatSearchKey(searchKey)
+        }
+        const queryMap = new URLSearchParams()
+        Object.entries(conditions).forEach(([k, v]) => {
+            if (Array.isArray(v)) {
+                v.forEach(vv => queryMap.append(k, vv))
+            } else queryMap.append(k, v)
+        })
         dispatch('setHistoryPageStatus', {
-            isQuerying: !!queryStr
+            isQuerying: !isEmptyObj(conditions)
         })
         if (version) {
-            queryStr += `&version=${version}`
+            queryMap.append('version', version)
         }
-        queryStr += `&page=${page}&pageSize=${pageSize}`
-        console.log(queryStr, 'queryStr')
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryStr}`).then(response => {
+        queryMap.append('page', page)
+        queryMap.append('pageSize', pageSize)
+        console.log(conditions, queryMap, `${queryMap}`)
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryMap}`).then(response => {
             return response.data
         })
     },

@@ -50,9 +50,9 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
 import com.tencent.devops.store.pojo.common.KEY_VAR_VALUE
-import com.tencent.devops.store.pojo.common.StoreEnvChangeLogInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
+import com.tencent.devops.store.pojo.common.env.StoreEnvChangeLogInfo
+import com.tencent.devops.store.pojo.common.env.StoreEnvVarInfo
+import com.tencent.devops.store.pojo.common.env.StoreEnvVarRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreEnvVarService
 import java.time.LocalDateTime

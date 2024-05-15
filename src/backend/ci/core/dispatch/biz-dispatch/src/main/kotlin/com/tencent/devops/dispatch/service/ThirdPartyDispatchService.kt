@@ -399,8 +399,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = event.buildId,
             message = logMessage,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
         )
     }
 
@@ -409,8 +411,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = event.buildId,
             message = logMessage,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = null
         )
     }
 
@@ -982,8 +986,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = dispatchMessage.event.buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId),
-            jobId = dispatchMessage.event.containerHashId,
-            executeCount = dispatchMessage.event.executeCount ?: 1
+            containerHashId = dispatchMessage.event.containerHashId,
+            executeCount = dispatchMessage.event.executeCount ?: 1,
+            jobId = dispatchMessage.event.jobId,
+            stepId = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId)
         )
     }
 
@@ -996,8 +1002,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = dispatchMessage.event.buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId),
-            jobId = dispatchMessage.event.containerHashId,
-            executeCount = dispatchMessage.event.executeCount ?: 1
+            containerHashId = dispatchMessage.event.containerHashId,
+            executeCount = dispatchMessage.event.executeCount ?: 1,
+            jobId = dispatchMessage.event.jobId,
+            stepId = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId)
         )
     }
 

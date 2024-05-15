@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.model.store.tables.TStoreMediaInfo
 import com.tencent.devops.model.store.tables.records.TStoreMediaInfoRecord
-import com.tencent.devops.store.pojo.common.StoreMediaInfo
-import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfoRequest
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import org.jooq.DSLContext
 import org.jooq.Result

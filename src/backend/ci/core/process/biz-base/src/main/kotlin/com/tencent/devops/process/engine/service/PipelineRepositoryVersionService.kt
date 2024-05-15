@@ -28,21 +28,30 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("LongParameterList", "ReturnCount")
@@ -51,8 +60,14 @@ class PipelineRepositoryVersionService(
     private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val redisOperation: RedisOperation
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val redisOperation: RedisOperation,
+    private val client: Client
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineRepositoryVersionService::class.java)
+    }
 
     fun addVerRef(projectId: String, pipelineId: String, resourceVersion: Int) {
         PipelineVersionLock(redisOperation, pipelineId, resourceVersion).use { versionLock ->
@@ -64,24 +79,25 @@ class PipelineRepositoryVersionService(
                 pipelineId = pipelineId,
                 version = resourceVersion
             )
-            val referFlag = pipelineVersionInfo?.referFlag ?: true
-            val referCount = pipelineVersionInfo?.referCount?.let { self -> self + 1 }
+            var referCount = pipelineVersionInfo?.referCount?.let { self -> self + 1 }
             // 兼容老数据缺少关联构建记录的情况，全量统计关联数据数量
-                ?: pipelineBuildDao.countBuildNumByVersion(
+            if (referCount == null || referCount < 0) {
+                referCount = pipelineBuildDao.countBuildNumByVersion(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     version = resourceVersion
                 )
+            }
 
             // 更新流水线版本关联构建记录信息
             pipelineResourceVersionDao.updatePipelineVersionReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = resourceVersion,
+                versions = listOf(resourceVersion),
                 referCount = referCount,
-                referFlag = referFlag
+                referFlag = true
             )
         }
     }
@@ -330,5 +346,92 @@ class PipelineRepositoryVersionService(
             version = version,
             debugBuildId = buildId
         )
+    }
+
+    fun asyncBatchUpdateReferFlag(
+        projectChannelCode: String,
+        routerTag: AuthSystemType? = null
+    ): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin asyncBatchUpdateReferFlag!!")
+            var offset = 0
+            val limit = PageUtil.DEFAULT_PAGE_SIZE
+            do {
+                val projectInfos = client.get(ServiceProjectResource::class).listMigrateProjects(
+                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                        channelCode = projectChannelCode,
+                        routerTag = routerTag
+                    ),
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                projectInfos.forEach { projectInfo ->
+                    val projectId = projectInfo.englishName
+                    val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectId)
+                    pipelineIds.forEach { pipelineId ->
+                        updatePipelineReferFlag(projectId, pipelineId)
+                    }
+                }
+                offset += limit
+            } while (projectInfos.size == limit)
+            logger.info("end asyncBatchUpdateReferFlag!!")
+        }
+        return true
+    }
+
+    private fun updatePipelineReferFlag(projectId: String, pipelineId: String) {
+        var offset = 0
+        val limit = PageUtil.DEFAULT_PAGE_SIZE
+        val lock = PipelineModelLock(redisOperation, pipelineId)
+        try {
+            lock.lock()
+            do {
+                // 查询关联状态未知的版本
+                val pipelineVersionList = pipelineResourceVersionDao.listPipelineVersion(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    queryUnknownRelatedFlag = true,
+                    offset = offset,
+                    limit = limit
+                )
+                val versions = pipelineVersionList.map { it.version }.toSet()
+                // 批量查询流水线版本号的构建记录
+                val versionBuildNumMap = pipelineBuildDao.batchCountBuildNumByVersion(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    versions = versions
+                ).associateBy({ it.value1() }, { it.value2() })
+                // 批量把流水线版本记录置为关联状态
+                versionBuildNumMap.forEach { (version, buildNum) ->
+                    pipelineResourceVersionDao.updatePipelineVersionReferInfo(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        versions = listOf(version),
+                        referCount = buildNum,
+                        referFlag = true
+                    )
+                }
+                // 过滤出未关联的流水线版本号
+                val unReferVersions =
+                    versions.filter { versionBuildNumMap[it] == null || (versionBuildNumMap[it] ?: 0) < 1 }
+                // 批量把流水线版本记录置为未关联状态
+                if (unReferVersions.isNotEmpty()) {
+                    pipelineResourceVersionDao.updatePipelineVersionReferInfo(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        versions = unReferVersions,
+                        referCount = 0,
+                        referFlag = false
+                    )
+                }
+                offset += limit
+            } while (pipelineVersionList.size == limit)
+        } finally {
+            lock.unlock()
+        }
     }
 }

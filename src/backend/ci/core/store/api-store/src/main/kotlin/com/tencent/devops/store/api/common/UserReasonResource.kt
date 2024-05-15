@@ -29,7 +29,7 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Reason
+import com.tencent.devops.store.pojo.common.reason.Reason
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
