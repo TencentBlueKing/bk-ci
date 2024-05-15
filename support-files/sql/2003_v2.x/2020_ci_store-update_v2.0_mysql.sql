@@ -152,8 +152,7 @@ BEGIN
                 FROM information_schema.COLUMNS
                 WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_STORE_PIPELINE_REL'
-                    AND COLUMN_NAME = 'PROJECT_CODE'
-                    AND COLUMN_TYPE = 'varchar(32)') THEN
+                    AND COLUMN_NAME = 'PROJECT_CODE') THEN
        ALTER TABLE T_STORE_PIPELINE_REL ADD COLUMN `PROJECT_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '项目代码';
     END IF;
 
