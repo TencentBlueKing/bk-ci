@@ -468,9 +468,10 @@ const actions = {
         triggerUser = '',
         pipelineId = '',
         startTime = '',
-        endTime = ''
+        endTime = '',
+        reason = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineId=${pipelineId}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineId=${pipelineId}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}&reason=${reason}`)
     },
 
     /**
@@ -602,6 +603,12 @@ const actions = {
             id: _.pipelineId,
             name: _.pipelineName
         })))
+    },
+    fetchTriggerReasonNum ({ commit }, {
+        projectId,
+        eventId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/triggerReasonStatistics`)
     }
 }
 

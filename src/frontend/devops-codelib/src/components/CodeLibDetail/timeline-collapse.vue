@@ -65,6 +65,7 @@
                             }"
                             @click="handleToggleTab(tab)">
                             {{ tab.name }}
+                            <span class="num">{{ reasonNumMap[tab.key] }}</span>
                         </div>
                     </div>
                     <div
@@ -180,6 +181,7 @@
             }
         },
         data () {
+            const reason = this.searchValue.find(i => i.id === 'reason')?.values[0].id || ''
             return {
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
@@ -193,7 +195,9 @@
                     count: 0
                 },
                 isZH: true,
-                filterTab: 'TRIGGER_SUCCESS'
+                filterTab: reason,
+                reason,
+                reasonNumMap: {}
             }
         },
         computed: {
@@ -202,9 +206,9 @@
             },
             filterTabList () {
                 return [
-                    { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS' },
-                    { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED' },
-                    { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH' }
+                    { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS', key: 'triggerSuccess' },
+                    { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED', key: 'triggerFailed' },
+                    { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH', key: 'triggerNotMatch' }
                 ]
             }
         },
@@ -214,6 +218,7 @@
         methods: {
             ...mapActions('codelib', [
                 'fetchEventDetail',
+                'fetchTriggerReasonNum',
                 'replayAllEvent',
                 'replayEvent'
             ]),
@@ -270,12 +275,13 @@
             /**
              * 展示触发事件详情
              */
-            handleShowDetail (data, index) {
+            async handleShowDetail (data, index) {
                 this.pagination.current = 1
                 this.activeIndex === index ? this.activeIndex = -1 : this.activeIndex = index
                 if (this.activeIndex === -1) return
                 this.eventId = data.eventId
-                this.getEventDetail()
+                await this.handleFetchTriggerReasonNum()
+                await this.getEventDetail()
             },
 
             getEventDetail () {
@@ -310,6 +316,20 @@
             handleToggleTab (tab) {
                 this.filterTab = tab.id
                 this.getEventDetail()
+            },
+
+            async handleFetchTriggerReasonNum () {
+                try {
+                    this.reasonNumMap = await this.fetchTriggerReasonNum({
+                        projectId: this.projectId,
+                        eventId: this.eventId
+                    })
+                    if (!this.reason) {
+                        this.filterTab = this.filterTabList.find(i => this.reasonNumMap[i.key] > 0)?.id
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
             }
         }
     }
@@ -428,6 +448,12 @@
                 &.active {
                     color: #3a84ff;
                 }
+            }
+            .num {
+                color: #979ba5;
+                background: #f0f5ff;
+                border-radius: 50%;
+                padding: 2px;
             }
         }
         .trigger-list-table {
