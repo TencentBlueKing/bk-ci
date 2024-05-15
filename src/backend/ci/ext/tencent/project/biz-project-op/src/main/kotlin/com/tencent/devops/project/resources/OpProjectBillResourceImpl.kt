@@ -10,7 +10,7 @@ import com.tencent.devops.project.service.ProjectOperationalProductService
 @RestResource
 class OpProjectBillResourceImpl constructor(
     val projectBillsService: ProjectBillsService,
-    val projectOperationalProductService: ProjectOperationalProductService,
+    val projectOperationalProductService: ProjectOperationalProductService
 ) : OpProjectBillResource {
     override fun processInactiveProject(projectList: List<String>): Result<Boolean> {
         return Result(
@@ -21,7 +21,7 @@ class OpProjectBillResourceImpl constructor(
     }
 
     override fun processInactiveProjectByCondition(
-        projectConditionDTO: ProjectConditionDTO,
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean> {
         return Result(
             projectBillsService.checkInactiveProject(

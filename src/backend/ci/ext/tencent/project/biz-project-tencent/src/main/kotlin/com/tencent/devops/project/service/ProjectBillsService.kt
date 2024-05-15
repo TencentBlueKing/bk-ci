@@ -47,6 +47,7 @@ class ProjectBillsService constructor(
             "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
         private const val PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE = "PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE"
         private const val IS_DISABLE_FLAG = "is_disable_flag"
+        private const val REPORT_BILL_BG = "956"
     }
 
     private val project2Status = Caffeine.newBuilder()
@@ -293,7 +294,6 @@ class ProjectBillsService constructor(
         }
     }
 
-
     private fun isProjectActive(projectInfo: ProjectVO): Boolean {
         /*若项目已关联运营产品，则4个月内无人访问并且没有执行过流水线则为不活跃；
         若项目未关联运营产品，则2个月内无人访问并且没有执行过流水线则为不活跃。*/
@@ -357,14 +357,15 @@ class ProjectBillsService constructor(
                     try {
                         val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
                         // 若项目不活跃（无人访问），不上报
-                        val projectActiveUserCount = client.get(ServiceMetricsResource::class)
+                        val projectActiveUserResponse = client.get(ServiceMetricsResource::class)
                             .getProjectActiveUserCount(
                                 BaseQueryReqVO(
                                     projectId = it.englishName,
                                     startTime = previousDate.format(DATE_FORMATTER),
                                     endTime = targetDate.format(DATE_FORMATTER)
                                 )
-                            ).data?.userCount ?: return@forEach
+                            ).data ?: return@forEach
+
                         val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
                             BaseQueryReqVO(
                                 projectId = it.englishName,
@@ -379,21 +380,27 @@ class ProjectBillsService constructor(
                             BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
                             BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
                             BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
-                            BkBillKind.PIPELINE_USER_COUNT to projectActiveUserCount
+                            BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
                         )
                         billKind2Usage.forEach { (billKind, usage) ->
                             val bkBillDTO = BkBillDTO(
-                                costDate = currentDate.minusMonths(1).format(DateTimeFormatter.ofPattern("yyyyMM")),
+                                costDate = currentDate.format(DateTimeFormatter.ofPattern("yyyyMM")),
                                 projectId = it.englishName,
+                                projectName = it.projectName,
+                                serviceType = "流水线服务",
                                 kind = billKind.name,
                                 usage = usage,
                                 bgName = projectInfo.bgName ?: "",
-                                flag = projectInfo.productId != null
+                                flag = projectInfo.productId != null && projectInfo.bgId == REPORT_BILL_BG
                             )
+                            // 若是流水线用户类型，还额外需要上报用户名单
+                            if (billKind == BkBillKind.PIPELINE_USER_COUNT) {
+                                bkBillDTO.users = projectActiveUserResponse.users
+                            }
                             bills.add(bkBillDTO)
                         }
                         val dataSourceBillsDTO = BkDataSourceBillsDTO(
-                            dataSourceName = "蓝盾流水线",
+                            dataSourceName = "蓝盾服务费",
                             bills = bills
                         )
                         val summaryBillDTO = BkSummaryBillDTO(

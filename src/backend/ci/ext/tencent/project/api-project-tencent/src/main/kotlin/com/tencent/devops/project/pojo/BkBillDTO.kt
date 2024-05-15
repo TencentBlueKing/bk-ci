@@ -38,6 +38,12 @@ data class BkBillDTO(
     @get:Schema(title = "項目ID")
     @JsonProperty(value = "project_id")
     val projectId: String,
+    @get:Schema(title = "項目ID")
+    @JsonProperty(value = "name")
+    val projectName: String,
+    @get:Schema(title = "服务类型")
+    @JsonProperty(value = "service_type")
+    val serviceType: String,
     @get:Schema(title = "种类")
     val kind: String,
     @get:Schema(title = "使用量")
@@ -46,5 +52,7 @@ data class BkBillDTO(
     @JsonProperty(value = "bg_name")
     val bgName: String,
     @get:Schema(title = "是否计费标志")
-    val flag: Boolean
+    val flag: Boolean,
+    @get:Schema(title = "人员名单")
+    var users: String? = null
 )

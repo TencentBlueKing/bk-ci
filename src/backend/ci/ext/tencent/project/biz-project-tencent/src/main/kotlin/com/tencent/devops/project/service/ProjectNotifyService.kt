@@ -39,7 +39,7 @@ class ProjectNotifyService constructor(
     val projectUserService: ProjectUserService,
     val dslContext: DSLContext,
     val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
-    val redisOperation: RedisOperation,
+    val redisOperation: RedisOperation
 ) {
     companion object {
         private val projectNotifyThreadPool = Executors.newFixedThreadPool(10)
@@ -85,7 +85,7 @@ class ProjectNotifyService constructor(
     }
 
     fun sendEmailForRelatedObsByCondition(
-        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO,
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Boolean {
         logger.info("send email for related obs by condition:$sendEmailForProjectByConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -123,7 +123,7 @@ class ProjectNotifyService constructor(
 
     private fun sendEmailForRelatedObsByProjectId(
         projectName: String,
-        projectId: String,
+        projectId: String
     ) {
         val managers = getProjectManager(projectId) ?: return
         val receives = managers.filterNot { projectUserService.isSeniorUser(it) }
@@ -155,7 +155,7 @@ class ProjectNotifyService constructor(
     }
 
     fun getProjectsForRelatedObsByCondition(
-        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO,
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Pair<Int, List<String>> {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
@@ -191,7 +191,7 @@ class ProjectNotifyService constructor(
     private fun sendEmail(
         bodyParams: Map<String, String>,
         receives: Set<String>,
-        templateCode: String,
+        templateCode: String
     ) {
         // 开关，默认打开
         val isSendEmail = redisOperation.get(IS_SEND_EMAIL_FLAG)?.toBoolean() ?: true
@@ -359,7 +359,7 @@ class ProjectNotifyService constructor(
         verifyBgId: Long,
         wrongOrganizationalProjectList: MutableList<String>,
         projectID2ManagerBelongVerifyBgId: MutableMap<String, List<String>>,
-        projectID2ManagerNotBelongVerifyBgId: MutableMap<String, List<String>>,
+        projectID2ManagerNotBelongVerifyBgId: MutableMap<String, List<String>>
     ) {
         projectInfos.forEach { projectInfo ->
             try {
@@ -416,7 +416,7 @@ class ProjectNotifyService constructor(
         projectInfo: ProjectByConditionDTO,
         managerBgIds: List<String>,
         verifyBgId: Long,
-        wrongOrganizationalProjectList: MutableList<String>,
+        wrongOrganizationalProjectList: MutableList<String>
     ) {
         if (managerBgIds.first() == verifyBgId.toString()) {
             if (projectInfo.bgId != verifyBgId) {
@@ -432,7 +432,7 @@ class ProjectNotifyService constructor(
         managerBgIds: List<String>,
         verifyBgId: Long,
         projectID2ManagerBelongVerifyBgId: MutableMap<String, List<String>>,
-        projectID2ManagerNotBelongVerifyBgId: MutableMap<String, List<String>>,
+        projectID2ManagerNotBelongVerifyBgId: MutableMap<String, List<String>>
     ) {
         if (managerBgIds.contains(verifyBgId.toString())) {
             if (verifyBgId != projectInfo.bgId) {
@@ -459,7 +459,7 @@ class ProjectNotifyService constructor(
         verifyBgId: Long,
         wrongOrganizationalProjectList: MutableList<String>,
         projectID2ManagerBelongVerifyBgId: MutableMap<String, List<String>>,
-        projectID2ManagerNotBelongVerifyBgId: MutableMap<String, List<String>>,
+        projectID2ManagerNotBelongVerifyBgId: MutableMap<String, List<String>>
     ) {
         logger.info(
             "send email for verify project manager organization:$wrongOrganizationalProjectList|" +

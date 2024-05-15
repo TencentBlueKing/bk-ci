@@ -68,7 +68,7 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceCodeConverter: AuthResourceCodeConverter,
     val permissionService: PermissionService,
     val itsmService: ItsmService,
-    val monitorSpaceService: AuthMonitorSpaceService,
+    val monitorSpaceService: AuthMonitorSpaceService
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -97,7 +97,7 @@ class RbacPermissionApplyService @Autowired constructor(
     override fun listGroups(
         userId: String,
         projectId: String,
-        searchGroupInfo: SearchGroupInfo,
+        searchGroupInfo: SearchGroupInfo
     ): ManagerRoleGroupVO {
         logger.info("RbacPermissionApplyService|listGroups:searchGroupInfo=$searchGroupInfo")
         verifyProjectRouterTag(projectId)
@@ -165,7 +165,7 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceType: String?,
         iamResourceCode: String?,
         projectId: String,
-        visitProjectPermission: Boolean,
+        visitProjectPermission: Boolean
     ): String {
         var bkIamPath: StringBuilder? = null
         if (iamResourceCode != null) {
@@ -218,7 +218,7 @@ class RbacPermissionApplyService @Autowired constructor(
     private fun getGradeManagerRoleGroup(
         searchGroupInfo: SearchGroupInfo,
         bkIamPath: String?,
-        relationId: String,
+        relationId: String
     ): V2ManagerRoleGroupVO {
         val searchGroupDTO = SearchGroupDTO
             .builder()
@@ -248,7 +248,7 @@ class RbacPermissionApplyService @Autowired constructor(
         userId: String,
         projectId: String,
         projectName: String,
-        managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>,
+        managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>
     ): List<ManagerRoleGroupInfo> {
         if (managerRoleGroupInfoList.isEmpty()) return emptyList()
 
@@ -280,7 +280,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun verifyMemberJoined(
         userId: String,
-        groupIds: List<String>,
+        groupIds: List<String>
     ): Map<Int, GroupMemberVerifyInfo> {
         val verifyGroupValidMemberResult = mutableMapOf<Int, GroupMemberVerifyInfo>()
         val futures = mutableListOf<Future<*>>()
@@ -359,7 +359,7 @@ class RbacPermissionApplyService @Autowired constructor(
     private fun getResourceGroupInfoForApply(
         projectCode: String,
         projectName: String,
-        groupId: String,
+        groupId: String
     ): ResourceGroupInfo {
         logger.info("get resource group for apply :$projectCode|$projectName|$groupId")
         val dbResourceGroupInfo = authResourceGroupDao.get(
@@ -414,7 +414,7 @@ class RbacPermissionApplyService @Autowired constructor(
     private fun generateResourceRedirectUri(
         projectCode: String,
         resourceType: String,
-        resourceCode: String,
+        resourceCode: String
     ): String? {
         return when (resourceType) {
             AuthResourceType.PIPELINE_DEFAULT.value -> {
@@ -502,7 +502,7 @@ class RbacPermissionApplyService @Autowired constructor(
         projectId: String,
         resourceType: String,
         resourceCode: String,
-        action: String?,
+        action: String?
     ): AuthApplyRedirectInfoVo {
         logger.info(
             "PermissionApplyService|getRedirectInformation: $userId|$projectId" +
@@ -577,7 +577,7 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceCode: String,
         action: String?,
         resourceName: String,
-        iamResourceCode: String,
+        iamResourceCode: String
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
@@ -641,7 +641,7 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceCode: String,
         groupCode: String,
         iamResourceCode: String,
-        iamRelatedResourceType: String,
+        iamRelatedResourceType: String
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName

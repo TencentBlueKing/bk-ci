@@ -108,16 +108,15 @@ class ProjectBuildSummaryDao {
         val endDateTime =
             DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
         return with(TProjectUserDaily.T_PROJECT_USER_DAILY) {
-            dslContext.select(PROJECT_ID, DSL.countDistinct(USER_ID)).from(this)
+            val users = dslContext.selectDistinct(USER_ID).from(this)
                 .where(PROJECT_ID.eq(baseQueryReq.projectId))
                 .and(CREATE_TIME.between(startDateTime, endDateTime))
-                .groupBy(PROJECT_ID)
-                .fetchAny()?.let {
-                    ProjectUserCountV0(
-                        projectId = it.value1(),
-                        userCount = it.value2()
-                    )
-                }
+                .fetch()
+            ProjectUserCountV0(
+                projectId = baseQueryReq.projectId!!,
+                userCount = users.size,
+                users = users.joinToString(separator = ",")
+            )
         }
     }
 

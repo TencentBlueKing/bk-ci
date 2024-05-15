@@ -16,7 +16,7 @@ class ProjectCronService constructor(
     val projectNotifyService: ProjectNotifyService,
     val projectBillsService: ProjectBillsService,
     val redisOperation: RedisOperation,
-    val projectOperationalProductService: ProjectOperationalProductService,
+    val projectOperationalProductService: ProjectOperationalProductService
 ) {
     private val redisLock = RedisLock(redisOperation, PROJECT_CRON_KEY, 10)
 
