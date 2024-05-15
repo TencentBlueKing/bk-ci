@@ -105,6 +105,7 @@ class MetricsUserService @Autowired constructor(
             val value = local[key] ?: return@forEach
             if (value.data.buildId !in ready2delete) return@forEach
             metricsCacheService.removeCache(key)
+            uncheckArray.remove(value.data.buildId)
         }
     }
 
