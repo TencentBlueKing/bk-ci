@@ -183,7 +183,7 @@ object CommandLineUtils {
             if (taskId != null) {
                 Heartbeat.recordTaskProgressRate(
                     taskId = taskId,
-                    progressRate = progressRate
+                    progressRate = progressRate.toDouble()
                 )
             }
             logger.info("report progress rate:$tmpLine|$taskId|$progressRate")

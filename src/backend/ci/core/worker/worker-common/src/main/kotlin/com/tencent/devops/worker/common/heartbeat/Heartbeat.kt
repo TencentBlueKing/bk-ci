@@ -46,7 +46,7 @@ object Heartbeat {
     private val logger = LoggerFactory.getLogger(Heartbeat::class.java)
     private val executor = Executors.newScheduledThreadPool(2)
     private var running = false
-    private val task2ProgressRate = mutableMapOf<String, String>()
+    private val task2ProgressRate = mutableMapOf<String, Double>()
 
     @Synchronized
     fun start(jobTimeoutMills: Long = TimeUnit.MINUTES.toMillis(900), executeCount: Int = 1) {
@@ -122,7 +122,7 @@ object Heartbeat {
 
     fun recordTaskProgressRate(
         taskId: String,
-        progressRate: String
+        progressRate: Double
     ) {
         task2ProgressRate[taskId] = progressRate
     }
