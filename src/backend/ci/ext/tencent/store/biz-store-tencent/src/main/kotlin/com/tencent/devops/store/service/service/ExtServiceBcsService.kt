@@ -309,16 +309,7 @@ class ExtServiceBcsService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val deployment = client.get(ServiceBcsResource::class).getBcsDeploymentInfo(
-            namespaceName = if (grayFlag == null || !grayFlag) {
-                extServiceBcsNameSpaceConfig.namespaceName
-            } else {
-                extServiceBcsNameSpaceConfig.grayNamespaceName
-            },
-            deploymentName = serviceCode,
-            bcsUrl = extServiceBcsConfig.masterUrl,
-            token = extServiceBcsConfig.token
-        ).data
+        val deployment = client.get(ServiceBcsResource::class).getBcsDeploymentInfo(userId, serviceCode).data
         logger.info("getExtServiceDeployStatus deployment is:$deployment")
         return Result(deployment?.status)
     }

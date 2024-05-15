@@ -44,12 +44,9 @@ class BuildBcsResourceImpl @Autowired constructor(
 
     override fun getBcsDeploymentInfo(
         userId: String,
-        namespaceName: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
-    ): Result<Deployment> {
-        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
+        deploymentName: String
+    ): Result<Deployment?> {
+        return bcsQueryService.getBcsDeploymentInfo(userId, deploymentName)
     }
 
     override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {

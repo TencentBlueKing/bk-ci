@@ -62,23 +62,14 @@ interface BuildBcsResource {
     ): Result<Boolean>
 
     @Operation(summary = "获取deployment信息")
-    @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
+    @Path("/deployments/{deploymentName}")
     @GET
     fun getBcsDeploymentInfo(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "命名空间名称")
-        @PathParam("namespaceName")
-        namespaceName: String,
         @Parameter(description = "deployment名称")
         @PathParam("deploymentName")
-        deploymentName: String,
-        @Parameter(description = "bcs请求路径")
-        @QueryParam("bcsUrl")
-        bcsUrl: String,
-        @Parameter(description = "请求token")
-        @QueryParam("token")
-        token: String
-    ): Result<Deployment>
+        deploymentName: String
+    ): Result<Deployment?>
 }
