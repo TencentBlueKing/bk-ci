@@ -35,7 +35,6 @@ import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.model.metrics.tables.TProjectBuildSummaryDaily
 import com.tencent.devops.model.metrics.tables.TProjectUserDaily
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalDateTime
