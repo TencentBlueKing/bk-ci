@@ -68,7 +68,7 @@ data class WeSecProjectWorkspace(
     @JsonProperty("machine_type")
     val machineType: String? = null,
     @JsonProperty("mac_address")
-    @get:Schema(title = "机型")
+    @get:Schema(title = "mac地址")
     val macAddress: String? = null
 )
 

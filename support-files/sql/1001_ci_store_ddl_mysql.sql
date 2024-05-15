@@ -515,7 +515,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_MEMBER` (
 CREATE TABLE IF NOT EXISTS `T_STORE_PROJECT_REL` (
   `ID` varchar(32) NOT NULL DEFAULT '' COMMENT '主键ID',
   `STORE_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT 'store组件编码',
-  `PROJECT_CODE` varchar(32) NOT NULL COMMENT '用户组所属项目',
+  `PROJECT_CODE` varchar(64) NOT NULL COMMENT '所属项目',
   `TYPE` tinyint(4) NOT NULL COMMENT '类型',
   `VERSION` varchar(256) COMMENT '版本号',
   `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
@@ -670,7 +670,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM_APPROVE_REL`
 (
     `ID`                varchar(32) NOT NULL COMMENT '主键ID',
     `ATOM_CODE`         varchar(64) NOT NULL COMMENT '插件的唯一标识',
-    `TEST_PROJECT_CODE` varchar(32) NOT NULL COMMENT '调试项目编码',
+    `TEST_PROJECT_CODE` varchar(64) NOT NULL COMMENT '调试项目编码',
     `APPROVE_ID`        varchar(32) NOT NULL COMMENT '审批ID',
     `CREATOR`           varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
     `MODIFIER`          varchar(50) NOT NULL DEFAULT 'system' COMMENT '最近修改人',
@@ -775,6 +775,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_PIPELINE_REL`
     `UPDATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `STORE_TYPE`  tinyint(4)  NOT NULL DEFAULT '0' COMMENT '商店组件类型 0：插件 1：模板 2：镜像 3：IDE插件',
     `BUS_TYPE` varchar(32) NOT NULL DEFAULT 'BUILD' COMMENT '业务类型 BUILD:构建 INDEX:研发商店指标',
+    `PROJECT_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '项目代码',
     PRIMARY KEY (`ID`),
     KEY `inx_tspr_code` (`STORE_CODE`),
     KEY `inx_tspr_type` (`STORE_TYPE`),

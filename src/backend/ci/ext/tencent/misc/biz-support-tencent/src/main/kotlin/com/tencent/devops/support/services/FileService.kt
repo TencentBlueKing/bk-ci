@@ -57,7 +57,8 @@ class FileService @Autowired constructor(private val client: Client) {
     fun uploadFile(
         userId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        fileRepoPath: String? = null
     ): Result<String?> {
         val fileName = disposition.fileName
         logger.info("$userId upload file:$fileName")
@@ -88,7 +89,11 @@ class FileService @Autowired constructor(private val client: Client) {
         }
         val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
         // 组装文件上传目标路径
-        val destPath = "file/$fileType/${file.name}"
+        val destPath = if (fileRepoPath.isNullOrBlank()) {
+            "file/$fileType/${file.name}"
+        } else {
+            fileRepoPath
+        }
         val serviceUrl =
             "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {

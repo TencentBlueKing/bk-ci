@@ -29,8 +29,7 @@ package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.approval.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.approval.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -49,20 +48,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpAtomResource {
-
-    @Operation(summary = "审核可见范围")
-    @PUT
-    @Path("/{atomCode}/visible/approve/")
-    fun approveVisibleDept(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "插件标识", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @Parameter(description = "可见范围审核请求报文", required = true)
-        visibleApproveReq: VisibleApproveReq
-    ): Result<Boolean>
 
     @Operation(summary = "查看插件可见范围")
     @GET

@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -219,5 +220,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 records = records
             )
         )
+    }
+
+    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+        logger.info("getWindowsQuota $userId|$type")
+        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type)
     }
 }
