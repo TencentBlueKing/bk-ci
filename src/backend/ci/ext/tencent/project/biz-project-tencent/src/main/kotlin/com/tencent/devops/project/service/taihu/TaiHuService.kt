@@ -27,10 +27,10 @@ class TaiHuService @Autowired constructor(
     @Value("\${taiHu.apiUrl}")
     val apiUrl: String = ""
 
-    @Value("\${esb.code:}")
+    @Value("\${remoteDev.appCode:}")
     val appCode = ""
 
-    @Value("\${esb.secret:}")
+    @Value("\${remoteDev.appToken:}")
     val appSecret = ""
 
     fun getTaiUserInfo(params: TaiUserInfoRequest): List<TaiUserInfo> {

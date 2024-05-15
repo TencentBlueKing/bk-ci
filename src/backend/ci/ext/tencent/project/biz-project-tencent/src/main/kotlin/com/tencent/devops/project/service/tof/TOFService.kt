@@ -42,6 +42,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_USER_INFORM
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
+import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.BkDeptInfo
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
@@ -57,16 +58,16 @@ import com.tencent.devops.project.pojo.tof.ParentDeptInfoRequest
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.tof.StaffInfoRequest
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils
-import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * API
@@ -76,7 +77,8 @@ import org.springframework.stereotype.Service
 class TOFService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val userService: ProjectUserService
+    private val dslContext: DSLContext,
+    private val userDao: UserDao
 ) {
 
     @Value("\${tof.host:#{null}}")
@@ -506,9 +508,9 @@ class TOFService @Autowired constructor(
     }
 
     private fun getPublicAccount(userId: String): UserDeptDetail? {
-        val bkCacheDeft = userService.getPublicAccount(userId)
-        if (bkCacheDeft != null) {
-            return bkCacheDeft
+        val userRecord = userDao.getPublicType(dslContext, userId)
+        if (userRecord != null) {
+            return userDao.convertToUserDeptDetail(userRecord)
         }
         return null
     }

@@ -30,7 +30,6 @@ package com.tencent.devops.project.service
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.UserUtil
-import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectSeniorUserDao
 import com.tencent.devops.project.dao.ProjectUserDao
@@ -64,7 +63,7 @@ class ProjectUserService @Autowired constructor(
 
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
-        return packagingBean(userRecord)
+        return userDao.convertToUserDeptDetail(userRecord)
     }
 
     fun getUserDeptDetail(userId: String): UserDeptDetail {
@@ -83,26 +82,6 @@ class ProjectUserService @Autowired constructor(
             }
         }
         return userDeptDetail
-    }
-
-    fun getPublicAccount(userId: String): UserDeptDetail? {
-        val userRecord = userDao.getPublicType(dslContext, userId) ?: return null
-        return packagingBean(userRecord)
-    }
-
-    fun packagingBean(userRecord: TUserRecord): UserDeptDetail {
-        return UserDeptDetail(
-            bgName = userRecord!!.bgName,
-            bgId = userRecord!!.bgId?.toString() ?: "",
-            centerName = userRecord.centerName,
-            centerId = userRecord!!.centerId?.toString() ?: "",
-            deptName = userRecord.deptName,
-            deptId = userRecord.deptId?.toString() ?: "",
-            groupName = userRecord.groupName ?: "",
-            groupId = userRecord.groypId?.toString() ?: "",
-            businessLineId = userRecord.businessLineId?.toString(),
-            businessLineName = userRecord.businessLineName
-        )
     }
 
     fun listUser(limit: Int, offset: Int): List<UserDeptDetail>? {
