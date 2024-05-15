@@ -204,7 +204,7 @@
                 return [
                     { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS' },
                     { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED' },
-                    { name: this.$t('codelib.触发不匹配'), id: 'TRIGGER_NOT_MATCH' }
+                    { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH' }
                 ]
             }
         },
