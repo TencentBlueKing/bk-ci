@@ -306,6 +306,11 @@ class DcContainerPrepareHandler @Autowired constructor(
                 resetBuildPool(handlerContext)
                 true
             }
+            // error和已删除的container，直接复用并发池位
+            OriginContainerStatus.error.name, OriginContainerStatus.deleted.name -> {
+                resetBuildPool(handlerContext)
+                true
+            }
             else -> false
         }
     }
