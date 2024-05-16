@@ -43,8 +43,9 @@ class TransferCacheService @Autowired constructor(
         .build<String, JSONObject> { key ->
             kotlin.runCatching {
                 val (atomCode, version) = key.split("@")
-                client.get(ServiceMarketAtomResource::class)
-                    .getAtomsDefaultValue(ElementThirdPartySearchParam(atomCode, version)).data
+                val res = client.get(ServiceMarketAtomResource::class)
+                    .getAtomsDefaultValue(ElementThirdPartySearchParam(atomCode, version)).data ?: emptyMap()
+                JSONObject(res)
             }.onFailure { logger.warn("get $key default value error.", it) }.getOrNull() ?: JSONObject()
         }
     private val storeImageInfoCache = Caffeine.newBuilder()
