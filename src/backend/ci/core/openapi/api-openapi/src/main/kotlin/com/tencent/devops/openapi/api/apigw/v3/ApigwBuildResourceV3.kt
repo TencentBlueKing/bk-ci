@@ -144,7 +144,7 @@ interface ApigwBuildResourceV3 {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "要重试或跳过的插件ID，或者StageId", required = false)
+        @Parameter(description = "要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @Parameter(description = "仅重试所有失败Job", required = false)

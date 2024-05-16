@@ -170,5 +170,5 @@ interface ServiceMarketAtomResource {
     @Path("/atom/default_value")
     fun getAtomsDefaultValue(
         atom: ElementThirdPartySearchParam
-    ): Result<Map<String, String>>
+    ): Result<Map<String, Any>>
 }

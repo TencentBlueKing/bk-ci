@@ -54,7 +54,8 @@ import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
-@Component@Suppress("ALL")
+@Component
+@Suppress("ALL")
 interface BuildListener {
 
     fun getStartupQueue(): String
@@ -115,17 +116,21 @@ interface BuildListener {
                     startupEvent = event,
                     jobType = getVmType(),
                     demoteQueueRouteKeySuffix = getStartupDemoteQueue()
-                )) {
+                )
+            ) {
                 return
             }
 
             onStartup(dispatchService.buildDispatchMessage(event))
         } catch (e: BuildFailureException) {
-            dispatchService.logRed(buildId = event.buildId,
+            dispatchService.logRed(
+                buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
                 message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")}- ${e.message}",
-                executeCount = event.executeCount)
+                executeCount = event.executeCount,
+                jobId = event.jobId
+            )
 
             errorCode = e.errorCode
             errorMessage = e.formatErrorMessage
@@ -134,22 +139,29 @@ interface BuildListener {
             onFailure(dispatchService, event, e)
         } catch (t: Throwable) {
             logger.warn("Fail to handle the start up message - DispatchService($event)", t)
-            dispatchService.logRed(buildId = event.buildId,
+            dispatchService.logRed(
+                buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
                 message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")} - ${t.message}",
-                executeCount = event.executeCount)
+                executeCount = event.executeCount,
+                jobId = event.jobId
+            )
 
             errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR
             errorMessage = "Fail to handle the start up message"
             errorType = ErrorType.SYSTEM
 
-            onFailure(dispatchService = dispatchService,
+            onFailure(
+                dispatchService = dispatchService,
                 event = event,
-                e = BuildFailureException(errorType = ErrorType.SYSTEM,
+                e = BuildFailureException(
+                    errorType = ErrorType.SYSTEM,
                     errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
                     formatErrorMessage = "Fail to handle the start up message",
-                    errorMessage = "Fail to handle the start up message"))
+                    errorMessage = "Fail to handle the start up message"
+                )
+            )
         } finally {
             DispatcherContext.removeEvent()
 
@@ -220,14 +232,17 @@ interface BuildListener {
         containerHashId: String?,
         vmSeqId: String,
         message: String,
-        executeCount: Int?
+        executeCount: Int?,
+        jobId: String?
     ) {
         buildLogPrinter.addLine(
             buildId = buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = containerHashId,
-            executeCount = executeCount ?: 1
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 
@@ -237,14 +252,17 @@ interface BuildListener {
         containerHashId: String?,
         vmSeqId: String,
         message: String,
-        executeCount: Int?
+        executeCount: Int?,
+        jobId: String?
     ) {
         buildLogPrinter.addRedLine(
             buildId = buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = containerHashId,
-            executeCount = executeCount ?: 1
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 

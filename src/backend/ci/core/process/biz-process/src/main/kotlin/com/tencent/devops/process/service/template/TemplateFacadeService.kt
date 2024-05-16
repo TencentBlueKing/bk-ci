@@ -210,7 +210,7 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             permission = AuthPermission.CREATE
         )
-        checkTemplate(template, projectId)
+        checkTemplate(template, projectId, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -606,7 +606,7 @@ class TemplateFacadeService @Autowired constructor(
                 permission = AuthPermission.EDIT
             )
         }
-        checkTemplate(template, projectId)
+        checkTemplate(template, projectId, userId)
         checkTemplateAtomsForExplicitVersion(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
@@ -2273,13 +2273,13 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板是不是合法
      */
-    private fun checkTemplate(template: Model, projectId: String? = null) {
+    private fun checkTemplate(template: Model, projectId: String? = null, userId: String) {
         if (template.name.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
-        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
+        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId, userId = userId)
         checkPipelineParam(template)
     }
 
@@ -2309,7 +2309,7 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
+    fun checkTemplate(templateId: String, projectId: String? = null, userId: String): Boolean {
         val templateRecord = if (projectId.isNullOrEmpty()) {
             templateDao.getLatestTemplate(dslContext, templateId)
         } else {
@@ -2318,7 +2318,7 @@ class TemplateFacadeService @Autowired constructor(
         val modelStr = templateRecord.template
         if (modelStr != null) {
             val model = JsonUtil.to(modelStr, Model::class.java)
-            checkTemplate(model, projectId)
+            checkTemplate(template = model, projectId = projectId, userId = userId)
         }
         return true
     }
@@ -2405,7 +2405,7 @@ class TemplateFacadeService @Autowired constructor(
             val modelStr = templateRecord.template
             if (modelStr != null) {
                 val model = JsonUtil.to(modelStr, Model::class.java)
-                checkTemplate(model, projectId)
+                checkTemplate(model, projectId, userId)
             }
         }
         val projectTemplateMap = mutableMapOf<String, String>()

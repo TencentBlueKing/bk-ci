@@ -37,7 +37,7 @@ import java.io.File
 
 class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
 
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
+    override fun uploadStoreLogo(userId: String, file: File, fileRepoPath: String?): Result<String?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val logoUrl = CommonUtils.serviceUploadFile(
             userId = userId,
@@ -45,7 +45,8 @@ class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
             file = file,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
             staticFlag = true,
-            language = I18nUtil.getLanguage(userId)
+            language = I18nUtil.getLanguage(userId),
+            fileRepoPath = fileRepoPath
         ).data
         // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
         return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)

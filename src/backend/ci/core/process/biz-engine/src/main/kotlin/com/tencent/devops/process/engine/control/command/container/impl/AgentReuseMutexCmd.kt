@@ -477,7 +477,8 @@ class AgentReuseMutexCmd @Autowired constructor(
             ) + " Mutex[$runtimeAgentOrEnvId]",
             tag = VMUtils.genStartVMTaskId(containerId),
             jobId = null,
-            executeCount = executeCount ?: 1
+            executeCount = executeCount ?: 1,
+            stepId = null
         )
     }
 
@@ -532,7 +533,8 @@ class AgentReuseMutexCmd @Autowired constructor(
                 message = message,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 jobId = null,
-                executeCount = container.executeCount
+                executeCount = container.executeCount,
+                stepId = null
             )
         } else {
             buildLogPrinter.addYellowLine(
@@ -540,7 +542,8 @@ class AgentReuseMutexCmd @Autowired constructor(
                 message = message,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 jobId = null,
-                executeCount = container.executeCount
+                executeCount = container.executeCount,
+                stepId = null
             )
         }
     }

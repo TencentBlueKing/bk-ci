@@ -30,11 +30,11 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.I18nSourceEnum
-import com.tencent.devops.store.pojo.common.HonorInfo
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.label.Label
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
-import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AtomVersion(

@@ -8,6 +8,9 @@ spring:
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21920
 server:
   port: __BK_CI_ARTIFACTORY_API_PORT__
+  undertow:
+    buffer-size: 10MB
+    max-http-post-size: 5120MB
 
 # 以下为构件存储目录，需要做分布式分享
 # 如果微服务是部署多机节点，则以下目录需要做成分布式高可用的，比如NFS，CephFS挂载

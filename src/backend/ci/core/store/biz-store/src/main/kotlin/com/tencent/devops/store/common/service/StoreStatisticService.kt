@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreStatisticService {

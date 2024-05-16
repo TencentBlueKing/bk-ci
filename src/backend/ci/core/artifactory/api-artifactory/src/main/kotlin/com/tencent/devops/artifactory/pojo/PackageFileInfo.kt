@@ -29,7 +29,7 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "插件市场-重新归档插件包请求报文体")
+@Schema(title = "重新归档组件包请求报文体")
 data class PackageFileInfo(
     @get:Schema(title = "包文件名", required = true)
     val packageFileName: String,

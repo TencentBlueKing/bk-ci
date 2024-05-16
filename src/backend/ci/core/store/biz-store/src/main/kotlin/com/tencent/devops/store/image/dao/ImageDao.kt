@@ -658,9 +658,9 @@ class ImageDao {
             .groupBy(tImage.IMAGE_CODE)
             .orderBy(tImage.UPDATE_TIME.desc())
         return if (pageSize != null && pageSize > 0 && page != null && page > 0) {
-            query.limit((page - 1) * pageSize, pageSize).fetch()
+            query.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            query.fetch()
+            query.skipCheck().fetch()
         }
     }
 
