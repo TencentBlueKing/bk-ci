@@ -124,11 +124,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        // 有草稿且不是空白的编排才可以发布，如果是模板实例则直接可发布
-        val canRelease = detailInfo.instanceFromTemplate ||
-            (draftVersion != null && draftVersion.model.stages.size > 1)
-        // 存在草稿版本就可以调试，如果是模板实例则永远不可调试
-        val canDebug = !detailInfo.instanceFromTemplate && draftVersion != null
+        // 有草稿且不是空白的编排才可以发布
+        val canRelease = draftVersion != null && draftVersion.model.stages.size > 1
+        // 存在草稿版本就可以调试
+        val canDebug = draftVersion != null
         val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId
