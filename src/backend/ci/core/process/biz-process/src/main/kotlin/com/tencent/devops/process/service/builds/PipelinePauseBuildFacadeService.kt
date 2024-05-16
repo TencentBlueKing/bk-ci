@@ -76,12 +76,13 @@ class PipelinePauseBuildFacadeService(
         pipelineId: String,
         buildId: String,
         projectId: String,
-        taskId: String,
+        taskId: String?,
         stageId: String,
         containerId: String,
         isContinue: Boolean,
         element: Element?,
-        checkPermission: Boolean? = true
+        checkPermission: Boolean? = true,
+        stepId: String?
     ): Boolean {
         logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue")
         if (checkPermission!!) {
@@ -125,9 +126,22 @@ class PipelinePauseBuildFacadeService(
             )
         }
 
-        val taskRecord = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
+        val taskRecord = when {
+            taskId != null -> pipelineTaskService.getBuildTask(
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId
+            )
+            stepId != null -> pipelineTaskService.getBuildTask(
+                projectId = projectId,
+                buildId = buildId,
+                taskId = null,
+                stepId = stepId
+            )
+            else -> null
+        } ?: return false
 
-        if (taskRecord?.status != BuildStatus.PAUSE) {
+        if (taskRecord.status != BuildStatus.PAUSE) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PAUSE_PIPELINE_IS_RUNNING
             )
@@ -143,7 +157,7 @@ class PipelinePauseBuildFacadeService(
                 element = element,
                 projectId = projectId,
                 buildId = buildId,
-                taskId = taskId,
+                taskId = taskRecord.taskId,
                 taskRecord = taskRecord
             )
         }
@@ -156,7 +170,7 @@ class PipelinePauseBuildFacadeService(
                 projectId = projectId,
                 stageId = stageId,
                 containerId = containerId,
-                taskId = taskId,
+                taskId = taskRecord.taskId,
                 actionType = actionType,
                 userId = userId
             )
@@ -204,22 +218,28 @@ class PipelinePauseBuildFacadeService(
                     buildId = buildId,
                     message = "plugin: ${oldTask.taskName}, params $it updated:",
                     tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = oldTask.executeCount ?: 1
+                    containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1,
+                    jobId = null,
+                    stepId = newElement.stepId
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "before: $oldData",
                     tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = oldTask.executeCount ?: 1
+                    containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1,
+                    jobId = null,
+                    stepId = newElement.stepId
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "after: $newData",
                     tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = oldTask.executeCount ?: 1
+                    containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1,
+                    jobId = null,
+                    stepId = newElement.stepId
                 )
             }
         }
@@ -263,13 +283,15 @@ class PipelinePauseBuildFacadeService(
             oldTask = taskRecord
         )
         // #9113 凡是有操作记录都保存下来，用于冲突判断
-        pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            newValue = newElementStr,
-            defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false),
-            executeCount = taskRecord.executeCount
-        ))
+        pipelineTaskPauseService.savePauseValue(
+            PipelinePauseValue(
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                newValue = newElementStr,
+                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false),
+                executeCount = taskRecord.executeCount
+            )
+        )
     }
 }

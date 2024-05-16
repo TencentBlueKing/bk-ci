@@ -67,7 +67,6 @@ import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
-import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
@@ -104,12 +103,12 @@ import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.KEY_VERSION_INFO
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_LATEST_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreI18nConfig
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
@@ -987,7 +986,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     @BkTimed(extraTags = ["publish", "passTest"], value = "store_publish_pipeline_atom")
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
-        val info = logger.info("passTest, userId=$userId, atomId=$atomId")
+        logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -1207,10 +1206,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf("$atomCode:$version")
             )
         if (AtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
-            throw ErrorCodeException(
-                errorCode = VERSION_PUBLISHED,
-                params = arrayOf(atomCode, version)
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)

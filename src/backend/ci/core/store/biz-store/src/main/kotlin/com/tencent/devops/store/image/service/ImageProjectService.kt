@@ -101,6 +101,7 @@ import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.image.MultiSourceDataPaginator
 import com.tencent.devops.store.common.utils.image.PagableDataSource
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -1044,10 +1045,12 @@ class ImageProjectService @Autowired constructor(
         }
         return storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = projectCodeList,
             storeId = image.id,
-            storeCode = image.imageCode,
-            storeType = StoreTypeEnum.IMAGE,
+            installStoreReq = InstallStoreReq(
+                projectCodes = projectCodeList,
+                storeCode = image.imageCode,
+                storeType = StoreTypeEnum.IMAGE
+            ),
             publicFlag = imageFeature.publicFlag,
             channelCode = channelCode
         )

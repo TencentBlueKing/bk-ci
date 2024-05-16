@@ -343,7 +343,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode
     ): List<PipelineModelTask> {
 
-        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId)
+        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId, userId)
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
 

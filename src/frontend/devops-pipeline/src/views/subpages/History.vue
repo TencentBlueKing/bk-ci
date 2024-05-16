@@ -68,7 +68,7 @@
             ShowVariable
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion', 'switchingVersion']),
+            ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
             ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline', 'isBranchVersion']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
@@ -191,6 +191,7 @@
                     const { data } = await this.getPipelineVersionInfo(this.$route.params)
                     const isDraft = data.status === VERSION_STATUS_ENUM.COMMITTING
                     const isBranchVersion = data.status === VERSION_STATUS_ENUM.BRANCH
+                    const isRelease = data.status === VERSION_STATUS_ENUM.RELEASED
 
                     this.selectPipelineVersion({
                         ...data,
@@ -198,13 +199,13 @@
                         description: isDraft ? this.$t('baseOn', [data.baseVersionName]) : (data.description || '--'),
                         isBranchVersion,
                         isDraft,
-                        isRelease: data.status === VERSION_STATUS_ENUM.RELEASED
+                        isRelease
                     })
                     if (isDraft && !this.isReleasePipeline) {
                         this.$router.replace({
                             name: 'pipelinesEdit'
                         })
-                    } else {
+                    } else if (this.pipelineInfo && data.version !== this.pipelineInfo?.releaseVersion) {
                         this.$router.replace({
                             ...this.$route,
                             params: {
@@ -252,7 +253,7 @@
                             component: 'BuildHistoryTab',
                             props: {
                                 isDebug: this.isActiveDraftVersion,
-                                pipelineName: this.pipeline?.name
+                                pipelineName: this.pipelineSetting?.pipelineName
                             }
                         }
                 }

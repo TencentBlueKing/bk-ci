@@ -110,6 +110,7 @@ import java.util.regex.Pattern
 object PipelineVarUtil {
 
     private val tPattern = Pattern.compile("\\$[{]{2}(?<double>[^$^{}]+)[}]{2}")
+    const val CONTEXT_PREFIX = "variables."
 
     /**
      * 检查[keyword]字符串是不是一个变量语法， ${{ varName }}， 如果不是则返回false
@@ -354,6 +355,20 @@ object PipelineVarUtil {
     fun fillOldVar(vars: MutableMap<String, String>) {
         turning(newVarMappingOldVar, vars)
         prefixTurning(newPrefixMappingOld, vars)
+    }
+
+    /**
+     * 填充variable变量
+     */
+    fun fillVariableMap(pipelineParamMap: Map<String, String>): Map<String, String> {
+        val allVars = mutableMapOf<String, String>()
+        pipelineParamMap.forEach { (name, value) ->
+            allVars[name] = value
+            if (!name.startsWith(CONTEXT_PREFIX)) {
+                allVars[CONTEXT_PREFIX + name] = value
+            }
+        }
+        return allVars
     }
 
     /**

@@ -160,6 +160,7 @@
                         this.$bkInfo({
                             type: 'error',
                             width: 500,
+                            zIndex: 2020,
                             title: this.$t('invalidCodeMode'),
                             subHeader: this.$createElement(
                                 'pre',

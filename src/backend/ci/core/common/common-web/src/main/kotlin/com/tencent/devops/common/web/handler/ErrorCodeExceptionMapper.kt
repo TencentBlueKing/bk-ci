@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory
         val errorResult = I18nUtil.generateResponseDataObject(
             messageCode = exception.errorCode,
             params = exception.params,
-            data = null,
+            data = exception.data,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             defaultMessage = exception.defaultMessage
         )

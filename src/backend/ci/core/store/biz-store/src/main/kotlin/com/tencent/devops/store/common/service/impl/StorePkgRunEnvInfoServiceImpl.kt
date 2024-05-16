@@ -29,8 +29,8 @@ package com.tencent.devops.store.common.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.store.common.dao.StorePkgRunEnvInfoDao
 import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvRequest
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
 import org.jooq.DSLContext

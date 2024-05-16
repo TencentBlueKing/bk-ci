@@ -129,7 +129,8 @@ class StoreIndexPipelineServiceImpl @Autowired constructor(
                 storeCode = atomCode,
                 storeType = storeType,
                 pipelineId = pipelineId,
-                busType = StorePipelineBusTypeEnum.INDEX
+                busType = StorePipelineBusTypeEnum.INDEX,
+                projectCode = initProjectCode
             )
         }
         if (executeTimeType == IndexExecuteTimeTypeEnum.INDEX_CHANGE) {

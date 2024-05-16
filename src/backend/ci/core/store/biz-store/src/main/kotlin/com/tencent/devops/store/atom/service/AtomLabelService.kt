@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.atom.service
 
-import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.label.Label
 
 /**
  * 插件标签逻辑处理

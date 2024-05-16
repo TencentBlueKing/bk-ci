@@ -169,6 +169,6 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     }
 
     override fun checkTemplate(userId: String, projectId: String, templateId: String): Result<Boolean> {
-        return Result(templateFacadeService.checkTemplate(templateId, projectId))
+        return Result(templateFacadeService.checkTemplate(templateId, projectId, userId))
     }
 }

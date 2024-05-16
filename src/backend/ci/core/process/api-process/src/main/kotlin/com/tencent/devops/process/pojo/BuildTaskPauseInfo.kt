@@ -33,7 +33,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "流水线暂停操作实体类")
 data class BuildTaskPauseInfo(
     @get:Schema(title = "任务ID")
-    val taskId: String,
+    val taskId: String?,
+    @get:Schema(title = "插件ID")
+    val stepId: String?,
     @get:Schema(title = "element信息,若插件内有变量变更需给出变更后的element")
     val element: Element?,
     @get:Schema(title = "是否继续 true:继续构建 false：停止构建")
