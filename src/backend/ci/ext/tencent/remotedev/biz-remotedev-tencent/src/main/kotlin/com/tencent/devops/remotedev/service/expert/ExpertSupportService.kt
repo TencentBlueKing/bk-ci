@@ -154,10 +154,16 @@ class ExpertSupportService @Autowired constructor(
                 "createTime" -> newParam[k] = DateTimeUtil.toDateTime(
                     LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
                 )
+
                 "zone" -> newParam[k] = detail.regionId.toString()
                 "workspaceName" -> newParam[k] = data.workspaceName
                 "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
-                "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) UserUtil.removeTaiSuffix(data.creator) else ""
+                "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) {
+                    UserUtil.removeTaiSuffix(data.creator)
+                } else {
+                    ""
+                }
+
                 else -> newParam[k] = v
             }
         }
