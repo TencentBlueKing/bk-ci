@@ -1,3 +1,4 @@
+import { showLoginPopup } from '@/utils/util'
 import axios from 'axios'
 import Vue from 'vue'
 
@@ -22,7 +23,7 @@ function errorHandler (error: object) {
 request.interceptors.response.use(response => {
     const { data: { code, data, message, status }, status: httpStatus } = response
     if (httpStatus === 401) {
-        location.href = window.getLoginUrl()
+        showLoginPopup()
     } else if (httpStatus === 503) {
         return Promise.reject({ // eslint-disable-line
             status: httpStatus,
