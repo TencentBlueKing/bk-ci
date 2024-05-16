@@ -29,8 +29,14 @@ package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.CallbackConstants
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.secret.ISecretParam
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -92,6 +98,47 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         }
         projectPipelineCallBackService.batchDisable(projectId = projectId, callbackIds = callbackIds)
         return Result(true)
+    }
+
+    override fun createProjectCallback(
+        userId: String,
+        eventType: CallBackEvent,
+        url: String,
+        region: CallBackNetWorkRegionType?,
+        secretParam: ISecretParam
+    ): Result<CreateCallBackResult> {
+        logger.info("start create project callback|$userId|$eventType|$region|$url")
+        return Result(
+            projectPipelineCallBackService.createCallBack(
+                userId = userId,
+                projectId = CallbackConstants.DEVOPS_ALL_PROJECT,
+                region = region,
+                event = eventType.name,
+                secretParam = secretParam,
+                secretToken = null,
+                needCheckPermission = false,
+                url = url
+            )
+        )
+    }
+
+    override fun delete(userId: String, id: Long): Result<Boolean> {
+        projectPipelineCallBackService.delete(
+            userId = userId,
+            projectId = CallbackConstants.DEVOPS_ALL_PROJECT,
+            id = id,
+            needCheckPermission = false
+        )
+        return Result(true)
+    }
+
+    override fun list(userId: String, event: CallBackEvent): Result<List<ProjectPipelineCallBack>> {
+        return Result(
+            projectPipelineCallBackService.listProjectCallBack(
+                projectId = CallbackConstants.DEVOPS_ALL_PROJECT,
+                events = event.name
+            )
+        )
     }
 
     companion object {

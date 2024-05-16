@@ -23,12 +23,6 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ProjectCallbackMQConfiguration {
-
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
     @Bean
     fun projectCreateCallbackQueue() = Queue(MQ.QUEUE_PROJECT_CREATE_CALLBACK_EVENT)
 

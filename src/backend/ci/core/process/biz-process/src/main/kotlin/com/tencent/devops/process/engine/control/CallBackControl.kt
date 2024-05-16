@@ -368,7 +368,11 @@ class CallBackControl @Autowired constructor(
                 request.url.toString()
             ).substringBefore("?")
             Counter.builder(PIPELINE_CALLBACK_COUNT)
-                .tags(Tags.of("status", status.name).and("host", URL(realUrl).host))
+                .tags(
+                    Tags.of("status", status.name)
+                        .and("host", URL(realUrl).host)
+                        .and("event", callBack.events)
+                )
                 .register(meterRegistry)
                 .increment()
             saveHistory(
