@@ -9,5 +9,5 @@ data class ProjectUserCountV0(
     @get:Schema(title = "用户数")
     val userCount: Int,
     @get:Schema(title = "用户名单")
-    val users: String1
+    val users: String
 )
