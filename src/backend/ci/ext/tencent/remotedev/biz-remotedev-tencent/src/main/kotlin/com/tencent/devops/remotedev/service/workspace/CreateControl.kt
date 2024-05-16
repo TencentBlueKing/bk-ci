@@ -42,6 +42,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
@@ -772,6 +773,7 @@ class CreateControl @Autowired constructor(
                 if (oldWs != null) {
                     // 对于个人云桌面而言，直接硬删除记录。新的工作空间会复用原先的name
                     workspaceDao.deleteWorkspace(oldWs.workspaceName, dslContext)
+                    client.get(ServiceRemoteDevResource::class).deleteWorkspace(userId, workspaceName)
                 }
                 val userInfo = kotlin.runCatching {
                     client.get(ServiceTxUserResource::class).get(userId)

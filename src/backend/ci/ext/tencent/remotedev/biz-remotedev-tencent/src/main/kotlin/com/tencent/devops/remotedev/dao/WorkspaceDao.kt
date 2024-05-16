@@ -88,7 +88,7 @@ class WorkspaceDao {
                     workspace.winConfigId,
                     workspace.imageId,
                     workspace.zoneId
-                ).execute()
+                ).onDuplicateKeyIgnore().execute()
             }
         }
 
