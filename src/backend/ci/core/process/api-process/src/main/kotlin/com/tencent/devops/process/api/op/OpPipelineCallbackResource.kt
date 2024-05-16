@@ -64,7 +64,6 @@ interface OpPipelineCallbackResource {
         callbackIds: String
     ): Result<Boolean>
 
-
     @POST
     @Path("/create")
     @Operation(summary = "新建项目级回调")
