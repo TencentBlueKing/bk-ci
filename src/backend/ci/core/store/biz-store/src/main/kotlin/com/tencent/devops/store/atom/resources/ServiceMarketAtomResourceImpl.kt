@@ -47,6 +47,7 @@ import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.atom.service.MarketAtomStatisticService
 import com.tencent.devops.store.atom.service.impl.AtomMemberServiceImpl
+import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -112,7 +113,7 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         return Result(marketAtomService.getAtomsRely(getRelyAtom = getRelyAtom))
     }
 
-    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Result<Map<String, String>> {
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Result<JSONObject> {
         return Result(marketAtomService.getAtomsDefaultValue(atom = atom))
     }
 }

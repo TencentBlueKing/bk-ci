@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
 @Suppress("ComplexMethod")
 @Schema(title = "人工审核", description = ManualReviewUserTaskElement.classType)
@@ -69,7 +70,7 @@ data class ManualReviewUserTaskElement(
 
     override fun getTaskAtom() = "manualReviewTaskAtom"
 
-    override fun transferYaml(defaultValue: Map<String, String>?): PreStep {
+    override fun transferYaml(defaultValue: JSONObject?): PreStep {
         val input = mutableMapOf<String, Any>().apply {
             reviewUsers.ifEmpty { null }?.run { put(::reviewUsers.name, this) }
             desc?.ifEmpty { null }?.run { put(::desc.name, this) }

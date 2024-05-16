@@ -71,10 +71,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.atom.dao.AtomApproveRelDao
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
@@ -83,10 +79,31 @@ import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.service.AtomLabelService
+import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.common.service.StoreCommentService
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreDailyStatisticService
+import com.tencent.devops.store.common.service.StoreHonorService
+import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.service.StoreIndexManageService
+import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.common.service.StoreTotalStatisticService
+import com.tencent.devops.store.common.service.StoreUserService
+import com.tencent.devops.store.common.service.StoreWebsocketService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
@@ -120,33 +137,17 @@ import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomLabelService
-import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.atom.service.MarketAtomEnvService
-import com.tencent.devops.store.atom.service.MarketAtomService
-import com.tencent.devops.store.common.service.ClassifyService
-import com.tencent.devops.store.common.service.StoreCommentService
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreDailyStatisticService
-import com.tencent.devops.store.common.service.StoreHonorService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
-import com.tencent.devops.store.common.service.StoreIndexManageService
-import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.common.service.StoreTotalStatisticService
-import com.tencent.devops.store.common.service.StoreUserService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.service.StoreWebsocketService
-import com.tencent.devops.store.common.utils.StoreUtils
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.json.JSONObject
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -337,11 +338,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     val atomIndexInfos = atomIndexInfosMap[atomCode]
                     val members = memberData?.get(atomCode)
                     val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
-                    val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
+                    val flag = storeCommonService.generateInstallFlag(
+                        defaultFlag = defaultFlag,
                         members = members,
                         userId = userId,
                         visibleList = visibleList,
-                        userDeptList = userDeptList)
+                        userDeptList = userDeptList
+                    )
                     val classifyId = it[tAtom.CLASSIFY_ID] as String
                     var logoUrl = it[tAtom.LOGO_URL]
                     logoUrl = logoUrl?.let {
@@ -592,7 +595,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
         processingAtomRecords?.forEach { processingAtomRecord ->
             if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank() ||
-                processingAtomRecord.branchTestFlag) {
+                processingAtomRecord.branchTestFlag
+            ) {
                 return@forEach
             }
             if (processingVersionInfoMap == null) {
@@ -1220,23 +1224,17 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return result
     }
 
-    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, String> {
-        val atomInfo = atomDao.getPipelineAtom(dslContext, atom.atomCode, atom.version) ?: return emptyMap()
-        val res = mutableMapOf<String, String>()
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): JSONObject {
+        val atomInfo = atomDao.getPipelineAtom(dslContext, atom.atomCode, atom.version) ?: return JSONObject()
+        val res = JSONObject()
         val props: Map<String, Any> = jacksonObjectMapper().readValue(atomInfo.props)
         if (null != props["input"]) {
             val input = props["input"] as Map<String, Any>
             input.forEach { inputIt ->
                 val paramKey = inputIt.key
                 val paramValueMap = inputIt.value as Map<String, Any>
-                val default = when (val d = paramValueMap["default"]) {
-                    null -> null
-                    is List<*> -> d.joinToString(separator = ",")
-                    is String -> d
-                    else -> d.toString()
-                }
-                if (default != null) {
-                    res[paramKey] = default
+                if (paramValueMap["default"] != null) {
+                    res.append(paramKey, paramValueMap["default"])
                 }
             }
         }
@@ -1437,6 +1435,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                                 "\n    - key: string" +
                                     "\n      value: string"
                             )
+
                             else -> sb.append("string")
                         }
                         sb.append("\r\n")
