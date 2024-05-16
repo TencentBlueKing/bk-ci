@@ -66,6 +66,9 @@ import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -314,9 +317,14 @@ data class StartBuildContext(
         }
 
         private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
-            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name &&
-                params[PIPELINE_START_TYPE] != StartType.PIPELINE.name
-            ) {
+            // 支持webhookInfo的启动类型
+            val startTypes = listOf(
+                StartType.WEB_HOOK.name,
+                StartType.PIPELINE.name,
+                StartType.SERVICE.name,
+                StartType.REMOTE.name
+            )
+            if (!startTypes.contains(params[PIPELINE_START_TYPE])) {
                 return null
             }
             return WebhookInfo(
@@ -350,7 +358,16 @@ data class StartBuildContext(
                 parentPipelineName = params[PIPELINE_START_PARENT_PIPELINE_NAME],
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
                 parentBuildNum = params[PIPELINE_START_PARENT_BUILD_NUM],
-                linkUrl = params[PIPELINE_GIT_EVENT_URL]
+                linkUrl = if (params[PIPELINE_START_TYPE] == StartType.REMOTE.name ||
+                    params[PIPELINE_START_TYPE] == StartType.SERVICE.name
+                ) {
+                    // 自定义触发材料
+                    params[BK_CI_MATERIAL_URL]
+                } else {
+                    params[PIPELINE_GIT_EVENT_URL]
+                },
+                materialId = params[BK_CI_MATERIAL_ID],
+                materialName = params[BK_CI_MATERIAL_NAME]
             )
         }
 

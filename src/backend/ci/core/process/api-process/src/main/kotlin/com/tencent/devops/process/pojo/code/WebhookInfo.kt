@@ -83,5 +83,9 @@ data class WebhookInfo(
     // 父流水线构建号
     val parentBuildNum: String?,
     // 触发材料url
-    val linkUrl: String?
+    val linkUrl: String?,
+    // 自定义触发材料ID
+    val materialId: String?,
+    // 自定义触发材料名
+    val materialName: String?
 )
