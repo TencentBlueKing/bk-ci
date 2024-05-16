@@ -5,6 +5,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 
 interface StoreComponentManageService {
@@ -44,4 +45,15 @@ interface StoreComponentManageService {
      * 删除组件
      */
     fun deleteComponent(userId: String, handlerRequest: StoreDeleteRequest): Result<Boolean>
+
+    /**
+     * 校验下载组件的权限
+     */
+    fun validateComponentDownloadPermission(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        projectCode: String,
+        userId: String
+    ): Result<Boolean>
 }

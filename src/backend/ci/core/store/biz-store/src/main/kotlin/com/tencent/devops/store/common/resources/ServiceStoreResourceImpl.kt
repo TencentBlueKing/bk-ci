@@ -27,20 +27,16 @@
 
 package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreBuildService
-import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreErrorCodeService
 import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
-import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -55,10 +51,9 @@ class ServiceStoreResourceImpl @Autowired constructor(
     private val sensitiveConfService: UserSensitiveConfService,
     private val storeBuildService: StoreBuildService,
     private val storeErrorCodeService: StoreErrorCodeService,
-    private val storeCommonService: StoreCommonService,
     private val storeMemberService: StoreMemberService,
     private val classifyService: ClassifyService,
-    private val redisOperation: RedisOperation
+    private val storeComponentManageService: StoreComponentManageService
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -101,29 +96,20 @@ class ServiceStoreResourceImpl @Autowired constructor(
         )
     }
 
-    override fun validateProjectComponentPermission(
-        projectCode: String,
+    override fun validateComponentDownloadPermission(
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        version: String,
+        projectCode: String,
+        userId: String
     ): Result<Boolean> {
-        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
-            // 如果从缓存中查出该组件是公共组件则无需权限校验
-            return Result(true)
-        }
-        val checkFlag = storeCommonService.getStorePublicFlagByCode(storeCode, storeType) ||
-            storeProjectService.isInstalledByProject(
-                projectCode = projectCode,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte()
-            )
-        if (!checkFlag) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
-                params = arrayOf(projectCode, storeCode)
-            )
-        }
-        return Result(true)
+        return storeComponentManageService.validateComponentDownloadPermission(
+            storeCode = storeCode,
+            storeType = storeType,
+            version = version,
+            projectCode = projectCode,
+            userId = userId
+        )
     }
 
     override fun getClassifyList(storeType: StoreTypeEnum): Result<List<Classify>> {
