@@ -306,7 +306,7 @@ class RemoteDevJobService @Autowired constructor(
         )
         repeat(5) {
             // 先暂停60s看看，因为是从finalStage发送的，发送到的时候流水线的状态还是运行中
-            Thread.sleep(1000 * 60)
+            Thread.sleep(1000 * 30)
             // 获取流水线状态
             val build = client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
                 userId = info.userId,

@@ -47,6 +47,7 @@
                 return statusColorMap
             }
         },
+        inject: ['updateList'],
         methods: {
             ...mapActions('pipelines', [
                 'reTriggerEvent'
@@ -64,6 +65,9 @@
                             message: this.$t('reTriggerSuc'),
                             limit: 1
                         })
+                        setTimeout(() => {
+                            this.updateList()
+                        }, 1000)
                     }
                 } catch (error) {
                     this.$bkMessage({

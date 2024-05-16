@@ -52,10 +52,12 @@ import com.tencent.devops.store.ideatom.dao.IdeAtomEnvInfoDao
 import com.tencent.devops.store.ideatom.dao.IdeAtomLabelRelDao
 import com.tencent.devops.store.ideatom.dao.MarketIdeAtomFeatureDao
 import com.tencent.devops.store.ideatom.dao.MarketIdeAtomVersionLogDao
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
+import com.tencent.devops.store.ideatom.service.IdeAtomCategoryService
+import com.tencent.devops.store.ideatom.service.OpIdeAtomService
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.ideatom.IdeAtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.ideatom.IdeAtomCreateRequest
 import com.tencent.devops.store.pojo.ideatom.IdeAtomEnvInfoCreateRequest
@@ -65,15 +67,13 @@ import com.tencent.devops.store.pojo.ideatom.IdeAtomUpdateRequest
 import com.tencent.devops.store.pojo.ideatom.OpIdeAtomItem
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
-import com.tencent.devops.store.ideatom.service.IdeAtomCategoryService
-import com.tencent.devops.store.ideatom.service.OpIdeAtomService
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class OpIdeAtomServiceImpl @Autowired constructor(
@@ -202,7 +202,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                messageCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
@@ -210,7 +210,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val atomRecords = ideAtomDao.getIdeAtomsByAtomCode(dslContext, atomRecord.atomCode)
-            if (null == atomRecords || atomRecords.isEmpty()) {
+            if (atomRecords.isNullOrEmpty()) {
                 storeMemberDao.deleteAll(context, atomCode, StoreTypeEnum.IDE_ATOM.type.toByte())
             }
             ideAtomDao.deleteIdeAtomById(context, atomId)

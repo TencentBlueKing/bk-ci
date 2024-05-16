@@ -5,14 +5,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -24,7 +21,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
@@ -33,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -40,12 +37,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -59,21 +53,6 @@ class ExpertSupportService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val rabbitTemplate: RabbitTemplate
 ) {
-    @Value("\${expertsupport.rtxtemplate:#{null}}")
-    val rtxTemplate: String? = null
-
-    @Value("\${expertsupport.rtxAssignTemplate:#{null}}")
-    val rtxAssignTemplate: String? = null
-
-    @Value("\${expertsupport.jumpurl:#{null}}")
-    val jumpUrl: String? = null
-
-    @Value("\${expertsupport.personalWeworkGroupId:#{null}}")
-    val personalWeworkGroupId: String? = null
-
-    @Value("\${expertsupport.weworkGroupId:#{null}}")
-    val weworkGroupId: String? = null
-
     @Suppress("ComplexMethod")
     fun createSupport(
         data: CreateSupportData
@@ -120,10 +99,10 @@ class ExpertSupportService @Autowired constructor(
         )
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    Pair("${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}", it.value["PHONE"] as String)
                 } else {
-                    it.key
+                    Pair(it.key, "")
                 }
             }
         val projectInfo = kotlin.runCatching {
@@ -138,73 +117,65 @@ class ExpertSupportService @Autowired constructor(
                 params = arrayOf(record.workspaceName)
             )
 
-        val expiredTime = DateTimeUtil.getFutureDateFromNow(Calendar.HOUR, 1)
-        // 发送企业微信群消息
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-            SendNotifyMessageTemplateRequest(
-                templateCode = rtxTemplate ?: return,
-                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                titleParams = null,
-                bodyParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to
-                        (
-                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
-                            weworkGroupId!!
-                        } else {
-                            personalWeworkGroupId!!
-                        }
-                        ),
-                    "id" to id.toString(),
-                    "projectId" to
-                        (
-                            if (record.ownerType == WorkspaceOwnerType.PROJECT) {
-                                data.projectId + " | " + projectInfo.projectName
-                            } else {
-                                "个人云桌面"
-                            }
-                        ),
-                    "workspaceName" to data.workspaceName,
-                    "hostIp" to (detail.regionId.toString().plus(":").plus(data.hostIp)),
-                    "userId" to (taiUserCN[data.creator] ?: data.creator),
-                    "content" to data.content,
-                    "url" to jumpUrl.toString(),
-                    "machineType" to data.machineType,
-                    "city" to data.city,
-                    "expiredTime" to
-                        DateTimeUtil.toDateTime(
-                            DateTimeUtil.convertDateToLocalDateTime(expiredTime), "HH:mm:ss"
-                        )
-                ),
-                markdownContent = true
+        // 异步执行流水线完成其他动作
+        /**
+         * redis 中，xxx 为需要替换
+         * {
+         *     "userId": "xxx",
+         *     "projectId": "xxx",
+         *     "pipelineId": "xxx",
+         *     "buildParam": {
+         *         "xxx": "ip",
+         *         "xxx": "projectId",
+         *         "xxx": "projectName",
+         *         "xxx": "ticketId",
+         *         "xxx": "creator",
+         *         "xxx": "content",
+         *         "xxx": "city",
+         *         "xxx": "machineType"
+         *     }
+         * }
+         */
+        val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
+        val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+        val newParam = mutableMapOf<String, String>()
+        val hostIdSub = data.hostIp.split(".")
+        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+        info.buildParam.forEach { (k, v) ->
+            when (v) {
+                "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
+                "projectId" -> newParam[k] = data.projectId
+                "projectName" -> newParam[k] = projectInfo.projectName
+                "ticketId" -> newParam[k] = id.toString()
+                "creator" -> newParam[k] = taiUserCN[data.creator]?.first ?: data.creator
+                "content" -> newParam[k] = data.content
+                "city" -> newParam[k] = data.city
+                "machineType" -> newParam[k] = data.machineType
+                "createTime" -> newParam[k] = DateTimeUtil.toDateTime(
+                    LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                )
+
+                "zone" -> newParam[k] = detail.regionId.toString()
+                "workspaceName" -> newParam[k] = data.workspaceName
+                "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
+                "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) {
+                    UserUtil.removeTaiSuffix(data.creator)
+                } else {
+                    ""
+                }
+
+                else -> newParam[k] = v
+            }
+        }
+        AsyncExecute.dispatch(
+            rabbitTemplate,
+            AsyncPipelineEvent(
+                userId = info.userId ?: "",
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam
             )
         )
-        // 异步执行流水线完成其他动作
-
-        try {
-            val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
-            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-
-            val newParam = mutableMapOf<String, String>()
-            val hostIdSub = data.hostIp.split(".")
-            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-            info.buildParam.forEach { (k, v) ->
-                when (v) {
-                    "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
-                    "projectId" -> newParam[k] = data.projectId
-                    else -> newParam[k] = v
-                }
-            }
-            AsyncExecute.dispatch(
-                rabbitTemplate, AsyncPipelineEvent(
-                    userId = info.userId ?: "",
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
-            )
-        } catch (e: Exception) {
-            logger.warn("execute createSupport pipeline error", e)
-        }
     }
 
     fun updateSupportStatus(
@@ -315,24 +286,6 @@ class ExpertSupportService @Autowired constructor(
             )
         }
 
-        // 发送认领通知
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-            SendNotifyMessageTemplateRequest(
-                templateCode = rtxAssignTemplate ?: return Pair(true, "通知模板为空"),
-                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                titleParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
-                    "id" to id.toString(),
-                    "userId" to userId,
-                    "time" to LocalDateTime.now().format(dateTimeFormatter)
-                ),
-                bodyParams = mapOf(
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!
-                ),
-                markdownContent = true
-            )
-        )
-
         return Pair(true, null)
     }
 
@@ -374,10 +327,27 @@ class ExpertSupportService @Autowired constructor(
         return Pair(true, "已发起查询，稍后通知密码")
     }
 
+    fun fetchSupRecord(
+        workspaceName: String,
+        createLaterTimestamp: Long
+    ): List<SupRecordData> {
+        val records = expertSupportDao.fetchSupByWorkspaceName(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            createLaterTime = DateTimeUtil.convertTimestampToLocalDateTime(createLaterTimestamp)
+        )
+        return records.map {
+            SupRecordData(
+                id = it.id,
+                createTime = it.createTime,
+                content = it.content
+            )
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
-        private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日HH:mm:ss")
         private const val PIPELINE_EXPORT_CONFIG_INFO = "remotedev:createExpSupport.pipelineinfo"
         private const val PIPELINE_QUERY_CGS_PWD = "remotedev:queryCgsPwd.pipelineinfo"
     }

@@ -150,17 +150,19 @@ class MacBuildListener @Autowired constructor(
                     containerHashId = event.containerHashId,
                     vmSeqId = event.vmSeqId,
                     message = "DevCloud MacOS IP：${it.ip}",
-                    executeCount = event.executeCount
+                    executeCount = event.executeCount,
+                    jobId = event.jobId
                 )
             } ?: run {
                 // 如果没有找到合适的vm机器，则等待10秒后再执行, 总共执行60次（10min）
                 logRed(
-                    buildLogPrinter,
-                    event.buildId,
-                    event.containerHashId,
-                    event.vmSeqId,
-                    "No idle macOS resources found, wait 10 seconds and try again",
-                    event.executeCount
+                    buildLogPrinter = buildLogPrinter,
+                    buildId = event.buildId,
+                    containerHashId = event.containerHashId,
+                    vmSeqId = event.vmSeqId,
+                    message = "No idle macOS resources found, wait 10 seconds and try again",
+                    executeCount = event.executeCount,
+                    jobId = event.jobId
                 )
 
                 logger.error("Can not found any idle vm for this build($dispatchMessage),wait for 10s")
@@ -201,7 +203,8 @@ class MacBuildListener @Autowired constructor(
                 vmSeqId = vmSeqId,
                 message = "${I18nUtil.getCodeLanMessage("${CommonMessageCode.BK_FAILED_START_BUILD_MACHINE}")} " +
                         "- ${t.message}",
-                executeCount = executeCount
+                executeCount = executeCount,
+                jobId = jobId
             )
 
             client.get(ServiceBuildResource::class).setVMStatus(

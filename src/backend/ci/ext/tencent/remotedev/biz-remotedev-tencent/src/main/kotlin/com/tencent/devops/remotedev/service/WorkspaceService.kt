@@ -452,8 +452,8 @@ class WorkspaceService @Autowired constructor(
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}"
                 } else it.key
             }
 
@@ -469,7 +469,7 @@ class WorkspaceService @Autowired constructor(
             if (expertSupId != null) {
                 listOf(expertSupportDao.getSup(dslContext, expertSupId))
             } else {
-                expertSupportDao.fetchSupByWorkspaceName(dslContext, workspaceNames)
+                expertSupportDao.fetchSupByWorkspaceNames(dslContext, workspaceNames)
             }.filterNotNull().forEach {
                 val resp = FetchSupportResp(
                     id = it.id,
@@ -711,8 +711,8 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
         ).mapValues {
-            if (it.value.first.isNotBlank()) {
-                "${it.value.first}@${it.value.second}"
+            if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}"
             } else it.key
         }
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
@@ -1303,7 +1303,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1346,7 +1346,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1400,7 +1400,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
@@ -1484,7 +1484,7 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                     userIds = userIds.toMutableSet(),
                     workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),

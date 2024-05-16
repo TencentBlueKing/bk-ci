@@ -62,9 +62,11 @@ class ApigwLogResourceV2Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = elementId,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
-            debug = debug
+            debug = debug,
+            jobId = null,
+            stepId = null
         )
     }
 

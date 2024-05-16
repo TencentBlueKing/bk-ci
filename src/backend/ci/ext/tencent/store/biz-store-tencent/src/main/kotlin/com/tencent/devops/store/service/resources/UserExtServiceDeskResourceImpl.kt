@@ -30,7 +30,7 @@ package com.tencent.devops.store.service.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.extservice.UserExtServiceDeskResource
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.extservice.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.extservice.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.extservice.dto.SubmitDTO

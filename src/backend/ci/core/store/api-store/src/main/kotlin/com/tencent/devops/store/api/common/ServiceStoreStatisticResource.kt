@@ -31,9 +31,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.StoreStatistic
-import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -78,5 +79,20 @@ interface ServiceStoreStatisticResource {
         storeType: StoreTypeEnum,
         @Parameter(description = "使用store组件流水线数量更新实体对象列表", required = true)
         pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>
+    ): Result<Boolean>
+
+    @Operation(summary = "更新store组件的每日统计信息")
+    @PUT
+    @Path("/types/{storeType}/codes/{storeCode}/daily/info/update")
+    fun updateDailyStatisticInfo(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "store组件的每日统计信息", required = true)
+        storeDailyStatisticRequest: StoreDailyStatisticRequest
     ): Result<Boolean>
 }

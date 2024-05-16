@@ -27,6 +27,7 @@
                     :loading="saveStatus"
                     outline
                     theme="primary"
+                    style="margin-right: 10px"
                     @click="saveSetting"
                     v-perm="{
                         hasPermission: canEdit,
@@ -102,15 +103,16 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
-    import PacTag from '@/components/PacTag.vue'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import {
-        RESOURCE_ACTION
-    } from '@/utils/permission'
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    import ReleaseButton from './ReleaseButton'
+import PacTag from '@/components/PacTag.vue'
+import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+import {
+    RESOURCE_ACTION
+} from '@/utils/permission'
+import { UI_MODE } from '@/utils/pipelineConst'
+import { mapActions, mapGetters, mapState } from 'vuex'
+import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {
@@ -184,7 +186,20 @@
                 return this.pipelineInfo?.version ?? ''
             }
         },
+        watch: {
+            isTemplatePipeline: {
+                handler (val) {
+                    if (val) {
+                        this.updatePipelineMode(UI_MODE)
+                    }
+                },
+                immediate: true
+            }
+        },
         methods: {
+            ...mapActions({
+                updatePipelineMode: 'updatePipelineMode'
+            }),
             ...mapActions('atom', [
                 'setPipelineEditing',
                 'saveDraftPipeline',
@@ -276,11 +291,34 @@
                     })
                     return true
                 } catch (e) {
-                    this.handleError(e, {
-                        projectId: this.projectId,
-                        resourceCode: this.pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }, 10000)
+                    if (e.code === 2101244) {
+                        const h = this.$createElement
+                        this.$bkMessage({
+                            theme: 'error',
+                            delay: 0,
+                            ellipsisLine: 0,
+                            message: h('div', {
+                                class: 'pipeline-save-error-list-box'
+                            }, e.data.map(item => h('div', {
+                                class: 'pipeline-save-error-list-item'
+                            }, [
+                                h('p', {}, item.errorTitle),
+                                h('ul', {
+                                    class: 'pipeline-save-error-list'
+                                }, item.errorDetails.map(err => h('li', {
+                                    domProps: {
+                                        innerHTML: err
+                                    }
+                                })))
+                            ])))
+                        })
+                    } else {
+                        this.handleError(e, {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        }, 10000)
+                    }
                     return false
                 } finally {
                     this.setSaveStatus(false)
@@ -375,5 +413,26 @@
     align-items: center;
   }
 }
+.pipeline-save-error-list-box {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 10px;
+    .pipeline-save-error-list-item {
 
-  </style>
+        > p {
+            margin-bottom: 12px;
+        }
+        .pipeline-save-error-list {
+            > li {
+                line-height: 26px;
+                a {
+                    color: $primaryColor;
+                    margin-left: 10px;
+                    text-align: right;
+                }
+            }
+        }
+    }
+}
+
+</style>

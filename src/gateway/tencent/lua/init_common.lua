@@ -43,6 +43,7 @@ ciAuthUtil = require("util.ci_auth_util")
 buildUtil = require("util.build_util")
 cjson = require("cjson")
 resolvUtil = require("util.resolv_util")
+aesUtil=require("util.aes_util")
 
 local ok_table = {status = 0, data = true}
 

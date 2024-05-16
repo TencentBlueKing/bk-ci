@@ -108,7 +108,7 @@
 </template>
 
 <script>
-    import { common, setting } from '@/http'
+    import { common } from '@/http'
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
     import EmptyTableStatus from '@/components/empty-table-status'
     import gitcode from './../images/home/gitcode.png'
@@ -220,21 +220,9 @@
             },
             
             enableCi (item) {
-                setting.toggleEnableCi(true, {
-                    id: item.id,
-                    name: item.name,
-                    name_with_namespace: item.nameWithNamespace,
-                    https_url_to_repo: item.httpsUrlToRepo,
-                    http_url_to_repo: item.httpsUrlToRepo.replace('https://', 'http://'),
-                    web_url: item.webUrl
-                }).then(res => {
-                    this.updateList()
-                    this.getRecentProjects()
-                }).catch((err) => {
-                    this.$bkMessage({
-                        theme: 'primary',
-                        message: err.message || err
-                    })
+                this.$router.push({
+                    name: 'basicSetting',
+                    hash: `#${item.nameWithNamespace}`
                 })
             },
 

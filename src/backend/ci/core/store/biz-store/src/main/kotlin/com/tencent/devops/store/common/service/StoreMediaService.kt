@@ -28,8 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMediaInfo
-import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreMediaService {

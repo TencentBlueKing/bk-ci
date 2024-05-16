@@ -29,7 +29,7 @@ package com.tencent.devops.store.template.service.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
-import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.template.service.TemplateCategoryService
 import org.jooq.DSLContext

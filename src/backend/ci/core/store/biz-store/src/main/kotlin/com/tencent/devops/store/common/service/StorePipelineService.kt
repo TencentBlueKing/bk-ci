@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
+import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 
 interface StorePipelineService {
 
@@ -40,4 +41,13 @@ interface StorePipelineService {
         userId: String,
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean>
+
+    /**
+     * 运行流水线
+     * @param storeRunPipelineParam 运行流水线参数
+     * @return 布尔值
+     */
+    fun runPipeline(
+        storeRunPipelineParam: StoreRunPipelineParam
+    ): Boolean
 }

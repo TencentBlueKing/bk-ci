@@ -35,6 +35,9 @@ store:
   defaultAtomErrorCodeLength: 6
   defaultAtomErrorCodePrefix: "8"
   defaultStaticFileFormat: jpg,png,svg,gif,jpeg
+  innerPipeline:
+    project: demo
+    user: admin
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

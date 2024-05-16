@@ -350,6 +350,7 @@ object ProcessMessageCode {
     const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
 
     const val ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY = "2101243" // 定时触发SVN分支不能为空
+    const val ERROR_PIPELINE_ELEMENT_CHECK_FAILED = "2101244" // 流水线有效性校验失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -530,4 +531,7 @@ object ProcessMessageCode {
     const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
     const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
     const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
+
+    const val BK_NOT_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotExecutePermissionErrorTitle" // 没有执行权限错误标题
+    const val BK_NOT_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotExecutePermissionErrorMessage" // 没有执行权限错误消息
 }

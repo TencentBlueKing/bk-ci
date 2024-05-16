@@ -32,24 +32,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.TxOpTemplateResource
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.template.service.TxOpTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class TxOpTemplateResourceImpl @Autowired constructor(
-    private val txOpTemplateService: TxOpTemplateService,
     private val storeVisibleDeptService: StoreVisibleDeptService
 ) : TxOpTemplateResource {
-
-    override fun approveVisibleDept(
-        userId: String,
-        templateCode: String,
-        visibleApproveReq: VisibleApproveReq
-    ): Result<Boolean> {
-        return txOpTemplateService.approveVisibleDept(userId, templateCode, visibleApproveReq)
-    }
 
     override fun getVisibleDept(templateCode: String): Result<StoreVisibleDeptResp?> {
         return storeVisibleDeptService.getVisibleDept(templateCode, StoreTypeEnum.TEMPLATE, null)

@@ -101,6 +101,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
             },
             highlightRanges () {
                 this.highlightBlocks(this.highlightRanges)
+            },
+            readOnly (val) {
+                this.editor.updateOptions({ readOnly: val })
             }
         },
         async mounted () {
@@ -202,7 +205,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
             },
             handleYamlPluginClick ({ editingElementPos, pos, range }) {
                 const atom = this.getAtomByPos(editingElementPos)
-                console.log('click atom', atom)
                 if (atom.run) {
                     this.$emit('step-click', editingElementPos, {
                         ...atom,

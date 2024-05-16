@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
@@ -39,7 +41,9 @@ import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,11 +55,42 @@ class WindowsResourceConfigService @Autowired constructor(
     private val windowsResourceTypeDao: WindowsResourceTypeDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
+    private val workspaceCommon: WorkspaceCommon,
     private val client: Client
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WindowsResourceConfigService::class.java)
+    }
+
+    fun allWindowsQuota(
+        userId: String,
+        searchCustom: Boolean?,
+        quotaType: QuotaType
+    ): Map<String, Map<String, Int>> {
+        // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
+        val res = mutableMapOf<String, MutableMap<String, Int>>()
+
+        if (searchCustom != true) {
+            workspaceCommon.syncStartCloudResourceList().forEach {
+                val key = it.zoneId.replace(Regex("\\d+"), "")
+                val map = res.getOrPut(key) { mutableMapOf() }
+                if (it.status == 11 && it.locked != true && it.internal == quotaType.getInternal()) {
+                    map[it.machineType] = (map[it.machineType] ?: 0) + 1
+                }
+            }
+        }
+
+        client.get(ServiceStartCloudResource::class).getResourceVm(
+            ResourceVmReq(null, null, quotaType.getInternal())
+        ).data?.forEach { resource ->
+                val key = resource.zoneId.replace(Regex("\\d+"), "")
+                val map = res.getOrPut(key) { mutableMapOf() }
+                resource.machineResources?.forEach { mas ->
+                    map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
+                }
+            }
+        return res
     }
 
     fun getAllZone(): List<WindowsResourceZoneConfig> {
@@ -112,7 +147,7 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Boolean {
         logger.info(
             "WorkspaceTemplateService|updateWorkspaceTemplate|" +
-                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
+                "id|$id|windowsResourceConfig|$windowsResourceConfig"
         )
 
         // 更新模板信息
@@ -131,7 +166,7 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Boolean {
         logger.info(
             "WorkspaceTemplateService|updateWindowsResourceZone|" +
-                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
+                "id|$id|windowsResourceConfig|$windowsResourceConfig"
         )
 
         // 更新模板信息

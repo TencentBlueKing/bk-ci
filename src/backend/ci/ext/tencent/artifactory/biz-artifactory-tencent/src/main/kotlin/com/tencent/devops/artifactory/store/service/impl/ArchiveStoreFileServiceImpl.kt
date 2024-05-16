@@ -27,8 +27,9 @@
 
 package com.tencent.devops.artifactory.store.service.impl
 
-import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.store.config.TxBkRepoStoreConfig
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
 import com.tencent.devops.artifactory.store.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -57,6 +58,8 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
     private lateinit var bkRepoConfig: BkRepoConfig
     @Autowired
     private lateinit var bkRepoStoreConfig: BkRepoStoreConfig
+    @Autowired
+    private lateinit var txBkRepoStoreConfig: TxBkRepoStoreConfig
     @Autowired
     private lateinit var bkRepoClient: BkRepoClient
     @Autowired
@@ -105,9 +108,9 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
         var userName = bkRepoStoreConfig.bkrepoStoreUserName
         var password = bkRepoStoreConfig.bkrepoStorePassword
         if (storeType == StoreTypeEnum.SERVICE) {
-            projectName = bkRepoStoreConfig.bkrepoExtServiceProjectName
-            userName = bkRepoStoreConfig.bkrepoExtServiceUserName
-            password = bkRepoStoreConfig.bkrepoExtServicePassword
+            projectName = txBkRepoStoreConfig.bkrepoExtServiceProjectName
+            userName = txBkRepoStoreConfig.bkrepoExtServiceUserName
+            password = txBkRepoStoreConfig.bkrepoExtServicePassword
         }
         try {
             bkRepoClient.uploadLocalFile(
@@ -129,14 +132,14 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
 
     override fun deleteFile(repoName: String, fullPath: String, type: String): Result<Boolean> {
         logger.info("deleteFile params:[$repoName")
-        var projectName: String
-        var userName: String
-        var password: String
+        val projectName: String
+        val userName: String
+        val password: String
         when (type) {
             StoreTypeEnum.SERVICE.name -> {
-                projectName = bkRepoStoreConfig.bkrepoExtServiceProjectName
-                userName = bkRepoStoreConfig.bkrepoExtServiceUserName
-                password = bkRepoStoreConfig.bkrepoExtServicePassword
+                projectName = txBkRepoStoreConfig.bkrepoExtServiceProjectName
+                userName = txBkRepoStoreConfig.bkrepoExtServiceUserName
+                password = txBkRepoStoreConfig.bkrepoExtServicePassword
             }
             else -> {
                 projectName = bkRepoStoreConfig.bkrepoStoreProjectName

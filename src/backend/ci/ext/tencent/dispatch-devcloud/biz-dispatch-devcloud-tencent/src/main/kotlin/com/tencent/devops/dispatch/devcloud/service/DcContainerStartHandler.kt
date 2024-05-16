@@ -129,8 +129,10 @@ class DcContainerStartHandler @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = VMUtils.genStartVMTaskId(vmSeqId),
-                    jobId = containerHashId,
-                    executeCount = executeCount ?: 1
+                    containerHashId = containerHashId,
+                    executeCount = executeCount ?: 1,
+                    jobId = jobId,
+                    stepId = VMUtils.genStartVMTaskId(vmSeqId)
                 )
 
                 devCloudBuildDao.createOrUpdate(

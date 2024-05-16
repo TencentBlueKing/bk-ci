@@ -6,22 +6,6 @@
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
-            <bk-button
-                :disabled="executeStatus"
-                v-perm="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
-                @click="goBack"
-            >
-                {{ $t("cancel") }}
-            </bk-button>
 
             <bk-button
                 theme="primary"
@@ -41,6 +25,24 @@
             >
                 {{ $t(isDebugPipeline ? "debug" : "exec") }}
             </bk-button>
+
+            <bk-button
+                :disabled="executeStatus"
+                v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goBack"
+            >
+                {{ $t("cancel") }}
+            </bk-button>
+
         </aside>
     </div>
     <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
@@ -48,11 +50,11 @@
 
 <script>
     import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
-    import {
-        RESOURCE_ACTION
-    } from '@/utils/permission'
-    import { mapGetters, mapState } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb'
+import {
+RESOURCE_ACTION
+} from '@/utils/permission'
+import { mapGetters, mapState } from 'vuex'
+import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
             PipelineBreadCrumb
