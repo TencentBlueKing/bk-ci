@@ -115,7 +115,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
         updateLabels: Boolean = true,
-        updateVersion: Boolean = true
+        updateVersion: Boolean = true,
+        isTemplate: Boolean = false
     ): PipelineSetting {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
@@ -154,7 +155,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             setting = setting,
             version = settingVersion,
             versionStatus = versionStatus,
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            isTemplate = isTemplate
         )
 
         if (pipelineName.name != pipelineName.oldName) {
