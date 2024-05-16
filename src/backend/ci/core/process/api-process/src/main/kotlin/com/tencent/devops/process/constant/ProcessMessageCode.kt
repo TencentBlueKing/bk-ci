@@ -486,4 +486,7 @@ object ProcessMessageCode {
     // TODO: AgentReuseMutex
     const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
     const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
+
+    const val BK_NOT_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotExecutePermissionErrorTitle" // 没有执行权限错误标题
+    const val BK_NOT_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotExecutePermissionErrorMessage" // 没有执行权限错误消息
 }
