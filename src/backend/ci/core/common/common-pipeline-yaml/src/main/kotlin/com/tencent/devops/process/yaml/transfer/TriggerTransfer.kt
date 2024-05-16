@@ -287,7 +287,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             "Issue" -> "issue"
                             else -> it
                         }
-                    }
+                    },
+                    comment = git.includeNoteComment?.disjoin()
                 )
 
                 CodeEventType.POST_COMMIT -> nowExist.push = PushRule(

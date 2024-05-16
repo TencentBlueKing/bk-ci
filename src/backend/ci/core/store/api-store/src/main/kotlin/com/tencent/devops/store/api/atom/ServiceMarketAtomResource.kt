@@ -53,6 +53,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import org.json.JSONObject
 
 @Tag(name = "SERVICE_MARKET_ATOM", description = "插件市场-插件")
 @Path("/service/market/atom/")
@@ -170,5 +171,5 @@ interface ServiceMarketAtomResource {
     @Path("/atom/default_value")
     fun getAtomsDefaultValue(
         atom: ElementThirdPartySearchParam
-    ): Result<Map<String, String>>
+    ): Result<JSONObject>
 }

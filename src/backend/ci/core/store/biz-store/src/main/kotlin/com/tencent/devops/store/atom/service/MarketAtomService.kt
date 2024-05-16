@@ -47,6 +47,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
+import org.json.JSONObject
 
 @Suppress("ALL")
 interface MarketAtomService {
@@ -180,7 +181,7 @@ interface MarketAtomService {
     /**
      * 获得插件默认值
      */
-    fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, String>
+    fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): JSONObject
 
     /**
      * 查找带post属性的插件
