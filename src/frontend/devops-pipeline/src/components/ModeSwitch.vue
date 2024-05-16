@@ -109,17 +109,17 @@
             },
             async detectYamlSupport () {
                 try {
-                    if (typeof this.isYamlSupport === 'boolean') {
-                        return {
-                            yamlSupported: this.isYamlSupport,
-                            yamlInvalidMsg: this.yamlInvalidMsg
-                        }
-                    }
                     // TODO: 模板不支持YAML
                     if (this.pipeline?.instanceFromTemplate) {
                         return {
                             yamlSupported: false,
                             yamlInvalidMsg: this.$t('templateYamlNotSupport')
+                        }
+                    }
+                    if (typeof this.isYamlSupport === 'boolean') {
+                        return {
+                            yamlSupported: this.isYamlSupport,
+                            yamlInvalidMsg: this.yamlInvalidMsg
                         }
                     }
                     const pipeline = Object.assign({}, this.pipeline, {
@@ -158,10 +158,10 @@
                     const { yamlSupported, yamlInvalidMsg, newYaml } = await this.detectYamlSupport()
                     if (!yamlSupported && yamlInvalidMsg) {
                         this.$bkInfo({
-                            type: 'error',
+                            type: this.pipeline?.instanceFromTemplate ? 'warning' : 'error',
                             width: 500,
                             zIndex: 2020,
-                            title: this.$t('invalidCodeMode'),
+                            title: this.$t(this.pipeline?.instanceFromTemplate ? 'unSupportCodeMode' : 'invalidCodeMode'),
                             subHeader: this.$createElement(
                                 'pre',
                                 {
