@@ -84,8 +84,8 @@ import org.springframework.test.util.ReflectionTestUtils
 @Suppress("MaxLineLength")
 internal class ModelTransferTest : BkCiAbstractTest() {
     private val client: Client = mockk()
-    private val creator: TransferCreator = TransferCreatorImpl()
     private val transferCache: TransferCacheService = mockk()
+    private val creator: TransferCreator = TransferCreatorImpl(transferCache)
     private val triggerTransfer: TriggerTransfer = TriggerTransfer(
         client = client, creator = creator, transferCache = transferCache
     )
@@ -147,15 +147,15 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     fun setUp() {
         every {
             transferCache.getAtomDefaultValue(any())
-        }.returns(emptyMap())
+        }.returns(JSONObject())
         every {
             transferCache.getAtomDefaultValue("CodeccCheckAtomDebug@4.*")
         }.returns("""{
-    "beAutoLang" : "false",
+    "beAutoLang" : false,
     "languages" : "",
     "checkerSetType" : "normal",
     "tools" : "",
-    "asyncTask" : "false",
+    "asyncTask" : false,
     "asyncTaskId" : "",
     "goPath" : "",
     "pyVersion" : "py3",
@@ -163,46 +163,46 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     "scriptType" : "SHELL",
     "script" : "# Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷\n# 请使用依赖的构建工具如maven/cmake等写一个编译脚本build.sh\n# 确保build.sh能够编译代码\n# cd path/to/build.sh\n# sh build.sh",
     "languageRuleSetMap" : "{}",
-    "C_CPP_RULE" : "",
+    "C_CPP_RULE" : [],
     "checkerSetEnvType" : "prod",
     "multiPipelineMark" : "",
     "rtxReceiverType" : "1",
-    "rtxReceiverList" : "",
+    "rtxReceiverList" : [],
     "botWebhookUrl" : "",
     "botRemindRange" : "2",
     "botRemindSeverity" : "7",
-    "botRemaindTools" : "",
+    "botRemaindTools" : [],
     "emailReceiverType" : "1",
-    "emailReceiverList" : "",
-    "emailCCReceiverList" : "",
+    "emailReceiverList" : [],
+    "emailCCReceiverList" : [],
     "instantReportStatus" : "2",
-    "reportDate" : "",
+    "reportDate" : [],
     "reportTime" : "",
-    "reportTools" : "",
+    "reportTools" : [],
     "toolScanType" : "1",
     "diffBranch" : "",
-    "byFile" : "false",
-    "mrCommentEnable" : "true",
-    "prohibitIgnore" : "false",
+    "byFile" : false,
+    "mrCommentEnable" : true,
+    "prohibitIgnore" : false,
     "newDefectJudgeFromDate" : "",
-    "transferAuthorList" : "",
-    "path" : "",
-    "customPath" : "",
-    "scanTestSource" : "false",
-    "openScanPrj" : "false",
+    "transferAuthorList" : [],
+    "path" : [],
+    "customPath" : [],
+    "scanTestSource" : false,
+    "openScanPrj" : false,
     "issueSystem" : "TAPD",
     "issueSubSystem" : "",
-    "issueResolvers" : "",
-    "issueReceivers" : "",
+    "issueResolvers" : [],
+    "issueReceivers" : [],
     "issueFindByVersion" : "",
     "maxIssue" : "1000",
-    "issueAutoCommit" : "false",
-    "issueTools" : "",
-    "issueSeverities" : ""
-  }""".let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) })
+    "issueAutoCommit" : false,
+    "issueTools" : [],
+    "issueSeverities" : []
+  }""".let { JSONObject(JsonUtil.to(it, object : TypeReference<Map<String, Any>>() {})) })
         every {
             transferCache.getAtomDefaultValue("manualReviewUserTask@1.*")
-        }.returns(emptyMap())
+        }.returns(JSONObject())
         every {
             transferCache.getDockerResource(any(), any(), any())
         }.returns(null)
@@ -214,30 +214,36 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     "repositoryName" : "",
     "repositoryUrl" : "",
     "authType" : "TICKET",
-    "persistCredentials" : "true",
+    "persistCredentials" : true,
     "pullType" : "BRANCH",
     "refName" : "master",
     "localPath" : "",
     "strategy" : "REVERT_UPDATE",
     "fetchDepth" : "",
-    "fetchOnlyCurrentRef" : "false",
-    "enableFetchRefSpec" : "false",
+    "fetchOnlyCurrentRef" : false,
+    "enableFetchRefSpec" : false,
     "fetchRefSpec" : "",
-    "enablePartialClone" : "false",
+    "enablePartialClone" : false,
     "includePath" : "",
     "excludePath" : "",
     "cachePath" : "",
-    "enableGitLfs" : "true",
-    "enableSubmodule" : "true",
+    "enableGitLfs" : true,
+    "enableSubmodule" : true,
     "submodulePath" : "",
-    "enableSubmoduleRemote" : "false",
-    "enableSubmoduleRecursive" : "true",
-    "enableVirtualMergeBranch" : "true",
-    "enableGitClean" : "true",
-    "enableGitCleanIgnore" : "true",
+    "enableSubmoduleRemote" : false,
+    "enableSubmoduleRecursive" : true,
+    "enableVirtualMergeBranch" : true,
+    "enableGitClean" : true,
+    "enableGitCleanIgnore" : true,
     "autoCrlf" : "false",
-    "enableTrace" : "false"
-  }""".let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) })
+    "enableTrace" : false
+  }""".let { JSONObject(JsonUtil.to(it, object : TypeReference<Map<String, Any>>() {})) })
+
+        every {
+            transferCache.getAtomDefaultValue("jobExecuteScriptForOA@1.*")
+        }.returns("""{
+    "scriptType" : "1"
+  }""".let { JSONObject(JsonUtil.to(it, object : TypeReference<Map<String, Any>>() {})) })
 
         every {
             transferCache.getStoreImageDetail(any(), any(), any())
