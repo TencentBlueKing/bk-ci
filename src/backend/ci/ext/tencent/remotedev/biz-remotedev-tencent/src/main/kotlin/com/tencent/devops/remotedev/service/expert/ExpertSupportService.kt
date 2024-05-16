@@ -163,7 +163,7 @@ class ExpertSupportService @Autowired constructor(
         }
         AsyncExecute.dispatch(
             rabbitTemplate,
-                AsyncPipelineEvent(
+            AsyncPipelineEvent(
                 userId = info.userId ?: "",
                 projectId = info.projectId,
                 pipelineId = info.pipelineId,
