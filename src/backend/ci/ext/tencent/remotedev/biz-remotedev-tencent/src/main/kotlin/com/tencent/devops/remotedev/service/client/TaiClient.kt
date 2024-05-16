@@ -82,6 +82,8 @@ data class TaiUserInfo(
     val accountEmail: String,
     @JsonProperty("phone")
     val phone: String?,
+    @JsonProperty("phone_country_code")
+    val phoneCountryCode: String?,
     @JsonProperty("company_tags")
     val companyTags: List<CompanyTags>,
     val departments: List<DepartmentsInfo>?

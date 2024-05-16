@@ -251,7 +251,9 @@ class RemoteDevSettingService @Autowired constructor(
                 userIds = userIds.filter { UserUtil.isTaiUser(it) }.toSet().ifEmpty { null }
             )
             val notInit = taiUsers.filter {
-                (it.value["EMAIL"] as String).isBlank() || (it.value["PHONE"] as String).isBlank() || update
+                (it.value["EMAIL"] as String).isBlank() ||
+                    (it.value["PHONE"] as String).isBlank() ||
+                    (it.value["PHONE_COUNTRY_CODE"] as String).isBlank() || update
             }
             val taiInfos = taiClient.taiUserInfo(TaiUserInfoRequest(usernames = notInit.keys))
                 .associateBy({ it.username }, { it })
