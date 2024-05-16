@@ -385,7 +385,7 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
                 return Result(true)
             }
             val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
-            val checkFlag = publicFlag == true  ||
+            val checkFlag = publicFlag == true ||
                 storeProjectService.isInstalledByProject(
                     projectCode = projectCode,
                     storeCode = storeCode,
