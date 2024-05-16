@@ -28,7 +28,6 @@
 package com.tencent.devops.environment.dao.job
 
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
@@ -488,12 +487,12 @@ class CmdbNodeDao {
     fun getCmdbNodesByNodeIdList(
         dslContext: DSLContext,
         nodeIdList: List<Long>
-    ): Result<Record4<Long, String, Boolean, String>> {
+    ): Result<Record4<Long, String, String, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_IP.`as`(T_NODE_NODE_IP),
-                AGENT_STATUS.`as`(T_NODE_AGENT_STATUS),
+                NODE_STATUS.`as`(T_NODE_NODE_STATUS),
                 AGENT_VERSION.`as`(T_NODE_AGENT_VERSION)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))

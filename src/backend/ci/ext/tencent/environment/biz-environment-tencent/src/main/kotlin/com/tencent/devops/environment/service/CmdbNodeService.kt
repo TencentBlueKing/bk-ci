@@ -52,7 +52,6 @@ import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_LINUX
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_SOLARIS
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_UNIX
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_WINDOWS
-import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
@@ -269,12 +268,18 @@ class CmdbNodeService @Autowired constructor(
             nodesAgentList = nodeRecords.map {
                 NodeAgent(
                     nodeIp = it[T_NODE_NODE_IP] as String,
-                    nodesAgentStatus = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0,
+                    nodesAgentStatus = if (NodeStatus.NORMAL.name == it[T_NODE_NODE_STATUS] as String) 1
+                    else if (NodeStatus.ABNORMAL.name == it[T_NODE_NODE_STATUS] as String) 0
+                    else 2,
                     nodesAgentVersion = it[T_NODE_AGENT_VERSION] as? String
                 )
             },
-            agentAbnormalNodesCount = nodeRecords.filterNot { it[T_NODE_AGENT_STATUS] as Boolean }.size,
-            agentNotInstallNodesCount = 0
+            agentAbnormalNodesCount = nodeRecords.filter {
+                NodeStatus.ABNORMAL.name == it[T_NODE_NODE_STATUS] as String
+            }.size,
+            agentNotInstallNodesCount = nodeRecords.filter {
+                NodeStatus.NOT_INSTALLED.name == it[T_NODE_NODE_STATUS] as String
+            }.size
         )
     }
 
@@ -388,12 +393,14 @@ class CmdbNodeService @Autowired constructor(
             nodesAgentList = toAddNodeList.map {
                 NodeAgent(
                     nodeIp = it.nodeIp,
-                    nodesAgentStatus = if (it.agentStatus) 1 else 0,
+                    nodesAgentStatus = if (NodeStatus.NORMAL.name == it.nodeStatus) 1
+                    else if (NodeStatus.ABNORMAL.name == it.nodeStatus) 0
+                    else 2,
                     nodesAgentVersion = it.agentVersion
                 )
             },
-            agentAbnormalNodesCount = toAddNodeList.filterNot { it.agentStatus }.size,
-            agentNotInstallNodesCount = 0
+            agentAbnormalNodesCount = toAddNodeList.filter { NodeStatus.ABNORMAL.name == it.nodeStatus }.size,
+            agentNotInstallNodesCount = toAddNodeList.filter { NodeStatus.NOT_INSTALLED.name == it.nodeStatus }.size
         )
     }
 
