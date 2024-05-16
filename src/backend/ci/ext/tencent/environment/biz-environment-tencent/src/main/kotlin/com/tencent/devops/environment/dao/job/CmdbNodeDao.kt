@@ -514,6 +514,7 @@ class CmdbNodeDao {
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(SERVER_ID.isNull)
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .orderBy(NODE_ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
