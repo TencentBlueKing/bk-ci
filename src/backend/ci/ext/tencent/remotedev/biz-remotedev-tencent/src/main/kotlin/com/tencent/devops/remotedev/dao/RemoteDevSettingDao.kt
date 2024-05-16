@@ -40,10 +40,12 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.client.TaiUserInfo
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -67,7 +69,9 @@ class RemoteDevSettingDao {
                 DOTFILE_REPO,
                 USER_SETTING,
                 USER_NAME,
-                COMPANY_NAME
+                COMPANY_NAME,
+                EMAIL,
+                PHONE
             )
                 .values(
                     userId,
@@ -78,7 +82,9 @@ class RemoteDevSettingDao {
                     setting.dotfileRepo,
                     JsonUtil.toJson(RemoteDevUserSettings(), false),
                     userInfo.value?.accountName ?: "",
-                    userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: ""
+                    userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: "",
+                    userInfo.value?.accountEmail ?: "",
+                    userInfo.value?.phone ?: ""
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -88,6 +94,8 @@ class RemoteDevSettingDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(USER_NAME, userInfo.value?.accountName ?: "")
                 .set(COMPANY_NAME, userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: "")
+                .set(EMAIL, userInfo.value?.accountEmail ?: "")
+                .set(PHONE, userInfo.value?.phone ?: "")
                 .execute()
         }
     }
@@ -138,10 +146,10 @@ class RemoteDevSettingDao {
         dslContext: DSLContext,
         limit: SQLLimit? = null,
         userIds: Set<String>? = null
-    ): Map<String, Pair<String, String>> {
+    ): Map<String, Record> {
         if (userIds?.isEmpty() == true) return emptyMap()
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.select(USER_ID, USER_NAME, COMPANY_NAME).from(this)
+            dslContext.select(USER_ID, USER_NAME, COMPANY_NAME, EMAIL, PHONE).from(this)
                 .let {
                     if (userIds != null) {
                         it.where(USER_ID.`in`(userIds))
@@ -154,21 +162,24 @@ class RemoteDevSettingDao {
                 }
                 .skipCheck()
                 .fetch {
-                    it.value1() to Pair(it.value2(), it.value3())
+                    it.value1() to it
                 }.toMap()
         }
     }
 
     fun updateTaiUserInfo(
         dslContext: DSLContext,
-        userInfo: Map<String, Pair<String, String>>
+        userInfo: Map<String, TaiUserInfo>
     ) {
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.batched { c ->
-                userInfo.forEach { (t, u) ->
-                    c.dsl().update(this).set(USER_NAME, u.first)
-                        .set(COMPANY_NAME, u.second)
-                        .where(USER_ID.eq(t))
+                userInfo.forEach { it ->
+                    c.dsl().update(this)
+                        .set(EMAIL, it.value.accountEmail)
+                        .set(PHONE, it.value.phone)
+                        .set(USER_NAME, it.value.accountName)
+                        .set(COMPANY_NAME, it.value.companyTags.joinToString(",") { it.tagName })
+                        .where(USER_ID.eq(it.key))
                         .execute()
                 }
             }
@@ -330,6 +341,8 @@ class RemoteDevSettingDao {
         if (UserUtil.isTaiUser(userId)) {
             val taiClient = SpringContextUtil.getBean(TaiClient::class.java)
             taiClient.taiUserInfo(TaiUserInfoRequest(setOf(userId))).first()
-        } else null
+        } else {
+            null
+        }
     }
 }

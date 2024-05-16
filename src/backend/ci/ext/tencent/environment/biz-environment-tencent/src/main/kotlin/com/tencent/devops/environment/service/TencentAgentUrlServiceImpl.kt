@@ -43,6 +43,9 @@ open class TencentAgentUrlServiceImpl constructor(
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+        if (gw.startsWith("http")) {
+            return "$gw/external/agents/$agentHashId/install"
+        }
         return "http://$gw/external/agents/$agentHashId/install"
     }
 
@@ -54,9 +57,17 @@ open class TencentAgentUrlServiceImpl constructor(
         // 2、公司devnet区域有的Linux/Mac构建机无法访问 https协议 的域名, 等解决。。。
         return if (agentRecord.os == OS.WINDOWS.name) {
             val wUrl = gw.replace(".oa.", ".woa.")
-            "https://$wUrl/external/agents/$agentHashId/agent"
+            if (wUrl.startsWith("http")) {
+                "$wUrl/external/agents/$agentHashId/agent"
+            } else {
+                "https://$wUrl/external/agents/$agentHashId/agent"
+            }
         } else {
-            "http://$gw/external/agents/$agentHashId/agent?arch=\${ARCH}"
+            if (gw.startsWith("http")) {
+                "$gw/external/agents/$agentHashId/agent?arch=\${ARCH}"
+            } else {
+                "http://$gw/external/agents/$agentHashId/agent?arch=\${ARCH}"
+            }
         }
     }
 
@@ -77,12 +88,12 @@ open class TencentAgentUrlServiceImpl constructor(
         return if (agentRecord.fileGateway.isNullOrBlank()) {
             genGateway(agentRecord)
         } else {
-            agentRecord.fileGateway.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+            agentRecord.fileGateway.removeSuffix("/")
         }
     }
 
     override fun fixGateway(gateway: String?): String {
         val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway!! else gateway!!
-        return gw.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+        return gw.removeSuffix("/")
     }
 }

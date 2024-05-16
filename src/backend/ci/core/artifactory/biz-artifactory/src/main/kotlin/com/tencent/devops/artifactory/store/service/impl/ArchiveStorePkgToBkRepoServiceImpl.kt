@@ -86,14 +86,19 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             } else {
                 val path = it.path.removePrefix(prefix)
                 logger.debug("uploadLocalFile fileName=${it.name}|path=$path")
+                val uploadRepoName = if (storeType == StoreTypeEnum.DEVX) {
+                    "$repoName-tmp"
+                } else {
+                    repoName
+                }
                 bkRepoClient.uploadLocalFile(
                     userId = BKREPO_DEFAULT_USER,
                     projectId = getBkRepoProjectId(storeType),
-                    repoName = repoName,
+                    repoName = uploadRepoName,
                     path = path,
                     file = it,
                     gatewayFlag = false,
-                    bkrepoApiUrl = "${getRepoPrefixUrl(storeType)}/api/generic",
+                    bkrepoApiUrl = "${bkRepoClientConfig.bkRepoIdcHost}/api/generic",
                     userName = bkRepoStoreConfig.bkrepoStoreUserName,
                     password = bkRepoStoreConfig.bkrepoStorePassword
                 )
@@ -143,7 +148,8 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
     override fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String
+        pkgPath: String,
+        idcFlag: Boolean
     ): String {
         val repoPrefixUrl = getRepoPrefixUrl(storeType)
         val temporaryAccessUrls = bkRepoClient.createTemporaryAccessUrl(
@@ -159,10 +165,11 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             userName = bkRepoStoreConfig.bkrepoStoreUserName,
             password = bkRepoStoreConfig.bkrepoStorePassword
         )
-        return if (temporaryAccessUrls.isNotEmpty()) {
-            temporaryAccessUrls[0].url
-        } else {
-            ""
+        return when {
+            temporaryAccessUrls.isEmpty() -> ""
+            !idcFlag && storeType == StoreTypeEnum.DEVX && bkRepoClientConfig.bkRepoDevxDevnetHost.isNotBlank() ->
+                temporaryAccessUrls[0].url.replace(repoPrefixUrl, bkRepoClientConfig.bkRepoDevxDevnetHost)
+            else -> temporaryAccessUrls[0].url
         }
     }
 

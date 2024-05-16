@@ -125,6 +125,8 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
     `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户ID',
     `USER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '用户中文名',
     `COMPANY_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '公司名称',
+    `PHONE` varchar(64) NOT NULL DEFAULT '' COMMENT '电话',
+    `EMAIL` varchar(128) NOT NULL DEFAULT '' COMMENT '邮箱',
     `DEFAULT_SHELL` varchar(10) NOT NULL DEFAULT '' COMMENT '默认shell: zsh | bash',
     `BASIC_SETTING` mediumtext NOT NULL COMMENT '客户端使用，后台只管存的信息',
     `GIT_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接git',

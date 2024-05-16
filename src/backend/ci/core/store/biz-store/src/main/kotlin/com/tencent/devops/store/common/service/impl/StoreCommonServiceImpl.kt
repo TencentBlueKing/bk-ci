@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.store.common.configuration.StoreDetailUrlConfig
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.OperationLogDao
@@ -176,6 +178,9 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
     @Autowired
     lateinit var storeVersionLogDao: StoreVersionLogDao
 
+    @Autowired
+    lateinit var client: Client
+
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
 
     override fun getStoreNameById(
@@ -283,24 +288,31 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         processInfo: List<ReleaseProcessItem>
     ): StoreProcessInfo {
         val opPermission = storeMemberDao.isStoreAdmin(
-            dslContext,
-            userId,
-            storeCode,
-            storeType.type.toByte()
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
         ) || creator == userId
         val storeProcessInfo = StoreProcessInfo(opPermission, null, processInfo)
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         if (null != storeBuildInfoRecord) {
+            val pipelineId = storeBuildInfoRecord.pipelineId
+            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(
+                dslContext = dslContext,
+                pipelineId = pipelineId
+            )
+            var projectCode = storePipelineRelRecord?.projectCode
+            if (projectCode.isNullOrBlank()) {
+                projectCode =
+                    client.get(ServicePipelineResource::class).getPipelineInfoByPipelineId(pipelineId)?.data?.projectId
+                        ?: ""
+                storePipelineRelDao.updateStorePipelineProject(dslContext, pipelineId, projectCode)
+            }
             storeProcessInfo.storeBuildInfo = StoreBuildInfo(
                 storeId = storeBuildInfoRecord.storeId,
-                pipelineId = storeBuildInfoRecord.pipelineId,
+                pipelineId = pipelineId,
                 buildId = storeBuildInfoRecord.buildId,
-                projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                    dslContext,
-                    userId,
-                    storeCode,
-                    storeType
-                ) ?: ""
+                projectCode = projectCode
             )
         }
         return storeProcessInfo

@@ -25,15 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.template.service
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.approval.VisibleApproveReq
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface TxOpTemplateService {
-
-    /**
-     * 审核可见范围
-     */
-    fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq): Result<Boolean>
-}
+/**
+ * 流水线校验失败原因
+ */
+@Schema(title = "流水线校验失败原因")
+class PipelineCheckFailedReason(
+    @get:Schema(title = "失败标题,多个插件校验时相同的错误", required = true)
+    val errorTitle: String,
+    @get:Schema(title = "失败详情,具体哪个插件失败详情", required = true)
+    val errorDetails: List<String>
+)

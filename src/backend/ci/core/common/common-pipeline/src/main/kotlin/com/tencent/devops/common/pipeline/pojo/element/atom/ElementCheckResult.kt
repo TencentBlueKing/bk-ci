@@ -25,17 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.approval
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "审核可见范围请求报文")
-data class VisibleApproveReq(
-    @get:Schema(title = "审核结果：PASS：通过|REJECT：驳回")
-    val result: String,
-    @get:Schema(title = "审核结果说明")
-    val message: String,
-    @get:Schema(title = "机构ID列表")
-    val deptIdList: List<Int>
-
+@Schema(title = "插件校验结果")
+data class ElementCheckResult(
+    @get:Schema(title = "插件校验结果", required = true)
+    val result: Boolean,
+    @get:Schema(title = "失败标题", required = true)
+    val errorTitle: String? = null,
+    @get:Schema(title = "失败详情", required = true)
+    val errorMessage: String? = null
 )
