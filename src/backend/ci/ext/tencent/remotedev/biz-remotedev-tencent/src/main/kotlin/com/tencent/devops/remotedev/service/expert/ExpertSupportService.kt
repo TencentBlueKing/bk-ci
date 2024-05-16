@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -98,10 +99,10 @@ class ExpertSupportService @Autowired constructor(
         )
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    Pair("${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}", it.value["PHONE"] as String)
                 } else {
-                    it.key
+                    Pair(it.key, "")
                 }
             }
         val projectInfo = kotlin.runCatching {
@@ -146,21 +147,29 @@ class ExpertSupportService @Autowired constructor(
                 "projectId" -> newParam[k] = data.projectId
                 "projectName" -> newParam[k] = projectInfo.projectName
                 "ticketId" -> newParam[k] = id.toString()
-                "creator" -> newParam[k] = taiUserCN[data.creator] ?: data.creator
+                "creator" -> newParam[k] = taiUserCN[data.creator]?.first ?: data.creator
                 "content" -> newParam[k] = data.content
                 "city" -> newParam[k] = data.city
                 "machineType" -> newParam[k] = data.machineType
                 "createTime" -> newParam[k] = DateTimeUtil.toDateTime(
                     LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
                 )
+
                 "zone" -> newParam[k] = detail.regionId.toString()
                 "workspaceName" -> newParam[k] = data.workspaceName
+                "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
+                "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) {
+                    UserUtil.removeTaiSuffix(data.creator)
+                } else {
+                    ""
+                }
+
                 else -> newParam[k] = v
             }
         }
         AsyncExecute.dispatch(
             rabbitTemplate,
-                AsyncPipelineEvent(
+            AsyncPipelineEvent(
                 userId = info.userId ?: "",
                 projectId = info.projectId,
                 pipelineId = info.pipelineId,
