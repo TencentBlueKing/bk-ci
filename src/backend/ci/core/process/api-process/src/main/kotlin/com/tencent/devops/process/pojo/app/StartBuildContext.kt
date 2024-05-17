@@ -324,11 +324,16 @@ data class StartBuildContext(
                 StartType.SERVICE.name,
                 StartType.REMOTE.name
             )
-            if (!startTypes.contains(params[PIPELINE_START_TYPE])) {
+            val startType = params[PIPELINE_START_TYPE]
+            if (!startTypes.contains(startType)) {
                 return null
             }
             return WebhookInfo(
-                codeType = params[BK_REPO_WEBHOOK_REPO_TYPE],
+                codeType = if (supportCustomMaterials(startType)) {
+                    startType
+                } else {
+                    params[BK_REPO_WEBHOOK_REPO_TYPE]
+                },
                 nameWithNamespace = params[BK_REPO_WEBHOOK_REPO_NAME],
                 webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE],
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL],
@@ -358,9 +363,7 @@ data class StartBuildContext(
                 parentPipelineName = params[PIPELINE_START_PARENT_PIPELINE_NAME],
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
                 parentBuildNum = params[PIPELINE_START_PARENT_BUILD_NUM],
-                linkUrl = if (params[PIPELINE_START_TYPE] == StartType.REMOTE.name ||
-                    params[PIPELINE_START_TYPE] == StartType.SERVICE.name
-                ) {
+                linkUrl = if (supportCustomMaterials(startType)) {
                     // 自定义触发材料
                     params[BK_CI_MATERIAL_URL]
                 } else {
@@ -370,6 +373,12 @@ data class StartBuildContext(
                 materialName = params[BK_CI_MATERIAL_NAME]
             )
         }
+
+        /**
+         * 是否支持自定义触发材料
+         */
+        private fun supportCustomMaterials(startType: String?) = startType == StartType.REMOTE.name ||
+                startType == StartType.SERVICE.name
 
         /**
          * 简易只为实现推送PipelineBuildStartEvent事件所需要的参数，不是全部
