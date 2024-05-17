@@ -68,6 +68,7 @@ interface ServiceStoreComponentResource {
             "releaseInfo"
         ]
     )
+    @Suppress("LongParameterList")
     fun getMainPageComponents(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -79,6 +80,9 @@ interface ServiceStoreComponentResource {
         @Parameter(description = "项目代码", required = false)
         @QueryParam("projectCode")
         projectCode: String? = null,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
@@ -151,6 +155,9 @@ interface ServiceStoreComponentResource {
         @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: StoreSortTypeEnum? = StoreSortTypeEnum.CREATE_TIME,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String?,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)

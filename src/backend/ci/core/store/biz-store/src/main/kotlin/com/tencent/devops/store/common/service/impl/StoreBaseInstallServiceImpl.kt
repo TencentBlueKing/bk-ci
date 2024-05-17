@@ -53,6 +53,20 @@ class StoreBaseInstallServiceImpl @Autowired constructor(
         channelCode: ChannelCode,
         installStoreReq: InstallStoreReq
     ): Result<StoreBaseInfo> {
+        if (installStoreReq.storeType == StoreTypeEnum.DEVX) {
+            if (installStoreReq.instanceId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf(InstallStoreReq::instanceId.name)
+                )
+            }
+            if (installStoreReq.version.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf(InstallStoreReq::version.name)
+                )
+            }
+        }
         val componentBaseInfoRecord = storeBaseQueryDao.getNewestComponentByCode(
             dslContext = dslContext,
             storeCode = installStoreReq.storeCode,

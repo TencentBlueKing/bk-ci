@@ -98,6 +98,7 @@ interface StoreProjectService {
     fun getProjectComponents(
         projectCode: String,
         storeType: Byte,
-        storeProjectTypes: List<Byte>
+        storeProjectTypes: List<Byte>,
+        instanceId: String? = null
     ): Map<String, String?>?
 }

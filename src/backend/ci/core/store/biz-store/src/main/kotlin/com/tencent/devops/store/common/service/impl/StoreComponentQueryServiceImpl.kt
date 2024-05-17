@@ -776,7 +776,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeType = storeType.type.toByte(),
             storeProjectTypes = listOf(
                 StoreProjectTypeEnum.COMMON.type.toByte()
-            )
+            ),
+            instanceId = storeInfoQuery.instanceId
         ) ?: emptyMap()
         validStoreCodes.addAll(installComponentMap.keys)
         // 查询项目下可调试的组件版本信息
@@ -785,7 +786,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeType = storeType.type.toByte(),
             storeProjectTypes = listOf(
                 StoreProjectTypeEnum.TEST.type.toByte()
-            )
+            ),
+            instanceId = storeInfoQuery.instanceId
         ) ?: emptyMap()
         validStoreCodes.addAll(testComponentMap.keys)
         val publicComponentList = storeBaseFeatureQueryDao.getAllPublicComponent(dslContext, storeType)
@@ -910,7 +912,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeProjectService.getProjectComponents(
                 projectCode = it,
                 storeType = storeTypeEnum.type.toByte(),
-                storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte())
+                storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte()),
+                instanceId = storeInfoQuery.instanceId
             )
         }
         // 获取分类

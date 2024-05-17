@@ -38,6 +38,8 @@ data class InstallStoreReq(
     val storeCode: String,
     @get:Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
+    @get:Schema(title = "实例ID", required = false)
+    val instanceId: String? = null,
     @get:Schema(title = "版本号", required = false)
     val version: String? = null
 )
