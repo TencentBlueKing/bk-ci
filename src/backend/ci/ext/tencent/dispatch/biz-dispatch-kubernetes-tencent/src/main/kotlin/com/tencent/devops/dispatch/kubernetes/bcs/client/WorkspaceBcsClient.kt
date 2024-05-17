@@ -61,6 +61,9 @@ class WorkspaceBcsClient @Autowired constructor(
     @Value("\${bcsCloud.apiUrl}")
     val bcsCloudUrl: String = ""
 
+    @Value("\${bcsCloud.token}")
+    val bcsToken: String = ""
+
     @Value("\${apigw.appCode}")
     val appCode: String = ""
 
@@ -831,7 +834,7 @@ class WorkspaceBcsClient @Autowired constructor(
     private fun makeHeaders(): Map<String, String> {
         val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appToken)
         val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
-        return mapOf("X-Bkapi-Authorization" to headerStr)
+        return mapOf("X-Bkapi-Authorization" to headerStr, "BK-Devops-Token" to bcsToken)
     }
 
     companion object {
