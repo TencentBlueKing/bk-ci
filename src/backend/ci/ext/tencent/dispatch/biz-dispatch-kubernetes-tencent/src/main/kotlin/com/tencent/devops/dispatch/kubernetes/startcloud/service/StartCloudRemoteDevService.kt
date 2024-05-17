@@ -56,7 +56,6 @@ import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCre
 import com.tencent.devops.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -132,7 +131,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile,
-                    internal = event.ownerType == WorkspaceOwnerType.PERSONAL
+                    internal = event.devFile.quotaType?.getInternal() ?: false
                 )
             )
         )
@@ -152,7 +151,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 it.status == 11 &&
                     it.machineType == event.devFile.machineType &&
                     it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                    it.locked != true
+                    it.locked != true && it.internal == event.devFile.quotaType?.getInternal()
             }.randomOrNull()
             if (random != null) {
                 logger.info("get random resource to running|$random")
@@ -165,7 +164,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             val random = workspaceClient.getResourceVm(
                 ResourceVmReq(
                     zoneId = event.devFile.zoneId,
-                    machineType = event.devFile.machineType
+                    machineType = event.devFile.machineType,
+                    internal = event.devFile.quotaType?.getInternal()
                 )
             )?.filter {
                 (it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId) &&

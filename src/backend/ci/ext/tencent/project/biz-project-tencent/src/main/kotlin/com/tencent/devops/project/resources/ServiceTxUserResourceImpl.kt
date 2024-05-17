@@ -51,7 +51,7 @@ class ServiceTxUserResourceImpl @Autowired constructor(
     }
 
     override fun get(userId: String): Result<UserDeptDetail> {
-        return Result(tofService.getUserDeptDetail(userId))
+        return Result(projectUserService.getUserDeptDetail(userId))
     }
 
     override fun getUser(userId: String): Result<Boolean> {

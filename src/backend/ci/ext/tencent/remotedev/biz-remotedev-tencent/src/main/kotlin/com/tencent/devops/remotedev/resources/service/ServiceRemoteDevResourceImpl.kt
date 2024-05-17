@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.resources.service
 
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -11,13 +12,16 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
@@ -25,6 +29,7 @@ import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -33,9 +38,9 @@ import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import java.net.URLDecoder
 
 @RestResource
 @Suppress("ALL")
@@ -51,6 +56,7 @@ class ServiceRemoteDevResourceImpl(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val workspaceLoginService: WorkspaceLoginService,
+    private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService
 ) : ServiceRemoteDevResource {
@@ -92,14 +98,20 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getProjectWorkspaceIp(ip: String): Result<WeSecProjectWorkspace?> {
-        return Result(
-            workspaceService.getWorkspaceList4WeSec(
-                projectId = null,
-                ip = ip,
-                hasDepartmentsInfo = true,
-                hasCurrentUser = true
-            ).randomOrNull()
+        val res = workspaceService.getWorkspaceList4WeSec(
+            projectId = null,
+            ip = ip,
+            hasDepartmentsInfo = true,
+            hasCurrentUser = true
         )
+        // 理论上一个IP最多只会有一条，如果查出了两条记录可能会出现越界数据，不能返回，需要抛错
+        if (res.size > 1) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.REMOTEDEV_CLIENT_IP_DUPLICATE_ERROR.errorCode,
+                params = arrayOf(ip)
+            )
+        }
+        return Result(res.randomOrNull())
     }
 
     override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
@@ -227,7 +239,24 @@ class ServiceRemoteDevResourceImpl(
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         notifyControl.notifyWorkspaceInfo(
             userId = operator,
-            notifyData = notifyData
+            notifyData = notifyData,
+            enableSendDesktop = true
+        )
+        return Result(true)
+    }
+
+    override fun notifyDesktopCheckIp(ip: String, notifyData: WorkspaceDesktopNotifyData): Result<Boolean> {
+        val ok = startWorkspaceService.checkIpUsers(ip, notifyData.userIdList)
+        if (!ok) {
+            return Result(false)
+        }
+        startWorkspaceService.sendMessage(
+            operator = notifyData.operator,
+            userIdList = notifyData.userIdList,
+            dataType = notifyData.dataType,
+            data = notifyData.data,
+            messageStartTime = notifyData.messageEndTime,
+            messageEndTime = notifyData.messageEndTime
         )
         return Result(true)
     }
@@ -275,6 +304,7 @@ class ServiceRemoteDevResourceImpl(
         projectId: String,
         data: WindowsWorkspaceCreate
     ): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(
             createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = projectId)
         )
@@ -286,11 +316,12 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
+
         return Result(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = true,
+                needPermission = !permissionService.hasUserManager(userId, projectId),
                 checkDeleteImmediately = true
             )
         )
@@ -314,11 +345,16 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(null)
         }
+        permissionService.checkViewerPermission(userId, workspaceName, projectId)
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspaceName,
                 notStatus = null
             ).firstOrNull()
         )
+    }
+
+    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
     }
 }

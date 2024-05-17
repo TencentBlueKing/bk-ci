@@ -28,6 +28,8 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreBase
@@ -35,9 +37,12 @@ import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreMember
+import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -498,5 +503,29 @@ class StoreBaseQueryDao {
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
+    }
+
+    fun getLatestStoreInfoListByCodes(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        storeCodeList: List<String>
+    ): Result<out Record>? {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStorePipelineRel = TStorePipelineRel.T_STORE_PIPELINE_REL
+        return dslContext.select(
+            tStoreBase.STORE_CODE.`as`(KEY_STORE_CODE),
+            tStoreBase.VERSION.`as`(KEY_VERSION),
+            tStoreBase.CREATOR.`as`(KEY_CREATOR),
+            tStorePipelineRel.PIPELINE_ID.`as`(KEY_PIPELINE_ID)
+        ).from(tStoreBase)
+            .join(tStorePipelineRel)
+            .on(
+                tStoreBase.STORE_CODE.eq(tStorePipelineRel.STORE_CODE)
+                    .and(tStoreBase.STORE_TYPE.eq(tStorePipelineRel.STORE_TYPE))
+            )
+            .where(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
+            .and(tStoreBase.LATEST_FLAG.eq(true))
+            .and(tStoreBase.STORE_CODE.`in`(storeCodeList))
+            .fetch()
     }
 }

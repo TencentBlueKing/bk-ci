@@ -60,6 +60,7 @@ import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -70,6 +71,7 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
 import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
 import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -138,13 +140,24 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             params = arrayOf(KEY_NEED_VISITED_SITE_INFOS)
         )
         // 检验云开发的包是否有上传
-        val baseRecord = storeBaseQueryDao.getComponent(
-            dslContext = dslContext,
-            storeCode = storeBaseUpdateRequest.storeCode,
-            version = storeBaseUpdateRequest.versionInfo.version,
-            storeType = StoreTypeEnum.DEVX
-        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
-        val storeId = baseRecord.id
+        val storeCode = storeBaseUpdateRequest.storeCode
+        val version = storeBaseUpdateRequest.versionInfo.version
+        val storeType = StoreTypeEnum.DEVX
+        val releaseType = storeBaseUpdateRequest.versionInfo.releaseType
+        val storeId = if (releaseType == ReleaseTypeEnum.NEW ||
+            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE
+        ) {
+            val baseRecord = storeBaseQueryDao.getComponent(
+                dslContext = dslContext,
+                storeCode = storeBaseUpdateRequest.storeCode,
+                version = storeBaseUpdateRequest.versionInfo.version,
+                storeType = StoreTypeEnum.DEVX
+            ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            baseRecord.id
+        } else {
+            // 普通发布类型会重新生成一条版本记录
+            DigestUtils.md5Hex("$storeType-$storeCode-$version")
+        }
         val baseEnvRecords = storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId) ?: throw ErrorCodeException(
             errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
         )
@@ -176,14 +189,15 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         var osRunInfos: MutableSet<String>? = null
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
-            val pkgPath = baseEnvRecord.pkgPath
-            val fileType = pkgPath.substringAfterLast(".")
-            if (osName == OSType.WINDOWS.name.lowercase() && windowsSupportFileTypes.split(",").contains(fileType)) {
+            if (osName == OSType.WINDOWS.name.lowercase()) {
                 if (osRunInfos == null) {
                     osRunInfos = mutableSetOf()
                 }
                 // 暂时只支持签windows操作系统的exe软件包
-                osRunInfos?.add("$osName=$pkgPath")
+                val pkgPath = baseEnvRecord.pkgPath
+                val fileType = pkgPath.substringAfterLast(".")
+                val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
+                osRunInfos?.add("$osName:$pkgPath:$signFlag")
             }
         }
         return mutableMapOf(

@@ -300,14 +300,16 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         storeCode: String,
         version: String,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        idcFlag: Boolean
     ): String {
-        val validateResult = if (projectId.isNotBlank()) {
-            // 判断项目是否有使用该组件的权限
-            client.get(ServiceStoreResource::class).validateProjectComponentPermission(projectId, storeCode, storeType)
-        } else {
-            client.get(ServiceStoreResource::class).isStoreMember(storeCode, storeType, userId)
-        }
+        val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
+            storeCode = storeCode,
+            storeType = storeType,
+            version = version,
+            projectCode = projectId,
+            userId = userId
+        )
         if (validateResult.isNotOk() || validateResult.data == false) {
             throw ErrorCodeException(
                 errorCode = validateResult.status.toString(),
@@ -323,12 +325,18 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             osArch = osArch
         ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         val storePkgEnvInfo = storePkgEnvInfos[0]
-        return createPkgShareUri(userId, storeType, storePkgEnvInfo.pkgRepoPath)
+        return createPkgShareUri(
+            userId = userId,
+            storeType = storeType,
+            pkgPath = storePkgEnvInfo.pkgRepoPath,
+            idcFlag = idcFlag
+        )
     }
 
     abstract fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String
+        pkgPath: String,
+        idcFlag: Boolean
     ): String
 }
