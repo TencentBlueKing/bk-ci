@@ -54,7 +54,7 @@ class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
         val hostReplaceFlag = if (!referer.isNullOrBlank() && !devxStaticRepoPrefixUrl.isNullOrBlank()) {
             // 判断请求来源的域名是否是devx环境的域名
             val host = RegexUtils.splitDomainContextPath(devxStaticRepoPrefixUrl!!)!!.first
-            referer.contains(host)
+            host.contains(referer)
         } else {
             false
         }
