@@ -360,7 +360,7 @@ class PipelineBuildService(
                 readOnly = true
             )
         }
-        pipelineParamMap[BK_CI_MATERIAL_NAME]?.let {
+        startValues?.get(BK_CI_MATERIAL_NAME)?.let {
             pipelineParamMap[BK_CI_MATERIAL_NAME] = BuildParameters(
                 key = BK_CI_MATERIAL_NAME,
                 value = it,
