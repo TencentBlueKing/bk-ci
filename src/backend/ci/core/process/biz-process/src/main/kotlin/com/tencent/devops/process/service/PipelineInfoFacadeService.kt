@@ -1375,8 +1375,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     )
                 }
                 pipelineSettingFacadeService.saveSetting(
-                    userId, projectId, pipelineId,
-                    setting.copy(
+                    userId = userId, projectId = projectId, pipelineId = pipelineId,
+                    setting = setting.copy(
                         pipelineAsCodeSettings = PipelineAsCodeSettings(false)
                     )
                 )
