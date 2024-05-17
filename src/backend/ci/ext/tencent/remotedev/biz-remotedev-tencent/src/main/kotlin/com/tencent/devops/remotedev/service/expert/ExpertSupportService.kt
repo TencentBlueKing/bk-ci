@@ -100,9 +100,13 @@ class ExpertSupportService @Autowired constructor(
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
-                    Pair("${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}", it.value["PHONE"] as String)
+                    Triple(
+                        "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}",
+                        it.value["PHONE"] as String,
+                        it.value["PHONE_COUNTRY_CODE"] as String
+                    )
                 } else {
-                    Pair(it.key, "")
+                    Triple(it.key, "", "")
                 }
             }
         val projectInfo = kotlin.runCatching {
@@ -158,6 +162,7 @@ class ExpertSupportService @Autowired constructor(
                 "zone" -> newParam[k] = detail.regionId.toString()
                 "workspaceName" -> newParam[k] = data.workspaceName
                 "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
+                "phoneCountryCode" -> newParam[k] = taiUserCN[data.creator]?.third ?: ""
                 "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) {
                     UserUtil.removeTaiSuffix(data.creator)
                 } else {
