@@ -672,6 +672,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         } else {
             // 修改已存在的流水线
             val isTemplate = templateService.isTemplatePipeline(projectId, pipelineId)
+            val draft = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
             val release = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
             val savedSetting = pipelineSettingFacadeService.saveSetting(
                 userId = userId,
@@ -680,6 +681,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 setting = setting ?: modelAndYaml.modelAndSetting.setting,
                 checkPermission = false,
                 versionStatus = versionStatus,
+                updateVersion = draft == null,
                 dispatchPipelineUpdateEvent = false,
                 updateLabels = false
             )
