@@ -761,6 +761,13 @@ class ThirdPartyAgentService @Autowired constructor(
             return
         }
 
+        val redisKey = "$AGENT_REPEATED_INSTALL_ALARM:$agentId"
+        if (redisOperation.get(redisKey) == null) {
+            redisOperation.set(redisKey, "")
+        } else {
+            return
+        }
+
         val users = mutableSetOf(agent.createUser)
         val nodeHashId = agent.nodeId ?: return
         val authUsers = kotlin.runCatching {
@@ -800,6 +807,6 @@ class ThirdPartyAgentService @Autowired constructor(
 
         private const val QUEUE_RETRY_COUNT = 3
 
-        private const val THIRD_DOCKER_TASK_INTERVAL: Long = 2000 // 轮询间隔时间，单位为毫秒
+        private const val AGENT_REPEATED_INSTALL_ALARM = "environment:thirdparty:goagent:repeatedinstall"
     }
 }
