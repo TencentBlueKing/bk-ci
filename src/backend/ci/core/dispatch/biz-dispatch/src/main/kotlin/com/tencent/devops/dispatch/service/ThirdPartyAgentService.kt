@@ -763,7 +763,7 @@ class ThirdPartyAgentService @Autowired constructor(
 
         val redisKey = "$AGENT_REPEATED_INSTALL_ALARM:$agentId"
         if (redisOperation.get(redisKey) == null) {
-            redisOperation.set(redisKey, "")
+            redisOperation.set(redisKey, "", 60 * 60 * 24)
         } else {
             return
         }
