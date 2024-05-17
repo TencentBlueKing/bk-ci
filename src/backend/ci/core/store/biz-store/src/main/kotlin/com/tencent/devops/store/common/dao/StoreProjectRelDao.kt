@@ -237,9 +237,9 @@ class StoreProjectRelDao {
     }
 
     /**
-     * 获取项目下已安装的插件
+     * 获取项目下关联的组件信息
      */
-    fun getInstalledComponent(
+    fun getProjectComponents(
         dslContext: DSLContext,
         projectCode: String,
         storeType: Byte,

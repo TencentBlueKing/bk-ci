@@ -25,44 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.approval.VisibleAuditInfo
-import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface OpStoreAuditConfService {
-
-    /**
-     * 查询给定条件的审核范围记录
-     * @param storeName 审核组件名称
-     * @param storeType 审核组件类型（0：插件 1：模板）
-     * @param status 审核状态
-     * @param page 分页页数
-     * @param pageSize 分页每页记录条数
-     */
-    fun getAllAuditConf(
-        storeName: String?,
-        storeType: StoreTypeEnum?,
-        status: DeptStatusEnum?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<VisibleAuditInfo>>
-
-    /**
-     * 审核可见范围，根据记录ID修改相应的审核状态
-     * @param userId 审核人ID
-     * @param id 审核记录ID
-     * @param storeApproveRequest 审核信息对象，半酣审核状态和驳回原因
-     */
-    fun approveVisibleDept(userId: String, id: String, storeApproveRequest: StoreApproveRequest): Result<Boolean>
-
-    /**
-     * 根据审核记录的ID删除一条审核记录
-     * @param id 审核记录的ID
-     */
-    fun deleteAuditConf(id: String): Result<Boolean>
-}
+/**
+ * 流水线校验失败原因
+ */
+@Schema(title = "流水线校验失败原因")
+class PipelineCheckFailedReason(
+    @get:Schema(title = "失败标题,多个插件校验时相同的错误", required = true)
+    val errorTitle: String,
+    @get:Schema(title = "失败详情,具体哪个插件失败详情", required = true)
+    val errorDetails: List<String>
+)

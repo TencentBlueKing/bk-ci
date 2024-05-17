@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.dao.ClassifyDao
@@ -40,6 +42,7 @@ import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
@@ -59,6 +62,7 @@ import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.jooq.DSLContext
@@ -111,6 +115,15 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     @Autowired
     lateinit var storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao
+
+    @Autowired
+    lateinit var storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao
+
+    @Autowired
+    lateinit var client: Client
+
+    @Autowired
+    lateinit var redisOperation: RedisOperation
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
@@ -334,6 +347,67 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val bkStoreContext = handlerRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
         StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+        return Result(true)
+    }
+
+    override fun validateComponentDownloadPermission(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        projectCode: String,
+        userId: String
+    ): Result<Boolean> {
+        // 检查组件的状态是否符合下载条件
+        val baseRecord = storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = storeType
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$storeCode:$version")
+        )
+        val inValidStatusList = listOf(
+            StoreStatusEnum.INIT.name,
+            StoreStatusEnum.COMMITTING.name,
+            StoreStatusEnum.BUILDING.name,
+            StoreStatusEnum.BUILD_FAIL.name,
+            StoreStatusEnum.CHECKING.name,
+            StoreStatusEnum.CHECK_FAIL.name
+        )
+        if (baseRecord.status in inValidStatusList) {
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID)
+        }
+        if (projectCode.isNotBlank()) {
+            val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
+            if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+                // 如果从缓存中查出该组件是公共组件则无需权限校验
+                return Result(true)
+            }
+            val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
+            val checkFlag = publicFlag == true ||
+                storeProjectService.isInstalledByProject(
+                    projectCode = projectCode,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte()
+                )
+            if (!checkFlag) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
+                    params = arrayOf(projectCode, storeCode)
+                )
+            }
+        } else {
+            val checkFlag = storeMemberDao.isStoreMember(
+                dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
+            )
+            if (!checkFlag) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
+                    params = arrayOf(storeCode)
+                )
+            }
+        }
         return Result(true)
     }
 

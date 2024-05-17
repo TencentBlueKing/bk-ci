@@ -85,7 +85,8 @@ class UserArchiveComponentPkgResourceImpl @Autowired constructor(
                 storeCode = storeCode,
                 version = version,
                 osName = osName,
-                osArch = osArch
+                osArch = osArch,
+                idcFlag = false
             )
         )
     }

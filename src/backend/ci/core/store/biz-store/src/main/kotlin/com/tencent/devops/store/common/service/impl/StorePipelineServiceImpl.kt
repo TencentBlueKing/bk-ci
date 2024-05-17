@@ -245,7 +245,8 @@ class StorePipelineServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     storeCode = storeCode,
                     storeType = storeType,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    projectCode = innerPipelineProject
                 )
                 val buildId = storeInitPipelineResp.buildId
                 if (!buildId.isNullOrBlank()) {
@@ -395,14 +396,22 @@ class StorePipelineServiceImpl @Autowired constructor(
                 params = arrayOf("grayPipelineModel")
             )
         }
-        val storeCommonDao =
-            SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
         // 获取研发商店组件信息
-        val storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
+        var storeInfoRecords = storeBaseQueryDao.getLatestStoreInfoListByCodes(
+            dslContext = dslContext,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            storeCodeList = storeCodeList
+        )
+        if (storeInfoRecords.isNullOrEmpty()) {
+            val storeCommonDao =
+                SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+            storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
+        }
         val pipelineModelVersionList = mutableListOf<PipelineModelVersion>()
         storeInfoRecords?.forEach { storeInfoRecord ->
             val storeInfoMap = storeInfoRecord.intoMap()
-            val projectCode = storeInfoMap[KEY_PROJECT_CODE]?.toString() ?: ""
+            val projectCode =
+                storeInfoMap[KEY_PROJECT_CODE]?.toString() ?: storeInnerPipelineConfig.innerPipelineProject
             val storeCode = storeInfoMap[KEY_STORE_CODE] as String
             val pipelineName = "am-$storeCode-${UUIDUtil.generate()}"
             val paramMap = mutableMapOf(
