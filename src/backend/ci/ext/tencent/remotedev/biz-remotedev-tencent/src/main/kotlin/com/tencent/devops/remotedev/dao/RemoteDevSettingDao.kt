@@ -71,7 +71,8 @@ class RemoteDevSettingDao {
                 USER_NAME,
                 COMPANY_NAME,
                 EMAIL,
-                PHONE
+                PHONE,
+                PHONE_COUNTRY_CODE
             )
                 .values(
                     userId,
@@ -84,7 +85,8 @@ class RemoteDevSettingDao {
                     userInfo.value?.accountName ?: "",
                     userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: "",
                     userInfo.value?.accountEmail ?: "",
-                    userInfo.value?.phone ?: ""
+                    userInfo.value?.phone ?: "",
+                    userInfo.value?.phoneCountryCode ?: ""
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -96,6 +98,7 @@ class RemoteDevSettingDao {
                 .set(COMPANY_NAME, userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: "")
                 .set(EMAIL, userInfo.value?.accountEmail ?: "")
                 .set(PHONE, userInfo.value?.phone ?: "")
+                .set(PHONE_COUNTRY_CODE, userInfo.value?.phoneCountryCode ?: "")
                 .execute()
         }
     }
@@ -149,7 +152,7 @@ class RemoteDevSettingDao {
     ): Map<String, Record> {
         if (userIds?.isEmpty() == true) return emptyMap()
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.select(USER_ID, USER_NAME, COMPANY_NAME, EMAIL, PHONE).from(this)
+            dslContext.select(USER_ID, USER_NAME, COMPANY_NAME, EMAIL, PHONE, PHONE_COUNTRY_CODE).from(this)
                 .let {
                     if (userIds != null) {
                         it.where(USER_ID.`in`(userIds))
@@ -177,6 +180,7 @@ class RemoteDevSettingDao {
                     c.dsl().update(this)
                         .set(EMAIL, it.value.accountEmail)
                         .set(PHONE, it.value.phone)
+                        .set(PHONE_COUNTRY_CODE, it.value.phoneCountryCode)
                         .set(USER_NAME, it.value.accountName)
                         .set(COMPANY_NAME, it.value.companyTags.joinToString(",") { it.tagName })
                         .where(USER_ID.eq(it.key))
