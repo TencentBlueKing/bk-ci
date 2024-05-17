@@ -92,8 +92,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService
 ) {
 
-    @Value("\${project.callback.secretParam.aes-key}")
-    private val aesKey = "C/R%3{?OS}IeGT21"
+    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
+    private val aesKey = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectPipelineCallBackService::class.java)
