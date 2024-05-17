@@ -29,7 +29,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreComment
 import com.tencent.devops.model.store.tables.records.TStoreCommentRecord
-import com.tencent.devops.store.pojo.common.StoreCommentRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result

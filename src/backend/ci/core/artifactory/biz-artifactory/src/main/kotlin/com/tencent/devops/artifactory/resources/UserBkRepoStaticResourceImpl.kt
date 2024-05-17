@@ -47,18 +47,25 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
     override fun uploadStaticFile(
         userId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        type: String?
     ): Result<String?> {
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileSuffix = fileName.substring(index + 1)
-        val filePath = "file/$fileSuffix/${UUIDUtil.generate()}.$fileSuffix"
+        val filePathSb = StringBuilder("file/")
+        val filePath = if (type.isNullOrBlank()) {
+            filePathSb.append(fileSuffix)
+        } else {
+            filePathSb.append("${type.lowercase()}/$fileSuffix")
+        }
+        filePathSb.append("/${UUIDUtil.generate()}.$fileSuffix")
         val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
             projectId = BKREPO_STATIC_PROJECT_ID,
-            filePath = filePath,
+            filePath = filePath.toString(),
             fileType = FileTypeEnum.BK_STATIC,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -68,6 +69,16 @@ interface ServiceScmWebhookResource {
         projectId: String,
         webhookCommit: WebhookCommit
     ): Result<String>
+
+    @Operation(summary = "Webhook代码库提交")
+    @POST
+    @Path("/webhook/commit/new")
+    fun webhookCommitNew(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        webhookCommit: WebhookCommit
+    ): Result<BuildId?>
 
     @Operation(summary = "获取流水线的webhook列表")
     @GET

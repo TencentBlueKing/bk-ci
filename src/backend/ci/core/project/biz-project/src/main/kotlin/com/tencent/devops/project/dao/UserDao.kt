@@ -123,4 +123,19 @@ class UserDao {
             baseStep.where(USER_ID.eq(userDeptDetail.userId)).execute()
         }
     }
+
+    fun convertToUserDeptDetail(userRecord: TUserRecord): UserDeptDetail {
+        return UserDeptDetail(
+            bgName = userRecord.bgName,
+            bgId = userRecord.bgId?.toString() ?: "",
+            centerName = userRecord.centerName,
+            centerId = userRecord.centerId?.toString() ?: "",
+            deptName = userRecord.deptName,
+            deptId = userRecord.deptId?.toString() ?: "",
+            groupName = userRecord.groupName ?: "",
+            groupId = userRecord.groypId?.toString() ?: "",
+            businessLineId = userRecord.businessLineId?.toString(),
+            businessLineName = userRecord.businessLineName
+        )
+    }
 }

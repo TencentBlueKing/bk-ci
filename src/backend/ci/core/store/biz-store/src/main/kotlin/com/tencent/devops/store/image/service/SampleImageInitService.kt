@@ -37,7 +37,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.image.dao.ImageDao
-import com.tencent.devops.store.pojo.common.BusinessConfigRequest
+import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum

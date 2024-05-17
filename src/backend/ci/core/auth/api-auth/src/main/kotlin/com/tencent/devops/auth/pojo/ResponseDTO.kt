@@ -7,7 +7,7 @@ data class ResponseDTO<T>(
     @get:Schema(title = "返回码")
     val code: Long,
     @get:Schema(title = "返回信息")
-    val message: String,
+    val message: String?,
     @get:Schema(title = "请求返回结果")
     val result: Boolean,
     @get:Schema(title = "请求返回数据")

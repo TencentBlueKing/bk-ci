@@ -126,7 +126,7 @@ class AtomIndexTriggerCalServiceImpl @Autowired constructor(
             // 修改插件的版本号
             updateModelVersion(model, atomCode, version)
             // 修改插件对应的指标计算流水线模型
-            client.get(ServicePipelineResource::class).edit(
+            client.get(ServicePipelineResource::class).editPipeline(
                 userId = userId,
                 projectId = initProjectCode,
                 pipelineId = pipelineId,

@@ -45,7 +45,11 @@ data class CodeP4Repository(
     @get:Schema(title = "项目id", required = true)
     override var projectId: String?,
     @get:Schema(title = "仓库hash id", required = false)
-    override val repoHashId: String?
+    override val repoHashId: String?,
+    @get:Schema(title = "仓库是否开启pac", required = false)
+    override val enablePac: Boolean? = false,
+    @get:Schema(title = "yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
 
     companion object {

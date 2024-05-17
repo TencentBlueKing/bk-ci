@@ -94,6 +94,8 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：节点[{0}]没有使用权限
     // "2105046" 环境管理: 不在CMDB中的IP [{0}]; 无权限的IP [{1}], 请确认当前用户[{2}]或节点导入人[{3}]是否为这些节点的主备负责人 - 脚本执行｜文件分发
     const val ERROR_NODE_IP_ILLEGAL = "2105046"
+    const val ERROR_CMDB_INTERFACE_TIME_OUT = "2105047"
+    const val ERROR_CMDB_RESPONSE = "2105048"
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

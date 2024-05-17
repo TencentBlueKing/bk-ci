@@ -169,8 +169,10 @@ class PipelineWebHookQueueService @Autowired constructor(
                                         "[<a target='_blank' href='" + // #4796 日志展示去掉链接上的域名前缀
                                     "/console/pipeline/$projectId/$pipelineId/detail/$buildId'>$buildId</a>]overlay",
                                 tag = "",
-                                jobId = "",
-                                executeCount = 1
+                                containerHashId = "",
+                                executeCount = 1,
+                                jobId = null,
+                                stepId = null
                             )
                             client.get(ServiceBuildResource::class).serviceShutdown(
                                 pipelineId = pipelineId,

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.pojo.user
 
-import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.BkDeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -62,5 +62,5 @@ data class UserDeptDetail(
     @get:Schema(title = "用户名称")
     var name: String? = null,
     @get:Schema(title = "部门及以上层级")
-    val deptInfos: List<DeptInfo>? = emptyList()
+    val deptInfos: List<BkDeptInfo>? = emptyList()
 )

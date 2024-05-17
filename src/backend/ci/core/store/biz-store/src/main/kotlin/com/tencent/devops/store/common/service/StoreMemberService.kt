@@ -28,8 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberItem
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.member.StoreMemberItem
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 @Suppress("ALL")

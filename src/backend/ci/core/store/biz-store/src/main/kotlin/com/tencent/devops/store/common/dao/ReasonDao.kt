@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.model.store.tables.TReason
 import com.tencent.devops.model.store.tables.records.TReasonRecord
-import com.tencent.devops.store.pojo.common.Reason
-import com.tencent.devops.store.pojo.common.ReasonReq
+import com.tencent.devops.store.pojo.common.reason.Reason
+import com.tencent.devops.store.pojo.common.reason.ReasonReq
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result

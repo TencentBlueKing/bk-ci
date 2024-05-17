@@ -139,7 +139,15 @@ class BuildMonitorControl @Autowired constructor(
         // #5090 ==0 是为了兼容旧的监控事件
         var containers = pipelineContainerService.listContainers(event.projectId, event.buildId)
         if (containers.isEmpty()) { // 因数据被过期清理，必须超时失败
-            buildLogPrinter.addRedLine(event.buildId, "empty_container!", TAG, JOB_ID, event.executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = event.buildId,
+                message = "empty_container!",
+                tag = TAG,
+                containerHashId = JOB_ID,
+                executeCount = event.executeCount,
+                jobId = null,
+                stepId = TAG
+            )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildFinishEvent(
                     source = "empty_container",
@@ -180,7 +188,15 @@ class BuildMonitorControl @Autowired constructor(
 
         var stages = pipelineStageService.listStages(event.projectId, event.buildId)
         if (stages.isEmpty()) { // 因数据被过期清理，必须超时失败
-            buildLogPrinter.addRedLine(event.buildId, "empty_stage!", TAG, JOB_ID, event.executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = event.buildId,
+                message = "empty_stage!",
+                tag = TAG,
+                containerHashId = JOB_ID,
+                executeCount = event.executeCount,
+                jobId = null,
+                stepId = TAG
+            )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildFinishEvent(
                     source = "empty_stage",
@@ -255,8 +271,10 @@ class BuildMonitorControl @Autowired constructor(
                 buildId = buildId,
                 message = errorInfo.message ?: "[SystemLog]Job timeout: $minute minutes!",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
             // 终止当前容器下的任务
             pipelineEventDispatcher.dispatch(
@@ -342,8 +360,10 @@ class BuildMonitorControl @Autowired constructor(
                 buildId = buildId,
                 message = "Stage Review timeout $hours hours. Shutdown build!",
                 tag = stageId,
-                jobId = "",
-                executeCount = executeCount
+                containerHashId = "",
+                executeCount = executeCount,
+                jobId = null,
+                stepId = null
             )
 
             // #5654 如果是红线待审核状态则取消红线审核
@@ -376,7 +396,8 @@ class BuildMonitorControl @Autowired constructor(
                         id = pauseCheck.groupToReview()?.id,
                         suggest = "TIMEOUT"
                     ),
-                    timeout = true
+                    timeout = true,
+                    debug = buildInfo.debug
                 )
             }
         }
@@ -408,8 +429,10 @@ class BuildMonitorControl @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + ". Cancel build!"),
                 tag = VMUtils.genStartVMTaskId(jobId),
-                jobId = jobId,
-                executeCount = 1
+                containerHashId = jobId,
+                executeCount = 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(jobId)
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildFinishEvent(

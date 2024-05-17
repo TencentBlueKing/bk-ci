@@ -30,15 +30,18 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
-import com.tencent.devops.store.pojo.common.StoreStatistic
-import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.common.service.StoreDailyStatisticService
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStoreStatisticResourceImpl @Autowired constructor(
-    private val storeTotalStatisticService: StoreTotalStatisticService
+    private val storeTotalStatisticService: StoreTotalStatisticService,
+    private val storeDailyStatisticService: StoreDailyStatisticService
 ) : ServiceStoreStatisticResource {
 
     override fun getStatisticByCode(
@@ -62,5 +65,19 @@ class ServiceStoreStatisticResourceImpl @Autowired constructor(
             pipelineNumUpdateList = pipelineNumUpdateList
         )
         return Result(true)
+    }
+
+    override fun updateDailyStatisticInfo(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeDailyStatisticRequest: StoreDailyStatisticRequest
+    ): Result<Boolean> {
+        return Result(
+            storeDailyStatisticService.updateDailyStatisticInfo(
+                storeType = storeType,
+                storeCode = storeCode,
+                storeDailyStatisticRequest = storeDailyStatisticRequest
+            )
+        )
     }
 }

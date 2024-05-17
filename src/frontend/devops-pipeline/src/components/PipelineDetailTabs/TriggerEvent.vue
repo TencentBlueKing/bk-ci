@@ -68,6 +68,10 @@
             filterData () {
                 return [
                     {
+                        name: this.$t('eventID'),
+                        id: 'eventId'
+                    },
+                    {
                         name: this.$t('triggerType'),
                         id: 'triggerType',
                         children: this.triggerTypeList
@@ -140,7 +144,7 @@
                 }
             }
         },
-        mounted () {
+        beforeMount () {
             this.init()
         },
         methods: {
@@ -151,6 +155,16 @@
             ]),
             async init () {
                 try {
+                    this.searchKey = this.filterData.reduce((acc, cur) => {
+                        const valuesText = this.$route.query[cur.id]
+                        if (valuesText) {
+                            acc.push({
+                                ...cur, values: [{ id: valuesText, name: valuesText }]
+                            })
+                        }
+                        return acc
+                    }, [])
+
                     const [
                         triggerTypeList,
                         eventTypeList
