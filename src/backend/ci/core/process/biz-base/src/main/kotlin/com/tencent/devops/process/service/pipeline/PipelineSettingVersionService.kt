@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -34,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.PipelineDetailInfo
@@ -42,6 +44,7 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ComplexMethod")
@@ -159,11 +162,17 @@ class PipelineSettingVersionService @Autowired constructor(
     fun getLatestSettingVersion(
         projectId: String,
         pipelineId: String
-    ): PipelineSettingVersion? {
+    ): PipelineSettingVersion {
         return pipelineSettingVersionDao.getLatestSettingVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
+        ) ?: PipelineSettingVersion.convertFromSetting(
+            pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+                ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+                )
         )
     }
 }

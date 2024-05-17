@@ -141,16 +141,15 @@ class PipelineSettingFacadeService @Autowired constructor(
         setting.fixSubscriptions()
         modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         ActionAuditContext.current().setInstance(setting)
-        val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
+        val latestSetting = pipelineSettingVersionService.getLatestSettingVersion(
             projectId = projectId,
             pipelineId = pipelineId
-        )?.let { latest ->
-            if (updateVersion) PipelineVersionUtils.getSettingVersion(
-                currVersion = latest.version,
-                originSetting = latest,
-                newSetting = PipelineSettingVersion.convertFromSetting(setting)
-            ) else latest.version
-        } ?: 1
+        )
+        val settingVersion = if (updateVersion) PipelineVersionUtils.getSettingVersion(
+            currVersion = latestSetting.version,
+            originSetting = latestSetting,
+            newSetting = PipelineSettingVersion.convertFromSetting(setting)
+        ) else latestSetting.version
 
         val pipelineName = pipelineRepositoryService.saveSetting(
             userId = userId,
