@@ -110,6 +110,13 @@ class CmdbNodeService @Autowired constructor(
 
         const val INNER_IP_FIRST_INDEX = 0
         const val IEG_DEPT_ID = 3
+
+        const val IMPORT_STATUS_SUCCEED = 1
+        const val IMPORT_STATUS_FAILED = 2
+
+        const val NODE_AGENT_STATUS_ABNORMAL = 0
+        const val NODE_AGENT_STATUS_NORMAL = 1
+        const val NODE_AGENT_STATUS_NOT_INSTALLED = 2
     }
 
     fun getUserCmdbNodesNew(
@@ -240,7 +247,14 @@ class CmdbNodeService @Autowired constructor(
         } else null
         val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
         val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
-        val updateNodeInfo = nodeRecords.map {
+        val unsuccessfullyImportedNodesIpList = mutableListOf<String>()
+        val updateNodeInfo = nodeRecords.filter {
+            val importNodesStatus = queryCCIpToCCInfoMap.containsKey(it[T_NODE_NODE_IP] as String)
+            if (!importNodesStatus) {
+                unsuccessfullyImportedNodesIpList.add(it[T_NODE_NODE_IP] as String)
+            }
+            importNodesStatus
+        }.map {
             val nodeId = it[T_NODE_NODE_ID] as Long
             UpdateTNodeInfo(
                 nodeId = nodeId,
@@ -263,17 +277,25 @@ class CmdbNodeService @Autowired constructor(
             )
         }
         cmdbNodeDao.batchUpdateCCInfo(dslContext, updateNodeInfo)
+        val addToCCNodeList = nodeRecords.map {
+            NodeAgent(
+                nodeIp = it[T_NODE_NODE_IP] as String,
+                nodesAgentStatus =
+                if (NodeStatus.NORMAL.name == it[T_NODE_NODE_STATUS] as String) NODE_AGENT_STATUS_NORMAL
+                else if (NodeStatus.ABNORMAL.name == it[T_NODE_NODE_STATUS] as String) NODE_AGENT_STATUS_ABNORMAL
+                else NODE_AGENT_STATUS_NOT_INSTALLED,
+                nodesAgentVersion = it[T_NODE_AGENT_VERSION] as? String
+            )
+        }
+        val notAddedNodeList = unsuccessfullyImportedNodesIpList.map {
+            NodeAgent(
+                nodeIp = it,
+                importStatus = IMPORT_STATUS_FAILED
+            )
+        }
         return AddCmdbNodesRes(
             nodeStatus = true,
-            nodesAgentList = nodeRecords.map {
-                NodeAgent(
-                    nodeIp = it[T_NODE_NODE_IP] as String,
-                    nodesAgentStatus = if (NodeStatus.NORMAL.name == it[T_NODE_NODE_STATUS] as String) 1
-                    else if (NodeStatus.ABNORMAL.name == it[T_NODE_NODE_STATUS] as String) 0
-                    else 2,
-                    nodesAgentVersion = it[T_NODE_AGENT_VERSION] as? String
-                )
-            },
+            nodesAgentList = addToCCNodeList + notAddedNodeList,
             agentAbnormalNodesCount = nodeRecords.filter {
                 NodeStatus.ABNORMAL.name == it[T_NODE_NODE_STATUS] as String
             }.size,
@@ -326,7 +348,14 @@ class CmdbNodeService @Autowired constructor(
         val agentVersionList = queryAgentStatusService.getAgentVersions(ipAndHostIdList)
         val time5 = LocalDateTime.now()
         val ipToAgentVersionMap = agentVersionList?.associateBy { it.ip }
-        val toAddNodeList = toAddIpList.map {
+        val unsuccessfullyImportedNodesIpList = mutableListOf<String>()
+        val toAddNodeList = toAddIpList.filter {
+            val importNodesStatus = queryCCIpToCCInfoMap.containsKey(it)
+            if (!importNodesStatus) {
+                unsuccessfullyImportedNodesIpList.add(it)
+            }
+            importNodesStatus
+        }.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
             val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
@@ -388,19 +417,26 @@ class CmdbNodeService @Autowired constructor(
                 "toAddNodeList: ${ComputeTimeUtils.calculateDuration(time5, time6)}s, " +
                 "batchInsertNode: ${ComputeTimeUtils.calculateDuration(time6, time7)}s, "
         )
+        val importedNodeList = toAddNodeList.map {
+            NodeAgent(
+                nodeIp = it.nodeIp,
+                importStatus = IMPORT_STATUS_SUCCEED,
+                nodesAgentStatus = if (NodeStatus.NORMAL.name == it.nodeStatus) NODE_AGENT_STATUS_NORMAL
+                else if (NodeStatus.ABNORMAL.name == it.nodeStatus) NODE_AGENT_STATUS_ABNORMAL
+                else NODE_AGENT_STATUS_NOT_INSTALLED,
+                nodesAgentVersion = it.agentVersion
+            )
+        }
+        val notImportedNodeList = unsuccessfullyImportedNodesIpList.map {
+            NodeAgent(nodeIp = it, importStatus = IMPORT_STATUS_FAILED)
+        }
         return AddCmdbNodesRes(
             nodeStatus = true,
-            nodesAgentList = toAddNodeList.map {
-                NodeAgent(
-                    nodeIp = it.nodeIp,
-                    nodesAgentStatus = if (NodeStatus.NORMAL.name == it.nodeStatus) 1
-                    else if (NodeStatus.ABNORMAL.name == it.nodeStatus) 0
-                    else 2,
-                    nodesAgentVersion = it.agentVersion
-                )
-            },
+            nodesAgentList = importedNodeList + notImportedNodeList,
             agentAbnormalNodesCount = toAddNodeList.filter { NodeStatus.ABNORMAL.name == it.nodeStatus }.size,
-            agentNotInstallNodesCount = toAddNodeList.filter { NodeStatus.NOT_INSTALLED.name == it.nodeStatus }.size
+            agentNotInstallNodesCount = toAddNodeList.filter { NodeStatus.NOT_INSTALLED.name == it.nodeStatus }.size,
+            successfullyImportedNodeCount = importedNodeList.size,
+            unsuccessfullyImportedNodeCount = notImportedNodeList.size
         )
     }
 
@@ -429,7 +465,7 @@ class CmdbNodeService @Autowired constructor(
 
     /**
      * 将节点添加到CC中
-     * 四类节点情况：（2.1、2.2为两种不能导入CC的情况，2.1U2.2 <= 2.*）
+     * 四类节点情况：（2.1、2.2为两种不能导入CC的情况，2.*为所有不允许导入CC的情况，2.1U2.2 <= 2.*）
      * 1. 单ip/多ip，在CC - 查CCInfo并更新信息；
      * 2.1 单ip/多ip，不在cc，不能导入CC - ieg的机器，需要用户手动处理，调用侧导入蓝盾并更新节点状态为NOT_IN_CC
      * 2.2 多ip，不在cc，不能导入CC - 有ip已经在CC中，本次导入去掉这个ip不导入，调用侧导入蓝盾并更新节点状态为NOT_IN_CC
