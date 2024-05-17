@@ -188,9 +188,8 @@ class GithubOAuthService @Autowired constructor(
         val url = "$GITHUB_URL/login/oauth/access_token" +
             "?client_id=$clientId&client_secret=$secret&code=$code"
 
-        val proxyUrl = scmUrlProxyService.getProxyUrl(url)
         val request = Request.Builder()
-            .url(proxyUrl)
+            .url(url)
             .header("Accept", "application/json")
             .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
             .build()

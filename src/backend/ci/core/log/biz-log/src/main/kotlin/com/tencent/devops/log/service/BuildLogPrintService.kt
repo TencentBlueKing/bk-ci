@@ -93,8 +93,8 @@ class BuildLogPrintService @Autowired constructor(
             Result(true)
         } catch (e: RejectedExecutionException) {
             // 队列满时的处理逻辑
-            logger.error(
-                "BKSystemErrorMonitor|BuildLogPrintService[${event.buildId}] " +
+            logger.warn(
+                "BuildLogPrintService[${event.buildId}] " +
                     "asyncDispatchEvent failed with queue tasks exceed the limit",
                 e
             )

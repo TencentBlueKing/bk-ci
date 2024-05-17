@@ -608,6 +608,7 @@
                         startTime: item.startTime ? convertTime(item.startTime) : '--',
                         endTime: item.endTime ? convertTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
+                        totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
                         executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
                         visibleMaterial:
                             Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],

@@ -28,7 +28,7 @@
 package com.tencent.devops.store.api.template
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.classify.Classify
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes

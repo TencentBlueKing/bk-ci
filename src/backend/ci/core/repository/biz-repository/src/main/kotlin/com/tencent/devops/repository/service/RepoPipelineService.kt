@@ -29,10 +29,12 @@
 package com.tencent.devops.repository.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.ElementPropType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -183,6 +185,7 @@ class RepoPipelineService @Autowired constructor(
         repositoryHashId: String,
         eventType: String?,
         triggerConditionMd5: String?,
+        taskRepoType: RepositoryType?,
         limit: Int,
         offset: Int
     ): SQLPage<RepoPipelineRefVo> {
@@ -194,7 +197,8 @@ class RepoPipelineService @Autowired constructor(
             repositoryId = repositoryId,
             eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
-            channel = "BS"
+            taskRepoType = taskRepoType,
+            channel = ChannelCode.BS.name
         )
         val records = repoPipelineRefDao.listByRepo(
             dslContext = dslContext,
@@ -202,7 +206,8 @@ class RepoPipelineService @Autowired constructor(
             repositoryId = repositoryId,
             eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
-            channel = "BS",
+            channel = ChannelCode.BS.name,
+            taskRepoType = taskRepoType,
             limit = limit,
             offset = offset
         )

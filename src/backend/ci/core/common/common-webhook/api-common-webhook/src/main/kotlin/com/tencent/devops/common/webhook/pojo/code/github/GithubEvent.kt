@@ -316,7 +316,13 @@ data class GithubRepository(
     nodeId = nodeId,
     updatedAt = updatedAt,
     createdAt = createdAt
-)
+) {
+    fun getRepoUrl() = if (htmlUrl.isNullOrBlank()) {
+        "$GITHUB_HOME_PAGE_URL/$fullName"
+    } else {
+        htmlUrl
+    }
+}
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)

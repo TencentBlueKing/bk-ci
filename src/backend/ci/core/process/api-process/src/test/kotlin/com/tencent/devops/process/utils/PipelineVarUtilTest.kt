@@ -67,6 +67,7 @@ class PipelineVarUtilTest {
         val notKeyword2 = "\$ a}"
         assertFalse(PipelineVarUtil.isVar(notKeyword2))
     }
+
     @Test
     fun haveVar() {
         val keyword = "hello\${{variables.abc}}"

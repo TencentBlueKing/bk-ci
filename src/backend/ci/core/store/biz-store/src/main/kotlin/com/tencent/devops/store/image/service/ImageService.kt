@@ -100,7 +100,7 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
-import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -727,6 +727,30 @@ abstract class ImageService @Autowired constructor() {
         } else {
             getImageRepoInfoByRecord(latestImage)
         }
+    }
+
+    fun getImageInfoByCodeAndVersion(
+        imageCode: String,
+        imageVersion: String?
+    ): ImageRepoInfo? {
+        // 区分是否为调试项目
+        val imageStatusList = mutableListOf(
+            ImageStatusEnum.RELEASED.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        val imageRecords =
+            imageDao.getImagesByBaseVersion(
+                dslContext = dslContext,
+                imageCode = imageCode,
+                imageStatusSet = imageStatusList.toSet(),
+                baseVersion = imageVersion
+            )
+        imageRecords?.sortWith(Comparator { o1, o2 ->
+            ImageUtil.compareVersion(o2.get(KEY_IMAGE_VERSION) as String?, o1.get(KEY_IMAGE_VERSION) as String?)
+        })
+        val latestImage = imageRecords?.get(0)
+        return latestImage?.let { getImageRepoInfoByRecord(it) }
     }
 
     fun getSelfDevelopPublicImages(

@@ -34,13 +34,16 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) : UserPipelineSettingResource {
 
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
@@ -49,7 +52,20 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
         @AuditRequestBody
         setting: PipelineSetting
     ): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            setting = setting
+        )
+        pipelineInfoFacadeService.updatePipelineSettingVersion(
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            operationLogType = OperationLogType.UPDATE_PIPELINE_SETTING,
+            savedSetting = savedSetting
+        )
+        return Result(savedSetting.pipelineId)
     }
 
     override fun getSetting(

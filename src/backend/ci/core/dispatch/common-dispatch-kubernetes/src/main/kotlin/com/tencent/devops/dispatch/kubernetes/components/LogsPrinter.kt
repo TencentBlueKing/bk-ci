@@ -54,7 +54,8 @@ class LogsPrinter @Autowired constructor(
                     builderHashId = containerHashId,
                     vmSeqId = vmSeqId,
                     message = message,
-                    executeCount = executeCount
+                    executeCount = executeCount,
+                    jobId = jobId
                 )
             } catch (e: Throwable) {
                 // 日志有问题就不打日志了，不能影响正常流程
@@ -63,23 +64,41 @@ class LogsPrinter @Autowired constructor(
         }
     }
 
-    fun log(buildId: String, builderHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun log(
+        buildId: String,
+        builderHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?,
+        jobId: String?
+    ) {
         buildLogPrinter.addLine(
             buildId = buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = builderHashId,
-            executeCount = executeCount ?: 1
+            containerHashId = builderHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 
-    fun logRed(buildId: String, builderHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun logRed(
+        buildId: String,
+        builderHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?,
+        jobId: String?
+    ) {
         buildLogPrinter.addRedLine(
             buildId = buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = builderHashId,
-            executeCount = executeCount ?: 1
+            containerHashId = builderHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 }

@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.model.store.tables.TStoreComment
 import com.tencent.devops.model.store.tables.TStoreCommentReply
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

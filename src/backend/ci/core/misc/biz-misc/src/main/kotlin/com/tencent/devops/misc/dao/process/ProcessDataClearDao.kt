@@ -124,9 +124,9 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteBuildHistoryByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+    fun deleteBuildHistoryByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Int {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            dslContext.deleteFrom(this)
+            return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))
                 .execute()

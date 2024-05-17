@@ -276,12 +276,14 @@ class PipelineViewDao {
     fun list(
         dslContext: DSLContext,
         projectId: String? = null,
-        viewIds: Set<Long>
+        viewIds: Collection<Long>,
+        viewType: Int? = null
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(viewIds))
                 .let { if (projectId == null) it else it.and(PROJECT_ID.eq(projectId)) }
+                .let { if (viewType == null) it else it.and(VIEW_TYPE.eq(viewType)) }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
