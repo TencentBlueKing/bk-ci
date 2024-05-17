@@ -896,6 +896,16 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val nodeIdMap = nodes.associate {
             it.nodeId to it.enableNode
         }
+        val nodeDisplayNameIds = nodeIdMap.filter { !it.value }.keys
+        val nodeDisplayNameMap = if (nodeDisplayNameIds.isNotEmpty()) {
+            nodeDao.listByIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                nodeIds = nodeDisplayNameIds
+            ).associate { it.nodeId to it.displayName }
+        } else {
+            null
+        }
         val agents = thirdPartyAgentDao.getAgentsByNodeIds(
             dslContext = dslContext,
             nodeIds = nodeIdMap.keys,
@@ -923,7 +933,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     dockerParallelTaskCount = it.dockerParallelTaskCount,
                     masterVersion = it.masterVersion
                 ),
-                enableNode = nodeIdMap[it.nodeId] ?: true
+                enableNode = nodeIdMap[it.nodeId] ?: true,
+                nodeDisplayName = nodeDisplayNameMap?.get(it.nodeId)
             )
         }
     }

@@ -5,5 +5,6 @@ package com.tencent.devops.environment.pojo.thirdpartyagent
  */
 data class EnvNodeAgent(
     val agent: ThirdPartyAgent,
-    val enableNode: Boolean
+    val enableNode: Boolean,
+    val nodeDisplayName: String?
 )
