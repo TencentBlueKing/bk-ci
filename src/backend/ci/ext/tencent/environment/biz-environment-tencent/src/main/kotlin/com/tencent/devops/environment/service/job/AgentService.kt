@@ -47,23 +47,27 @@ import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentObtainManualCommand
 import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.agentres.Content
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
 import com.tencent.devops.environment.pojo.job.agentres.Meta
+import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
+import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
 import com.tencent.devops.environment.utils.FileUtils
@@ -548,5 +552,49 @@ data class AgentService @Autowired constructor(
             }
         )
         return queryAgentInsChannelRes
+    }
+
+    fun obtainManualInstallationCommand(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult> {
+        NodeManApi.setNodemanOperationName("obtainManualInstallationCommand")
+        val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> =
+            nodeManApi.executeGetRequest(
+                AgentObtainManualCommand::class.java, jobId, hostId
+            )
+        val obtainManualCommandRes: AgentResult<ObtainManualCommandResult> = AgentResult(
+            code = agentObtainManualCommandRes.code,
+            result = agentObtainManualCommandRes.result,
+            message = agentObtainManualCommandRes.message,
+            errors = agentObtainManualCommandRes.errors,
+            data = if (agentObtainManualCommandRes.data?.solutions.isNullOrEmpty()) {
+                ObtainManualCommandResult(
+                    status = agentObtainManualCommandRes.data?.status
+                )
+            } else {
+                agentObtainManualCommandRes.data?.solutions?.get(0)?.let {
+                    ObtainManualCommandResult(
+                        type = it.type,
+                        description = it.description,
+                        steps = it.steps.map { step ->
+                            Step(
+                                type = step.type,
+                                description = step.description,
+                                contents = step.contents.map { content ->
+                                    Content(
+                                        text = content.text,
+                                        description = content.description
+                                    )
+                                }
+                            )
+                        }
+                    )
+                }
+            }
+        )
+        return obtainManualCommandRes
     }
 }

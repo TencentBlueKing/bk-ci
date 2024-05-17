@@ -12,6 +12,7 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobResult
@@ -143,6 +144,16 @@ class TencentUserJobResourceImpl @Autowired constructor(
     ): AgentResult<QueryAgentInstallChannelResult> {
         checkParamBlank(userId, projectId)
         return agentService.queryAgentInstallChannel(userId, projectId, withHidden)
+    }
+
+    override fun obtainManualInstallationCommand(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult> {
+        checkParamBlank(userId, projectId)
+        return agentService.obtainManualInstallationCommand(userId, projectId, jobId, hostId)
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {

@@ -66,11 +66,13 @@ class NodeManApi {
             "terminalAgentInstallTask" to "/job/%s/revoke",
             "retryAgentInstallTask" to "/job/%s/retry",
             "queryAgentStatusFromNodeman" to "/host/search",
-            "queryAgentInstallChannel" to "/install_channel"
+            "queryAgentInstallChannel" to "/install_channel",
+            "obtainManualInstallationCommand" to "/job/%s/get_job_commands"
         )
         private val suffix = mapOf(
             "queryAgentTaskLog" to "/?instance_id=%s",
-            "queryAgentInstallChannel" to "/?with_hidden=%s"
+            "queryAgentInstallChannel" to "/?with_hidden=%s",
+            "obtainManualInstallationCommand" to "/?bk_host_id=%s"
         )
 
         private val logger = LoggerFactory.getLogger(NodeManApi::class.java)

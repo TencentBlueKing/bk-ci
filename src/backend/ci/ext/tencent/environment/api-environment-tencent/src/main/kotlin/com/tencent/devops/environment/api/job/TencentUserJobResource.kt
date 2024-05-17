@@ -10,6 +10,7 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobResult
@@ -229,4 +230,22 @@ interface TencentUserJobResource {
         @QueryParam("withHidden")
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult>
+
+    @Operation(summary = "获取手动安装agent的命令")
+    @GET
+    @Path("/{projectId}/{jobId}/obtain_manual_installation_command")
+    fun obtainManualInstallationCommand(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "JOB ID", required = true)
+        @PathParam("jobId")
+        jobId: Int,
+        @Parameter(description = "HOST ID", required = true)
+        @QueryParam("hostId")
+        hostId: Long
+    ): AgentResult<ObtainManualCommandResult>
 }
