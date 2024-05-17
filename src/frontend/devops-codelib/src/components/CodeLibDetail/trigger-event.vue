@@ -23,7 +23,7 @@
                 :data="searchList"
                 clearable
                 :show-condition="false"
-                :placeholder="$t('codelib.事件ID/触发器类型/事件类型/触发人/流水线名称')"
+                :placeholder="filterTips"
             >
             </search-select>
             <span class="refresh-icon" @click="handleRefresh">
@@ -135,6 +135,9 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            filterTips () {
+                return this.searchList.map(item => item.name).join(' / ')
             },
             searchList () {
                 const list = [
