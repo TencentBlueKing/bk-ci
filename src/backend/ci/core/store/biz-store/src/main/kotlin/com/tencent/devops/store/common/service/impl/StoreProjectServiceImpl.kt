@@ -315,9 +315,16 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun uninstall(
         storeType: StoreTypeEnum,
         storeCode: String,
-        projectCode: String
+        projectCode: String,
+        instanceIdList: List<String>?
     ): Result<Boolean> {
-        storeProjectRelDao.deleteRel(dslContext, storeCode, storeType.type.toByte(), projectCode)
+        storeProjectRelDao.deleteRel(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            projectCode = projectCode,
+            instanceIdList = instanceIdList
+        )
         return Result(true)
     }
 

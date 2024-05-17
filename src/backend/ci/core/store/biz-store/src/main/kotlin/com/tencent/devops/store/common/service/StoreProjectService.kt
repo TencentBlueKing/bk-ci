@@ -79,7 +79,8 @@ interface StoreProjectService {
     fun uninstall(
         storeType: StoreTypeEnum,
         storeCode: String,
-        projectCode: String
+        projectCode: String,
+        instanceIdList: List<String>? = null
     ): Result<Boolean>
 
     /**

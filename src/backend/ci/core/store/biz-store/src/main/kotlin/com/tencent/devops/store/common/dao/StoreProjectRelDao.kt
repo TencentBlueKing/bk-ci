@@ -279,14 +279,24 @@ class StoreProjectRelDao {
     /**
      * 卸载时删除关联关系
      */
-    fun deleteRel(dslContext: DSLContext, storeCode: String, storeType: Byte, projectCode: String) {
+    fun deleteRel(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        projectCode: String,
+        instanceIdList: List<String>? = null
+    ) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            if (!instanceIdList.isNullOrEmpty()) {
+                conditions.add(INSTANCE_ID.`in`(instanceIdList))
+            }
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
             dslContext.deleteFrom(this)
-                .where(STORE_CODE.eq(storeCode)
-                    .and(PROJECT_CODE.eq(projectCode))
-                    .and(STORE_TYPE.eq(storeType))
-                )
-                .and(TYPE.eq(1))
+                .where(conditions)
                 .execute()
         }
     }

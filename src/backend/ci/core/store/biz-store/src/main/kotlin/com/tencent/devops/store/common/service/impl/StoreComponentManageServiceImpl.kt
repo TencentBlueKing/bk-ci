@@ -317,7 +317,12 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 卸载
-            storeProjectService.uninstall(storeTypeEnum, storeCode, projectCode)
+            storeProjectService.uninstall(
+                storeType = storeTypeEnum,
+                storeCode = storeCode,
+                projectCode = projectCode,
+                instanceIdList = unInstallReq.instanceIdList
+            )
             // 入库卸载原因
             unInstallReq.reasonList.forEach {
                 if (it?.reasonId != null) {
