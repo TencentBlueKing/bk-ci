@@ -1640,6 +1640,7 @@ class PipelineRepositoryService constructor(
     }
 
     fun saveSetting(
+        context: DSLContext? = null,
         userId: String,
         setting: PipelineSetting,
         version: Int,
@@ -1662,10 +1663,10 @@ class PipelineRepositoryService constructor(
         }
 
         var oldName: String = setting.pipelineName
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
+        (context ?: dslContext).transaction { t ->
+            val transactionContext = DSL.using(t)
             val old = pipelineSettingDao.getSetting(
-                dslContext = context,
+                dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId
             )
@@ -1673,7 +1674,7 @@ class PipelineRepositoryService constructor(
                 oldName = old.pipelineName
             }
             if (versionStatus.isReleasing()) pipelineInfoDao.update(
-                dslContext = context,
+                dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
                 userId = userId,
@@ -1686,7 +1687,7 @@ class PipelineRepositoryService constructor(
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {
                     pipelineSettingVersionDao.deleteEarlyVersion(
-                        dslContext = context,
+                        dslContext = transactionContext,
                         projectId = setting.projectId,
                         pipelineId = setting.pipelineId,
                         currentVersion = version,
@@ -1694,7 +1695,7 @@ class PipelineRepositoryService constructor(
                     )
                 }
                 pipelineSettingVersionDao.saveSetting(
-                    dslContext = context,
+                    dslContext = transactionContext,
                     setting = setting,
                     version = version,
                     isTemplate = isTemplate,
@@ -1704,7 +1705,7 @@ class PipelineRepositoryService constructor(
                 )
             }
             if (versionStatus.isReleasing()) pipelineSettingDao.saveSetting(
-                context, setting, isTemplate
+                transactionContext, setting, isTemplate
             ).toString()
         }
 

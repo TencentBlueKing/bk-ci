@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service
 @Service
 class TemplateSettingService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val client: Client,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -57,12 +56,13 @@ class TemplateSettingService @Autowired constructor(
                 name = setting.pipelineName,
                 desc = setting.desc
             )
-            saveTemplatePipelineSetting(userId, setting, true)
+            saveTemplatePipelineSetting(context, userId, setting, true)
         }
         return true
     }
 
     fun saveTemplatePipelineSetting(
+        context: DSLContext? = null,
         userId: String,
         setting: PipelineSetting,
         isTemplate: Boolean = false
@@ -83,7 +83,12 @@ class TemplateSettingService @Autowired constructor(
         )
         logger.info("Save the template pipeline setting - ($setting)")
         return pipelineSettingFacadeService.saveSetting(
-            userId, setting.projectId, setting.pipelineId, setting
+            context = context,
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            setting = setting,
+            isTemplate = isTemplate
         )
     }
 
@@ -105,9 +110,11 @@ class TemplateSettingService @Autowired constructor(
             content = NotifyTemplateUtils.getCommonShutdownFailureContent()
         )
         val setting = PipelineSetting.defaultSetting(
-            projectId, templateId, pipelineName, null, failSubscription
+            projectId = projectId, pipelineId = templateId, pipelineName = pipelineName,
+            maxPipelineResNum = null, failSubscription = failSubscription
         )
         return pipelineSettingFacadeService.saveSetting(
+            context = context,
             userId = userId,
             projectId = projectId,
             pipelineId = templateId,

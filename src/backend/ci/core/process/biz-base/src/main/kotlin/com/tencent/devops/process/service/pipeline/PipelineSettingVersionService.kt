@@ -160,19 +160,16 @@ class PipelineSettingVersionService @Autowired constructor(
     }
 
     fun getLatestSettingVersion(
+        context: DSLContext? = null,
         projectId: String,
         pipelineId: String
-    ): PipelineSettingVersion {
+    ): PipelineSettingVersion? {
         return pipelineSettingVersionDao.getLatestSettingVersion(
-            dslContext = dslContext,
+            dslContext = context ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId
-        ) ?: PipelineSettingVersion.convertFromSetting(
-            pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-                ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-                )
-        )
+        ) ?: pipelineSettingDao.getSetting(
+            context ?: dslContext, projectId, pipelineId
+        )?.let { PipelineSettingVersion.convertFromSetting(it) }
     }
 }

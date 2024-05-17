@@ -68,6 +68,7 @@ import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -106,6 +107,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         content = ActionAuditContent.PIPELINE_EDIT_SAVE_SETTING_CONTENT
     )
     fun saveSetting(
+        context: DSLContext? = null,
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -141,17 +143,19 @@ class PipelineSettingFacadeService @Autowired constructor(
         setting.fixSubscriptions()
         modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         ActionAuditContext.current().setInstance(setting)
-        val latestSetting = pipelineSettingVersionService.getLatestSettingVersion(
+        val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
             projectId = projectId,
             pipelineId = pipelineId
-        )
-        val settingVersion = if (updateVersion) PipelineVersionUtils.getSettingVersion(
-            currVersion = latestSetting.version,
-            originSetting = latestSetting,
-            newSetting = PipelineSettingVersion.convertFromSetting(setting)
-        ) else latestSetting.version
+        )?.let { latest ->
+            if (updateVersion) PipelineVersionUtils.getSettingVersion(
+                currVersion = latest.version,
+                originSetting = latest,
+                newSetting = PipelineSettingVersion.convertFromSetting(setting)
+            ) else latest.version
+        } ?: 1
 
         val pipelineName = pipelineRepositoryService.saveSetting(
+            context = context,
             userId = userId,
             setting = setting,
             version = settingVersion,

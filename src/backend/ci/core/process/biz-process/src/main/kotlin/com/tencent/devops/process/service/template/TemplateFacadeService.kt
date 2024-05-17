@@ -316,7 +316,9 @@ class TemplateFacadeService @Autowired constructor(
                     newTemplateId,
                     copyTemplateReq.templateName
                 )
-                templateSettingService.saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
                 templateSettingService.insertTemplateSetting(
                     context = context,
@@ -401,7 +403,9 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateId,
                     templateName = saveAsTemplateReq.templateName
                 )
-                templateSettingService.saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
                 templateSettingService.insertTemplateSetting(
                     context = context,
@@ -1615,7 +1619,9 @@ class TemplateFacadeService @Autowired constructor(
                             pipelineId = pipelineId,
                             templateName = instance.pipelineName
                         )
-                        templateSettingService.saveTemplatePipelineSetting(userId, setting)
+                        templateSettingService.saveTemplatePipelineSetting(
+                            context, userId, setting
+                        )
                     } else {
                         templateSettingService.insertTemplateSetting(
                             context = context,

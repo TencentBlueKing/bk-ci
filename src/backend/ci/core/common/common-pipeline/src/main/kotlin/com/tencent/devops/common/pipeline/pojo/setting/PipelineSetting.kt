@@ -97,6 +97,7 @@ data class PipelineSetting(
 ) {
 
     companion object {
+
         fun defaultSetting(
             projectId: String,
             pipelineId: String,
