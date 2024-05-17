@@ -23,6 +23,20 @@ import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusRsp
 import com.tencent.devops.dispatch.kubernetes.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.bcs.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmResp
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.APP_NOT_BIND_CGS
+import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.NO_CGS_CHOOSE
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateRsp
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateRsp
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.ListCgsResp
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
+import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import java.net.SocketTimeoutException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -34,25 +48,89 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class WorkspaceBcsClient @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceBcsClient::class.java)
-        private const val BCS_TOKEN_KEY = "BK-Devops-Token"
         const val OK = 0
     }
-    @Value("\${bcsCloud.appId}")
-    val bcsCloudAppId: String = ""
-
-    @Value("\${bcsCloud.token}")
-    val bcsCloudToken: String = ""
 
     @Value("\${bcsCloud.apiUrl}")
     val bcsCloudUrl: String = ""
+
+    @Value("\${apigw.appCode}")
+    val appCode: String = ""
+
+    @Value("\${apigw.appToken}")
+    val appToken: String = ""
+
+    /**
+     * TODO: 函数带有 start 的都是之前是放到 start client 下但是操作的是 bcs 的接口，先平移过来，未来看整合到一起
+     */
+
+    fun startCreateWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/createvm"
+        val id = UUID.randomUUID()
+        val body = JsonUtil.toJson(environment, false)
+        logger.info("$id|User $userId request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+
+                val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
+                logger.info("$id|createWorkspace rsp: $environmentRsp")
+                when {
+                    WorkspaceStartCloudClient.OK == environmentRsp.code && environmentRsp.data != null
+                    -> return environmentRsp.data
+
+                    APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
+                    -> throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        " ${environment.basicBody.zoneId}地区${environment.basicBody.machineType}" +
+                                "型云桌面资源不足(${environmentRsp.code})"
+                    )
+
+                    else -> throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "(${environmentRsp.code}-${environmentRsp.message})"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId create environment get SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
 
     fun createWorkspace(userId: String, environment: Environment): EnvironmentOpRspData {
         val url = bcsCloudUrl + "/api/v1/remotedevenv/create"
@@ -60,12 +138,7 @@ class WorkspaceBcsClient @Autowired constructor(
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(
-                makeHeaders(
-                    bcsCloudToken
-                )
-                    .toHeaders()
-            )
+            .headers(makeHeaders().toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
 
@@ -107,6 +180,66 @@ class WorkspaceBcsClient @Autowired constructor(
         }
     }
 
+    fun startOperateWorkspace(
+        userId: String,
+        action: EnvironmentAction,
+        workspaceName: String,
+        environmentOperate: EnvironmentOperate
+    ): EnvironmentOperateRsp.EnvironmentOperateRspData {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/${action.action}"
+        val body = JsonUtil.toJson(environmentOperate, false)
+        logger.info("$userId ${action.action} workspace url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.info("$userId ${action.action} workspace response: $responseContent")
+                val environmentOpRsp: EnvironmentOperateRsp = jacksonObjectMapper().readValue(responseContent)
+                if (WorkspaceStartCloudClient.OK == environmentOpRsp.code) {
+                    // 记录操作历史
+                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        environmentUid = environmentOperate.uid,
+                        operator = userId,
+                        uid = environmentOpRsp.data!!.taskUid,
+                        action = action
+                    )
+
+                    return environmentOpRsp.data!!
+                } else {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${environmentOpRsp.code}-${environmentOpRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId ${action.action} workspace get SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
     fun operatorWorkspace(
         userId: String,
         environmentUid: String,
@@ -120,7 +253,7 @@ class WorkspaceBcsClient @Autowired constructor(
             "patchStr: $envPatchStr, body:$body")
         val request = Request.Builder()
             .url(url)
-            .headers(makeHeaders(bcsCloudToken).toHeaders())
+            .headers(makeHeaders().toHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
@@ -173,6 +306,53 @@ class WorkspaceBcsClient @Autowired constructor(
         }
     }
 
+    fun startGetWorkspaceInfo(
+        userId: String,
+        environmentOperate: EnvironmentOperate
+    ): EnvironmentStatus {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/status"
+        val body = JsonUtil.toJson(environmentOperate, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.info("$userId get workspace info body: $body response: $responseContent")
+                val environmentInfoRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                if (WorkspaceStartCloudClient.OK == environmentInfoRsp.code) {
+                    return environmentInfoRsp.data!!
+                } else {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${environmentInfoRsp.code}-${environmentInfoRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId get workspace info SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
     fun getWorkspaceStatus(
         userId: String,
         environmentUid: String,
@@ -182,12 +362,7 @@ class WorkspaceBcsClient @Autowired constructor(
         logger.info("User $userId get environment status: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(
-                makeHeaders(
-                    bcsCloudToken
-                )
-                    .toHeaders()
-            )
+            .headers(makeHeaders().toHeaders())
             .post(
                 RequestBody.create(
                     "application/json; charset=utf-8".toMediaTypeOrNull(),
@@ -256,12 +431,7 @@ class WorkspaceBcsClient @Autowired constructor(
         logger.info("User $userId get environment detail: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(
-                makeHeaders(
-                    bcsCloudToken
-                )
-                    .toHeaders()
-            )
+            .headers(makeHeaders().toHeaders())
             .post(
                 RequestBody.create(
                     "application/json; charset=utf-8".toMediaTypeOrNull(),
@@ -332,12 +502,7 @@ class WorkspaceBcsClient @Autowired constructor(
         val body = ObjectMapper().writeValueAsString(EnvironmentListReq(userId, 0, 0))
         val request = Request.Builder()
             .url(url)
-            .headers(
-                makeHeaders(
-                    bcsCloudToken
-                )
-                    .toHeaders()
-            )
+            .headers(makeHeaders().toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
         try {
@@ -398,12 +563,7 @@ class WorkspaceBcsClient @Autowired constructor(
         val url = "$bcsCloudUrl/api/v1/devops/task/status?uid=$taskUid"
         val request = Request.Builder()
             .url(url)
-            .headers(
-                makeHeaders(
-                    bcsCloudToken
-                )
-                    .toHeaders()
-            )
+            .headers(makeHeaders().toHeaders())
             .get()
             .build()
 
@@ -507,10 +667,157 @@ class WorkspaceBcsClient @Autowired constructor(
         }
     }
 
-    fun makeHeaders(
-        token: String
-    ): Map<String, String> {
-        return mapOf(BCS_TOKEN_KEY to token)
+    fun startGetResourceVm(
+        data: ResourceVmReq
+    ): List<ResourceVmRespData>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm/list"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.RESOURCE_VM_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.RESOURCE_VM_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.RESOURCE_VM_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.debug("get resource vm body: $body response: $responseContent")
+                val resp: ResourceVmResp = jacksonObjectMapper().readValue(responseContent)
+                if (WorkspaceStartCloudClient.OK == resp.code) {
+                    return resp.data?.zoneResources
+                } else {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get resource vm SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun startListCgs(): List<ListCgsRespData> {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/listcgs"
+        val body = JsonUtil.toJson("", false)
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("get cgs list response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                        " 获取listcgs接口异常: ${response.code}"
+                    )
+                }
+
+                val resp: ListCgsResp = jacksonObjectMapper().readValue(responseContent)
+                when (resp.code) {
+                    WorkspaceStartCloudClient.OK -> {
+                        if (resp.data == null) {
+                            throw BuildFailureException(
+                                com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                                com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                                com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                                " 获取listcgs接口异常: data is null"
+                            )
+                        }
+                        return resp.data
+                    }
+
+                    else -> throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                        " 获取listcgs接口异常: ${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get listcgs SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                errorCode = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                formatErrorMessage = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                errorMessage = " 获取listcgs接口超时, url: $url"
+            )
+        }
+    }
+
+    // 获取基础镜像列表
+    fun startGetVmStandardImages(): List<StandardVmImage>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/list/image"
+        val body = JsonUtil.toJson("", false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.RESOURCE_VM_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.RESOURCE_VM_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.RESOURCE_VM_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.debug("list vm image body: $body response: $responseContent")
+                val resp: ListVmImagesResp = jacksonObjectMapper().readValue(responseContent)
+                if (WorkspaceStartCloudClient.OK == resp.code) {
+                    return resp.data
+                } else {
+                    throw BuildFailureException(
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorType,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorCode,
+                        com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                        "${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get resource vm SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorType,
+                errorCode = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    private fun makeHeaders(): Map<String, String> {
+        val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appToken)
+        val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
+        return mapOf("X-Bkapi-Authorization" to headerStr)
     }
 }
 data class TaskResult(
