@@ -135,13 +135,13 @@
     width: 615px;
     height: 640px;
     pointer-events: none;
-    opacity: 0;
-    z-index: 9999;
+    display: none;
+    z-index: 2000;
     background-color: #ecf2fe;
     border: 1px solid rgba(59, 66, 75, .24);
 }
 .fixation-wrap-active {
-    opacity: 1;
+    display: block;
     pointer-events: auto;
 }
 .help-center-iframe {
@@ -151,7 +151,7 @@
     width: 615px;
     height: 640px;
     pointer-events: auto;
-    z-index: 9999;
+    z-index: 2000;
     background-color: #ecf2fe;
     border: 1px solid rgba(59, 66, 75, .24);
 }
