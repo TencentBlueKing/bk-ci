@@ -31,7 +31,12 @@
                 size="18"
                 class="active-atom-location-icon"
             />
-            <bk-round-progress v-if="showProgress" ext-cls="atom-progress" v-bind="progressConf" :percent="atom.progressRate" />
+            <bk-round-progress
+                v-if="showProgress"
+                ext-cls="atom-progress"
+                v-bind="progressConf"
+                :percent="atom.progressRate"
+            />
             <status-icon
                 v-else-if="!isSkip && !!atomStatus"
                 type="element"
@@ -388,7 +393,7 @@
                 }
             },
             showProgress () {
-                return typeof this.atom.progressRate === 'number' && this.atom.progressRate < 1
+                return this.isExecuting && typeof this.atom.progressRate === 'number' && this.atom.progressRate < 1
             },
             progressConf () {
                 return {
