@@ -170,6 +170,7 @@ class BuildAgentBuildResourceImpl @Autowired constructor(
         val requestAgentId = agentAskRequestCache.getIfPresent(agentId)
         if (requestAgentId != null) {
             logger.warn("agentHeartbeat|$projectId|$agentId| request too frequently")
+            thirdPartyAgentBuildService.agentRepeatedInstallAlarm(projectId, agentId, data.heartbeat.agentIp)
             return AgentResult(1, "request too frequently")
         } else {
             val lockKey = "environment:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
@@ -177,6 +178,7 @@ class BuildAgentBuildResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentAskRequestCache.put(agentId, agentId)
             } else {
+                thirdPartyAgentBuildService.agentRepeatedInstallAlarm(projectId, agentId, data.heartbeat.agentIp)
                 return AgentResult(1, "request too frequently")
             }
         }

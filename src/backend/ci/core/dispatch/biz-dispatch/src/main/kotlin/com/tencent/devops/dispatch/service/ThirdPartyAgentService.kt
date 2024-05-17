@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -39,7 +40,9 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
@@ -87,7 +90,8 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
+    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService,
+    private val tokenService: ClientTokenService
 ) {
     @Value("\${thirdagent.workerErrorTemplate:#{null}}")
     val workerErrorRtxTemplate: String? = null
@@ -739,6 +743,56 @@ class ThirdPartyAgentService @Autowired constructor(
             agentIds = agentIds,
             projectId = projectId
         )
+    }
+
+    fun agentRepeatedInstallAlarm(
+        projectId: String,
+        agentId: String,
+        newIp: String
+    ) {
+        val agent = try {
+            client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId).data ?: return
+        } catch (e: RemoteServiceException) {
+            logger.warn("Fail to get the agent($agentId) of project($projectId) because of ${e.message}")
+            return
+        }
+
+        if (agent.ip == newIp) {
+            return
+        }
+
+        val users = mutableSetOf(agent.createUser)
+        val nodeHashId = agent.nodeId ?: return
+        val authUsers = kotlin.runCatching {
+            client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectId,
+                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+                resourceCode = nodeHashId
+            ).data
+        }.onFailure {
+            logger.warn("agentStartup|getResourceGroupMembers|$projectId|$nodeHashId")
+        }.getOrNull()
+        users.addAll(authUsers ?: emptySet())
+        kotlin.runCatching {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                SendNotifyMessageTemplateRequest(
+                    templateCode = "THIRDPART_AGENT_REPEAT_INSTALL",
+                    receivers = users,
+                    titleParams = mapOf(
+                        "projectId" to projectId,
+                        "agentId" to agentId
+                    ),
+                    bodyParams = mapOf(
+                        "oldIp" to agent.ip,
+                        "newIp" to newIp,
+                        "url" to "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
+                                "nodeDetail/$nodeHashId"
+                    )
+                )
+            ) }.onFailure {
+            logger.warn("agentStartup|sendNotifyMessageByTemplate|$projectId|$agentId")
+        }
     }
 
     companion object {

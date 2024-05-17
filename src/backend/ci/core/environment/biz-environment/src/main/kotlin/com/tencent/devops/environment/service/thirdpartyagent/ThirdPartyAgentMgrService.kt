@@ -34,7 +34,6 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
-import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.CustomException
@@ -55,13 +54,10 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
@@ -110,8 +106,6 @@ import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -151,8 +145,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val agentMetricService: AgentMetricService,
     private val agentShareProjectDao: AgentShareProjectDao,
     private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
-    private val thirdPartAgentService: ThirdPartAgentService,
-    private val tokenService: ClientTokenService
+    private val thirdPartAgentService: ThirdPartAgentService
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
@@ -1054,43 +1047,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             status = AgentStatus.UN_IMPORT_OK
         } else if (status == AgentStatus.IMPORT_EXCEPTION) {
             status = AgentStatus.IMPORT_OK
-        }
-
-        // 如果已经有了状态正常的Agent且IP不同，发送告警
-        if (status == AgentStatus.IMPORT_OK && agentRecord.ip != startInfo.hostIp) {
-            val users = mutableSetOf(agentRecord.createdUser)
-            val nodeHashId = HashUtil.encodeLongId(agentRecord.nodeId)
-            val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-            val authUsers = kotlin.runCatching {
-                client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                    token = tokenService.getSystemToken(),
-                    projectCode = agentRecord.projectId,
-                    resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
-                    resourceCode = nodeHashId
-                ).data
-            }.onFailure {
-                logger.warn("agentStartup|getResourceGroupMembers|${agentRecord.projectId}|$nodeHashId")
-            }.getOrNull()
-            users.addAll(authUsers ?: emptySet())
-            kotlin.runCatching {
-            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-                SendNotifyMessageTemplateRequest(
-                    templateCode = "THIRDPART_AGENT_REPEAT_INSTALL",
-                    receivers = users,
-                    titleParams = mapOf(
-                        "projectId" to agentRecord.projectId,
-                        "agentId" to agentHashId
-                    ),
-                    bodyParams = mapOf(
-                        "oldIp" to agentRecord.ip,
-                        "newIp" to startInfo.hostIp,
-                        "url" to "${HomeHostUtil.innerServerHost()}/console/environment/${agentRecord.projectId}/" +
-                                "nodeDetail/$nodeHashId"
-                    )
-                )
-            ) }.onFailure {
-                logger.warn("agentStartup|sendNotifyMessageByTemplate|${agentRecord.projectId}|$agentHashId")
-            }
         }
 
         if (!(AgentStatus.isImportException(status) ||
