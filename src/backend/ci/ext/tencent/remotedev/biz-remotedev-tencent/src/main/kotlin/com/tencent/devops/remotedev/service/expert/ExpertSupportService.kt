@@ -100,7 +100,11 @@ class ExpertSupportService @Autowired constructor(
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
             .mapValues {
                 if ((it.value["USER_NAME"] as String).isNotBlank()) {
-                    Triple("${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}", it.value["PHONE"] as String, it.value["PHONE_COUNTRY_CODE"] as String)
+                    Triple(
+                        "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}",
+                        it.value["PHONE"] as String,
+                        it.value["PHONE_COUNTRY_CODE"] as String
+                    )
                 } else {
                     Triple(it.key, "", "")
                 }
