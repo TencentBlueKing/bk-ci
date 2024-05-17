@@ -179,8 +179,8 @@ data class AgentService @Autowired constructor(
                     bkBizId = hostIdToqueryCCResDataMap?.get(it.bkHostId)?.bkBizId ?: bkBizScopeId,
                     bkCloudId = it.bkCloudId ?: DEFAULT_CLOUD_ID,
                     bkHostId = it.bkHostId,
-                    bkAddressing = null,
-                    apId = DEFAULT_INSTALL_AGENT_AP_ID,
+                    bkAddressing = it.bkAddressing,
+                    apId = if (it.apId != null) it.apId else DEFAULT_INSTALL_AGENT_AP_ID,
                     installChannelId = if (it.isAutoChooseInstallChannelId) {
                         chooseAgentInstallChannelIdService.autoChooseAgentInstallChannelId(
                             it.innerIp ?: ""
@@ -188,9 +188,9 @@ data class AgentService @Autowired constructor(
                     } else it.installChannelId,
                     innerIp = it.innerIp,
                     outerIp = null,
-                    loginIp = null,
+                    loginIp = it.loginIp,
                     dataIp = null,
-                    innerIpv6 = null,
+                    innerIpv6 = it.innerIpv6,
                     outerIpv6 = null,
                     osType = it.osType,
                     authType = it.authType,
@@ -200,11 +200,11 @@ data class AgentService @Autowired constructor(
                     } else it.password,
                     port = it.port,
                     key = if ("KEY" == it.authType) FileUtils.convertFileContentToString(keyFile) else it.key,
-                    isManual = DEFAULT_IS_MANUAL,
+                    isManual = if (true == it.isManual) it.isManual else DEFAULT_IS_MANUAL,
                     retention = null,
-                    peerExchangeSwitchForAgent = null,
+                    peerExchangeSwitchForAgent = it.peerExchangeSwitchForAgent,
                     btSpeedLimit = null,
-                    enableCompression = null,
+                    enableCompression = it.enableCompression,
                     dataPath = null
                 )
             },

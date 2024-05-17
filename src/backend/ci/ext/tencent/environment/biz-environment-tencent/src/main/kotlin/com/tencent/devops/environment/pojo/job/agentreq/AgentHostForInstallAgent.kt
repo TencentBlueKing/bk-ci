@@ -49,9 +49,9 @@ data class AgentHostForInstallAgent(
     @JsonProperty("bk_addressing")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val bkAddressing: String?,
-    @get:Schema(title = "接入点ID", required = true)
+    @get:Schema(title = "接入点ID")
     @JsonProperty("ap_id")
-    val apId: Int,
+    val apId: Int? = null,
     @get:Schema(title = "安装通道ID")
     @JsonProperty("install_channel_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
