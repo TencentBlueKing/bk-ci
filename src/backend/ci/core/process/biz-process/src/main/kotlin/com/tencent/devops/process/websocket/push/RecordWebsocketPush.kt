@@ -62,7 +62,9 @@ data class RecordWebsocketPush(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RecordWebsocketPush::class.java)
-        private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildFacadeService::class.java)
+        private val pipelineBuildService by lazy {
+            SpringContextUtil.getBean(PipelineBuildFacadeService::class.java)
+        }
     }
 
     override fun findSession(page: String): Set<String>? {
