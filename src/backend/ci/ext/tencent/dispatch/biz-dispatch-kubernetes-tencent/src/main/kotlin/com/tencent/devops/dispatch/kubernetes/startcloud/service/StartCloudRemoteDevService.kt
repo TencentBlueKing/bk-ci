@@ -33,7 +33,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.bcs.client.WorkspaceBcsClient
-import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsRemoteDevService
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
@@ -276,7 +275,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         machineType: String,
         pipelineId: String
     ): String {
-        val resp = workspaceClient.operateWorkspace(
+        val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.UPGRADE_VM,
             workspaceName = workspaceName,
@@ -377,7 +376,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             type == UpdateEventType.CREATE ||
             type == UpdateEventType.REBUILD ||
             type == UpdateEventType.MAKE_IMAGE
-            ) {
+        ) {
             START_CREATE_TIMEOUT
         } else {
             START_OTHER_TIMEOUT
