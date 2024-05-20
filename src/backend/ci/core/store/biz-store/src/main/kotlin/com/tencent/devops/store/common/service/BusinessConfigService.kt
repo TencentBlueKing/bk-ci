@@ -28,8 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.common.dao.BusinessConfigDao
-import com.tencent.devops.store.pojo.common.BusinessConfigRequest
-import com.tencent.devops.store.pojo.common.BusinessConfigResponse
+import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
+import com.tencent.devops.store.pojo.common.config.BusinessConfigResponse
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

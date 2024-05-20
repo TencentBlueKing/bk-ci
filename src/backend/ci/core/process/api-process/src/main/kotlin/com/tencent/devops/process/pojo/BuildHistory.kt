@@ -43,8 +43,10 @@ data class BuildHistory(
     val trigger: String,
     @get:Schema(title = "构建号", required = true)
     val buildNum: Int?,
-    @get:Schema(title = "编排文件版本号", required = true)
+    @get:Schema(title = "编排版本号", required = true)
     val pipelineVersion: Int,
+    @get:Schema(title = "编排版本名称", required = true)
+    val pipelineVersionName: String?,
     @get:Schema(title = "流水线的执行开始时间", required = true)
     val startTime: Long,
     @get:Schema(title = "流水线的执行结束时间", required = true)

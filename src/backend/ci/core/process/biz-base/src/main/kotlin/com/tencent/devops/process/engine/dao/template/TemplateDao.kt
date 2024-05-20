@@ -61,7 +61,8 @@ class TemplateDao {
         userId: String,
         template: String,
         storeFlag: Boolean,
-        version: Long? = null
+        version: Long? = null,
+        desc: String?
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             val currentTime = LocalDateTime.now()
@@ -76,7 +77,8 @@ class TemplateDao {
                 UPDATE_TIME,
                 TEMPLATE,
                 STORE_FLAG,
-                VERSION
+                VERSION,
+                DESC
             )
                 .values(
                     projectId,
@@ -88,7 +90,8 @@ class TemplateDao {
                     currentTime,
                     template,
                     storeFlag,
-                    version
+                    version,
+                    desc
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version
@@ -109,7 +112,8 @@ class TemplateDao {
         srcTemplateId: String?,
         storeFlag: Boolean,
         weight: Int,
-        version: Long? = null
+        version: Long? = null,
+        desc: String?
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             val currentTime = LocalDateTime.now()
@@ -129,7 +133,8 @@ class TemplateDao {
                 SRC_TEMPLATE_ID,
                 STORE_FLAG,
                 WEIGHT,
-                VERSION
+                VERSION,
+                DESC
             )
                 .values(
                     projectId,
@@ -146,7 +151,8 @@ class TemplateDao {
                     srcTemplateId,
                     storeFlag,
                     weight,
-                    version
+                    version,
+                    desc
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version
@@ -460,7 +466,8 @@ class TemplateDao {
         if (projectId != null) {
             if (includePublicFlag != null && includePublicFlag) {
                 conditions.add(
-                    tTemplate.PROJECT_ID.eq(projectId).or(tTemplate.PROJECT_ID.eq("").and(tTemplate.TYPE.eq(TemplateType.PUBLIC.name)))
+                    tTemplate.PROJECT_ID.eq(projectId)
+                        .or(tTemplate.PROJECT_ID.eq("").and(tTemplate.TYPE.eq(TemplateType.PUBLIC.name)))
                 )
             } else {
                 conditions.add(tTemplate.PROJECT_ID.eq(projectId))
@@ -618,6 +625,23 @@ class TemplateDao {
                 .and(SRC_TEMPLATE_ID.eq(templateId))
                 .and(PROJECT_ID.`in`(projectIds))
                 .fetch()
+        }
+    }
+
+    fun updateNameAndDescById(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        name: String?,
+        desc: String?
+    ): Int {
+        with(TTemplate.T_TEMPLATE) {
+            val dsl = dslContext.update(this)
+                .set(DESC, desc)
+            if (!name.isNullOrBlank()) {
+                dsl.set(TEMPLATE_NAME, name)
+            }
+            return dsl.where(PROJECT_ID.eq(projectId)).and(ID.eq(templateId)).execute()
         }
     }
 }

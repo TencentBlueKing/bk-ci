@@ -34,8 +34,8 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.ClassifyDao
-import com.tencent.devops.store.pojo.common.Classify
-import com.tencent.devops.store.pojo.common.ClassifyRequest
+import com.tencent.devops.store.pojo.common.classify.Classify
+import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.AbstractClassifyService
 import com.tencent.devops.store.common.service.ClassifyService

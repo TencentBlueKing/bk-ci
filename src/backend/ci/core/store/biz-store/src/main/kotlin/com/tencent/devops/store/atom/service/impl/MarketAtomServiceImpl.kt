@@ -94,11 +94,12 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
-import com.tencent.devops.store.pojo.atom.MarketMainItem
-import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
+import com.tencent.devops.store.pojo.common.MarketMainItem
+import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomRespItem
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
@@ -114,9 +115,9 @@ import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
-import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.AtomLabelService
@@ -136,6 +137,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -937,10 +939,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         return storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = installAtomReq.projectCode,
             storeId = atom.id,
-            storeCode = atom.atomCode,
-            storeType = StoreTypeEnum.ATOM,
+            installStoreReq = InstallStoreReq(
+                projectCodes = installAtomReq.projectCode,
+                storeCode = atom.atomCode,
+                storeType = StoreTypeEnum.ATOM
+            ),
             publicFlag = atom.defaultFlag,
             channelCode = channelCode
         )
@@ -1064,7 +1068,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                messageCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -1219,6 +1223,29 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return result
     }
 
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, String> {
+        val atomInfo = atomDao.getPipelineAtom(dslContext, atom.atomCode, atom.version) ?: return emptyMap()
+        val res = mutableMapOf<String, String>()
+        val props: Map<String, Any> = jacksonObjectMapper().readValue(atomInfo.props)
+        if (null != props["input"]) {
+            val input = props["input"] as Map<String, Any>
+            input.forEach { inputIt ->
+                val paramKey = inputIt.key
+                val paramValueMap = inputIt.value as Map<String, Any>
+                val default = when (val d = paramValueMap["default"]) {
+                    null -> null
+                    is List<*> -> d.joinToString(separator = ",")
+                    is String -> d
+                    else -> d.toString()
+                }
+                if (default != null) {
+                    res[paramKey] = default
+                }
+            }
+        }
+        return res
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuilder()
@@ -1357,7 +1384,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
-                        "true".equals(paramValueMap["required"].toString(), true)
+                    "true".equals(paramValueMap["required"].toString(), true)
                 val defaultValue = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
@@ -1411,7 +1438,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             "atom-checkbox" -> sb.append("boolean")
                             "key-value-normal" -> sb.append(
                                 "\n    - key: string" +
-                                "\n      value: string"
+                                    "\n      value: string"
                             )
                             else -> sb.append("string")
                         }

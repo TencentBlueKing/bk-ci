@@ -221,7 +221,7 @@ object I18nUtil {
     fun I18Variable.getCodeLanMessage(): String {
         return getCodeLanMessage(
             messageCode = code,
-            params = params.toTypedArray()
+            params = params?.toTypedArray()
         )
     }
 

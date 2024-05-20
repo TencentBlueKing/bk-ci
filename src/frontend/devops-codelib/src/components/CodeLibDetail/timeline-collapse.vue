@@ -40,9 +40,10 @@
                                         action: RESOURCE_ACTION.USE
                                     }
                                 }"
+                                v-bk-tooltips="$t('codelib.重放此事件，符合条件的流水线将触发执行')"
                                 @click.stop="handleReplayAll(eventId)"
                             >
-                                {{ $t('codelib.一键重新触发') }}
+                                {{ $t('codelib.全部重放') }}
                             </a>
                             <bk-icon
                                 :class="{
@@ -85,7 +86,9 @@
                                     <td class="replay-btn">
                                         <div class="cell">
                                             <a
-                                                class="click-trigger"
+                                                :class="{
+                                                    'click-trigger': isZH
+                                                }"
                                                 v-perm="{
                                                     hasPermission: curRepo.canUse,
                                                     disablePermissionApi: true,
@@ -96,9 +99,10 @@
                                                         action: RESOURCE_ACTION.USE
                                                     }
                                                 }"
+                                                v-bk-tooltips="$t('codelib.重放此事件，仅触发当前流水线')"
                                                 @click="handleReplay(detail)"
                                             >
-                                                {{ $t('codelib.重新触发') }}
+                                                {{ $t('codelib.重放') }}
                                             </a>
                                         </div>
                                     </td>
@@ -175,13 +179,17 @@
                     current: 1,
                     limit: 10,
                     count: 0
-                }
+                },
+                isZH: true
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
             }
+        },
+        created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
         },
         methods: {
             ...mapActions('codelib', [
@@ -191,11 +199,11 @@
             ]),
 
             /**
-             * 一键重新触发
+             * 全部重放
              */
             handleReplayAll (eventId) {
                 this.$bkInfo({
-                    title: this.$t('codelib.是否一键重新触发？'),
+                    title: this.$t('codelib.是否全部重放？'),
                     subTitle: this.$t('codelib.将使用此事件重新触发关联的流水线'),
                     confirmLoading: true,
                     confirmFn: async () => {
@@ -357,6 +365,9 @@
                 transform: rotate(90deg);
             }
         }
+        .trigger-user {
+            color: #979BA5;
+        }
         .trigger-time {
             padding-left: 8px;
             color: #979BA5;
@@ -405,6 +416,10 @@
             .cell {
                 display: inline-block;
                 width: 110px;
+            }
+            .click-trigger {
+                display: inline-block;
+                margin-left: 22px;
             }
         }
     }

@@ -151,14 +151,17 @@ class PipelineBuildTaskService @Autowired constructor(
                 val tasks = pipelineTaskService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
+                    val stepId = task["stepId"] ?: ""
                     val containerId = task["containerId"] ?: ""
                     val executeCount = task["executeCount"] ?: 1
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "Cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
                         tag = taskId.toString(),
-                        jobId = containerId.toString(),
-                        executeCount = executeCount as Int
+                        containerHashId = containerId.toString(),
+                        executeCount = executeCount as Int,
+                        jobId = null,
+                        stepId = stepId.toString()
                     )
                 }
                 if (tasks.isEmpty()) {
@@ -166,8 +169,10 @@ class PipelineBuildTaskService @Autowired constructor(
                         buildId = buildId,
                         message = "cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
                         tag = "",
-                        jobId = "",
-                        executeCount = 1
+                        containerHashId = "",
+                        executeCount = 1,
+                        jobId = null,
+                        stepId = null
                     )
                 }
                 pipelineRuntimeService.cancelBuild(

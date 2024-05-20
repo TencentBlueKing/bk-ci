@@ -62,6 +62,8 @@
                 const url = this.listUrl || `/project/api/user/users/projectUser/${this.$route.params.projectId}/${this.$route.params.pipelineId}/map`
                 this.$ajax.get(`${url}`).then(res => {
                     this.list = res.data
+                }).catch(e => {
+                    console.log(e)
                 })
             },
             // 检验变量

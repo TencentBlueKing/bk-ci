@@ -201,7 +201,8 @@ class CallBackControl @Autowired constructor(
                 events = callBackEvent.name
             )
         )
-        val pipelineCallback = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val pipelineCallback = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?.model
             ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
         if (pipelineCallback.isNotEmpty()) {
             list.addAll(pipelineCallback)

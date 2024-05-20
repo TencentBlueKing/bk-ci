@@ -210,6 +210,12 @@
                         : 'tgit'
                 this.createCodelib(type, true)
                 this.checkOAuth({ projectId: this.projectId, type })
+                const query = { ...this.$route.query }
+                delete query.userId
+                delete query.resetType
+                this.$router.push({
+                    query
+                })
             }
         },
 

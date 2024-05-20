@@ -26,5 +26,7 @@ data class MigrateProjectConditionDTO(
     @get:Schema(title = "是否关联产品")
     val relatedProduct: Boolean? = null,
     @get:Schema(title = "排除创建时间大于该值的项目")
-    val excludedCreateTime: String? = null
+    val excludedCreateTime: String? = null,
+    @get:Schema(title = "渠道代码")
+    val channelCode: String? = null
 )
