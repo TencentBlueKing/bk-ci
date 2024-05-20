@@ -30,6 +30,7 @@ package com.tencent.devops.sign.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.constant.SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER
@@ -180,6 +181,10 @@ class SignInfoService(
                 EnumResignStatus.SUCCESS -> "Sign finished."
                 EnumResignStatus.RUNNING -> "Sign is running..."
                 else -> record?.errorMessage ?: "Unknown error."
+            },
+            executeTime = when (status) {
+                EnumResignStatus.RUNNING -> ""
+                else -> getSignInfo(resignId)?.let { JsonUtil.toJson(it) }.toString()
             }
         )
     }
