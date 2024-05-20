@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+@Suppress("NestedBlockDepth")
 @Component
 class WorkspaceBcsClient @Autowired constructor(
     private val dslContext: DSLContext,
