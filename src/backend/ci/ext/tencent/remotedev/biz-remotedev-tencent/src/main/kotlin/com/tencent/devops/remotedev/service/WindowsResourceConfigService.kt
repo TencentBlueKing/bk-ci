@@ -246,11 +246,11 @@ class WindowsResourceConfigService @Autowired constructor(
     }
 
     // 追加项目的云桌面配额
-    fun addProjectTotalQuota(
+    fun updateAndGetProjectTotalQuota(
         userId: String,
         projectId: String,
         quota: Int
-    ): Boolean {
+    ): Int {
         logger.info("addProjectTotalQuota|projectId|$projectId|quota|$quota")
         // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
         val projectInfo = kotlin.runCatching {
@@ -262,16 +262,21 @@ class WindowsResourceConfigService @Autowired constructor(
         val projectProperties = projectInfo.properties
         if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
             logger.info("addProjectTotalQuota|$projectId|not open remotedev")
-            return false
+            throw RemoteServiceException(
+                "project $projectId not open remotedev", HTTP_400
+            )
         }
         val curQuota = projectProperties.cloudDesktopNum
-        return client.get(OPProjectResource::class).setProjectProperties(
-            userId = userId,
-            projectCode = projectId,
-            properties = projectProperties.copy(
-                cloudDesktopNum = (curQuota + quota)
+        if (quota != 0) {
+            client.get(OPProjectResource::class).setProjectProperties(
+                userId = userId,
+                projectCode = projectId,
+                properties = projectProperties.copy(
+                    cloudDesktopNum = (curQuota + quota)
+                )
             )
-        ).data == true
+        }
+        return curQuota + quota
     }
 
     fun addProjectRemotedevManager(

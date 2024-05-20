@@ -23,10 +23,13 @@ import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.StartWorkspaceService
+import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -51,7 +54,11 @@ class ServiceRemoteDevResourceImpl(
     private val notifyControl: NotifyControl,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val workspaceLoginService: WorkspaceLoginService
+    private val workspaceLoginService: WorkspaceLoginService,
+    private val startWorkspaceService: StartWorkspaceService,
+    private val rabbitTemplate: RabbitTemplate,
+    private val expertSupportService: ExpertSupportService,
+    private val whiteListService: WhiteListService
 ) : ServiceRemoteDevResource {
     private val executor = Executors.newCachedThreadPool()
 
@@ -176,12 +183,12 @@ class ServiceRemoteDevResourceImpl(
                 pmUserId = owner ?: operator,
                 projectId = projectId,
                 cgsId = cgs.cgsId,
-                autoAssign = !owner.isNullOrEmpty(),
                 workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
                     baseImageId = 0,
-                    count = 1
+                    count = 1,
+                    assignOwners = owner?.let { listOf(owner) } ?: emptyList()
                 )
             )
             Thread.sleep(500)
@@ -323,5 +330,14 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
         return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
+    }
+
+    override fun updateUsageLimit(userId: String, projectId: String?, count: Int): Result<QuotaInApiRes> {
+        val res =   if (projectId != null) {
+            QuotaInApiRes(project = windowsResourceConfigService.updateAndGetProjectTotalQuota(userId, projectId, count))
+        } else {
+            QuotaInApiRes(user =  whiteListService.updateAndGetWindowsLimit(userId, count))
+        }
+        return Result(res)
     }
 }
