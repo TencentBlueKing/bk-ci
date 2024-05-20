@@ -89,8 +89,7 @@ class DeliverControl @Autowired constructor(
     fun safeInitialization(
         projectId: String,
         userId: String,
-        workspaceName: String,
-        autoAssign: Boolean? = false
+        workspaceName: String
     ) {
         logger.info("$userId start workspace $workspaceName")
         RedisCallLimit(
@@ -125,8 +124,7 @@ class DeliverControl @Autowired constructor(
                         userId,
                         regionId = detail.regionId.toString(),
                         ip = detail.environmentIP,
-                        workspaceName = workspaceName,
-                        autoAssign = autoAssign
+                        workspaceName = workspaceName
                     )
                 }
 
@@ -264,7 +262,6 @@ class DeliverControl @Autowired constructor(
         workspaceName: String,
         projectId: String,
         userId: String,
-        autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
         logger.info(
@@ -287,20 +284,8 @@ class DeliverControl @Autowired constructor(
                             newStatus = WorkspaceStatus.DISTRIBUTING,
                             action = WorkspaceAction.CREATE
                         )
-                        if (autoAssign == true) {
-                            assignUser2Workspace(
-                                userId = userId,
-                                projectId = projectId,
-                                workspaceName = workspaceName,
-                                assigns = listOf(
-                                    ProjectWorkspaceAssign(
-                                        userId = userId,
-                                        type = WorkspaceShared.AssignType.OWNER,
-                                        expiration = null
-                                    )
-                                )
-                            )
-                        }
+                        workspaceCommon.autoAssignOwner(workspace)
+
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
                             cc = mutableSetOf(workspace.createUserId),

@@ -38,7 +38,9 @@ class WorkspaceSharedDao {
                         it.type.name,
                         resourceId,
                         it.expiration
-                    )
+                    ).onDuplicateKeyUpdate()
+                        .set(RESOURCE_ID, resourceId)
+                        .set(EXPIRATION,  it.expiration)
                 }
             ).execute()
         }
