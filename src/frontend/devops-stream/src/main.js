@@ -3,20 +3,19 @@
  * @author <%- author %>
  */
 
-import '../build/public-path'
 import Vue from 'vue'
+import '../build/public-path'
 
 import App from '@/App'
-import router from '@/router'
-import store from '@/store'
-import '@/css/index.css'
 import '@/common/bkmagic'
 import icon from '@/components/icon'
+import '@/css/index.css'
+import router from '@/router'
+import store from '@/store'
 import log from '@blueking/log'
-import VeeValidate from 'vee-validate'
-import VueCompositionAPI from '@vue/composition-api'
 import { bkMessage } from 'bk-magic-vue'
 import bkPipeline from 'bkui-pipeline'
+import VeeValidate from 'vee-validate'
 
 import {
     getCookie, getLanguageMap
@@ -38,7 +37,6 @@ const i18n = new VueI18n({
 Vue.component('Icon', icon)
 Vue.use(log)
 Vue.use(VeeValidate)
-Vue.use(VueCompositionAPI)
 
 Vue.use(bkPipeline, {
     i18n

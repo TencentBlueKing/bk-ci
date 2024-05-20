@@ -28,6 +28,9 @@
 package com.tencent.devops.dispatch.docker.client
 
 import com.tencent.devops.dispatch.docker.client.context.HandlerContext
+import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import okhttp3.Request
 
 abstract class Handler<T : HandlerContext> {
     protected var nextHandler = ThreadLocal<Handler<T>?>()
@@ -37,5 +40,25 @@ abstract class Handler<T : HandlerContext> {
     fun setNextHandler(handler: Handler<T>): Handler<T> {
         this.nextHandler.set(handler)
         return this
+    }
+
+    fun getDockerHostProxyRequest(
+        hostIp: String,
+        hostPort: Int,
+        hostUri: String
+    ): Request.Builder {
+        val url = if (hostIp.isBlank() || hostPort == 0) {
+            throw DockerServiceException(
+                errorType = ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType,
+                errorCode = ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode,
+                errorMsg = "Docker IP: $hostIp is not available."
+            )
+        } else {
+            "http://$hostIp:$hostPort$hostUri"
+        }
+
+        return Request.Builder().url(url)
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
     }
 }

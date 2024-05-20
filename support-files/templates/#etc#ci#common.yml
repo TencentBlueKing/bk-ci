@@ -153,9 +153,6 @@ spring:
       - index: 31
         name: T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO
         databaseShardingStrategy: SHARDING
-      - index: 32
-        name: T_PIPELINE_BUILD_COMMITS
-        databaseShardingStrategy: SHARDING
       - index: 33
         name: T_PIPELINE_RULE
         broadcastFlag: true

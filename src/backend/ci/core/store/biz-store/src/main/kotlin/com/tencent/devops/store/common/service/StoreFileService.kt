@@ -29,8 +29,8 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
+import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -40,13 +40,11 @@ import java.util.Locale
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 /**
  * 研发商店-文件管理逻辑
  * since: 2019-08-15
  */
-@Service
 abstract class StoreFileService {
 
     @Autowired

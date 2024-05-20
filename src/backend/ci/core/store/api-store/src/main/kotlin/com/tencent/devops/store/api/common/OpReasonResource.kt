@@ -29,8 +29,8 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Reason
-import com.tencent.devops.store.pojo.common.ReasonReq
+import com.tencent.devops.store.pojo.common.reason.Reason
+import com.tencent.devops.store.pojo.common.reason.ReasonReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation

@@ -3,12 +3,15 @@
         <div class="pipeline-subpages-header">
             <router-view name="header"></router-view>
         </div>
-        <router-view class="biz-content" v-bkloading="{ isLoading }"></router-view>
+        <router-view class="biz-content"></router-view>
         <portal-target name="artifactory-popup"></portal-target>
     </div>
 </template>
 
 <script>
+    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { mapActions } from 'vuex'
+
     export default {
         created () {
             this.$store.dispatch('requestProjectDetail', {
@@ -16,8 +19,20 @@
             })
         },
         beforeDestroy () {
-            this.$store.commit('pipelines/updateCurPipeline', {})
-            this.$store.commit('pipelines/updatePipelineList', [])
+            this.setPipeline(null)
+            this.setPipelineWithoutTrigger(null)
+            this.setPipelineYaml('')
+            this.selectPipelineVersion(null)
+            this.$store.commit('atom/resetPipelineSetting', null)
+            this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
+        },
+        methods: {
+            ...mapActions('atom', [
+                'setPipeline',
+                'setPipelineYaml',
+                'selectPipelineVersion',
+                'setPipelineWithoutTrigger'
+            ])
         }
     }
 </script>
@@ -27,9 +42,7 @@
 .bkdevops-history-subpage {
   min-height: 100%;
   flex-direction: column;
-  .bk-exception {
-    position: absolute;
-  }
+  background: #F5F7FA;
   .pipeline-subpages-header {
     display: flex;
     align-items: center;
@@ -37,6 +50,7 @@
     background-color: white;
     width: 100%;
     box-shadow: 0 2px 5px 0 rgba(51, 60, 72, 0.03);
+    border-bottom: 1px solid #DCDEE5;
   }
 }
 

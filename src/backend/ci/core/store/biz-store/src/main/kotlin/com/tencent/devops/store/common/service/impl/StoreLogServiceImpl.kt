@@ -76,8 +76,10 @@ class StoreLogServiceImpl @Autowired constructor(
                 buildId = buildId,
                 debug = debug,
                 tag = tag,
+                containerHashId = null,
+                executeCount = executeCount,
                 jobId = null,
-                executeCount = executeCount
+                stepId = null
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -109,8 +111,10 @@ class StoreLogServiceImpl @Autowired constructor(
                 start = start,
                 debug = debug,
                 tag = tag,
+                containerHashId = null,
+                executeCount = executeCount,
                 jobId = null,
-                executeCount = executeCount
+                stepId = null
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -148,8 +152,10 @@ class StoreLogServiceImpl @Autowired constructor(
                 start = start,
                 end = end,
                 tag = tag,
+                containerHashId = null,
+                executeCount = executeCount,
                 jobId = null,
-                executeCount = executeCount
+                stepId = null
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)

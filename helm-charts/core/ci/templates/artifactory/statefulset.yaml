@@ -19,7 +19,7 @@ spec:
   {{ if ne .Values.config.bkCiArtifactoryRealm "local"}}
   strategy:
     rollingUpdate:
-      maxSurge: 1
+      maxSurge: 25%
       maxUnavailable: 0
     type: RollingUpdate
   {{ end }}

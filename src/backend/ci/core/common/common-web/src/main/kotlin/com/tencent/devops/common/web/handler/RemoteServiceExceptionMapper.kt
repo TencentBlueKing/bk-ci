@@ -49,6 +49,12 @@ class RemoteServiceExceptionMapper : ExceptionMapper<RemoteServiceException> {
             logger.warn("remote service exception: ", exception)
         }
         return Response.status(exception.httpStatus).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.errorCode ?: exception.httpStatus, exception.errorMessage)).build()
+            .entity(
+                Result(
+                    status = exception.errorCode ?: exception.httpStatus,
+                    message = exception.errorMessage,
+                    data = exception.data
+                )
+            ).build()
     }
 }

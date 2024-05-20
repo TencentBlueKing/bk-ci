@@ -30,7 +30,6 @@ package com.tencent.devops.misc.dao.process
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.model.process.tables.TPipelineBuildCommits
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
@@ -125,9 +124,9 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteBuildHistoryByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+    fun deleteBuildHistoryByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Int {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            dslContext.deleteFrom(this)
+            return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))
                 .execute()
@@ -192,15 +191,6 @@ class ProcessDataClearDao {
 
     fun deleteBuildWebhookParameter(dslContext: DSLContext, projectId: String, buildId: String) {
         with(TPipelineWebhookBuildParameter.T_PIPELINE_WEBHOOK_BUILD_PARAMETER) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
-    fun deleteBuildCommits(dslContext: DSLContext, projectId: String, buildId: String) {
-        with(TPipelineBuildCommits.T_PIPELINE_BUILD_COMMITS) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))

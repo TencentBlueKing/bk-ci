@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.atom.service.SampleMarketAtomService
+import org.springframework.stereotype.Service
 
+@Service
 class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceImpl() {
 
     override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {

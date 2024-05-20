@@ -41,8 +41,6 @@ data class NodeWithPermission(
     val ip: String,
     @get:Schema(title = "节点状态", required = true)
     val nodeStatus: String,
-    @get:Schema(title = "agent状态", required = true)
-    val agentStatus: Boolean,
     @get:Schema(title = "节点类型", required = true)
     val nodeType: String,
     @get:Schema(title = "操作系统", required = false)
@@ -77,6 +75,18 @@ data class NodeWithPermission(
     val pipelineRefCount: Int? = 0,
     @get:Schema(title = "流水线Job引用数")
     val lastBuildTime: String? = "",
+    @get:Schema(title = "agent状态", required = true)
+    val agentStatus: Boolean,
+    @get:Schema(title = "agent版本")
+    val agentVersion: String?,
     @get:Schema(title = "agent hash id")
-    val agentHashId: String? = ""
+    val agentHashId: String? = "",
+    @get:Schema(title = "云区域ID")
+    val cloudAreaId: Long?,
+    @get:Schema(title = "操作系统类型")
+    val osType: String?,
+    @get:Schema(title = "hostID")
+    val bkHostId: Long? = null,
+    @get:Schema(title = "job任务ID")
+    val taskId: Long?
 )

@@ -51,6 +51,7 @@ import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
@@ -368,7 +369,7 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
-
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.object_attributes.source_branch
         // 有覆盖风险的上下文做二次确认
         startParams.putIfEmpty(GIT_MR_NUMBER, event.object_attributes.iid.toString())
         startParams.putIfEmpty(PIPELINE_GIT_MR_ID, event.object_attributes.id.toString())
