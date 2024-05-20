@@ -96,7 +96,7 @@ object IpaFileUtil {
             } else {
                 logger.error("file does not exist: $dir")
             }
-        }catch (e: Throwable) {
+        } catch (e: Throwable) {
             logger.error("delete ipa temp dir error: $e")
         }
     }
