@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service.job
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.environment.constant.T_ENV_ENV_ID
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
@@ -41,6 +42,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service("ParseHashListService")
 class ParseHashListService @Autowired constructor(
@@ -86,6 +88,15 @@ class ParseHashListService @Autowired constructor(
             val nodeRecord = cmdbNodeDao.getNodesByNodeIdList(
                 dslContext, projectId, nodeIdList
             )
+            val notInCCNodeList = nodeRecord.filter {
+                null == it[T_NODE_HOST_ID] as? Long || null == it[T_NODE_CLOUD_AREA_ID] as? Long
+            }.map { it[T_NODE_NODE_IP] as String }
+            if (notInCCNodeList.isNotEmpty()) {
+                throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "Node $notInCCNodeList in env list is not in CC/CMDB"
+                )
+            }
             val nodeHostList = nodeRecord.map {
                 Host(
                     bkHostId = it[T_NODE_HOST_ID] as? Long,
@@ -106,6 +117,15 @@ class ParseHashListService @Autowired constructor(
             val nodeRecord = cmdbNodeDao.getNodesByNodeHashIdList(
                 dslContext, projectId, nodeHashIdList
             )
+            val notInCCNodeList = nodeRecord.filter {
+                null == it[T_NODE_HOST_ID] as? Long || null == it[T_NODE_CLOUD_AREA_ID] as? Long
+            }.map { it[T_NODE_NODE_IP] as String }
+            if (notInCCNodeList.isNotEmpty()) {
+                throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "Node $notInCCNodeList in node list is not in CC/CMDB"
+                )
+            }
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             val hostList = nodeRecord.map {
                 val hostId = it[T_NODE_HOST_ID] as? Long
