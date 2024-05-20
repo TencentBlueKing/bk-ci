@@ -182,9 +182,9 @@ class SignInfoService(
                 EnumResignStatus.RUNNING -> "Sign is running..."
                 else -> record?.errorMessage ?: "Unknown error."
             },
-            executeTime = when (status) {
-                EnumResignStatus.RUNNING -> ""
-                else -> getSignInfo(resignId)?.let { JsonUtil.toJson(it) }.toString()
+            signInfo = when (status) {
+                EnumResignStatus.RUNNING -> null
+                else -> getSignInfo(resignId)?.let { JsonUtil.toJson(it) }
             }
         )
     }

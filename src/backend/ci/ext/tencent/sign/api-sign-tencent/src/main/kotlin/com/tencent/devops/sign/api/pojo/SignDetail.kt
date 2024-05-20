@@ -37,6 +37,6 @@ data class SignDetail(
     val status: String,
     @get:Schema(title = "描述信息", required = true)
     val message: String,
-    @get:Schema(title = "执行时间分布", required = false)
-    val executeTime: String
+    @get:Schema(title = "签名任务执行情况JSON", required = false)
+    val signInfo: String?
 )
