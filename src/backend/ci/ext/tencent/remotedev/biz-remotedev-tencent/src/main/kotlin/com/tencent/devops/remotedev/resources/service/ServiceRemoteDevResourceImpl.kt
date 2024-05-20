@@ -13,11 +13,14 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -40,6 +43,7 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
 import java.util.concurrent.Executors
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 @RestResource
 @Suppress("ALL")
@@ -332,12 +336,49 @@ class ServiceRemoteDevResourceImpl(
         return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
     }
 
-    override fun updateUsageLimit(userId: String, projectId: String?, count: Int): Result<QuotaInApiRes> {
-        val res =   if (projectId != null) {
-            QuotaInApiRes(project = windowsResourceConfigService.updateAndGetProjectTotalQuota(userId, projectId, count))
-        } else {
-            QuotaInApiRes(user =  whiteListService.updateAndGetWindowsLimit(userId, count))
+    override fun updateUsageLimit(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        count: Int
+    ): Result<QuotaInApiRes> {
+        val res = when {
+            machineType != null -> {
+                checkNotNull(projectId)
+                QuotaInApiRes(
+                    project = windowsResourceConfigService.updateAndGetProjectTotalQuota(
+                        userId = userId,
+                        projectId = projectId,
+                        quota = 0
+                    ),
+                    quotas = windowsResourceConfigService.updateAndGetAllSpec(
+                        projectId = projectId,
+                        machineType = machineType,
+                        count = count
+                    )
+                )
+            }
+
+            projectId != null -> {
+                QuotaInApiRes(
+                    project = windowsResourceConfigService.updateAndGetProjectTotalQuota(
+                        userId = userId,
+                        projectId = projectId,
+                        quota = count
+                    ),
+                    quotas = windowsResourceConfigService.updateAndGetAllSpec(
+                        projectId = projectId,
+                        machineType = null,
+                        count = 0
+                    )
+                )
+            }
+
+            else -> {
+                QuotaInApiRes(user = whiteListService.updateAndGetWindowsLimit(userId, count))
+            }
         }
+
         return Result(res)
     }
 }

@@ -323,9 +323,12 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目id", required = true)
+        @Parameter(description = "项目id", required = false)
         @QueryParam("projectId")
         projectId: String?,
+        @Parameter(description = "机型", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
         @Parameter(description = "配额增量(可负，可零，可正)", required = true)
         @QueryParam("count")
         count: Int
