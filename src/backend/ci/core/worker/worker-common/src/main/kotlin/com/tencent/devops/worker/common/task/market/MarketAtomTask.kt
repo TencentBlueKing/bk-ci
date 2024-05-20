@@ -92,6 +92,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_GET_OUTPU
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.CIKeywordsService
@@ -172,10 +173,10 @@ open class MarketAtomTask : ITask() {
         val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
         buildTask.elementVersion = atomData.version
         if (!atomTmpSpace.exists() && !atomTmpSpace.mkdirs()) {
-            atomEnvResult.data ?: throw TaskExecuteException(
+            throw TaskExecuteException(
                 errorMsg = "create directory fail! please check ${atomTmpSpace.absolutePath}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 
@@ -184,14 +185,12 @@ open class MarketAtomTask : ITask() {
         // 将Job传入的流水线变量先进行凭据替换
         // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
-        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).let { vars ->
-            vars.map {
-                it.key to it.value.parseCredentialValue(
-                    context = buildTask.buildVariable,
-                    acrossProjectId = acrossInfo?.targetProjectId
-                )
-            }.toMap()
-        }
+        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).map {
+            it.key to it.value.parseCredentialValue(
+                context = buildTask.buildVariable,
+                acrossProjectId = acrossInfo?.targetProjectId
+            )
+        }.toMap()
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -372,25 +371,25 @@ open class MarketAtomTask : ITask() {
                 )
             }
         } catch (e: Throwable) {
-            error = e
+            error = TaskExecuteExceptionDecorator.decorate(e)
         } finally {
             output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
             atomData.finishKillFlag?.let { addFinishKillFlag(it) }
             if (error != null) {
-                val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
-                defaultMessage.append(error.toString())
-                error.stackTrace.forEach {
-                    with(it) {
-                        defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
-                    }
-                }
                 throw if (error is TaskExecuteException) {
                     error
-                } else TaskExecuteException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
-                    errorMsg = defaultMessage.toString()
-                )
+                } else {
+                    val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
+                    defaultMessage.append(error.toString())
+                    error.stackTrace.forEach {
+                        with(it) { defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)") }
+                    }
+                    TaskExecuteException(
+                        errorType = ErrorType.SYSTEM,
+                        errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                        errorMsg = defaultMessage.toString()
+                    )
+                }
             }
         }
     }
@@ -838,7 +837,7 @@ open class MarketAtomTask : ITask() {
                     )
                 }
             } else {
-                if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {
+                if (!atomResult.qualityData.isNullOrEmpty()) {
                     logger.warn("qualityData is not empty, but type is ${atomResult.type}, expected 'quality' !")
                 }
             }
@@ -1043,12 +1042,8 @@ open class MarketAtomTask : ITask() {
             return atomExecuteFile
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)
-            LoggerService.addErrorLine("download plugin execute file fail: ${t.message}")
-            throw TaskExecuteException(
-                errorMsg = "download plugin execute file fail",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
-            )
+            LoggerService.addErrorLine("download plugin execute file fail: $t")
+            throw TaskExecuteExceptionDecorator.decorate(t)
         }
     }
 

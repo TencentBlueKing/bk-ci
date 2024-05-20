@@ -30,7 +30,7 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomLabelResource
-import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.common.service.LabelService

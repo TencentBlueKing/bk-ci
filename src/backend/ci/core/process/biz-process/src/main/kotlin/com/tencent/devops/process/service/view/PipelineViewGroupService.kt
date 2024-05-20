@@ -57,6 +57,7 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -67,6 +68,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import org.apache.commons.lang3.StringUtils
@@ -92,6 +94,7 @@ class PipelineViewGroupService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val clientTokenService: ClientTokenService,
+    private val operationLogService: PipelineOperationLogService,
     private val pipelineYamlViewDao: PipelineYamlViewDao
 ) {
     private val allPipelineInfoCache = Caffeine.newBuilder()
@@ -207,6 +210,7 @@ class PipelineViewGroupService @Autowired constructor(
             .setInstance(pipelineView)
         // 更新视图
         var result = false
+        val oldPipelineIds = pipelineViewGroupDao.listPipelineIdByViewId(dslContext, projectId, viewId).toSet()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             result = pipelineViewService.updateView(userId, projectId, viewId, pipelineView, context)
@@ -224,6 +228,16 @@ class PipelineViewGroupService @Autowired constructor(
                 )
             }
         }
+        val newPipelineIds = pipelineViewGroupDao.listPipelineIdByViewId(dslContext, projectId, viewId).toSet()
+
+        // 记录流水线组的修改
+        newPipelineIds.minus(oldPipelineIds).forEach {
+            saveGroupOperationLog(userId, projectId, it, true, pipelineView.name)
+        }
+        oldPipelineIds.minus(newPipelineIds).forEach {
+            saveGroupOperationLog(userId, projectId, it, false, pipelineView.name)
+        }
+
         return result
     }
 
@@ -835,17 +849,17 @@ class PipelineViewGroupService @Autowired constructor(
                 pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds, ChannelCode.BS)
             summaries.add(
                 0, PipelineNewViewSummary(
-                id = PIPELINE_VIEW_UNCLASSIFIED,
-                projectId = projectId,
-                name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
-                projected = true,
-                createTime = LocalDateTime.now().timestamp(),
-                updateTime = LocalDateTime.now().timestamp(),
-                creator = "admin",
-                top = false,
-                viewType = PipelineViewType.UNCLASSIFIED,
-                pipelineCount = unclassifiedCount
-            )
+                    id = PIPELINE_VIEW_UNCLASSIFIED,
+                    projectId = projectId,
+                    name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
+                    projected = true,
+                    createTime = LocalDateTime.now().timestamp(),
+                    updateTime = LocalDateTime.now().timestamp(),
+                    creator = "admin",
+                    top = false,
+                    viewType = PipelineViewType.UNCLASSIFIED,
+                    pipelineCount = unclassifiedCount
+                )
             )
         }
         return summaries
@@ -988,6 +1002,28 @@ class PipelineViewGroupService @Autowired constructor(
             viewType = it.viewType,
             pipelineCount = 0
         )
+
+    private fun saveGroupOperationLog(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        addOrRemove: Boolean,
+        groupName: String
+    ) {
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = 0,
+            operationLogType = if (addOrRemove) {
+                OperationLogType.ADD_PIPELINE_TO_GROUP
+            } else {
+                OperationLogType.MOVE_PIPELINE_OUT_OF_GROUP
+            },
+            params = groupName,
+            description = null
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)

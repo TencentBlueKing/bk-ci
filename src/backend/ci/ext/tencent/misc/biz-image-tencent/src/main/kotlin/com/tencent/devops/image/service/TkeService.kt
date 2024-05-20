@@ -159,8 +159,10 @@ class TkeService @Autowired constructor(
                 language = I18nUtil.getDefaultLocaleLanguage()
             ),
             tag = pushImageParam.taskId,
-            jobId = pushImageParam.containerId,
-            executeCount = pushImageParam.executeCount ?: 1
+            containerHashId = pushImageParam.containerId,
+            executeCount = pushImageParam.executeCount ?: 1,
+            jobId = null,
+            stepId = null
         )
         val toImageRepo = if (pushImageParam.verifyOa) {
             "${pushImageParam.repoAddress}/${pushImageParam.targetImageName}"
@@ -180,8 +182,10 @@ class TkeService @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
                 tag = pushImageParam.taskId,
-                jobId = pushImageParam.containerId,
-                executeCount = pushImageParam.executeCount ?: 1
+                containerHashId = pushImageParam.containerId,
+                executeCount = pushImageParam.executeCount ?: 1,
+                jobId = null,
+                stepId = null
             )
             pushImageToTke(pushImageParam)
             logger.info("Push image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
@@ -276,8 +280,10 @@ class TkeService @Autowired constructor(
                             language = I18nUtil.getDefaultLocaleLanguage()
                         ),
                         tag = pushImageParam.taskId,
-                        jobId = pushImageParam.containerId,
-                        executeCount = pushImageParam.executeCount ?: 1
+                        containerHashId = pushImageParam.containerId,
+                        executeCount = pushImageParam.executeCount ?: 1,
+                        jobId = null,
+                        stepId = null
                     )
                 } else {
                     val msg = responseData["msg"]
@@ -289,8 +295,10 @@ class TkeService @Autowired constructor(
                             language = I18nUtil.getDefaultLocaleLanguage()
                         ) + "$msg",
                         tag = pushImageParam.taskId,
-                        jobId = pushImageParam.containerId,
-                        executeCount = pushImageParam.executeCount ?: 1
+                        containerHashId = pushImageParam.containerId,
+                        executeCount = pushImageParam.executeCount ?: 1,
+                        jobId = null,
+                        stepId = null
                     )
                 }
             }
@@ -303,8 +311,10 @@ class TkeService @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "${e.message}",
                 tag = pushImageParam.taskId,
-                jobId = pushImageParam.containerId,
-                executeCount = pushImageParam.executeCount ?: 1
+                containerHashId = pushImageParam.containerId,
+                executeCount = pushImageParam.executeCount ?: 1,
+                jobId = null,
+                stepId = null
             )
         }
     }

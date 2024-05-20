@@ -55,4 +55,9 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
     ): Result<WorkspaceInfo> {
         return Result(remoteDevService.getWorkspaceInfo(userId, workspaceName, mountType))
     }
+
+    override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        remoteDevService.deleteWorkspace(userId, workspaceName)
+        return Result(true)
+    }
 }

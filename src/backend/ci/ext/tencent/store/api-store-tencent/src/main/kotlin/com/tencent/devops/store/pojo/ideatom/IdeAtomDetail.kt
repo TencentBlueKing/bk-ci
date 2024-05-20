@@ -28,9 +28,9 @@
 package com.tencent.devops.store.pojo.ideatom
 
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.pojo.common.Category
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.category.Category
+import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 

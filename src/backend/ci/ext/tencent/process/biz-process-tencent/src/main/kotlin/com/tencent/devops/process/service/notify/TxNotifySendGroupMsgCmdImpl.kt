@@ -177,6 +177,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             titleParams = params,
             bodyParams = params
         )
+        // 如果群通知不需要发送，则直接结束返回
+        if (!subscription.wechatGroupFlag) return
         logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
         val group = EnvUtils.parseEnv(
             command = subscription.wechatGroup,

@@ -31,5 +31,6 @@ class RemoteServiceException(
     val errorMessage: String,
     val httpStatus: Int = 500,
     val responseContent: String? = null,
-    val errorCode: Int? = null
+    val errorCode: Int? = null,
+    val data: Any? = null
 ) : RuntimeException(errorMessage)

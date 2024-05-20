@@ -70,64 +70,73 @@ else
             end
         end
     end
-    local double_check = false and ngx.var.http_host == config.bkci.host and
+    local double_check = true and ngx.var.http_host == config.bkci.host and
         not string.find(ngx.var.request_uri, '^/prebuild') and not string.find(ngx.var.request_uri, '^/ms/prebuild') and
         not string.find(ngx.var.request_uri, '^/remotedev') and not string.find(ngx.var.request_uri, '^/ms/remotedev') and
-        not string.find(ngx.var.request_uri, '^/websocket') and not string.find(ngx.var.request_uri , '^/ms/project/api/user/users') and
+        not string.find(ngx.var.request_uri, '^/websocket') and
+        not string.find(ngx.var.request_uri, '^/ms/project/api/user/users') and
         not string.find(ngx.var.request_uri, "^/project/api/user/projects")
     local tof_staffname
+    local devopsIdentity = cookieUtil:get_cookie("x-devops-identity")
     if double_check then
-        --- TOF登录
-        local base64 = require "ngx.base64"
-        local dec = base64.decode_base64url
-        local resty_sha256 = require "resty.sha256"
-        local resty_str = require "resty.string"
-        local cjson = require "cjson"
-        local key = config.tof_token -- token变量
+        if ngx.var.http_x_tai_identity ~= nil then --- TOF登录(头部)
+            local base64 = require "ngx.base64"
+            local dec = base64.decode_base64url
+            local resty_sha256 = require "resty.sha256"
+            local resty_str = require "resty.string"
+            local cjson = require "cjson"
+            local key = config.tof_token -- token变量
 
-        local function check_sign(key)
-            local timestamp = ngx.var.http_timestamp
-            if timestamp == nil then
-                return false
+            local function check_sign(key)
+                local timestamp = ngx.var.http_timestamp
+                if timestamp == nil then
+                    return false
+                end
+                local ts = tonumber(timestamp)
+                local now = ngx.time()
+                if now - ts > 180 or ts - now > 180 then
+                    ngx.log(ngx.WARN, "tof timestamp error , ", timestamp, " , ts: ", ts)
+                    return false
+                end
+                -- check timestamp 180
+                local signature = ngx.var.http_signature
+                local nonce = ngx.var.http_x_rio_seq
+                local signstr = string.format('%s%s%s,%s,%s,%s%s', timestamp, key, nonce, '', '', '', timestamp)
+                local hash = resty_sha256:new()
+                hash:update(signstr)
+                local str = resty_str.str_to_hex(hash:final())
+                if string.upper(str) ~= signature then
+                    ngx.log(ngx.WARN, "tof signature error , ", signature, " , str: ", str)
+                    return false
+                end
+                return true
             end
-            local ts = tonumber(timestamp)
-            local now = ngx.time()
-            if now - ts > 180 or ts - now > 180 then
-                ngx.log(ngx.WARN, "tof timestamp error , ", timestamp, " , ts: ", ts)
-                return false
-            end
-            -- check timestamp 180
-            local signature = ngx.var.http_signature
-            local nonce = ngx.var.http_x_rio_seq
-            local signstr = string.format('%s%s%s,%s,%s,%s%s', timestamp, key, nonce, '', '', '', timestamp)
-            local hash = resty_sha256:new()
-            hash:update(signstr)
-            local str = resty_str.str_to_hex(hash:final())
-            if string.upper(str) ~= signature then
-                ngx.log(ngx.WARN, "tof signature error , ", signature, " , str: ", str)
-                return false
-            end
-            return true
-        end
 
-        if not check_sign(key) then
-            ngx.log(ngx.WARN, 'check smartgate signature fail')
-            ngx.exit(401)
-        end
-
-        local str = ngx.var.http_x_tai_identity
-        if str then
-            local header, enckey, iv, ciphertext, tag = str:match("(.-)%.(.-)%.(.-)%.(.-)%.(.*)")
-            local cipher = assert(require("resty.openssl.cipher").new("aes-256-gcm"))
-            local plaintext, err = cipher:decrypt(key, dec(iv), dec(ciphertext), false, header, dec(tag))
-            if err ~= nil then
-                ngx.log(ngx.WARN, "auth tof failed")
+            if not check_sign(key) then
+                ngx.log(ngx.WARN, 'check smartgate signature fail')
                 ngx.exit(401)
             end
-            local res = cjson.decode(plaintext)
-            tof_staffname = res.LoginName
+
+            local str = ngx.var.http_x_tai_identity
+            if str then
+                local header, _, iv, ciphertext, tag = str:match("(.-)%.(.-)%.(.-)%.(.-)%.(.*)")
+                local cipher = assert(require("resty.openssl.cipher").new("aes-256-gcm"))
+                local plaintext, err = cipher:decrypt(key, dec(iv), dec(ciphertext), false, header, dec(tag))
+                if err ~= nil then
+                    ngx.log(ngx.WARN, "auth tof failed")
+                    ngx.exit(401)
+                end
+                local res = cjson.decode(plaintext)
+                tof_staffname = res.LoginName
+            else
+                tof_staffname = ngx.req.get_headers()['staffname']
+            end
+        elseif devopsIdentity ~= nil then --- TOF登录(API)
+            tof_staffname = aesUtil.decrypt(devopsIdentity, config.itlogin.aseKey)
         else
-            tof_staffname = ngx.req.get_headers()['staffname']
+            ngx.log(ngx.ERR , "the request must have tof cookie")
+            ngx.header["X-DEVOPS-ERROR-RETURN"] = 'https://'..config.bkci.host
+            ngx.header["X-DEVOPS-ERROR-STATUS"] = 302
         end
     end
 

@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.extservice.UserExtServiceCommentReplyResource
 import com.tencent.devops.store.common.service.StoreCommentReplyService
-import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

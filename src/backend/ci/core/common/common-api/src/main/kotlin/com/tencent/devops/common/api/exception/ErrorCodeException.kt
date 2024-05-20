@@ -37,5 +37,6 @@ open class ErrorCodeException(
     val errorCode: String,
     val errorType: ErrorType? = null,
     val defaultMessage: String? = null,
-    val params: Array<String>? = null
+    val params: Array<String>? = null,
+    val data: Any? = null
 ) : UniqueIdException("[errorCode=$errorCode]$defaultMessage")

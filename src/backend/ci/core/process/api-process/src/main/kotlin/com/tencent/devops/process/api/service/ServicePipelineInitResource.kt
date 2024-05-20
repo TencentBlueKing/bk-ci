@@ -30,13 +30,11 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
-import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
-import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
-import com.tencent.devops.process.pojo.CheckImageInitPipelineResp
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -51,31 +49,17 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineInitResource {
 
-    @Operation(summary = "插件市场初始化流水线")
+    @Operation(summary = "初始化流水线")
     @POST
-    @Path("/market/pipeline/init/{projectCode}")
-    fun initAtomMarketPipeline(
+    @Path("/projects/{projectId}/pipeline/init")
+    fun initStorePipeline(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @Parameter(description = "插件市场初始化流水线请求报文体", required = true)
-        atomMarketInitPipelineReq: AtomMarketInitPipelineReq
-    ): Result<AtomMarketInitPipelineResp>
-
-    @Operation(summary = "验证镜像合法性初始化流水线")
-    @POST
-    @Path("/market/pipeline/projectCodes/{projectCode}/image/check/init")
-    fun initCheckImagePipeline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @Parameter(description = "检查镜像合法性初始化流水线请求报文体", required = true)
-        checkImageInitPipelineReq: CheckImageInitPipelineReq
-    ): Result<CheckImageInitPipelineResp>
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "初始化流水线请求报文体", required = true)
+        storeInitPipelineReq: StoreInitPipelineReq
+    ): Result<StoreInitPipelineResp>
 }
