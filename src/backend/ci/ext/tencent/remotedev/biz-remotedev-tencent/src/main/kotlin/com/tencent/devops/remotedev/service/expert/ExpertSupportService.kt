@@ -168,6 +168,7 @@ class ExpertSupportService @Autowired constructor(
                 } else {
                     ""
                 }
+                "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
 
                 else -> newParam[k] = v
             }
@@ -348,6 +349,12 @@ class ExpertSupportService @Autowired constructor(
                 content = it.content
             )
         }
+    }
+
+    fun deleteConfigWithData(
+        data: CreateExpertSupportConfigData
+    ) {
+        expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
     }
 
     companion object {
