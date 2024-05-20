@@ -84,12 +84,12 @@ class WindowsResourceConfigService @Autowired constructor(
         client.get(ServiceStartCloudResource::class).getResourceVm(
             ResourceVmReq(null, null, quotaType.getInternal())
         ).data?.forEach { resource ->
-                val key = resource.zoneId.replace(Regex("\\d+"), "")
-                val map = res.getOrPut(key) { mutableMapOf() }
-                resource.machineResources?.forEach { mas ->
-                    map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
-                }
+            val key = resource.zoneId.replace(Regex("\\d+"), "")
+            val map = res.getOrPut(key) { mutableMapOf() }
+            resource.machineResources?.forEach { mas ->
+                map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
             }
+        }
         return res
     }
 
@@ -220,6 +220,18 @@ class WindowsResourceConfigService @Autowired constructor(
         size: String
     ): Boolean {
         return windowsSpecResourceDao.delete(dslContext = dslContext, projectId = projectId, size = size)
+    }
+
+    fun updateAndGetAllSpec(
+        projectId: String,
+        machineType: String?,
+        count: Int
+    ): Map<String, Int> {
+        if (count != 0 && machineType != null) {
+            val res = windowsSpecResourceDao.fetchQuota(dslContext, projectId, machineType) ?: 0
+            windowsSpecResourceDao.createOrUpdateSpecRes(dslContext, projectId, machineType, count + res)
+        }
+        return windowsSpecResourceDao.fetchAllQuota(dslContext, projectId)
     }
 
     fun fetchSpec(
