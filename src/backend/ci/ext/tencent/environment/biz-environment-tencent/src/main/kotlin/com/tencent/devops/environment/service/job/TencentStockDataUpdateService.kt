@@ -47,6 +47,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
+import com.tencent.devops.environment.dao.job.JobDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
@@ -68,6 +69,7 @@ import java.time.LocalDateTime
 class TencentStockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
+    private val jobDao: JobDao,
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
     private val queryFromCCService: QueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
@@ -82,6 +84,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         private const val SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY = "scheduled_check_nodes_timeout_lock"
         private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
         private const val WRITE_SERVER_ID_TIMEOUT_LOCK_KEY = "write_server_id_timeout_lock"
+        private const val CLEAR_EXPIRED_JOB_TASK_TIMEOUT_LOCK_KEY = "clear_expired_job_task_timeout_lock"
 
         private const val DEFAULT_PAGE_SIZE = 100
         private const val EXPIRATION_TIME_OF_THE_LOCK = 600L
@@ -89,6 +92,18 @@ class TencentStockDataUpdateService @Autowired constructor(
         const val AGENT_NORMAL_NODE_STATUS = 1
 
         const val FIRST_IP_INDEX = 0
+
+        const val JOB_TASK_EXPIRED_DAYS = 30L
+    }
+
+    /**
+     * clearExpiredJobTask：
+     * 清理T_PROJECT_JOB表的过期数据（job任务过期时间：1个月）
+     * cron：每天执行一次
+     */
+    @Scheduled(cron = "0 19 19 * * ?")
+    fun scheduledClearExpiredJobTask() {
+        taskWithRedisLock(CLEAR_EXPIRED_JOB_TASK_TIMEOUT_LOCK_KEY, ::clearExpiredJobTask)
     }
 
     /**
@@ -134,6 +149,10 @@ class TencentStockDataUpdateService @Autowired constructor(
      */
     fun writeServerIdOnce() {
         taskWithRedisLock(WRITE_SERVER_ID_TIMEOUT_LOCK_KEY, ::writeServerId)
+    }
+
+    private fun clearExpiredJobTask() {
+        jobDao.deleteExpiredJobTaskRecord(dslContext, JOB_TASK_EXPIRED_DAYS)
     }
 
     private fun checkDeployNodesIsInCmdb() {
