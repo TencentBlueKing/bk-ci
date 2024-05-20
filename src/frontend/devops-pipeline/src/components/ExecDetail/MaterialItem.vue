@@ -101,7 +101,7 @@
                     webhookSourceTarget: 'branch',
                     parentPipelineName: 'pipeline',
                     parentBuildNum: 'sharp',
-                    materialName: 'openApi',
+                    materialName: scmIcon,
                     materialId: 'icon-link'
                 }
             },
