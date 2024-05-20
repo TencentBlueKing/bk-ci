@@ -308,6 +308,11 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.REBUILDING
             }
 
+            workspaceInfo.status == EnvStatusEnum.upgrading -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.UPGRADING)
+                return WorkspaceStatus.UPGRADING
+            }
+
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
