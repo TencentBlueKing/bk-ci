@@ -6,10 +6,10 @@
             </div>
             <div :key="curPipelineId" class="more-operation-dropmenu" slot="dropdown-content">
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
-                    <template v-for="(action, aIndex) in parent">
+                    <template v-for="action in parent">
                         <li
                             v-if="!action.hidden"
-                            :key="aIndex"
+                            :key="action.label"
                             v-perm="{
                                 permissionData: action.permissionData
                             }"
@@ -66,6 +66,7 @@
     } from '@/utils/permission'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
+
     export default {
         components: {
             ImportPipelinePopup,
@@ -89,6 +90,12 @@
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             isTemplatePipeline () {
                 return this.curPipeline?.instanceFromTemplate ?? false
             },
@@ -143,9 +150,9 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
-                        {
-                            ...(pipeline.templateId
-                                ? {
+                        ...(
+                            pipeline.templateId
+                                ? [{
                                     label: 'copyAsTemplateInstance',
                                     handler: () => this.copyAsTemplateInstance(pipeline),
                                     permissionData: {
@@ -154,12 +161,9 @@
                                         resourceCode: projectId,
                                         action: RESOURCE_ACTION.CREATE
                                     }
-                                }
-                                : {
-                                
-                                })
-                            
-                        },
+                                }]
+                                : []
+                        ),
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
