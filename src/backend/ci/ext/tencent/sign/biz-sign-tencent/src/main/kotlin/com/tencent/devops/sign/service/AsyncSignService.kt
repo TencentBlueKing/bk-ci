@@ -136,6 +136,7 @@ class AsyncSignService(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun metricsUpload(
         history: SignHistory,
         start: LocalDateTime,

@@ -81,6 +81,7 @@ object IpaFileUtil {
      * @param file 文件对象
      * @return void
      */
+    @Suppress("ComplexMethod")
     fun deleteDir(dir: File) {
         try {
             if (dir.isFile) {
