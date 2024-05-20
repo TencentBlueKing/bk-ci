@@ -65,6 +65,7 @@ interface ArchiveStorePkgService {
         storeCode: String,
         version: String,
         osName: String? = null,
-        osArch: String? = null
+        osArch: String? = null,
+        idcFlag: Boolean = true
     ): String
 }

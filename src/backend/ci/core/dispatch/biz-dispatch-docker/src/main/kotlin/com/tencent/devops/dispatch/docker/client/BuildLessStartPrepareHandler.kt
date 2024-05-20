@@ -62,8 +62,10 @@ class BuildLessStartPrepareHandler @Autowired constructor(
                     buildId = event.buildId,
                     message = "Prepare BuildLess Job(#${event.vmSeqId})...",
                     tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-                    jobId = event.containerHashId,
-                    executeCount = event.executeCount ?: 1
+                    containerHashId = event.containerHashId,
+                    executeCount = event.executeCount ?: 1,
+                    jobId = null,
+                    stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
                 )
             }
 

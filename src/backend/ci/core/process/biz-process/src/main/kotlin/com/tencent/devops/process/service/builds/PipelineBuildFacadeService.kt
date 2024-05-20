@@ -136,12 +136,12 @@ import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 /**
  *
@@ -357,7 +357,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String, // 要重试的构建ID
-        taskId: String? = null, // 要重试或跳过的插件ID，或者StageId
+        taskId: String? = null, // 要重试或跳过的插件ID，或者StageId, 或则stepId
         failedContainer: Boolean? = false, // 仅重试所有失败Job
         skipFailedTask: Boolean? = false, // 跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）
         isMobile: Boolean = false,
@@ -500,7 +500,7 @@ class PipelineBuildFacadeService(
 
                                     return@run
                                 }
-                                if (element.id == taskId) {
+                                if (element.id == taskId || element.stepId == taskId) {
                                     // 校验task是否允许跳过
                                     if (skipFailedTask == true) {
                                         val isSkipTask = pipelineRetryFacadeService.isSkipTask(
@@ -937,10 +937,11 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String,
+        elementId: String?,
         params: ReviewParam,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        stepId: String?
     ) {
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
@@ -962,14 +963,18 @@ class PipelineBuildFacadeService(
         )
         // 对人工审核提交时的参数做必填和范围校验
         checkManualReviewParam(params = params.params)
+        var trueElementId = elementId ?: ""
 
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
             }
             s.containers.forEach { cc ->
-                cc.elements.forEach { el ->
-                    if (el is ManualReviewUserTaskElement && el.id == elementId) {
+                cc.elements.forEach element@{ el ->
+                    if (!elementId.isNullOrBlank() && el.id != elementId) return@element
+                    if (!stepId.isNullOrBlank() && el.stepId != stepId) return@element
+                    if (el is ManualReviewUserTaskElement) {
+                        trueElementId = el.id!!
                         // Replace the review user with environment
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
@@ -1003,10 +1008,10 @@ class PipelineBuildFacadeService(
                 }
             }
         }
-        logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|params=$params")
+        logger.info("[$buildId]|buildManualReview|taskId=$trueElementId|userId=$userId|params=$params")
 
         pipelineRuntimeService.manualDealReview(
-            taskId = elementId,
+            taskId = trueElementId,
             userId = userId,
             params = params.apply {
                 this.projectId = projectId
@@ -2311,6 +2316,7 @@ class PipelineBuildFacadeService(
 
             tasks.forEach { task ->
                 val taskId = task["taskId"]?.toString() ?: ""
+                val stepId = task["stepId"]?.toString() ?: ""
                 val containerId = task["containerId"]?.toString() ?: ""
                 val status = task["status"] ?: ""
                 val executeCount = task["executeCount"] as? Int ?: 1
@@ -2322,8 +2328,10 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     message = "Cancelled by $userId",
                     tag = taskId,
-                    jobId = containerId,
-                    executeCount = executeCount
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
                 )
             }
 
@@ -2333,8 +2341,10 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     message = "Cancelled by $userId",
                     tag = VMUtils.genStartVMTaskId(jobId),
-                    jobId = jobId,
-                    executeCount = 1
+                    containerHashId = jobId,
+                    executeCount = 1,
+                    jobId = null,
+                    stepId = VMUtils.genStartVMTaskId(jobId)
                 )
             }
 
@@ -2403,8 +2413,9 @@ class PipelineBuildFacadeService(
                         buildId = buildId,
                         message = self,
                         tag = startUpVMTask!!.taskId,
-                        jobId = startUpVMTask.containerHashId,
-                        executeCount = startUpVMTask.executeCount ?: 1
+                        containerHashId = startUpVMTask.containerHashId,
+                        executeCount = startUpVMTask.executeCount ?: 1,
+                        jobId = null, stepId = startUpVMTask.stepId
                     )
                 }
                 return Pair(startUpVMTask?.starter, false)

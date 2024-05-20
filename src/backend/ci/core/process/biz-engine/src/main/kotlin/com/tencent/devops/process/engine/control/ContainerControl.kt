@@ -242,16 +242,20 @@ class ContainerControl @Autowired constructor(
                 buildId = container.buildId,
                 message = msg,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                jobId = container.containerHashId ?: "",
-                executeCount = executeCount
+                containerHashId = container.containerHashId ?: "",
+                executeCount = executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         } else {
             buildLogPrinter.addDebugLine(
                 buildId = container.buildId,
                 message = "JobTimeout| Set(${container.controlOption.jobControlOption.timeout}) minutes",
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                jobId = container.containerHashId ?: "",
-                executeCount = executeCount
+                containerHashId = container.containerHashId ?: "",
+                executeCount = executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         }
     }

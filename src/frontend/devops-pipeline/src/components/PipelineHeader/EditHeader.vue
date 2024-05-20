@@ -293,11 +293,34 @@
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params
 
-                    this.handleError(e, {
-                        projectId,
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }, 10000)
+                    if (e.code === 2101244) {
+                        const h = this.$createElement
+                        this.$bkMessage({
+                            theme: 'error',
+                            delay: 0,
+                            ellipsisLine: 0,
+                            message: h('div', {
+                                class: 'pipeline-save-error-list-box'
+                            }, e.data.map(item => h('div', {
+                                class: 'pipeline-save-error-list-item'
+                            }, [
+                                h('p', {}, item.errorTitle),
+                                h('ul', {
+                                    class: 'pipeline-save-error-list'
+                                }, item.errorDetails.map(err => h('li', {
+                                    domProps: {
+                                        innerHTML: err
+                                    }
+                                })))
+                            ])))
+                        })
+                    } else {
+                        this.handleError({
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        })
+                    }
                     return false
                 } finally {
                     this.setSaveStatus(false)
@@ -392,5 +415,26 @@
     align-items: center;
   }
 }
+.pipeline-save-error-list-box {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 10px;
+    .pipeline-save-error-list-item {
 
-  </style>
+        > p {
+            margin-bottom: 12px;
+        }
+        .pipeline-save-error-list {
+            > li {
+                line-height: 26px;
+                a {
+                    color: $primaryColor;
+                    margin-left: 10px;
+                    text-align: right;
+                }
+            }
+        }
+    }
+}
+
+</style>

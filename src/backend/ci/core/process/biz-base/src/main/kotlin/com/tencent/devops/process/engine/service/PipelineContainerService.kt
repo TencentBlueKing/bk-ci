@@ -1051,8 +1051,10 @@ class PipelineContainerService @Autowired constructor(
                     message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
                             " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
                     tag = context.firstTaskId,
-                    jobId = container.id,
-                    executeCount = context.executeCount
+                    containerHashId = container.id,
+                    executeCount = context.executeCount,
+                    jobId = container.jobId,
+                    stepId = atomElement.stepId
                 )
                 return
             }

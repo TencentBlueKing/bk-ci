@@ -331,9 +331,11 @@ class UpdateStateForStageCmdFinally(
                     buildLogPrinter.addYellowLine(
                         buildId = c.buildId,
                         tag = VMUtils.genStartVMTaskId(c.containerId),
-                        jobId = c.containerHashId,
+                        containerHashId = c.containerHashId,
                         executeCount = c.executeCount,
-                        message = "job(${c.containerId}) stop by fast kill"
+                        message = "job(${c.containerId}) stop by fast kill",
+                        jobId = null,
+                        stepId = VMUtils.genStartVMTaskId(c.containerId)
                     )
                 }
             }
