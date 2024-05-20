@@ -144,7 +144,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
                     machineType = rebuildReq.machineType,
-                    gameId = null
+                    gameId = null,
+                    projectId = projectId
                 )
             )
 
