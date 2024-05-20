@@ -10,5 +10,5 @@ data class QuotaInApiRes(
     @get:Schema(title = "项目配额")
     val project: Int? = null,
     @get:Schema(title = "特殊配额")
-    val quotas: Map<String, Int>? = null,
+    val quotas: Map<String, Int>? = null
 )

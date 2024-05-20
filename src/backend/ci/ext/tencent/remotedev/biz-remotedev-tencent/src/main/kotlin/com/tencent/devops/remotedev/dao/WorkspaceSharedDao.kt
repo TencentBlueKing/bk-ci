@@ -4,11 +4,11 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class WorkspaceSharedDao {
@@ -40,7 +40,7 @@ class WorkspaceSharedDao {
                         it.expiration
                     ).onDuplicateKeyUpdate()
                         .set(RESOURCE_ID, resourceId)
-                        .set(EXPIRATION,  it.expiration)
+                        .set(EXPIRATION, it.expiration)
                 }
             ).execute()
         }
