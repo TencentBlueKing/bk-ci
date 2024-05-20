@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS `T_LOG_STATUS`
     `TAG`           varchar(64)          DEFAULT NULL COMMENT '标签',
     `SUB_TAG` varchar(256) DEFAULT NULL COMMENT '子标签',
     `JOB_ID`        varchar(64)          DEFAULT NULL COMMENT 'JOB ID',
+	`USER_JOB_ID` varchar(128) NULL COMMENT '真正的jobId，已经存在的 JOB_ID 字段其实是 container hash id',
+	`STEP_ID` varchar(64) NULL COMMENT '用户填写的插件id',
     `MODE`        varchar(32)          DEFAULT NULL COMMENT 'LogStorageMode',
     `EXECUTE_COUNT` int(11)     NOT NULL COMMENT '执行次数',
     `FINISHED`      bit(1)      NOT NULL DEFAULT b'0' COMMENT 'build is finished or not',

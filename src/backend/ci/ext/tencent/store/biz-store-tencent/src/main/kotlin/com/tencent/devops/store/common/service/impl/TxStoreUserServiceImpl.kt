@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -67,7 +68,7 @@ class TxStoreUserServiceImpl : StoreUserService {
      * 获取用户机构ID信息
      */
     override fun getUserDeptList(userId: String): List<Int> {
-        val userInfo = client.get(ServiceTxUserResource::class).get(userId).data
+        val userInfo = client.get(ServiceTxUserResource::class).get(UserUtil.removeTaiSuffix(userId)).data
         return if (userInfo == null) {
             listOf(0, 0, 0, 0)
         } else {

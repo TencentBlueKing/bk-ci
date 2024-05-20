@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
@@ -76,16 +75,6 @@ interface StoreVisibleDeptService {
         userId: String,
         storeCode: String,
         deptIds: String,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    /**
-     * 审核可见范围
-     */
-    fun approveVisibleDept(
-        userId: String,
-        storeCode: String,
-        visibleApproveReq: VisibleApproveReq,
         storeType: StoreTypeEnum
     ): Result<Boolean>
 

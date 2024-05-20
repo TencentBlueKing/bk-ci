@@ -221,6 +221,16 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132042",
         formatErrorMessage = "request tgit api {0} error {1}"
+    ),
+    REMOTEDEV_CLIENT_IP_DUPLICATE_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132043",
+        formatErrorMessage = "client ip {0} request error: duplicate ip"
+    ),
+    REMOTEDEV_CLIENT_IP_NO_PERM_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132044",
+        formatErrorMessage = "client ip {0} request error: ip no permission to perform the operation {1}"
     );
 
     fun getErrorMessage(): String {

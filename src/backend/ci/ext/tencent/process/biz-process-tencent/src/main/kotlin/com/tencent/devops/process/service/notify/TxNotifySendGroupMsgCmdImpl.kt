@@ -95,7 +95,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             replaceWithEmpty = true
                         )
                     }.toMutableSet()
-                    if (!emptyGroup(successSubscription.groups) && successSubscription.wechatGroupFlag) {
+                    if (!emptyGroup(successSubscription.groups)) {
                         logger.info("success notify config group: ${successSubscription.groups}")
                         val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
                             serviceCode = pipelineAuthServiceCode,
@@ -133,7 +133,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             replaceWithEmpty = true
                         )
                     }.toMutableSet()
-                    if (!emptyGroup(failSubscription.groups) && failSubscription.wechatGroupFlag) {
+                    if (!emptyGroup(failSubscription.groups)) {
                         logger.info("fail notify config group: ${failSubscription.groups}")
                         val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
                             serviceCode = pipelineAuthServiceCode,
@@ -177,6 +177,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             titleParams = params,
             bodyParams = params
         )
+        // 如果群通知不需要发送，则直接结束返回
+        if (!subscription.wechatGroupFlag) return
         logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
         val group = EnvUtils.parseEnv(
             command = subscription.wechatGroup,

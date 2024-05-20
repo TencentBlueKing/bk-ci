@@ -114,7 +114,9 @@ class BuildLogListenerService @Autowired constructor(
                             logStorageMode = logStorageMode,
                             executeCount = executeCount,
                             retryTime = retryTime - 1,
-                            delayMills = getNextDelayMills(retryTime)
+                            delayMills = getNextDelayMills(retryTime),
+                            userJobId = userJobId,
+                            stepId = stepId
                         )
                     )
                 }

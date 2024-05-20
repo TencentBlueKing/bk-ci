@@ -131,6 +131,7 @@ class PipelineResourceVersionDao {
                 .set(BRANCH_ACTION, branchAction?.name)
                 .set(DESCRIPTION, description)
                 .set(BASE_VERSION, baseVersion)
+                .set(REFER_FLAG, false)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelStr)
                 .set(YAML, yamlStr)
@@ -344,13 +345,15 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        queryUnknownRelatedFlag: Boolean? = null,
+        maxQueryVersion: Int? = null,
         offset: Int,
         limit: Int,
-        includeDraft: Boolean?,
-        excludeVersion: Int?,
-        creator: String?,
-        versionName: String?,
-        description: String?
+        includeDraft: Boolean? = null,
+        excludeVersion: Int? = null,
+        creator: String? = null,
+        versionName: String? = null,
+        description: String? = null
     ): List<PipelineVersionSimple> {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
@@ -380,6 +383,14 @@ class PipelineResourceVersionDao {
             }
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            if (queryUnknownRelatedFlag == true) {
+                query.and(REFER_FLAG.isNull)
+            } else if (queryUnknownRelatedFlag == false) {
+                query.and(REFER_FLAG.isNotNull)
+            }
+            maxQueryVersion?.let {
+                query.and(VERSION.le(maxQueryVersion))
+            }
             return query.orderBy(VERSION.desc()).limit(limit).offset(offset).fetch(sampleMapper)
         }
     }
@@ -517,7 +528,7 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int,
+        versions: List<Int>,
         referCount: Int,
         referFlag: Boolean? = null
     ) {
@@ -525,7 +536,8 @@ class PipelineResourceVersionDao {
             val baseStep = dslContext.update(this)
                 .set(REFER_COUNT, referCount)
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
-            baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version))).execute()
+            baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
+                .execute()
         }
     }
 

@@ -28,7 +28,7 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 
 class SampleAtomMemberServiceImpl : AtomMemberServiceImpl() {
 
