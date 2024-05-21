@@ -214,9 +214,8 @@
             },
             ipList () {
                 if (this.stepResultGroupList.length) {
-                    if (this.activeIp) return
                     const activeItem = this.stepResultGroupList[this.activeGroupIndex].hostResultList[0] || {}
-                    if (activeItem) {
+                    if (!this.activeIp && activeItem) {
                         this.activeHostId = activeItem.bkHostId
                         this.activeIp = activeItem.ip
                         this.activeBkCloudId = activeItem.bkCloudId
