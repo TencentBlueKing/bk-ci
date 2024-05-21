@@ -20,6 +20,7 @@
 | T_PROJECT_DATA_MIGRATE_HISTORY | 项目数据迁移历史表 |
 | T_PROJECT_LABEL |  |
 | T_PROJECT_LABEL_REL |  |
+| T_PROJECT_UPDATE_HISTORY | 项目更新历史表 |
 | T_SENIOR_USER | 高级用户表 |
 | T_SERVICE | 服务信息表 |
 | T_SERVICE_TYPE | 服务类型表 |
@@ -303,6 +304,29 @@
 |  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  5   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
 
+**表名：** <a>T_PROJECT_UPDATE_HISTORY</a>
+
+**说明：** 项目更新历史表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | ENGLISH_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 英文名称  |
+|  3   | BEFORE_PROJECT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 变更前项目名称  |
+|  4   | AFTER_PROJECT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 变更后项目名称  |
+|  5   | BEFORE_PRODUCT_ID |   int   | 10 |   0    |    Y     |  N   |       | 变更前运营产品 ID  |
+|  6   | AFTER_PRODUCT_ID |   int   | 10 |   0    |    Y     |  N   |       | 变更后运营产品 ID  |
+|  7   | BEFORE_ORGANIZATION |   varchar   | 255 |   0    |    Y     |  N   |       | 变更前组织架构  |
+|  8   | AFTER_ORGANIZATION |   varchar   | 255 |   0    |    Y     |  N   |       | 变更后组织架构  |
+|  9   | BEFORE_SUBJECT_SCOPES |   text   | 65535 |   0    |    Y     |  N   |       | 变更前最大可授权人员范围  |
+|  10   | AFTER_SUBJECT_SCOPES |   text   | 65535 |   0    |    Y     |  N   |       | 变更后最大可授权人员范围  |
+|  11   | OPERATOR |   varchar   | 32 |   0    |    Y     |  N   |       | 操作人  |
+|  12   | APPROVAL_STATUS |   int   | 10 |   0    |    Y     |  N   |   1    |   |
+|  13   | CREATED_AT |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  14   | UPDATED_AT |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
 **表名：** <a>T_SENIOR_USER</a>
 
 **说明：** 高级用户表
@@ -431,6 +455,8 @@
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  13   | USER_TYPE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 用户类型 0 普通用户 1 公共账号  |
+|  14   | BUSINESS_LINE_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 业务线 ID  |
+|  15   | BUSINESS_LINE_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 业务线名称  |
 
 **表名：** <a>T_USER_DAILY_FIRST_AND_LAST_LOGIN</a>
 

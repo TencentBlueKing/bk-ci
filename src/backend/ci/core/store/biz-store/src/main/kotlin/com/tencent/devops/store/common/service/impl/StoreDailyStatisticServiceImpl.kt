@@ -30,8 +30,10 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
-import com.tencent.devops.store.pojo.common.StoreDailyStatistic
 import com.tencent.devops.store.common.service.StoreDailyStatisticService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -78,6 +80,7 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
                     dailyFailDetail = if (dailyStatisticRecord.dailyFailDetail != null) JsonUtil.toMap(
                         dailyStatisticRecord.dailyFailDetail!!
                     ) else null,
+                    dailyActiveDuration = dailyStatisticRecord.dailyActiveDuration?.toDouble(),
                     statisticsTime = DateTimeUtil.toDateTime(
                         dailyStatisticRecord.statisticsTime,
                         DateTimeUtil.YYYY_MM_DD
@@ -86,5 +89,34 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
             )
         }
         return storeDailyStatisticList
+    }
+
+    override fun updateDailyStatisticInfo(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeDailyStatisticRequest: StoreDailyStatisticRequest
+    ): Boolean {
+        val storeDailyStatistic = storeStatisticDailyDao.getDailyStatisticByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            statisticsTime = storeDailyStatisticRequest.statisticsTime
+        )
+        if (storeDailyStatistic != null) {
+            storeStatisticDailyDao.updateDailyStatisticData(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte(),
+                storeDailyStatisticRequest = storeDailyStatisticRequest
+            )
+        } else {
+            storeStatisticDailyDao.insertDailyStatisticData(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte(),
+                storeDailyStatisticRequest = storeDailyStatisticRequest
+            )
+        }
+        return true
     }
 }

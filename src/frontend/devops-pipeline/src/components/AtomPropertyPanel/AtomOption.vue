@@ -20,10 +20,6 @@
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
     import optionConfigMixin from '@/store/modules/common/optionConfigMixin'
-    // import {
-    //     getAtomOptionDefault,
-    //     ATOM_OPTION
-    // } from '@/store/modules/common/optionConfig'
     export default {
         name: 'atom-config',
         mixins: [atomMixin, validMixins, optionConfigMixin],
@@ -103,9 +99,7 @@
                 const retryable = currentfailControl.includes('retryWhenFailed')
                 const manualRetry = !isAutoSkip && includeManualRetry
 
-                console.log(currentfailControl, isAutoSkip, this.atomOption.failControl, value)
                 const failControl = isAutoSkip ? currentfailControl.filter(item => item !== 'MANUAL_RETRY') : [...currentfailControl]
-                this.setPipelineEditing(true)
 
                 this.handleUpdateElement('additionalOptions', {
                     ...this.atomOption,
@@ -116,8 +110,11 @@
                     failControl
                 })
             },
-            initOptionConfig () {
-                this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption))
+            initOptionConfig (isInit = false) {
+                // 编辑状态
+                if (!this.disabled) {
+                    this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption), isInit)
+                }
             }
         }
     }

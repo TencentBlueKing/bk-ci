@@ -115,6 +115,9 @@
                 } else if (value === 'NAME') {
                     this.atomPropsModel.repositoryHashId.hidden = true
                     this.atomPropsModel.repositoryName.hidden = false
+                } else if (value === 'SELF') {
+                    this.atomPropsModel.repositoryHashId.hidden = true
+                    this.atomPropsModel.repositoryName.hidden = true
                 }
                 this.handleUpdateElement(name, value)
             },

@@ -27,22 +27,34 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.store.common.configuration.StoreDetailUrlConfig
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.OperationLogDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.SensitiveConfDao
 import com.tencent.devops.store.common.dao.StoreApproveDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
+import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseManageDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreCommentDao
 import com.tencent.devops.store.common.dao.StoreCommentPraiseDao
 import com.tencent.devops.store.common.dao.StoreCommentReplyDao
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreEnvVarDao
+import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMediaInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
@@ -52,26 +64,29 @@ import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.StoreBuildInfo
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.StoreShowVersionItem
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreBuildInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionItem
+import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 /**
  * store公共
  * since: 2019-07-23
  */
 @Suppress("ALL")
-@Service
-abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonService {
+abstract class StoreCommonServiceImpl : StoreCommonService {
 
     @Autowired
     lateinit var dslContext: DSLContext
@@ -131,7 +146,40 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
     lateinit var storeStatisticDailyDao: StoreStatisticDailyDao
 
     @Autowired
+    lateinit var storeBaseQueryDao: StoreBaseQueryDao
+
+    @Autowired
+    lateinit var storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao
+
+    @Autowired
     lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
+
+    @Autowired
+    lateinit var storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao
+
+    @Autowired
+    lateinit var storeLabelRelDao: StoreLabelRelDao
+
+    @Autowired
+    lateinit var storeBaseExtManageDao: StoreBaseExtManageDao
+
+    @Autowired
+    lateinit var storeBaseEnvManageDao: StoreBaseEnvManageDao
+
+    @Autowired
+    lateinit var storeBaseManageDao: StoreBaseManageDao
+
+    @Autowired
+    lateinit var storeBaseFeatureManageDao: StoreBaseFeatureManageDao
+
+    @Autowired
+    lateinit var storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao
+
+    @Autowired
+    lateinit var storeVersionLogDao: StoreVersionLogDao
+
+    @Autowired
+    lateinit var client: Client
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
 
@@ -139,13 +187,20 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         storeId: String,
         storeType: StoreTypeEnum
     ): String {
-        logger.info("getStoreNameById: $storeId | $storeType")
-        val storeCommonDao = getStoreCommonDao(storeType.name)
-        return storeCommonDao.getStoreNameById(dslContext, storeId) ?: ""
+        var name = storeBaseQueryDao.getComponentById(dslContext, storeId)?.name
+        if (name == null) {
+            val storeCommonDao = getStoreCommonDao(storeType.name)
+            name = storeCommonDao.getStoreNameById(dslContext, storeId)
+        }
+        return name ?: ""
     }
 
     override fun getStorePublicFlagByCode(storeCode: String, storeType: StoreTypeEnum): Boolean {
-        return getStoreCommonDao(storeType.name).getStorePublicFlagByCode(dslContext, storeCode)
+        var publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
+        if (publicFlag == null) {
+            publicFlag = getStoreCommonDao(storeType.name).getStorePublicFlagByCode(dslContext, storeCode)
+        }
+        return publicFlag
     }
 
     override fun getStoreRepoHashIdByCode(storeCode: String, storeType: StoreTypeEnum): String? {
@@ -237,24 +292,31 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         processInfo: List<ReleaseProcessItem>
     ): StoreProcessInfo {
         val opPermission = storeMemberDao.isStoreAdmin(
-            dslContext,
-            userId,
-            storeCode,
-            storeType.type.toByte()
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
         ) || creator == userId
         val storeProcessInfo = StoreProcessInfo(opPermission, null, processInfo)
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         if (null != storeBuildInfoRecord) {
+            val pipelineId = storeBuildInfoRecord.pipelineId
+            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(
+                dslContext = dslContext,
+                pipelineId = pipelineId
+            )
+            var projectCode = storePipelineRelRecord?.projectCode
+            if (projectCode.isNullOrBlank()) {
+                projectCode =
+                    client.get(ServicePipelineResource::class).getPipelineInfoByPipelineId(pipelineId)?.data?.projectId
+                        ?: ""
+                storePipelineRelDao.updateStorePipelineProject(dslContext, pipelineId, projectCode)
+            }
             storeProcessInfo.storeBuildInfo = StoreBuildInfo(
                 storeId = storeBuildInfoRecord.storeId,
-                pipelineId = storeBuildInfoRecord.pipelineId,
+                pipelineId = pipelineId,
                 buildId = storeBuildInfoRecord.buildId,
-                projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                    dslContext,
-                    userId,
-                    storeCode,
-                    storeType
-                ) ?: ""
+                projectCode = projectCode
             )
         }
         return storeProcessInfo
@@ -270,7 +332,7 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
             StoreTypeEnum.IMAGE -> getStoreDetailUrl(storeDetailUrlConfig.imageDetailBaseUrl, storeCode)
             StoreTypeEnum.IDE_ATOM -> getStoreDetailUrl(storeDetailUrlConfig.ideAtomDetailBaseUrl, storeCode)
             StoreTypeEnum.SERVICE -> getStoreDetailUrl(storeDetailUrlConfig.serviceDetailBaseUrl, storeCode)
-            else -> ""
+            else -> "${storeDetailUrlConfig.storeDetailBaseUrl}/${storeType.name.lowercase()}/$storeCode"
         }
     }
 
@@ -301,6 +363,17 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         storeStatisticDao.deleteStoreStatistic(context, storeCode, storeType)
         storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
         storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
+        storeBaseFeatureManageDao.deleteStoreBaseFeature(context, storeCode, storeType)
+        storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
+        storeVersionLogDao.deleteByStoreCode(context, storeCode, storeType)
+        val storeIds = storeBaseQueryDao.getComponentIds(context, storeCode, storeType)
+        if (storeIds.isNotEmpty()) {
+            storeBaseEnvManageDao.batchDeleteStoreEnvInfo(context, storeIds)
+            storeLabelRelDao.batchDeleteByStoreId(context, storeIds)
+            storeBaseExtManageDao.batchDeleteStoreBaseExtInfo(context, storeIds)
+            storeBaseEnvExtManageDao.batchDeleteStoreEnvExtInfo(context, storeIds)
+        }
+        storeBaseManageDao.deleteByComponentCode(context, storeCode, storeType)
         return true
     }
 
@@ -355,5 +428,108 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
             }
         }
         return StoreShowVersionInfo(showVersionList)
+    }
+
+    override fun validateStoreVersion(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        versionInfo: VersionModel,
+        name: String
+    ) {
+        val releaseType = versionInfo.releaseType
+        val opBaseRecord = generateOpBaseRecord(storeCode, storeType, releaseType)
+        val version = versionInfo.version
+        val dbVersion = opBaseRecord.version
+        val dbStatus = opBaseRecord.status
+        // 判断首个版本对应的请求是否合法
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            dbStatus !in listOf(StoreStatusEnum.INIT.name, StoreStatusEnum.GROUNDING_SUSPENSION.name)
+        ) {
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
+        }
+        // 最近的版本处于上架中止状态，重新升级版本号不变
+        val cancelFlag = dbStatus == StoreStatusEnum.GROUNDING_SUSPENSION.name
+        val requireVersionList =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                listOf(dbVersion)
+            } else {
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    storeBaseQueryDao.getComponent(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        version = VersionUtils.convertLatestVersion(version),
+                        storeType = storeType
+                    )?.version
+                } else {
+                    null
+                }
+                getRequireVersion(
+                    reqVersion = reqVersion,
+                    dbVersion = dbVersion,
+                    releaseType = releaseType
+                )
+            }
+        if (!requireVersionList.contains(version)) {
+            logger.warn("$storeType[$storeCode]| invalid version: $version|requireVersionList:$requireVersionList")
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID,
+                params = arrayOf(version, requireVersionList.toString())
+            )
+        }
+        // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
+        checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
+    }
+
+    private fun generateOpBaseRecord(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        releaseType: ReleaseTypeEnum
+    ): TStoreBaseRecord {
+        val maxVersionBaseRecord = storeBaseQueryDao.getMaxVersionComponentByCode(dslContext, storeCode, storeType)
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
+        val newestBaseRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)!!
+        val opBaseRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+            newestBaseRecord
+        } else {
+            maxVersionBaseRecord
+        }
+        return opBaseRecord
+    }
+
+    private fun checkAddVersionCondition(
+        dbVersion: String,
+        releaseType: ReleaseTypeEnum,
+        dbStatus: String,
+        name: String
+    ) {
+        if (dbVersion.isNotBlank() && releaseType != ReleaseTypeEnum.NEW) {
+            val storeFinalStatusList = mutableListOf(
+                StoreStatusEnum.AUDIT_REJECT.name,
+                StoreStatusEnum.RELEASED.name,
+                StoreStatusEnum.GROUNDING_SUSPENSION.name,
+                StoreStatusEnum.UNDERCARRIAGED.name
+            )
+            if (!storeFinalStatusList.contains(dbStatus)) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
+                    params = arrayOf(name, dbVersion)
+                )
+            }
+        }
+    }
+
+    override fun getNormalUpgradeFlag(storeCode: String, storeType: StoreTypeEnum, status: StoreStatusEnum): Boolean {
+        val releaseTotalNum = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeType = storeType,
+            storeCode = storeCode,
+            status = StoreStatusEnum.RELEASED
+        )
+        val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
+        return releaseTotalNum > currentNum
     }
 }

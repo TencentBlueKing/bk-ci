@@ -11,7 +11,6 @@
 | T_PIPELINE_ATOM_REPLACE_BASE | 流水线插件替换基本信息表 |
 | T_PIPELINE_ATOM_REPLACE_HISTORY | 流水线插件替换历史信息表 |
 | T_PIPELINE_ATOM_REPLACE_ITEM | 流水线插件替换项信息表 |
-| T_PIPELINE_BUILD_COMMITS |  |
 | T_PIPELINE_BUILD_CONTAINER | 流水线构建容器环境表 |
 | T_PIPELINE_BUILD_DETAIL | 流水线构建详情表 |
 | T_PIPELINE_BUILD_HISTORY | 流水线构建历史表 |
@@ -145,29 +144,6 @@
 |  11   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  12   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
-**表名：** <a>T_PIPELINE_BUILD_COMMITS</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
-|  2   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       |   |
-|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       |   |
-|  4   | BUILD_ID |   varchar   | 34 |   0    |    N     |  N   |       |   |
-|  5   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       |   |
-|  6   | MESSAGE |   longtext   | 2147483647 |   0    |    N     |  N   |       |   |
-|  7   | AUTHOR_NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
-|  8   | MERGE_REQUEST_ID |   varchar   | 256 |   0    |    Y     |  N   |       |   |
-|  9   | REPOSITORY_TYPE |   varchar   | 20 |   0    |    N     |  N   |       |   |
-|  10   | COMMIT_TIME |   datetime   | 19 |   0    |    N     |  N   |       |   |
-|  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       |   |
-|  12   | URL |   varchar   | 255 |   0    |    N     |  N   |       | 仓库 url  |
-|  13   | EVENT_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 触发事件类型  |
-|  14   | CHANNEL |   varchar   | 32 |   0    |    Y     |  N   |       |   |
-|  15   | ACTION |   varchar   | 64 |   0    |    Y     |  N   |       |   |
 
 **表名：** <a>T_PIPELINE_BUILD_CONTAINER</a>
 

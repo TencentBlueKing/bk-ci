@@ -83,8 +83,10 @@ class DispatchQueueControl @Autowired constructor(
                     buildId = container.buildId,
                     message = "[QUEUE] Dispatch queue add container(${container.containerId})",
                     tag = VMUtils.genStartVMTaskId(container.containerId),
+                    containerHashId = null,
+                    executeCount = container.executeCount,
                     jobId = null,
-                    executeCount = container.executeCount
+                    stepId = VMUtils.genStartVMTaskId(container.containerId)
                 )
                 redisOperation.zadd(queueKey, container.containerId, LocalDateTime.now().timestamp().toDouble())
                 redisOperation.expire(queueKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
@@ -104,8 +106,10 @@ class DispatchQueueControl @Autowired constructor(
             message = "[QUEUE] Rank of container(${container.containerId}) is: $rank, " +
                 "if can dequeue: $canDequeue",
             tag = VMUtils.genStartVMTaskId(container.containerId),
+            containerHashId = null,
+            executeCount = container.executeCount,
             jobId = null,
-            executeCount = container.executeCount
+            stepId = VMUtils.genStartVMTaskId(container.containerId)
         )
         return canDequeue
     }

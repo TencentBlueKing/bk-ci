@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -55,10 +56,8 @@ interface StoreProjectService {
      */
     fun installStoreComponent(
         userId: String,
-        projectCodeList: ArrayList<String>,
         storeId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum,
+        installStoreReq: InstallStoreReq,
         publicFlag: Boolean,
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -92,6 +91,16 @@ interface StoreProjectService {
         storeCode: String,
         storeType: Byte
     ): Boolean
+
+    /**
+     * 获取项目下关联的组件信息
+     * @return key:storeCode,value:version
+     */
+    fun getProjectComponents(
+        projectCode: String,
+        storeType: Byte,
+        storeProjectTypes: List<Byte>
+    ): Map<String, String?>?
 
     /**
      * 更新组件初始化项目信息

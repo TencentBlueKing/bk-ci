@@ -1,5 +1,5 @@
 <template>
-    <pipeline v-if="!isLoading" :pipeline="pipeline" :is-editing="isEditing" :show-header="false"></pipeline>
+    <pipeline class="edit-bk-pipeline" v-if="!isLoading" :pipeline="pipeline" :show-header="false"></pipeline>
 </template>
 
 <script>
@@ -12,47 +12,39 @@
             Pipeline
         },
         props: {
-            isEditing: Boolean,
             isLoading: Boolean,
             pipeline: Object
         },
         data () {
             return {
-                showAtomYet: false,
-                showLinkAtomYet: false
+                showAtomYet: false
+            }
+        },
+        computed: {
+            pipelineId () {
+                return this.$route.params.pipelineId
             }
         },
         watch: {
-            pipeline: {
-                deep: true,
-                handler (newVal, oldVal) {
-                    this.isLoading = false
-                    if (this.isPipelineIdDiff) { // 如果是切换了pipeline，无需置为编辑状态
-                        this.requestInterceptAtom()
-                        this.isPipelineIdDiff = false
-                        return
-                    }
-                    if (newVal && newVal.stages) {
-                        let { hash } = this.$route
-                        const linkAtomIndex = this.getLinkAtomIndex(newVal.stages, hash)
-                        hash = hash.substr(1)
-                        if (!this.showAtomYet) {
-                            const atomIndex = this.getAtomIndex(newVal.stages, hash)
-                            atomIndex && this.togglePropertyPanel({
-                                isShow: true,
-                                editingElementPos: atomIndex
-                            })
-                            // 只在首次加载进入编辑页面下弹出手动触发弹窗
-                            this.showAtomYet = true
-                        }
-                        if (newVal && linkAtomIndex && !this.showLinkAtomYet) {
-                            this.togglePropertyPanel({
-                                isShow: true,
-                                editingElementPos: linkAtomIndex
-                            })
-                            // 只在首次加载进入编辑页面下弹出來弹窗
-                            this.showLinkAtomYet = true
-                        }
+            pipelineId (newVal, oldVal) {
+                if (newVal !== oldVal) {
+                    this.requestInterceptAtom({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: newVal
+                    })
+                }
+            },
+            pipeline (newVal, oldVal) {
+                if (newVal?.stages) {
+                    const { hash } = this.$route
+                    const atomIndex = this.getAtomIndex(newVal.stages, hash)
+                    if (!this.showAtomYet && typeof atomIndex !== 'undefined') {
+                        this.togglePropertyPanel({
+                            isShow: true,
+                            editingElementPos: atomIndex
+                        })
+                        // 只在首次加载进入编辑页面下弹出手动触发弹窗
+                        this.showAtomYet = true
                     }
                 }
             }
@@ -64,14 +56,15 @@
             ...mapActions('common', [
                 'requestInterceptAtom'
             ]),
-            getLinkAtomIndex (stages, hash) { // 新增
-                let index = null
-                const atomId = hash.substr(1)
+
+            getAtomIndex (stages, hash) { // 新增
+                let pos
+                const keyword = hash.substr(1)
                 stages.forEach((stage, sIndex) => {
                     stage.containers.forEach((container, cIndex) => {
                         container.elements.forEach((ele, eIndex) => {
-                            if (ele.id === atomId) {
-                                index = {
+                            if ([ele.id, ele['@type'], ele.atomCode].includes(keyword)) {
+                                pos = {
                                     stageIndex: sIndex,
                                     containerIndex: cIndex,
                                     elementIndex: eIndex
@@ -80,25 +73,24 @@
                         })
                     })
                 })
-                return index
-            },
-            getAtomIndex (stages, atomName) {
-                let index = null
-                stages.forEach((stage, sIndex) => {
-                    stage.containers.forEach((container, cIndex) => {
-                        container.elements.forEach((ele, eIndex) => {
-                            if (ele['@type'] === atomName || ele.atomCode === atomName) {
-                                index = {
-                                    stageIndex: sIndex,
-                                    containerIndex: cIndex,
-                                    elementIndex: eIndex
-                                }
-                            }
-                        })
-                    })
-                })
-                return index
+                return pos
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .edit-bk-pipeline {
+        .bk-pipeline {
+            padding-left: 50px;
+        }
+        .scroll-container {
+            .scroll-wraper {
+                padding: 0 0 0 6px;
+            }
+            &:before {
+                top: 24px;
+            }
+        }
+    }
+</style>

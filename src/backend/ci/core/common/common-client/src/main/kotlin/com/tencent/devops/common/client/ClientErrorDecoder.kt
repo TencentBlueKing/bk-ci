@@ -62,7 +62,8 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
         return RemoteServiceException(
             httpStatus = response.status(),
             errorCode = result.status,
-            errorMessage = result.message ?: ""
+            errorMessage = result.message ?: "",
+            data = result.data
         )
     }
 }

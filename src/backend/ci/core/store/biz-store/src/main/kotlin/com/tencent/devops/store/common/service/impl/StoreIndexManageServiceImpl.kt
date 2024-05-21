@@ -48,6 +48,9 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.store.common.dao.StoreIndexManageInfoDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.StoreIndexManageService
+import com.tencent.devops.store.common.service.StoreIndexPipelineService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
@@ -58,9 +61,6 @@ import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexPipelineInitRequest
-import com.tencent.devops.store.common.service.StoreIndexManageService
-import com.tencent.devops.store.common.service.StoreIndexPipelineService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

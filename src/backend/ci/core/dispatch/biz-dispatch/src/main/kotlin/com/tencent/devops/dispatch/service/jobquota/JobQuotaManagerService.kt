@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.dao.JobQuotaProjectDao
 import com.tencent.devops.dispatch.dao.JobQuotaSystemDao
+import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaProject
 import com.tencent.devops.dispatch.pojo.JobQuotaSystem
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -38,12 +39,14 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service@Suppress("ALL")
 class JobQuotaManagerService @Autowired constructor(
-    private val jobQuotaProjectDao: JobQuotaProjectDao,
+    private val dslContext: DSLContext,
+    private val runningJobsDao: RunningJobsDao,
     private val jobQuotaSystemDao: JobQuotaSystemDao,
-    private val dslContext: DSLContext
+    private val jobQuotaProjectDao: JobQuotaProjectDao
 ) {
     fun listProjectQuota(projectId: String?): List<JobQuotaProject> {
         val record = jobQuotaProjectDao.list(dslContext, projectId)
@@ -218,5 +221,23 @@ class JobQuotaManagerService @Autowired constructor(
      */
     fun updateSystemQuota(jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaSystem): Boolean {
         return jobQuotaSystemDao.update(dslContext, jobQuota.channelCode, jobQuotaVmType, jobQuota)
+    }
+
+    /**
+     * 清理指定项目时间点的配额记录
+     */
+    fun clearRunningJobs(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        createTime: String,
+        channelCode: String = ChannelCode.BS.name
+    ) {
+        runningJobsDao.clearRunningJobs(
+            dslContext = dslContext,
+            projectId = projectId,
+            vmType = vmType,
+            channelCode = channelCode,
+            createTime = LocalDateTime.parse(createTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
     }
 }

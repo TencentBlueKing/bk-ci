@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreCommentInfo
-import com.tencent.devops.store.pojo.common.StoreCommentRequest
-import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter

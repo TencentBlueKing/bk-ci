@@ -493,6 +493,14 @@ table tr:hover {
 	width: 100%;
 }
 
+.draft-tag {
+    padding: 0 4px !important;
+    margin: 0 !important;
+    line-height: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0;
+}
+
 .biz-tab-content {
     background-color: #fff;
     font-size: 14px;

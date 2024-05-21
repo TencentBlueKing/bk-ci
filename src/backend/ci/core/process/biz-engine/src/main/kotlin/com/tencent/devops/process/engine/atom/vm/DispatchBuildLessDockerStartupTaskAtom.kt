@@ -95,16 +95,20 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = param.jobId,
+                stepId = task.stepId
             )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Build container init failed: ${e.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Build container init failed", e)
             atomResponse = AtomResponse(
@@ -118,8 +122,10 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 buildId = task.buildId,
                 message = "Build container init failed: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Build container init failed", ignored)
             atomResponse = AtomResponse(
@@ -209,7 +215,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount,
-                customBuildEnv = param.matrixContext
+                customBuildEnv = param.matrixContext,
+                queueTimeoutMinutes = param.jobControlOption?.prepareTimeout
             )
         )
     }

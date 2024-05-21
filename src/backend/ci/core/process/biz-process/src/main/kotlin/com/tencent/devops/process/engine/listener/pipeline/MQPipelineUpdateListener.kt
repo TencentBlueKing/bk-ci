@@ -62,7 +62,10 @@ class MQPipelineUpdateListener @Autowired constructor(
 
         if (event.buildNo != null) {
             watcher.safeAround("updateBuildNo") {
-                pipelineRuntimeService.updateBuildNo(event.projectId, event.pipelineId, event.buildNo!!.buildNo)
+                pipelineRuntimeService.updateBuildNo(
+                    projectId = event.projectId, pipelineId = event.pipelineId,
+                    buildNo = event.buildNo!!.buildNo, debug = false
+                )
             }
         }
 

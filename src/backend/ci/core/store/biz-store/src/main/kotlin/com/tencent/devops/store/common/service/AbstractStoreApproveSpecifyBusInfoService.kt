@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 /**

@@ -26,8 +26,6 @@
         &-separator {
             display: inline-block;
             align-self: center;
-            font-weight: bold;
-            color: #C3CDD7;
         }
     }
 </style>

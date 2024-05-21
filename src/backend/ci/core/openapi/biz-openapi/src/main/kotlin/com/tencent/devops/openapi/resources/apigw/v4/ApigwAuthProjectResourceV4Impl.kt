@@ -1,6 +1,7 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.pojo.Result
@@ -83,6 +84,40 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
             userId = deleteInfo.operator,
             projectCode = projectId,
             projectDeleteUserInfo = deleteInfo
+        )
+    }
+
+    override fun createGroupByGroupCode(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupCode: BkAuthGroup
+    ): Result<Boolean> {
+        logger.info("createGroupByGroupCode v4 |$appCode|$userId|$projectId|$resourceType|$groupCode")
+        return client.get(ServiceResourceGroupResource::class).createGroupByGroupCode(
+            userId = userId,
+            projectCode = projectId,
+            resourceType = resourceType,
+            groupCode = groupCode
+        )
+    }
+
+    override fun deleteGroup(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Result<Boolean> {
+        logger.info("deleteGroup v4 |$appCode|$userId|$projectId|$resourceType|$groupId")
+        return client.get(ServiceResourceGroupResource::class).deleteGroup(
+            userId = userId,
+            projectCode = projectId,
+            resourceType = resourceType,
+            groupId = groupId
         )
     }
 }

@@ -30,6 +30,8 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
 
@@ -62,6 +64,23 @@ data class WindowsScriptElement(
         // 帮助转化
         mutableMap["script"] = URLEncoder.encode(script, "UTF-8")
         return mutableMap
+    }
+
+    override fun transferYaml(defaultValue: Map<String, String>?): PreStep = PreStep(
+        name = name,
+        id = stepId,
+        // bat插件上的
+        ifFiled = TransferUtil.parseStepIfFiled(this),
+        uses = "${getAtomCode()}@$version",
+        with = batchParams()
+    )
+
+    private fun batchParams(): Map<String, Any> {
+        val res = mutableMapOf<String, Any>(WindowsScriptElement::script.name to script)
+        if (charsetType != null && charsetType != CharsetType.DEFAULT) {
+            res[WindowsScriptElement::charsetType.name] = charsetType.name
+        }
+        return res
     }
 
     override fun getClassType() = classType

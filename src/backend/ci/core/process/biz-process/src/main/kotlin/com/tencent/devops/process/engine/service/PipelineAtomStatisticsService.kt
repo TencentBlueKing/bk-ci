@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.utils.ModelUtils
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
-import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -48,7 +48,7 @@ import java.util.concurrent.Executors
  */
 @Service
 class PipelineAtomStatisticsService @Autowired constructor(
-    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val dslContext: DSLContext,
     private val client: Client
 ) {
@@ -129,6 +129,6 @@ class PipelineAtomStatisticsService @Autowired constructor(
     }
 
     private fun getVersionModelString(projectId: String, pipelineId: String, version: Int?): String? {
-        return pipelineResVersionDao.getVersionModelString(dslContext, projectId, pipelineId, version)
+        return pipelineResourceVersionDao.getVersionModelString(dslContext, projectId, pipelineId, version)
     }
 }

@@ -38,6 +38,7 @@ import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -109,5 +110,9 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomRely(getRelyAtom: GetRelyAtom): Result<Map<String, Map<String, Any>>?> {
         return Result(marketAtomService.getAtomsRely(getRelyAtom = getRelyAtom))
+    }
+
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Result<Map<String, String>> {
+        return Result(marketAtomService.getAtomsDefaultValue(atom = atom))
     }
 }

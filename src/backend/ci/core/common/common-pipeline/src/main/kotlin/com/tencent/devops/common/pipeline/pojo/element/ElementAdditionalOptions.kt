@@ -52,7 +52,7 @@ data class ElementAdditionalOptions(
     @JsonIgnore // 表示是否有修改，比如timeout. 注解 @JsonIgnore 表示本字段不会持久到数据库存储，只做临时的校验字段，不做任何保证
     var change: Boolean = false,
     @get:Schema(title = "执行条件", required = false)
-    var runCondition: RunCondition?,
+    var runCondition: RunCondition? = null,
     @get:Schema(title = "是否配置前置暂停", required = false)
     var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
     @get:Schema(title = "订阅暂停通知用户", required = false)

@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -55,20 +56,28 @@ import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
+import com.tencent.devops.process.engine.service.ProjectPipelineCallBackUrlGenerator
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
+import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tags
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URL
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -86,8 +95,13 @@ class CallBackControl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectPipelineCallBackService: ProjectPipelineCallBackService,
     private val client: Client,
-    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry,
+    private val meterRegistry: MeterRegistry,
+    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
 ) {
+
+    @Value("\${callback.failureDisableTimePeriod:#{43200000}}")
+    private val failureDisableTimePeriod: Long = DEFAULT_FAILURE_DISABLE_TIME_PERIOD
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.CREATE_PIPELINE)
@@ -187,7 +201,8 @@ class CallBackControl @Autowired constructor(
                 events = callBackEvent.name
             )
         )
-        val pipelineCallback = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val pipelineCallback = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?.model
             ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
         if (pipelineCallback.isNotEmpty()) {
             list.addAll(pipelineCallback)
@@ -217,7 +232,8 @@ class CallBackControl @Autowired constructor(
             projectId = event.projectId,
             trigger = modelDetail.trigger,
             stageId = event.stageId,
-            taskId = event.taskId
+            taskId = event.taskId,
+            buildNo = modelDetail.buildNum
         )
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
@@ -271,20 +287,20 @@ class CallBackControl @Autowired constructor(
                 HttpRetryUtils.retry(MAX_RETRY_COUNT) {
                     callbackClient.newCall(request).execute()
                 }
+                if (callBack.failureTime != null) {
+                    projectPipelineCallBackService.updateFailureTime(
+                        projectId = callBack.projectId,
+                        id = callBack.id!!,
+                        failureTime = null
+                    )
+                }
             }
         } catch (e: CallNotPermittedException) {
             logger.warn(
                 "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}|" +
                     "failureRate=${breaker.metrics.failureRate}|${e.message}"
             )
-            // 如果请求100%失败，则说明回调地址已经失效，禁用
-            if (breaker.metrics.failureRate == 100.0F) {
-                logger.warn(
-                    "Removing callbacks because of 100% failure rate|" +
-                        "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
-                )
-                projectPipelineCallBackService.disable(callBack)
-            }
+            checkIfNeedDisable(breaker, callBack)
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } catch (e: Exception) {
@@ -296,6 +312,14 @@ class CallBackControl @Autowired constructor(
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
+            // 去掉代理url后,真实的url地址
+            val realUrl = projectPipelineCallBackUrlGenerator.decodeCallbackUrl(
+                request.url.toString()
+            ).substringBefore("?")
+            Counter.builder(PIPELINE_CALLBACK_COUNT)
+                .tags(Tags.of("status", status.name).and("host", URL(realUrl).host))
+                .register(meterRegistry)
+                .increment()
             saveHistory(
                 callBack = callBack,
                 requestHeaders = listOf(CallBackHeader(name = "X-DEVOPS-WEBHOOK-UNIQUE-ID", value = uniqueId)),
@@ -304,6 +328,37 @@ class CallBackControl @Autowired constructor(
                 startTime = startTime,
                 endTime = System.currentTimeMillis()
             )
+        }
+    }
+
+    /**
+     * 判断是否需要禁用
+     */
+    private fun checkIfNeedDisable(
+        breaker: CircuitBreaker,
+        callBack: ProjectPipelineCallBack
+    ) {
+        if (breaker.metrics.failureRate == 100.0F) {
+            // 如果请求已经连续12个小时100%失败，则说明回调地址已经失效，禁用
+            val duration = if (callBack.failureTime != null) {
+                System.currentTimeMillis() - callBack.failureTime!!.timestampmilli()
+            } else {
+                // 记录第一次100%失败的时间
+                projectPipelineCallBackService.updateFailureTime(
+                    projectId = callBack.projectId,
+                    id = callBack.id!!,
+                    failureTime = LocalDateTime.now()
+                )
+                0
+            }
+            if (duration >= failureDisableTimePeriod) {
+                logger.warn(
+                    "disable callbacks because of 100% failure rate|" +
+                            "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}|" +
+                            "duration=$duration"
+                )
+                projectPipelineCallBackService.disable(projectId = callBack.projectId, id = callBack.id!!)
+            }
         }
     }
 
@@ -442,6 +497,13 @@ class CallBackControl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CallBackControl::class.java)
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
         const val MAX_RETRY_COUNT = 3
+        // 默认连续失败12小时,则禁用回调地址
+        private const val DEFAULT_FAILURE_DISABLE_TIME_PERIOD = 12 * 60 * 60 * 1000L
+        private const val PIPELINE_CALLBACK_COUNT = "pipeline_callback_count"
+
+        private const val connectTimeout = 3L
+        private const val readTimeout = 3L
+        private const val writeTimeout = 3L
 
         private fun anySslSocketFactory(): SSLSocketFactory {
             try {
@@ -463,10 +525,6 @@ class CallBackControl @Autowired constructor(
 
             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         })
-
-        private const val connectTimeout = 3L
-        private const val readTimeout = 3L
-        private const val writeTimeout = 3L
 
         private val callbackClient = OkHttpClient.Builder()
             .connectTimeout(connectTimeout, TimeUnit.SECONDS)

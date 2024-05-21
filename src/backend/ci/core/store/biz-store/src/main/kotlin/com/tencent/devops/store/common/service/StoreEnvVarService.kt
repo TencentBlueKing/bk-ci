@@ -28,9 +28,9 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreEnvChangeLogInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
+import com.tencent.devops.store.pojo.common.env.StoreEnvChangeLogInfo
+import com.tencent.devops.store.pojo.common.env.StoreEnvVarInfo
+import com.tencent.devops.store.pojo.common.env.StoreEnvVarRequest
 
 interface StoreEnvVarService {
 
