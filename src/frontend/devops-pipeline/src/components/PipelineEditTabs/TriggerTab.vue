@@ -37,7 +37,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import AtomPropertyPanel from '../AtomPropertyPanel'
     import AtomSelector from '../AtomSelector'
 
@@ -89,6 +89,12 @@
                                 })
                             }
                         })
+                    }
+                    if (!show) {
+                        this.togglePropertyPanel({
+                            isShow: false
+                        })
+                        this.element = null
                     }
                 }
             }
