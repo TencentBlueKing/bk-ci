@@ -18,6 +18,7 @@ import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
@@ -340,8 +341,20 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         projectId: String?,
         machineType: String?,
-        count: Int
+        count: Int,
+        available: Boolean?
     ): Result<QuotaInApiRes> {
+        val mix = if (available == true) {
+            val using = workspaceService.getWorkspaceList4WeSec(
+                projectId = projectId,
+                notStatus = listOf(WorkspaceStatus.DELETED),
+                ownerName = userId
+            )
+            using.associate {
+                it.machineType to using.count { c -> c.machineType == it.machineType }
+            }
+        } else null
+        logger.info("update usage limit for $userId|$projectId|$machineType|$count|$mix")
         val res = when {
             machineType != null -> {
                 checkNotNull(projectId)
@@ -378,7 +391,13 @@ class ServiceRemoteDevResourceImpl(
                 QuotaInApiRes(user = whiteListService.updateAndGetWindowsLimit(userId, count))
             }
         }
-
-        return Result(res)
+        // 对mix做计算
+        return Result(
+            res.copy(
+                user = res.user?.let { it - (mix?.values?.sum() ?: 0) },
+                project = res.project?.let { it - (mix?.values?.sum() ?: 0) },
+                quotas = res.quotas?.mapValues { it.value - (mix?.get(it.key) ?: 0) }
+            )
+        )
     }
 }

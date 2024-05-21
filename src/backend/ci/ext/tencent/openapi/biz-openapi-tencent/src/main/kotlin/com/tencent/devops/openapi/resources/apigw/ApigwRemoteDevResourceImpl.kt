@@ -216,14 +216,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         userId: String,
         projectId: String?,
         machineType: String?,
-        count: Int
+        count: Int,
+        available: Boolean?
     ): Result<QuotaInApiRes> {
-        logger.info("updateUsageLimit $userId|$projectId|$count")
+        logger.info("updateUsageLimit $userId|$projectId|$count|$available")
         return client.get(ServiceRemoteDevResource::class).updateUsageLimit(
             userId = userId,
             projectId = projectId,
             machineType = machineType,
-            count = count
+            count = count,
+            available = available
         )
     }
 }
