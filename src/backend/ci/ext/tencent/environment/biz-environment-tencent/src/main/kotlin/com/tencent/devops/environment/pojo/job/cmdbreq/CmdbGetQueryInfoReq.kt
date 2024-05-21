@@ -1,6 +1,7 @@
 package com.tencent.devops.environment.pojo.job.cmdbreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.annotation.SkipLogField
 
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -9,6 +10,7 @@ data class CmdbGetQueryInfoReq(
     @JsonProperty("app_code")
     val bkAppCode: String? = "",
     @get:Schema(title = "安全秘钥 (app secret)", required = true)
+    @SkipLogField("app_secret")
     @JsonProperty("app_secret")
     val bkAppSecret: String? = "",
     @get:Schema(title = "操作人")

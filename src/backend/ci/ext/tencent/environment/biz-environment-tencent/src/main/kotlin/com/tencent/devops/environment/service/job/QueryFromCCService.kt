@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.Constants.FIELD_BAK_OPERATOR
@@ -212,9 +213,9 @@ class QueryFromCCService {
         )
     }
 
-    private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
+    private fun <T : Any> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = mapper.writeValueAsString(req)
-        logger.info("POST url: $url, req: ${logWithLengthLimit(requestContent)}")
+        logger.info("POST url: $url, req: ${logWithLengthLimit(JsonUtil.skipLogFields(req) ?: "")}")
 
         val ccPostResBody = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
         logger.info("POST res: ${logWithLengthLimit(ccPostResBody ?: "")}")

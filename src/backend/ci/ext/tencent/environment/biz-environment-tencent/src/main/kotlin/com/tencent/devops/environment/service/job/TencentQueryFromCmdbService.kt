@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.Constants.COLUMN_SEVER_LAN_IP
@@ -120,9 +121,9 @@ class TencentQueryFromCmdbService {
         return getNodeIpToCmdbDataMap(responseBody)
     }
 
-    private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
+    private fun <T : Any> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
-        logger.info("POST url: $url, req: ${logWithLengthLimit(requestContent)}")
+        logger.info("POST url: $url, req: ${logWithLengthLimit(JsonUtil.skipLogFields(req) ?: "")}")
 
         val ccPostRes: String?
         try {
