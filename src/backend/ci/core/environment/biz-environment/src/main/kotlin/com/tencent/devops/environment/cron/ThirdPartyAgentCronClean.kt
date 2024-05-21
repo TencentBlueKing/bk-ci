@@ -57,28 +57,32 @@ class ThirdPartyAgentCronClean @Autowired constructor(
     // 将禁用项目的和两个月没有构建任务的Agent标记为禁用
     @Scheduled(cron = "0 28 2 * * ?")
     fun fetchAndDisableAgents() {
+        logger.info("fetchAndDisableAgents start")
+        val max = redisOperation.get(MAX_TO_DISABLE_AGENT)?.toInt() ?: return
         // 对已经发送过通知但是还没有禁用的做筛选
         val now = LocalDateTime.now()
         val needDisAgents = agentDao.fetchNeedDisabledAgent(dslContext, now.timestamp())
         needDisAgents.chunked(100).forEach { chunk ->
-            val noBuildAgents = fetchNoBuildAgents(chunk.map { it.first }.toSet(), now.minusMonths(2).timestamp())
+            val chunkIds = chunk.map { it.first }.toSet()
+            val (noBuildAgents, buildAgents) = fetchNoBuildAgents(chunkIds, now.minusMonths(2).timestamp())
             agentDao.batchUpdateAgent(dslContext, noBuildAgents, AgentStatus.DISABLED)
+            // 没有禁用的恢复使用
+            agentDao.updateAgentByProject(dslContext, null, buildAgents, null, null)
         }
 
         // 寻找还没有发送通知的做禁用预告
-        val max = redisOperation.get(MAX_TO_DISABLE_AGENT)?.toInt()
         val agents = agentDao.fetchAgents(
             dslContext = dslContext,
             status = setOf(AgentStatus.IMPORT_OK),
             hasDisableInfo = false,
-            limit = if (max != null) {
+            limit = if (max != 0) {
                 PageUtil.convertPageSizeToSQLLimit(1, max)
             } else {
                 null
             }
         ).associateBy { it.id }
         agents.keys.chunked(100).forEach { chunk ->
-            val noBuildAgents = fetchNoBuildAgents(chunk.toSet(), now.minusMonths(2).timestamp())
+            val (noBuildAgents, _) = fetchNoBuildAgents(chunk.toSet(), now.minusMonths(2).timestamp())
             noBuildAgents.forEach noBuildFor@{ agentId ->
                 val agent = agents[agentId] ?: return@noBuildFor
                 agentDao.updateAgentDisableInfo(
@@ -109,7 +113,7 @@ class ThirdPartyAgentCronClean @Autowired constructor(
         }
     }
 
-    private fun fetchNoBuildAgents(agentIds: Set<Long>, time: Long): Set<Long> {
+    private fun fetchNoBuildAgents(agentIds: Set<Long>, time: Long): Pair<Set<Long>, Set<Long>> {
         val agents = try {
             client.get(ServiceAgentResource::class).fetchAgentBuildByTime(
                 time = time,
@@ -118,9 +122,9 @@ class ThirdPartyAgentCronClean @Autowired constructor(
         } catch (e: Exception) {
             logger.error("fetchNoBuildAgents err", e)
             null
-        }?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: return emptySet()
+        }?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: return Pair(emptySet(), emptySet())
 
-        return agentIds.subtract(agents)
+        return Pair(agentIds.subtract(agents), agents)
     }
 
     private fun getNotifyReceivers(agentRecord: TEnvironmentThirdpartyAgentRecord): MutableSet<String> {

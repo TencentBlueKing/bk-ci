@@ -528,7 +528,48 @@ class ThirdPartyAgentDao {
         disableInfo: AgentDisableInfo
     ) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            dslContext.update(this).set(DISABLE_INFO, JSON.json(JsonUtil.toJson(disableInfo, false))).execute()
+            dslContext.update(this)
+                .set(DISABLE_INFO, JSON.json(JsonUtil.toJson(disableInfo, false)))
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun updateAgentByProject(
+        dslContext: DSLContext,
+        projectIds: Set<String>?,
+        agents: Set<Long>?,
+        status: AgentStatus?,
+        disableInfo: AgentDisableInfo?
+    ) {
+        if (projectIds.isNullOrEmpty() && agents.isNullOrEmpty()) {
+            return
+        }
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            val dsl = dslContext.update(this)
+                .set(
+                    DISABLE_INFO, if (disableInfo == null) {
+                        null
+                    } else {
+                        JSON.json(JsonUtil.toJson(disableInfo, false))
+                    }
+                )
+
+            if (status != null) {
+                dsl.set(STATUS, status.status)
+            }
+
+            if (!projectIds.isNullOrEmpty()) {
+                dsl.where(PROJECT_ID.`in`(projectIds))
+                dsl.execute()
+                return
+            }
+
+            if (!agents.isNullOrEmpty()) {
+                dsl.where(ID.`in`(agents))
+                dsl.execute()
+                return
+            }
         }
     }
 }

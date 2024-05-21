@@ -415,4 +415,11 @@ interface ServiceThirdPartyAgentResource {
         @PathParam("envName")
         envName: String
     ): Result<Pair<Long?, List<ThirdPartyAgent>>>
+
+    @Operation(summary = "禁用Agent")
+    @POST
+    @Path("/disable_agent")
+    fun disableAgent(
+        projects: Set<String>
+    )
 }
