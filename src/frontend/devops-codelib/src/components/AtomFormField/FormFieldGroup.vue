@@ -35,6 +35,10 @@
             docsLink: {
                 type: String,
                 default: ''
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         methods: {
@@ -46,7 +50,7 @@
             }
         },
         render (h) {
-            const { $slots, label, desc, value, topDivider, showSwitch, handleChangeSwitch, docsLink, docs, handleToDocs } = this
+            const { $slots, label, desc, value, topDivider, showSwitch, handleChangeSwitch, docsLink, docs, handleToDocs, disabled } = this
             return (
                 <div class="form-field bk-form-item">
                     {
@@ -67,7 +71,7 @@
                         showSwitch && <span class="bk-form-group-label-divider"></span>
                     }
                     {
-                        showSwitch && <bk-switcher value={value} theme="primary" onChange={handleChangeSwitch}></bk-switcher>
+                        showSwitch && <bk-switcher value={value} theme="primary" disabled={disabled} onChange={handleChangeSwitch}></bk-switcher>
                     }
                     {
                         docsLink && <span class="bk-form-group-docs-link" onClick={handleToDocs}>
