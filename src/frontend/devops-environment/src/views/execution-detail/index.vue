@@ -214,6 +214,7 @@
             },
             ipList () {
                 if (this.stepResultGroupList.length) {
+                    if (this.activeIp) return
                     const activeItem = this.stepResultGroupList[this.activeGroupIndex].hostResultList[0] || {}
                     if (activeItem) {
                         this.activeHostId = activeItem.bkHostId
@@ -405,10 +406,9 @@
         height: 50px;
         padding-left: 24px;
         padding-right: 24px;
-        position: fixed;
+        position: relative;
         left: 0;
         right: 0;
-        top: 50px;
         z-index: 500;
         .bk-breadcrumb-item {
             max-width: 300px !important;
@@ -483,7 +483,6 @@
     }
     .task-step-detail {
         width: 100%;
-        margin-top: 50px;
         .step-info-header {
             background: #f5f6fa;
             display: flex;
