@@ -118,9 +118,9 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -2051,6 +2051,19 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             branchName = branchName,
             branchVersionAction = branchVersionAction
+        )
+    }
+
+    fun softDelete(
+        pipelineId: String,
+        userId: String,
+        channelCode: ChannelCode?
+    ) {
+        pipelineInfoDao.softDelete(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            userId = userId,
+            channelCode = channelCode
         )
     }
 }

@@ -630,4 +630,19 @@ interface ServicePipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineRemoteToken>
+
+    @Operation(summary = "将流水线设置为删除态")
+    @DELETE
+    @Path("/delete")
+    fun softDelete(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        channelCode: ChannelCode?
+    ): Result<Boolean>
 }
