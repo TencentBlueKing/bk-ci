@@ -373,7 +373,7 @@ class ServiceRemoteDevResourceImpl(
             val using = workspaceService.getWorkspaceList4WeSec(
                 projectId = projectId,
                 notStatus = listOf(WorkspaceStatus.DELETED),
-                ownerName = userId
+                ownerName = if (projectId == null) userId else null
             )
             using.associate {
                 it.machineType to using.count { c -> c.machineType == it.machineType }
