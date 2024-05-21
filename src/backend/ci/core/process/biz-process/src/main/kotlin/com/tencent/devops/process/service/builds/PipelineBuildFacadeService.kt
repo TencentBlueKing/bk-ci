@@ -2443,6 +2443,10 @@ class PipelineBuildFacadeService(
                     return Pair(startUpVMTask.starter, true)
                 }
             }
+
+            // #10362 Worker杀掉当前进程父进程导致Agent误报
+            // agent 改动后可能会存在进程报错但是业务成功的情况，做一下二次校验
+            if ()
         }
 
         // 添加错误码日志
