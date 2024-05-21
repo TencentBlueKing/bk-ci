@@ -1276,6 +1276,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     AgentStatus.UN_IMPORT_OK
                 }
 
+                // #10338 暂时对老版本以 DELETE 代替 DISABLE 功能
+                AgentStatus.DISABLED -> {
+                    AgentStatus.DELETE
+                }
+
                 else /* AgentStatus.IMPORT_OK || AgentStatus.IMPORT_EXCEPTION */ -> {
                     if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status) {
                         logger.info("update agent($agentHashId) status from exception to ok")
