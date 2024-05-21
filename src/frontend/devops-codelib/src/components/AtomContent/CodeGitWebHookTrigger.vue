@@ -2,14 +2,14 @@
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
             <template v-if="obj.type === 'group'">
-                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :handle-change="handleMethods" :key="key" v-bind="obj">
-                    <template v-for="(i, index) in obj.children">
+                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :key="key" v-bind="obj">
+                    <template v-for="(i) in obj.children">
                         <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
                             <component
                                 :is="i.component"
                                 :name="i.key"
                                 disabled
-                                :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
+                                :value="element[i.key]"
                                 v-bind="i">
                             </component>
                         </form-field>
