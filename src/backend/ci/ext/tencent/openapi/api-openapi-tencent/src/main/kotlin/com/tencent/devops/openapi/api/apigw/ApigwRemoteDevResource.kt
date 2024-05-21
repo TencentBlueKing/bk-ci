@@ -344,6 +344,9 @@ interface ApigwRemoteDevResource {
         machineType: String?,
         @Parameter(description = "配额增量(可负，可零，可正)", required = true)
         @QueryParam("count")
-        count: Int
+        count: Int,
+        @Parameter(description = "返回可用配额", required = false)
+        @QueryParam("available")
+        available: Boolean?
     ): Result<QuotaInApiRes>
 }
