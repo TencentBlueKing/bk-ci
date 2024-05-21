@@ -37,6 +37,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -106,12 +107,15 @@ class ProjectMiscDao {
     ): Result<TProjectRecord> {
         val date = DateTimeUtil.stringToLocalDate(ltUpdateTime)!!.atStartOfDay()
         return with(TProject.T_PROJECT) {
-            dslContext.selectFrom(this)
+            val execute = dslContext.selectFrom(this)
                 .where(ENABLED.eq(false))
                 .and(CHANNEL.`in`(channelCodes))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(UPDATED_AT.lt(date))
-                .limit(limit).offset(offset).fetch()
+                .orderBy(UPDATED_AT)
+                .limit(limit).offset(offset)
+            logger.info("get disable project sql ${execute.sql}")
+            execute.fetch()
         }
     }
 
@@ -120,5 +124,6 @@ class ProjectMiscDao {
             ProjectApproveStatus.CREATE_PENDING.status,
             ProjectApproveStatus.CREATE_REJECT.status
         )
+        private val logger = LoggerFactory.getLogger(ProjectMiscDao::class.java)
     }
 }
