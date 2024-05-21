@@ -907,8 +907,12 @@ public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>
 
             for (OSProcess p : BkProcessTree.this) {
                 if (p.getParent() == this) {
-                    p.addKeepAlivePids(keepAlivePids);
-                    r.add(p);
+                    if (keepAlivePids.contains(p.pid)) {
+                        this.keepAlivePids.add(this.pid);
+                    } else {
+                        p.addKeepAlivePids(keepAlivePids);
+                        r.add(p);
+                    }
                 }
             }
 
