@@ -317,7 +317,7 @@ class ProjectBillsService constructor(
                 endTime = endTime
             )
         ).data?.pipelineSumInfoDO?.totalExecuteCount ?: 0
-        return projectActiveUserCount != 0 && totalExecuteCount != 0L
+        return projectActiveUserCount != 0 || totalExecuteCount != 0L
     }
 
     private fun clearCacheAfterCheck() {
@@ -336,13 +336,12 @@ class ProjectBillsService constructor(
             val yearAndMonthOfReportDate = LocalDate.parse(
                 yearAndMonthOfReportStr + "01", DateTimeFormatter.ofPattern("yyyyMMdd")
             )
-            val startTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 14)
-            val endTime = if (yearAndMonthOfReportDate.monthValue == 1) {
+            val startTime = if (yearAndMonthOfReportDate.monthValue == 1) {
                 LocalDate.of(yearAndMonthOfReportDate.year - 1, 12, 15)
             } else {
                 LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue - 1, 15)
             }
-
+            val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 14)
             do {
                 val projects = projectService.listProjectsByCondition(
                     projectConditionDTO = ProjectConditionDTO(
@@ -367,6 +366,9 @@ class ProjectBillsService constructor(
                                     endTime = endTime.format(DATE_FORMATTER)
                                 )
                             ).data ?: return@forEach
+                        // 不活跃项目不上报
+                        if (projectActiveUserResponse.userCount == 0)
+                            return@forEach
 
                         val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
                             BaseQueryReqVO(

@@ -110,6 +110,7 @@ class ProjectCronService constructor(
      * 处理逻辑：
      * 对未关联运营产品的项目，连续三周发送邮件，若第四周还未处理的项目，则禁用。
      * */
+    @Scheduled(cron = "0 0 3 ? * MON")
     fun checkProjectRelatedProductRegularly() {
         if (!enable) {
             return
