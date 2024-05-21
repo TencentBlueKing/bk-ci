@@ -320,9 +320,12 @@
 
             async handleFetchTriggerReasonNum () {
                 try {
+                    const pipelineId = this.searchValue.find(i => i.id === 'pipelineId')?.values[0].id || ''
+
                     this.reasonNumMap = await this.fetchTriggerReasonNum({
                         projectId: this.projectId,
-                        eventId: this.eventId
+                        eventId: this.eventId,
+                        pipelineId
                     })
                     if (!this.reason) {
                         this.filterTab = this.filterTabList.find(i => this.reasonNumMap[i.key] > 0)?.id

@@ -606,9 +606,10 @@ const actions = {
     },
     fetchTriggerReasonNum ({ commit }, {
         projectId,
-        eventId
+        eventId,
+        pipelineId
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/triggerReasonStatistics`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/triggerReasonStatistics?pipelineId=${pipelineId}`)
     }
 }
 
