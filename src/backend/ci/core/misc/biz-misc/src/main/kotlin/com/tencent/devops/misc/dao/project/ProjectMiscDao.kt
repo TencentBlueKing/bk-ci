@@ -27,8 +27,11 @@
 
 package com.tencent.devops.misc.dao.project
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TProject
+import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -91,5 +94,31 @@ class ProjectMiscDao {
                 CHANNEL.`as`("CHANNEL")
             ).from(this).where(conditions).fetch()
         }
+    }
+
+    fun getDisableProject(
+        dslContext: DSLContext,
+        channelCodes: List<String>,
+        /*获取小于该更新时间的项目*/
+        ltUpdateTime: String,
+        limit: Int,
+        offset: Int
+    ): Result<TProjectRecord> {
+        val date = DateTimeUtil.stringToLocalDate(ltUpdateTime)!!.atStartOfDay()
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this)
+                .where(ENABLED.eq(false))
+                .and(CHANNEL.`in`(channelCodes))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .and(UPDATED_AT.lt(date))
+                .limit(limit).offset(offset).fetch()
+        }
+    }
+
+    companion object {
+        private val UNSUCCESSFUL_CREATE_STATUS = listOf(
+            ProjectApproveStatus.CREATE_PENDING.status,
+            ProjectApproveStatus.CREATE_REJECT.status
+        )
     }
 }

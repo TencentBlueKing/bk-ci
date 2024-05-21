@@ -36,7 +36,7 @@ interface ProcessRelatedPlatformDataClearService {
      */
     fun cleanBuildData(
         projectId: String,
-        pipelineId: String,
+        pipelineId: String? = null,
         buildIds: List<String>? = null,
         platformDataClearEnum: PlatformDataClearEnum
     )

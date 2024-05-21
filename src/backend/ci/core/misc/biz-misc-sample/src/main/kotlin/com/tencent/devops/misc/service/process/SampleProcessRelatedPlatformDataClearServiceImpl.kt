@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service
 class SampleProcessRelatedPlatformDataClearServiceImpl : ProcessRelatedPlatformDataClearService {
     override fun cleanBuildData(
         projectId: String,
-        pipelineId: String,
+        pipelineId: String?,
         buildIds: List<String>?,
         platformDataClearEnum: PlatformDataClearEnum
     ) {
