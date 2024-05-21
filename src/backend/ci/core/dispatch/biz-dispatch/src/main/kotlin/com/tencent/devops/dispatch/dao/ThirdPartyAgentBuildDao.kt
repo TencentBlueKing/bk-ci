@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
@@ -333,6 +334,23 @@ class ThirdPartyAgentBuildDao {
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(DOCKER_INFO.isNotNull)
                 .fetchAny()
+        }
+    }
+
+    fun fetchLastTimeBuildAgents(
+        dslContext: DSLContext,
+        lastTime: LocalDateTime,
+        agentIds: Set<String>?
+    ): Set<String> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = if (!agentIds.isNullOrEmpty()) {
+                dslContext.select(AGENT_ID).from(this)
+                    .where(AGENT_ID.`in`(agentIds))
+                    .and(UPDATED_TIME.greaterOrEqual(lastTime))
+            } else {
+                dslContext.select(AGENT_ID).from(this).where(UPDATED_TIME.greaterOrEqual(lastTime)).skipCheck()
+            }
+            return dsl.fetch().map { it[AGENT_ID] }.toSet()
         }
     }
 }
