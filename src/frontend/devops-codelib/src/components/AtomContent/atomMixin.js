@@ -12,6 +12,7 @@ import FormFieldGroup from '../AtomFormField/FormFieldGroup'
 import EnumButton from '../AtomFormField/EnumButton'
 import ConditionalInputSelector from '../AtomFormField/ConditionalInputSelector'
 import CompositeInput from '../AtomFormField/CompositeInput'
+import AtomCheckboxList from '../AtomFormField/AtomCheckboxList'
 import { rely } from './utils.js'
 
 const atomMixin = {
@@ -29,7 +30,8 @@ const atomMixin = {
         FormFieldGroup,
         EnumButton,
         ConditionalInputSelector,
-        CompositeInput
+        CompositeInput,
+        AtomCheckboxList
     },
     methods: {
         rely (obj, element) {
