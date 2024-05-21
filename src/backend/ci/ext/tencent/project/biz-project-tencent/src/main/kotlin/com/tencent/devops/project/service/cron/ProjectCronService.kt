@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Service
 class ProjectCronService constructor(
@@ -27,6 +29,7 @@ class ProjectCronService constructor(
         private const val PROJECT_CRON_KEY = "project_cron_key"
         private val logger = LoggerFactory.getLogger(ProjectCronService::class.java)
         private const val PROCESS_INACTIVE_PROJECT_BG = "process_inactive_project_bg"
+        private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     }
 
     @Scheduled(cron = "0 0 6 * * ?")
@@ -103,7 +106,7 @@ class ProjectCronService constructor(
     }
 
     /**
-     * 每周一8点开始检测项目活跃度
+     * 每周一8点开始检测项目是否关联运营产品
      * 处理逻辑：
      * 对未关联运营产品的项目，连续三周发送邮件，若第四周还未处理的项目，则禁用。
      * */
@@ -141,6 +144,30 @@ class ProjectCronService constructor(
             logger.info("update obs product|finish")
         } catch (e: Exception) {
             logger.warn("update obs product | error", e)
+        }
+    }
+
+    /**
+     * 定期上报货币化数据
+     * */
+    fun reportBillDataRegularly() {
+        if (!enable) {
+            return
+        }
+        try {
+            logger.info("report bill data regularly|start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                val currentYearAndMonthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"))
+                projectBillsService.reportBillsData(
+                    yearAndMonthOfReportStr = currentYearAndMonthDate
+                )
+                logger.info("check project related product regularly|finish")
+            } else {
+                logger.info("check project related product regularly|running")
+            }
+        } catch (e: Exception) {
+            logger.warn("check project related product regularly|error", e)
         }
     }
 }

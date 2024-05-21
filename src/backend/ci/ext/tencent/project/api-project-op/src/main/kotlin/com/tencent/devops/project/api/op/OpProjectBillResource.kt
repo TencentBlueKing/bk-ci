@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -47,6 +48,10 @@ interface OpProjectBillResource {
 
     @Operation(summary = "上报货币化数据")
     @POST
-    @Path("/reportBillsData/")
-    fun reportBillsData(): Result<Boolean>
+    @Path("/reportBillsData/{yearAndMonthOfReportStr}")
+    fun reportBillsData(
+        @Parameter(description = "账单日期.格式如202403,即上报2024年3月份账单", required = true)
+        @PathParam("yearAndMonthOfReportStr")
+        yearAndMonthOfReportStr: String
+    ): Result<Boolean>
 }

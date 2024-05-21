@@ -326,19 +326,21 @@ class ProjectBillsService constructor(
         manager2projectList.invalidateAll()
     }
 
-    fun reportBillsData(): Boolean {
+    fun reportBillsData(yearAndMonthOfReportStr: String): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
         projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = 10
             var count = 0
-            val currentDate = LocalDate.now()
-            val targetDate = LocalDate.of(currentDate.year, currentDate.monthValue, 14)
-            val previousDate = if (currentDate.monthValue == 1) {
-                LocalDate.of(currentDate.year - 1, 12, 15)
+            val yearAndMonthOfReportDate = LocalDate.parse(
+                yearAndMonthOfReportStr + "01", DateTimeFormatter.ofPattern("yyyyMMdd")
+            )
+            val startTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 14)
+            val endTime = if (yearAndMonthOfReportDate.monthValue == 1) {
+                LocalDate.of(yearAndMonthOfReportDate.year - 1, 12, 15)
             } else {
-                LocalDate.of(currentDate.year, currentDate.monthValue - 1, 15)
+                LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue - 1, 15)
             }
 
             do {
@@ -361,16 +363,16 @@ class ProjectBillsService constructor(
                             .getProjectActiveUserCount(
                                 BaseQueryReqVO(
                                     projectId = it.englishName,
-                                    startTime = previousDate.format(DATE_FORMATTER),
-                                    endTime = targetDate.format(DATE_FORMATTER)
+                                    startTime = startTime.format(DATE_FORMATTER),
+                                    endTime = endTime.format(DATE_FORMATTER)
                                 )
                             ).data ?: return@forEach
 
                         val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
                             BaseQueryReqVO(
                                 projectId = it.englishName,
-                                startTime = previousDate.format(DATE_FORMATTER),
-                                endTime = targetDate.format(DATE_FORMATTER)
+                                startTime = startTime.format(DATE_FORMATTER),
+                                endTime = endTime.format(DATE_FORMATTER)
                             )
                         ).data
                         val billKind2Usage = mapOf(
@@ -384,7 +386,7 @@ class ProjectBillsService constructor(
                         )
                         billKind2Usage.forEach { (billKind, usage) ->
                             val bkBillDTO = BkBillDTO(
-                                costDate = currentDate.format(DateTimeFormatter.ofPattern("yyyyMM")),
+                                costDate = yearAndMonthOfReportStr,
                                 projectId = it.englishName,
                                 projectName = it.projectName,
                                 serviceType = "流水线服务",

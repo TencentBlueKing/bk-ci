@@ -42,7 +42,7 @@ class OpProjectBillResourceImpl constructor(
         return Result(projectOperationalProductService.syncOperationalProduct())
     }
 
-    override fun reportBillsData(): Result<Boolean> {
-        return Result(projectBillsService.reportBillsData())
+    override fun reportBillsData(yearAndMonthOfReportStr: String): Result<Boolean> {
+        return Result(projectBillsService.reportBillsData(yearAndMonthOfReportStr))
     }
 }
