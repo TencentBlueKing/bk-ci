@@ -29,11 +29,13 @@ package com.tencent.devops.sign.utils
 
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
 
 object IpaFileUtil {
+    private val logger = LoggerFactory.getLogger(IpaFileUtil::class.java)
     private const val bufferSize = 8 * 1024
 
     /*
@@ -71,6 +73,32 @@ object IpaFileUtil {
         if (!file.exists()) return ""
         return file.inputStream().use {
             DigestUtils.md5Hex(it)
+        }
+    }
+
+    /**
+     * 递归删除文件/目录
+     * @param file 文件对象
+     * @return void
+     */
+    @Suppress("NestedBlockDepth")
+    fun deleteDir(dir: File) {
+        try {
+            if (dir.isFile) {
+                dir.delete()
+            } else if (dir.isDirectory) {
+                val fileList = dir.listFiles()
+                if (fileList != null && fileList.isNotEmpty()) {
+                    for (one in fileList) {
+                        deleteDir(one)
+                    }
+                }
+                dir.delete()
+            } else {
+                logger.error("file does not exist: $dir")
+            }
+        } catch (e: Throwable) {
+            logger.error("delete ipa temp dir error: $e")
         }
     }
 }
