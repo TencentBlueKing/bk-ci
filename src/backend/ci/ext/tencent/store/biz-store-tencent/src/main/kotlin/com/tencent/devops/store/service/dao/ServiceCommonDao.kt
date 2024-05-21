@@ -169,4 +169,13 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
             null
         }
     }
+
+    override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
+        return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
+            dslContext.select(REPOSITORY_HASH_ID)
+                .from(this)
+                .where(SERVICE_CODE.eq(storeCode))
+                .fetchAny()?.into(String::class.java)
+        }
+    }
 }
