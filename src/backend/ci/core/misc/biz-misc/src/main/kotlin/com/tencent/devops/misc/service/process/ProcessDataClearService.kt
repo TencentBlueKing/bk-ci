@@ -33,6 +33,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataClearDao
 import com.tencent.devops.misc.lock.PipelineVersionLock
+import com.tencent.devops.misc.pojo.PlatformDataClearEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,7 +88,11 @@ class ProcessDataClearService @Autowired constructor(
             }
             processDataClearDao.deletePipelineInfoByPipelineId(context, projectId, pipelineId)
         }
-        processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId)
+        processRelatedPlatformDataClearService.cleanBuildData(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            platformDataClearEnum = PlatformDataClearEnum.CLEAR_PIPELINE_REPOSITORY_BUILD_DATA
+        )
     }
 
     private fun generateFinalDslContext(archiveFlag: Boolean?): DSLContext {

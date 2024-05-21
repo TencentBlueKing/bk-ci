@@ -27,11 +27,17 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.misc.pojo.PlatformDataClearEnum
 import org.springframework.stereotype.Service
 
 @Service
 class SampleProcessRelatedPlatformDataClearServiceImpl : ProcessRelatedPlatformDataClearService {
-    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>?) {
+    override fun cleanBuildData(
+        projectId: String,
+        pipelineId: String,
+        buildIds: List<String>?,
+        platformDataClearEnum: PlatformDataClearEnum
+    ) {
         // 开源版无需额外清理数据
     }
 }
