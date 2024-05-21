@@ -380,6 +380,8 @@ class ServiceRemoteDevResourceImpl(
             }
         } else null
         logger.info("update usage limit for $userId|$projectId|$machineType|$count|$mix")
+        val spec = windowsResourceConfigService.getAllType(withUnavailable = true, onlySpecModel = true)
+            .associate { it.size to 0 }
         val res = when {
             machineType != null -> {
                 checkNotNull(projectId)
@@ -389,10 +391,12 @@ class ServiceRemoteDevResourceImpl(
                         projectId = projectId,
                         quota = 0
                     ),
-                    quotas = windowsResourceConfigService.updateAndGetAllSpec(
-                        projectId = projectId,
-                        machineType = machineType,
-                        count = count
+                    quotas = spec.plus(
+                        windowsResourceConfigService.updateAndGetAllSpec(
+                            projectId = projectId,
+                            machineType = machineType,
+                            count = count
+                        )
                     )
                 )
             }
@@ -404,10 +408,12 @@ class ServiceRemoteDevResourceImpl(
                         projectId = projectId,
                         quota = count
                     ),
-                    quotas = windowsResourceConfigService.updateAndGetAllSpec(
-                        projectId = projectId,
-                        machineType = null,
-                        count = 0
+                    quotas = spec.plus(
+                        windowsResourceConfigService.updateAndGetAllSpec(
+                            projectId = projectId,
+                            machineType = null,
+                            count = 0
+                        )
                     )
                 )
             }
