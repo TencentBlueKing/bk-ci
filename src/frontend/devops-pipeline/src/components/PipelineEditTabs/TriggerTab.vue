@@ -90,12 +90,11 @@
                             }
                         })
                     }
-                    if (!show) {
-                        this.togglePropertyPanel({
-                            isShow: false
-                        })
-                        this.element = null
-                    }
+                }
+            },
+            editingElementPos (val) {
+                if (!val) {
+                    this.element = null
                 }
             }
         },
