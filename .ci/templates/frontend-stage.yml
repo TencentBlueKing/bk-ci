@@ -70,6 +70,7 @@ stages:
           cp ./pipeline/frontend#pipeline#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no pipeline module"
           cp ./manage/frontend#manage#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no manage module"
           cp ./permission/frontend#permission#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no permission module"
+          cp ./stream/frontend#stream#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no stream module"
 
           cd ${{ ci.workspace }}/scripts/
           cp -rf ci_env_${{ parameters.env }}.properties ci_env.properties
