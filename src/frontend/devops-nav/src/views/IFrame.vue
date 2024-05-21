@@ -9,13 +9,14 @@
         />
         <div
             v-bkloading="{ isLoading }"
-            :style="{ height: &quot;100%&quot; }"
+            :style="{ height: '100%' }"
         >
             <iframe
                 v-if="src"
                 id="iframe-box"
                 ref="iframeEle"
                 allowfullscreen
+                allow="clipboard-read; clipboard-write"
                 :src="src"
                 @load="onLoad"
             />

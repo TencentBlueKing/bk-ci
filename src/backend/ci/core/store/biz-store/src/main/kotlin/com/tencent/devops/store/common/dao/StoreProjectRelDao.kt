@@ -33,13 +33,13 @@ import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -51,16 +51,18 @@ class StoreProjectRelDao {
         storeCode: String,
         projectCode: String,
         type: Byte,
-        storeType: Byte
+        storeType: Byte,
+        version: String? = null
     ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.insertInto(
+            val baseStep = dslContext.insertInto(
                 this,
                 ID,
                 STORE_CODE,
                 PROJECT_CODE,
                 TYPE,
                 STORE_TYPE,
+                VERSION,
                 CREATOR,
                 MODIFIER
             ).values(
@@ -69,13 +71,17 @@ class StoreProjectRelDao {
                 projectCode,
                 type,
                 storeType,
+                version,
                 userId,
                 userId
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_CODE, projectCode)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .execute()
+            version?.let {
+                baseStep.set(VERSION, version)
+            }
+            return baseStep.execute()
         }
     }
 
@@ -106,13 +112,23 @@ class StoreProjectRelDao {
         }
     }
 
-    fun countInstalledProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Int {
+    fun countInstalledProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCode: String,
+        storeType: Byte,
+        version: String? = null
+    ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            version?.let {
+                conditions.add(VERSION.eq(version))
+            }
             return dslContext.selectCount().from(this)
-                .where(PROJECT_CODE.eq(projectCode)
-                    .and(STORE_CODE.eq(storeCode))
-                    .and(STORE_TYPE.eq(storeType))
-                )
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -221,18 +237,23 @@ class StoreProjectRelDao {
     }
 
     /**
-     * 获取项目下已安装的插件
+     * 获取项目下关联的组件信息
      */
-    fun getInstalledComponent(
+    fun getProjectComponents(
         dslContext: DSLContext,
         projectCode: String,
         storeType: Byte,
+        storeProjectTypes: List<Byte>? = null,
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf(PROJECT_CODE.eq(projectCode))
+            storeProjectTypes?.let {
+                conditions.add(TYPE.`in`(storeProjectTypes))
+            }
             val baseQuery = dslContext.selectFrom(this)
-                .where(PROJECT_CODE.eq(projectCode))
+                .where(conditions)
                 .and(STORE_TYPE.eq(storeType))
             if (offset != null && offset >= 0) {
                 baseQuery.offset(offset)
@@ -510,16 +531,6 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .groupBy(STORE_CODE)
                 .fetch()
-        }
-    }
-
-    fun getAtomProjectRel(dslContext: DSLContext, storeCode: String): TStoreProjectRelRecord? {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode))
-                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
-                .and(STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-                .fetchOne()
         }
     }
 }

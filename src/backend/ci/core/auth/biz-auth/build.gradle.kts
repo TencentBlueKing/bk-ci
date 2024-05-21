@@ -31,6 +31,7 @@ dependencies {
     api(project(":core:common:common-event"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-auth:common-auth-provider"))
     api(project(":core:auth:api-auth"))
     api(project(":core:auth:model-auth"))
     api(project(":core:notify:api-notify"))

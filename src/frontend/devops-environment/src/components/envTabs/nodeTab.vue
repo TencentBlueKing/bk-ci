@@ -56,7 +56,7 @@
                         >
                         </span>
 
-                        <span class="node-status">{{ props.row.nodeStatus }}</span>
+                        <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :width="80" :label="$t('environment.operation')">
@@ -207,7 +207,7 @@
                 const params = []
 
                 this.nodeDialogLoading.isLoading = true
-                this.nodeSelectConf.importText = `${this.$t('environment.nodeType.importing')}...`
+                this.nodeSelectConf.importText = `${this.$t('environment.nodeInfo.importing')}...`
 
                 nodeArr.forEach(item => {
                     params.push(item)
@@ -254,7 +254,6 @@
             },
 
             getNodeStatusIcon (nodeStatus) {
-                console.log(nodeStatus)
                 const i18nPrefix = 'environment.nodeInfo'
                 const statusArray = [
                     'abnormal',
@@ -265,7 +264,7 @@
             
                 switch (true) {
                     case nodeStatus === this.$t(`${i18nPrefix}.creating`):
-                        return 'ceating'
+                        return 'creating'
                     case nodeStatus === this.$t(`${i18nPrefix}.normal`):
                         return 'normal'
                     case statusArray.some(status => nodeStatus === this.$t(`${i18nPrefix}.${status}`)):

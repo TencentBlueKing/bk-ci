@@ -26,7 +26,7 @@
             records: {
                 type: Array
             },
-            
+
             record: {
                 type: Object
             },
@@ -58,7 +58,7 @@
         },
         computed: {
             hasRecords () {
-                return Array.isArray(this.records) && this.records.length
+                return Array.isArray(this.records)
             }
         },
         methods: {
@@ -124,8 +124,8 @@
         .devops-icon {
             font-size: 12px;
             margin: 0 8px;
-            font-weight: bold;
             display: inline-block;
+            color: #C3CDD7;
             &.is-cursor {
                 cursor: pointer;
                 color: $primaryColor;
@@ -142,6 +142,8 @@
         .bread-crumb-item-icon {
             margin: 0 8px 0 0;
             font-size: 20px;
+            font-weight: bold;
+            color: #63656E;
         }
     }
     .spin-icon {

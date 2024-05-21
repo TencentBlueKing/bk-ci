@@ -29,8 +29,8 @@ package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildPublishersResource
-import com.tencent.devops.store.pojo.common.PublishersRequest
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.publication.PublishersRequest
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import com.tencent.devops.store.common.service.PublishersDataService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission

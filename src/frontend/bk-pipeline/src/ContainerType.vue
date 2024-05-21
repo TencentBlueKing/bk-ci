@@ -87,3 +87,9 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+.is-danger {
+  color: #ff5656;
+}
+</style>

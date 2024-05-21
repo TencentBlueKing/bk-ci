@@ -29,5 +29,6 @@
 package com.tencent.devops.repository.constant
 
 object RepositoryConstants {
+    const val CI_DIR_PATH = ".ci"
     const val INITIALIZED_BRANCH_RULE_NAME = "initialized_branch_rule"
 }

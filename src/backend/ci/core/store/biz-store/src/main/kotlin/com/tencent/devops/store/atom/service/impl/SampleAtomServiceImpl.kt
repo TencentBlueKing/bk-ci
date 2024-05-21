@@ -30,7 +30,9 @@ package com.tencent.devops.store.atom.service.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.service.SampleAtomService
+import org.springframework.stereotype.Service
 
+@Service
 class SampleAtomServiceImpl : SampleAtomService, AtomServiceImpl() {
 
     override fun hasManagerPermission(projectCode: String, userId: String): Boolean {

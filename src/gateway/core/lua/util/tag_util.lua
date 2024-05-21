@@ -190,7 +190,7 @@ function _M:get_frontend_path(tag, project)
         end
         frontend_path = red:get(red_key)
         if not frontend_path or frontend_path == ngx.null then
-            frontend_path = ""
+            frontend_path = config.ns.tag
         end
         frontend_path_cache:set(local_cache_key, frontend_path, 30)
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
@@ -225,7 +225,7 @@ function _M:get_sub_path(tag)
         end
         sub_path = red:get("gw:sub:path:" .. tag)
         if not sub_path or sub_path == ngx.null then
-            sub_path = "prod"
+            sub_path = config.ns.tag
         end
         sub_path_cache:set(tag, sub_path, 30)
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)

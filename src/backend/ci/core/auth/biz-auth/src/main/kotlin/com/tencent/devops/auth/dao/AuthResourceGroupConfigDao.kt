@@ -37,7 +37,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class AuthResourceGroupConfigDao {
 
-    fun get(
+    fun getByGroupCode(
         dslContext: DSLContext,
         resourceType: String,
         groupCode: String
@@ -52,24 +52,15 @@ class AuthResourceGroupConfigDao {
 
     fun get(
         dslContext: DSLContext,
-        resourceType: String
-    ): Result<TAuthResourceGroupConfigRecord> {
-        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
-            dslContext.selectFrom(this)
-                .where(RESOURCE_TYPE.eq(resourceType))
-                .fetch()
-        }
-    }
-
-    fun get(
-        dslContext: DSLContext,
         resourceType: String,
-        createMode: Boolean
+        createMode: Boolean? = null,
+        groupType: Int? = null
     ): Result<TAuthResourceGroupConfigRecord> {
         return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
             dslContext.selectFrom(this)
                 .where(RESOURCE_TYPE.eq(resourceType))
-                .and(CREATE_MODE.eq(createMode))
+                .let { if (createMode == null) it else it.and(CREATE_MODE.eq(createMode)) }
+                .let { if (groupType == null) it else it.and(GROUP_TYPE.eq(groupType)) }
                 .fetch()
         }
     }
@@ -109,6 +100,7 @@ class AuthResourceGroupConfigDao {
                 .fetchOne(0, Int::class.java)!!
         }
     }
+
     fun list(
         dslContext: DSLContext,
         page: Int,

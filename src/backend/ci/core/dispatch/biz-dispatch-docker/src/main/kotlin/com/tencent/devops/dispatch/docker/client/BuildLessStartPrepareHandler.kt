@@ -27,84 +27,49 @@
 
 package com.tencent.devops.dispatch.docker.client
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class BuildLessStartPrepareHandler @Autowired constructor(
-    private val bkTag: BkTag,
-    private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
+    private val dockerRoutingSdkService: DockerRoutingSdkService,
     private val buildLessStartDispatchHandler: BuildLessStartDispatchHandler
 ) : Handler<BuildLessStartHandlerContext>() {
     private val logger = LoggerFactory.getLogger(BuildLessStartPrepareHandler::class.java)
 
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
-            // 区分是否灰度环境
-            handlerContext.grayEnv = bkTag.getFinalTag().contains("gray")
-
             // 设置日志打印关键字
             handlerContext.buildLogKey = "${event.pipelineId}|${event.buildId}|${event.vmSeqId}|$retryTime"
             logger.info("$buildLogKey start select buildLess.")
 
-            // Check if the pipeline is running
-            checkPipelineRunning(event)
+            // 区分无编译集群（k8s集群和原始docker集群）
+            val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
+            if (dockerRoutingType == DockerRoutingType.KUBERNETES) {
+                clusterType = DockerHostClusterType.K8S_BUILD_LESS
+            }
 
             if (event.retryTime == 0) {
                 buildLogPrinter.addLine(
                     buildId = event.buildId,
                     message = "Prepare BuildLess Job(#${event.vmSeqId})...",
                     tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-                    jobId = event.containerHashId,
-                    executeCount = event.executeCount ?: 1
+                    containerHashId = event.containerHashId,
+                    executeCount = event.executeCount ?: 1,
+                    jobId = null,
+                    stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
                 )
             }
 
             buildLessStartDispatchHandler.handlerRequest(this)
-        }
-    }
-
-    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
-        // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
-            projectId = event.projectId,
-            buildId = event.buildId,
-            taskId = VMUtils.genStartVMTaskId(event.containerId)
-        )
-
-        if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn(
-                "The build event($event) fail to check if pipeline task is running " +
-                    "because of ${statusResult.message}"
-            )
-            throw BuildFailureException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
-                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
-                errorMessage = "无法获取流水线JOB状态，构建停止"
-            )
-        }
-
-        if (!statusResult.data!!.isRunning()) {
-            logger.warn("The build event($event) is not running")
-            throw BuildFailureException(
-                errorType = ErrorType.USER,
-                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
-                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
-                errorMessage = "流水线JOB已经不再运行，构建停止"
-            )
         }
     }
 }

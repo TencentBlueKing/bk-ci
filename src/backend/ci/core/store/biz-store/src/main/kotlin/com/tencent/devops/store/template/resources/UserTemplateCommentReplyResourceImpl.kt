@@ -30,8 +30,8 @@ package com.tencent.devops.store.template.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.UserTemplateCommentReplyResource
-import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
 import com.tencent.devops.store.common.service.StoreCommentReplyService
 import org.springframework.beans.factory.annotation.Autowired
 

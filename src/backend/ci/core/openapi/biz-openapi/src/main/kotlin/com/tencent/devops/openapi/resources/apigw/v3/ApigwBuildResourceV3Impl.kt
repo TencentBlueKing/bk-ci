@@ -46,22 +46,26 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("TooManyFunctions")
 class ApigwBuildResourceV3Impl @Autowired constructor(
     private val client: Client,
     private val apiGatewayUtil: ApiGatewayUtil
 ) : ApigwBuildResourceV3 {
+
     override fun manualStartupInfo(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo> {
         logger.info("OPENAPI_BUILD_V3|$userId|manual startup info|$projectId|$pipelineId")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            version = debugVersion,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }

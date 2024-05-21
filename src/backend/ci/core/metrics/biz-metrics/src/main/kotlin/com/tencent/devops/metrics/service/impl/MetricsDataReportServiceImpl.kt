@@ -528,7 +528,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 projectId = projectId,
                 atomCode = atomCode,
                 atomName = taskMetricsData.atomCode
-            ) <= 0) {
+            ) <= 0
+        ) {
             saveProjectAtomRelationPOs.add(
                 SaveProjectAtomRelationDataPO(
                     id = client.get(ServiceAllocIdResource::class)
@@ -929,7 +930,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val currentTotalAvgCostTime = currentTotalCostTime.toDouble().div(currentTotalExecuteCount).roundToLong()
             val currentSuccessAvgCostTime = if (buildSuccessFlag) {
                 val currentSuccessCostTime = originSuccessAvgCostTime * originSuccessExecuteCount +
-                    pipelineBuildCostTime
+                        pipelineBuildCostTime
                 currentSuccessCostTime.toDouble().div(currentSuccessExecuteCount).roundToLong()
             } else {
                 originSuccessAvgCostTime
@@ -996,12 +997,15 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             errorCodePrefix.startsWith("8") -> {
                 ErrorCodeTypeEnum.ATOM
             }
+
             errorCodePrefix.startsWith("100") -> {
                 ErrorCodeTypeEnum.GENERAL
             }
+
             errorCodePrefix.toInt() in 101..599 -> {
                 ErrorCodeTypeEnum.PLATFORM
             }
+
             else -> return false
         }
         return client.get(ServiceStoreResource::class).isComplianceErrorCode(

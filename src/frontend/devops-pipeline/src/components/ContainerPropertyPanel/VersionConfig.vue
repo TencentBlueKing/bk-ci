@@ -14,7 +14,8 @@
                 <input class="accordion-checkbox" :disabled="disabled" type="checkbox" name="versions" :checked="showVersions" @click.stop @change="toggleVersions" />
             </template>
             <div slot="content">
-                <pipeline-versions-form ref="versionForm"
+                <pipeline-versions-form
+                    ref="versionForm"
                     v-if="showVersions"
                     :build-no="buildNo"
                     :disabled="!showVersions || disabled"
@@ -175,9 +176,6 @@
         margin: 20px 0;
         .params-flex-col {
             display: flex;
-            &:last-child {
-                margin-top: 20px;
-            }
             .bk-form-item {
                 flex: 1;
                 padding-right: 8px;

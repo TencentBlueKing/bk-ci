@@ -696,8 +696,8 @@
   weworkTemplate:
     id: "34a071f8d22f4edaba56624df3a0aae2"
     sender: "DevOps"
-    title: "The  store atom [${name}] V$ {version} failed the audit"
-    body: "The  store atom [${name}] V$ {version} failed the audit"
+    title: "The  store atom [${name}] V${version} failed the audit"
+    body: "The  store atom [${name}] V${version} failed the audit"
   creator: "system"
   modifior: "system"
 - index: 33
@@ -719,8 +719,8 @@
   weworkTemplate:
     id: "48ba65ca230c46f08c6e3ca2da753aee"
     sender: "DevOps"
-    title: "The  store atom [${name}] V$ {version} has been approved and released successfully"
-    body: "The  store atom [${name}] V$ {version} has been approved and released successfully"
+    title: "The  store atom [${name}] V${version} has been approved and released successfully"
+    body: "The  store atom [${name}] V${version} has been approved and released successfully"
   creator: "system"
   modifior: "system"
 - index: 34
@@ -922,5 +922,66 @@
     sender: "DevOps"
     title: "[Project ${projectCode}] Third-party build machine ${agentId} failed to start the build"
     body: "[Build link|${buildUrl}]\n[Third-party build machine connection|${agentUrl}]\nBuild triggerer: ${userId}\nBuild machine owner: ${agentOwner}"
+  creator: "system"
+  modifior: "system"
+- index: 45
+  id: "e166ee7f4dfe4d96b2bb32addc6dd34c"
+  templateCode: "THIRDPART_AGENT_REPEAT_INSTALL"
+  templateName: "Alarm for repeated installation of third-party build machine"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d18a"
+    sender: "DevOps"
+    title: "Project ${projectId} third-party build machine ${agentId} may be repeatedly installed"
+    body: "Original IP ${oldIp} New IP ${newIp}\n${url}"
+  creator: "system"
+  modifior: "system"
+- index: 46
+  id: "dff46cd92eab458b96b25be0d7a62055"
+  templateCode: "STORE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "The component publishes an audit rejection message notification template"
+  notifyTypeScope:
+    - "WEWORK"
+    - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "e94162ee8dea4f54bcbb5ebcc171bf60"
+    title: "Store component 【${name}】V${version} review failed"
+    body: "<html>\n\t<head>\n\t</head>\n\t<body>\n\t\t<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"\n\t\twidth=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n\t\t\t<tbody>\n\t\t\t\t<tr>\n\t\t\t\t\t<td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n\t\t\t\t\t\t<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"\n\t\t\t\t\t\twidth=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\">\n\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\"\n\t\t\t\t\t\t\t\t\t\twidth=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"height: 64px; background: #555;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"\" width=\"52\" style=\"display: block\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t/>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 6px;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"\" width=\"176\" style=\"display: block\"\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t/>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\store component【${name}】V${version}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<font color=\"red\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\taudit faile\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t</font>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tPush from the BlueKing Dev Ops platform\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<!-- Table content -->\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"table-info\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"table-title\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tReasons for rejection\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${statusMsg}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\Publish\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${publisher}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tPublish type\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${releaseType}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t version\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${version}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t Release description\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 10px;font-weight: normal;color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t${versionDesc}\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t If you have any questions, you can always contact the administrator。\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 20px 0; line-height: 24px; color: #707070;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<div>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<a href=\"${url}\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tSee details\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</a>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\tYou received this email because you are an administrator of {nameInBody} or you submitted a post\n\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t\t\t\t</table>\n\t\t\t\t\t\t\t\t\t</td>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t</table>\n\t\t\t\t\t</td>\n\t\t\t\t</tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</body>\n\n</html>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "34a071f8d22f4edaba56624df3a1aae0"
+    sender: "DevOps"
+    title: "The  store component [${name}] V${version} failed the audit"
+    body: "The  store component [${name}] V${version} failed the audit, please modify it correctly and re-publish it"
+  creator: "system"
+  modifior: "system"
+- index: 47
+  id: "e961fd2ccc1c4f5d8eefaac9d51b1cb1"
+  templateCode: "STORE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "component release audit through message notification template"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "6434c949ea1847d69247d68bb0e37ec0"
+    title: "Store component 【${name}】V${version} Approved，successfully released"
+    body: "<html> <head></head> <body> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"> <tbody> <tr> <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"> <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td valign=\"top\" align=\"center\"> <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr style=\"height: 64px; background: #555;\"> <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"> <img src=\"\" width=\"52\" style=\"display: block\" /> </td> <td style=\"padding-left: 6px;\"> <img src=\"\" width=\"176\" style=\"display: block\" /> </td> </tr> </tbody> </table> </td> </tr> <tr> <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\"> <tbody> <tr> <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\"> Store component 【${name}】V${version} <font color=\"green\">Approved，successfully released</font> </td> </tr> <tr> <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">Push from the BlueKing DevOps platform</td> </tr> <!-- Table content --> <tr class=\"email-information\"> <td class=\"table-info\"> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td> <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"> <tbody> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">Publisher</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${publisher}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">Release type</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${releaseType}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">Version</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${version}</td> </tr> <tr> <td style=\"text-align: right;width: 100px;padding: 10px;font-weight: normal;color: #707070;\">Release description</td> <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${versionDesc}</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"prompt-tips\"> <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">If you have any questions, feel free to contact the administrator at any time。</td> </tr> <tr class=\"info-remark\"> <td style=\"padding: 20px 0; line-height: 24px; color: #707070;\"> <div> <a href=\"${url}\">View details</a> </div> </td> </tr> </tbody> </table> </td> </tr> <tr class=\"email-footer\"> <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">You received this email because you are the administrator of ${nameInBody} or you submitted a release</td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </body> </html>\n"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "48ba65ca230c46f08c6e3ca2da253ae0"
+    sender: "DevOps"
+    title: "The store component [${name}] V${version} has been approved and released successfully"
+    body: "The store component [${name}]V${version} has been reviewed and approved and successfully released"
   creator: "system"
   modifior: "system"

@@ -87,7 +87,7 @@
             </bk-button>
             <bk-button
                 theme="success"
-                @click="toApplyPermission"
+                @click="applyPermission"
             >
                 {{ $t('codelib.applyPermission') }}
             </bk-button>
@@ -210,6 +210,12 @@
                         : 'tgit'
                 this.createCodelib(type, true)
                 this.checkOAuth({ projectId: this.projectId, type })
+                const query = { ...this.$route.query }
+                delete query.userId
+                delete query.resetType
+                this.$router.push({
+                    query
+                })
             }
         },
 
@@ -281,13 +287,6 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
-                this.$router.push({
-                    query: {
-                        ...this.$route.query,
-                        sortBy,
-                        sortType
-                    }
-                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -352,13 +351,10 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                if (sortBy && sortType) {
-                    localStorage.setItem('codelibSortType', sortType)
-                    localStorage.setItem('codelibSortBy', sortBy)
-                } else {
-                    localStorage.removeItem('codelibSortType')
-                    localStorage.removeItem('codelibSortBy')
-                }
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
+                const queryKeys = Object.keys(this.$route?.query || {})
+                if (!queryKeys.length) return
                 this.$router.push({
                     query: {
                         ...this.$route.query,

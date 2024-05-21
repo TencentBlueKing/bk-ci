@@ -53,7 +53,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectAuthResource {
-
     @GET
     @Path("/{projectCode}/users/byGroup")
     @Operation(summary = "获取项目成员 (需要对接的权限中心支持该功能才可以)")

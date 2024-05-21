@@ -28,7 +28,7 @@
 package com.tencent.devops.store.template.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.category.Category
 
 interface TemplateCategoryService {
 

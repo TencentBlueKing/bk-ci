@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserSensitiveConfResource
-import com.tencent.devops.store.pojo.common.SensitiveConfReq
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfReq
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.UserSensitiveConfService
 import org.springframework.beans.factory.annotation.Autowired

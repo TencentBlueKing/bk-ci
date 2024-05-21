@@ -34,5 +34,6 @@ data class PipelineTaskStatusInfo(
     val containerHashId: String, // 容器哈希ID
     val buildStatus: BuildStatus, // 构建状态
     val executeCount: Int, // 执行次数
-    val message: String? = null // 提示信息
+    val message: String? = null, // 提示信息
+    val stepId: String?
 )

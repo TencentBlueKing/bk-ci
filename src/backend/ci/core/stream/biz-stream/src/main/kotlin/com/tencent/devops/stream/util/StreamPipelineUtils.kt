@@ -29,14 +29,15 @@ package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 
 @Suppress("LongParameterList", "ReturnCount")
 object StreamPipelineUtils {
@@ -94,6 +95,9 @@ object StreamPipelineUtils {
                 )
             )
         ),
-        setting = PipelineSetting(cleanVariablesWhenRetry = true)
+        setting = PipelineSetting(
+            cleanVariablesWhenRetry = true,
+            pipelineAsCodeSettings = PipelineAsCodeSettings()
+        )
     )
 }
