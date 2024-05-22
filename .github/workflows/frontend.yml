@@ -38,7 +38,9 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn --prefer-offline && yarn install
         working-directory: src/frontend
-      - run: yarn public
+      - run: |
+          export NODE_OPTIONS=--openssl-legacy-provider
+          yarn public
         working-directory: src/frontend
       - uses: actions/upload-artifact@v3
         if: ${{ inputs.upload == 'true'  }}
