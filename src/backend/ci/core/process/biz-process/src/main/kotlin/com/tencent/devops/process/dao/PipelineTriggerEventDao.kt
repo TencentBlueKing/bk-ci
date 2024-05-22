@@ -666,7 +666,7 @@ class PipelineTriggerEventDao {
     ): PipelineTriggerReasonStatistics {
         return with(T_PIPELINE_TRIGGER_DETAIL) {
             val conditions = mutableListOf(
-                EVENT_ID.eq(EVENT_ID),
+                EVENT_ID.eq(eventId),
                 PROJECT_ID.eq(projectId)
             ).let {
                 if (!pipelineId.isNullOrBlank()) {
@@ -681,7 +681,8 @@ class PipelineTriggerEventDao {
                 REASON,
                 count()
             ).from(this)
-                .where(conditions).groupBy(REASON)
+                .where(conditions)
+                .groupBy(REASON)
                 .fetch()
                 .associate {
                     it.value1() to it.value2()
