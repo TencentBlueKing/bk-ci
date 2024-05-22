@@ -681,7 +681,7 @@ class PipelineTriggerEventDao {
                 REASON,
                 count()
             ).from(this)
-                .where(conditions).groupBy(EVENT_ID)
+                .where(conditions).groupBy(REASON)
                 .fetch()
                 .associate {
                     it.value1() to it.value2()
