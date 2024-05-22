@@ -712,6 +712,7 @@
     "addRemarkForBuild": "为本次构建添加一个备注",
     "triggerRepo": "触发材料",
     "hideSkipStep": "隐藏跳过的步骤",
+    "isExpandJob": "展开 Job",
     "num": "第",
     "times": "次，{0}",
     "copyTo": "复制至",
@@ -1519,5 +1520,7 @@
   "editCurDraft": "编辑草稿",
   "unSupportCodeMode": "暂不支持Code方式",
   "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式查看和PAC模式发布。",
-  "eventID": "事件ID"
+  "eventID": "事件ID",
+  "runningSteps": "正在运行的步骤：",
+  "completeness": "完成度："
 }
