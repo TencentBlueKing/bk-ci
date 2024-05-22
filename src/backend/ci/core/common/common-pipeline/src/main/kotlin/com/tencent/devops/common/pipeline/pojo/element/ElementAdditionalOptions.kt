@@ -66,7 +66,8 @@ data class ElementAdditionalOptions(
     @get:Schema(title = "插件post信息", required = false)
     var elementPostInfo: ElementPostInfo? = null,
     @get:Schema(title = "是否设置自定义环境变量", required = false)
-    val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
+    @Deprecated("不需要判断是否开启env")
+    val enableCustomEnv: Boolean? = true, // 是否设置自定义环境变量
     @get:Schema(title = "自定义环境变量", required = false)
     val customEnv: List<NameAndValue>? = null
 )

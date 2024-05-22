@@ -61,7 +61,7 @@ abstract class ITask {
         if (params != null && null != params["additionalOptions"]) {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
-            if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
+            if (additionalOptions?.customEnv?.isNotEmpty() == true) {
                 val variables = buildTask.buildVariable?.toMutableMap()
                 val variablesBuild = newVariables.variables.toMutableMap()
                 if (variables != null) {

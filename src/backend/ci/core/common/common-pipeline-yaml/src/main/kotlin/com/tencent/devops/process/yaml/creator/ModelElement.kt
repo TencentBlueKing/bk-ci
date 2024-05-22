@@ -75,7 +75,6 @@ class ModelElement @Autowired(required = false) constructor(
                 timeoutVar = timeout.toString(),
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
-                enableCustomEnv = step.env != null,
                 customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
