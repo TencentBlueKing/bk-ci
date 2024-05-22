@@ -92,8 +92,8 @@
                 }
                 let clearFields = {}
                 if (
-                    value === this.ATOM_OPTION[name].clearValue
-                    && Array.isArray(this.ATOM_OPTION[name].clearFields)
+                    value === this.ATOM_OPTION[name]?.clearValue
+                    && Array.isArray(this.ATOM_OPTION[name]?.clearFields)
                 ) {
                     // 重置关联的值，可配置相关的联动值
                     clearFields = this.ATOM_OPTION[name].clearFields.reduce((acc, key) => {
