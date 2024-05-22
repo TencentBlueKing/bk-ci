@@ -43,6 +43,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -233,7 +234,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                     variables = variables, model = model, executeCount = buildInfo.executeCount
                                 )
                             ).toMutableMap()
-                            fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
+                            fillContainerContext(contextMap, c.customEnv, c.matrixContext, asCodeSettings?.enable)
                             val asCodeEnabled = asCodeSettings?.enable == true
                             val contextPair = if (asCodeEnabled) {
                                 EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
@@ -251,24 +252,26 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 ).data?.let { self -> envList.add(self) }
                             }
 
-                            // 设置Job环境变量customBuildEnv到variablesWithType和variables中
+                            // 设置Job环境变量customEnv到variablesWithType和variables中
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
-                            c.customBuildEnv?.map { (t, u) ->
+                            val customBuildParameters = mutableListOf<BuildParameters>()
+                            c.customEnv?.forEach { nameAndValue ->
                                 val value = EnvReplacementParser.parse(
-                                    value = u,
+                                    value = nameAndValue.value,
                                     contextMap = contextMap,
                                     onlyExpression = asCodeEnabled,
                                     contextPair = contextPair
                                 )
-                                contextMap[t] = value
+                                val key = nameAndValue.key ?: return@forEach
+                                contextMap[key] = value
                                 BuildParameters(
-                                    key = t,
+                                    key = key,
                                     value = value,
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
                                 )
-                            }?.let { self -> variablesWithType.addAll(self) }
-
+                            }
+                            variablesWithType.addAll(customBuildParameters)
                             Triple(envList, contextMap, tm)
                         }
                         is NormalContainer -> {
@@ -322,7 +325,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      */
     private fun fillContainerContext(
         context: MutableMap<String, String>,
-        customBuildEnv: Map<String, String>?,
+        customBuildEnv: List<NameAndValue>?,
         matrixContext: Map<String, String>?,
         asCodeEnabled: Boolean?
     ) {
