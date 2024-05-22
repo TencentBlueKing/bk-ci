@@ -200,8 +200,7 @@ class CallBackControl @Autowired constructor(
         val projectEvent = ProjectCallbackEvent(
             projectId = projectId,
             projectName = projectName,
-            enable = enable,
-            event = callBackEvent
+            enable = enable
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = projectEvent), list)

@@ -169,8 +169,7 @@ data class SimpleTask(
 data class ProjectCallbackEvent(
     val projectId: String,
     val projectName: String,
-    val enable: Boolean,
-    val event: CallBackEvent
+    val enable: Boolean
 )
 
 object CallbackConstants {
