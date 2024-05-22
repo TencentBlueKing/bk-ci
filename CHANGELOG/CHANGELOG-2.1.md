@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.2](#v212)
+   - [Changelog since v2.1.1](#changelog-since-v211)
+
 - [v2.1.1](#v211)
    - [Changelog since v2.1.0](#changelog-since-v210)
 
@@ -28,6 +31,10 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.2
+## Changelog since v2.1.1
+#### 修复
+- [修复] [社区]上架失败&流水线执行页面白屏问题[v2.1.0+] [链接](http://github.com/TencentBlueKing/bk-ci/issues/10357)
 # v2.1.1
 ## Changelog since v2.1.0
 #### 修复
