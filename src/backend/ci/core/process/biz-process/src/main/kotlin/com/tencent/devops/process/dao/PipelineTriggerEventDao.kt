@@ -665,21 +665,23 @@ class PipelineTriggerEventDao {
         pipelineName: String? = null
     ): PipelineTriggerReasonStatistics {
         return with(T_PIPELINE_TRIGGER_DETAIL) {
+            val conditions = mutableListOf(
+                EVENT_ID.eq(EVENT_ID),
+                PROJECT_ID.eq(projectId)
+            ).let {
+                if (!pipelineId.isNullOrBlank()) {
+                    it.add(PIPELINE_ID.eq(pipelineId))
+                }
+                if (!pipelineName.isNullOrBlank()) {
+                    it.add(PIPELINE_NAME.eq(pipelineName))
+                }
+                it
+            }
             dslContext.select(
                 REASON,
                 count()
             ).from(this)
-                .where(
-                    EVENT_ID.eq(EVENT_ID).and(PROJECT_ID.eq(projectId)).let {
-                        if (!pipelineId.isNullOrBlank()) {
-                            it.and(PIPELINE_ID.eq(pipelineId))
-                        }
-                        if (!pipelineName.isNullOrBlank()) {
-                            PIPELINE_NAME.eq(pipelineName)
-                        }
-                        it
-                    }
-                ).groupBy(EVENT_ID)
+                .where(conditions).groupBy(EVENT_ID)
                 .fetch()
                 .associate {
                     it.value1() to it.value2()
