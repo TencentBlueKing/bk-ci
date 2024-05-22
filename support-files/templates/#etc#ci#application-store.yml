@@ -40,7 +40,7 @@ store:
     user: admin
 
 logo:
-  allowUploadLogoTypes: jpg,png,svg
+  allowUploadLogoTypes: jpg,png
   allowUploadLogoWidth: 200
   allowUploadLogoHeight: 200
   maxUploadLogoSize: 2097152
