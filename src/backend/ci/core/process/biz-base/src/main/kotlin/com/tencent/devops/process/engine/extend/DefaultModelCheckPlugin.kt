@@ -276,15 +276,8 @@ open class DefaultModelCheckPlugin constructor(
                     params = arrayOf((container.id ?: ""), "128")
                 )
             }
-            if (container is VMBuildContainer &&
-                container.jobId.isNullOrBlank() &&
-                (container.jobControlOption?.allNodeConcurrency != null ||
-                        container.jobControlOption?.singleNodeConcurrency != null)
-            ) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
-                    params = arrayOf((container.id ?: ""), "128")
-                )
+            if (container is VMBuildContainer) {
+                checkJobControlNodeConcurrency(container)
             }
 
             container.elements.forEach { e ->
@@ -575,6 +568,26 @@ open class DefaultModelCheckPlugin constructor(
                 logger.info(
                     "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
                             "|bad timeout: ${obj.beforeChangeStr}"
+                )
+            }
+        }
+    }
+
+    private fun checkJobControlNodeConcurrency(container: VMBuildContainer) {
+        val c = container.jobControlOption ?: return
+        if (c.allNodeConcurrency != null || c.singleNodeConcurrency != null) {
+            if (container.jobId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                    params = arrayOf((container.id ?: ""), "128")
+                )
+            }
+            if ((c.allNodeConcurrency != null && c.allNodeConcurrency!! <= 0) ||
+                (c.singleNodeConcurrency != null && c.singleNodeConcurrency!! <= 0)
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_CONTROL_NODECURR,
+                    params = arrayOf(container.id ?: "")
                 )
             }
         }
