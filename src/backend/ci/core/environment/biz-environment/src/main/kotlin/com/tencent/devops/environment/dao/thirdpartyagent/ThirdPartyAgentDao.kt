@@ -511,14 +511,10 @@ class ThirdPartyAgentDao {
         status: AgentStatus
     ) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            dslContext.batched { c ->
-                agentIds.forEach {
-                    c.dsl().update(this)
-                        .set(STATUS, status.status)
-                        .where(ID.eq(it))
-                        .execute()
-                }
-            }
+            dslContext.update(this)
+                .set(STATUS, status.status)
+                .where(ID.`in`(agentIds))
+                .execute()
         }
     }
 
@@ -570,6 +566,17 @@ class ThirdPartyAgentDao {
                 dsl.execute()
                 return
             }
+        }
+    }
+
+    fun fetchNodeIdsByAgentIds(
+        dslContext: DSLContext,
+        agentIds: Set<Long>
+    ): Set<Long> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(agentIds))
+                .fetch().map { it.nodeId }.toSet()
         }
     }
 }
