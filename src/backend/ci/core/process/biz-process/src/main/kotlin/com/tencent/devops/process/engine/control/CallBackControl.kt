@@ -121,20 +121,20 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
     }
 
-    fun projectCreate(projectId: String, projectName: String) {
-        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_CREATE)
+    fun projectCreate(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, true, CallBackEvent.PROJECT_CREATE)
     }
 
-    fun projectUpdate(projectId: String, projectName: String) {
-        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_UPDATE)
+    fun projectUpdate(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, true, CallBackEvent.PROJECT_UPDATE)
     }
 
-    fun projectEnable(projectId: String, projectName: String) {
-        callBackProjectEvent(projectId, projectName, true, CallBackEvent.PROJECT_ENABLE)
+    fun projectEnable(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, true, CallBackEvent.PROJECT_ENABLE)
     }
 
-    fun projectDisable(projectId: String, projectName: String) {
-        callBackProjectEvent(projectId, projectName, false, CallBackEvent.PROJECT_DISABLE)
+    fun projectDisable(projectId: String, projectName: String, userId: String) {
+        callBackProjectEvent(projectId, projectName, userId, false, CallBackEvent.PROJECT_DISABLE)
     }
 
     fun pipelineStreamEnabledEvent(event: PipelineStreamEnabledEvent) {
@@ -184,6 +184,7 @@ class CallBackControl @Autowired constructor(
     private fun callBackProjectEvent(
         projectId: String,
         projectName: String,
+        userId: String,
         enable: Boolean,
         callBackEvent: CallBackEvent
     ) {
@@ -200,7 +201,8 @@ class CallBackControl @Autowired constructor(
         val projectEvent = ProjectCallbackEvent(
             projectId = projectId,
             projectName = projectName,
-            enable = enable
+            enable = enable,
+            userId = userId
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = projectEvent), list)

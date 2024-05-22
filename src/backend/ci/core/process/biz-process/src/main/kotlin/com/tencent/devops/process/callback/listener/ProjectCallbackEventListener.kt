@@ -48,7 +48,11 @@ class ProjectCallbackEventListener @Autowired constructor(
      *  @param event ProjectCreateBroadCastEvent
      */
     fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
-        callbackControl.projectCreate(event.projectInfo.englishName, event.projectInfo.projectName)
+        callbackControl.projectCreate(
+            projectId = event.projectInfo.englishName,
+            projectName = event.projectInfo.projectName,
+            userId = event.userId
+        )
     }
 
     /**
@@ -56,7 +60,11 @@ class ProjectCallbackEventListener @Autowired constructor(
      *  @param event ProjectUpdateBroadCastEvent
      */
     fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
-        callbackControl.projectUpdate(event.projectInfo.englishName, event.projectInfo.projectName)
+        callbackControl.projectUpdate(
+            projectId = event.projectInfo.englishName,
+            projectName = event.projectInfo.projectName,
+            userId = event.userId
+        )
     }
 
     /**
@@ -68,9 +76,17 @@ class ProjectCallbackEventListener @Autowired constructor(
         // 参考：com.tencent.devops.project.service.impl.AbsProjectServiceImpl.updateUsableStatus
         getProject(projectEnglishName = event.projectId)?.let {
             if (event.enabled) {
-                callbackControl.projectEnable(event.projectId, it.projectName)
+                callbackControl.projectEnable(
+                    projectId = event.projectId,
+                    projectName = it.projectName,
+                    userId = event.userId
+                )
             } else {
-                callbackControl.projectDisable(event.projectId, it.projectName)
+                callbackControl.projectDisable(
+                    projectId = event.projectId,
+                    projectName = it.projectName,
+                    userId = event.userId
+                )
             }
         }
     }
