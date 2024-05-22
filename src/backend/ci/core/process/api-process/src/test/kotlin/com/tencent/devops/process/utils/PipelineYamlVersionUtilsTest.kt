@@ -34,6 +34,10 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -208,5 +212,83 @@ class PipelineYamlVersionUtilsTest {
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model, diffModel2))
         assertEquals(version + 1, PipelineVersionUtils.getTriggerVersion(version, model, diffTrigger))
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, diffModel2, diffModel3))
+    }
+
+    @Test
+    fun getSettingVersions() {
+        val setting = PipelineSettingVersion(
+            projectId = "proj1",
+            pipelineId = "p-xxx",
+            version = 1,
+            pipelineName = "p-name",
+            desc = "setting.desc",
+            runLockType = PipelineRunLockType.LOCK,
+            successSubscriptionList = listOf(
+                Subscription(
+                    types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
+                )
+            ),
+            failSubscriptionList = listOf(
+                Subscription(
+                    types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
+                )
+            ),
+            labels = null,
+            waitQueueTimeMinute = 1,
+            maxQueueSize = 1,
+            buildNumRule = null,
+            concurrencyCancelInProgress = null,
+            concurrencyGroup = null
+        )
+        val sameSetting = PipelineSettingVersion(
+            projectId = "proj1",
+            pipelineId = "p-xxx",
+            version = 1,
+            pipelineName = "p-name",
+            desc = "setting.desc",
+            runLockType = PipelineRunLockType.LOCK,
+            successSubscriptionList = listOf(
+                Subscription(
+                    types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
+                )
+            ),
+            failSubscriptionList = listOf(
+                Subscription(
+                    types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
+                )
+            ),
+            labels = null,
+            waitQueueTimeMinute = 1,
+            maxQueueSize = 1,
+            buildNumRule = null,
+            concurrencyCancelInProgress = null,
+            concurrencyGroup = null
+        )
+        val diffSetting = PipelineSettingVersion(
+            projectId = "proj1",
+            pipelineId = "p-xxx",
+            version = 1,
+            pipelineName = "p-name",
+            desc = "setting.desc",
+            runLockType = PipelineRunLockType.LOCK,
+            successSubscriptionList = listOf(
+                Subscription(
+                    types = setOf(PipelineSubscriptionType.RTX)
+                )
+            ),
+            failSubscriptionList = listOf(
+                Subscription(
+                    types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
+                )
+            ),
+            labels = null,
+            waitQueueTimeMinute = 1,
+            maxQueueSize = 1,
+            buildNumRule = null,
+            concurrencyCancelInProgress = null,
+            concurrencyGroup = null
+        )
+        assertEquals(setting.version, PipelineVersionUtils.getSettingVersion(setting.version, setting, sameSetting))
+        assertEquals(setting.version + 1, PipelineVersionUtils.getSettingVersion(setting.version, setting, diffSetting))
     }
 }
