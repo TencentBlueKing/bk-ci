@@ -109,17 +109,24 @@ func doBuild(
 	// #5806 从b-xxxx_build_msg.log 读取错误信息，此信息可由worker-agent.jar写入，用于当异常时能够将信息上报给服务器
 	msgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 	msg, _ := fileutil.GetString(msgFile)
-	logs.Infof("build[%s] pid[%d] finish, state=%v err=%v, msg=%s", buildInfo.BuildId, pid, cmd.ProcessState, err, msg)
-
 	if err != nil {
-		if len(msg) == 0 {
-			msg = err.Error()
-		}
+		logs.Errorf("build[%s] pid[%d] finish, state=%v err=%v, msg=%s", buildInfo.BuildId, pid, cmd.ProcessState, err, msg)
+	} else {
+		logs.Infof("build[%s] pid[%d] finish, state=%v err=%v, msg=%s", buildInfo.BuildId, pid, cmd.ProcessState, err, msg)
 	}
+
+	// #10362 Worker杀掉当前进程父进程导致Agent误报
+	// agent 改动后可能会导致业务执行完成但是进程被杀掉导致流水线错误，所以将错误只是作为额外信息添加
+	cmdErrMsg := ""
+	if err != nil {
+		cmdErrMsg = "|" + err.Error()
+	}
+
 	success := true
 	if len(msg) == 0 {
-		msg = i18n.Localize("WorkerExit", map[string]interface{}{"pid": pid})
+		msg = i18n.Localize("WorkerExit", map[string]interface{}{"pid": pid}) + cmdErrMsg
 	} else {
+		msg += cmdErrMsg
 		success = false
 	}
 
