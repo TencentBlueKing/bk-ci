@@ -102,7 +102,7 @@
                     parentPipelineName: 'pipeline',
                     parentBuildNum: 'sharp',
                     materialName: scmIcon,
-                    materialId: 'icon-link'
+                    materialId: 'link'
                 }
             },
             materialInfoKeys () {
