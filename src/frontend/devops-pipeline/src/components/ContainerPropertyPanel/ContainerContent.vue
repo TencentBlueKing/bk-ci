@@ -18,7 +18,7 @@
                 <selector :disabled="!editable" :handle-change="changeResourceType" :list="buildResourceTypeList"
                     :value="buildResourceType" :clearable="false" setting-key="type" name="buildType">
                     <template>
-                        <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
+                        <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThirdSlave">
                             <i class="devops-icon icon-plus-circle"></i>
                             <span class="text">{{ $t("editPage.addThirdSlave") }}</span>
                         </div>
@@ -90,7 +90,7 @@
                     :agent-type="buildAgentType"
                     :toggle-visible="toggleVisible"
                     :handle-change="changeBuildResource"
-                    :add-thrid-slave="addThridSlave"
+                    :add-third-slave="addThirdSlave"
                     :value="buildResource"
                     :env-project-id="buildResourceProj"
                     :pipeline="pipeline"
@@ -209,24 +209,36 @@
 
         <div>
             <div class="job-matrix">
-                <job-matrix v-if="!isTriggerContainer(container)" :enable-matrix="container.matrixGroupFlag || false"
+                <job-matrix
+                    v-if="!isTriggerContainer(container)"
+                    :enable-matrix="container.matrixGroupFlag || false"
                     :matrix-control-option="container.matrixControlOption"
-                    :update-container-params="handleContainerChange" :set-parent-validate="setContainerValidate"
-                    :disabled="!editable">
-                </job-matrix>
+                    :update-container-params="handleContainerChange"
+                    :set-parent-validate="setContainerValidate"
+                    :disabled="!editable"
+                />
             </div>
             <div class="job-option">
-                <job-option v-if="!isTriggerContainer(container)" :job-option="container.jobControlOption"
-                    :update-container-params="handleContainerChange" :set-parent-validate="setContainerValidate"
-                    @setKeyValueValidate="setContainerValidate" :disabled="!editable" :stage="stage"
-                    :stage-index="stageIndex" :container-index="containerIndex">
-                </job-option>
+                <job-option
+                    v-if="!isTriggerContainer(container)"
+                    :job-option="container.jobControlOption"
+                    :update-container-params="handleContainerChange"
+                    :set-parent-validate="setContainerValidate"
+                    @setKeyValueValidate="setContainerValidate"
+                    :disabled="!editable"
+                    :stage="stage"
+                    :stage-index="stageIndex"
+                    :container-index="containerIndex"
+                />
             </div>
             <div class="job-mutual">
-                <job-mutual v-if="!isTriggerContainer(container)" :mutex-group="container.mutexGroup"
-                    :update-container-params="handleContainerChange" :set-parent-validate="setContainerValidate"
-                    :disabled="!editable">
-                </job-mutual>
+                <job-mutual
+                    v-if="!isTriggerContainer(container)"
+                    :mutex-group="container.mutexGroup"
+                    :update-container-params="handleContainerChange"
+                    :set-parent-validate="setContainerValidate"
+                    :disabled="!editable"
+                />
             </div>
         </div>
 
@@ -849,7 +861,7 @@
                     ? `export ${env.name}=/data/bkdevops/apps/${key}/${value}/${env.path}`
                     : `export ${env.name}=/data/soda/apps/${key}/${value}/${env.path}`
             },
-            addThridSlave () {
+            addThirdSlave () {
                 const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/nodeList?type=${this.container.baseOS}`
                 window.open(url, '_blank')
             },

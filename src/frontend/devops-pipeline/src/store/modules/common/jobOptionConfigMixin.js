@@ -157,6 +157,22 @@ const jobOptionConfigMixin = {
                     text: this.$t('storeMap.enableJob'),
                     default: true
                 },
+                // enableCustomEnv: {
+                //     rule: {},
+                //     type: 'boolean',
+                //     component: 'atom-checkbox',
+                //     text: this.$t('storeMap.customEnv'),
+                //     default: false,
+                //     clearValue: false,
+                //     clearFields: ['customEnv']
+                // },
+                customEnv: {
+                    rule: {},
+                    component: 'key-value-normal',
+                    default: [],
+                    allowNull: true,
+                    label: this.$t('storeMap.customEnv')
+                },
                 dependOnType: {
                     component: 'enum-input',
                     label: this.$t('storeMap.dependOn'),
@@ -262,15 +278,21 @@ const jobOptionConfigMixin = {
         }
     },
     methods: {
-        getJobOptionDefault (OPTION = this.JOB_OPTION) {
-            return Object.keys(OPTION).reduce((formProps, key) => {
-                if (OPTION[key] && typeof OPTION[key].default === 'object') {
-                    formProps[key] = JSON.parse(JSON.stringify(OPTION[key].default))
-                } else {
-                    formProps[key] = OPTION[key].default
+        getJobOptionDefault (model, values) {
+            return Object.keys(model).reduce((formProps, key) => {
+                if (!Object.prototype.hasOwnProperty.apply(values, [key])) {
+                    formProps[key] = this.getFieldDefault(key, model)
                 }
                 return formProps
-            }, {})
+            }, {
+                ...values
+            })
+        },
+        getFieldDefault (key, model) {
+            if (typeof model[key]?.default === 'object') {
+                return JSON.parse(JSON.stringify(model[key].default))
+            }
+            return model[key].default
         }
     }
 }

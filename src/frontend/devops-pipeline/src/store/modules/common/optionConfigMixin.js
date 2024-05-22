@@ -88,12 +88,21 @@ const optionConfigMixin = {
                         return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('retryWhenFailed')))
                     }
                 },
-                enableCustomEnv: {
+                // enableCustomEnv: {
+                //     rule: {},
+                //     type: 'boolean',
+                //     component: 'atom-checkbox',
+                //     text: this.$t('storeMap.customEnv'),
+                //     default: false,
+                //     clearValue: false,
+                //     clearFields: ['customEnv']
+                // },
+                customEnv: {
                     rule: {},
-                    type: 'boolean',
-                    component: 'atom-checkbox',
-                    text: this.$t('storeMap.customEnv'),
-                    default: false
+                    component: 'key-value-normal',
+                    default: [],
+                    allowNull: true,
+                    label: this.$t('storeMap.customEnv')
                 },
                 pauseBeforeExec: {
                     rule: {},
@@ -177,16 +186,6 @@ const optionConfigMixin = {
                         return !(element.additionalOptions && (element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH' || element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
                     }
                 },
-                customEnv: {
-                    rule: {},
-                    component: 'key-value-normal',
-                    default: [{ key: 'param1', value: '' }],
-                    allowNull: false,
-                    label: this.$t('storeMap.customEnv'),
-                    isHidden (element) {
-                        return !(element.additionalOptions && element.additionalOptions.enableCustomEnv === true)
-                    }
-                },
                 customCondition: {
                     rule: {},
                     component: 'vuex-input',
@@ -208,20 +207,21 @@ const optionConfigMixin = {
         getAtomOptionDefault (additionalOptions = {}) {
             Object.entries(this.ATOM_OPTION).forEach(([key, option]) => {
                 if (typeof additionalOptions[key] === 'undefined') {
-                    if (option && typeof option.default === 'object') {
-                        additionalOptions[key] = JSON.parse(JSON.stringify(option.default))
-                    } else {
-                        additionalOptions[key] = option.default
-                    }
+                    additionalOptions[key] = this.getFieldDefault(key, this.ATOM_OPTION)
                 }
             })
-            console.log(additionalOptions.failControl)
             additionalOptions.failControl = [
                 ...(additionalOptions.continueWhenFailed ? ['continueWhenFailed'] : []),
                 ...(additionalOptions.retryWhenFailed ? ['retryWhenFailed'] : []),
                 ...(additionalOptions.manualRetry ? ['MANUAL_RETRY'] : [])
             ]
             return additionalOptions
+        },
+        getFieldDefault (key, model) {
+            if (typeof model[key]?.default === 'object') {
+                return JSON.parse(JSON.stringify(model[key].default))
+            }
+            return model[key].default
         }
     }
 }
