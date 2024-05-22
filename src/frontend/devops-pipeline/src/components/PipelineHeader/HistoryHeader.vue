@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-history-header">
         <div class="pipeline-history-left-aside">
-            <pipeline-bread-crumb :is-loading="switchingVersion" />
+            <pipeline-bread-crumb :is-loading="isSwitchPipeline || switchingVersion" />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
             <bk-popover :delay="[666, 0]">
                 <VersionSelector
@@ -136,7 +136,7 @@
             RollbackEntry
         },
         props: {
-            updatePipeline: Function
+            isSwitchPipeline: Boolean
         },
         data () {
             return {
@@ -166,7 +166,7 @@
                 return this.isReleaseVersion || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
-                return this.$route.params.version ? parseInt(this.$route.params.version) : undefined
+                return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo.releaseVersion
             },
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
@@ -220,32 +220,19 @@
             }
         },
         watch: {
-            pipelineInfo: {
-                deep: true,
-                handler (val, oldVal) {
-                    if (val && !this.pipelineHistoryViewable) {
-                        this.$router.replace({
-                            name: 'pipelinesEdit'
-                        })
-                    }
-                    if (val?.pipelineId !== oldVal?.pipelineId) {
-                        if (val.releaseVersion === oldVal?.releaseVersion) {
-                            this.init()
-                        }
-                        if (oldVal || !this.currentVersion) {
-                            this.handleVersionChange(val.releaseVersion)
-                        }
-                    } else if (!this.currentVersion) {
-                        this.handleVersionChange(val.releaseVersion)
-                    }
-                }
-            },
-            currentVersion (val) {
-                this.init()
+            currentVersion () {
+                this.$nextTick(this.init)
             }
         },
         created () {
-            if (this.currentVersion) {
+            if (!this.pipelineHistoryViewable) {
+                this.$router.replace({
+                    name: 'pipelinesEdit'
+                })
+            }
+            if (this.pipelineInfo.releaseVersion !== this.currentVersion) {
+                this.handleVersionChange(this.pipelineInfo.releaseVersion)
+            } else {
                 this.init()
             }
         },
@@ -274,13 +261,12 @@
             },
             async init () {
                 try {
-                    const version = this.currentVersion
-                    if (version) {
+                    if (this.currentVersion) {
                         this.setSwitchingPipelineVersion(true)
                         await this.requestPipeline({
                             projectId: this.projectId,
                             pipelineId: this.pipelineId,
-                            version
+                            version: this.currentVersion
                         })
                     }
                 } catch (error) {

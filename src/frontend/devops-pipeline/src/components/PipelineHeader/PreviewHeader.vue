@@ -1,16 +1,16 @@
 <template>
     <div v-if="pipelineName" class="pipeline-preview-header">
-        <pipeline-bread-crumb :pipeline-name="pipelineName">
+        <pipeline-bread-crumb :is-loading="!pipelineName" :pipeline-name="pipelineName">
             <span class="build-num-switcher-wrapper">
                 {{ title }}
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
-
             <bk-button
                 theme="primary"
                 :disabled="executeStatus"
                 :loading="executeStatus"
+                v-if="isDebugPipeline"
                 v-perm="{
                     hasPermission: canExecute,
                     disablePermissionApi: true,
@@ -23,7 +23,7 @@
                 }"
                 @click="handleClick"
             >
-                {{ $t(isDebugPipeline ? "debug" : "exec") }}
+                {{ $t("debug") }}
             </bk-button>
 
             <bk-button
@@ -42,7 +42,25 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
-
+            <bk-button
+                theme="primary"
+                :disabled="executeStatus"
+                :loading="executeStatus"
+                v-if="!isDebugPipeline"
+                v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                @click="handleClick"
+            >
+                {{ $t("exec") }}
+            </bk-button>
         </aside>
     </div>
     <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
@@ -62,7 +80,7 @@
         data () {
             return {
                 paramsValid: true,
-                pipelineName: '--'
+                pipelineName: ''
             }
         },
         computed: {
