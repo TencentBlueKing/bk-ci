@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
@@ -74,6 +75,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEv
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineProgressRateService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
@@ -133,7 +135,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineProgressRateService: PipelineProgressRateService
 ) {
 
     companion object {
@@ -934,7 +937,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        executeCount: Int? = null
+        executeCount: Int? = null,
+        jobHeartbeatRequest: JobHeartbeatRequest?
     ): HeartBeatInfo {
         LOG.info("ENGINE|$projectId|$buildId|HEART_BEAT|j($vmSeqId)|$vmName|$executeCount")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
@@ -948,6 +952,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
             cancelTaskIds.add(cancelTaskId)
         }
+        pipelineProgressRateService.reportProgressRate(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount ?: 1,
+            jobHeartbeatRequest = jobHeartbeatRequest
+        )
         return HeartBeatInfo(
             projectId = projectId,
             buildId = buildId,
