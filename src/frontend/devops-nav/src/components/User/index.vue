@@ -119,7 +119,7 @@
             }
         }
 
-        async logout (): Promise<void> {
+        logout (): void {
          try {
             const url = new URL(location.protocol + window.getLoginUrl())
             url.searchParams.delete('is_signin')
