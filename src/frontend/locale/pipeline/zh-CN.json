@@ -405,6 +405,7 @@
     "diff": "差异对比",
     "needToUpdate": "需更新",
     "noNeedToUpdate": "无需更新",
+    "updateFailed": "更新失败",
     "updating": "正在更新",
     "instanceEmptyTitle": "创建你的第一个实例",
     "instanceEmptyDesc": "创建自己的实例，快速生成你想要的流水线",

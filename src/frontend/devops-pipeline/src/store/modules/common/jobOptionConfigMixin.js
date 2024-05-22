@@ -164,9 +164,9 @@ const jobOptionConfigMixin = {
                 //     text: this.$t('storeMap.customEnv'),
                 //     default: false,
                 //     clearValue: false,
-                //     clearFields: ['customEnv']
+                //     clearFields: ['customBuildEnv']
                 // },
-                customEnv: {
+                customBuildEnv: {
                     rule: {},
                     component: 'key-value-normal',
                     default: [],

@@ -408,6 +408,7 @@
     "diff": "Diff",
     "needToUpdate": "Need to update",
     "noNeedToUpdate": "No need to update",
+    "updateFailed": "Update Failed",
     "updating": "Updating",
     "instanceEmptyTitle": "Create your first instance",
     "instanceEmptyDesc": "Create your own instance and quickly generate the pipeline you want ",
