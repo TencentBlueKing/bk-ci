@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -43,7 +45,6 @@ import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
 import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
-import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.quartz.CronExpression
@@ -52,7 +53,6 @@ import org.slf4j.LoggerFactory
 @ElementBiz
 class TimerTriggerElementBizPlugin constructor(
     private val pipelineTimerService: PipelineTimerService,
-    private val pipelineYamlService: PipelineYamlService,
     private val client: Client
 ) : ElementBizPlugin<TimerTriggerElement> {
 
@@ -60,7 +60,15 @@ class TimerTriggerElementBizPlugin constructor(
         return TimerTriggerElement::class.java
     }
 
-    override fun check(element: TimerTriggerElement, appearedCnt: Int) = Unit
+    override fun check(
+        projectId: String?,
+        userId: String,
+        stage: Stage,
+        container: Container,
+        element: TimerTriggerElement,
+        contextMap: Map<String, String>,
+        appearedCnt: Int
+    ) = ElementCheckResult(true)
 
     override fun afterCreate(
         element: TimerTriggerElement,

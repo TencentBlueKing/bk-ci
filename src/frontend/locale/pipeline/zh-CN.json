@@ -1518,7 +1518,8 @@
   "editDraft": "编辑原草稿",
   "thinkthink": "再想想",
   "editCurDraft": "编辑草稿",
-  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式。",
+  "unSupportCodeMode": "暂不支持Code方式",
+  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式查看和PAC模式发布。",
   "eventID": "事件ID",
   "runningSteps": "正在运行的步骤：",
   "completeness": "完成度："

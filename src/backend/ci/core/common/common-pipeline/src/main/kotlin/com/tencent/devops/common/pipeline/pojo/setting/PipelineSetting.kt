@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -94,6 +95,34 @@ data class PipelineSetting(
     @get:Schema(title = "YAML流水线特殊配置", required = false)
     var pipelineAsCodeSettings: PipelineAsCodeSettings?
 ) {
+
+    companion object {
+
+        fun defaultSetting(
+            projectId: String,
+            pipelineId: String,
+            pipelineName: String,
+            maxPipelineResNum: Int? = null,
+            failSubscription: Subscription? = null
+        ): PipelineSetting {
+            return PipelineSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                version = 1,
+                desc = pipelineName,
+                maxPipelineResNum = maxPipelineResNum ?: PIPELINE_RES_NUM_MIN,
+                waitQueueTimeMinute = DateTimeUtil.minuteToSecond(
+                    PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
+                ),
+                maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+                runLockType = PipelineRunLockType.MULTIPLE,
+                failSubscription = failSubscription ?: Subscription(),
+                failSubscriptionList = failSubscription?.let { listOf(it) },
+                pipelineAsCodeSettings = PipelineAsCodeSettings()
+            )
+        }
+    }
 
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
     fun notifySettingIsNull(): Boolean {

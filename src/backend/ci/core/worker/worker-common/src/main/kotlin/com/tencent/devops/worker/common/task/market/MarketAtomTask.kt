@@ -518,7 +518,6 @@ open class MarketAtomTask : ITask() {
     private fun getAtomSensitiveConfMap(atomCode: String): Map<String, MutableMap<String, String>> {
         // 查询插件的敏感信息
         val atomSensitiveConfResult = atomApi.getAtomSensitiveConf(atomCode)
-        logger.info("atomCode is:$atomCode ,atomSensitiveConfResult is:$atomSensitiveConfResult")
         val atomSensitiveConfList = atomSensitiveConfResult.data
         val atomSensitiveConfMap = mutableMapOf<String, String>()
         atomSensitiveConfList?.forEach {

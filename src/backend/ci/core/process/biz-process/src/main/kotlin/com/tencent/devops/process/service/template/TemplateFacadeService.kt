@@ -210,7 +210,7 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             permission = AuthPermission.CREATE
         )
-        checkTemplate(template, projectId)
+        checkTemplate(template, projectId, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -228,9 +228,9 @@ class TemplateFacadeService @Autowired constructor(
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
                 desc = template.desc
             )
-
             templateSettingService.insertTemplateSetting(
                 context = context,
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 pipelineName = template.name,
@@ -316,10 +316,13 @@ class TemplateFacadeService @Autowired constructor(
                     newTemplateId,
                     copyTemplateReq.templateName
                 )
-                templateSettingService.saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
                 templateSettingService.insertTemplateSetting(
                     context = context,
+                    userId = userId,
                     projectId = projectId,
                     templateId = newTemplateId,
                     isTemplate = true,
@@ -400,10 +403,13 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateId,
                     templateName = saveAsTemplateReq.templateName
                 )
-                templateSettingService.saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
                 templateSettingService.insertTemplateSetting(
                     context = context,
+                    userId = userId,
                     projectId = projectId,
                     templateId = templateId,
                     pipelineName = saveAsTemplateReq.templateName,
@@ -604,7 +610,7 @@ class TemplateFacadeService @Autowired constructor(
                 permission = AuthPermission.EDIT
             )
         }
-        checkTemplate(template, projectId)
+        checkTemplate(template, projectId, userId)
         checkTemplateAtomsForExplicitVersion(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
@@ -1613,10 +1619,13 @@ class TemplateFacadeService @Autowired constructor(
                             pipelineId = pipelineId,
                             templateName = instance.pipelineName
                         )
-                        templateSettingService.saveTemplatePipelineSetting(userId, setting)
+                        templateSettingService.saveTemplatePipelineSetting(
+                            context, userId, setting
+                        )
                     } else {
                         templateSettingService.insertTemplateSetting(
                             context = context,
+                            userId = userId,
                             projectId = projectId,
                             templateId = pipelineId,
                             pipelineName = pipelineName,
@@ -2270,13 +2279,13 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板是不是合法
      */
-    private fun checkTemplate(template: Model, projectId: String? = null) {
+    private fun checkTemplate(template: Model, projectId: String? = null, userId: String) {
         if (template.name.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
-        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
+        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId, userId = userId)
         checkPipelineParam(template)
     }
 
@@ -2306,7 +2315,7 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
+    fun checkTemplate(templateId: String, projectId: String? = null, userId: String): Boolean {
         val templateRecord = if (projectId.isNullOrEmpty()) {
             templateDao.getLatestTemplate(dslContext, templateId)
         } else {
@@ -2315,7 +2324,7 @@ class TemplateFacadeService @Autowired constructor(
         val modelStr = templateRecord.template
         if (modelStr != null) {
             val model = JsonUtil.to(modelStr, Model::class.java)
-            checkTemplate(model, projectId)
+            checkTemplate(template = model, projectId = projectId, userId = userId)
         }
         return true
     }
@@ -2402,7 +2411,7 @@ class TemplateFacadeService @Autowired constructor(
             val modelStr = templateRecord.template
             if (modelStr != null) {
                 val model = JsonUtil.to(modelStr, Model::class.java)
-                checkTemplate(model, projectId)
+                checkTemplate(model, projectId, userId)
             }
         }
         val projectTemplateMap = mutableMapOf<String, String>()
@@ -2450,6 +2459,7 @@ class TemplateFacadeService @Autowired constructor(
             )
             templateSettingService.insertTemplateSetting(
                 context = context,
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 isTemplate = true,

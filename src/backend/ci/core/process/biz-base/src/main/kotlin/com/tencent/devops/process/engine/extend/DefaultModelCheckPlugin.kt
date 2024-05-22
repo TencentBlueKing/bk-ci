@@ -42,6 +42,8 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -63,6 +65,7 @@ import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.version.StoreVersion
@@ -76,7 +79,7 @@ open class DefaultModelCheckPlugin constructor(
     open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
-    override fun checkModelIntegrity(model: Model, projectId: String?): Int {
+    override fun checkModelIntegrity(model: Model, projectId: String?, userId: String): Int {
         var metaSize = 0
         // 检查流水线名称
         PipelineUtils.checkPipelineName(
@@ -108,10 +111,11 @@ open class DefaultModelCheckPlugin constructor(
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
         // 检查触发容器
         val paramsMap = checkTriggerContainer(trigger)
-        val contextMap = paramsMap.mapValues { it.value.defaultValue.toString() }
+        val contextMap = PipelineVarUtil.fillVariableMap(paramsMap.mapValues { it.value.defaultValue.toString() })
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
         val lastPosition = model.stages.size - 1
+        val elementCheckResults = mutableListOf<ElementCheckResult>()
 
         model.stages.forEachIndexed { nowPosition, stage ->
             val containers = stage.containers
@@ -143,11 +147,14 @@ open class DefaultModelCheckPlugin constructor(
             val atomInputParamList = mutableListOf<StoreParam>()
 
             metaSize += stage.checkJob(
+                projectId = projectId,
+                userId = userId,
                 containerCnt = containerCnt,
                 elementCnt = elementCnt,
                 atomVersions = atomVersions,
                 contextMap = contextMap,
-                atomInputParamList = atomInputParamList
+                atomInputParamList = atomInputParamList,
+                elementCheckResults = elementCheckResults
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -159,6 +166,20 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             DependOnUtils.checkRepeatedJobId(stage)
+        }
+
+        // 批量校验插件有效性
+        if (elementCheckResults.isNotEmpty()) {
+            val elementCheckResultMap = elementCheckResults.filterNot {
+                it.errorTitle.isNullOrBlank() || it.errorMessage.isNullOrBlank()
+            }.groupBy({ it.errorTitle!! }, { it.errorMessage!! })
+                .map { PipelineCheckFailedReason(it.key, it.value) }
+            if (elementCheckResultMap.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
+                    data = elementCheckResultMap
+                )
+            }
         }
 
         return metaSize
@@ -213,11 +234,14 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun Stage.checkJob(
+        projectId: String?,
+        userId: String,
         containerCnt: MutableMap<String, Int>,
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
-        atomInputParamList: MutableList<StoreParam>
+        atomInputParamList: MutableList<StoreParam>,
+        elementCheckResults: MutableList<ElementCheckResult>
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -244,22 +268,47 @@ open class DefaultModelCheckPlugin constructor(
                 )
             )
             container.elements.forEach { e ->
-                container.checkElement(e, elementCnt, atomVersions, atomInputParamList, contextMap)
+                container.checkElement(
+                    projectId = projectId,
+                    userId = userId,
+                    stage = this,
+                    element = e,
+                    elementCnt = elementCnt,
+                    atomVersions = atomVersions,
+                    atomInputParamList = atomInputParamList,
+                    contextMap = contextMap,
+                    elementCheckResults = elementCheckResults
+                )
             }
         }
         return metaSize + containers.size
     }
 
     private fun Container.checkElement(
+        projectId: String?,
+        userId: String,
+        stage: Stage,
         element: Element,
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
-        contextMap: Map<String, String>
+        contextMap: Map<String, String>,
+        elementCheckResults: MutableList<ElementCheckResult>
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
-        ElementBizRegistrar.getPlugin(element)?.check(element, eCnt)
+        val elementCheckResult = ElementBizRegistrar.getPlugin(element)?.check(
+            projectId = projectId,
+            userId = userId,
+            stage = stage,
+            container = this,
+            element = element,
+            contextMap = contextMap,
+            appearedCnt = eCnt
+        )
+        if (elementCheckResult?.result == false) {
+            elementCheckResults.add(elementCheckResult)
+        }
         addAtomInputDataInfo(element, atomVersions, atomInputParamList)
 
         checkElementTimeoutVar(container = this, element = element, contextMap = contextMap)
