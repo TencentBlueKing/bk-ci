@@ -43,7 +43,6 @@
     import { Component, Prop } from 'vue-property-decorator'
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
-    import bkLogout from '../../utils/bklogout.js'
 
     const IS_HIDE_HINT = 'IS_HIDE_HINT'
 
@@ -122,7 +121,6 @@
 
         async logout (): Promise<void> {
          try {
-            await bkLogout.logout()
             const url = new URL(location.protocol + window.getLoginUrl())
             url.searchParams.delete('is_signin')
             url.searchParams.append('is_from_logout', '1')
