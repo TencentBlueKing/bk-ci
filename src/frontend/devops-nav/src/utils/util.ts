@@ -1,4 +1,4 @@
-
+import { showLoginModal } from '@blueking/login-modal'
 export function firstUpperCase (str: string): string {
     try {
         return str[0].toUpperCase() + str.slice(1)
@@ -177,4 +177,25 @@ export function ifShowNotice (currentNotice) {
         }
     }
     return false
+}
+
+export function showLoginPopup () {
+    const successUrl = `${window.location.origin}/console/static/login_success.html`
+
+    // 系统的登录页地址
+    let siteLoginUrl = window.getLoginUrl()
+    if (!siteLoginUrl) {
+        console.error('Login URL not configured!')
+        return
+    }
+
+    // 处理登录地址为登录小窗需要的格式，主要是设置c_url参数
+    !siteLoginUrl.startsWith('https:') && (siteLoginUrl = `${location.protocol}${siteLoginUrl}`)
+    const loginURL = new URL(siteLoginUrl)
+    loginURL.searchParams.set('c_url', successUrl)
+    const pathname = loginURL.pathname.endsWith('/') ? loginURL.pathname : `${loginURL.pathname}/`
+    const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`
+
+    // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
+    showLoginModal({ loginUrl })
 }

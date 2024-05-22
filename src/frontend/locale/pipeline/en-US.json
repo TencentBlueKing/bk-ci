@@ -1516,6 +1516,7 @@
   "editDraft": "Edit Draft",
   "thinkthink": "Thinking again",
   "editCurDraft": "Edit Draft",
-  "templateYamlNotSupport": "Constraint pattern pipeline (template instance) is not supported by Code currently.",
+  "unSupportCodeMode": "Code mode is not supported yet",
+  "templateYamlNotSupport": "The constrained mode pipeline (template instance) currently does not support Code mode viewing and PAC mode publishing.",
   "eventID": "Event ID"
 }
