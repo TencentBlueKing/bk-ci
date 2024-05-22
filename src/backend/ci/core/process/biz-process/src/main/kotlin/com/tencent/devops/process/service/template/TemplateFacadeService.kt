@@ -228,9 +228,9 @@ class TemplateFacadeService @Autowired constructor(
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
                 desc = template.desc
             )
-
             templateSettingService.insertTemplateSetting(
                 context = context,
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 pipelineName = template.name,
@@ -316,10 +316,13 @@ class TemplateFacadeService @Autowired constructor(
                     newTemplateId,
                     copyTemplateReq.templateName
                 )
-                templateSettingService.saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
                 templateSettingService.insertTemplateSetting(
                     context = context,
+                    userId = userId,
                     projectId = projectId,
                     templateId = newTemplateId,
                     isTemplate = true,
@@ -400,10 +403,13 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateId,
                     templateName = saveAsTemplateReq.templateName
                 )
-                templateSettingService.saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
                 templateSettingService.insertTemplateSetting(
                     context = context,
+                    userId = userId,
                     projectId = projectId,
                     templateId = templateId,
                     pipelineName = saveAsTemplateReq.templateName,
@@ -1613,10 +1619,13 @@ class TemplateFacadeService @Autowired constructor(
                             pipelineId = pipelineId,
                             templateName = instance.pipelineName
                         )
-                        templateSettingService.saveTemplatePipelineSetting(userId, setting)
+                        templateSettingService.saveTemplatePipelineSetting(
+                            context, userId, setting
+                        )
                     } else {
                         templateSettingService.insertTemplateSetting(
                             context = context,
+                            userId = userId,
                             projectId = projectId,
                             templateId = pipelineId,
                             pipelineName = pipelineName,
@@ -2450,6 +2459,7 @@ class TemplateFacadeService @Autowired constructor(
             )
             templateSettingService.insertTemplateSetting(
                 context = context,
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 isTemplate = true,

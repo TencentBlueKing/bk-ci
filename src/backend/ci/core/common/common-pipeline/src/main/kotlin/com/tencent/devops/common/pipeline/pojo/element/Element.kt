@@ -59,6 +59,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -157,7 +158,7 @@ abstract class Element(
 
     open fun cleanUp() {}
 
-    open fun transferYaml(defaultValue: Map<String, String>?): PreStep? = null
+    open fun transferYaml(defaultValue: JSONObject?): PreStep? = null
 
     open fun isElementEnable(): Boolean {
         return additionalOptions?.enable ?: true

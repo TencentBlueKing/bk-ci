@@ -157,13 +157,16 @@ class PipelineSettingVersionService @Autowired constructor(
     }
 
     fun getLatestSettingVersion(
+        context: DSLContext? = null,
         projectId: String,
         pipelineId: String
     ): PipelineSettingVersion? {
         return pipelineSettingVersionDao.getLatestSettingVersion(
-            dslContext = dslContext,
+            dslContext = context ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId
-        )
+        ) ?: pipelineSettingDao.getSetting(
+            context ?: dslContext, projectId, pipelineId
+        )?.let { PipelineSettingVersion.convertFromSetting(it) }
     }
 }
