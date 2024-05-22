@@ -31,8 +31,14 @@
                 size="18"
                 class="active-atom-location-icon"
             />
+            <bk-round-progress
+                v-if="showProgress"
+                ext-cls="atom-progress"
+                v-bind="progressConf"
+                :percent="atom.progressRate"
+            />
             <status-icon
-                v-if="!isSkip && !!atomStatus"
+                v-else-if="!isSkip && !!atomStatus"
                 type="element"
                 :status="atomStatus"
                 :is-hook="isHookAtom"
@@ -45,7 +51,9 @@
                     {{ atom.atomCode ? atom.name : t("pendingAtom") }}
                 </span>
             </p>
-            <span class="atom-execounter" v-if="isExecuting">{{ execTime }}</span>
+            <template v-if="isExecuting">
+                <span class="atom-execounter">{{ execTime }}</span>
+            </template>
             <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
             <bk-popover :delay="[300, 0]" v-else-if="isReviewing" placement="top">
                 <span
@@ -383,6 +391,25 @@
                     console.error(error)
                     return []
                 }
+            },
+            showProgress () {
+                return this.isExecuting && typeof this.atom.progressRate === 'number' && this.atom.progressRate < 1
+            },
+            progressConf () {
+                return {
+                    width: 28,
+                    numUnit: '',
+                    numStyle: {
+                        fontSize: '10px',
+                        color: '#333',
+                        transform: 'translate(-50%, -50%)'
+                    },
+                    config: {
+                        strokeWidth: 12,
+                        bgColor: '#f0f1f5',
+                        activeColor: '#459fff'
+                    }
+                }
             }
         },
         watch: {
@@ -542,6 +569,13 @@
   transition: all 0.4s ease-in-out;
   z-index: 2;
   border: 1px solid $fontLighterColor;
+  .atom-progress {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+  }
 
   .active-atom-location-icon {
     position: absolute;

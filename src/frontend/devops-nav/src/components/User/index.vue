@@ -104,7 +104,6 @@
             try {
                 const url = new URL(window.getLoginUrl())
                 url.searchParams.append('is_from_logout', '1')
-                console.log(url.href)
                 window.location.href = url.href
             } catch (error) {
                 console.error(error)

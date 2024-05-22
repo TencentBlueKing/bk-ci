@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.ClassifyDao
@@ -135,7 +136,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         } else {
             newestBaseRecord.id
         }
-        val latestFlag = releaseType == ReleaseTypeEnum.NEW
+        val latestFlag = version == INIT_VERSION && !newVersionFlag
         val bkStoreContext = storeUpdateRequest.bkStoreContext
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
         bkStoreContext[KEY_STORE_ID] = storeId
