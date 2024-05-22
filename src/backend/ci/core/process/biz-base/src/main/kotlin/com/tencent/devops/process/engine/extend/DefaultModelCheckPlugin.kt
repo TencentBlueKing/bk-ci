@@ -582,8 +582,10 @@ open class DefaultModelCheckPlugin constructor(
                     params = arrayOf((container.id ?: ""), "128")
                 )
             }
-            if ((c.allNodeConcurrency != null && c.allNodeConcurrency!! <= 0) ||
-                (c.singleNodeConcurrency != null && c.singleNodeConcurrency!! <= 0)
+            if ((c.allNodeConcurrency != null &&
+                        (c.allNodeConcurrency!! <= 0 || c.allNodeConcurrency!! > 1000)) ||
+                (c.singleNodeConcurrency != null &&
+                        (c.singleNodeConcurrency!! <= 0 || c.singleNodeConcurrency!! > 1000))
             ) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_CONTROL_NODECURR,
