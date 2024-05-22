@@ -370,7 +370,6 @@ class DownloadAgentInstallService @Autowired constructor(
         file: String,
         md5: String?
     ): Response {
-
         if (!checkAgent(projectId, agentId, secretKey)) {
             logger.warn("The agent($agentId)'s is DELETE")
             return Response.status(Response.Status.NOT_FOUND).build()
@@ -411,7 +410,7 @@ class DownloadAgentInstallService @Autowired constructor(
             return false
         }
 
-        return AgentStatus.fromStatus(agentRecord.status) != AgentStatus.DELETE
+        return !AgentStatus.fromStatus(agentRecord.status).isDisabled()
     }
 
     companion object {

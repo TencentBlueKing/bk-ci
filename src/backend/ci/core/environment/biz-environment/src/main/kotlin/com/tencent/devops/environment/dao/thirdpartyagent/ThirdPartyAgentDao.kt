@@ -27,13 +27,19 @@
 
 package com.tencent.devops.environment.dao.thirdpartyagent
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
+import com.tencent.devops.environment.model.AgentDisableInfo
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.UpdateSetMoreStep
@@ -448,6 +454,121 @@ class ThirdPartyAgentDao {
                     }
                 }
                 transactionContext.batch(updates).execute()
+            }
+        }
+    }
+
+    fun fetchAgents(
+        dslContext: DSLContext,
+        status: Set<AgentStatus>,
+        hasDisableInfo: Boolean?,
+        limit: SQLLimit?
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            val dsl = dslContext.selectFrom(this).where(STATUS.`in`(status.map { it.status }))
+            if (hasDisableInfo != null) {
+                if (hasDisableInfo) {
+                    dsl.and(DISABLE_INFO.isNotNull)
+                } else {
+                    dsl.and(DISABLE_INFO.isNull)
+                }
+            }
+            if (limit != null) {
+                dsl.limit(limit.limit).offset(limit.offset)
+            }
+            return dsl.fetch()
+        }
+    }
+
+    fun fetchNeedDisabledAgent(
+        dslContext: DSLContext,
+        time: Long
+    ): List<Pair<Long, AgentDisableInfo>> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.select(ID, DISABLE_INFO).from(this)
+                .where(STATUS.ne(AgentStatus.DISABLED.status))
+                .and(DISABLE_INFO.isNotNull)
+                .and(
+                    DSL.field("JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))", Long::class.java, DISABLE_INFO, "\$.time")
+                        .lessThan(time)
+                )
+                .skipCheck()
+                .fetch().map {
+                    Pair(
+                        it[ID],
+                        JsonUtil.getObjectMapper().readValue(
+                            it[DISABLE_INFO].data(),
+                            object : TypeReference<AgentDisableInfo>() {}
+                        )
+                    )
+                }
+        }
+    }
+
+    fun batchUpdateAgent(
+        dslContext: DSLContext,
+        agentIds: Set<Long>,
+        status: AgentStatus
+    ) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.batched { c ->
+                agentIds.forEach {
+                    c.dsl().update(this)
+                        .set(STATUS, status.status)
+                        .where(ID.eq(it))
+                        .execute()
+                }
+            }
+        }
+    }
+
+    fun updateAgentDisableInfo(
+        dslContext: DSLContext,
+        id: Long,
+        disableInfo: AgentDisableInfo
+    ) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.update(this)
+                .set(DISABLE_INFO, JSON.json(JsonUtil.toJson(disableInfo, false)))
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun updateAgentByProject(
+        dslContext: DSLContext,
+        projectIds: Set<String>?,
+        agents: Set<Long>?,
+        status: AgentStatus?,
+        disableInfo: AgentDisableInfo?
+    ) {
+        if (projectIds.isNullOrEmpty() && agents.isNullOrEmpty()) {
+            return
+        }
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            val dsl = dslContext.update(this)
+                .set(
+                    DISABLE_INFO, if (disableInfo == null) {
+                        null
+                    } else {
+                        JSON.json(JsonUtil.toJson(disableInfo, false))
+                    }
+                )
+
+            if (status != null) {
+                dsl.set(STATUS, status.status)
+            }
+
+            if (!projectIds.isNullOrEmpty()) {
+                dsl.where(PROJECT_ID.`in`(projectIds))
+                dsl.execute()
+                return
+            }
+
+            if (!agents.isNullOrEmpty()) {
+                dsl.where(ID.`in`(agents))
+                dsl.execute()
+                return
             }
         }
     }

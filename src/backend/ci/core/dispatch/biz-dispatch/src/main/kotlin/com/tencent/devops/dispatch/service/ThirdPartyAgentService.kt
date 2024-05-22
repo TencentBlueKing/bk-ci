@@ -174,7 +174,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 return AgentResult(1, e.message ?: "Fail to get the agent")
             }
 
-            if (agentResult.agentStatus == AgentStatus.DELETE) {
+            if (agentResult.agentStatus?.isDisabled() == true) {
                 return AgentResult(AgentStatus.DELETE, null)
             }
 
@@ -351,7 +351,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 return AgentResult(1, e.message ?: "Fail to get the agent")
             }
 
-            if (agentResult.agentStatus == AgentStatus.DELETE) {
+            if (agentResult.agentStatus?.isDisabled() == true) {
                 return AgentResult(AgentStatus.DELETE, false)
             }
 
@@ -668,14 +668,20 @@ class ThirdPartyAgentService @Autowired constructor(
             return AgentResult(1, "data is null")
         }
 
+        // #10338 暂时对老版本以 DELETE 代替 DISABLE 功能
+        var agentStatus = if (heartR != null) {
+            AgentStatus.fromString(heartR.agentStatus)
+        } else {
+            null
+        }
+        if (agentStatus?.isDisabled() == true) {
+            agentStatus = AgentStatus.DELETE
+        }
+
         return AgentResult(
             status = 0,
             message = null,
-            agentStatus = if (heartR != null) {
-                AgentStatus.fromString(heartR.agentStatus)
-            } else {
-                null
-            },
+            agentStatus = agentStatus,
             data = ThirdPartyAskResp(
                 heartbeat = heartR,
                 build = buildR,

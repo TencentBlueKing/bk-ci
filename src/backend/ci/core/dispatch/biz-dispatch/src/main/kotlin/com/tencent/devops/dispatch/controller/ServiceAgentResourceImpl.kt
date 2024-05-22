@@ -29,16 +29,21 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceAgentResource
+import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class ServiceAgentResourceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val agentBuildDao: ThirdPartyAgentBuildDao,
     val thirdPartyAgentService: ThirdPartyAgentService,
     val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) : ServiceAgentResource {
@@ -72,6 +77,16 @@ class ServiceAgentResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 vmSeqId = vmSeqId
+            )
+        )
+    }
+
+    override fun fetchAgentBuildByTime(time: Long, agentIds: Set<String>): Result<Set<String>> {
+        return Result(
+            agentBuildDao.fetchLastTimeBuildAgents(
+                dslContext = dslContext,
+                lastTime = DateTimeUtil.convertTimestampToLocalDateTime(time),
+                agentIds = agentIds
             )
         )
     }

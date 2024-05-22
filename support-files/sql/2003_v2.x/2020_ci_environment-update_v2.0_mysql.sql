@@ -124,6 +124,15 @@ BEGIN
             ADD INDEX `NODE_IP` (`NODE_IP`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ENVIRONMENT_THIRDPARTY_AGENT'
+                    AND INDEX_NAME = 'DISABLE_INFO') THEN
+        ALTER TABLE `T_ENVIRONMENT_THIRDPARTY_AGENT`
+            ADD COLUMN `DISABLE_INFO` json NULL COMMENT '被禁用信息';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -88,6 +88,7 @@ const BuildTypeAgent = "AGENT"
 
 const AgentStatusImportOk = "IMPORT_OK" // 用户已经在界面导入并且agent工作正常（构建机只有在这个状态才能正常工作）
 const AgentStatusDelete = "DELETE"      // Agent被卸载
+const AgentStatusDisabled = "DISABLED"  // Agnet 被禁用
 
 // GetServerAgentFile 根据平台生成对应要下载的devopsAgent文件名
 func GetServerAgentFile() string {

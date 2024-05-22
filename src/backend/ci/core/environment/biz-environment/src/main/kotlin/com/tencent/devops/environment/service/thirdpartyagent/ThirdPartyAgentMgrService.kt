@@ -1091,11 +1091,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
         if (!(AgentStatus.isImportException(status) ||
                     AgentStatus.isUnImport(status) ||
-                    agentRecord.startRemoteIp.isNullOrBlank())
+                    agentRecord.startRemoteIp.isNullOrBlank()) &&
+            (startInfo.hostIp != agentRecord.startRemoteIp)
         ) {
-            if (startInfo.hostIp != agentRecord.startRemoteIp) {
-                return AgentStatus.DELETE
-            }
+            return AgentStatus.DELETE
         }
         val updateCount = thirdPartyAgentDao.updateAgentInfo(
             dslContext = dslContext,
@@ -1177,7 +1176,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         secretKey: String,
         newHeartbeatInfo: NewHeartbeatInfo
     ): HeartbeatResponse {
-
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val agentRecord = getAgentRecord(
@@ -1276,6 +1274,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
                 AgentStatus.UN_IMPORT_OK -> {
                     AgentStatus.UN_IMPORT_OK
+                }
+
+                // #10338 暂时对老版本以 DELETE 代替 DISABLE 功能
+                AgentStatus.DISABLED -> {
+                    AgentStatus.DELETE
                 }
 
                 else /* AgentStatus.IMPORT_OK || AgentStatus.IMPORT_EXCEPTION */ -> {

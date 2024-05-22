@@ -985,3 +985,18 @@
     body: "The store component [${name}]V${version} has been reviewed and approved and successfully released"
   creator: "system"
   modifior: "system"
+- index: 48
+  id: "c0713777b00d4514866d49507625650c"
+  templateCode: "THIRDPART_AGENT_DISABLE_NOTIFY"
+  templateName: "Third-party build machine is about to be disabled notification"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "8654068dcf8e4aaf808db0d825be3971"
+    sender: "DevOps"
+    title: "Project ${projectId} Third-party build machine ${agentId} has not built for two months and will be disabled in seven days"
+    body: "You can restore it by performing any build within seven days. If you disable it and use it again, you need to reinstall it. \n${url}"
+  creator: "system"
+  modifior: "system"

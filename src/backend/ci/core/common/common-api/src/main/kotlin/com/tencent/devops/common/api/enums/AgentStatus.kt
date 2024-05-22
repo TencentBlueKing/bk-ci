@@ -34,9 +34,13 @@ enum class AgentStatus(val status: Int) {
     UN_IMPORT_OK(1), // 未导入但是agent状态正常（这个时候还是不能用来当构建机）
     IMPORT_OK(2), // 用户已经在界面导入并且agent工作正常（构建机只有在这个状态才能正常工作）
     IMPORT_EXCEPTION(3), // agent异常
-    DELETE(4);
+    DELETE(4),
+    // 后台主动禁用，行为和 DELETE 一致
+    DISABLED(5);
 
     override fun toString() = status.toString()
+
+    fun isDisabled() = this == DISABLED || this == DELETE
 
     companion object {
         fun fromStatus(status: Int): AgentStatus {

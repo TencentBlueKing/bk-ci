@@ -985,3 +985,18 @@
     body: "研发商店组件【${name}】V${version} 已经审核通过，成功发布"
   creator: "system"
   modifior: "system"
+- index: 48
+  id: "c0713777b00d4514866d49507625650c"
+  templateCode: "THIRDPART_AGENT_DISABLE_NOTIFY"
+  templateName: "第三方构建机即将禁用通知"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "8654068dcf8e4aaf808db0d825be3971"
+    sender: "DevOps"
+    title: "项目 ${projectId} 第三方构建机 ${agentId} 两个月未进行构建，将在七天后禁用"
+    body: "七天内进行任意构建即可恢复，禁用后再次d使用需要重新安装。\n${url}"
+  creator: "system"
+  modifior: "system"
