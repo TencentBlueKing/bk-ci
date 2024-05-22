@@ -356,7 +356,7 @@ class CreateControl @Autowired constructor(
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = workspaceNames[i]
-            val owner = workspaceCreate.assignNames.getOrNull(i)
+            val owner = workspaceCreate.assignOwners.getOrNull(i)
             if (!owner.isNullOrBlank()) {
                 workspaceSharedDao.batchCreate(
                     dslContext = dslContext, workspaceName = workspaceName, operator = creator, assigns = listOf(
