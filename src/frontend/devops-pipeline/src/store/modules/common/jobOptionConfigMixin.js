@@ -203,6 +203,7 @@ const jobOptionConfigMixin = {
                     children: [
                         {
                             key: 'singleNodeConcurrency',
+                            rule: { maxConcurrencyRule: true },
                             type: 'groupItem',
                             component: 'vuex-input',
                             labelWidth: 150,
@@ -211,6 +212,7 @@ const jobOptionConfigMixin = {
                         },
                         {
                             key: 'allNodeConcurrency',
+                            rule: { maxConcurrencyRule: true },
                             type: 'groupItem',
                             component: 'vuex-input',
                             labelWidth: 150,
