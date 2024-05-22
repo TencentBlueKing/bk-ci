@@ -124,9 +124,9 @@ const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时
 /**
  * 自定义触发材料
  */
-const val BK_CI_MATERIAL_ID = "BK_CI_MATERIAL_ID" //触发材料ID
-const val BK_CI_MATERIAL_NAME = "BK_CI_MATERIAL_NAME" //触发材料名称
-const val BK_CI_MATERIAL_URL = "BK_CI_MATERIAL_URL" //触发材料链接
+const val BK_CI_MATERIAL_ID = "BK_CI_MATERIAL_ID" // 触发材料ID
+const val BK_CI_MATERIAL_NAME = "BK_CI_MATERIAL_NAME" // 触发材料名称
+const val BK_CI_MATERIAL_URL = "BK_CI_MATERIAL_URL" // 触发材料链接
 
 /**
  * 流水线设置-最大排队数量-默认值
