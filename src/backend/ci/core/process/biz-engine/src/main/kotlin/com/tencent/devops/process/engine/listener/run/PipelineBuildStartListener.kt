@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.process.engine.control.BuildStartControl
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.service.SubPipelineStatusService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -42,10 +43,12 @@ import org.springframework.stereotype.Component
 @Component
 class PipelineBuildStartListener @Autowired constructor(
     private val buildControl: BuildStartControl,
+    private val subPipelineStatusService: SubPipelineStatusService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildStartEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildStartEvent) {
         buildControl.handle(event)
+        subPipelineStatusService.onAsyncStart(event)
     }
 }

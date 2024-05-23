@@ -2010,4 +2010,36 @@ class PipelineRuntimeService @Autowired constructor(
             redisLock.unlock()
         }
     }
+
+    fun updateAsyncStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        taskBuildRecordService.updateAsyncStatus(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount,
+            asyncStatus = asyncStatus
+        )
+    }
+
+    fun getBuildVariableService(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        keys: Set<String>
+    ): Map<String, String> {
+        return buildVariableService.getAllVariable(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            keys = keys
+        )
+    }
 }

@@ -33,11 +33,18 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -52,6 +59,7 @@ class SubPipelineStatusService @Autowired constructor(
         private const val SUBPIPELINE_STATUS_START_EXPIRED = 54000L
         // 子流水线完成过期时间10分钟
         private const val SUBPIPELINE_STATUS_FINISH_EXPIRED = 600L
+        private val logger = LoggerFactory.getLogger(SubPipelineStatusService::class.java)
     }
 
     fun onStart(buildId: String) {
@@ -64,19 +72,87 @@ class SubPipelineStatusService @Autowired constructor(
         )
     }
 
+    /**
+     * 异步启动子流水线
+     */
+    fun onAsyncStart(event: PipelineBuildStartEvent) {
+        with(event) {
+            try {
+                updateParentPipelineTaskStatus(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    asyncStatus = "start"
+                )
+            } catch (ignored: Exception) {
+                logger.warn("fail to update parent pipeline task status", ignored)
+            }
+        }
+    }
+
     fun onFinish(event: PipelineBuildFinishBroadCastEvent) {
         with(event) {
-            // 不是子流水线启动或者子流水线是异步启动的，不需要缓存状态
-            if (triggerType != StartType.PIPELINE.name ||
-                redisOperation.get(getSubPipelineStatusKey(buildId)) == null
-            ) {
+            // 不是流水线启动
+            if (triggerType != StartType.PIPELINE.name) {
                 return
             }
+            updateParentPipelineTaskStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                asyncStatus = "finish"
+            )
+            // 子流水线是异步启动的，不需要缓存状态
+            if (redisOperation.get(getSubPipelineStatusKey(buildId)) != null) {
+                redisOperation.set(
+                    key = getSubPipelineStatusKey(buildId),
+                    value = JsonUtil.toJson(getSubPipelineStatusFromDB(event.projectId, buildId)),
+                    expiredInSecond = SUBPIPELINE_STATUS_FINISH_EXPIRED
+                )
+            }
+        }
+    }
 
-            redisOperation.set(
-                key = getSubPipelineStatusKey(buildId),
-                value = JsonUtil.toJson(getSubPipelineStatusFromDB(event.projectId, buildId)),
-                expiredInSecond = SUBPIPELINE_STATUS_FINISH_EXPIRED
+    private fun updateParentPipelineTaskStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        asyncStatus: String
+    ) {
+        // 父流水线相关信息
+        val keys = setOf(
+            PIPELINE_START_PARENT_PROJECT_ID,
+            PIPELINE_START_PARENT_PIPELINE_ID,
+            PIPELINE_START_PARENT_BUILD_ID,
+            PIPELINE_START_PARENT_BUILD_TASK_ID
+        )
+        val buildVariables = pipelineRuntimeService.getBuildVariableService(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            keys = keys
+        ).filter { it.value.isNotBlank() }
+        if (buildVariables.size != keys.size) {
+            logger.warn(
+                "The parent pipeline status cannot be updated, " +
+                        "because an abnormal variable exists[$buildVariables]"
+            )
+            return
+        }
+        pipelineRuntimeService.getBuildInfo(
+            projectId = buildVariables[PIPELINE_START_PARENT_PROJECT_ID]!!,
+            pipelineId = buildVariables[PIPELINE_START_PARENT_PIPELINE_ID]!!,
+            buildId = buildVariables[PIPELINE_START_PARENT_BUILD_ID]!!
+        )?.let {
+            logger.info("start update parent pipeline asyncStatus|${it.projectId}|${it.pipelineId}|" +
+                    "${it.buildId}|${it.executeCount}|")
+            pipelineRuntimeService.updateAsyncStatus(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                buildId = it.buildId,
+                taskId = buildVariables[PIPELINE_START_PARENT_BUILD_TASK_ID]!!,
+                executeCount = it.executeCount ?: 1,
+                asyncStatus = asyncStatus
             )
         }
     }
