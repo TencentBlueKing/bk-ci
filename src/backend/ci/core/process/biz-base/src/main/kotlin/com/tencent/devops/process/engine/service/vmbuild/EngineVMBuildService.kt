@@ -264,11 +264,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 )
                                 val key = nameAndValue.key ?: return@forEach
                                 contextMap[key] = value
-                                BuildParameters(
-                                    key = key,
-                                    value = value,
-                                    valueType = BuildFormPropertyType.STRING,
-                                    readOnly = true
+                                customBuildParameters.add(
+                                    BuildParameters(
+                                        key = key,
+                                        value = value,
+                                        valueType = BuildFormPropertyType.STRING,
+                                        readOnly = true
+                                    )
                                 )
                             }
                             variablesWithType.addAll(customBuildParameters)
