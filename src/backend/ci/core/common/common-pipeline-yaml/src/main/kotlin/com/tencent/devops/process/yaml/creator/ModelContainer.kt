@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -103,7 +102,7 @@ class ModelContainer @Autowired(required = false) constructor(
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
             buildEnv = StreamDispatchUtils.getBuildEnv(job),
-            customEnv = job.env?.map { NameAndValue(it.key, it.value) },
+            customEnv = ModelCommon.getCustomEnv(job.env),
             jobControlOption = getJobControlOption(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
