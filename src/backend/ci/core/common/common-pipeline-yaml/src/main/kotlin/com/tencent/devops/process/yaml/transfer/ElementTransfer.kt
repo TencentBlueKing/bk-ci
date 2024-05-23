@@ -340,7 +340,6 @@ class ElementTransfer @Autowired(required = false) constructor(
             timeoutVar = step.timeoutMinutes ?: VariableDefault.DEFAULT_TASK_TIME_OUT.toString(),
             retryWhenFailed = step.retryTimes != null,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
-            customEnv = getElementEnv(step.env),
             runCondition = runCondition,
             customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) step.ifFiled else null,
             manualRetry = step.manualRetry ?: false,
@@ -412,6 +411,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 creator.transferMarketBuildAtomElement(step)
             }
         }.apply {
+            this.customEnv = getElementEnv(step.env)
             this.additionalOptions = additionalOptions
         }
         return element
@@ -561,7 +561,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 element.additionalOptions?.retryCount
             } else null
             this.manualRetry = element.additionalOptions?.manualRetry?.nullIfDefault(false)
-            this.env = element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) {
+            this.env = element.customEnv?.associateBy({ it.key ?: "" }) {
                 it.value
             }?.ifEmpty { null }
         }
