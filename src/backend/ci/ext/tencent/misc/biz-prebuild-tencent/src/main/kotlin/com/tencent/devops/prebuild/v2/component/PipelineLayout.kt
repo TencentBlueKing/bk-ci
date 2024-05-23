@@ -41,6 +41,7 @@ import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -300,7 +301,9 @@ class PipelineLayout private constructor(
                     maxQueueMinutes = 60,
                     maxRunningMinutes = job.timeoutMinutes ?: 900,
                     buildEnv = buildEnv,
+                    // 针对内网版本兼容
                     customBuildEnv = job.env,
+                    customEnv = job.env?.map { NameAndValue(it.key, it.value) },
                     thirdPartyAgentId = null,
                     thirdPartyAgentEnvId = null,
                     thirdPartyWorkspace = null,
