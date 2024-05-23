@@ -91,7 +91,8 @@ interface ApigwBuildResourceV3 {
                 ),
                 ExampleObject(description = "若流水线没有设置输入变量，则填空", value = "{}"),
                 ExampleObject(
-                    description = "如需指定自定义触发材料时，需传入特定参数",
+                    description = "如需指定自定义触发材料时, 需传入特定参数, " +
+                            "详情请查看: https://github.com/TencentBlueKing/bk-ci/issues/10302",
                     value = "{" +
                                 "\"BK_CI_MATERIAL_ID\": \"触发材料ID\"," +
                                 "\"BK_CI_MATERIAL_NAME\": \"触发材料名称\"," +
