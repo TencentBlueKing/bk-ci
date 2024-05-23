@@ -27,35 +27,35 @@
 
 package com.tencent.devops.stream.pojo.message
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class UserMessage(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: Int,
-    @ApiModelProperty("用户ID")
+    @get:Schema(title = "用户ID")
     val userId: String,
-    @ApiModelProperty("消息类型")
+    @get:Schema(title = "消息类型")
     val messageType: UserMessageType,
-    @ApiModelProperty("消息标题")
+    @get:Schema(title = "消息标题")
     val messageTitle: String,
-    @ApiModelProperty("消息ID")
+    @get:Schema(title = "消息ID")
     val messageId: String,
-    @ApiModelProperty("是否已读")
+    @get:Schema(title = "是否已读")
     val haveRead: Boolean,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long?,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: Long?,
-    @ApiModelProperty("消息内容")
+    @get:Schema(title = "消息内容")
     val content: List<RequestMessageContent>,
-    @ApiModelProperty("消息内容属性")
+    @get:Schema(title = "消息内容属性")
     val contentAttr: ContentAttr?
 )
 
 data class ContentAttr(
-    @ApiModelProperty("内容总数")
+    @get:Schema(title = "内容总数")
     val total: Int?,
-    @ApiModelProperty("request为触发构建总数")
+    @get:Schema(title = "request为触发构建总数")
     val failedNum: Int?
 )
 

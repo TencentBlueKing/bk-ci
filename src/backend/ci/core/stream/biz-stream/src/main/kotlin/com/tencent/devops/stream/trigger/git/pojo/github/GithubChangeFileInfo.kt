@@ -27,8 +27,8 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.sdk.github.pojo.GithubCommitFile
-import com.tencent.devops.common.sdk.github.response.PullRequestFileResponse
+import com.tencent.devops.repository.sdk.github.pojo.GithubCommitFile
+import com.tencent.devops.repository.sdk.github.response.PullRequestFileResponse
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitChangeFileInfo
 
 data class GithubChangeFileInfo(

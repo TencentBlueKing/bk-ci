@@ -38,9 +38,9 @@ import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailInfoQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailTrendInfoVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.QueryParam
@@ -49,62 +49,62 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_FAIL_INFOS"], description = "流水线-失败统计")
+@Tag(name = "USER_PIPELINE_FAIL_INFOS", description = "流水线-失败统计")
 @Path("/user/pipeline/fail/infos")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineFailResource {
 
-    @ApiOperation("查询流水线失败趋势数据")
+    @Operation(summary = "查询流水线失败趋势数据")
     @Path("/trend/info")
     @POST
     fun queryPipelineFailTrendInfo(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询条件", required = false)
+        @Parameter(description = "查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<List<PipelineFailTrendInfoVO>>
 
-    @ApiOperation("查询流水线错误类型统计数据")
+    @Operation(summary = "查询流水线错误类型统计数据")
     @Path("/errorType/summary/data/get")
     @POST
     fun queryPipelineFailSumInfo(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @ApiParam("查询条件", required = true)
+        @Parameter(description = "查询条件", required = true)
         pipelineFailInfoQueryReq: PipelineFailInfoQueryReqVO
     ): Result<PipelineFailSumInfoVO>
 
-    @ApiOperation("查询流水线失败详情数据")
+    @Operation(summary = "查询流水线失败详情数据")
     @Path("/details")
     @POST
     fun queryPipelineFailDetailInfo(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @ApiParam("查询条件", required = true)
+        @Parameter(description = "查询条件", required = true)
         pipelineFailInfoQueryReq: PipelineFailInfoQueryReqVO,
-        @ApiParam("页码", required = true, defaultValue = "1")
+        @Parameter(description = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页大小", required = true, defaultValue = "10")
+        @Parameter(description = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户评论信息")
+@Schema(title = "用户评论信息")
 data class StoreUserCommentInfo(
-    @ApiModelProperty("是否已评论 true:是，false:否", required = true)
+    @get:Schema(title = "是否已评论 true:是，false:否", required = true)
     val commentFlag: Boolean,
-    @ApiModelProperty("评论ID", required = false)
+    @get:Schema(title = "评论ID", required = false)
     val commentId: String?
 )

@@ -161,7 +161,7 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun Stage.checkStageReviewers() {
-        if (stageControlOption?.manualTrigger != true && checkIn?.manualTrigger != true) {
+        if (checkIn?.manualTrigger != true) {
             return
         }
         resetBuildOption()

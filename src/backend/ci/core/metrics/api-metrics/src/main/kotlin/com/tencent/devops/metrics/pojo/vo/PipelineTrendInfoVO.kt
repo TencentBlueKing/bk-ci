@@ -28,11 +28,10 @@
 package com.tencent.devops.metrics.pojo.vo
 
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线趋势信息视图")
+@Schema(title = "流水线趋势信息视图")
 data class PipelineTrendInfoVO(
-    @ApiModelProperty("流水线趋势信息")
+    @get:Schema(title = "流水线趋势信息")
     val pipelineTrendInfo: List<PipelineTrendInfoDO>
 )

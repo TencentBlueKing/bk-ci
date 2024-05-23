@@ -34,6 +34,7 @@ store:
   imageAgentTypes: "DOCKER"
   defaultAtomErrorCodeLength: 6
   defaultAtomErrorCodePrefix: "8"
+  defaultStaticFileFormat: jpg,png,svg,gif,jpeg
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

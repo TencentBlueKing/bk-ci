@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v2.parsers.template.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.process.yaml.v2.models.Concurrency
 import com.tencent.devops.process.yaml.v2.models.Extends
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
@@ -42,5 +43,6 @@ data class NoReplaceTemplate(
     var label: List<String>? = null,
     var triggerOn: PreTriggerOn?,
     var extends: Extends?,
-    var resources: Resources?
+    var resources: Resources?,
+    val concurrency: Concurrency?
 )

@@ -29,7 +29,8 @@
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
-            title: String
+            title: String,
+            pipeline: Object
         },
         data () {
             return {

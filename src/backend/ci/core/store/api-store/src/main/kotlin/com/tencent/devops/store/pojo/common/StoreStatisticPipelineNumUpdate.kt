@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("使用store组件流水线数量更新实体对象")
+@Schema(title = "使用store组件流水线数量更新实体对象")
 data class StoreStatisticPipelineNumUpdate(
-    @ApiModelProperty("插件标识")
+    @get:Schema(title = "插件标识")
     val storeCode: String,
-    @ApiModelProperty("数量增长标识")
+    @get:Schema(title = "数量增长标识")
     val incrementFlag: Boolean? = null,
-    @ApiModelProperty("更新数量")
+    @get:Schema(title = "更新数量")
     val num: Int? = null
 )

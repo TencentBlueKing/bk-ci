@@ -26,7 +26,7 @@ export default {
 
   computed: {
     projectCode() {
-      return this.$route.params.projectCode;
+      return this.$route.params.projectCode || this.$route.query.projectCode;
     },
   },
 

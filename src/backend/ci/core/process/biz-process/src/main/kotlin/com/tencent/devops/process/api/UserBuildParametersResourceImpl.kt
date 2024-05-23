@@ -27,15 +27,19 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
+import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -54,7 +58,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED")
 @RestResource
 class UserBuildParametersResourceImpl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val scmProxyService: ScmProxyService
 ) : UserBuildParametersResource {
 
     companion object {
@@ -170,6 +176,54 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 pageSize = pageSize,
                 aliasName = aliasName
             ).map { BuildFormRepositoryValue(id = it.repositoryHashId!!, name = it.aliasName) }
+        )
+    }
+
+    override fun listPermissionPipeline(
+        userId: String,
+        projectId: String,
+        permission: com.tencent.devops.process.pojo.Permission,
+        excludePipelineId: String?,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<BuildFormValue>> {
+        val pipelineList = pipelineListFacadeService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            excludePipelineId = excludePipelineId,
+            filterByPipelineName = pipelineName,
+            page = page,
+            pageSize = pageSize
+        ).records
+        return Result(
+            pipelineList.map { BuildFormValue(it.pipelineName, it.pipelineName) }
+        )
+    }
+
+    override fun listGitRefs(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        search: String?
+    ): Result<List<BuildFormValue>> {
+        val result = mutableListOf<String>()
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(repositoryId, repositoryType)
+        val branches = scmProxyService.listBranches(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search
+        ).data ?: listOf()
+        val tags = scmProxyService.listTags(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search
+        ).data ?: listOf()
+        result.addAll(branches)
+        result.addAll(tags)
+        return Result(
+            result.map { BuildFormValue(it, it) }
         )
     }
 }

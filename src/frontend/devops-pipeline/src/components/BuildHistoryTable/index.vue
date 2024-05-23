@@ -66,7 +66,11 @@
                             class="material-item"
                         >
                             <p
-                                v-bk-tooltips="{ content: generateMaterial(material), delay: [300, 0], allowHTML: false }"
+                                v-bk-tooltips="{
+                                    content: generateMaterial(material),
+                                    delay: [300, 0],
+                                    allowHTML: false
+                                }"
                                 :class="{ 'show-commit-times': material.commitTimes > 1 }"
                                 @click="handleRowClick(props.row)"
                             >
@@ -141,7 +145,13 @@
                     <div class="remark-cell">
                         <span
                             :class="{ 'remark-span': true, active: props.row.active }"
-                            v-bk-tooltips="{ content: props.row.remark, width: 500, disabled: !props.row.remark, delay: [300, 0], allowHTML: false }"
+                            v-bk-tooltips="{
+                                content: props.row.remark,
+                                width: 500,
+                                disabled: !props.row.remark,
+                                delay: [300, 0],
+                                allowHTML: false
+                            }"
                         >
                             {{ props.row.remark || "--" }}
                         </span>
@@ -186,9 +196,7 @@
                     </div>
                 </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
-                    <template
-                        v-if="props.row.errorInfoList.length > 0"
-                    >
+                    <template v-if="props.row.errorInfoList.length > 0">
                         <div
                             @click.stop=""
                             class="error-code-item"
@@ -196,13 +204,14 @@
                             v-for="item in props.row.errorInfoList"
                             :key="item.taskId"
                         >
-                            <logo
-                                class="svg-error-icon"
-                                size="16"
-                                :name="item.icon"
-                            />
+                            <logo class="svg-error-icon" size="16" :name="item.icon" />
                             <span
-                                v-bk-tooltips="{ content: item.title, maxWidth: 500, delay: [300, 0], allowHTML: false }"
+                                v-bk-tooltips="{
+                                    content: item.title,
+                                    maxWidth: 500,
+                                    delay: [300, 0],
+                                    allowHTML: false
+                                }"
                                 v-if="item.title"
                             >
                                 {{ item.title }}
@@ -404,7 +413,11 @@
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
-                        executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
+                        executeTime: item.executeTime
+                            ? `${convertMStoString(item.executeTime)} (${item.executeCount}/${
+                                item.executeCount
+                            })`
+                            : '--',
                         material:
                             !active && Array.isArray(item.material) && item.material.length > 1
                                 ? item.material.slice(0, 1)
@@ -414,14 +427,15 @@
                         visible: this.visibleIndex === index,
                         stageStatus,
                         errorInfoList:
-                            (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
-                                ? item.errorInfoList.slice(0, 1)
-                                : item.errorInfoList)?.map(err => {
-                                    return {
-                                    title: err?.errorMsg ?? '--',
-                                    icon: errorTypeMap[err.errorType]?.icon
-                                }
-                                }) ?? []
+            (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
+              ? item.errorInfoList.slice(0, 1)
+              : item.errorInfoList
+            )?.map((err) => {
+              return {
+                title: err?.errorMsg ?? '--',
+                icon: errorTypeMap[err.errorType]?.icon
+              }
+            }) ?? []
                     }
                 })
             },
@@ -443,11 +457,9 @@
             },
             column () {
                 Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map((item) => {
-                    if (this.customColumn.includes(item)) {
-                        const localStorageVal = localStorage.getItem(`${item}Width`)
-                        if (localStorageVal) {
-                            this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
-                        }
+                    const localStorageVal = localStorage.getItem(`${item}Width`)
+                    if (localStorageVal) {
+                        this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
                     }
                     return item
                 })
@@ -564,10 +576,7 @@
                 }
             },
             handleDragend (newWidth, oldWidth, column) {
-                if (this.customColumn.includes(column.property)) {
-                    localStorage.setItem(`${column.property}Width`, newWidth)
-                }
-
+                localStorage.setItem(`${column.property}Width`, newWidth)
                 this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
@@ -641,14 +650,11 @@
                     window.open(res.url, '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this.$route.params
-                    this.handleError(
-                        err,
-                        {
-                            projectId,
-                            resourceCode: pipelineId,
-                            action: this.$permissionResourceAction.DOWNLOAD
-                        }
-                    )
+                    this.handleError(err, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.DOWNLOAD
+                    })
                 }
             },
             async copyToCustom (artifactory) {
@@ -705,14 +711,11 @@
                     }
                 } catch (err) {
                     const { projectId, pipelineId } = this.$route.params
-                    this.handleError(
-                        err,
-                        {
-                            projectId,
-                            resourceCode: pipelineId,
-                            action: this.$permissionResourceAction.EXECUTE
-                        }
-                    )
+                    this.handleError(err, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 } finally {
                     delete this.retryingMap[buildId]
                     message

@@ -281,6 +281,18 @@ class HistoryDao @Autowired constructor(
         return count(dslContext, projectId, pipelineId, ruleId, RuleInterceptResult.FAIL.name, startTime, endTime)
     }
 
+    fun batchUpdateHistoryResultById(
+        historyIds: Set<Long>,
+        result: RuleInterceptResult
+    ): Int {
+        return with(THistory.T_HISTORY) {
+            innerDslContext.update(this)
+                .set(RESULT, result.name)
+                .where(ID.`in`(historyIds))
+                .execute()
+        }
+    }
+
     fun batchUpdateHistoryResult(
         projectId: String,
         pipelineId: String,

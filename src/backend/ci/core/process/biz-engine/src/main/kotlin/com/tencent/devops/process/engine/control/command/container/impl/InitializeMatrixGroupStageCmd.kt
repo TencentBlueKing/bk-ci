@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -242,11 +244,11 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-                    val contextPair = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
-                    } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
+                    val contextPair = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(allContext)
+                    } else null
 
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
@@ -297,10 +299,11 @@ class InitializeMatrixGroupStageCmd(
                         baseOS = customBaseOS ?: modelContainer.baseOS,
                         vmNames = modelContainer.vmNames,
                         dockerBuildVersion = modelContainer.dockerBuildVersion,
-                        dispatchType = customDispatchType ?: modelContainer.dispatchType?.let { itd ->
-                            itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
-                            itd
-                        },
+                        dispatchType = customDispatchType
+                            ?: modelContainer.dispatchType?.deepCopy<DispatchType>()?.let { itd ->
+                                itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
+                                itd
+                            },
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
                             EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
@@ -327,16 +330,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
@@ -398,7 +403,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
                     val replacement = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                        EnvReplacementParser.getCustomExecutionContextByMap(contextCase)
                     } else null
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
@@ -441,16 +446,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it

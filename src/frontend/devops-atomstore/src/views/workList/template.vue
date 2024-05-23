@@ -50,7 +50,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('store.修改人')" prop="modifier" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150" :formatter="timeFormatter" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
+                <bk-table-column :label="$t('store.操作')" width="300" class-name="handler-btn">
                     <template slot-scope="props">
                         <span class="shelf-btn"
                             v-if="props.row.templateStatus === 'INIT' || props.row.templateStatus === 'UNDERCARRIAGED'
@@ -524,7 +524,7 @@
                     const res = await this.$store.dispatch('store/requestPipelineTemplate', {
                         projectCode: this.relateTemplateForm.projectCode
                     })
-                    this.templateList.splice(0, this.templateList.length, ...res.models || [])
+                    this.templateList = res.models.filter(i => i.canEdit)
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,

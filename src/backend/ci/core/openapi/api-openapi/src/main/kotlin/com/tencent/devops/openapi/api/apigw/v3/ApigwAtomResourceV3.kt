@@ -38,9 +38,9 @@ import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.common.StoreStatistic
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -51,89 +51,89 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_ATOM_V3"], description = "OPENAPI-插件资源")
+@Tag(name = "OPENAPI_ATOM_V3", description = "OPENAPI-插件资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/atoms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwAtomResourceV3 {
-    @ApiOperation("根据插件代码获取插件详细信息", tags = ["v3_app_atom_get", "v3_user_atom_get"])
+    @Operation(summary = "根据插件代码获取插件详细信息", tags = ["v3_app_atom_get", "v3_user_atom_get"])
     @GET
     @Path("/{atomCode}")
     fun getAtomByCode(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<AtomVersion?>
 
-    @ApiOperation("根据插件代码获取插件统计信息", tags = ["v3_app_atom_statistic", "v3_user_atom_statistic"])
+    @Operation(summary = "根据插件代码获取插件统计信息", tags = ["v3_app_atom_statistic", "v3_user_atom_statistic"])
     @GET
     @Path("/{atomCode}/statistic")
     fun getAtomStatisticByCode(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<StoreStatistic>
 
-    @ApiOperation("根据插件代码获取使用的流水线详情", tags = ["v3_user_atom_pipeline_list", "v3_app_atom_pipeline_list"])
+    @Operation(summary = "根据插件代码获取使用的流水线详情", tags = ["v3_user_atom_pipeline_list", "v3_app_atom_pipeline_list"])
     @GET
     @Path("/{atomCode}/pipelines")
     fun getAtomPipelinesByCode(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AtomPipeline>>
 
-    @ApiOperation("安装插件到项目", tags = ["v3_user_atom_install", "v3_app_atom_install"])
+    @Operation(summary = "安装插件到项目", tags = ["v3_user_atom_install", "v3_app_atom_install"])
     @POST
     @Path("/{atomCode}/install")
     fun installAtom(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("渠道类型", required = false)
+        @Parameter(description = "渠道类型", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS,
-        @ApiParam("安装插件到项目请求报文体", required = true)
+        @Parameter(description = "安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 }

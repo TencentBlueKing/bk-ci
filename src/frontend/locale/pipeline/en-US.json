@@ -91,7 +91,7 @@
   "buildNum": "BuildNo.",
   "propertyBar": "Property",
   "pipelineNameTips": "Please enter pipeline name",
-  "pipelineNameInputTips": "Please enter a name for this pipeline within 40 letters",
+  "pipelineNameInputTips": "Please enter a name for this pipeline within 128 letters",
   "pipelineDesc": "Description",
   "pipelineDescInputTips": "Please describe this pipeline within 100 letters",
   "pipelineDynamicMatchPlaceholder": "Will automatically match based on the name, label and other attributes of the pipeline",
@@ -354,7 +354,8 @@
     "imgUrl": "Image Url",
     "mdLink": "Markdown Link",
     "conCopySuc": "Copied Succeed",
-    "additionDesc": "Description"
+    "additionDesc": "Description",
+    "voice": "Voice"
   },
   "template": {
     "addTemplate": "New Template",
@@ -416,7 +417,14 @@
     "deleteTemplateTips": "Delete Template ( {0} ) ?",
     "updateStatus": "Update Status",
     "updateDialogTitle": "Update Instance",
-    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed"
+    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed",
+    "permissionSetting": "Permission Setting",
+    "accessDeny": {
+      "title": "No access to this pipeline template",
+      "desc": "You do not have permission to view the pipeline template, please apply for permission",
+      "apply": "Apply"
+    },
+    "editStoreTemplateTips": "The development store template does not support editing"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -485,6 +493,7 @@
     "freedomMode": "Free Mode",
     "freedomModeTips": " You can arrange the pipeline freely without being constrained by the template.",
     "constraintMode": "Constraint Mode",
+    "constraintModeDesc": "Constraint Mode the arrangement is controlled by the template",
     "constraintModeTips": "You can't arrange the pipeline freely and should update the instance through template",
     "noTemplateTips": " Please select a template first",
     "noSearchResult": " No results found",
@@ -697,14 +706,18 @@
     "name": "Name",
     "filePath": "Path",
     "size": "Size",
-    "created": "Created",
-    "lastModified": "Last Modified",
+    "created": "Created at",
+    "lastModified": "Last Modified at",
     "pipelineErrorGuide": "Troubleshooting Guide",
     "pipelineErrorType": "Error Type",
     "pipelineErrorCode": "Error Code",
     "pipelineErrorPos": "Error Position",
     "pipelineErrorInfo": "Error Message",
-    "Errors": "Errors"
+    "Errors": "Errors",
+    "directoryName": "Folder Name",
+    "directoryPath": "Folder Path",
+    "include": "Include",
+    "fileAndFolder": "{0} files, {1} folders"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",
@@ -804,6 +817,8 @@
     "abnormal": "Abnormal",
     "noPermToView": "No permission to view",
     "selectSlave": "Select a agent",
+    "locksSlave": "Building Resource Locks",
+    "locksSlaveTips": "Once set, with this configuration, Jobs that are similar (including those with locked resources) must all finish execution before the build resources are released.",
     "inputSlave": "Input Agent Alias Name",
     "selectEnv": "Select a pool",
     "inputEnv": "Input Pool Alias Name",
@@ -858,7 +873,7 @@
     "provided": "Provided",
     "selected": "Selected",
     "select": "Select",
-    "envUseTips": "Usable under compiling environment, please switch to the corresponding type of job and then try again",
+    "envUseTips": "{0} Usable under compiling environment, please switch to the corresponding type of job and then try again",
     "noEnvUseTips": " This plugin is usable within agentless job, please switch to the corresponding type of job and then try again ",
     "installSuc": "Installed successfully",
     "loadingData": "Loading data",
@@ -1210,5 +1225,16 @@
   "skipSuc": "Skipped the failed step and continued running",
   "skipFail": "Skip failed",
   "runs": "runs",
-  "nonManual": "Non Manual"
+  "nonManual": "Non Manual",
+  "needSignTips": "{0} is an internal test version and is being downloaded, please wait",
+  "apkSignDurationTips": "Only the first download needs to wait. The preparation time is related to the package size. A 500MB package takes about 1 minute.",
+  "apkSignSuccess": "{0} is ready, start downloading",
+  "downloadLater": "Download later",
+  "copyAsTemplateInstance": "Copy As Instance",
+  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
+  "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template",
+  "copy": "Copy",
+  "templateName": "Template",
+  "templateVersion": "Template Version",
+  "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing"
 }

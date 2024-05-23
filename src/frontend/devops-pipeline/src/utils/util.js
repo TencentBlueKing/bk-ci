@@ -270,18 +270,23 @@ export function convertMStoString (time) {
     return time ? getDays(Math.floor(time / 1000)) : `0${window.pipelineVue.$i18n.t('timeMap.seconds')}`
 }
 
-export function convertMillSec (ms) {
+export function convertMillSec (ms, full = false) {
+    if (!Number.isInteger(ms)) return '--'
     const millseconds = ms % 1000 > 0 ? `.${`${ms % 1000}`.padStart(3, '0')}` : ''
-
+    const day = Math.floor(ms / (24 * 60 * 60 * 1000))
+    if (day > 0) {
+        // 先减去天数，再计算小时
+        ms -= day * (24 * 60 * 60 * 1000)
+    }
     const seconds = Math.floor(ms / 1000) % 60
     const minutes = Math.floor(ms / 1000 / 60) % 60
     const hours = Math.floor(ms / 1000 / 60 / 60) % 24
 
-    return `${[
-        ...(hours > 0 ? [hours] : []),
+    return `${day ? day + window.pipelineVue.$i18n.t('timeMap.days') : ''} ${[
+        ...(hours > 0 ? [hours] : [full ? '00' : '']),
         minutes,
         seconds
-    ].map(prezero).join(':')}${millseconds}`
+    ].map(prezero).join(':')}${full ? '' : millseconds}`
 }
 
 /**
@@ -391,7 +396,7 @@ export function convertFileSize (size, unit) {
             return convertFileSize(calcSize, next)
         }
     } else {
-        return `${calcSize.toFixed(2)}${next || unit}`
+        return `${calcSize.toFixed(2)} ${next || unit}`
     }
 }
 

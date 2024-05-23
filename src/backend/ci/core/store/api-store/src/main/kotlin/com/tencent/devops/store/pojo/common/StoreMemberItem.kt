@@ -27,27 +27,26 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store成员")
+@Schema(title = "store成员")
 data class StoreMemberItem(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: String,
-    @ApiModelProperty("成员名称")
+    @get:Schema(title = "成员名称")
     val userName: String,
-    @ApiModelProperty("成员类型")
+    @get:Schema(title = "成员类型")
     val type: String,
-    @ApiModelProperty("所属调试项目标识")
+    @get:Schema(title = "所属调试项目标识")
     val projectCode: String,
-    @ApiModelProperty("所属调试项目名称")
+    @get:Schema(title = "所属调试项目名称")
     val projectName: String,
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String
 )

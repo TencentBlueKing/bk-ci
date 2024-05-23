@@ -70,7 +70,23 @@
                                     <p class="temp-title" :title="item.name">
                                         {{ item.name }}
                                     </p>
-                                    <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item, index)" :title="item.name">{{ $t('editPage.install') }}</p>
+                                    <p class="install-btn"
+                                        v-if="item.isInstall && item.isFlag "
+                                        @click="installTemplate(item, index)"
+                                        :title="item.name"
+                                        v-perm="{
+                                            hasPermission: hasCreatePermission,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: 'pipeline_template',
+                                                resourceCode: projectId,
+                                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                    >
+                                        {{ $t('editPage.install') }}
+                                    </p>
                                     <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
                                     <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
                                 </li>
@@ -84,7 +100,7 @@
                             <template v-show="!isActiveTempEmpty">
                                 <label class="info-label">{{ $t('pipelineName') }}：</label>
                                 <div class="pipeline-input">
-                                    <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
+                                    <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="128" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
                                     <span v-show="errors.has(&quot;newPipelineName&quot;)" class="validate-fail-border-effect"></span>
                                 </div>
@@ -144,6 +160,7 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
+    import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import Logo from '@/components/Logo'
 
     export default {
@@ -168,6 +185,7 @@
 
         data () {
             return {
+                TEMPLATE_RESOURCE_ACTION,
                 isDisabled: false,
                 activeTempIndex: -1,
                 tempTypeIndex: 0,
@@ -189,7 +207,9 @@
                 groupValue: {
                     labels: [],
                     staticViews: []
-                }
+                },
+                currentTemplate: {},
+                hasCreatePermission: false
             }
         },
 
@@ -282,6 +302,7 @@
             isShow: function () {
                 if (this.isShow) {
                     this.isLoading = true
+                    this.fetchHasTemplateCreatePermission()
                     this.requestCategory()
                     this.requestPipelineTemplate({
                         projectId: this.projectId
@@ -336,11 +357,13 @@
                 }
                 this.isLoading = true
                 this.requestInstallTemplate(postData).then((res) => {
+                    const curTempData = res.installProjectTemplateDTO.find(i => i.projectId === this.projectId)
                     return this.requestPipelineTemplate({
                         projectId: this.projectId
                     }).then(() => {
                         const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
                         currentStoreItem.installed = true
+                        this.pipelineTemplate[curTempData.srcTemplateId] = curTempData
                         this.selectTemp(index)
                     })
                 }).catch((err) => {
@@ -438,7 +461,6 @@
                 if (this.templateType === 'CONSTRAINT') {
                     const code = this.activeTemp.code || ''
                     const currentTemplate = this.pipelineTemplate[code] || this.activeTemp
-
                     this.$router.push({
                         name: 'createInstance',
                         params: {
@@ -487,6 +509,15 @@
             },
             computPopupHeight () {
                 this.viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - this.headerHeight - 120 + 'px'
+            },
+            fetchHasTemplateCreatePermission () {
+                this.$store.dispatch('pipelines/getTemplateHasCreatePermission', {
+                    projectId: this.projectId
+                }).then(async res => {
+                    this.hasCreatePermission = res.data
+                }).finally(() => {
+                    this.isLoading = false
+                })
             }
         }
     }

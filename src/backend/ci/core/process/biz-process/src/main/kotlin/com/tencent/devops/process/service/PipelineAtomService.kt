@@ -47,6 +47,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -418,14 +419,7 @@ class PipelineAtomService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         // 获取流水线下插件标识集合
-        val atomCodes = mutableSetOf<String>()
-        model.stages.forEach { stage ->
-            stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    atomCodes.add(element.getAtomCode())
-                }
-            }
-        }
+        val atomCodes = ModelUtils.getModelAtoms(model)
         return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
     }
 }

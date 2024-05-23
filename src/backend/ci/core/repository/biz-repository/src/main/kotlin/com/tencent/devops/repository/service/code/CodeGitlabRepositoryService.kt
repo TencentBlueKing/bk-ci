@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -109,6 +111,16 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 )
             )
         }
+        // 不得切换代码库
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
@@ -131,7 +143,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeGitLabDao.edit(
                 dslContext = transactionContext,
@@ -139,7 +152,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 projectName = GitUtils.getProjectName(repository.url),
                 userName = repository.userName,
                 credentialId = repository.credentialId,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                authType = repository.authType?.name ?: RepoAuthType.HTTP.name
             )
         }
     }
@@ -154,7 +168,13 @@ class CodeGitlabRepositoryService @Autowired constructor(
             userName = record.userName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            // gitlab代码库的老数据authType字段为null
+            authType = if (record.authType.isNullOrBlank()) {
+                RepoAuthType.HTTP
+            } else {
+                RepoAuthType.valueOf(record.authType)
+            }
         )
     }
 

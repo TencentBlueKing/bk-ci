@@ -32,6 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCredentialResourceV3
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
@@ -60,8 +61,8 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
             projectId = projectId,
             credentialTypesString = credentialTypesString,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
-            keyword = null
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            keyword = keyword
         )
     }
 

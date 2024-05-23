@@ -27,23 +27,23 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class StoreMediaInfo(
-    @ApiModelProperty("媒体id")
+    @get:Schema(title = "媒体id")
     val id: String,
-    @ApiModelProperty("研发商店类型", required = true)
+    @get:Schema(title = "研发商店类型", required = true)
     val storeCode: String,
-    @ApiModelProperty("媒体url", required = true)
+    @get:Schema(title = "媒体url", required = true)
     val mediaUrl: String,
-    @ApiModelProperty("媒体类型", required = true)
+    @get:Schema(title = "媒体类型", required = true)
     val mediaType: String,
-    @ApiModelProperty("添加用户", required = true)
+    @get:Schema(title = "添加用户", required = true)
     val create: String,
-    @ApiModelProperty("修改用户", required = true)
+    @get:Schema(title = "修改用户", required = true)
     val modifier: String,
-    @ApiModelProperty("添加时间", required = true)
+    @get:Schema(title = "添加时间", required = true)
     val createTime: String,
-    @ApiModelProperty("修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: String
 )

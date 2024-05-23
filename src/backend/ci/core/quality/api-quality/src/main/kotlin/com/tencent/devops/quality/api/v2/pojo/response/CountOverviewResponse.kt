@@ -27,17 +27,16 @@
 
 package com.tencent.devops.quality.api.v2.pojo.response
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-总览v2")
+@Schema(title = "质量红线-总览v2")
 data class CountOverviewResponse(
-    @ApiModelProperty("规则数", required = true)
+    @get:Schema(title = "规则数", required = true)
     val ruleCount: Int,
-    @ApiModelProperty("指标数", required = true)
+    @get:Schema(title = "指标数", required = true)
     val indicatoCount: Int,
-    @ApiModelProperty("拦截数", required = true)
+    @get:Schema(title = "拦截数", required = true)
     val interceptCount: Int,
-    @ApiModelProperty("流水线数", required = true)
+    @get:Schema(title = "流水线数", required = true)
     val pipelineCount: Int
 )

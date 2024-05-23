@@ -1,21 +1,20 @@
 package com.tencent.devops.common.event.pojo.measure
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("流水线关联标签数据")
+@Schema(title = "流水线关联标签数据")
 data class PipelineLabelRelateInfo(
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @ApiModelProperty("流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String? = null,
-    @ApiModelProperty("标签id")
+    @get:Schema(title = "标签id")
     val labelId: Long? = null,
-    @ApiModelProperty("标签名称")
+    @get:Schema(title = "标签名称")
     val name: String? = null,
-    @ApiModelProperty("创建者")
+    @get:Schema(title = "创建者")
     val createUser: String? = null,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime? = null
 )

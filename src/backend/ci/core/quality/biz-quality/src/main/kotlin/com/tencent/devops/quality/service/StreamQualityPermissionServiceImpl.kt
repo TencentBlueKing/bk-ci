@@ -71,7 +71,7 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
             return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = authPermission.value,
             projectCode = projectId,
             resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
@@ -154,7 +154,7 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
             return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = authPermission.value,
             projectCode = projectId,
             resourceCode = AuthResourceType.QUALITY_RULE.value

@@ -112,7 +112,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         false, //    setDelete(delete);
         1, //    setId(id);
         "test", //    setPipelineNamePinyin(pipelineNamePinyin);
-        now //    setLatestStartTime(latestStartTime);
+        now //    setLatestStartTime(latestStartTime);,
     )
 
     private val pipelineViewForm = PipelineViewForm(
@@ -836,7 +836,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     inner class HasPermission {
         @BeforeEach
         fun beforeEach() {
-            every { clientTokenService.getSystemToken(any()) } returns ""
+            every { clientTokenService.getSystemToken() } returns ""
         }
 
         @Test

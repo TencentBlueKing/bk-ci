@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.api.app
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -271,6 +273,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun manualStartup(
         userId: String,
         projectId: String,
@@ -320,6 +323,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun retry(
         userId: String,
         projectId: String,

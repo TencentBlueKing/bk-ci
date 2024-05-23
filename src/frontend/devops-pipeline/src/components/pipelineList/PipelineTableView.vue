@@ -5,6 +5,7 @@
         ref="pipelineTable"
         row-key="pipelineId"
         height="100%"
+        row-auto-height
         :data="pipelineList"
         :size="tableSize"
         :pagination="pagination"
@@ -15,9 +16,6 @@
         :default-sort="sortField"
         @selection-change="handleSelectChange"
         @header-dragend="handelHeaderDragend"
-        @row-mouse-enter="handleRowMouseEnter"
-        @row-mouse-leave="handleRowMouseLeave"
-        :row-style="{ height: '56px' }"
         v-on="$listeners"
         :key="viewId"
     >
@@ -30,11 +28,13 @@
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
-            <template slot-scope="{ row, $index }">
+            <template slot-scope="{ row }">
                 <bk-button
-                    v-show="showCollectIndex === $index || row.hasCollect"
                     text
-                    class="icon-star-btn"
+                    :class="{
+                        'icon-star-btn': true,
+                        'is-collect': row.hasCollect
+                    }"
                     :theme="row.hasCollect ? 'warning' : ''"
                     @click="collectHandler(row)">
                     <i :class="{
@@ -45,24 +45,35 @@
                 </bk-button>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
+        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <span
-                    v-if="props.row.permissions && !props.row.permissions.canView"
-                    class="pointer"
-                    @click="applyPermission(props.row)"
-                >
-                    {{props.row.pipelineName}}
-                </span>
-                <router-link
-                    v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
-                    class="pipeline-cell-link"
-                    :disabled="props.row.permissions && !props.row.permissions.canView"
-                    :to="props.row.historyRoute">
-                    {{props.row.pipelineName}}
-                </router-link>
-                <span v-else>{{props.row.pipelineName}}</span>
+                <div class="pipeline-name-warpper" :key="props.row.pipelineName">
+                    <div class="pipeline-name" v-bk-overflow-tips>
+                        <span
+                            v-if="props.row.permissions && !props.row.permissions.canView"
+                            class="pointer"
+                            @click="applyPermission(props.row)"
+                        >
+                            {{props.row.pipelineName}}
+                        </span>
+                        <router-link
+                            v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
+                            class="pipeline-cell-link"
+                            :disabled="props.row.permissions && !props.row.permissions.canView"
+                            :to="props.row.historyRoute">
+                            {{props.row.pipelineName}}
+                        </router-link>
+                        <span v-else>{{props.row.pipelineName}}</span>
+                    </div>
+                    <logo
+                        v-if="props.row.templateId"
+                        class="ml5 template-mode-icon"
+                        name="template-mode"
+                        size="12"
+                        v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
+                    />
+                </div>
             </template>
         </bk-table-column>
         <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
@@ -73,7 +84,7 @@
                         :ref="`groupName_${props.$index}`"
                         v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
-                        v-bk-tooltips="{ content: viewName, delay: [300, 0], allowHTML: false }"
+                        v-bk-overflow-tips="{ delay: [500, 0], interactive: false }"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
@@ -94,7 +105,7 @@
                                 v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
                                 ext-cls="pipeline-group-name-tag"
                                 :key="hiddenGroup"
-                                v-bk-tooltips="{ content: hiddenGroup, delay: [300, 0], allowHTML: false }"
+                                v-bk-overflow-tips="{ delay: [500, 0], interactive: false }"
                                 @click="goGroup(hiddenGroup)"
                             >
                                 {{hiddenGroup}}
@@ -261,13 +272,14 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
     import ExtMenu from '@/components/pipelineList/extMenu'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
         CACHE_PIPELINE_TABLE_WIDTH_MAP,
         DELETED_VIEW_ID,
-        RECENT_USED_VIEW_ID,
-        TABLE_COLUMN_CACHE
+        PIPELINE_TABLE_COLUMN_CACHE,
+        PIPELINE_TABLE_LIMIT_CACHE,
+        RECENT_USED_VIEW_ID
     } from '@/store/constants'
     import {
         PROJECT_RESOURCE_ACTION,
@@ -285,7 +297,7 @@
             PipelineStatusIcon,
             PipelineListEmpty
         },
-        mixins: [piplineActionMixin],
+        mixins: [pipelineActionMixin],
         props: {
             isPatchView: Boolean,
             filterParams: {
@@ -300,14 +312,14 @@
                 selectionLength: 0,
                 pagination: {
                     current: parseInt(this.$route.query.page ?? 1),
-                    limit: parseInt(this.$route.query.pageSize ?? 50),
+                    limit: 50,
                     count: 0
                 },
                 visibleTagCountList: {},
                 RESOURCE_ACTION,
                 PROJECT_RESOURCE_ACTION,
                 tableWidthMap: {},
-                tableSize: 'small',
+                tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
                 showCollectIndex: -1
@@ -407,6 +419,9 @@
             }
         },
         mounted () {
+            const { pageSize } = this.$route.query
+            const tableLimit = JSON.parse(localStorage.getItem(PIPELINE_TABLE_LIMIT_CACHE)) || 50
+            pageSize ? this.pagination.limit = parseInt(pageSize) : this.pagination.limit = tableLimit
             this.tableColumn = [
                 {
                     id: 'pipelineName',
@@ -443,7 +458,7 @@
                     disabled: true
                 }
             ]
-            const columnsCache = JSON.parse(localStorage.getItem(TABLE_COLUMN_CACHE))
+            const columnsCache = JSON.parse(localStorage.getItem(PIPELINE_TABLE_COLUMN_CACHE))
             if (columnsCache) {
                 this.selectedTableColumn = columnsCache.columns
                 this.tableSize = columnsCache.size
@@ -500,6 +515,9 @@
             handleSelectChange (selection, ...args) {
                 this.selectionLength = selection.length
                 this.$emit('selection-change', selection, ...args)
+                this.$nextTick(() => {
+                    this.$refs?.pipelineTable?.doLayout?.()
+                })
             },
             goGroup (groupName) {
                 const group = this.groupNamesMap[groupName]
@@ -512,6 +530,7 @@
                 }
             },
             handlePageLimitChange (limit) {
+                localStorage.setItem(PIPELINE_TABLE_LIMIT_CACHE, JSON.stringify(limit))
                 this.pagination.limit = limit
                 this.$nextTick(this.requestList)
             },
@@ -612,12 +631,6 @@
                 // this.tableWidthMap.pipelineName -= 1
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             },
-            handleRowMouseEnter (index) {
-                this.showCollectIndex = index
-            },
-            handleRowMouseLeave (index) {
-                this.showCollectIndex = -1
-            },
             setTableColumn (val) {
                 if (val) {
                     this.tableColumn.splice(1, 0, {
@@ -631,7 +644,7 @@
             handleSettingChange ({ fields, size }) {
                 this.selectedTableColumn = fields
                 this.tableSize = size
-                localStorage.setItem(TABLE_COLUMN_CACHE, JSON.stringify({
+                localStorage.setItem(PIPELINE_TABLE_COLUMN_CACHE, JSON.stringify({
                     columns: fields,
                     size
                 }))
@@ -661,6 +674,7 @@
         justify-content: center;
         background: #EAEBF0;
         height: 32px;
+        grid-gap: 10px;
     }
     .latest-build-multiple-row {
         display: flex;
@@ -680,17 +694,43 @@
         ::-webkit-scrollbar {
             background-color: white;
         }
-        ::-webkit-scrollbar-thumb {
-            background-color: #DCDEE5 !important;
+        .pipeline-name-warpper {
+            width: 100%;
+            display: inline-flex;
+            white-space: nowrap;
+            overflow: hidden;
         }
-    }
-    .exec-pipeline-btn {
-        width: 55px;
-        text-align: left;
-        overflow: hidden;
-    }
-    .icon-star-btn {
-        position: relative;
-        font-size: 14px !important;
+        .pipeline-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pipeline-cell-link {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .template-mode-icon {
+            flex-shrink: 0;
+            position: relative;
+            top: 2px;
+        }
+        .exec-pipeline-btn {
+            width: 55px;
+            text-align: left;
+            overflow: hidden;
+        }
+        .icon-star-btn {
+            position: relative;
+            font-size: 14px !important;
+            z-index: 999;
+            display: none;
+        }
+        .is-collect {
+            display: block
+        }
+        .bk-table-row.hover-row {
+            .icon-star-btn {
+                display: block
+            }
+        }
     }
 </style>

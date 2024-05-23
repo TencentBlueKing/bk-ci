@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线task组件公共配置信息")
+@Schema(title = "流水线task组件公共配置信息")
 data class TaskComponentCommonSetting(
-    @ApiModelProperty("组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val componentType: String,
-    @ApiModelProperty("组件大小最大值（单位：字符）", required = true)
+    @get:Schema(title = "组件大小最大值（单位：字符）", required = true)
     val maxSize: Int
 )

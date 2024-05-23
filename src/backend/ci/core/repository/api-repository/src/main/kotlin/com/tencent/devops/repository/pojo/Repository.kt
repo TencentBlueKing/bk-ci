@@ -29,9 +29,10 @@ package com.tencent.devops.repository.pojo
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.enums.ScmType
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-多态基类")
+@Schema(title = "代码库模型-多态基类")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
     JsonSubTypes.Type(value = CodeSvnRepository::class, name = CodeSvnRepository.classType),
@@ -55,4 +56,8 @@ interface Repository {
     fun getStartPrefix(): String
 
     fun getFormatURL() = url
+
+    fun getScmType(): ScmType
+
+    fun getExternalId(): String = projectName
 }

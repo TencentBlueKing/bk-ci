@@ -271,6 +271,7 @@ class BuildMonitorControl @Autowired constructor(
                     containerHashId = containerHashId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
+                    executeCount = executeCount,
                     reason = errorInfo.message ?: "[SystemLog]Job timeout: $minute minutes!",
                     errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
                     errorTypeName = ErrorType.USER.name

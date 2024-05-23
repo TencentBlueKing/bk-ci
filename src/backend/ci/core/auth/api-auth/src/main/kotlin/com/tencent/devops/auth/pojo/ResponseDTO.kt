@@ -1,16 +1,15 @@
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("请求返回实体")
-data class ResponseDTO(
-    @ApiModelProperty("返回码")
+@Schema(title = "请求返回实体")
+data class ResponseDTO<T>(
+    @get:Schema(title = "返回码")
     val code: Long,
-    @ApiModelProperty("返回信息")
+    @get:Schema(title = "返回信息")
     val message: String,
-    @ApiModelProperty("请求返回结果")
+    @get:Schema(title = "请求返回结果")
     val result: Boolean,
-    @ApiModelProperty("请求返回数据")
-    val data: Any?
+    @get:Schema(title = "请求返回数据")
+    val data: T?
 )

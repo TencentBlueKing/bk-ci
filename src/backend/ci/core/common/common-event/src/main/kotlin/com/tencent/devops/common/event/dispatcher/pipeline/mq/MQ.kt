@@ -43,6 +43,9 @@ object MQ {
     const val ROUTE_PIPELINE_RESTORE = "r.engine.pipeline.restore"
     const val QUEUE_PIPELINE_RESTORE = "q.engine.pipeline.restore"
 
+    const val ROUTE_PIPELINE_ARCHIVE = "r.engine.pipeline.archive"
+    const val QUEUE_PIPELINE_ARCHIVE = "q.engine.pipeline.archive"
+
     const val ROUTE_PIPELINE_TIMER = "r.engine.pipeline.timer"
     const val QUEUE_PIPELINE_TIMER = "q.engine.pipeline.timer"
 
@@ -152,6 +155,10 @@ object MQ {
     const val QUEUE_BUILD_LESS_AGENT_STARTUP_PREFFIX = "q.engine.pipeline.bl.agent.startup."
     const val QUEUE_BUILD_LESS_AGENT_SHUTDOWN_PREFFIX = "q.engine.pipeline.bl.agent.shutdown."
 
+    // 构建job统计数据上报事件广播
+    const val EXCHANGE_DISPATCH_JOB_METRICS_FANOUT = "e.metrics.dispatch.job.daily.exchange.fanout"
+    const val QUEUE_DISPATCH_JOB_METRICS = "q.metrics.dispatch.job.daily.queue"
+
     const val DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX = "sys_default"
     // ================================================================================================
 
@@ -206,6 +213,11 @@ object MQ {
     const val ROUTE_P4_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.p4.event"
     const val QUEUE_P4_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.p4.event"
 
+    // 代码库webhook重放请求
+    const val EXCHANGE_REPLAY_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.replay.event"
+    const val ROUTE_REPLAY_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.replay.event"
+    const val QUEUE_REPLAY_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.replay.event"
+
     // 广播清理文件
     const val EXCHANGE_BKJOB_CLEAR_JOB_TMP_FANOUT = "e.bkjob.clear.file.fanout"
     const val ROUTE_BKJOB_CLEAR_JOB_TMP_EVENT = "r.bkjob.clear.file"
@@ -250,6 +262,7 @@ object MQ {
     const val EXCHANGE_PROJECT_CREATE_FANOUT = "e.project.create.exchange.fanout"
     const val EXCHANGE_PROJECT_UPDATE_FANOUT = "e.project.update.exchange.fanout"
     const val EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT = "e.project.update.logo.exchange.fanout"
+    const val EXCHANGE_PROJECT_ENABLE_FANOUT = "e.project.enable.exchange.fanout"
     const val QUEUE_PROJECT_CREATE_EVENT = "q.project.create.project.queue"
     const val QUEUE_PROJECT_UPDATE_EVENT = "q.project.update.project.queue"
     const val QUEUE_PROJECT_UPDATE_LOGO_EVENT = "q.project.update.logo.project.queue"
@@ -301,4 +314,10 @@ object MQ {
     // 权限资源关联用户组修改事件
     const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
+
+    const val EXCHANGE_PROJECT_USER_DAILY_FANOUT = "e.metrics.project.user.daily.exchange.fanout"
+    const val QUEUE_PROJECT_USER_DAILY_METRICS = "q.metrics.project.user.daily.queue"
+
+    // 数据库分片
+    const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
 }

@@ -2,10 +2,54 @@
     <div class="pipeline-template-list" v-bkloading="{ isLoading }">
         <div class="template-list-content">
             <div class="view-table-wrapper">
-                <bk-button theme="primary" icon="devops-icon icon-plus" class="add-template" @click="showSetting" :disabled="!isManagerUser" v-if="!showSelfEmpty">
-                    {{ $t('template.addTemplate') }}
-                </bk-button>
-                <template-table @getApiData="getTempFromSelf" ref="selfTemp"></template-table>
+                <template v-if="isEnabledPermission">
+                    <bk-button
+                        v-if="!showSelfEmpty"
+                        theme="primary"
+                        icon="devops-icon icon-plus"
+                        class="add-template"
+                        @click="showSetting"
+                        v-perm="{
+                            hasPermission: hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline_template',
+                                resourceCode: projectId,
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                    >
+                        {{ $t('template.addTemplate') }}
+                    </bk-button>
+                </template>
+                <template v-else>
+                    <bk-button
+                        v-if="!showSelfEmpty"
+                        theme="primary"
+                        icon="devops-icon icon-plus"
+                        class="add-template"
+                        @click="showSetting"
+                        v-perm="{
+                            hasPermission: isManagerUser,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'project',
+                                resourceCode: projectId,
+                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                            }
+                        }"
+                    >
+                        {{ $t('template.addTemplate') }}
+                    </bk-button>
+                </template>
+                <template-table
+                    ref="selfTemp"
+                    :has-create-permission="hasCreatePermission"
+                    @getApiData="getTempFromSelf"
+                >
+                </template-table>
                 <empty-tips v-if="showSelfEmpty"
                     :title="$t('template.noTemplate')"
                     :desc="emptyTipsConfig.desc"
@@ -50,6 +94,7 @@
     import templateTable from '@/components/template/templateTable'
 
     import {
+        TEMPLATE_RESOURCE_ACTION,
         PROJECT_RESOURCE_ACTION
     } from '@/utils/permission'
 
@@ -80,7 +125,7 @@
                 showStoreEmpty: false,
                 emptyTipsConfig: {
                     desc: this.$t('template.emptyDesc'),
-                    btnDisabled: true,
+                    disablePermissionApi: true,
                     btns: [
                         {
                             theme: 'primary',
@@ -97,13 +142,21 @@
                     desc: '',
                     labels: [],
                     stages: [{ containers: [{ '@type': 'trigger', name: this.$t('buildTrigger'), elements: [{ '@type': 'manualTrigger', name: this.$t('manualTrigger'), id: 'T-1-1-1', canElementSkip: true, useLatestParameters: false, executeCount: 1, canRetry: false, classType: 'manualTrigger', taskAtom: '' }], params: [], canRetry: false, classType: 'trigger' }], id: 'stage-1' }]
-                }
+                },
+                hasCreatePermission: false,
+                isEnabledPermission: false
             }
         },
 
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
+            },
+            PROJECT_RESOURCE_ACTION () {
+                return PROJECT_RESOURCE_ACTION
             }
         },
 
@@ -132,17 +185,34 @@
                         pageSize
                     })
                     this.isManagerUser = res.hasPermission
-                    Object.assign(this.emptyTipsConfig, {
-                        btnDisabled: !this.isManagerUser,
-                        hasPermission: this.isManagerUser,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: this.projectId,
-                            resourceType: 'project',
-                            resourceCode: this.projectId,
-                            action: PROJECT_RESOURCE_ACTION.MANAGE
-                        }
-                    })
+                    this.hasCreatePermission = res.hasCreatePermission
+                    this.isEnabledPermission = res.enableTemplatePermissionManage
+                    if (!this.isEnabledPermission) {
+                        Object.assign(this.emptyTipsConfig, {
+                            btnDisabled: !this.isManagerUser,
+                            hasPermission: this.isManagerUser,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'project',
+                                resourceCode: this.projectId,
+                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                            }
+                        })
+                    } else {
+                        Object.assign(this.emptyTipsConfig, {
+                            btnDisabled: !this.hasCreatePermission,
+                            hasPermission: this.hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'pipeline_template',
+                                resourceCode: this.projectId,
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            }
+                        })
+                    }
+                    console.log()
                     return res
                 } catch (err) {
                     this.$showTips({

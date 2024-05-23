@@ -31,38 +31,37 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.store.pojo.app.BuildEnv
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.util.concurrent.TimeUnit
 
-@ApiModel("流水线模型-构建参数变量")
+@Schema(title = "流水线模型-构建参数变量")
 data class BuildVariables(
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("构建环境ID", required = true)
+    @get:Schema(title = "构建环境ID", required = true)
     val vmSeqId: String,
-    @ApiModelProperty("构建机名称", required = true)
+    @get:Schema(title = "构建机名称", required = true)
     val vmName: String,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("pipeline id", required = true)
+    @get:Schema(title = "pipeline id", required = true)
     val pipelineId: String,
-    @ApiModelProperty("参数集合（已完成上下文转换）", required = true)
+    @get:Schema(title = "参数集合（已完成上下文转换）", required = true)
     val variables: Map<String, String>,
-    @ApiModelProperty("系统环境变量", required = false)
+    @get:Schema(title = "系统环境变量", required = false)
     val buildEnvs: List<BuildEnv>,
-    @ApiModelProperty("container的编排ID（同seq）", required = false)
+    @get:Schema(title = "container的编排ID（同seq）", required = false)
     val containerId: String,
-    @ApiModelProperty("container的全局ID", required = false)
+    @get:Schema(title = "container的全局ID", required = false)
     val containerHashId: String,
-    @ApiModelProperty("container用户自定义ID", required = false)
+    @get:Schema(title = "container用户自定义ID", required = false)
     val jobId: String?,
-    @ApiModelProperty("参数类型集合（用于打印时区分敏感信息，建议不要作为传参使用）", required = false)
+    @get:Schema(title = "参数类型集合（用于打印时区分敏感信息，建议不要作为传参使用）", required = false)
     val variablesWithType: List<BuildParameters>,
-    @ApiModelProperty("Job超时时间（毫秒）", required = true)
+    @get:Schema(title = "Job超时时间（毫秒）", required = true)
     var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
-    @ApiModelProperty("容器类型", required = false)
+    @get:Schema(title = "容器类型", required = false)
     val containerType: String? = null,
-    @ApiModelProperty("YAML流水线特殊配置", required = false)
+    @get:Schema(title = "YAML流水线特殊配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 )

@@ -92,14 +92,14 @@ data class GithubUser(
 //    val gistsUrl: String, // https://api.github.com/users/yongyiduan/gists{/gist_id}
     @JsonProperty("gravatar_id")
     val gravatarId: String,
-//    @JsonProperty("html_url")
-//    val htmlUrl: String, // https://github.com/yongyiduan
+    @JsonProperty("html_url")
+    override val htmlUrl: String?, // https://github.com/yongyiduan
     @JsonProperty("id")
-    val id: Int, // 88175075
+    override val id: Long, // 88175075
     @JsonProperty("login")
     val login: String, // yongyiduan
     @JsonProperty("node_id")
-    val nodeId: String, // MDQ6VXNlcjg4MTc1MDc1
+    override val nodeId: String, // MDQ6VXNlcjg4MTc1MDc1
 //    @JsonProperty("organizations_url")
 //    val organizationsUrl: String, // https://api.github.com/users/yongyiduan/orgs
 //    @JsonProperty("received_events_url")
@@ -113,9 +113,20 @@ data class GithubUser(
 //    @JsonProperty("subscriptions_url")
 //    val subscriptionsUrl: String, // https://api.github.com/users/yongyiduan/subscriptions
     @JsonProperty("type")
-    val type: String // User
+    val type: String, // User
 //    @JsonProperty("url")
-//    val url: String // https://api.github.com/users/yongyiduan
+    override val url: String?, // https://api.github.com/users/yongyiduan,
+    @JsonProperty("created_at")
+    override val createdAt: String?, // 2022-06-21T08:45:41Z
+    @JsonProperty("updated_at")
+    override val updatedAt: String? // 2022-06-21T08:45:41Z
+) : GithubBaseInfo(
+    id = id,
+    url = url,
+    htmlUrl = htmlUrl,
+    nodeId = nodeId,
+    updatedAt = updatedAt,
+    createdAt = createdAt
 )
 
 @Suppress("ALL")
@@ -171,7 +182,7 @@ data class GithubRepository(
 //    @JsonProperty("contributors_url")
 //    val contributorsUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/contributors
     @JsonProperty("created_at")
-    val createdAt: Any, // 1655798261 or 2022-06-21T08:45:42Z github这两种类型都会传,难受~
+    override val createdAt: String?, // 1655798261 or 2022-06-21T08:45:42Z github这两种类型都会传,难受~
     @JsonProperty("default_branch")
     val defaultBranch: String, // main
 //    @JsonProperty("deployments_url")
@@ -216,10 +227,10 @@ data class GithubRepository(
     val homepage: String?, // null
 //    @JsonProperty("hooks_url")
 //    val hooksUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/hooks
-//    @JsonProperty("html_url")
-//    val htmlUrl: String, // https://github.com/yongyiduan/webhook-test
+    @JsonProperty("html_url")
+    override val htmlUrl: String?, // https://github.com/yongyiduan/webhook-test
     @JsonProperty("id")
-    val id: Int, // 505743915
+    override val id: Long, // 505743915
     @JsonProperty("is_template")
     val isTemplate: Boolean, // false
 //    @JsonProperty("issue_comment_url")
@@ -245,7 +256,7 @@ data class GithubRepository(
     @JsonProperty("name")
     val name: String, // webhook-test
     @JsonProperty("node_id")
-    val nodeId: String, // R_kgDOHiUKKw
+    override val nodeId: String, // R_kgDOHiUKKw
 //    @JsonProperty("notifications_url")
 //    val notificationsUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/notifications{?since,all,participating}
     @JsonProperty("open_issues")
@@ -289,15 +300,22 @@ data class GithubRepository(
 //    @JsonProperty("trees_url")
 //    val treesUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/git/trees{/sha}
     @JsonProperty("updated_at")
-    val updatedAt: String?, // 2022-06-21T07:54:56Z
+    override val updatedAt: String?, // 2022-06-21T07:54:56Z
     @JsonProperty("url")
-    val url: String, // https://github.com/yongyiduan/webhook-test
+    override val url: String, // https://github.com/yongyiduan/webhook-test
     @JsonProperty("visibility")
     val visibility: String, // public
     @JsonProperty("watchers")
     val watchers: Int, // 0
     @JsonProperty("watchers_count")
     val watchersCount: Int // 0
+) : GithubBaseInfo(
+    id = id,
+    url = url,
+    htmlUrl = htmlUrl,
+    nodeId = nodeId,
+    updatedAt = updatedAt,
+    createdAt = createdAt
 )
 
 @Suppress("ALL")

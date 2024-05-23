@@ -161,6 +161,7 @@ class HeartbeatControl @Autowired constructor(
                 containerHashId = container.containerHashId,
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
+                executeCount = container.executeCount,
                 reason = tipMessage,
                 errorTypeName = ErrorType.THIRD_PARTY.name,
                 errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR

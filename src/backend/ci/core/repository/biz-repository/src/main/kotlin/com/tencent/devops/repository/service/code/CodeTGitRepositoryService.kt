@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.TGIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
@@ -48,7 +50,6 @@ import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -109,6 +110,16 @@ class CodeTGitRepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_TGIT.name)) {
             throw OperationException(I18nUtil.getCodeLanMessage(TGIT_INVALID))
         }
+        // 不得切换代码库
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
@@ -131,7 +142,8 @@ class CodeTGitRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeGitDao.edit(
                 dslContext = transactionContext,
@@ -188,10 +200,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTP -> {
-                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                    logger.info("TGit check type is username+password,don't check, return")
-                    return TokenCheckResult(result = true, message = "")
-                }
                 scmService.checkUsernameAndPassword(
                     projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
@@ -204,10 +212,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTPS -> {
-                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                    logger.info("TGit check type is username+password,don't check, return")
-                    return TokenCheckResult(result = true, message = "")
-                }
                 scmService.checkUsernameAndPassword(
                     projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
@@ -296,7 +300,8 @@ class CodeTGitRepositoryService @Autowired constructor(
         } else {
             credentialService.getCredentialInfo(
                 projectId = projectId,
-                repository = repository
+                repository = repository,
+                tryGetSession = true
             )
         }
     }

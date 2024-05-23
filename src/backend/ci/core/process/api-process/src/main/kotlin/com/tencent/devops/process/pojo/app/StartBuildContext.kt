@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
@@ -72,7 +73,11 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -129,7 +134,7 @@ data class StartBuildContext(
      * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
      */
     fun needSkipWhenStageFailRetry(stage: Stage): Boolean {
-        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
+        return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
             false
         } else if (!stageRetry) { // 不是stage失败重试的动作也不会跳过
             false
@@ -140,7 +145,7 @@ data class StartBuildContext(
 
     fun needSkipContainerWhenFailRetry(stage: Stage, container: Container): Boolean {
         val containerStatus = BuildStatus.parse(container.status)
-        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
+        return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
             false
         } else if (!containerStatus.isFailure() && !containerStatus.isCancel()) { // 跳过失败和被取消的其他job
             false
@@ -204,12 +209,12 @@ data class StartBuildContext(
         return DependOnUtils.enableDependOn(container) && BuildStatus.parse(container.status) == BuildStatus.SKIP
     }
 
-    private fun needRerun(stage: Stage): Boolean {
+    fun needRerunStage(stage: Stage): Boolean {
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
     fun needRerunTask(stage: Stage, container: Container): Boolean {
-        return needRerun(stage) || isRetryDependOnContainer(container)
+        return needRerunStage(stage) || isRetryDependOnContainer(container)
     }
 
     companion object {
@@ -292,7 +297,9 @@ data class StartBuildContext(
         }
 
         private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
-            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
+            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name &&
+                params[PIPELINE_START_TYPE] != StartType.PIPELINE.name
+            ) {
                 return null
             }
             return WebhookInfo(
@@ -320,7 +327,13 @@ data class StartBuildContext(
                 tagName = params[BK_REPO_GIT_WEBHOOK_TAG_NAME],
                 issueIid = params[BK_REPO_GIT_WEBHOOK_ISSUE_IID],
                 noteId = params[BK_REPO_GIT_WEBHOOK_NOTE_ID],
-                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID]
+                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID],
+                parentProjectId = params[PIPELINE_START_PARENT_PROJECT_ID],
+                parentPipelineId = params[PIPELINE_START_PARENT_PIPELINE_ID],
+                parentPipelineName = params[PIPELINE_START_PARENT_PIPELINE_NAME],
+                parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
+                parentBuildNum = params[PIPELINE_START_PARENT_BUILD_NUM],
+                linkUrl = params[PIPELINE_GIT_EVENT_URL]
             )
         }
 

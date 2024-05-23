@@ -63,6 +63,7 @@ class CheckImageInitPipelineService @Autowired constructor(
         val imageType = checkImageInitPipelineReq.imageType
         val registryUser = checkImageInitPipelineReq.registryUser
         val registryPwd = checkImageInitPipelineReq.registryPwd
+        val registryHost = checkImageInitPipelineReq.registryHost
         // 保存流水线信息
         val model = JsonUtil.to(checkImageInitPipelineReq.pipelineModel, Model::class.java)
         val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
@@ -72,6 +73,7 @@ class CheckImageInitPipelineService @Autowired constructor(
         startParams["imageCode"] = imageCode
         startParams["imageName"] = imageName
         startParams["version"] = version
+        registryHost?.let { startParams["registryHost"] = it }
         imageType?.let { startParams["imageType"] = it }
         registryUser?.let { startParams["registryUser"] = it }
         registryPwd?.let { startParams["registryPwd"] = it }

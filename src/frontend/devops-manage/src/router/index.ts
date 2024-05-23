@@ -17,6 +17,10 @@ const router = createRouter({
   history: createWebHistory('manage'),
   routes: [
     {
+      path: '/userManage',
+      component: UserGroup,
+    },
+    {
       path: '/',
       component: HomeEntry,
       children: [
@@ -66,7 +70,9 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.fullPath);
+  if (!location.search.includes('disableSyncUrl=true')) {
+    window.$syncUrl?.(to.fullPath);
+  }
 });
 
 // 导出默认数据

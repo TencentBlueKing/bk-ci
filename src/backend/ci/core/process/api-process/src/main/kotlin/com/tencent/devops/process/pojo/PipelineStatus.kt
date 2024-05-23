@@ -28,44 +28,43 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-列表-状态信息")
+@Schema(title = "流水线模型-列表-状态信息")
 data class PipelineStatus(
-    @ApiModelProperty("流水线任务数量", required = true)
+    @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
-    @ApiModelProperty("构建次数", required = true)
+    @get:Schema(title = "构建次数", required = true)
     val buildCount: Long,
-    @ApiModelProperty("运行锁定", required = false)
+    @get:Schema(title = "运行锁定", required = false)
     val lock: Boolean,
-    @ApiModelProperty("是否可手工启动", required = true)
+    @get:Schema(title = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
-    @ApiModelProperty("最后构建时间", required = false)
+    @get:Schema(title = "最后构建时间", required = false)
     val latestBuildStartTime: Long?,
-    @ApiModelProperty("最后构建结束时间", required = false)
+    @get:Schema(title = "最后构建结束时间", required = false)
     val latestBuildEndTime: Long?,
-    @ApiModelProperty("最后构建状态", required = false)
+    @get:Schema(title = "最后构建状态", required = false)
     val latestBuildStatus: BuildStatus?,
-    @ApiModelProperty("最后构建版本号", required = false)
+    @get:Schema(title = "最后构建版本号", required = false)
     val latestBuildNum: Int?,
-    @ApiModelProperty("最后构建任务名称", required = false)
+    @get:Schema(title = "最后构建任务名称", required = false)
     @Deprecated("无用.不再提供任何信息")
     val latestBuildTaskName: String? = null,
-    @ApiModelProperty("最后任务预计执行时间（毫秒）", required = false)
+    @get:Schema(title = "最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
-    @ApiModelProperty("最后构建实例ID", required = false)
+    @get:Schema(title = "最后构建实例ID", required = false)
     val latestBuildId: String?,
-    @ApiModelProperty("服务器当前时间戳", required = true)
+    @get:Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @ApiModelProperty("当前运行的构建的个数", required = true)
+    @get:Schema(title = "当前运行的构建的个数", required = true)
     val runningBuildCount: Int,
-    @ApiModelProperty("是否被收藏", required = true)
+    @get:Schema(title = "是否被收藏", required = true)
     val hasCollect: Boolean,
-    @ApiModelProperty("最后一次构建所有的任务个数", required = false)
+    @get:Schema(title = "最后一次构建所有的任务个数", required = false)
     var lastBuildTotalCount: Int? = null,
-    @ApiModelProperty("最后一次构建已完成的任务个数", required = false)
+    @get:Schema(title = "最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
-    @ApiModelProperty("触发方式", required = false)
+    @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null
 )

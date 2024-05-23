@@ -32,11 +32,14 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.log.meta.Ansi
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
-    private val client: Client
+    private val client: Client,
+    private val circuitBreakerRegistry: CircuitBreakerRegistry
 ) {
 
     fun addLine(
@@ -48,17 +51,21 @@ class BuildLogPrinter(
         subTag: String? = null
     ) {
         try {
-            genLogPrintPrintResource().addLogLine(
-                buildId = buildId,
-                logMessage = genLogMessage(
-                    message = message,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    logType = LogType.LOG,
-                    executeCount = executeCount
+            doWithCircuitBreaker {
+                genLogPrintPrintResource().addLogLine(
+                    buildId = buildId,
+                    logMessage = genLogMessage(
+                        message = message,
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        logType = LogType.LOG,
+                        executeCount = executeCount
+                    )
                 )
-            )
+            }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addLine error|message=$message", ignore)
         }
@@ -66,10 +73,14 @@ class BuildLogPrinter(
 
     fun addLines(buildId: String, logMessages: List<LogMessage>) {
         try {
-            genLogPrintPrintResource().addLogMultiLine(
-                buildId = buildId,
-                logMessages = logMessages
-            )
+            doWithCircuitBreaker {
+                genLogPrintPrintResource().addLogMultiLine(
+                    buildId = buildId,
+                    logMessages = logMessages
+                )
+            }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addLines error|logMessages=$logMessages", ignore)
         }
@@ -116,17 +127,21 @@ class BuildLogPrinter(
         subTag: String? = null
     ) {
         try {
-            genLogPrintPrintResource().addLogLine(
-                buildId = buildId,
-                logMessage = genLogMessage(
-                    message = "$LOG_ERROR_FLAG${message.replace("\n", "\n$LOG_ERROR_FLAG")}",
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    logType = LogType.ERROR,
-                    executeCount = executeCount
+            doWithCircuitBreaker {
+                genLogPrintPrintResource().addLogLine(
+                    buildId = buildId,
+                    logMessage = genLogMessage(
+                        message = "$LOG_ERROR_FLAG${message.replace("\n", "\n$LOG_ERROR_FLAG")}",
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        logType = LogType.ERROR,
+                        executeCount = executeCount
+                    )
                 )
-            )
+            }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addErrorLine error|message=$message", ignore)
         }
@@ -141,17 +156,21 @@ class BuildLogPrinter(
         subTag: String? = null
     ) {
         try {
-            genLogPrintPrintResource().addLogLine(
-                buildId = buildId,
-                logMessage = genLogMessage(
-                    message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    logType = LogType.DEBUG,
-                    executeCount = executeCount
+            doWithCircuitBreaker {
+                genLogPrintPrintResource().addLogLine(
+                    buildId = buildId,
+                    logMessage = genLogMessage(
+                        message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        logType = LogType.DEBUG,
+                        executeCount = executeCount
+                    )
                 )
-            )
+            }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addDebugLine error|message=$message", ignore)
         }
@@ -166,17 +185,21 @@ class BuildLogPrinter(
         subTag: String? = null
     ) {
         try {
-            genLogPrintPrintResource().addLogLine(
-                buildId = buildId,
-                logMessage = genLogMessage(
-                    message = "$LOG_WARN_FLAG${message.replace("\n", "\n$LOG_WARN_FLAG")}",
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    logType = LogType.DEBUG,
-                    executeCount = executeCount
+            doWithCircuitBreaker {
+                genLogPrintPrintResource().addLogLine(
+                    buildId = buildId,
+                    logMessage = genLogMessage(
+                        message = "$LOG_WARN_FLAG${message.replace("\n", "\n$LOG_WARN_FLAG")}",
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        logType = LogType.DEBUG,
+                        executeCount = executeCount
+                    )
                 )
-            )
+            }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addWarnLine error|message=$message", ignore)
         }
@@ -248,7 +271,7 @@ class BuildLogPrinter(
                 executeCount = executeCount
             )
         } catch (ignore: Exception) {
-            logger.error("[$buildId]|stopLog fail", ignore)
+            logger.warn("[$buildId]|stopLog fail", ignore)
         }
     }
 
@@ -268,7 +291,7 @@ class BuildLogPrinter(
                 executeCount = executeCount
             )
         } catch (ignore: Exception) {
-            logger.error("[$buildId]|stopLog fail", ignore)
+            logger.warn("[$buildId]|stopLog fail", ignore)
         }
     }
 
@@ -291,6 +314,17 @@ class BuildLogPrinter(
 
     private fun genLogPrintPrintResource(): ServiceLogPrintResource {
         return client.get(ServiceLogPrintResource::class)
+    }
+
+    private fun <T> doWithCircuitBreaker(
+        action: () -> T
+    ): T {
+        return circuitBreakerRegistry.let {
+            val breaker = it.circuitBreaker(this.javaClass.name)
+            breaker.executeCallable {
+                action()
+            }
+        }
     }
 
     companion object {

@@ -31,8 +31,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
+import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.CHECK_DOCKER_IMAGE_INFO_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPDATE_IMAGE_MARKET_INFO_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -62,5 +65,28 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
             MessageUtil.getMessageByLocale(UPDATE_IMAGE_MARKET_INFO_FAILED, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
+    }
+
+    override fun checkDockerImage(
+        userId: String,
+        vararg checkDockerImageRequestList: CheckDockerImageRequest
+    ): Result<List<CheckDockerImageResponse>> {
+        val path = "/ms/image/api/build/docker-image/checkDockerImage"
+        val body = RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            objectMapper.writeValueAsString(checkDockerImageRequestList.toList())
+        )
+        val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
+        val request = buildPost(path, body, headMap)
+        val responseContent = request(
+            request = request,
+            errorMessage = MessageUtil.getMessageByLocale(CHECK_DOCKER_IMAGE_INFO_FAILED, AgentEnv.getLocaleLanguage()),
+            readTimeoutInSec = IMAGE_READ_TIMEOUT_IN_SEC
+        )
+        return objectMapper.readValue(responseContent)
+    }
+
+    companion object {
+        const val IMAGE_READ_TIMEOUT_IN_SEC = 900L
     }
 }

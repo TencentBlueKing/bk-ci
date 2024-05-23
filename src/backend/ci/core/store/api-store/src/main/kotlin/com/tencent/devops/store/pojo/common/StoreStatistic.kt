@@ -27,24 +27,23 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("统计信息")
+@Schema(title = "统计信息")
 data class StoreStatistic(
-    @ApiModelProperty("下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int,
-    @ApiModelProperty("评论量")
+    @get:Schema(title = "评论量")
     val commentCnt: Int,
-    @ApiModelProperty("星级评分")
+    @get:Schema(title = "星级评分")
     val score: Double?,
-    @ApiModelProperty("流水线个数")
+    @get:Schema(title = "流水线个数")
     val pipelineCnt: Int? = null,
-    @ApiModelProperty("最近执行次数")
+    @get:Schema(title = "最近执行次数")
     val recentExecuteNum: Int? = null,
-    @ApiModelProperty("成功率")
+    @get:Schema(title = "成功率")
     val successRate: Double? = null,
-    @ApiModelProperty("hotFlag")
+    @get:Schema(title = "hotFlag")
     val hotFlag: Boolean? = false
 
 )

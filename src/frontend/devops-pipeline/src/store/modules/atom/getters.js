@@ -296,12 +296,12 @@ export default {
         return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo
     },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
-        // const isDocker = getters.isDockerBuildResource(container)
+        const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
         const isThirdDocker = getters.isThirdDockerContainer(container)
         const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)

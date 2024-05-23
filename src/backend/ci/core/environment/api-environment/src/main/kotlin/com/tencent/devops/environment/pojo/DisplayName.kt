@@ -27,11 +27,10 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("显示名称")
+@Schema(title = "显示名称")
 data class DisplayName(
-    @ApiModelProperty("显示名称", required = true)
+    @get:Schema(title = "显示名称", required = true)
     val displayName: String
 )

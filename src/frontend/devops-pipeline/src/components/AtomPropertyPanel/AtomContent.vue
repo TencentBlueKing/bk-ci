@@ -110,37 +110,37 @@
 </template>
 
 <script>
-    import AtomOption from './AtomOption'
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import RemoteAtom from './RemoteAtom'
+    import Logo from '@/components/Logo'
     import QualitygateTips from '@/components/atomFormField/QualitygateTips'
-    import BuildScript from './BuildScript'
-    import Unity3dBuild from './Unity3dBuild'
-    import NormalAtom from './NormalAtom'
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
-    import FormField from './FormField'
-    import BuildArchiveGet from './BuildArchiveGet'
-    import { isObject } from '@/utils/util'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import { bus } from '@/utils/bus'
-    import TimerTrigger from './TimerTrigger'
+    import { isObject } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import AtomOption from './AtomOption'
+    import BuildArchiveGet from './BuildArchiveGet'
+    import BuildScript from './BuildScript'
+    import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
+    import CodeGithubWebHookTrigger from './CodeGithubWebHookTrigger'
+    import CodeGitlabWebHookTrigger from './CodeGitlabWebHookTrigger'
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
-    import IosCertInstall from './IosCertInstall'
-    import CrossDistribute from './CrossDistribute'
-    import SendWechatNotify from './SendWechatNotify'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
-    import ReportArchive from './ReportArchive'
+    import CrossDistribute from './CrossDistribute'
+    import FormField from './FormField'
+    import IosCertInstall from './IosCertInstall'
+    import ManualReviewUserTask from './ManualReviewUserTask'
+    import NormalAtom from './NormalAtom'
+    import NormalAtomV2 from './NormalAtomV2'
     import PullGithub from './PullGithub'
-    import CodeGithubWebHookTrigger from './CodeGithubWebHookTrigger'
     import PushImageToThirdRepo from './PushImageToThirdRepo'
     import ReferenceVariable from './ReferenceVariable'
-    import NormalAtomV2 from './NormalAtomV2'
-    import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
-    import CodeGitlabWebHookTrigger from './CodeGitlabWebHookTrigger'
+    import RemoteAtom from './RemoteAtom'
+    import ReportArchive from './ReportArchive'
+    import SendWechatNotify from './SendWechatNotify'
     import SubPipelineCall from './SubPipelineCall'
-    import ManualReviewUserTask from './ManualReviewUserTask'
-    import Logo from '@/components/Logo'
+    import TimerTrigger from './TimerTrigger'
+    import Unity3dBuild from './Unity3dBuild'
 
     export default {
         name: 'atom-content',
@@ -665,11 +665,18 @@
             color: white;
         }
         > p {
-            line-height: 48px;
+            height: 50px;
+            line-height: 25px;
             border: 1px solid $borderColor;
             border-left-color: transparent;
             flex: 1;
-            text-align: center;
+            text-align: left;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 12px;
         }
     }
 

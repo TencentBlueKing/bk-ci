@@ -28,18 +28,17 @@
 
 package com.tencent.devops.common.auth.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 权限资源实例关系
  */
-@ApiModel("权限资源实例关系")
+@Schema(title = "权限资源实例关系")
 data class AuthResourceInstance(
-    @ApiModelProperty("资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @ApiModelProperty("资源ID")
+    @get:Schema(title = "资源ID")
     val resourceCode: String,
-    @ApiModelProperty("父资源, 流水线有项目和流水线组父资源,其他资源父资源都只有项目资源, 项目没有父资源")
+    @get:Schema(title = "父资源, 流水线有项目和流水线组父资源,其他资源父资源都只有项目资源, 项目没有父资源")
     val parents: List<AuthResourceInstance>? = null
 )

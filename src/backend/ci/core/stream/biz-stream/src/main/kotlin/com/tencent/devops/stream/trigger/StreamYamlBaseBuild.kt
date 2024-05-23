@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -516,7 +515,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     state = StreamCommitCheckState.PENDING,
                     block = action.data.setting.enableMrBlock &&
                         action.metaData.isStreamMr(),
-                    context = "${pipeline.filePath}@${action.metaData.streamObjectKind.name}",
+                    context = "${pipeline.displayName}@${action.metaData.streamObjectKind.name}",
                     targetUrl = StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                             I18nUtil.getCodeLanMessage(
@@ -641,14 +640,6 @@ class StreamYamlBaseBuild @Autowired constructor(
                 if (webhookCommitList.size < pageSize) break
                 page++
             }
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildCommitFinishEvent(
-                    source = "build_commits",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
-                )
-            )
         } catch (ignore: Throwable) {
             logger.warn("StreamYamlBaseBuild|savePipelineBuildCommit|error", ignore)
         }

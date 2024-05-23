@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.pojo.mq
 
-import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
@@ -47,23 +46,17 @@ data class PipelineAgentStartupEvent(
     val taskName: String,
     val os: String,
     val vmNames: String,
-    @Deprecated("废弃字段")
-    val startTime: Long? = null,
     val channelCode: String,
     val dispatchType: DispatchType,
-    @Deprecated("废弃字段")
-    val zone: Zone? = null,
-    @Deprecated("废弃字段")
-    val stageId: String? = null,
     val containerId: String,
     val containerHashId: String?,
     val queueTimeoutMinutes: Int? = null,
-    @Deprecated("废弃字段")
-    val containerType: String? = null,
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
     val executeCount: Int?,
     val customBuildEnv: Map<String, String>? = null,
     val dockerRoutingType: String? = "VM",
+    val jobId: String? = null,
+    val ignoreEnvAgentIds: Set<String>? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
     override var routeKeySuffix: String? = null

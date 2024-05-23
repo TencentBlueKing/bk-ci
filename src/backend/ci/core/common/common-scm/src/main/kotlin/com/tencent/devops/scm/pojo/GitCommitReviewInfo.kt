@@ -1,30 +1,29 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("日常代码评审")
+@Schema(title = "日常代码评审")
 data class GitCommitReviewInfo constructor(
     val id: String,
-    @ApiModelProperty("标签")
+    @get:Schema(title = "标签")
     val labels: List<String>?,
-    @ApiModelProperty("标题")
+    @get:Schema(title = "标题")
     val title: String,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @ApiModelProperty("提交信息")
+    @get:Schema(title = "提交信息")
     val commits: List<GitCrCommit>? = listOf(),
-    @ApiModelProperty("状态")
+    @get:Schema(title = "状态")
     val state: String
 )
 
-@ApiModel("日常代码评审--提交信息")
+@Schema(title = "日常代码评审--提交信息")
 data class GitCrCommit constructor(
-    @ApiModelProperty("提交时间")
+    @get:Schema(title = "提交时间")
     @JsonProperty("commit_date")
     val commitDate: String,
-    @ApiModelProperty("commitId")
+    @get:Schema(title = "commitId")
     @JsonProperty("id")
     val id: String
 )

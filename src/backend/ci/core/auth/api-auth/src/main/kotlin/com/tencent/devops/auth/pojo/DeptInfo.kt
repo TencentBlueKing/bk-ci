@@ -28,20 +28,19 @@
 package com.tencent.devops.auth.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class DeptInfo(
-    @ApiModelProperty("组织ID")
+    @get:Schema(title = "组织ID")
     val id: Int,
-    @ApiModelProperty("组织名称")
+    @get:Schema(title = "组织名称")
     val name: String,
-    @ApiModelProperty("父级组织")
+    @get:Schema(title = "父级组织")
     val parent: Int,
-    @ApiModelProperty("是否有子级", name = "has_children")
+    @get:Schema(title = "是否有子级", description = "has_children")
     @JsonProperty("has_children")
     val hasChildren: Boolean,
-    @ApiModelProperty("是否启用")
+    @get:Schema(title = "是否启用")
     val enabled: Boolean
 )

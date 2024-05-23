@@ -29,12 +29,14 @@ package com.tencent.devops.stream.trigger.listener.components
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -46,13 +48,13 @@ import com.tencent.devops.stream.trigger.actions.data.context.isSuccess
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.util.StreamPipelineUtils
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 @Suppress("NestedBlockDepth")
 @Component
@@ -79,11 +81,25 @@ class SendCommitCheck @Autowired constructor(
         action: BaseAction
     ) {
         try {
+            fixSettingFromYaml(action)
             if (action.data.setting.enableCommitCheck && action.needSendCommitCheck()) {
                 sendCommitCheckV2(action)
             }
         } catch (e: Throwable) {
             logger.warn("SendCommitCheck|error=${action.format()}")
+        }
+    }
+
+    private fun fixSettingFromYaml(action: BaseAction) {
+        val triggerOn = YamlUtil.getObjectMapper().readValue(
+            action.data.context.finishData?.normalizedYaml, ScriptBuildYaml::class.java
+        ).triggerOn
+        if (triggerOn?.mr?.reportCommitCheck != null) {
+            action.data.setting.enableCommitCheck = triggerOn.mr?.reportCommitCheck!!
+        }
+
+        if (triggerOn?.mr?.blockMr != null) {
+            action.data.setting.enableMrBlock = triggerOn.mr?.blockMr!!
         }
     }
 
@@ -103,7 +119,7 @@ class SendCommitCheck @Autowired constructor(
             state = finishData.getGitCommitCheckState(),
             block = action.metaData.isStreamMr() && action.data.setting.enableMrBlock &&
                     !finishData.isSuccess(),
-            context = "${action.data.context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
+            context = "${action.data.context.pipeline!!.displayName}@${action.metaData.streamObjectKind.name}",
             targetUrl = getTargetUrl(action),
             description = getDescByBuildStatus(
                 pipelineName = action.data.context.pipeline!!.displayName,
@@ -118,9 +134,11 @@ class SendCommitCheck @Autowired constructor(
             BuildStatus.REVIEWING -> {
                 getStageReviewDesc(finishData)
             }
+
             BuildStatus.REVIEW_PROCESSED -> {
                 BUILD_RUNNING_DESC
             }
+
             else -> {
                 getFinishDesc(finishData, pipelineName)
             }
@@ -137,6 +155,7 @@ class SendCommitCheck @Autowired constructor(
             BuildReviewType.STAGE_REVIEW -> {
                 BUILD_MANUAL_REVIEW_DESC
             }
+
             BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {
                 BUILD_GATE_REVIEW_DESC
             }
@@ -145,6 +164,7 @@ class SendCommitCheck @Autowired constructor(
                 logger.warn("SendCommitCheck|getStageReviewDesc|event not match|${finishData.reviewType}")
                 BUILD_RUNNING_DESC
             }
+
             BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
             BuildReviewType.TRIGGER_REVIEW -> {
                 ""
@@ -164,9 +184,11 @@ class SendCommitCheck @Autowired constructor(
                 BUILD_SUCCESS_DESC.format(getFinishTime(finishData.startTime))
             }
         }
+
         finishData.getBuildStatus().isCancel() -> {
             BUILD_CANCEL_DESC.format(pipelineName)
         }
+
         else -> {
             BUILD_FAILED_DESC.format(getFinishTime(finishData.startTime))
         }
@@ -255,6 +277,7 @@ private fun BuildFinishStageData.isCheckInOrOut(): Pair<String?, String?> {
         BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN -> {
             Pair(this.stageId, null)
         }
+
         BuildReviewType.QUALITY_CHECK_OUT -> {
             Pair(null, this.stageId)
         }
@@ -262,6 +285,7 @@ private fun BuildFinishStageData.isCheckInOrOut(): Pair<String?, String?> {
         BuildReviewType.TASK_REVIEW -> {
             Pair(null, null)
         }
+
         BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
         BuildReviewType.TRIGGER_REVIEW -> {
             Pair(null, null)

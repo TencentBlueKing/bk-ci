@@ -150,7 +150,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummaryCount(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>? = null,
         viewId: String? = null,
         favorPipelines: List<String> = emptyList(),
@@ -180,7 +180,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummary(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         sortType: PipelineSortType? = null,
         pipelineIds: Collection<String>? = null,
         favorPipelines: List<String> = emptyList(),
@@ -221,7 +221,7 @@ class PipelineBuildSummaryDao {
 
     private fun generatePipelineFilterCondition(
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>?,
         viewId: String?,
         favorPipelines: List<String>,
@@ -233,7 +233,9 @@ class PipelineBuildSummaryDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
-        conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        if (channelCode != null) {
+            conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        }
         if (includeDelete == false) {
             conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
         }

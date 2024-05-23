@@ -39,17 +39,17 @@ import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
-import bkMagic from 'bk-magic-vue'
-import BkPipeline from 'bkui-pipeline'
-import { pipelineDocs } from '../../common-lib/docs'
 import {
     handlePipelineNoPermission,
     RESOURCE_ACTION
 } from '@/utils/permission'
+import bkMagic from 'bk-magic-vue'
+import BkPipeline from 'bkui-pipeline'
+import { pipelineDocs } from '../../common-lib/docs'
 // 权限指令
-import { PermissionDirective, BkPermission } from 'bk-permission'
-import 'bk-permission/dist/main.css'
 import VueCompositionAPI from '@vue/composition-api'
+import { BkPermission, PermissionDirective } from 'bk-permission'
+import 'bk-permission/dist/main.css'
 
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')

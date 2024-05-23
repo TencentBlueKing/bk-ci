@@ -27,10 +27,17 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.stream.api.user.UserStreamProjectResource
+import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
@@ -40,7 +47,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStreamProjectResourceImpl @Autowired constructor(
-    private val streamProjectService: StreamProjectService
+    private val client: Client,
+    private val streamProjectService: StreamProjectService,
+    private val permissionService: StreamPermissionService
 ) : UserStreamProjectResource {
     override fun getProjects(
         userId: String,
@@ -65,6 +74,35 @@ class UserStreamProjectResourceImpl @Autowired constructor(
     override fun getProjectsHistory(userId: String, size: Long?): Result<List<StreamProjectCIInfo>> {
         val fixPageSize = size?.coerceAtMost(maxPageSize)?.coerceAtLeast(defaultPageSize) ?: defaultPageSize
         return Result(streamProjectService.getUserProjectHistory(userId, size = fixPageSize) ?: emptyList())
+    }
+
+    override fun getProjectInfo(userId: String, projectId: String): Result<ProjectVO> {
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
+        return Result(
+            client.get(ServiceProjectResource::class).get(projectId).data
+                ?: throw OperationException("project $projectId not found")
+        )
+    }
+
+    override fun updateProjectOrganization(
+        userId: String,
+        projectId: String,
+        productId: Int,
+        productName: String,
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean> {
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT
+        )
+        client.get(ServiceProjectResource::class).updateProjectProductId(projectId, productName)
+        client.get(ServiceProjectResource::class).updateOrganizationByEnglishName(projectId, organization)
+        return Result(true)
     }
 
     private val maxPageSize = 10L

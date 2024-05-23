@@ -154,6 +154,7 @@ const initTable = () => {
 };
 
 const handleChangeSearch = (data) => {
+  pagination.value.current = 1;
   setTimeout(() => {
     filter.value = data;
     const query = route.query;
@@ -355,6 +356,7 @@ const columns = [
       </bk-table>
       <bk-pagination
         class="table-pagination"
+        v-model="pagination.current"
         v-bind="pagination"
         type="default"
         @change="handlePageChange"

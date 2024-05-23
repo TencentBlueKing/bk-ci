@@ -5,7 +5,8 @@
                 <div v-if="(!item.children || !item.children.length || item.showChildren === false) && !item.childrenType" class="bkc-menu-title-wrapper"
                     :class="[item.hide, item.disable, item.id === $route.name || (item.children && item.children.some(child => child.id === $route.name)) ? 'selected' : '']"
                     @click="(!item.disable && !item.hide) ? handleClick(item, itemIndex, $event) : () => {}">
-                    <i class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
+                    <Logo v-if="item.icon === 'permission'" class="devops-icon left-icon-permission" :name="item.icon" />
+                    <i v-else class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
                     <div class="bkc-menu-title">{{item.name}}</div>
                     <i class="biz-badge" v-if="item.badge !== undefined">{{item.badge}}</i>
                 </div>
@@ -13,7 +14,8 @@
                 <div v-else class="bkc-menu-title-wrapper"
                     :class="[item.hide, item.disable, item.isChildSelected ? 'child-selected' : '', item.isOpen ? 'open' : '']"
                     @click="(!item.disable && !item.hide) ? openChildren(item, itemIndex, $event) : () => {}">
-                    <i class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
+                    <Logo v-if="item.icon === 'permission'" class="devops-icon left-icon-permission" :name="item.icon" />
+                    <i v-else class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
                     <div class="bkc-menu-title">{{item.name}}</div>
                     <i class="devops-icon right-icon icon-angle-down" :class="{ 'open': item.isOpen }"></i>
                 </div>
@@ -51,11 +53,13 @@
 <script>
     import CollapseTransition from '@/utils/collapse-transition.js'
     import bkTrees from '@/components/common/bk-trees'
+    import Logo from '@/components/Logo'
 
     export default {
         name: 'bkc-menu',
         components: {
             CollapseTransition,
+            Logo,
             'bk-trees': bkTrees
         },
         props: {
@@ -188,8 +192,9 @@
         position: relative;
         &:hover {
             color: $primaryColor;
-            .left-icon {
-                color: $primaryColor;
+            .left-icon,
+            .left-icon-permission {
+                color: #63656E;
             }
         }
 
@@ -204,13 +209,15 @@
         &.selected {
             background-color: $primaryLightColor;
             color: $primaryColor;
-            .left-icon {
-                color: $primaryColor;
+            .left-icon,
+            .left-icon-permission {
+                color: #63656E;
             }
         }
         &.open {
             color: $primaryColor;
-            .left-icon {
+            .left-icon,
+            .left-icon-permission {
                 color: $primaryColor;
             }
         }
@@ -222,16 +229,19 @@
             right: 20px;
             top: 17px;
         }
-        .left-icon {
+        .left-icon,
+        .left-icon-permission {
             vertical-align: middle;
             font-size: 20px;
             position: absolute;
             top: 14px;
-            color: #c4cdd6;
             &.disable {
                 cursor: not-allowed;
                 color: #c3cdd7;
             }
+        }
+        .left-icon-permission {
+            top: 10px !important;
         }
         .right-icon {
             position: absolute;

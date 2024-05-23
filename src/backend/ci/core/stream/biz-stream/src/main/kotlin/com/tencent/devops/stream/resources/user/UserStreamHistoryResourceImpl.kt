@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -39,6 +41,8 @@ import com.tencent.devops.stream.pojo.StreamBuildHistory
 import com.tencent.devops.stream.pojo.StreamBuildHistorySearch
 import com.tencent.devops.stream.service.StreamHistoryService
 import com.tencent.devops.stream.util.GitCommonUtils
+import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -46,6 +50,15 @@ class UserStreamHistoryResourceImpl @Autowired constructor(
     private val streamHistoryService: StreamHistoryService,
     private val permissionService: StreamPermissionService
 ) : UserStreamHistoryResource {
+
+    companion object {
+        val logger = LoggerFactory.getLogger(UserStreamHistoryResourceImpl::class.java)
+    }
+
+    private val cache: Cache<String, Page<StreamBuildHistory>> = Caffeine.newBuilder()
+        .expireAfterWrite(2, TimeUnit.SECONDS)
+        .build()
+
     override fun getHistoryBuildList(
         userId: String,
         projectId: String,
@@ -58,13 +71,19 @@ class UserStreamHistoryResourceImpl @Autowired constructor(
             permission = AuthPermission.VIEW
         )
         checkParam(userId)
-        return Result(
-            streamHistoryService.getHistoryBuildList(
-                userId = userId,
-                gitProjectId = gitProjectId,
-                search = search
-            )
+        val key = "$userId$projectId$search"
+        val res = cache.getIfPresent(key)
+        if (res != null) {
+            logger.info("getHistoryBuildList from cache |$key")
+            return Result(res)
+        }
+        val set = streamHistoryService.getHistoryBuildList(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            search = search
         )
+        cache.put(key, set)
+        return Result(set)
     }
 
     override fun getAllBuildBranchList(

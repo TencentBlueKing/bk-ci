@@ -162,6 +162,15 @@ class JooqConfiguration {
         return generateDefaultConfiguration(environmentDataSource, executeListenerProviders)
     }
 
+    @Bean
+    fun imageJooqConfiguration(
+        @Qualifier("imageDataSource")
+        imageDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(imageDataSource, executeListenerProviders)
+    }
+
     private fun generateDefaultConfiguration(
         dataSource: DataSource,
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>

@@ -29,8 +29,7 @@ package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
 {
@@ -113,97 +112,97 @@ import io.swagger.annotations.ApiModelProperty
 }
  */
 
-@ApiModel("工蜂项目详细信息")
+@Schema(title = "工蜂项目详细信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeProjectInfo(
     @JsonProperty("id")
-    @ApiModelProperty(name = "id")
+    @get:Schema(title = "id")
     val id: Long?,
     @JsonProperty("public")
-    @ApiModelProperty(name = "public")
+    @get:Schema(title = "public")
     val public: Boolean?,
     @JsonProperty("archived")
-    @ApiModelProperty(name = "archived")
+    @get:Schema(title = "archived")
     val archived: Boolean?,
     @JsonProperty("visibility_level")
-    @ApiModelProperty(name = "visibility_level")
+    @get:Schema(title = "visibility_level")
     val visibilityLevel: Long?,
     @JsonProperty("public_visibility")
-    @ApiModelProperty(name = "public_visibility")
+    @get:Schema(title = "public_visibility")
     val publicVisibility: Long?,
     @JsonProperty("name")
-    @ApiModelProperty(name = "name")
+    @get:Schema(title = "name")
     val name: String?,
     @JsonProperty("name_with_namespace")
-    @ApiModelProperty(name = "name_with_namespace")
+    @get:Schema(title = "name_with_namespace")
     val nameWithNamespace: String?,
     @JsonProperty("path")
-    @ApiModelProperty(name = "path")
+    @get:Schema(title = "path")
     val path: String?,
     @JsonProperty("path_with_namespace")
-    @ApiModelProperty(name = "path_with_namespace")
+    @get:Schema(title = "path_with_namespace")
     val pathWithNamespace: String?,
     @JsonProperty("default_branch")
-    @ApiModelProperty(name = "default_branch")
+    @get:Schema(title = "default_branch")
     val defaultBranch: String?,
     @JsonProperty("ssh_url_to_repo")
-    @ApiModelProperty(name = "ssh_url_to_repo")
+    @get:Schema(title = "ssh_url_to_repo")
     val sshUrlToRepo: String?,
     @JsonProperty("http_url_to_repo")
-    @ApiModelProperty(name = "http_url_to_repo")
+    @get:Schema(title = "http_url_to_repo")
     val httpUrlToRepo: String?,
     @JsonProperty("https_url_to_repo")
-    @ApiModelProperty(name = "https_url_to_repo")
+    @get:Schema(title = "https_url_to_repo")
     val httpsUrlToRepo: String?,
     @JsonProperty("web_url")
-    @ApiModelProperty(name = "web_url")
+    @get:Schema(title = "web_url")
     val webUrl: String?,
-    @ApiModelProperty(name = "issues_enabled")
+    @get:Schema(title = "issues_enabled")
     @JsonProperty("issues_enabled")
     val issuesEnabled: Boolean?,
     @JsonProperty("merge_requests_enabled")
-    @ApiModelProperty(name = "merge_requests_enabled")
+    @get:Schema(title = "merge_requests_enabled")
     val mergeRequestsEnabled: Boolean?,
     @JsonProperty("wiki_enabled")
-    @ApiModelProperty(name = "wiki_enabled")
+    @get:Schema(title = "wiki_enabled")
     val wikiEnabled: Boolean?,
     @JsonProperty("snippets_enabled")
-    @ApiModelProperty(name = "snippets_enabled")
+    @get:Schema(title = "snippets_enabled")
     val snippetsEnabled: Boolean?,
     @JsonProperty("review_enabled")
-    @ApiModelProperty(name = "review_enabled")
+    @get:Schema(title = "review_enabled")
     val reviewEnabled: Boolean?,
     @JsonProperty("fork_enabled")
-    @ApiModelProperty(name = "fork_enabled")
+    @get:Schema(title = "fork_enabled")
     val forkEnabled: Boolean?,
     @JsonProperty("tag_create_push_level")
-    @ApiModelProperty(name = "tag_create_push_level")
+    @get:Schema(title = "tag_create_push_level")
     val tagCreatePushLevel: Long?,
     @JsonProperty("created_at")
-    @ApiModelProperty(name = "created_at")
+    @get:Schema(title = "created_at")
     val createdAt: String?,
     @JsonProperty("last_activity_at")
-    @ApiModelProperty(name = "last_activity_at")
+    @get:Schema(title = "last_activity_at")
     val lastActivityAt: String?,
     @JsonProperty("creator_id")
-    @ApiModelProperty(name = "creator_id")
+    @get:Schema(title = "creator_id")
     val creatorId: String?,
     @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
+    @get:Schema(title = "avatar_url")
     val avatarUrl: String?,
     @JsonProperty("watchs_count")
-    @ApiModelProperty(name = "watchs_count")
+    @get:Schema(title = "watchs_count")
     val watchsCount: Long?,
     @JsonProperty("stars_count")
-    @ApiModelProperty(name = "stars_count")
+    @get:Schema(title = "stars_count")
     val starsCount: Long?,
     @JsonProperty("forks_count")
-    @ApiModelProperty(name = "forks_count")
+    @get:Schema(title = "forks_count")
     val forksCount: Long?,
     @JsonProperty("push_reset_enabled")
-    @ApiModelProperty(name = "push_reset_enabled")
+    @get:Schema(title = "push_reset_enabled")
     val pushResetEnabled: Boolean?,
     @JsonProperty("description")
-    @ApiModelProperty(name = "description")
+    @get:Schema(title = "description")
     val description: String?
 )

@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.log.constant.Constants.BULK_BUFFER_SIZE
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
@@ -43,7 +44,6 @@ import com.tencent.devops.worker.common.LOG_MESSAGE_LENGTH_LIMIT
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
-import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
 import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
@@ -53,10 +53,13 @@ import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
+import java.time.Duration
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -74,6 +77,24 @@ object LoggerService {
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+    private val circuitBreakerRegistry = CircuitBreakerRegistry.of(
+        CircuitBreakerConfig.custom()
+            .enableAutomaticTransitionFromOpenToHalfOpen()
+            .writableStackTraceEnabled(false)
+            // 当熔断后等待 300s 放开熔断
+            .waitDurationInOpenState(Duration.ofSeconds(300))
+            // 熔断放开后，运行通过的请求数，如果达到熔断条件，继续熔断
+            .permittedNumberOfCallsInHalfOpenState(100)
+            // 当错误率达到 10% 开启熔断
+            .failureRateThreshold(10.0F)
+            // 慢请求超过 10% 开启熔断
+            .slowCallRateThreshold(10.0F)
+            // 请求超过 1s 就是慢请求
+            .slowCallDurationThreshold(Duration.ofSeconds(1))
+            // 滑动窗口大小为 100，默认值
+            .slidingWindowSize(100)
+            .build()
+    )
 
     /**
      * 构建日志处理的异步线程池
@@ -131,7 +152,7 @@ object LoggerService {
                 val size = logMessages.size
                 val now = System.currentTimeMillis()
                 // 缓冲大于200条或上次保存时间超过3秒
-                if (size >= LOG_UPLOAD_BUFFER_SIZE || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
+                if (size >= BULK_BUFFER_SIZE || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
                     flush()
                     lastSaveTime = now
                     currentTaskLineNo += size
@@ -390,7 +411,9 @@ object LoggerService {
             logger.info("Finished archiving log $archivedCount files")
 
             // 同步所有存储状态到log服务端
-            logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
+            doWithCircuitBreaker {
+                logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
+            }
             logger.info("Finished update mode to log service.")
         } catch (ignored: Throwable) {
             logger.warn("Fail to archive log files", ignored)
@@ -412,7 +435,9 @@ object LoggerService {
             }
 
             // 通过上报的结果感知是否需要调整模式
-            val result = logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", logMessages)
+            val result = doWithCircuitBreaker {
+                logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", logMessages)
+            }
             when {
                 // 当log服务返回拒绝请求或者并发量超限制时，自动切换模式为本地保存并归档
                 result.status == 503 || result.status == 509 -> {
@@ -460,13 +485,15 @@ object LoggerService {
         try {
             currentTaskLineNo = 0
             logger.info("Start to finish the log, property: ${elementId2LogProperty[tag]}")
-            val result = logResourceApi.finishLog(
-                tag = tag,
-                jobId = jobId,
-                executeCount = executeCount,
-                subTag = subTag,
-                logMode = elementId2LogProperty[tag]?.logStorageMode
-            )
+            val result = doWithCircuitBreaker {
+                logResourceApi.finishLog(
+                    tag = tag,
+                    jobId = jobId,
+                    executeCount = executeCount,
+                    subTag = subTag,
+                    logMode = elementId2LogProperty[tag]?.logStorageMode
+                )
+            }
             if (result.isNotOk()) {
                 logger.error("Fail to send the log status ：${result.message}")
             }
@@ -484,5 +511,16 @@ object LoggerService {
         // 将全局日志模式设为本地保存
         logger.warn("Set AgentEnv logMode to ${LogStorageMode.LOCAL.name}")
         AgentEnv.setLogMode(LogStorageMode.LOCAL)
+    }
+
+    private fun <T> doWithCircuitBreaker(
+        action: () -> T
+    ): T {
+        return circuitBreakerRegistry.let {
+            val breaker = it.circuitBreaker(this.javaClass.name)
+            breaker.executeCallable {
+                action()
+            }
+        }
     }
 }

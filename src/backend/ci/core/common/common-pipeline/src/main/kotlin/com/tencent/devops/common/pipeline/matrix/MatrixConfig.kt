@@ -2,17 +2,16 @@ package com.tencent.devops.common.pipeline.matrix
 
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("矩阵的分裂计算配置")
+@Schema(title = "矩阵的分裂计算配置")
 @Suppress("ComplexMethod")
 data class MatrixConfig(
-    @ApiModelProperty("分裂策略", required = true)
+    @get:Schema(title = "分裂策略", required = true)
     val strategy: Map<String, List<String>>?,
-    @ApiModelProperty("额外的参数组合", required = true)
+    @get:Schema(title = "额外的参数组合", required = true)
     val include: MutableList<Map<String, String>>?,
-    @ApiModelProperty("排除的参数组合", required = false)
+    @get:Schema(title = "排除的参数组合", required = false)
     val exclude: MutableList<Map<String, String>>?
 ) {
 

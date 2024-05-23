@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v2.models.step
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class Step(
     val name: String?,
@@ -48,7 +48,7 @@ data class Step(
     val retryTimes: Int?,
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
-    @ApiModelProperty("run 插件的附加参数")
+    @get:Schema(title = "run 插件的附加参数")
     val runAdditionalOptions: Map<String, String?>?,
     val checkout: String?,
     // 在系统内唯一标识step唯一性，不参与yaml打印

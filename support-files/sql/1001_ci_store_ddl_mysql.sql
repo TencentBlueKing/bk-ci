@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `SUMMARY` varchar(256) DEFAULT NULL COMMENT '简介',
   `DESCRIPTION` text COMMENT '描述',
   `CATEGROY` tinyint(4) NOT NULL DEFAULT '1' COMMENT '类别',
-  `VERSION` varchar(20) NOT NULL COMMENT '版本号',
+  `VERSION` varchar(30) NOT NULL COMMENT '版本号',
   `LOGO_URL` varchar(256) DEFAULT NULL COMMENT 'LOGO URL地址',
   `ICON` text COMMENT '插件图标',
   `DEFAULT_FLAG` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否为默认原子',
@@ -84,6 +84,8 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `PRIVATE_REASON` varchar(256) DEFAULT NULL COMMENT '插件代码库不开源原因',
   `DELETE_FLAG` bit(1) DEFAULT b'0' COMMENT '是否删除',
   `BRANCH` VARCHAR(128) DEFAULT 'master' COMMENT '代码库分支',
+  `BRANCH_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否是分支测试版本',
+  `LATEST_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否为最新测试版本原子， TRUE：最新 FALSE：非最新',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tpca_code_version` (`ATOM_CODE`,`VERSION`),
   KEY `inx_tpca_service_code` (`SERVICE_SCOPE`(255)),
@@ -401,9 +403,9 @@ CREATE TABLE IF NOT EXISTS `T_LABEL` (
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   `TYPE` tinyint(4) NOT NULL DEFAULT '0' COMMENT '类型',
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `uni_inx_name_type` (`LABEL_NAME`,`TYPE`),
-  UNIQUE KEY `uni_inx_code_type` (`LABEL_CODE`,`TYPE`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='原子标签信息表';
+  UNIQUE KEY `UNI_INX_TL_TYPE_NAME` (`TYPE`, `LABEL_NAME`),
+  UNIQUE KEY `UNI_INX_TL_TYPE_CODE` (`TYPE`, `LABEL_CODE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签信息表';
 
 -- ----------------------------
 -- Table structure for T_STORE_COMMENT
@@ -732,9 +734,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_APPROVE`
     `UPDATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `TOKEN` varchar(64) DEFAULT NULL,
     PRIMARY KEY (`ID`),
-    KEY `inx_tsa_applicant` (`APPLICANT`),
-    KEY `inx_tsa_type` (`TYPE`),
-    KEY `inx_tsa_status` (`STATUS`)
+    KEY `inx_tsa_store_code` (`STORE_CODE`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT='审核表';
 
@@ -1003,7 +1003,8 @@ CREATE TABLE IF NOT EXISTS `T_STORE_BUILD_INFO` (
   `SAMPLE_PROJECT_PATH` varchar(500) NOT NULL DEFAULT '' COMMENT '样例工程路径',
   `STORE_TYPE` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'store组件类型 0：插件 1：模板 2：镜像 3：IDE插件 4：微扩展',
   PRIMARY KEY (`ID`) USING BTREE,
-  UNIQUE KEY `inx_tsbi_language_type` (`LANGUAGE`,`STORE_TYPE`) USING BTREE
+  UNIQUE KEY `inx_tsbi_language_type` (`LANGUAGE`,`STORE_TYPE`) USING BTREE,
+  KEY `INX_TSBI_TYPE_ENABLE` (`STORE_TYPE`, `ENABLE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='store组件构建信息表';
 
 CREATE TABLE IF NOT EXISTS `T_STORE_BUILD_APP_REL` (

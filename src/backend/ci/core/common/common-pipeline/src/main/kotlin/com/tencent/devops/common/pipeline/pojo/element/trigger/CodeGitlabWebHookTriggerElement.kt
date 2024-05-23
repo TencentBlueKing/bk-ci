@@ -29,54 +29,56 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("GitLab仓库代码提交触发", description = CodeGitlabWebHookTriggerElement.classType)
+@Schema(title = "GitLab仓库代码提交触发", description = CodeGitlabWebHookTriggerElement.classType)
 data class CodeGitlabWebHookTriggerElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "Gitlab变更触发",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("仓库ID", required = true)
+    @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("分支名称", required = false)
+    @get:Schema(title = "分支名称", required = false)
     val branchName: String?,
-    @ApiModelProperty("新版的gitlab原子的类型")
+    @get:Schema(title = "新版的gitlab原子的类型")
     val repositoryType: RepositoryType? = null,
-    @ApiModelProperty("新版的gitlab代码库名")
+    @get:Schema(title = "新版的gitlab代码库名")
     val repositoryName: String? = null,
-    @ApiModelProperty("事件类型", required = false)
+    @get:Schema(title = "事件类型", required = false)
     val eventType: CodeEventType? = CodeEventType.PUSH,
-    @ApiModelProperty("用于排除的分支名", required = false)
+    @get:Schema(title = "用于排除的分支名", required = false)
     val excludeBranchName: String?,
-    @ApiModelProperty("路径过滤类型", required = true)
+    @get:Schema(title = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @ApiModelProperty("用于包含的路径", required = false)
+    @get:Schema(title = "用于包含的路径", required = false)
     val includePaths: String?,
-    @ApiModelProperty("用于排除的路径", required = false)
+    @get:Schema(title = "用于排除的路径", required = false)
     val excludePaths: String?,
-    @ApiModelProperty("用于包含的user id", required = false)
+    @get:Schema(title = "用于包含的user id", required = false)
     val includeUsers: List<String>? = null,
-    @ApiModelProperty("用于排除的user id", required = false)
+    @get:Schema(title = "用于排除的user id", required = false)
     val excludeUsers: List<String>?,
-    @ApiModelProperty("是否为block", required = false)
+    @get:Schema(title = "是否为block", required = false)
     val block: Boolean?,
-    @ApiModelProperty("tag名称", required = false)
+    @get:Schema(title = "tag名称", required = false)
     val tagName: String? = null,
-    @ApiModelProperty("用于排除的tag名称", required = false)
+    @get:Schema(title = "用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
-    @ApiModelProperty("用于排除的源分支名称", required = false)
+    @get:Schema(title = "用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
-    @ApiModelProperty("用于包含的源分支名称", required = false)
+    @get:Schema(title = "用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
-    @ApiModelProperty("用于包含的提交信息", required = false)
+    @get:Schema(title = "用于包含的提交信息", required = false)
     val includeCommitMsg: String? = null,
-    @ApiModelProperty("用于排除的提交信息", required = false)
+    @get:Schema(title = "用于排除的提交信息", required = false)
     val excludeCommitMsg: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
@@ -91,5 +93,71 @@ data class CodeGitlabWebHookTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): List<ElementProp> {
+        val props = when (eventType) {
+            CodeEventType.PUSH -> {
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.MERGE_REQUEST -> {
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                listOf(
+                    vuexInput(name = "action", value = "merge"),
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.TAG_PUSH -> {
+                listOf(
+                    vuexInput(name = "tagName", value = tagName),
+                    vuexInput(name = "excludeTagName", value = excludeTagName)
+                )
+            }
+
+            else ->
+                emptyList()
+        }
+        return props.filterNotNull()
     }
 }

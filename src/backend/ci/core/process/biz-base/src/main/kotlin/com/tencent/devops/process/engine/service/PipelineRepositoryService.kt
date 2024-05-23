@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -34,6 +35,7 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
@@ -43,13 +45,14 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
+import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -68,6 +71,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
@@ -75,6 +79,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
@@ -82,6 +87,7 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -121,6 +127,7 @@ class PipelineRepositoryService constructor(
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao,
+    private val templateDao: TemplateDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
@@ -164,6 +171,16 @@ class PipelineRepositoryService constructor(
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     return@lit
+                }
+            }
+        }
+
+        // 检查jobId长度，并打日志方便后续填充和报错
+        model.stages.forEach { stage ->
+            stage.containers.forEach { con ->
+                if ((con.jobId?.length ?: 0) > 32) {
+                    // TODO: 会在issue #9810 中改为在DefaultModelCheckPlugin中填充和限制jobId的逻辑，这里先打印统计日志
+                    logger.warn("deployPipeline|#9810|$pipelineId|${con.jobId!!.length}")
                 }
             }
         }
@@ -289,6 +306,9 @@ class PipelineRepositoryService constructor(
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
         distIds.add(c.containerHashId!!)
+
+        // 清理无用的options
+        c.params = PipelineUtils.cleanOptions(c.params)
 
         var taskSeq = 0
         c.elements.forEach { e ->
@@ -455,13 +475,11 @@ class PipelineRepositoryService constructor(
                     "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
-        MatrixContextUtils.schemaCheck(
-            JsonUtil.toJson(
-                MatrixPipelineInfo(
-                    include = option.includeCaseStr,
-                    exclude = option.excludeCaseStr,
-                    strategy = option.strategyStr
-                ).toMatrixConvert()
+        MatrixYamlCheckUtils.checkYaml(
+            MatrixPipelineInfo(
+                include = option.includeCaseStr,
+                exclude = option.excludeCaseStr,
+                strategy = option.strategyStr
             )
         )
     }
@@ -752,13 +770,20 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null,
-        delete: Boolean? = false
+        delete: Boolean? = false,
+        queryDslContext: DSLContext? = null
     ): PipelineInfo? {
-        val template = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val finalDslContext = queryDslContext ?: dslContext
+        val template = templatePipelineDao.get(finalDslContext, projectId, pipelineId)
+        val srcTemplate = template?.let { t ->
+            templateDao.getTemplate(
+                dslContext = finalDslContext, templateId = t.templateId
+            )
+        }
         val templateId = template?.templateId
-        return pipelineInfoDao.convert(
+        val info = pipelineInfoDao.convert(
             t = pipelineInfoDao.getPipelineInfo(
-                dslContext = dslContext,
+                dslContext = finalDslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
@@ -766,6 +791,16 @@ class PipelineRepositoryService constructor(
             ),
             templateId = templateId
         )
+        if (info != null && srcTemplate != null) {
+            info.templateInfo = TemplateInfo(
+                templateId = template.templateId,
+                templateName = srcTemplate.templateName,
+                version = template.version,
+                versionName = template.versionName,
+                instanceType = PipelineInstanceTypeEnum.valueOf(template.instanceType)
+            )
+        }
+        return info
     }
 
     /**
@@ -1129,6 +1164,15 @@ class PipelineRepositoryService constructor(
             val lock = PipelineModelLock(redisOperation, pipelineModelVersion.pipelineId)
             try {
                 lock.lock()
+                // 审计
+                ActionAuditContext.current().addInstanceInfo(
+                    pipelineModelVersion.pipelineId,
+                    pipelineModelVersion.pipelineId,
+                    null,
+                    pipelineModelVersion.model
+                )
+                    .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
+                    .scopeId = pipelineModelVersion.projectId
                 pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
             } finally {
                 lock.unlock()
@@ -1147,9 +1191,10 @@ class PipelineRepositoryService constructor(
         sortType: PipelineSortType,
         collation: PipelineCollation
     ): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(
+        val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
             projectId = projectId,
+            deleteFlag = true,
             days = days,
             offset = offset,
             limit = limit,

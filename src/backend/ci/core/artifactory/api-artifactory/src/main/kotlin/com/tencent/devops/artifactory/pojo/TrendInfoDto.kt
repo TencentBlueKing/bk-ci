@@ -27,11 +27,10 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本仓库-构建曲线")
+@Schema(title = "版本仓库-构建曲线")
 data class TrendInfoDto(
-    @ApiModelProperty("曲线图谱")
+    @get:Schema(title = "曲线图谱")
     var trendData: Map<String, List<ArtifactoryInfo>>
 )

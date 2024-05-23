@@ -145,8 +145,12 @@ const actions: ActionTree<RootState, any> = {
     /**
      * 项目列表 (项目管理界面)
      */
-    fetchProjectList () {
-        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects?unApproved=true`)
+    fetchProjectList (_, payload = {
+        sortType: '',
+        collation: ''
+    }) {
+        const { sortType, collation } = payload
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects?unApproved=true&sortType=${sortType}&collation=${collation}`)
     },
     /**
      * 申请加入项目

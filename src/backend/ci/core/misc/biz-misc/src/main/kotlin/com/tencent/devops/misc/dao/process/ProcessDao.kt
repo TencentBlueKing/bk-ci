@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.dao.process
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.misc.pojo.project.PipelineVersionSimple
 import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
@@ -88,16 +89,31 @@ class ProcessDao {
         }
     }
 
+    fun getPipelineNumByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        with(TPipelineInfo.T_PIPELINE_INFO) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun getPipelineIdListByProjectId(
         dslContext: DSLContext,
         projectId: String,
         minId: Long,
-        limit: Long
+        limit: Long,
+        gapDays: Long? = null
     ): Result<out Record>? {
         with(TPipelineInfo.T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(ID.ge(minId))
+            if (gapDays != null) {
+                conditions.add(UPDATE_TIME.lt(LocalDateTime.now().minusDays(gapDays)))
+            }
             return dslContext.select(PIPELINE_ID).from(this)
                 .where(conditions)
                 .orderBy(ID.asc())
@@ -231,6 +247,28 @@ class ProcessDao {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
             return baseStep.orderBy(BUILD_ID).fetch()
+        }
+    }
+
+    fun getHistoryInfoList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int,
+        statusList: List<BuildStatus>? = null
+    ): Result<out Record>? {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            if (!statusList.isNullOrEmpty()) {
+                conditions.add(STATUS.`in`(statusList.map { it.ordinal }))
+            }
+            return dslContext.select(BUILD_ID, CHANNEL, START_USER)
+                .from(this)
+                .where(conditions)
+                .orderBy(BUILD_ID).limit(limit).offset(offset).fetch()
         }
     }
 

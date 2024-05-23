@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_NON_TIMED_TRIGGER_SKIP
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_RETRY_TIMED_TRIGGER_SKIP
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
 import com.tencent.devops.process.constant.ProcessMessageCode.OK
@@ -73,6 +74,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         // 非定时触发的直接跳过
         if (task.startType != StartType.TIME_TRIGGER) {
             return Response(OK, I18nUtil.getCodeLanMessage(BK_NON_TIMED_TRIGGER_SKIP))
+        }
+        // 定时触发，如果流水线执行失败，此时重试流水线不校验源码是否变更
+        if (task.retry == true) {
+            return Response(OK, I18nUtil.getCodeLanMessage(BK_RETRY_TIMED_TRIGGER_SKIP))
         }
 
         val pipelineId = task.pipelineInfo.pipelineId

@@ -19,7 +19,7 @@
                     </div>
                     <template v-else>
                         <draggable v-model="globalParams" :options="paramsDragOptions">
-                            <accordion v-for="(param, index) in globalParams" :key="param.paramIdKey" :is-error="errors.any(`param-${param.id}`)">
+                            <accordion v-for="(param, index) in globalParams" condition :key="param.paramIdKey" :is-error="errors.any(`param-${param.id}`)">
                                 <header class="param-header" slot="header">
                                     <span>
                                         <bk-popover style="vertical-align: middle" v-if="errors.all(`param-${param.id}`).length" placement="top">
@@ -143,42 +143,42 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import { deepCopy } from '@/utils/util'
+    import FileParamInput from '@/components/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import FileParamInput from '@/components/FileParamInput'
-    import validMixins from '../validMixins'
-    import draggable from 'vuedraggable'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
     import {
-        isTextareaParam,
-        isStringParam,
-        isBooleanParam,
-        isBuildResourceParam,
-        isEnumParam,
-        isMultipleParam,
-        isCodelibParam,
-        isSvnParam,
-        isGitParam,
-        isSubPipelineParam,
-        isFileParam,
-        getRepoOption,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
+        CODE_LIB_OPTION,
+        CODE_LIB_TYPE,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING,
-        CODE_LIB_OPTION,
-        CODE_LIB_TYPE,
-        SUB_PIPELINE_OPTION
+        SUB_PIPELINE_OPTION,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
+        getRepoOption,
+        isBooleanParam,
+        isBuildResourceParam,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isStringParam,
+        isSubPipelineParam,
+        isSvnParam,
+        isTextareaParam
     } from '@/store/modules/atom/paramsConfig'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy } from '@/utils/util'
+    import draggable from 'vuedraggable'
+    import { mapGetters } from 'vuex'
+    import validMixins from '../validMixins'
 
     const BOOLEAN = [
         {

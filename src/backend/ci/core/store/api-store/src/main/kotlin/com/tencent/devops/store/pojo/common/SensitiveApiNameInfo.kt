@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("敏感API名称信息")
+@Schema(title = "敏感API名称信息")
 data class SensitiveApiNameInfo(
-    @ApiModelProperty("敏感API名")
+    @get:Schema(title = "敏感API名")
     val apiName: String,
-    @ApiModelProperty("敏感API别名,不同语言SDK中敏感API对应的方法名")
+    @get:Schema(title = "敏感API别名,不同语言SDK中敏感API对应的方法名")
     val aliasName: String
 )

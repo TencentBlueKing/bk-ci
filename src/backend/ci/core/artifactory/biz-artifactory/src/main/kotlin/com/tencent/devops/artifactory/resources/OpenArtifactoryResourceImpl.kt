@@ -51,7 +51,7 @@ class OpenArtifactoryResourceImpl(
         token: String,
         nodeCreatedEventPayload: NodeCreatedEventPayload
     ) {
-        val validateTokenFlag = clientTokenService.checkToken(null, token)
+        val validateTokenFlag = clientTokenService.checkToken(token)
         if (!validateTokenFlag) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,

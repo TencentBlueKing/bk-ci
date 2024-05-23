@@ -6,10 +6,10 @@
             </div>
             <div :key="curPipelineId" class="more-operation-dropmenu" slot="dropdown-content">
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
-                    <template v-for="(action, aIndex) in parent">
+                    <template v-for="action in parent">
                         <li
                             v-if="!action.hidden"
-                            :key="aIndex"
+                            :key="action.label"
                             v-perm="{
                                 permissionData: action.permissionData
                             }"
@@ -61,11 +61,12 @@
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
-        PROJECT_RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
+
     export default {
         components: {
             ImportPipelinePopup,
@@ -89,6 +90,12 @@
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             isTemplatePipeline () {
                 return this.curPipeline?.instanceFromTemplate ?? false
             },
@@ -143,6 +150,20 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
+                        ...(
+                            pipeline.templateId
+                                ? [{
+                                    label: 'copyAsTemplateInstance',
+                                    handler: () => this.copyAsTemplateInstance(pipeline),
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'project',
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }]
+                                : []
+                        ),
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
@@ -160,7 +181,7 @@
                                 projectId,
                                 resourceType: 'project',
                                 resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
                             }
                         },
                         {
@@ -261,6 +282,11 @@
                         theme
                     })
                 }
+            },
+            copyAsTemplateInstance (pipeline) {
+                const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
+                const { templateId, projectId, templateVersion } = pipeline
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}`
             }
         }
     }

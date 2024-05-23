@@ -115,7 +115,6 @@ $ helm uninstall bkci
 - artifactory
 - auth
 - dispatch
-- dispatch-docker
 - environment
 - gateway
 - image

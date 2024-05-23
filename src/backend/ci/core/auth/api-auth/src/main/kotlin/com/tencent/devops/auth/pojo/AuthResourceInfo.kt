@@ -28,10 +28,10 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("资源信息")
+@Schema(title = "资源信息")
 data class AuthResourceInfo(
     val id: Long? = null,
     val projectCode: String,

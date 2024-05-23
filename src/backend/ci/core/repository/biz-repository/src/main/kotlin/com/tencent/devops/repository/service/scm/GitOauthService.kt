@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -40,6 +39,7 @@ import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
@@ -72,10 +72,10 @@ class GitOauthService @Autowired constructor(
 ) : IGitOauthService {
 
     @Value("\${aes.git:#{null}}")
-    private val aesKey: String? = ""
+    private val aesKey: String = ""
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitOauthService::class.java)
+        private val logger = LoggerFactory.getLogger(GitOauthService::class.java)
     }
 
     override fun getProject(userId: String, projectId: String, repoHashId: String?, search: String?): AuthorizeResult {
@@ -153,7 +153,8 @@ class GitOauthService @Autowired constructor(
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
         gitProjectId: Long?,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        resetType: String?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
@@ -169,7 +170,8 @@ class GitOauthService @Autowired constructor(
             "userId" to userId,
             "redirectUrlType" to redirectUrlType?.type,
             "redirectUrl" to redirectUrl,
-            "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
+            "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}",
+            "resetType" to resetType
         )
         val accessToken = if (refreshToken == true) {
             null
@@ -177,6 +179,13 @@ class GitOauthService @Autowired constructor(
             getAccessToken(userId)
         } ?: return AuthorizeResult(403, getAuthUrl(authParams))
         logger.info("isOAuth accessToken is: $accessToken")
+        // 检查accessToken 是否可用
+        try {
+            gitService.getUserInfoByToken(accessToken.accessToken)
+        } catch (e: Exception) {
+            logger.info("get oauth project fail: ${e.message}")
+            return AuthorizeResult(403, getAuthUrl(authParams))
+        }
         return AuthorizeResult(200, "")
     }
 
@@ -260,8 +269,8 @@ class GitOauthService @Autowired constructor(
     private fun doGetAccessToken(userId: String): GitToken? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
             GitToken(
-                accessToken = AESUtil.decrypt(aesKey!!, it.accessToken),
-                refreshToken = AESUtil.decrypt(aesKey!!, it.refreshToken),
+                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli()
@@ -272,14 +281,14 @@ class GitOauthService @Autowired constructor(
     private fun refreshToken(userId: String, gitToken: GitToken): GitToken {
         val token = gitService.refreshToken(userId, gitToken)
         saveAccessToken(userId, token)
-        token.accessToken = AESUtil.decrypt(aesKey!!, token.accessToken)
-        token.refreshToken = AESUtil.decrypt(aesKey!!, token.refreshToken)
+        token.accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.accessToken)
+        token.refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.refreshToken)
         return token
     }
 
     override fun saveAccessToken(userId: String, tGitToken: GitToken): Int {
-        tGitToken.accessToken = AESUtil.encrypt(aesKey!!, tGitToken.accessToken)
-        tGitToken.refreshToken = AESUtil.encrypt(aesKey!!, tGitToken.refreshToken)
+        tGitToken.accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, tGitToken.accessToken)
+        tGitToken.refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, tGitToken.refreshToken)
         return gitTokenDao.saveAccessToken(dslContext, userId, tGitToken)
     }
 

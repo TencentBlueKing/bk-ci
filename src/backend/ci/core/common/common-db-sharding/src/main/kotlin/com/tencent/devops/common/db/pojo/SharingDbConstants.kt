@@ -28,4 +28,10 @@
 package com.tencent.devops.common.db.pojo
 
 const val DATA_SOURCE_NAME_PREFIX = "ds_"
+const val MIGRATING_DATA_SOURCE_NAME_PREFIX = "mig_ds_"
+const val ARCHIVE_DATA_SOURCE_NAME_PREFIX = "archive_ds_"
 const val DEFAULT_DATA_SOURCE_NAME = "ds_0"
+const val DEFAULT_MIGRATING_DATA_SOURCE_NAME = "mig_ds_0"
+const val DEFAULT_ARCHIVE_DATA_SOURCE_NAME = "archive_ds_0"
+const val MIGRATING_SHARDING_DSL_CONTEXT = "migratingShardingDslContext"
+const val ARCHIVE_SHARDING_DSL_CONTEXT = "archiveShardingDslContext"

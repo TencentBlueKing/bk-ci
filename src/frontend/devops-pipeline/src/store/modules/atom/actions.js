@@ -139,13 +139,32 @@ export default {
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
-    requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
+    requestTemplate: async ({ commit, dispatch, getters }, { projectId, templateId, version }) => {
         try {
-            const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
-            const response = await request.get(url)
-            dispatch('setPipeline', response.data.template)
+            const versionQuery = version
+                ? {
+                    version
+                }
+                : null
+            const [templateRes, atomPropRes] = await Promise.all([
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`, {
+                    params: versionQuery
+                }),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/template/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
+                    params: versionQuery
+                })
+            ])
+            const template = templateRes.data.template
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(template.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+            dispatch('setPipeline', template)
             commit(SET_TEMPLATE, {
-                template: response.data
+                template: templateRes.data
             })
         } catch (e) {
             if (e.code === 403) {
@@ -565,7 +584,7 @@ export default {
     // 第一次拉取日志
 
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, subTag, debug }) {
-        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
                 jobId,
@@ -578,7 +597,7 @@ export default {
 
     // 后续拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, lineNo, subTag, debug }) {
-        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
@@ -595,11 +614,11 @@ export default {
     },
 
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
-        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
     },
 
     getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
-        return request.get(`${API_URL_PREFIX}/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
+        return request.get(`/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
             const data = res.data || {}
             return data.url || ''
         })

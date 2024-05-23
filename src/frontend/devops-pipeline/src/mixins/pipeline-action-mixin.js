@@ -31,6 +31,7 @@ import {
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 import {
+    TEMPLATE_RESOURCE_ACTION,
     PROJECT_RESOURCE_ACTION,
     RESOURCE_ACTION,
     handleProjectNoPermission
@@ -42,7 +43,8 @@ export default {
     data () {
         return {
             pipelineMap: {},
-            hasTemplatePermission: false
+            hasTemplatePermission: false,
+            hasCreatePermission: false
         }
     },
     computed: {
@@ -58,6 +60,7 @@ export default {
     },
     created () {
         this.checkHasTemplatePermission()
+        this.checkHasCreatePermission()
     },
     methods: {
         ...mapMutations('pipelines', [
@@ -72,7 +75,8 @@ export default {
             'requestToggleCollect',
             'deletePipeline',
             'copyPipeline',
-            'restorePipeline'
+            'restorePipeline',
+            'requestHasCreatePermission'
         ]),
         async checkHasTemplatePermission () {
             this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
@@ -177,6 +181,10 @@ export default {
             }
             return ''
         },
+        async checkHasCreatePermission () {
+            const res = await this.requestHasCreatePermission(this.$route.params)
+            this.hasCreatePermission = res
+        },
         getPipelineActions (pipeline) {
             const isShowRemovedAction = ![
                 ALL_PIPELINE_VIEW_ID,
@@ -203,6 +211,20 @@ export default {
                     text: this.$t('addTo'),
                     handler: this.addToHandler
                 },
+                ...(pipeline.templateId
+                    ? [{
+                        text: this.$t('copyAsTemplateInstance'),
+                        handler: () => this.copyAsTemplateInstance(pipeline),
+                        hasPermission: this.hasCreatePermission,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: pipeline.projectId,
+                            resourceType: 'project',
+                            resourceCode: pipeline.projectId,
+                            action: RESOURCE_ACTION.CREATE
+                        }
+                    }]
+                    : []),
                 {
                     text: this.$t('newlist.copyAs'),
                     handler: this.copyAs,
@@ -219,12 +241,12 @@ export default {
                     text: this.$t('newlist.saveAsTemp'),
                     handler: this.saveAsTempHandler,
                     hasPermission: this.hasTemplatePermission,
-                    disablePermissionApi: false,
+                    disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: 'project',
                         resourceCode: pipeline.projectId,
-                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                        action: TEMPLATE_RESOURCE_ACTION.CREATE
                     }
                 },
                 ...(pipeline.isInstanceTemplate
@@ -485,6 +507,11 @@ export default {
                     })
                 }
             })
+        },
+        copyAsTemplateInstance (pipeline) {
+            const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
+            const { templateId, projectId, version } = pipeline
+            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${pipelineName}`
         }
     }
 }

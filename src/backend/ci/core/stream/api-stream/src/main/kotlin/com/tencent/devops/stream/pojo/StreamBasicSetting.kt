@@ -27,77 +27,76 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("蓝盾stream 项目配置V2")
+@Schema(title = "蓝盾stream 项目配置V2")
 data class StreamBasicSetting(
-    @ApiModelProperty("stream 项目ID")
+    @get:Schema(title = "stream 项目ID")
     override val gitProjectId: Long,
-    @ApiModelProperty("stream 项目名")
+    @get:Schema(title = "stream 项目名")
     override val name: String,
-    @ApiModelProperty("stream 项目url")
+    @get:Schema(title = "stream 项目url")
     override val url: String,
-    @ApiModelProperty("homepage")
+    @get:Schema(title = "homepage")
     override val homepage: String,
-    @ApiModelProperty("gitHttpUrl")
+    @get:Schema(title = "gitHttpUrl")
     override val gitHttpUrl: String,
-    @ApiModelProperty("gitSshUrl")
+    @get:Schema(title = "gitSshUrl")
     override val gitSshUrl: String,
-    @ApiModelProperty("是否启用CI")
+    @get:Schema(title = "是否启用CI")
     val enableCi: Boolean,
-    @ApiModelProperty("Build pushed branches")
+    @get:Schema(title = "Build pushed branches")
     val buildPushedBranches: Boolean = true,
-    @ApiModelProperty("Build pushed pull request")
+    @get:Schema(title = "Build pushed pull request")
     val buildPushedPullRequest: Boolean = true,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long?,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: Long?,
-    @ApiModelProperty("蓝盾项目Code")
+    @get:Schema(title = "蓝盾项目Code")
     val projectCode: String?,
-    @ApiModelProperty("是否开启Mr锁定")
+    @get:Schema(title = "是否开启Mr锁定")
     val enableMrBlock: Boolean = true,
-    @ApiModelProperty("Stream开启人")
+    @get:Schema(title = "Stream开启人")
     val enableUserId: String,
-    @ApiModelProperty("Stream开启人所在事业群")
+    @get:Schema(title = "Stream开启人所在事业群")
     var creatorBgName: String?,
-    @ApiModelProperty("Stream开启人所在部门")
+    @get:Schema(title = "Stream开启人所在部门")
     var creatorDeptName: String?,
-    @ApiModelProperty("Stream开启人所在中心")
+    @get:Schema(title = "Stream开启人所在中心")
     var creatorCenterName: String?,
-    @ApiModelProperty("GIT项目的描述信息")
+    @get:Schema(title = "GIT项目的描述信息")
     val gitProjectDesc: String?,
-    @ApiModelProperty("GIT项目的头像信息")
+    @get:Schema(title = "GIT项目的头像信息")
     val gitProjectAvatar: String?,
-    @ApiModelProperty("带有名空间的项目名称")
+    @get:Schema(title = "带有名空间的项目名称")
     val nameWithNamespace: String,
-    @ApiModelProperty("带有名空间的项目路径")
+    @get:Schema(title = "带有名空间的项目路径")
     val pathWithNamespace: String?,
-    @ApiModelProperty("项目最后一次构建的CI信息")
+    @get:Schema(title = "项目最后一次构建的CI信息")
     val lastCiInfo: StreamCIInfo?,
-    @ApiModelProperty("项目下构建是否发送commitCheck")
+    @get:Schema(title = "项目下构建是否发送commitCheck")
     val enableCommitCheck: Boolean = true,
-    @ApiModelProperty("项目下构建是否发送mrComment")
+    @get:Schema(title = "项目下构建是否发送mrComment")
     val enableMrComment: Boolean = true,
-    @ApiModelProperty("pr、mr触发时的权限校验")
+    @get:Schema(title = "pr、mr触发时的权限校验")
     val triggerReviewSetting: TriggerReviewSetting = TriggerReviewSetting()
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
-@ApiModel("蓝盾stream 页面修改配置")
+@Schema(title = "蓝盾stream 页面修改配置")
 data class StreamUpdateSetting(
-    @ApiModelProperty("Build pushed branches")
+    @get:Schema(title = "Build pushed branches")
     val buildPushedBranches: Boolean,
-    @ApiModelProperty("Build pushed pull request")
+    @get:Schema(title = "Build pushed pull request")
     val buildPushedPullRequest: Boolean,
-    @ApiModelProperty("是否开启Mr锁定")
+    @get:Schema(title = "是否开启Mr锁定")
     val enableMrBlock: Boolean
 )
 
-@ApiModel("mr触发时的权限校验相关配置")
+@Schema(title = "mr触发时的权限校验相关配置")
 data class TriggerReviewSetting(
-    @ApiModelProperty("主库开发者及以上的用户提交的pr、mr是否默认给触发")
+    @get:Schema(title = "主库开发者及以上的用户提交的pr、mr是否默认给触发")
     val memberNoNeedApproving: Boolean = true,
-    @ApiModelProperty("白名单，可以是用户或者项目id")
+    @get:Schema(title = "白名单，可以是用户或者项目id")
     val whitelist: List<String> = emptyList()
 )

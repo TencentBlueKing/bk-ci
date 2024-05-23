@@ -1,20 +1,19 @@
 package com.tencent.devops.process.pojo.classify
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("命中动态组情况")
+@Schema(title = "命中动态组情况")
 data class PipelineViewMatchDynamic(
-    @ApiModelProperty("流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("标签列表")
+    @get:Schema(title = "标签列表")
     val labels: List<LabelInfo>
 ) {
-    @ApiModel("标签信息")
+    @Schema(title = "标签信息")
     data class LabelInfo(
-        @ApiModelProperty("标签分组id", required = false)
+        @get:Schema(title = "标签分组id", required = false)
         val groupId: String,
-        @ApiModelProperty("标签id列表", required = false)
+        @get:Schema(title = "标签id列表", required = false)
         val labelIds: List<String>
     )
 }

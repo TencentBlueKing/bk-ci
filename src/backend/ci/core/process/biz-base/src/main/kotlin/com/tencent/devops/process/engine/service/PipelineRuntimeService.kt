@@ -62,7 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -80,11 +80,13 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNumAliasLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
+import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -105,6 +107,7 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -127,6 +130,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
@@ -144,6 +148,7 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -215,8 +220,8 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun getBuildInfo(projectId: String, buildId: String): BuildInfo? {
-        val t = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+    fun getBuildInfo(projectId: String, buildId: String, queryDslContext: DSLContext? = null): BuildInfo? {
+        val t = pipelineBuildDao.getBuildInfo(queryDslContext ?: dslContext, projectId, buildId)
         return pipelineBuildDao.convert(t)
     }
 
@@ -369,12 +374,13 @@ class PipelineRuntimeService @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         startUser: List<String>?,
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        queryDslContext: DSLContext? = null
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             materialAlias = materialAlias,
@@ -682,6 +688,8 @@ class PipelineRuntimeService @Autowired constructor(
 //        var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         var afterRetryStage = false
+        // #10082 针对构建容器的第三方构建机组装复用互斥信息
+        val agentReuseMutexTree = AgentReuseMutexTree(mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
@@ -727,17 +735,21 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
+                        stageEnableFlag = stage.isStageEnable(),
                         container = container,
                         context = context,
                         buildStatus = null,
                         taskBuildRecords = taskBuildRecords
                     )
+                    // 清理options变量
+                    container.params = PipelineUtils.cleanOptions(container.params)
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -750,6 +762,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -757,6 +770,9 @@ class PipelineRuntimeService @Autowired constructor(
                         )
                         return@nextContainer
                     }
+
+                    // #10082 针对构建容器的第三方构建机组装复用互斥信息
+                    agentReuseMutexTree.addNode(container, index)
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
@@ -793,24 +809,10 @@ class PipelineRuntimeService @Autowired constructor(
                     return@nextContainer
                 }
 
+                // --- 第3层循环：Element遍历处理 ---
                 /*
                     #4518 整合组装Task和刷新已有Container的逻辑
-                    构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
-                if (container.matrixGroupFlag == true) {
-                    container.retryFreshMatrixOption()
-                    pipelineContainerService.cleanContainersInMatrixGroup(
-                        transactionContext = dslContext,
-                        projectId = context.projectId,
-                        pipelineId = context.pipelineId,
-                        buildId = context.buildId,
-                        matrixGroupId = container.id!!
-                    )
-                    // 去掉要重试的矩阵内部数据
-                    updateExistsTask.removeIf { it.containerId == container.id }
-                    updateExistsContainerWithDetail.removeIf { it.first.matrixGroupId == container.id }
-                }
-                // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
                     container = container,
                     context = context,
@@ -887,7 +889,13 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 )
             }
+
+            // #10082 针对构建容器的第三方构建机组装复用互斥信息
+            agentReuseMutexTree.checkVirtualRootAndResetJobType()
         }
+
+        // #10082 使用互斥树节点重新回写Control和Container
+        agentReuseMutexTree.rewriteModel(buildContainersWithDetail, fullModel, buildTaskList)
 
         context.pipelineParamMap[PIPELINE_START_TASK_ID] =
             BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
@@ -961,15 +969,27 @@ class PipelineRuntimeService @Autowired constructor(
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
                 key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
             )
-
-            context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
-            buildVariableService.startBuildBatchSaveWithoutThreadSafety(
-                dslContext = transactionContext,
-                projectId = context.projectId,
-                pipelineId = context.pipelineId,
-                buildId = context.buildId,
-                variables = context.pipelineParamMap
-            )
+            if (buildHistoryRecord != null) {
+                // 重试构建需要增加锁保护更新VAR表
+                context.watcher.start("startBuildBatchSetVariable")
+                buildVariableService.batchSetVariable(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            } else {
+                // 全新构建不需要锁保护更新VAR表
+                context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
+                buildVariableService.startBuildBatchSaveWithoutThreadSafety(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            }
             context.watcher.start("saveBuildRuntimeRecord")
             saveBuildRuntimeRecord(
                 transactionContext = transactionContext,
@@ -1011,7 +1031,8 @@ class PipelineRuntimeService @Autowired constructor(
             id = context.buildId,
             executeCount = context.executeCount,
             projectId = context.projectId,
-            pipelineId = context.pipelineId
+            pipelineId = context.pipelineId,
+            num = context.buildNum
         )
     }
 
@@ -1118,6 +1139,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildContainers.forEach { (build, detail) ->
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = detail.name
+            containerVar[Container::startVMTaskSeq.name] = detail.startVMTaskSeq ?: 1
             build.containerHashId?.let { hashId ->
                 containerVar[Container::containerHashId.name] = hashId
             }
@@ -1496,6 +1518,7 @@ class PipelineRuntimeService @Autowired constructor(
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH,
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
+                    executeCount = buildTask.executeCount,
                     reason = completeTask.errorMsg
                 )
             )
@@ -1601,7 +1624,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
         with(latestRunningBuild) {
             val executeTime = try {
-                timeCost?.executeCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
+                timeCost?.totalCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
                 0L
@@ -1641,14 +1664,18 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun getBuildParametersFromStartup(projectId: String, buildId: String): List<BuildParameters> {
+    fun getBuildParametersFromStartup(
+        projectId: String,
+        buildId: String,
+        queryDslContext: DSLContext? = null
+    ): List<BuildParameters> {
         return try {
-            val buildParameters = pipelineBuildDao.getBuildParameters(dslContext, projectId, buildId)
+            val buildParameters = pipelineBuildDao.getBuildParameters(queryDslContext ?: dslContext, projectId, buildId)
             return if (buildParameters.isNullOrEmpty()) {
                 emptyList()
             } else {
                 (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
-                    .filter { !it.key.startsWith(SkipElementUtils.prefix) }
+                    .filter { !it.key.startsWith(ElementUtils.skipPrefix) }
             }
         } catch (ignore: Exception) {
             emptyList()
@@ -1726,10 +1753,11 @@ class PipelineRuntimeService @Autowired constructor(
         buildNoStart: Int? = null,
         buildNoEnd: Int? = null,
         buildMsg: String? = null,
-        startUser: List<String>? = null
+        startUser: List<String>? = null,
+        queryDslContext: DSLContext? = null
     ): Int {
         return pipelineBuildDao.count(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             materialAlias = materialAlias,
@@ -1853,5 +1881,63 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId,
             buildParameters = buildParameters
         )
+    }
+
+    fun concurrencyCancelBuildPipeline(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
+        groupName: String,
+        detailUrl: String
+    ) {
+        val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
+        try {
+            redisLock.lock()
+            val buildInfo = getBuildInfo(projectId, pipelineId, buildId)
+            val tasks = pipelineTaskService.getRunningTask(projectId, buildId)
+            tasks.forEach { task ->
+                val taskId = task["taskId"]?.toString() ?: ""
+                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: ${task["status"] ?: ""}")
+                val containerId = task["containerId"]?.toString() ?: ""
+                // #7599 兼容短时间取消状态异常优化
+                val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false)
+                redisOperation.addSetValue(cancelTaskSetKey, taskId)
+                redisOperation.expire(cancelTaskSetKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists",
+                    tag = taskId,
+                    jobId = task["containerId"]?.toString() ?: "",
+                    executeCount = task["executeCount"] as? Int ?: 1
+                )
+            }
+            if (tasks.isEmpty()) {
+                buildLogPrinter.addRedLine(
+                    buildId = buildId,
+                    message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists",
+                    tag = "QueueInterceptor",
+                    jobId = "",
+                    executeCount = 1
+                )
+            }
+            try {
+                cancelBuild(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    executeCount = buildInfo?.executeCount ?: 1,
+                    buildStatus = BuildStatus.CANCELED
+                )
+                logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
+            } catch (t: Throwable) {
+                logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)
+            }
+        } finally {
+            redisLock.unlock()
+        }
     }
 }

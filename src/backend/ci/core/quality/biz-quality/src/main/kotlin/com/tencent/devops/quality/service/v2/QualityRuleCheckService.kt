@@ -327,6 +327,11 @@ class QualityRuleCheckService @Autowired constructor(
                         (runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
             )
 
+            // 指标详情链接支持占位符
+            interceptRecordList.forEach { record ->
+                record.logPrompt = runtimeVariable?.let { EnvUtils.parseEnv(record.logPrompt, it) } ?: record.logPrompt
+            }
+
             resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
             ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
 

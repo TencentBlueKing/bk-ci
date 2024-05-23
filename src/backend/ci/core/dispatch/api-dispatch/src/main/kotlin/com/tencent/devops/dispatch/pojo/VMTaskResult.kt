@@ -27,15 +27,14 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("虚拟机主机-任务结束后置处理")
+@Schema(title = "虚拟机主机-任务结束后置处理")
 data class VMTaskResult(
-    @ApiModelProperty("task id", required = true)
+    @get:Schema(title = "task id", required = true)
     val taskId: Int,
-    @ApiModelProperty("脚本执行信息", required = true)
+    @get:Schema(title = "脚本执行信息", required = true)
     val message: String,
-    @ApiModelProperty("脚本执行结果", required = true)
+    @get:Schema(title = "脚本执行结果", required = true)
     val success: Boolean
 )

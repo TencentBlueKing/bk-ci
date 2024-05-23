@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
@@ -110,6 +111,7 @@ class ManualReviewTaskAtom(
         val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
         val reviewDesc = parseVariable(param.desc, runVariables)
         val notifyTitle = parseVariable(param.notifyTitle, runVariables)
+        val notifyGroup = parseVariable(param.notifyGroup, runVariables)
 
         if (reviewUsers.isBlank()) {
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
@@ -185,7 +187,7 @@ class ManualReviewTaskAtom(
                     "manualReviewParam" to JsonUtil.toJson(param.params),
                     "checkParams" to param.params.isNotEmpty().toString(),
                     // 企业微信组
-                    NotifyUtils.WEWORK_GROUP_KEY to (param.notifyGroup?.joinToString(separator = ",") ?: "")
+                    NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
                 ),
                 position = null,
                 stageId = null,
@@ -215,7 +217,7 @@ class ManualReviewTaskAtom(
                         )
                     },
                     notifyBody = reviewDesc,
-                    weworkGroup = param.notifyGroup?.toSet() ?: emptySet(),
+                    weworkGroup = notifyGroup.toSet(),
                     buildId = buildId,
                     taskId = taskId,
                     executeCount = task.executeCount ?: 1
@@ -359,6 +361,13 @@ class ManualReviewTaskAtom(
             buildId = task.buildId, message = "output(except): $suggestParamKey=$suggestContent",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
+    }
+
+    private fun parseVariable(value: List<String>?, runVariables: Map<String, String>): List<String> {
+        if (value.isNullOrEmpty()) {
+            return emptyList()
+        }
+        return value.map { EnvUtils.parseEnv(it, runVariables) }
     }
 
     private fun beforePrint(

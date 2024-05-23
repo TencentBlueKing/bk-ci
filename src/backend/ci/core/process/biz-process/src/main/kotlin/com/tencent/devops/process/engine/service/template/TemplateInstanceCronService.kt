@@ -143,6 +143,9 @@ class TemplateInstanceCronService @Autowired constructor(
                 val template: TTemplateRecord?
                 try {
                     template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
+                        ?: throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+                        )
                 } catch (e: ErrorCodeException) {
                     if (e.errorCode == ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS) {
                         // 模板版本记录如果已经被删，则无需执行更新任务并把任务记录删除

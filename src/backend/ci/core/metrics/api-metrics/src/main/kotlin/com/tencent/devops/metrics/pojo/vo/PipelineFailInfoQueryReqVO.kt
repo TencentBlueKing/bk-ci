@@ -27,21 +27,21 @@
 
 package com.tencent.devops.metrics.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.Parameter
 
-@ApiModel("流水线失败信息查询请求报文")
+@Schema(title = "流水线失败信息查询请求报文")
 data class PipelineFailInfoQueryReqVO(
-    @ApiParam("流水线ID", required = false)
+    @Parameter(description = "流水线ID", required = false)
     override var pipelineIds: List<String>? = null,
-    @ApiParam("流水线标签", required = false)
+    @Parameter(description = "流水线标签", required = false)
     override val pipelineLabelIds: List<Long>? = null,
-    @ApiParam("开始时间", required = false)
+    @Parameter(description = "开始时间", required = false)
     override var startTime: String? = null,
-    @ApiParam("结束时间", required = false)
+    @Parameter(description = "结束时间", required = false)
     override var endTime: String? = null,
-    @ApiParam("错误类型", required = false)
+    @Parameter(description = "错误类型", required = false)
     val errorTypes: List<Int>? = null,
-    @ApiParam("插件代码", required = false)
+    @Parameter(description = "插件代码", required = false)
     val atomCodes: List<String>? = null
 ) : BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)

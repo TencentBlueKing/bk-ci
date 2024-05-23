@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -151,6 +152,14 @@ class PipelineJobBean(
         val projectId = comboKeys[2]
         val watcher = Watcher(id = "timer|[$comboKey]")
         try {
+            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)) {
+                logger.warn("Pipeline[$pipelineId] has restricted build permissions,please try again later!")
+                return
+            }
+            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)) {
+                logger.warn("Project[$projectId] has restricted build permissions,please try again later!")
+                return
+            }
             val pipelineTimer = pipelineTimerService.get(projectId, pipelineId)
             if (null == pipelineTimer) {
                 logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")

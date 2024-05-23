@@ -64,6 +64,7 @@
                     :title="panelTitle"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
+                    :pipeline="pipeline"
                     :stages="pipeline.stages"
                     :editable="pipelineEditable"
                 />

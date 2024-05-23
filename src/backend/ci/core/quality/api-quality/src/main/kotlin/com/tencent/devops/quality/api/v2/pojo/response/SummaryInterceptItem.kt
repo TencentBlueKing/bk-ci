@@ -27,9 +27,9 @@
 
 package com.tencent.devops.quality.api.v2.pojo.response
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-总览-最近执行历史")
+@Schema(title = "质量红线-总览-最近执行历史")
 class SummaryInterceptItem(
     val pipelineId: String,
     val pipelineName: String,

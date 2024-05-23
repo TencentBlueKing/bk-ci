@@ -27,8 +27,10 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.BuildAgentCertResource
 import com.tencent.devops.ticket.pojo.CertAndroid
@@ -42,6 +44,7 @@ class BuildAgentCertResourceImpl @Autowired constructor(
     private val certService: CertService
 ) : BuildAgentCertResource {
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun queryIos(
         projectId: String,
         agentId: String,
@@ -62,6 +65,7 @@ class BuildAgentCertResourceImpl @Autowired constructor(
         return Result(certService.queryIos(projectId, buildId, certId, publicKey))
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun queryAndroid(
         projectId: String,
         agentId: String,

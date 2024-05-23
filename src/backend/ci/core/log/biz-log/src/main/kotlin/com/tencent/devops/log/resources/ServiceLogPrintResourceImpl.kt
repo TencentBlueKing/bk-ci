@@ -76,7 +76,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         // #7168 通过一次获取创建记录以及缓存
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
-        buildLogPrintService.dispatchEvent(
+        buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
                 finished = false,
@@ -102,7 +102,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(
+        buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
                 finished = finished,

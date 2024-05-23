@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("评论回复信息请求报文体")
+@Schema(title = "评论回复信息请求报文体")
 data class StoreCommentReplyRequest(
-    @ApiModelProperty("回复内容", required = true)
+    @get:Schema(title = "回复内容", required = true)
     val replyContent: String,
-    @ApiModelProperty("被回复者（如果评论的回复被其它人回复则需要传该字段）", required = true)
+    @get:Schema(title = "被回复者（如果评论的回复被其它人回复则需要传该字段）", required = true)
     val replyToUser: String
 )

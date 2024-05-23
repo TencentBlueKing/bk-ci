@@ -27,7 +27,7 @@
 
 package com.tencent.devops.worker.common.api.utils
 
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
 import org.slf4j.LoggerFactory
 
 object ThirdPartyAgentBuildInfoUtils {
