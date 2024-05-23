@@ -97,13 +97,6 @@ const optionConfigMixin = {
                 //     clearValue: false,
                 //     clearFields: ['customEnv']
                 // },
-                customEnv: {
-                    rule: {},
-                    component: 'key-value-normal',
-                    default: [],
-                    allowNull: true,
-                    label: this.$t('storeMap.customEnv')
-                },
                 pauseBeforeExec: {
                     rule: {},
                     type: 'boolean',

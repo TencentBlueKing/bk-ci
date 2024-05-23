@@ -208,10 +208,14 @@
         </section>
 
         <div>
+            <CustomEnvField
+                v-if="isVmContainer(container)"
+                v-model="container.customEnv"
+                :disabled="!editable"
+            />
             <div class="job-matrix">
                 <job-matrix
                     v-if="!isTriggerContainer(container)"
-                    :enable-matrix="container.matrixGroupFlag || false"
                     :matrix-control-option="container.matrixControlOption"
                     :update-container-params="handleContainerChange"
                     :set-parent-validate="setContainerValidate"
@@ -251,6 +255,7 @@
     import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import ImageSelector from '@/components/AtomSelector/imageSelector'
+    import CustomEnvField from '@/components/CustomEnvField'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
@@ -283,7 +288,8 @@
             Selector,
             AtomCheckbox,
             ImageSelector,
-            SelectInput
+            SelectInput,
+            CustomEnvField
         },
         props: {
             containerIndex: Number,

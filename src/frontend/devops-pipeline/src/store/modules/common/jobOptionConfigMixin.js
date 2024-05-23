@@ -166,13 +166,6 @@ const jobOptionConfigMixin = {
                 //     clearValue: false,
                 //     clearFields: ['customEnv']
                 // },
-                customEnv: {
-                    rule: {},
-                    component: 'key-value-normal',
-                    default: [],
-                    allowNull: true,
-                    label: this.$t('storeMap.customEnv')
-                },
                 dependOnType: {
                     component: 'enum-input',
                     label: this.$t('storeMap.dependOn'),
