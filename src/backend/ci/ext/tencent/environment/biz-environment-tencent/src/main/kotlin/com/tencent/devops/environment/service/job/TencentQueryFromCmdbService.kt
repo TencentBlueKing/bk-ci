@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.service.job
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
@@ -56,6 +57,10 @@ class TencentQueryFromCmdbService {
         private const val CONNECT_TIMEOUT = 5L // 三个超时时间单位：均为秒
         private const val READ_TIMEOUT = 15L
         private const val WRITE_TIMEOUT = 15L
+
+        private val mapper = jacksonObjectMapper().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
     }
 
     /*
@@ -73,10 +78,10 @@ class TencentQueryFromCmdbService {
         val ipNotInCmdb = mutableListOf<String>()
         val unauthorisedIpList = nodeIpList.filter {
             if (null != cmdbIpToCmdbDataMap?.get(it)) {
-                val isOperator = userId == cmdbIpToCmdbDataMap[it]?.SvrOperator ||
-                    nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == cmdbIpToCmdbDataMap[it]?.SvrOperator
-                val isBakOpertor = cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")?.contains(userId) ?: false ||
-                    cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")
+                val isOperator = userId == cmdbIpToCmdbDataMap[it]?.svrOperator ||
+                    nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == cmdbIpToCmdbDataMap[it]?.svrOperator
+                val isBakOpertor = cmdbIpToCmdbDataMap[it]?.svrBakOperator?.split(";")?.contains(userId) ?: false ||
+                    cmdbIpToCmdbDataMap[it]?.svrBakOperator?.split(";")
                         ?.contains(nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String) ?: false
                 !isOperator && !isBakOpertor
             } else { // 机器不在CMDB中
@@ -110,7 +115,7 @@ class TencentQueryFromCmdbService {
             operator = DEFAULT_SYTEM_USER,
             reqColumn = reqColumn.toList(),
             keyValues = CmdbKeyValues(
-                svrIp = nodeIpList.joinToString(separator = ";")
+                svrIpStrList = nodeIpList.joinToString(separator = ";")
             ),
             pagingInfo = CmdbPagingInfo(DEFAULT_START_INDEX, PAGE_SIZE, DEFAULT_RETURN_TOTAL_ROWS)
         )
@@ -121,8 +126,24 @@ class TencentQueryFromCmdbService {
         return getNodeIpToCmdbDataMap(responseBody)
     }
 
+    fun queryCmdbInfo(keyValues: CmdbKeyValues, vararg reqColumn: String): List<CmdbDataIns>? {
+        val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(
+            bkAppCode = bkAppCode,
+            bkAppSecret = bkAppSecret,
+            operator = DEFAULT_SYTEM_USER,
+            reqColumn = reqColumn.toList(),
+            keyValues = keyValues,
+            pagingInfo = CmdbPagingInfo(DEFAULT_START_INDEX, PAGE_SIZE, DEFAULT_RETURN_TOTAL_ROWS)
+        )
+        val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
+        val responseBody = executePostRequest(
+            headers, cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, cmdbGetQueryInfoReq
+        )
+        return getNodeCmdbData(responseBody)
+    }
+
     private fun <T : Any> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
-        val requestContent = jacksonObjectMapper().writeValueAsString(req)
+        val requestContent = mapper.writeValueAsString(req)
         logger.info("POST url: $url, req: ${logWithLengthLimit(JsonUtil.skipLogFields(req) ?: "")}")
 
         val ccPostRes: String?
@@ -155,14 +176,27 @@ class TencentQueryFromCmdbService {
     private fun getNodeIpToCmdbDataMap(responseBody: String?): Map<String, CmdbDataIns> {
         val cmdbData: List<CmdbDataIns>?
         try {
-            cmdbData = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!).data.data
+            cmdbData = mapper.readValue<CmdbResp>(responseBody!!).data.data
         } catch (e: Exception) {
             throw CustomException(
                 Response.Status.INTERNAL_SERVER_ERROR,
                 "CMDB api response error."
             )
         }
-        return cmdbData?.associateBy { it.SvrIp!! } ?: mapOf()
+        return cmdbData?.associateBy { it.svrIp!! } ?: mapOf()
+    }
+
+    private fun getNodeCmdbData(responseBody: String?): List<CmdbDataIns>? {
+        val cmdbData: List<CmdbDataIns>?
+        try {
+            cmdbData = mapper.readValue<CmdbResp>(responseBody!!).data.data
+        } catch (e: Exception) {
+            throw CustomException(
+                Response.Status.INTERNAL_SERVER_ERROR,
+                "CMDB api response error."
+            )
+        }
+        return cmdbData
     }
 
     private fun logWithLengthLimit(logOrigin: String): String {

@@ -38,6 +38,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
+import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -187,17 +188,17 @@ class CmdbNodeDao {
 
     /**
      * 将在CMDB中但被误更新为NOT_IN_CMDB的节点对应状态改为NOT_IN_CC
-     * @param ipList 在CMDB中但被误更新为NOT_IN_CMDB的节点ip
+     * @param serverIdList 在CMDB中但节点状态被误更新为NOT_IN_CMDB的节点serverId
      */
-    fun updateStatusIncorrectNodeByIpList(
+    fun updateStatusIncorrectNodeByServerIdList(
         dslContext: DSLContext,
-        ipList: Set<String>
+        serverIdList: Set<Long>
     ) {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
-                .where(NODE_IP.`in`(ipList))
+                .where(SERVER_ID.`in`(serverIdList))
                 .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .execute()
@@ -243,18 +244,16 @@ class CmdbNodeDao {
         }
     }
 
-    fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
+    fun updateNodeNotInCmdbByServerIdList(dslContext: DSLContext, serverIdList: List<Long>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
-        val serverIdDefault: Long? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.name)
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
-                .set(SERVER_ID, serverIdDefault)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
-                .where(NODE_IP.`in`(ipList))
+                .where(SERVER_ID.`in`(serverIdList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .execute()
@@ -446,14 +445,11 @@ class CmdbNodeDao {
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record5<Long, String, String, Long, Long>> {
+    ): Result<Record2<Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
-                NODE_TYPE.`as`(T_NODE_NODE_TYPE),
-                NODE_IP.`as`(T_NODE_NODE_IP),
-                HOST_ID.`as`(T_NODE_HOST_ID),
-                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .orderBy(NODE_ID.desc())

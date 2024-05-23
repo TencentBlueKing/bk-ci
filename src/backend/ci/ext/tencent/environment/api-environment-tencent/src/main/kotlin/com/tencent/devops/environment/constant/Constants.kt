@@ -38,6 +38,7 @@ object Constants {
     const val COLUMN_SFW_NAME = "SfwName"
     const val COLUMN_SEVER_LAN_IP = "serverLanIP"
     const val COLUMN_DEPT_ID = "DeptId"
+    const val COLUMN_SERVER_ID = "serverId"
 
     /**
      * 请求CC接口的请求参数

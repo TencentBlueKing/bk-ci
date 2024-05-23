@@ -30,6 +30,7 @@ package com.tencent.devops.environment.service.job
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.constant.Constants.COLUMN_SERVER_ID
 import com.tencent.devops.environment.constant.Constants.COLUMN_SEVER_LAN_IP
 import com.tencent.devops.environment.constant.Constants.COLUMN_SFW_NAME
 import com.tencent.devops.environment.constant.Constants.COLUMN_SVR_IP
@@ -46,12 +47,14 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
+import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
+import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbKeyValues
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.environment.service.CmdbNodeService
@@ -179,22 +182,29 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun checkDeployNodesIsInCmdbByPage(page: Int) {
-        // 1. 节点：类型为部署："CMDB"，"UNKNOW"，"OTHER"
+        // 1. 节点：类型为部署："CMDB"，"UNKNOWN"，"OTHER"
         val cmdbNodesRecords = cmdbNodeDao.getDeployNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
-        // 节点ip
-        val nodeIpList = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
-        // 节点：ip - cmdb record（从cmdb查到的，节点在cmdb中）
-        val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(
-            nodeIpList, COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME
+        // 节点serverId（只更新有serverId的部署节点，正常情况下，部署节点记录都应该有serverId）
+        val nodeServerIdList = cmdbNodesRecords.mapNotNull {
+            if (null != it[T_NODE_SERVER_ID]) it[T_NODE_SERVER_ID] as Long
+            else null
+        }.toSet()
+        // 节点：cmdb信息（从cmdb查到的，节点在cmdb中）
+        val cmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfo(
+            keyValues = CmdbKeyValues(
+                serverIdStrList = nodeServerIdList.joinToString(separator = ";")
+            ),
+            COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME, COLUMN_SERVER_ID
         )
-        // 2.1.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
-        val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
-        cmdbNodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
+        val serverIdToCmdbInfoMap = cmdbInfoMap?.associateBy { it.serverId!! } ?: mapOf()
+        // 2.1.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 改成 NOT_IN_CMDB
+        val invalidServerIdList = nodeServerIdList.filterNot { serverIdToCmdbInfoMap.containsKey(it) }
+        cmdbNodeDao.updateNodeNotInCmdbByServerIdList(dslContext, invalidServerIdList)
         // 2.1.2 在CMDB中，但是节点状态是NOT_IN_CMDB，此类节点，此处更新为NOT_IN_CC，后面在checkDeployNodesIsInCC函数中再进一步更新
         // （正常不应出现这种情况，该逻辑是为防止CMDB接口返回的数据不稳定，导致将一些在CMDB中的节点更新为NOT_IN_CMDB）
-        val inCmdbIpList = ipToCmdbInfoMap?.keys
-        if (!inCmdbIpList.isNullOrEmpty()) {
-            cmdbNodeDao.updateStatusIncorrectNodeByIpList(dslContext, inCmdbIpList)
+        val inCmdbServerIdList = serverIdToCmdbInfoMap.keys
+        if (inCmdbServerIdList.isNotEmpty()) {
+            cmdbNodeDao.updateStatusIncorrectNodeByServerIdList(dslContext, inCmdbServerIdList)
         }
     }
 
@@ -405,7 +415,7 @@ class TencentStockDataUpdateService @Autowired constructor(
                 val hostIdToCCinfo = svrIdQueryCCList?.associateBy { it.bkHostId }
                 val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
                     CCUpdateInfo(
-                        nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.SvrIp]
+                        nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.svrIp]
                             ?.get(T_NODE_NODE_ID) as Long,
                         bkCloudId = hostIdToCCinfo?.get(value)?.bkCloudId?.toLong(),
                         bkHostId = value,

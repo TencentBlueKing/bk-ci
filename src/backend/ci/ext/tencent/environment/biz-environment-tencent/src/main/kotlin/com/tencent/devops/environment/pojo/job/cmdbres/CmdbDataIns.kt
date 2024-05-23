@@ -1,21 +1,28 @@
 package com.tencent.devops.environment.pojo.job.cmdbres
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
 data class CmdbDataIns(
     @get:Schema(title = "主负责人")
-    val SvrOperator: String?,
+    @JsonProperty("SvrOperator")
+    val svrOperator: String?,
     @get:Schema(title = "备份负责人")
-    val SvrBakOperator: String?,
+    @JsonProperty("SvrBakOperator")
+    val svrBakOperator: String?,
     @get:Schema(title = "服务器名称")
-    val SvrName: String?,
+    @JsonProperty("SvrName")
+    val svrName: String?,
     @get:Schema(title = "服务器局域网IP")
-    val serverLanIP: List<String>?,
+    @JsonProperty("serverLanIP")
+    val svrLanIP: List<String>?,
     @get:Schema(title = "服务器IP")
-    val SvrIp: String?,
+    @JsonProperty("SvrIp")
+    val svrIp: String?,
     @get:Schema(title = "服务器操作系统")
-    val SfwName: String?,
+    @JsonProperty("SfwName")
+    val svrOsName: String?,
     @get:Schema(title = "服务器ID")
     val serverId: Long?
 )
