@@ -75,7 +75,6 @@ class ModelElement @Autowired(required = false) constructor(
                 timeoutVar = timeout.toString(),
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
-                customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
                     IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
@@ -118,8 +117,8 @@ class ModelElement @Autowired(required = false) constructor(
             if (element != null) {
                 // 统一禁用插件的retry属性
                 element.canRetry = false
+                element.customEnv = getElementEnv(step.env)
                 elementList.add(element)
-
                 if (element is MarketBuildAtomElement) {
                     ModelCommon.installMarketAtom(
                         client = client,
