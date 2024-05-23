@@ -163,4 +163,5 @@ object StoreMessageCode {
     const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120934" // 研发商店：组件仓库文件删除失败
     // 当 queryProjectComponentFlag、installed 或 updateFlag 参数不为空时, projectCode 参数必须非空
     const val STORE_QUERY_PARAM_CHECK_FAIL = "2120935"
+    const val STORE_COMPONENT_IS_NOT_ALLOW_OFFLINE = "2120936" // 研发商店：非发布状态的版本不允许下架
 }
