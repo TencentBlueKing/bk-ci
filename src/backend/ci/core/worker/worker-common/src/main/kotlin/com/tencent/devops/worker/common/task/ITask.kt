@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -66,11 +67,15 @@ abstract class ITask {
             } catch (ignore: Throwable) {
                 null
             }
-            if (customEnv?.isNotEmpty() == true) {
+            // 内部特殊兼容两个写法
+            val additionalOptionsStr = params[Element::additionalOptions.name]
+            val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
+            val resultEnv = customEnv ?: additionalOptions?.customEnv
+            if (resultEnv?.isNotEmpty() == true) {
                 val variables = buildTask.buildVariable?.toMutableMap()
                 val variablesBuild = newVariables.variables.toMutableMap()
                 if (variables != null) {
-                    customEnv.forEach {
+                    resultEnv.forEach {
                         if (!it.key.isNullOrBlank()) {
                             // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
                             val value = EnvReplacementParser.parse(
