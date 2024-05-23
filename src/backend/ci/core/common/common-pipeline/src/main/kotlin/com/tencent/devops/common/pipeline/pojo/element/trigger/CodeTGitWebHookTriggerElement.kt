@@ -68,6 +68,7 @@ data class CodeTGitWebHookTriggerElement(
             val props = when (eventType) {
                 CodeEventType.PUSH -> {
                     listOf(
+                        vuexInput(name = "action", value = joinToString(includePushAction)),
                         vuexInput(name = "branchName", value = branchName),
                         vuexInput(name = "excludeBranchName", value = excludeBranchName),
                         vuexInput(name = "includePaths", value = includePaths),
@@ -79,6 +80,7 @@ data class CodeTGitWebHookTriggerElement(
 
                 CodeEventType.MERGE_REQUEST -> {
                     listOf(
+                        vuexInput(name = "action", value = joinToString(includeMrAction)),
                         vuexInput(name = "branchName", value = branchName),
                         vuexInput(name = "excludeBranchName", value = excludeBranchName),
                         vuexInput(
@@ -120,7 +122,9 @@ data class CodeTGitWebHookTriggerElement(
                     listOf(
                         vuexInput(name = "tagName", value = tagName),
                         vuexInput(name = "excludeTagName", value = excludeTagName),
-                        vuexInput(name = "fromBranches", value = fromBranches)
+                        vuexInput(name = "fromBranches", value = fromBranches),
+                        staffInput(name = "includeUsers", value = includeUsers),
+                        staffInput(name = "excludeUsers", value = excludeUsers)
                     )
                 }
 
