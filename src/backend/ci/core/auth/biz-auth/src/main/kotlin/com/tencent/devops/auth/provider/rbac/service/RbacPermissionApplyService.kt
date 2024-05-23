@@ -153,7 +153,6 @@ class RbacPermissionApplyService @Autowired constructor(
                 errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL
             )
         }
-
         return ManagerRoleGroupVO(
             count = managerRoleGroupVO.count,
             results = groupInfoList

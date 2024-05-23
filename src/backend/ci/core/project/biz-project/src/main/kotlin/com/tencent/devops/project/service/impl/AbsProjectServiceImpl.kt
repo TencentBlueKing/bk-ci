@@ -1219,6 +1219,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             ActionAuditContext.current()
                 .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
         }
+        projectDispatcher.dispatch(
+            ProjectEnableStatusBroadCastEvent(
+                userId = userId ?: "",
+                projectId = englishName,
+                enabled = enabled
+            )
+        )
         projectDao.updateUsableStatus(
             dslContext = dslContext,
             userId = userId,
