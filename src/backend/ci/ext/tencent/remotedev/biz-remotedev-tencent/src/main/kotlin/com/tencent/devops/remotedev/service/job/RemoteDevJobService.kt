@@ -330,7 +330,8 @@ class RemoteDevJobService @Autowired constructor(
                 } else {
                     JobRecordStatus.SUCCESS
                 },
-                errMsg = build.errorInfoList?.joinToString(";"),
+                // 太长了而且可以通过流水线看，不存了
+                errMsg = null,
                 endTime = LocalDateTime.now()
             )
             return
