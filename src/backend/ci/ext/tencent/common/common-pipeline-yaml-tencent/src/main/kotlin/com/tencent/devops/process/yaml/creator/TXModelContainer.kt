@@ -92,6 +92,7 @@ class TXModelContainer @Autowired(required = false) constructor(
             buildEnv = TXStreamDispatchUtils.getBuildEnv(job),
             // 针对Stream内网版本兼容
             customBuildEnv = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
+            customEnv = ModelCommon.getCustomEnv(job.env),
             jobControlOption = getJobControlOption(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
