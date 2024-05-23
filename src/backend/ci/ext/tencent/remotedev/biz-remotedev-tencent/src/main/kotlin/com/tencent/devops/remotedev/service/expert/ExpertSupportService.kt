@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -145,6 +147,12 @@ class ExpertSupportService @Autowired constructor(
         val newParam = mutableMapOf<String, String>()
         val hostIdSub = data.hostIp.split(".")
         val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+
+        // 获取请求来源ip
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        val requestIp = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
+            ?.firstOrNull { it.isNotBlank() }?.trim()
+
         info.buildParam.forEach { (k, v) ->
             when (v) {
                 "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
@@ -169,6 +177,7 @@ class ExpertSupportService @Autowired constructor(
                     ""
                 }
                 "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
+                "requestIp" -> newParam[k] = requestIp ?: ""
 
                 else -> newParam[k] = v
             }
