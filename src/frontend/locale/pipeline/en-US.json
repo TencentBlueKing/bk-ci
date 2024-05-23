@@ -1009,8 +1009,9 @@
     "every": "Remind every",
     "remindTime": "hours",
     "codelib": "Code Repositories",
-    "branchs": "Branch",
-    "codelibConfigs": "Code Repositories Config"
+    "branches": "Branch",
+    "codelibConfigs": "Code Repositories Config",
+    "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path."
   },
   "storeMap": {
     "textarea": "Textarea",

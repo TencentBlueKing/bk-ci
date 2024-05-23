@@ -1008,7 +1008,8 @@
     "remindTime": "小时提醒一次",
     "codelib": "代码库",
     "branches": "分支",
-    "codelibConfigs": "代码库配置"
+    "codelibConfigs": "代码库配置",
+    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录"
   },
   "storeMap": {
     "textarea": "文本框",

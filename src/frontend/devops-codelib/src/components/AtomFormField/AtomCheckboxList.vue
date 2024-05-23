@@ -8,7 +8,7 @@
 </template>
 
 <script>
-    import atomFieldMixin from '../atomFieldMixin'
+    import atomFieldMixin from './atomFieldMixin'
     export default {
         name: 'atom-checkbox-list',
         mixins: [atomFieldMixin],
