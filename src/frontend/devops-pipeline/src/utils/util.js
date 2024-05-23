@@ -755,7 +755,9 @@ export function getMaterialIconByType (type) {
         CODE_GITLAB: 'CODE_GITLAB',
         GITHUB: 'codeGithubWebHookTrigger',
         CODE_TGIT: 'CODE_GIT',
-        CODE_P4: 'CODE_P4'
+        CODE_P4: 'CODE_P4',
+        CODE_REMOTE: 'remoteTrigger',
+        CODE_SERVICE: 'openApi'
     }
     return materialIconMap[type] ?? 'CODE_GIT'
 }

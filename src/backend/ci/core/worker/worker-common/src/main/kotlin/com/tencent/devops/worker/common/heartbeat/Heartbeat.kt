@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.heartbeat
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
@@ -45,6 +46,7 @@ object Heartbeat {
     private val logger = LoggerFactory.getLogger(Heartbeat::class.java)
     private val executor = Executors.newScheduledThreadPool(2)
     private var running = false
+    private val task2ProgressRate = mutableMapOf<String, Double>()
 
     @Synchronized
     fun start(jobTimeoutMills: Long = TimeUnit.MINUTES.toMillis(900), executeCount: Int = 1) {
@@ -57,7 +59,12 @@ object Heartbeat {
             if (running) {
                 try {
                     logger.info("Start to do the heartbeat")
-                    val heartBeatInfo = EngineService.heartbeat(executeCount)
+                    val heartBeatInfo = EngineService.heartbeat(
+                        executeCount = executeCount,
+                        jobHeartbeatRequest = JobHeartbeatRequest(
+                            task2ProgressRate = task2ProgressRate
+                        )
+                    )
                     val cancelTaskIds = heartBeatInfo.cancelTaskIds
                     if (!cancelTaskIds.isNullOrEmpty()) {
                         // 启动线程杀掉取消任务对应的进程
@@ -111,6 +118,13 @@ object Heartbeat {
                 logger.warn("responseContent covert map fail", e)
             }
         }
+    }
+
+    fun recordTaskProgressRate(
+        taskId: String,
+        progressRate: Double
+    ) {
+        task2ProgressRate[taskId] = progressRate
     }
 
     private class KillCancelTaskProcessRunnable(

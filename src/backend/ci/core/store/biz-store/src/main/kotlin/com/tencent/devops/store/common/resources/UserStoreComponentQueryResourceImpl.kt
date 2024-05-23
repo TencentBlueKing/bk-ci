@@ -117,6 +117,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         projectCode: String?,
+        instanceId: String?,
         page: Int,
         pageSize: Int
     ): Result<List<MarketMainItem>> {
@@ -125,6 +126,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             storeInfoQuery = StoreInfoQuery(
                 storeType = storeType,
                 projectCode = projectCode,
+                instanceId = instanceId,
                 page = page,
                 pageSize = pageSize,
                 queryProjectComponentFlag = false
@@ -148,6 +150,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         updateFlag: Boolean?,
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
+        instanceId: String?,
         page: Int,
         pageSize: Int
     ): Result<Page<MarketItem>> {
@@ -166,6 +169,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                     rdType = rdType,
                     queryProjectComponentFlag = queryProjectComponentFlag,
                     sortType = sortType,
+                    instanceId = instanceId,
                     page = page,
                     pageSize = pageSize,
                     installed = installed,

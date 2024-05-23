@@ -65,6 +65,8 @@ data class StoreInfoQuery(
     val updateFlag: Boolean? = null,
     @get:Schema(title = "排序", required = false)
     val sortType: StoreSortTypeEnum? = null,
+    @get:Schema(title = "实例ID", required = false)
+    val instanceId: String? = null,
     @get:Schema(title = "页码", required = true)
     val page: Int,
     @get:Schema(title = "每页数量", required = true)

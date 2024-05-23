@@ -135,6 +135,7 @@
     import SubPipelineCall from './SubPipelineCall'
     import TimerTrigger from './TimerTrigger'
     import Unity3dBuild from './Unity3dBuild'
+    import CodeWebHookTrigger from './CodeWebHookTrigger'
 
     export default {
         name: 'atom-content',
@@ -355,7 +356,11 @@
                     return RemoteAtom
                 }
                 if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
-                    return NormalAtomV2
+                    const atomMap = {
+                        codeTGitWebHookTrigger: CodeWebHookTrigger,
+                        codeP4WebHookTrigger: CodeWebHookTrigger
+                    }
+                    return atomMap[this.atomCode] || NormalAtomV2
                 }
                 const atomMap = {
                     timerTrigger: TimerTrigger,

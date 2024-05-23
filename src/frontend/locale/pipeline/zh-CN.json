@@ -712,6 +712,7 @@
     "addRemarkForBuild": "为本次构建添加一个备注",
     "triggerRepo": "触发材料",
     "hideSkipStep": "隐藏跳过的步骤",
+    "isExpandJob": "展开 Job",
     "num": "第",
     "times": "次，{0}",
     "copyTo": "复制至",
@@ -1007,7 +1008,8 @@
     "remindTime": "小时提醒一次",
     "codelib": "代码库",
     "branches": "分支",
-    "codelibConfigs": "代码库配置"
+    "codelibConfigs": "代码库配置",
+    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1517,6 +1519,9 @@
   "editDraft": "编辑原草稿",
   "thinkthink": "再想想",
   "editCurDraft": "编辑草稿",
-  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式。",
-  "eventID": "事件ID"
+  "unSupportCodeMode": "暂不支持Code方式",
+  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式查看和PAC模式发布。",
+  "eventID": "事件ID",
+  "runningSteps": "正在运行的步骤：",
+  "completeness": "完成度："
 }

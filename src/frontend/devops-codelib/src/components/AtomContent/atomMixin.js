@@ -7,6 +7,12 @@ import RequestSelector from '../AtomFormField/RequestSelector'
 import StaffInput from '../AtomFormField/StaffInput'
 import Accordion from '../AtomFormField/Accordion'
 import Tips from '../AtomFormField/Tips'
+import TipsSimple from '../AtomFormField/TipsSimple'
+import FormFieldGroup from '../AtomFormField/FormFieldGroup'
+import EnumButton from '../AtomFormField/EnumButton'
+import ConditionalInputSelector from '../AtomFormField/ConditionalInputSelector'
+import CompositeInput from '../AtomFormField/CompositeInput'
+import AtomCheckboxList from '../AtomFormField/AtomCheckboxList'
 import { rely } from './utils.js'
 
 const atomMixin = {
@@ -19,7 +25,13 @@ const atomMixin = {
         AtomCheckbox,
         StaffInput,
         Accordion,
-        Tips
+        Tips,
+        TipsSimple,
+        FormFieldGroup,
+        EnumButton,
+        ConditionalInputSelector,
+        CompositeInput,
+        AtomCheckboxList
     },
     methods: {
         rely (obj, element) {

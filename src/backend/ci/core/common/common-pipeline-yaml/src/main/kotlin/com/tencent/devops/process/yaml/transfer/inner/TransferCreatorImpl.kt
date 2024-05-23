@@ -30,6 +30,8 @@ package com.tencent.devops.process.yaml.transfer.inner
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.utils.TransferUtil
+import com.tencent.devops.process.yaml.transfer.TransferCacheService
 import com.tencent.devops.process.yaml.transfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +39,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class TransferCreatorImpl @Autowired constructor() : TransferCreator {
+class TransferCreatorImpl @Autowired constructor(
+    val transferCache: TransferCacheService
+) : TransferCreator {
     @Value("\${marketRun.enable:#{false}}")
     private val marketRunTaskData: Boolean = false
 
@@ -49,6 +53,8 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
 
     @Value("\${container.defaultImage:#{null}}")
     private val defaultImageData: String = "tlinux3_ci:2.*"
+
+    private val checkoutVersion = "checkout@1.*"
 
     companion object {
         private const val STREAM_CHECK_AUTH_TYPE = "AUTH_USER_TOKEN"
@@ -75,7 +81,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
         // checkout插件装配
         val inputMap = mutableMapOf<String, Any?>()
         if (!step.with.isNullOrEmpty()) {
-            inputMap.putAll(step.with!!)
+            inputMap.putAll(TransferUtil.mixParams(transferCache.getAtomDefaultValue(checkoutVersion), step.with))
         }
         when {
             step.checkout?.self == true -> {
@@ -101,7 +107,6 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.SELF
             }
         }
-
         val data = mutableMapOf<String, Any>()
         data["input"] = inputMap
 
@@ -109,8 +114,8 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             id = step.taskId,
             name = step.name ?: "checkout",
             stepId = step.id,
-            atomCode = "checkout",
-            version = "1.*",
+            atomCode = checkoutVersion.split('@')[0],
+            version = checkoutVersion.split('@')[1],
             data = data
         )
     }
@@ -119,7 +124,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
         step: Step
     ): MarketBuildAtomElement {
         val data = mutableMapOf<String, Any>()
-        data["input"] = step.with ?: Any()
+        data["input"] = TransferUtil.mixParams(transferCache.getAtomDefaultValue(step.uses!!), step.with)
         return MarketBuildAtomElement(
             id = step.taskId,
             name = step.name ?: step.uses!!.split('@')[0],
@@ -132,7 +137,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
 
     override fun transferMarketBuildLessAtomElement(step: Step): MarketBuildLessAtomElement {
         val data = mutableMapOf<String, Any>()
-        data["input"] = step.with ?: Any()
+        data["input"] = TransferUtil.mixParams(transferCache.getAtomDefaultValue(step.uses!!), step.with)
         return MarketBuildLessAtomElement(
             id = step.taskId,
             name = step.name ?: step.uses!!.split('@')[0],
