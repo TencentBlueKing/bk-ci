@@ -110,7 +110,7 @@ class ProjectBuildSummaryDao {
             val users = dslContext.selectDistinct(USER_ID).from(this)
                 .where(PROJECT_ID.eq(baseQueryReq.projectId))
                 .and(CREATE_TIME.between(startDateTime, endDateTime))
-                .fetch()
+                .fetchInto(String::class.java)
             ProjectUserCountV0(
                 projectId = baseQueryReq.projectId!!,
                 userCount = users.size,
