@@ -13,12 +13,14 @@ import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResu
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.service.job.AgentService
@@ -85,6 +87,15 @@ class TencentUserJobResourceImpl @Autowired constructor(
             projectId, jobInstanceId, stepInstanceId, executeCount,
             batch, maxHostNumPerGroup, keyword, searchIp, status, tag
         )
+    }
+
+    override fun operateStepInstance(
+        userId: String,
+        projectId: String,
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.operateStepInstance(operateStepInstanceReq)
     }
 
     override fun installAgent(

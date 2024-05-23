@@ -31,10 +31,12 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -184,6 +186,15 @@ class TencentServiceJobResourceImpl @Autowired constructor(
             projectId, jobInstanceId, stepInstanceId, executeCount,
             batch, maxHostNumPerGroup, keyword, searchIp, status, tag
         )
+    }
+
+    override fun operateStepInstance(
+        userId: String,
+        projectId: String,
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.operateStepInstance(operateStepInstanceReq)
     }
 
     override fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {

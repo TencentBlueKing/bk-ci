@@ -75,7 +75,8 @@ class ApigwJobCloudApi {
             "getAccountList" to "/api/v3/get_account_list",
             "getStepInstanceDetail" to "/api/v3/get_step_instance_detail",
             "getStepInstanceStatus" to "/api/v3/get_step_instance_status",
-            "queryAgentStatusFromJob" to "/api/v3/query_agent_info"
+            "queryAgentStatusFromJob" to "/api/v3/query_agent_info",
+            "operateStepInstance" to "/api/v3/operate_step_instance"
         )
         private val suffix = mapOf(
             "queryJobInstanceStatus" to "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s",

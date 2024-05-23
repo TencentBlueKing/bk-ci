@@ -29,6 +29,7 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
@@ -82,8 +83,11 @@ import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobStepInstance
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudIpInfo
+import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudOperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudHostInRes
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudOperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudVariableServer
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExcuteLog
@@ -105,6 +109,10 @@ class JobService @Autowired constructor(
     private val parseHashListService: ParseHashListService,
     private val permissionManageService: PermissionManageService
 ) {
+    companion object {
+        private const val DEFAULT_FAILED_RETRY_OPERATION_CODE = 2
+    }
+
     fun executeScript(
         projectId: String,
         userId: String,
@@ -717,6 +725,35 @@ class JobService @Autowired constructor(
             }
         )
         return getStepInstanceStatusRes
+    }
+
+    fun operateStepInstance(
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult> {
+        ApigwJobCloudApi.setJobOperationName(::operateStepInstance.name)
+        val jobCloudOperateStepInstanceReq = JobCloudOperateStepInstanceReq(
+            jobInstanceId = operateStepInstanceReq.jobInstanceId,
+            stepInstanceId = operateStepInstanceReq.stepInstanceId,
+            operationCode = DEFAULT_FAILED_RETRY_OPERATION_CODE,
+            bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+        )
+        val jobCloudOperateStepInstanceRes: JobCloudResult<JobCloudOperateStepInstanceResult> =
+            apigwJobCloudApi.executePostRequest(
+                jobCloudOperateStepInstanceReq, JobCloudOperateStepInstanceResult::class.java
+            )
+        val operateStepInstanceRes: JobResult<OperateStepInstanceResult> = JobResult(
+            code = jobCloudOperateStepInstanceRes.code,
+            result = jobCloudOperateStepInstanceRes.result,
+            jobRequestId = jobCloudOperateStepInstanceRes.jobRequestId,
+            message = jobCloudOperateStepInstanceRes.message,
+            data = jobCloudOperateStepInstanceRes.data?.let {
+                OperateStepInstanceResult(
+                    jobInstanceId = it.jobInstanceId,
+                    stepInstanceId = it.stepInstanceId
+                )
+            }
+        )
+        return operateStepInstanceRes
     }
 
     fun queryAgentStatusFromJob(

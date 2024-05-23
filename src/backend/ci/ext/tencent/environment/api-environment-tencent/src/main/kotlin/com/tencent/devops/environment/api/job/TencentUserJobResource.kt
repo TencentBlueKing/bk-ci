@@ -11,6 +11,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResu
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
+import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobResult
@@ -19,6 +20,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusRes
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -127,6 +129,20 @@ interface TencentUserJobResource {
         @QueryParam("tag")
         tag: String?
     ): JobResult<GetStepInstanceStatusResult>
+
+    @Operation(summary = "请求上云版job - 对执行的实例的步骤进行操作的接口")
+    @POST
+    @Path("/{projectId}/operate_step_instance")
+    fun operateStepInstance(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作执行实例步骤的信息", required = true)
+        operateStepInstanceReq: OperateStepInstanceReq
+    ): JobResult<OperateStepInstanceResult>
 
     @Operation(summary = "安装agent的接口")
     @POST
