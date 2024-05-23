@@ -62,16 +62,16 @@ class DevCloudMQConfiguration @Autowired constructor() {
     @Value("\${dispatch.demoteQueue.maxConcurrency:2}")
     private val demoteQueueMaxConcurrency: Int = 2
 
-    @Value("\${dispatch.agentStartQueue.concurrency:60}")
+    @Value("\${dispatch.agentStartQueue.concurrency:120}")
     private val agentStartQueueConcurrency: Int = 120
 
-    @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
+    @Value("\${dispatch.agentStartQueue.maxConcurrency:200}")
     private val agentStartQueueMaxConcurrency: Int = 200
 
     @Value("\${dispatch.agentShutdownQueue.concurrency:300}")
     private val agentShutdownQueueConcurrency: Int = 300
 
-    @Value("\${dispatch.agentShutdownQueue.maxConcurrency:300}")
+    @Value("\${dispatch.agentShutdownQueue.maxConcurrency:500}")
     private val agentShutdownQueueMaxConcurrency: Int = 500
 
     @Bean
