@@ -241,7 +241,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
             },
             steps = steps,
             timeoutMinutes = makeJobTimeout(job.jobControlOption),
-            env = null,
+            env = job.customEnv?.associateBy({ it.key ?: "" }) {
+                it.value
+            }?.ifEmpty { null },
             continueOnError = job.jobControlOption?.continueWhenFailed.nullIfDefault(DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
                 getMatrixFromJob(job.matrixControlOption)
