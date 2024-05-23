@@ -43,12 +43,14 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
-import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
@@ -168,19 +170,8 @@ open class DefaultModelCheckPlugin constructor(
             DependOnUtils.checkRepeatedJobId(stage)
         }
 
-        // 批量校验插件有效性
-        if (elementCheckResults.isNotEmpty()) {
-            val elementCheckResultMap = elementCheckResults.filterNot {
-                it.errorTitle.isNullOrBlank() || it.errorMessage.isNullOrBlank()
-            }.groupBy({ it.errorTitle!! }, { it.errorMessage!! })
-                .map { PipelineCheckFailedReason(it.key, it.value) }
-            if (elementCheckResultMap.isNotEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
-                    data = elementCheckResultMap
-                )
-            }
-        }
+        // 批量校验插件参数有效性
+        checkElementInput(elementCheckResults)
 
         return metaSize
     }
@@ -340,6 +331,27 @@ open class DefaultModelCheckPlugin constructor(
                 logger.info(
                     "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
                             "|bad timeout: ${obj.beforeChangeStr}"
+                )
+            }
+        }
+    }
+
+    private fun checkElementInput(elementCheckResults: MutableList<ElementCheckResult>) {
+        if (elementCheckResults.isNotEmpty()) {
+            val pipelineCheckErrors = elementCheckResults.filterNot {
+                it.errorTitle.isNullOrBlank() || it.errorMessage.isNullOrBlank()
+            }.groupBy({ it.errorTitle!! }, { it.errorMessage!! })
+                .map { PipelineCheckFailedErrors.ErrorInfo(it.key, it.value.toSet()) }
+            if (pipelineCheckErrors.isNotEmpty()) {
+                val failedReason = PipelineCheckFailedErrors(
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
+                    ),
+                    errors = pipelineCheckErrors
+                )
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
+                    params = arrayOf(JsonUtil.toJson(failedReason))
                 )
             }
         }

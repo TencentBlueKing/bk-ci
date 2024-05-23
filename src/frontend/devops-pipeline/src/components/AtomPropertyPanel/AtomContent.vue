@@ -122,6 +122,7 @@
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
+    import CodeWebHookTrigger from './CodeWebHookTrigger'
     import Codecc from './Codecc'
     import CrossDistribute from './CrossDistribute'
     import FormField from './FormField'
@@ -389,7 +390,11 @@
                     return RemoteAtom
                 }
                 if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
-                    return NormalAtomV2
+                    const atomMap = {
+                        codeTGitWebHookTrigger: CodeWebHookTrigger,
+                        codeP4WebHookTrigger: CodeWebHookTrigger
+                    }
+                    return atomMap[this.atomCode] || NormalAtomV2
                 }
                 const atomMap = {
                     timerTrigger: TimerTrigger,

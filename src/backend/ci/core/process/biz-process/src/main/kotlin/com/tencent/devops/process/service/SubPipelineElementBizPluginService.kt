@@ -131,20 +131,21 @@ class SubPipelineElementBizPluginService @Autowired constructor(
             pipelineId = subPipelineId,
             permission = AuthPermission.EXECUTE
         )
+        val pipelinePermissionUrl =
+            "/console/pipeline/$subProjectId/$subPipelineId/history"
         return if (checkPermission) {
             ElementCheckResult(true)
         } else {
             ElementCheckResult(
                 result = false,
                 errorTitle = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_NOT_EXECUTE_PERMISSION_ERROR_TITLE,
+                    messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
                     params = arrayOf(userId)
                 ),
                 errorMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_NOT_EXECUTE_PERMISSION_ERROR_MESSAGE,
+                    messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE,
                     params = arrayOf(
-                        stage.name ?: "", container.name, element.name,
-                        subProjectId, subPipelineId, subPipelineName
+                        stage.name ?: "", container.name, element.name, pipelinePermissionUrl, subPipelineName
                     )
                 )
             )
@@ -210,9 +211,8 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                     projectId = subProjectId, pipelineId = subPipelineId
                 ) ?: run {
                     logger.info(
-                        "sub-pipeline not found|projectId:$projectId|" +
-                                "$subProjectId:$subProjectId|subPipelineType:$subPipelineType|" +
-                                "subPipelineId:$subPipelineId|subPipelineName:$subPipelineName"
+                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
+                            "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
                     )
                     return null
                 }
@@ -223,9 +223,10 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 if (subPipelineName.isNullOrBlank()) {
                     return null
                 }
+                val finalSubProjectId = EnvUtils.parseEnv(subProjectId, contextMap)
                 var finalSubPipelineName = EnvUtils.parseEnv(subPipelineName, contextMap)
                 var finalSubPipelineId = pipelineRepositoryService.listPipelineIdByName(
-                    projectId = subProjectId,
+                    projectId = finalSubProjectId,
                     pipelineNames = setOf(finalSubPipelineName),
                     filterDelete = true
                 )[finalSubPipelineName]
@@ -233,18 +234,17 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 if (finalSubPipelineId.isNullOrBlank() && pattern.matcher(finalSubPipelineName).matches()) {
                     finalSubPipelineId = finalSubPipelineName
                     finalSubPipelineName = pipelineRepositoryService.getPipelineInfo(
-                        projectId = subProjectId, pipelineId = finalSubPipelineName
+                        projectId = finalSubProjectId, pipelineId = finalSubPipelineName
                     )?.pipelineName ?: ""
                 }
                 if (finalSubPipelineId.isNullOrBlank() || finalSubPipelineName.isEmpty()) {
                     logger.info(
-                        "sub-pipeline not found|projectId:$projectId|" +
-                                "$subProjectId:$subProjectId|subPipelineType:$subPipelineType|" +
-                                "subPipelineId:$subPipelineId|subPipelineName:$subPipelineName"
+                        "sub-pipeline not found|projectId:$projectId|subPipelineType:$subPipelineType|" +
+                            "subProjectId:$subProjectId|subPipelineName:$subPipelineName"
                     )
                     return null
                 }
-                Triple(subProjectId, finalSubPipelineId, finalSubPipelineName)
+                Triple(finalSubProjectId, finalSubPipelineId, finalSubPipelineName)
             }
         }
     }

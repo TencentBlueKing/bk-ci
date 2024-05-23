@@ -100,6 +100,8 @@ object WebhookUtils {
     private const val MAX_VARIABLE_COUNT = 32
     // p4自定义触发器插件版本号
     const val CUSTOM_P4_TRIGGER_VERSION = 2
+    // GitAction触发器插件版本号
+    const val ACTION_GIT_TRIGGER_VERSION = 2
 
     private val logger = LoggerFactory.getLogger(WebhookUtils::class.java)
 
@@ -335,6 +337,10 @@ object WebhookUtils {
 
     fun isCustomP4TriggerVersion(version: String?): Boolean {
         return getMajorVersion(version) >= CUSTOM_P4_TRIGGER_VERSION
+    }
+
+    fun isActionGitTriggerVersion(version: String?): Boolean {
+        return getMajorVersion(version) >= ACTION_GIT_TRIGGER_VERSION
     }
 
     /**
