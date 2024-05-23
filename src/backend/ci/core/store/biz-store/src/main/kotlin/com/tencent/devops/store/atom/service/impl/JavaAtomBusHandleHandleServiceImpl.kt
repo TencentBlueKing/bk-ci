@@ -50,9 +50,11 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
             return target
         }
         val javaPath = reqTarget.substringBefore("-jar").trim()
+        // 获取插件配置的JVM指令
         val jvmOptions = target.substringAfter("java").substringBefore("-jar").trim()
-        val jarOption = reqTarget.substringAfter("-jar").trim()
+        // 获取插件jar包路径
+        val jarPath = reqTarget.substringAfter("-jar").trim()
 
-        return "$javaPath $jvmOptions -jar $jarOption"
+        return "$javaPath $jvmOptions -jar $jarPath"
     }
 }
