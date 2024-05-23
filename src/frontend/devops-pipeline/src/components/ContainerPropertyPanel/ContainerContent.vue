@@ -210,7 +210,8 @@
         <div>
             <CustomEnvField
                 v-if="isVmContainer(container)"
-                v-model="container.customEnv"
+                :value="container.customEnv"
+                @change="handleContainerChange"
                 :disabled="!editable"
             />
             <div class="job-matrix">

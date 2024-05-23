@@ -54,8 +54,8 @@
             handleChange (name, value) {
                 console.log(name, value)
                 this.$emit('update:value', value)
-                this.$emit('input', value)
-                this.$emit('change', value)
+                this.$emit('input', name, value)
+                this.$emit('change', name, value)
             }
         }
     }

@@ -95,7 +95,8 @@
                     </div>
                     <CustomEnvField
                         v-if="isVmContainer(container)"
-                        v-model="element.customEnv"
+                        :value="element.customEnv"
+                        @change="handleUpdateAtom"
                         :disabled="!editable"
                     />
                     <div class="atom-option">
