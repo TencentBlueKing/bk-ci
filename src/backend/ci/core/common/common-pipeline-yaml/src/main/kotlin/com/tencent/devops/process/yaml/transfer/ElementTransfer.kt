@@ -340,7 +340,6 @@ class ElementTransfer @Autowired(required = false) constructor(
             timeoutVar = step.timeoutMinutes ?: VariableDefault.DEFAULT_TASK_TIME_OUT.toString(),
             retryWhenFailed = step.retryTimes != null,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
-            enableCustomEnv = false,
             customEnv = getElementEnv(step.env),
             runCondition = runCondition,
             customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) step.ifFiled else null,
@@ -562,12 +561,9 @@ class ElementTransfer @Autowired(required = false) constructor(
                 element.additionalOptions?.retryCount
             } else null
             this.manualRetry = element.additionalOptions?.manualRetry?.nullIfDefault(false)
-            this.env = if (element.additionalOptions?.enableCustomEnv == true) {
-                element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) { it.value }
-                    ?.ifEmpty { null }
-            } else {
-                null
-            }
+            this.env = element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) {
+                it.value
+            }?.ifEmpty { null }
         }
     }
 
