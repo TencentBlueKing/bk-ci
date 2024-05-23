@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
@@ -62,6 +61,7 @@ import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -411,7 +411,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 creator.transferMarketBuildAtomElement(step)
             }
         }.apply {
-            this.customEnv = getElementEnv(step.env)
+            this.customEnv = ModelCreateUtil.getCustomEnv(step.env)
             this.additionalOptions = additionalOptions
         }
         return element
@@ -569,26 +569,5 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     protected fun makeServiceElementList(job: Job): MutableList<Element> {
         return mutableListOf()
-    }
-
-    private fun getElementEnv(env: Map<String, Any?>?): List<NameAndValue>? {
-        return emptyList()
-        // 互转暂不支持 element env
-//        if (env == null) {
-//            return null
-//        }
-//
-//        val nameAndValueList = mutableListOf<NameAndValue>()
-//        env.forEach {
-//            // todo 001
-//            nameAndValueList.add(
-//                NameAndValue(
-//                    key = it.key,
-//                    value = it.value.toString()
-//                )
-//            )
-//        }
-//
-//        return nameAndValueList
     }
 }
