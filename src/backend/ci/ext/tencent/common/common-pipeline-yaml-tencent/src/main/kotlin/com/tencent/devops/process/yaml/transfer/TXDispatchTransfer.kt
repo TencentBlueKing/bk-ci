@@ -122,7 +122,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
             ),
             macOS = null,
             third = null,
-            env = job.env,
+            env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
             buildType = buildType,
             image = PoolImage(
                 imageCode = inner.defaultImageCode,
@@ -152,7 +152,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
                     buildType = buildType,
                     image = PoolImage(
                         imageCode = imageCode,
@@ -186,7 +186,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
                     buildType = buildType,
                     image = PoolImage(
                         imageCode = imageCode,
