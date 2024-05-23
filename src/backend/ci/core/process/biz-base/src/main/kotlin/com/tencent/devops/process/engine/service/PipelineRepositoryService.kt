@@ -2053,17 +2053,4 @@ class PipelineRepositoryService constructor(
             branchVersionAction = branchVersionAction
         )
     }
-
-    fun softDelete(
-        pipelineId: String,
-        userId: String,
-        channelCode: ChannelCode?
-    ) {
-        pipelineInfoDao.softDelete(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            userId = userId,
-            channelCode = channelCode
-        )
-    }
 }

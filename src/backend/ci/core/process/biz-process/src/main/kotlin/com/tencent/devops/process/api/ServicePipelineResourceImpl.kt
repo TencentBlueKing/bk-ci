@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -53,6 +54,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService.Companion.checkParam
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
@@ -61,15 +63,13 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.enums.OperationLogType
-import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
@@ -400,15 +400,18 @@ class ServicePipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        checkFlag: Boolean
     ): Result<Boolean> {
-        checkParams(userId, projectId)
+        if (checkFlag) {
+            checkParams(userId, projectId)
+        }
         pipelineInfoFacadeService.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode) && checkFlag
         )
         return Result(true)
     }
@@ -726,14 +729,5 @@ class ServicePipelineResourceImpl @Autowired constructor(
         if (pipelineIds.size > 100) {
             throw InvalidParamException("Number of pipelines is too large, size:${pipelineIds.size}")
         }
-    }
-
-    override fun softDelete(userId: String, pipelineId: String, channelCode: ChannelCode?): Result<Boolean> {
-        pipelineRepositoryService.softDelete(
-            pipelineId = pipelineId,
-            userId = userId,
-            channelCode = channelCode
-        )
-        return Result(true)
     }
 }

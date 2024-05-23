@@ -56,11 +56,11 @@ import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
+import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
 
 /**
  * store项目通用业务逻辑类
@@ -348,6 +348,12 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+            // 获取组件当前初始化项目
+            val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                dslContext = context,
+                storeCode = storeProjectInfo.storeCode,
+                storeType = storeProjectInfo.storeType.type.toByte()
+            )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
             val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
@@ -358,10 +364,12 @@ class StoreProjectServiceImpl @Autowired constructor(
             storePipelineRel?.let {
                 storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
                 storePipelineBuildRelDao.deleteStorePipelineBuildRelByPiplineId(context, storePipelineRel.id)
-                client.get(ServicePipelineResource::class).softDelete(
+                client.get(ServicePipelineResource::class).delete(
                     userId = userId,
                     pipelineId = it.pipelineId,
-                    channelCode = ChannelCode.AM
+                    channelCode = ChannelCode.AM,
+                    projectId = initProjectCode,
+                    checkFlag = false
                 )
             }
             val storeRepoHashId =

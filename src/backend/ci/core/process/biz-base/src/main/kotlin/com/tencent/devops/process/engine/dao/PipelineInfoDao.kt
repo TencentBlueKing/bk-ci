@@ -773,25 +773,6 @@ class PipelineInfoDao {
         }
     }
 
-    fun softDelete(
-        dslContext: DSLContext,
-        pipelineId: String,
-        userId: String,
-        channelCode: ChannelCode?
-    ): Int {
-        return with(T_PIPELINE_INFO) {
-            val update = dslContext.update(this)
-                .set(DELETE, true)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_MODIFY_USER, userId)
-                .where(PIPELINE_ID.eq(pipelineId))
-            if (channelCode != null) {
-                update.and(CHANNEL.eq(channelCode.name))
-            }
-            update.execute()
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoDao::class.java)
     }
