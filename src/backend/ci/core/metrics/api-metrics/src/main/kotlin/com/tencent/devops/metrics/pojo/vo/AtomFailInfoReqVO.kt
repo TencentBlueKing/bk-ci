@@ -32,6 +32,8 @@ import io.swagger.v3.oas.annotations.Parameter
 
 @Schema(title = "插件错误查询请求报文")
 data class AtomFailInfoReqVO(
+    @Parameter(description = "项目ID", required = false)
+    override var projectId: String? = null,
     @Parameter(description = "流水线ID", required = false)
     override var pipelineIds: List<String>? = null,
     @Parameter(description = "流水线标签", required = false)
@@ -46,4 +48,4 @@ data class AtomFailInfoReqVO(
     val errorCodes: List<Int>?,
     @Parameter(description = "插件code", required = false)
     val atomCodes: List<String>?
-) : BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)
+) : BaseQueryReqVO(projectId, pipelineIds, pipelineLabelIds, startTime, endTime)

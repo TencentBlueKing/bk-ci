@@ -25,11 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.pojo.enums
+package com.tencent.devops.project.pojo
 
-@Suppress("MaxLineLength")
-enum class ProjectRelateOBSProductStatusEnum(val value: String, val action: String) {
-    RELATE_PRODUCT_BUT_INACTIVE("已关联OBS运营产品，但已有 4 个月不活跃", "<p>联系助手加白名单</p>"),
-    INACTIVE_AND_NOT_RELATE_PRODUCT("未关联OBS运营产品，且已有 2 个月不活跃", "<p><a href=\"%s/console/manage/%s/show\">关联并启用</a></p>"),
-    NOT_RELATE_PRODUCT("未关联OBS运营产品", "<p><a href=\"%s/console/manage/%s/edit\">去关联运营产品</a> <a href=\"%s/console/manage/%s/show\">停用项目</a></p>"),
-}
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "蓝盾数据源货币化数据")
+data class BkSummaryBillDTO(
+    @get:Schema(title = "数据源名称")
+    @JsonProperty(value = "data_source_bills", required = true)
+    val dataSourceBills: BkDataSourceBillsDTO
+)

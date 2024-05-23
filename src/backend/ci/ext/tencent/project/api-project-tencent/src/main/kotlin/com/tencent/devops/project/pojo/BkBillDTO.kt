@@ -25,11 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.pojo.enums
+package com.tencent.devops.project.pojo
 
-@Suppress("MaxLineLength")
-enum class ProjectRelateOBSProductStatusEnum(val value: String, val action: String) {
-    RELATE_PRODUCT_BUT_INACTIVE("已关联OBS运营产品，但已有 4 个月不活跃", "<p>联系助手加白名单</p>"),
-    INACTIVE_AND_NOT_RELATE_PRODUCT("未关联OBS运营产品，且已有 2 个月不活跃", "<p><a href=\"%s/console/manage/%s/show\">关联并启用</a></p>"),
-    NOT_RELATE_PRODUCT("未关联OBS运营产品", "<p><a href=\"%s/console/manage/%s/edit\">去关联运营产品</a> <a href=\"%s/console/manage/%s/show\">停用项目</a></p>"),
-}
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "蓝盾货币化数据")
+data class BkBillDTO(
+    @get:Schema(title = "账单周期（月）")
+    @JsonProperty(value = "cost_date")
+    val costDate: String,
+    @get:Schema(title = "項目ID")
+    @JsonProperty(value = "project_id")
+    val projectId: String,
+    @get:Schema(title = "項目ID")
+    @JsonProperty(value = "name")
+    val projectName: String,
+    @get:Schema(title = "服务类型")
+    @JsonProperty(value = "service_type")
+    val serviceType: String,
+    @get:Schema(title = "种类")
+    val kind: String,
+    @get:Schema(title = "使用量")
+    val usage: Int,
+    @get:Schema(title = "bg名称")
+    @JsonProperty(value = "bg_name")
+    val bgName: String,
+    @get:Schema(title = "是否计费标志")
+    val flag: Boolean,
+    @get:Schema(title = "人员名单")
+    var users: String? = null
+)

@@ -29,7 +29,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
@@ -132,15 +132,15 @@ class ProjectDao {
         }
     }
 
-    fun listMigrateProjects(
+    fun listProjectsByCondition(
         dslContext: DSLContext,
-        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+        projectConditionDTO: ProjectConditionDTO,
         limit: Int,
         offset: Int
     ): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
-                .where(buildMigrateProjectCondition(migrateProjectConditionDTO))
+                .where(buildProjectCondition(projectConditionDTO))
                 .orderBy(CREATED_AT.asc())
                 .limit(limit)
                 .offset(offset)
@@ -148,12 +148,12 @@ class ProjectDao {
         }
     }
 
-    fun buildMigrateProjectCondition(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    fun buildProjectCondition(
+        projectConditionDTO: ProjectConditionDTO
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         with(TProject.T_PROJECT) {
-            with(migrateProjectConditionDTO) {
+            with(projectConditionDTO) {
                 conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 if (channelCode == null) {
                     conditions.add(
@@ -162,7 +162,7 @@ class ProjectDao {
                 } else {
                     conditions.add(CHANNEL.eq(channelCode))
                 }
-                conditions.add(ENABLED.eq(true))
+                enabled?.let { conditions.add(ENABLED.eq(enabled)) }
                 centerId?.let { conditions.add(CENTER_ID.eq(centerId)) }
                 deptId?.let { conditions.add(DEPT_ID.eq(deptId)) }
                 bgId?.let { conditions.add(BG_ID.eq(bgId)) }
@@ -183,16 +183,17 @@ class ProjectDao {
                         else -> {}
                     }
                 }
-                if (migrateProjectConditionDTO.routerTag == null) {
-                    conditions.add(
-                        ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
-                            .or(ROUTER_TAG.isNull)
-                    )
-                } else {
-                    conditions.add(
-                        ROUTER_TAG.like("%${migrateProjectConditionDTO.routerTag!!.value}%")
-                            .or(ROUTER_TAG.like("%devx%"))
-                    )
+                routerTag?.let {
+                    if (routerTag == AuthSystemType.RBAC_AUTH_TYPE) {
+                        conditions.add(
+                            ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
+                                .or(ROUTER_TAG.like("%devx%"))
+                        )
+                    } else {
+                        conditions.add(
+                            ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
+                        )
+                    }
                 }
             }
         }
