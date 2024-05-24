@@ -170,9 +170,6 @@
                 }
             },
             goEdit (version) {
-                debugger
-                console.log(this.$route.params.type)
-                
                 this.$router.push({
                     name: 'pipelinesEdit',
                     params: {
