@@ -302,8 +302,8 @@ class PipelineLayout private constructor(
                     maxRunningMinutes = job.timeoutMinutes ?: 900,
                     buildEnv = buildEnv,
                     // 针对内网版本兼容
-                    customBuildEnv = job.env,
-                    customEnv = job.env?.map { NameAndValue(it.key, it.value) },
+                    customBuildEnv = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
+                    customEnv = job.env?.map { NameAndValue(it.key, it.value?.toString() ?: "") },
                     thirdPartyAgentId = null,
                     thirdPartyAgentEnvId = null,
                     thirdPartyWorkspace = null,
@@ -477,7 +477,8 @@ class PipelineLayout private constructor(
         } else {
             BuildType.DEVCLOUD
         }
-
+        var env = mutableMapOf<String, String>()
+        job.env?.forEach { (k, v) -> env[k] = v?.toString() ?: "" }
         return if (job.runsOn.container == null) {
             Pool(
                 container = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
@@ -487,7 +488,7 @@ class PipelineLayout private constructor(
                 ),
                 macOS = null,
                 third = null,
-                env = job.env,
+                env = env.takeIf { it.isNotEmpty() },
                 buildType = buildType
             )
         } else {
@@ -505,7 +506,7 @@ class PipelineLayout private constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = env.takeIf { it.isNotEmpty() },
                     buildType = buildType
                 )
             } catch (e: Exception) {
@@ -524,7 +525,7 @@ class PipelineLayout private constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = env.takeIf { it.isNotEmpty() },
                     buildType = buildType
                 )
             }
