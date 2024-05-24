@@ -638,12 +638,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
             schedule.forEach { timer ->
                 val repositoryType = when {
                     !timer.repoId.isNullOrBlank() ->
-                        RepositoryType.ID
+                        TriggerRepositoryType.ID
 
                     !timer.repoName.isNullOrBlank() ->
-                        RepositoryType.NAME
+                        TriggerRepositoryType.NAME
 
-                    else -> null
+                    else -> TriggerRepositoryType.SELF
                 }
                 elementQueue.add(
                     TimerTriggerElement(

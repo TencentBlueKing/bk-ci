@@ -101,6 +101,7 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -224,7 +225,8 @@ class PipelineRepositoryService constructor(
         setting: PipelineSetting? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
-        description: String? = null
+        description: String? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -237,7 +239,8 @@ class PipelineRepositoryService constructor(
             userId = userId,
             create = create,
             versionStatus = versionStatus,
-            channelCode = channelCode
+            channelCode = channelCode,
+            yamlInfo = yamlInfo
         )
 
         val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
@@ -337,7 +340,8 @@ class PipelineRepositoryService constructor(
         userId: String,
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        yamlInfo: PipelineYamlVo? = null
     ): List<PipelineModelTask> {
 
         val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId, userId)
@@ -365,7 +369,8 @@ class PipelineRepositoryService constructor(
                     channelCode = channelCode,
                     create = create,
                     distIds = distinctIdSet,
-                    versionStatus = versionStatus
+                    versionStatus = versionStatus,
+                    yamlInfo = yamlInfo
                 )
             } else {
                 initOtherContainer(
@@ -379,7 +384,8 @@ class PipelineRepositoryService constructor(
                     channelCode = channelCode,
                     create = create,
                     distIds = distinctIdSet,
-                    versionStatus = versionStatus
+                    versionStatus = versionStatus,
+                    yamlInfo = yamlInfo
                 )
             }
         }
@@ -398,7 +404,8 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         create: Boolean,
         distIds: HashSet<String>,
-        versionStatus: VersionStatus? = VersionStatus.RELEASED
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
+        yamlInfo: PipelineYamlVo?
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -439,7 +446,8 @@ class PipelineRepositoryService constructor(
                     userId = userId,
                     channelCode = channelCode,
                     create = create,
-                    container = c
+                    container = c,
+                    yamlInfo = yamlInfo
                 )
             }
 
@@ -474,7 +482,8 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         create: Boolean,
         distIds: HashSet<String>,
-        versionStatus: VersionStatus? = VersionStatus.RELEASED
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
+        yamlInfo: PipelineYamlVo?
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -559,7 +568,8 @@ class PipelineRepositoryService constructor(
                         userId = userId,
                         channelCode = channelCode,
                         create = create,
-                        container = c
+                        container = c,
+                        yamlInfo = yamlInfo
                     )
                 }
 
