@@ -72,8 +72,14 @@ abstract class ITask {
                 null
             }
             // 内部特殊兼容两个写法
-            val additionalOptionsStr = params[Element::additionalOptions.name]
-            val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
+            val additionalOptions = try {
+                params["additionalOptions"]?.let { str ->
+                    JsonUtil.toOrNull(str, ElementAdditionalOptions::class.java)
+                }
+            } catch (ignore: Throwable) {
+                logger.warn("Parse additionalOptions with error: ", ignore)
+                null
+            }
             val resultEnv = customEnv ?: additionalOptions?.customEnv
             if (resultEnv?.isNotEmpty() == true) {
                 val variables = buildTask.buildVariable?.toMutableMap()
