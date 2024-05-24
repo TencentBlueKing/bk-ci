@@ -171,7 +171,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     }
 
     override fun getStoreUpdateStatus(): StoreStatusEnum {
-        return StoreStatusEnum.TESTING
+        return StoreStatusEnum.COMMITTING
     }
 
     override fun getStoreRunPipelineStartParams(
