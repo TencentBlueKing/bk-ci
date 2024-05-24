@@ -48,7 +48,7 @@ class ProjectBillsService constructor(
             "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
         private const val PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE = "PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE"
         private const val IS_DISABLE_FLAG = "is_disable_flag"
-        private const val REPORT_BILL_BG = "956"
+        private const val IEG_BG_ID = 956L
     }
 
     private val project2Status = Caffeine.newBuilder()
@@ -172,7 +172,8 @@ class ProjectBillsService constructor(
                     projectConditionDTO = ProjectConditionDTO(
                         routerTag = AuthSystemType.RBAC_AUTH_TYPE,
                         enabled = true,
-                        relatedProduct = false
+                        relatedProduct = false,
+                        bgIdList = listOf(IEG_BG_ID)
                     ),
                     limit = limit,
                     offset = offset
@@ -396,7 +397,7 @@ class ProjectBillsService constructor(
                                 kind = billKind.name,
                                 usage = usage,
                                 bgName = projectInfo.bgName ?: "",
-                                flag = projectInfo.productId != null && projectInfo.bgId == REPORT_BILL_BG
+                                flag = projectInfo.productId != null && projectInfo.bgId == IEG_BG_ID.toString()
                             )
                             // 若是流水线用户类型，还额外需要上报用户名单
                             if (billKind == BkBillKind.PIPELINE_USER_COUNT) {
