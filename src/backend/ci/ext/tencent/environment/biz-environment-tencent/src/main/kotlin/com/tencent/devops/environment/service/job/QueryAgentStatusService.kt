@@ -91,6 +91,7 @@ class QueryAgentStatusService @Autowired constructor(
                 val jobResAgentVersion = jobRes.data?.agentInfoList?.map {
                     hostIdMutableList.remove(it.bkHostId)
                     AgentVersion(
+                        serverId = hostIdToAgentVersionMap[it.bkHostId]?.serverId,
                         ip = hostIdToAgentVersionMap[it.bkHostId]?.ip,
                         bkHostId = it.bkHostId,
                         installedTag = INSTALLED_AGENT_TAG,
@@ -102,6 +103,7 @@ class QueryAgentStatusService @Autowired constructor(
                 val agentAbnormalList = if (hostIdMutableList.isNotEmpty()) {
                     hostIdMutableList.map {
                         AgentVersion(
+                            serverId = hostIdToAgentVersionMap[it]?.serverId,
                             ip = hostIdToAgentVersionMap[it]?.ip,
                             bkHostId = it,
                             installedTag = INSTALLED_AGENT_TAG,
@@ -126,6 +128,7 @@ class QueryAgentStatusService @Autowired constructor(
             else {
                 notInstalledAgentHostIdList.map {
                     AgentVersion(
+                        serverId = hostIdToAgentVersionMap[it]?.serverId,
                         ip = hostIdToAgentVersionMap[it]?.ip,
                         bkHostId = it,
                         installedTag = NOT_INSTALLED_AGENT_TAG

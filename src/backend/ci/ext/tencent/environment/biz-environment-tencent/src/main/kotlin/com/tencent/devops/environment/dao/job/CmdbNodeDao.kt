@@ -53,7 +53,7 @@ import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Record5
-import org.jooq.Record6
+import org.jooq.Record7
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -147,18 +147,18 @@ class CmdbNodeDao {
         }
     }
 
-    fun batchUpdateNodeInCCByIp(dslContext: DSLContext, ipToNodeStatus: Map<String, String>) {
+    fun batchUpdateNodeInCCByServerId(dslContext: DSLContext, serverIdToNodeStatus: Map<Long, String>) {
         val agentVersionDefault: String? = null
         with(TNode.T_NODE) {
             val batchUpdate = dslContext.batch(
-                ipToNodeStatus.map { (ip, nodeStatus) ->
+                serverIdToNodeStatus.map { (serverId, nodeStatus) ->
                     val updateInfo = dslContext.update(this)
                         .set(NODE_STATUS, nodeStatus)
                         .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                     if (NodeStatus.NOT_INSTALLED.name == nodeStatus) {
                         updateInfo.set(AGENT_VERSION, agentVersionDefault)
                     }
-                    updateInfo.where(NODE_IP.eq(ip))
+                    updateInfo.where(SERVER_ID.eq(serverId))
                         .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 }
             )
@@ -205,7 +205,7 @@ class CmdbNodeDao {
         }
     }
 
-    fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
+    fun updateNodeNotInCCByServerId(dslContext: DSLContext, notInCCServerIdList: List<Long>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
         val osTypeDefault: String? = null
@@ -218,7 +218,7 @@ class CmdbNodeDao {
                 .set(OS_TYPE, osTypeDefault)
                 .set(AGENT_VERSION, agentVersionDefault)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
-                .where(NODE_IP.`in`(notInCCIpList))
+                .where(SERVER_ID.`in`(notInCCServerIdList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CC.name))
                 .execute()
@@ -462,7 +462,7 @@ class CmdbNodeDao {
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record6<Long, String, String, Long, Long, String>> {
+    ): Result<Record7<Long, String, String, Long, Long, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
@@ -470,7 +470,8 @@ class CmdbNodeDao {
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 HOST_ID.`as`(T_NODE_HOST_ID),
                 CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
-                OS_TYPE.`as`(T_NODE_OS_TYPE)
+                OS_TYPE.`as`(T_NODE_OS_TYPE),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
@@ -533,7 +534,7 @@ class CmdbNodeDao {
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record6<String, Long, String, String, String, Long>> {
+    ): Result<Record7<String, Long, String, String, String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_IP.`as`(T_NODE_NODE_IP),
@@ -541,7 +542,8 @@ class CmdbNodeDao {
                 NODE_STATUS.`as`(T_NODE_NODE_STATUS),
                 AGENT_VERSION.`as`(T_NODE_AGENT_VERSION),
                 PROJECT_ID.`as`(T_NODE_PROJECT_ID),
-                NODE_ID.`as`(T_NODE_NODE_ID)
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
                 .limit(pageSize).offset((page - 1) * pageSize)
