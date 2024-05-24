@@ -61,7 +61,7 @@ abstract class ITask {
         workspace: File
     ) {
         val params = buildTask.params
-        val newVariables = combineVariables(buildTask, buildVariables)
+        val jobBuildVariables = combineVariables(buildTask, buildVariables)
         if (params != null && null != params[Element::customEnv.name]) {
             val customEnvStr = params[Element::customEnv.name]
             val customEnv = try {
@@ -72,7 +72,7 @@ abstract class ITask {
             }
             if (customEnv?.isNotEmpty() == true) {
                 val variables = buildTask.buildVariable?.toMutableMap()
-                val variablesBuild = newVariables.variables.toMutableMap()
+                val variablesBuild = jobBuildVariables.variables.toMutableMap()
                 if (variables != null) {
                     customEnv.forEach {
                         if (!it.key.isNullOrBlank()) {
@@ -90,13 +90,13 @@ abstract class ITask {
                     }
                     return execute(
                         buildTask.copy(buildVariable = variables),
-                        newVariables.copy(variables = variablesBuild),
+                        jobBuildVariables.copy(variables = variablesBuild),
                         workspace
                     )
                 }
             }
         }
-        execute(buildTask, newVariables, workspace)
+        execute(buildTask, jobBuildVariables, workspace)
     }
 
     /**

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -396,5 +397,31 @@ object Runner {
         }
         LoggerService.addFoldEndLine("-----")
         LoggerService.addNormalLine("")
+    }
+
+    /**
+     *  为插件级变量填充Job前序产生的流水线变量，以及插件级的ENV
+     */
+    private fun combineTaskVariables(
+        buildTask: BuildTask,
+        jobBuildVariables: BuildVariables
+    ) {
+        // 如果之前的插件不是在构建机执行, 会缺少环境变量
+        val taskBuildVariable = buildTask.buildVariable ?: emptyMap()
+        val taskBuildParameters = taskBuildVariable.map { (key, value) ->
+            BuildParameters(key, value)
+        }.associateBy { it.key }
+        jobBuildVariables.variables = jobBuildVariables.variables.plus(taskBuildVariable)
+        // 以key去重, 并以buildTask中的为准
+        jobBuildVariables.variablesWithType = jobBuildVariables.variablesWithType
+            .associateBy { it.key }
+            .plus(taskBuildParameters)
+            .values.toList()
+
+        // 填充插件级的ENV参数
+        val params = buildTask.params
+        if (params != null && null != params[Element::customEnv.name]) {
+            // TODO 把ITask的方法移到这里
+        }
     }
 }
