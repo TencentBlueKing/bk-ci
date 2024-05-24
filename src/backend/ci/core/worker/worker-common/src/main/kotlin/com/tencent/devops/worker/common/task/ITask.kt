@@ -37,10 +37,13 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.expression.SpecialFunctions
+import org.slf4j.LoggerFactory
 import java.io.File
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
 abstract class ITask {
+
+    private val logger = LoggerFactory.getLogger(ITask::class.java)
 
     private val environment = HashMap<String, String>()
 
@@ -64,6 +67,7 @@ abstract class ITask {
             val customEnv = try {
                 JsonUtil.toOrNull(customEnvStr, List::class.java) as List<NameAndValue>?
             } catch (ignore: Throwable) {
+                logger.warn("Parse customEnv with error: ", ignore)
                 null
             }
             if (customEnv?.isNotEmpty() == true) {
