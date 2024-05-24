@@ -51,6 +51,7 @@ import com.tencent.devops.common.ci.image.PoolType as TXPoolType
 
 @Primary
 @Component
+@Suppress("ComplexMethod")
 class TXDispatchTransfer @Autowired(required = false) constructor(
     client: Client,
     objectMapper: ObjectMapper,
