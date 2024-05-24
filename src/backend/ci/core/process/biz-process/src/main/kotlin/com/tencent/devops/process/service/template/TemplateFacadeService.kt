@@ -34,6 +34,7 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_INSTANCE_ERROR_INFO
 import com.tencent.devops.common.api.constant.KEY_UPDATED_TIME
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_VERSION_NAME
@@ -60,6 +61,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -72,6 +75,7 @@ import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
@@ -93,8 +97,8 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
-import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplate
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
@@ -1877,6 +1881,24 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
+    fun updateInstanceErrorInfo(
+        projectId: String,
+        pipelineId: String,
+        errorInfo: String?
+    ) {
+        if (errorInfo == null) return
+        try {
+            templatePipelineDao.updateInstanceErrorInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                errorInfo = errorInfo
+            )
+        } catch (ignored: Exception) {
+            logger.warn("Failed to update instance error info|$projectId|$pipelineId$errorInfo")
+        }
+    }
+
     fun asyncUpdateTemplateInstances(
         projectId: String,
         userId: String,
@@ -1917,11 +1939,29 @@ class TemplateFacadeService @Autowired constructor(
                         data = null,
                         defaultMessage = exception.defaultMessage
                     ).message ?: exception.defaultMessage ?: "unknown!"
-                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
+                    // ERROR_PIPELINE_ELEMENT_CHECK_FAILED输出的是一个json,需要格式化输出
+                    val reason = if (exception.errorCode == ERROR_PIPELINE_ELEMENT_CHECK_FAILED) {
+                        JsonUtil.to(message, PipelineCheckFailedErrors::class.java)
+                    } else {
+                        PipelineCheckFailedMsg(message)
+                    }
+                    updateInstanceErrorInfo(
+                        projectId = projectId,
+                        pipelineId = templateInstanceUpdate.pipelineId,
+                        errorInfo = JsonUtil.toJson(reason, false)
+                    )
+                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：${reason.message}")
                 } catch (t: Throwable) {
                     val message =
                         if (!t.message.isNullOrBlank() && t.message!!.length > maxErrorReasonLength)
                             t.message!!.substring(0, maxErrorReasonLength) + "......" else t.message
+                    message?.let {
+                        updateInstanceErrorInfo(
+                            projectId = projectId,
+                            pipelineId = templateInstanceUpdate.pipelineId,
+                            errorInfo = JsonUtil.toJson(PipelineCheckFailedMsg(it), false)
+                        )
+                    }
                     failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
                     logger.warn("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|$message")
                 }
@@ -2178,11 +2218,13 @@ class TemplateFacadeService @Autowired constructor(
                 )
             }
             val templatePipelineVersion = it[KEY_VERSION] as Long
+            val instanceErrorInfo = it[KEY_INSTANCE_ERROR_INFO] as String?
             val templatePipelineStatus = generateTemplatePipelineStatus(
                 templateInstanceItems = templateInstanceItems,
                 templatePipelineId = pipelineId,
                 templatePipelineVersion = templatePipelineVersion,
-                version = version
+                version = version,
+                instanceErrorInfo = instanceErrorInfo
             )
             TemplatePipeline(
                 templateId = it[KEY_TEMPLATE_ID] as String,
@@ -2192,7 +2234,8 @@ class TemplateFacadeService @Autowired constructor(
                 pipelineName = pipelineSetting[0].pipelineName,
                 updateTime = (it[KEY_UPDATED_TIME] as LocalDateTime).timestampmilli(),
                 hasPermission = hasPermissionList.contains(pipelineId),
-                status = templatePipelineStatus
+                status = templatePipelineStatus,
+                instanceErrorInfo = instanceErrorInfo
             )
         }
         val sortTemplatePipelines = templatePipelines.sortedWith { a, b ->
@@ -2234,22 +2277,22 @@ class TemplateFacadeService @Autowired constructor(
         templateInstanceItems: Result<TTemplateInstanceItemRecord>?,
         templatePipelineId: String,
         templatePipelineVersion: Long,
-        version: Long
+        version: Long,
+        instanceErrorInfo: String?
     ): TemplatePipelineStatus {
-        var templatePipelineStatus = TemplatePipelineStatus.UPDATED
-        run lit@{
-            templateInstanceItems?.forEach { templateInstanceItem ->
-                if (templateInstanceItem.pipelineId == templatePipelineId) {
-                    // 任务表中有记录说明模板实例处于更新中
-                    templatePipelineStatus = TemplatePipelineStatus.UPDATING
-                    return@lit
-                }
-            }
-            if (templatePipelineVersion != version) {
-                templatePipelineStatus = TemplatePipelineStatus.PENDING_UPDATE
-            }
+        return when {
+            templateInstanceItems?.any { it.pipelineId == templatePipelineId } ?: false ->
+                TemplatePipelineStatus.UPDATING
+
+            !instanceErrorInfo.isNullOrBlank() ->
+                TemplatePipelineStatus.FAILED
+
+            templatePipelineVersion != version ->
+                TemplatePipelineStatus.PENDING_UPDATE
+
+            else ->
+                TemplatePipelineStatus.UPDATED
         }
-        return templatePipelineStatus
     }
 
     fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {

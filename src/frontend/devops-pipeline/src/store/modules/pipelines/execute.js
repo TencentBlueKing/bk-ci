@@ -14,7 +14,7 @@ const getters = {
 }
 
 const mutations = {
-    [SET_EXECUTE_PARAMS]: (state, { pipelineId, ...params }) => {
+    [SET_EXECUTE_PARAMS]: (state, pipelineId, params) => {
         const oldVal = state.executeParams.get(pipelineId)
         state.executeParams.set(pipelineId, {
             ...oldVal,
@@ -35,8 +35,8 @@ const mutations = {
 }
 
 const actions = {
-    setExecuteParams ({ commit }, params) {
-        commit(SET_EXECUTE_PARAMS, params)
+    setExecuteParams ({ commit }, pipelineId, params) {
+        commit(SET_EXECUTE_PARAMS, pipelineId, params)
     },
     setExecuteStatus ({ commit }, status) {
         commit(SET_EXECUTE_STATUS, status)

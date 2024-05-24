@@ -39,13 +39,19 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
+import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
+import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
+import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
@@ -59,17 +65,11 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PR
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.version.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.atom.service.MarketAtomEnvService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
-import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 插件执行环境逻辑类
@@ -461,15 +461,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         }
         val osName = atomEnvRequest.osName
         val osArch = atomEnvRequest.osArch
-        atomEnvRequest.language?.let {
-            val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(it)
-            if (!osName.isNullOrBlank()) {
-                atomEnvRequest.osName = atomBusHandleService.handleOsName(osName)
-            }
-            if (!osName.isNullOrBlank() && !osArch.isNullOrBlank()) {
-                atomEnvRequest.osArch = atomBusHandleService.handleOsArch(osName, osArch)
-            }
-        }
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         return if (null != atomRecord) {
             val atomId = atomRecord.id
@@ -479,6 +470,20 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 osName = osName,
                 osArch = osArch
             )
+            atomEnvRequest.language?.let {
+                val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(it)
+                if (!osName.isNullOrBlank()) {
+                    atomEnvRequest.osName = atomBusHandleService.handleOsName(osName)
+                }
+                if (!osName.isNullOrBlank() && !osArch.isNullOrBlank()) {
+                    atomEnvRequest.osArch = atomBusHandleService.handleOsArch(osName, osArch)
+                }
+                // 对系统预置的执行指令及用户自定义execution.target执行指令做处理
+                atomEnvRequest.target?.let { buildTarget ->
+                    atomEnvRequest.target =
+                        atomBusHandleService.handleTarget(buildTarget, atomEnvRecord?.target ?: "")
+                }
+            }
             atomEnvRecord?.let {
                 // 合并用户配置的前置命令和系统预置的前置命令
                 val dbPreCmds = CommonUtils.strToList(atomEnvRecord.preCmd ?: "")

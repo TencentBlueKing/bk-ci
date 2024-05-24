@@ -41,15 +41,12 @@
     } from '@/store/constants'
     export default {
         name: 'branch-parameter-array',
-
         mixins: [mixins],
-
         props: {
             repoHashId: {
                 type: String
             }
         },
-
         data () {
             return {
                 defaultValue: '',
@@ -79,7 +76,6 @@
                 }
             }
         },
-
         created () {
             this.getBranchesList()
             if (this.value.length) {
@@ -88,7 +84,6 @@
                 this.curValue = ['']
             }
         },
-
         methods: {
             handleChangeBranch (val, index) {
                 this.curValue[index] = val
@@ -111,7 +106,6 @@
                 this.curValue.push('')
                 this.handleChange(this.name, this.curValue)
             },
-
             /**
              * 删除一行参数
              */

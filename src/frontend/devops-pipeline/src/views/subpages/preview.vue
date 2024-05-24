@@ -234,8 +234,7 @@
                     this.constantParams = startupInfo.properties.filter(p => p.constant)
                     this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
                     this.getParamsValue(values)
-                    this.setExecuteParams({
-                        pipelineId: this.pipelineId,
+                    this.setExecuteParams(this.pipelineId, {
                         ...this.paramsValues,
                         ...this.versionParamValues,
                         ...this.buildValues,
@@ -263,8 +262,7 @@
             updateParams (valueKey = 'defaultValue') {
                 this.showChangedParamsAlert = valueKey === 'value'
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
-                this.setExecuteParams({
-                    pipelineId: this.pipelineId,
+                this.setExecuteParams(this.pipelineId, {
                     ...this.paramsValues
                 })
             },
@@ -296,8 +294,7 @@
             },
             handleChange (type, name, value) {
                 this[`${type}Values`][name] = value
-                this.setExecuteParams({
-                    pipelineId: this.pipelineId,
+                this.setExecuteParams(this.pipelineId, {
                     ...this[`${type}Values`]
                 })
             },
@@ -313,8 +310,7 @@
             handleBuildNoChange (name, value) {
                 this.buildNo.buildNo = value
 
-                this.setExecuteParams({
-                    pipelineId: this.pipelineId,
+                this.setExecuteParams(this.pipelineId, {
                     buildNo: this.buildNo
                 })
             },
