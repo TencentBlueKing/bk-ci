@@ -236,11 +236,13 @@
                     this.getParamsValue(values)
                     this.setExecuteParams({
                         pipelineId: this.pipelineId,
-                        ...this.paramsValues,
-                        ...this.versionParamValues,
-                        ...this.buildValues,
-                        ...this.constantValues,
-                        ...this.otherValues
+                        params: {
+                            ...this.paramsValues,
+                            ...this.versionParamValues,
+                            ...this.buildValues,
+                            ...this.constantValues,
+                            ...this.otherValues
+                        }
                     })
                 } else {
                     this.$bkMessage({
@@ -265,7 +267,9 @@
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
-                    ...this.paramsValues
+                    params: {
+                        ...this.paramsValues
+                    }
                 })
             },
             async handleValidate () {
@@ -298,7 +302,9 @@
                 this[`${type}Values`][name] = value
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
-                    ...this[`${type}Values`]
+                    params: {
+                        ...this[`${type}Values`]
+                    }
                 })
             },
             handleBuildChange (...args) {
@@ -315,7 +321,9 @@
 
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
-                    buildNo: this.buildNo
+                    params: {
+                        buildNo: this.buildNo
+                    }
                 })
             },
             async init () {
