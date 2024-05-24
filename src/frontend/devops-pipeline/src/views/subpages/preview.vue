@@ -234,12 +234,15 @@
                     this.constantParams = startupInfo.properties.filter(p => p.constant)
                     this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
                     this.getParamsValue(values)
-                    this.setExecuteParams(this.pipelineId, {
-                        ...this.paramsValues,
-                        ...this.versionParamValues,
-                        ...this.buildValues,
-                        ...this.constantValues,
-                        ...this.otherValues
+                    this.setExecuteParams({
+                        pipelineId: this.pipelineId,
+                        params: {
+                            ...this.paramsValues,
+                            ...this.versionParamValues,
+                            ...this.buildValues,
+                            ...this.constantValues,
+                            ...this.otherValues
+                        }
                     })
                 } else {
                     this.$bkMessage({
@@ -262,8 +265,11 @@
             updateParams (valueKey = 'defaultValue') {
                 this.showChangedParamsAlert = valueKey === 'value'
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
-                this.setExecuteParams(this.pipelineId, {
-                    ...this.paramsValues
+                this.setExecuteParams({
+                    pipelineId: this.pipelineId,
+                    params: {
+                        ...this.paramsValues
+                    }
                 })
             },
             async handleValidate () {
@@ -294,8 +300,11 @@
             },
             handleChange (type, name, value) {
                 this[`${type}Values`][name] = value
-                this.setExecuteParams(this.pipelineId, {
-                    ...this[`${type}Values`]
+                this.setExecuteParams({
+                    pipelineId: this.pipelineId,
+                    params: {
+                        ...this[`${type}Values`]
+                    }
                 })
             },
             handleBuildChange (...args) {
@@ -310,8 +319,11 @@
             handleBuildNoChange (name, value) {
                 this.buildNo.buildNo = value
 
-                this.setExecuteParams(this.pipelineId, {
-                    buildNo: this.buildNo
+                this.setExecuteParams({
+                    pipelineId: this.pipelineId,
+                    params: {
+                        buildNo: this.buildNo
+                    }
                 })
             },
             async init () {
