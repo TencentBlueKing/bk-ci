@@ -183,7 +183,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 pmUserId = userId,
                 projectId = projectId,
                 cgsId = cgs.cgsId,
-                autoAssign = false,
                 workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
