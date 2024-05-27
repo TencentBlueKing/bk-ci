@@ -50,7 +50,6 @@ import org.glassfish.jersey.server.ChunkedOutput
 import java.util.concurrent.Executors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
 import javax.ws.rs.core.HttpHeaders
 
 @RestResource
