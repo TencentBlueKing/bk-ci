@@ -517,4 +517,27 @@ class NodeDao {
                 .execute()
         }
     }
+
+    fun batchUpdateNodeStatus(
+        dslContext: DSLContext,
+        projectIds: Set<String>?,
+        ids: Set<Long>?,
+        status: NodeStatus
+    ) {
+        with(TNode.T_NODE) {
+            if (!projectIds.isNullOrEmpty()) {
+                dslContext.update(this)
+                    .set(NODE_STATUS, status.name)
+                    .where(PROJECT_ID.`in`(projectIds))
+                    .execute()
+                return
+            } else if (!ids.isNullOrEmpty()) {
+                dslContext.update(this)
+                    .set(NODE_STATUS, status.name)
+                    .where(NODE_ID.`in`(ids))
+                    .execute()
+                return
+            }
+        }
+    }
 }

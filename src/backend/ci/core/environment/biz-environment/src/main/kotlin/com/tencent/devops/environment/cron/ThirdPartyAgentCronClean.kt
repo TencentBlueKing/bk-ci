@@ -15,6 +15,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionD
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentDisableInfo
 import com.tencent.devops.environment.model.AgentDisableType
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -32,7 +33,8 @@ class ThirdPartyAgentCronClean @Autowired constructor(
     private val dslContext: DSLContext,
     private val actionDao: ThirdPartyAgentActionDao,
     private val agentDao: ThirdPartyAgentDao,
-    private val tokenService: ClientTokenService
+    private val tokenService: ClientTokenService,
+    private val agentService: ThirdPartAgentService
 ) {
     // 清理超过100的Action数据
     @Scheduled(cron = "0 28 3 * * ?")
@@ -65,7 +67,9 @@ class ThirdPartyAgentCronClean @Autowired constructor(
         needDisAgents.chunked(100).forEach { chunk ->
             val chunkIds = chunk.map { it.first }.toSet()
             val (noBuildAgents, buildAgents) = fetchNoBuildAgents(chunkIds, now.minusMonths(2).timestamp())
-            agentDao.batchUpdateAgent(dslContext, noBuildAgents, AgentStatus.DISABLED)
+            // 依旧没有构建的禁用
+            val nodeIds = agentDao.fetchNodeIdsByAgentIds(dslContext, noBuildAgents)
+            agentService.disableAgent(null, Pair(noBuildAgents, nodeIds))
             // 没有禁用的恢复使用
             agentDao.updateAgentByProject(dslContext, null, buildAgents, null, null)
         }
