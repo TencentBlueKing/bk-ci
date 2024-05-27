@@ -520,6 +520,32 @@ class WorkspaceCommon @Autowired constructor(
         )
     }
 
+    /**
+     * 团队项目可以在创建时指定owner，将会自动挂载owner
+     *
+     */
+    fun autoAssignOwner(
+        ws: WorkspaceRecord
+    ) {
+        if (ws.ownerType != WorkspaceOwnerType.PROJECT) return
+        val owners = sharedDao.fetchWorkspaceOwner(dslContext, setOf(ws.workspaceName))
+        if (owners.isEmpty()) return
+        shareWorkspace(
+            workspaceName = ws.workspaceName,
+            projectId = ws.projectId,
+            operator = ws.createUserId,
+            assigns = owners.map {
+                ProjectWorkspaceAssign(
+                    userId = it,
+                    type = WorkspaceShared.AssignType.OWNER,
+                    expiration = null
+                )
+            },
+            mountType = WorkspaceMountType.START,
+            ownerType = ws.ownerType
+        )
+    }
+
     fun shareWorkspace(
         workspaceName: String,
         projectId: String,

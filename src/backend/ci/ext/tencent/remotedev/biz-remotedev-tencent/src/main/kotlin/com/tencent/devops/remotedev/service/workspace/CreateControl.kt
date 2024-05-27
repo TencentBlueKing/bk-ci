@@ -62,8 +62,10 @@ import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
@@ -75,6 +77,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -127,7 +130,9 @@ class CreateControl @Autowired constructor(
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
     private val notifyControl: NotifyControl,
     private val tCloudCfsService: TCloudCfsService,
-    private val gitProxyTGitService: GitProxyTGitService
+    private val gitProxyTGitService: GitProxyTGitService,
+    private val rabbitTemplate: RabbitTemplate,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
     private val executor = Executors.newCachedThreadPool()
 
@@ -162,10 +167,9 @@ class CreateControl @Autowired constructor(
         pmUserId: String,
         projectId: String,
         cgsId: String?,
-        autoAssign: Boolean?,
         workspaceCreate: WindowsWorkspaceCreate
     ) {
-        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$autoAssign|$workspaceCreate")
+        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$workspaceCreate")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -254,8 +258,7 @@ class CreateControl @Autowired constructor(
                     windowsConfig = windowsConfig,
                     projectInfo = projectInfo,
                     windowsZone = windowsZone,
-                    cgsId = cgsId,
-                    autoAssign = autoAssign
+                    cgsId = cgsId
                 )
                 return
             }
@@ -279,8 +282,7 @@ class CreateControl @Autowired constructor(
             windowsConfig = windowsConfig,
             projectInfo = projectInfo,
             windowsZone = windowsZone,
-            cgsId = cgsId,
-            autoAssign = autoAssign
+            cgsId = cgsId
         )
     }
 
@@ -342,8 +344,7 @@ class CreateControl @Autowired constructor(
         windowsConfig: WindowsResourceTypeConfig,
         projectInfo: ProjectVO,
         windowsZone: WindowsResourceZoneConfig,
-        cgsId: String?,
-        autoAssign: Boolean?
+        cgsId: String?
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
@@ -355,6 +356,14 @@ class CreateControl @Autowired constructor(
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = workspaceNames[i]
+            val owner = workspaceCreate.assignOwners.getOrNull(i)
+            if (!owner.isNullOrBlank()) {
+                workspaceSharedDao.batchCreate(
+                    dslContext = dslContext, workspaceName = workspaceName, operator = creator, assigns = listOf(
+                        ProjectWorkspaceAssign(owner, WorkspaceShared.AssignType.OWNER, null)
+                    ), resourceId = ""
+                )
+            }
             val ws = Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
@@ -405,7 +414,6 @@ class CreateControl @Autowired constructor(
                         zoneId = windowsZone.zoneShortName,
                         machineType = windowsConfig.size,
                         cgsId = cgsId,
-                        autoAssign = autoAssign,
                         imageCosFile = workspaceCreate.imageCosFile,
                         quotaType = QuotaType.OFFSHORE
                     ),
@@ -432,7 +440,6 @@ class CreateControl @Autowired constructor(
                 pmUserId = userId,
                 projectId = projectId,
                 cgsId = null,
-                autoAssign = null,
                 workspaceCreate = workspaceCreate
             )
         } else {
@@ -611,7 +618,7 @@ class CreateControl @Autowired constructor(
             }
 
             if (ws.workspaceSystemType.needSafeInitialization()) {
-                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName)
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索

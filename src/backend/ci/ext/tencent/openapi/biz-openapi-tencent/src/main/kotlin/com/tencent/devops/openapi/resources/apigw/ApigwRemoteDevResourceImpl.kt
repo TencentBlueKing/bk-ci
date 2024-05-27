@@ -9,11 +9,14 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -207,5 +210,22 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
         logger.info("getWindowsQuota $userId|$type")
         return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type)
+    }
+
+    override fun updateUsageLimit(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        count: Int,
+        available: Boolean?
+    ): Result<QuotaInApiRes> {
+        logger.info("updateUsageLimit $userId|$projectId|$count|$available")
+        return client.get(ServiceRemoteDevResource::class).updateUsageLimit(
+            userId = userId,
+            projectId = projectId,
+            machineType = machineType,
+            count = count,
+            available = available
+        )
     }
 }

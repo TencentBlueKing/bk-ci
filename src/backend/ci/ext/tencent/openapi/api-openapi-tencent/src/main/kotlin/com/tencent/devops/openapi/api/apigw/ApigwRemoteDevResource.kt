@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -21,6 +22,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -313,4 +315,25 @@ interface ApigwRemoteDevResource {
         @QueryParam("type")
         type: QuotaType
     ): Result<Map<String, Map<String, Int>>>
+
+    @Operation(summary = "更新项目/个人在使用云桌面上的配额", tags = ["v4_app_remotedev_usage_limit"])
+    @PUT
+    @Path("/update_usage_limit")
+    fun updateUsageLimit(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "机型", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
+        @Parameter(description = "配额增量(可负，可零，可正)", required = true)
+        @QueryParam("count")
+        count: Int,
+        @Parameter(description = "返回可用配额", required = false)
+        @QueryParam("available")
+        available: Boolean?
+    ): Result<QuotaInApiRes>
 }
