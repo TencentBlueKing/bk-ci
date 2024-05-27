@@ -57,7 +57,7 @@ class ThirdPartyAgentCronClean @Autowired constructor(
     }
 
     // 将禁用项目的和两个月没有构建任务的Agent标记为禁用
-    @Scheduled(cron = "0 28 2 * * ?")
+    // @Scheduled(cron = "0 28 2 * * ?")
     fun fetchAndDisableAgents() {
         logger.info("fetchAndDisableAgents start")
         val max = redisOperation.get(MAX_TO_DISABLE_AGENT)?.toInt() ?: return
