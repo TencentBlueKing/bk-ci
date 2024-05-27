@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -38,6 +39,7 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -65,7 +67,8 @@ class ServiceRemoteDevResourceImpl(
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
     private val whiteListService: WhiteListService,
-    private val deliverControl: DeliverControl
+    private val deliverControl: DeliverControl,
+    private val imageManageService: ImageManageService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -443,5 +446,14 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Boolean> {
         deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
         return Result(true)
+    }
+
+    override fun getWorkspaceImageList(projectId: String?): Result<List<String>> {
+        val imageList = if (projectId.isNullOrBlank()) {
+            imageManageService.getVmStandardImages().mapNotNull { it.cosFile }
+        } else {
+            imageManageService.getProjectImageList(projectId).map { it.imageCosFile }
+        }
+        return Result(imageList.distinct())
     }
 }

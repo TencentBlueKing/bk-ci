@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -325,4 +326,13 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间描述", required = true)
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean>
+
+    @Operation(summary = "获取镜像列表")
+    @GET
+    @Path("/list")
+    fun getWorkspaceImageList(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<List<String>>
 }

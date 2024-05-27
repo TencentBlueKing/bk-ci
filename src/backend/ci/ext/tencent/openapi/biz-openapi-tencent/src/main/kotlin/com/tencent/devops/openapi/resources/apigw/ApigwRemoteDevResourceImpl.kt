@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -260,6 +261,17 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId,
             workspaceName = workspaceName,
             assigns = assigns
+        )
+    }
+
+    override fun queryWorkspaceImageList(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String?
+    ): Result<List<String>> {
+        logger.info("queryWorkspaceImageList |$projectId|")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceImageList(
+            projectId = projectId
         )
     }
 }
