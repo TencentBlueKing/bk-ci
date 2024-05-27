@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
@@ -134,7 +133,7 @@ class SubPipelineStatusService @Autowired constructor(
         )
         keys.forEach {
             // 存在异常值，则直接返回
-            if (buildVariables[it].isNullOrBlank()){
+            if (buildVariables[it].isNullOrBlank()) {
                 logger.warn(
                     "The parent pipeline status cannot be updated, " +
                             "because an abnormal variable exists[$buildVariables]"

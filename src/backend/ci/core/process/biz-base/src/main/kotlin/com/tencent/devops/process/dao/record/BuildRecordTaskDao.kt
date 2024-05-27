@@ -40,7 +40,6 @@ import com.tencent.devops.process.pojo.KEY_TASK_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record18
 import org.jooq.Record19
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
