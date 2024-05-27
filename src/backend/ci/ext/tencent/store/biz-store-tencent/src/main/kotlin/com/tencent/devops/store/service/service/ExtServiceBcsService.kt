@@ -104,7 +104,7 @@ class ExtServiceBcsService {
         checkPermissionFlag: Boolean = true
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
-        val grayFlag = namespaceName == "dev-base"
+        val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
         val host = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
         val scopes = "ALL," + if (grayFlag) "TEST" else "PRD"
         val storeEnvVarInfoListResult = storeEnvVarService.getLatestEnvVarList(
@@ -192,7 +192,11 @@ class ExtServiceBcsService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val namespaceName = "dev-base"
+        val namespaceName = if (!grayFlag) {
+            extServiceBcsNameSpaceConfig.namespaceName
+        } else {
+            extServiceBcsNameSpaceConfig.grayNamespaceName
+        }
         val deployApp = generateDeployApp(
             userId = userId,
             namespaceName = namespaceName,
@@ -249,9 +253,9 @@ class ExtServiceBcsService {
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
         }
-        var grayNamespaceName = "dev-base"
+        var grayNamespaceName = ""
         var grayHost = ""
-        var namespaceName = "dev-base"
+        var namespaceName = ""
         var host = ""
         when {
             grayFlag == null -> {
@@ -266,7 +270,7 @@ class ExtServiceBcsService {
             }
         }
         // 停止扩展服务部署
-        val bcsStopAppResult = client.get(ServiceBcsResource::class).bcsStopApp(
+        val bcsStopAppResult = client.get(ServiceBcsResource::class).stopApp(
             userId = userId,
             stopApp = StopApp(
                 bcsUrl = extServiceBcsConfig.masterUrl,

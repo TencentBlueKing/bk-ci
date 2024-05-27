@@ -95,11 +95,10 @@ class ExtServiceBcsInitService @Autowired constructor(
             password = extServiceImageSecretConfig.repoPassword,
             email = extServiceImageSecretConfig.repoEmail
         )
-        val namespace = "dev-base"
         // 创建已发布扩展服务版本的命名空间拉取镜像secret
         val createReleaseNsImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
             userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-            namespaceName = namespace,
+            namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
             secretName = secretName,
             kubernetesRepo = kubernetesRepo
         )
@@ -110,7 +109,7 @@ class ExtServiceBcsInitService @Autowired constructor(
         val graySecretName = extServiceImageSecretConfig.graySecretName
         val createGrayNsImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
             userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-            namespaceName = namespace,
+            namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
             secretName = graySecretName,
             kubernetesRepo = kubernetesRepo
         )

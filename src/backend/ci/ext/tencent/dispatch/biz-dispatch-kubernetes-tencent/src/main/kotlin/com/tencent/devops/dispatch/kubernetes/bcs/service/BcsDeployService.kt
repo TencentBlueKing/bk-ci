@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.bcs.util.BcsClientUtils
 import com.tencent.devops.dispatch.kubernetes.client.DeploymentClient
 import com.tencent.devops.dispatch.kubernetes.client.IngressClient
 import com.tencent.devops.dispatch.kubernetes.client.ServiceClient
@@ -50,6 +51,7 @@ import io.fabric8.kubernetes.api.model.networking.v1.IngressBackend
 import io.fabric8.kubernetes.api.model.networking.v1.IngressBackendBuilder
 import io.fabric8.kubernetes.api.model.networking.v1.IngressBuilder
 import io.fabric8.kubernetes.api.model.networking.v1.IngressRule
+import io.fabric8.kubernetes.client.KubernetesClient
 import java.text.MessageFormat
 import java.util.Collections
 import org.slf4j.LoggerFactory
@@ -263,6 +265,56 @@ class BcsDeployService @Autowired constructor(
 
     private fun getIngressName(namespaceName: String) = "$namespaceName-ingress"
 
+    fun stopBcsApp(
+        userId: String,
+        stopApp: StopApp
+    ): Result<Boolean> {
+        logger.info("bcsStopApp userId is: $userId,stopApp is: $stopApp")
+        val bcsUrl = stopApp.bcsUrl
+        val token = stopApp.token
+        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
+        val deploymentName = stopApp.deploymentName
+        // 停止灰度命名空间的应用
+        val grayNamespaceName = stopApp.grayNamespaceName
+        var deployment: Deployment?
+        if (grayNamespaceName.isNotEmpty()) {
+            deployment = bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName)
+                .withName(deploymentName).get()
+            if (deployment != null) {
+                // 删除deployment
+                bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName)
+                    .withName(deploymentName).delete()
+                // 删除service
+                bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
+                // 更新ingress规则
+                deleteBcsIngressRule(
+                    bcsKubernetesClient = bcsKubernetesClient,
+                    namespaceName = grayNamespaceName,
+                    host = stopApp.grayHost,
+                    deploymentName = deploymentName,
+                    bcsUrl = bcsUrl,
+                    token = token
+                )
+            }
+        }
+        // 停止正式命名空间的应用
+        val namespaceName = stopApp.namespaceName
+        if (namespaceName.isNotEmpty()) {
+            deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName)
+                .withName(deploymentName).get()
+            if (deployment != null) {
+                // 删除deployment
+                bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).delete()
+                // 删除service
+                bcsKubernetesClient.services().inNamespace(namespaceName).withName(stopApp.serviceName).delete()
+                // 更新ingress规则
+                deleteBcsIngressRule(bcsKubernetesClient, namespaceName, stopApp.host, deploymentName, bcsUrl, token)
+            }
+        }
+        return Result(true)
+    }
+
+
     fun stopApp(
         userId: String,
         stopApp: StopApp
@@ -322,5 +374,21 @@ class BcsDeployService @Autowired constructor(
             ingress?.spec?.rules?.removeIf { rule -> rule.host == MessageFormat(host).format(arrayOf(deploymentName)) }
             ingress?.let { it -> ingressClient.createIngress(userId, it) }
         }
+    }
+
+    private fun deleteBcsIngressRule(
+        bcsKubernetesClient: KubernetesClient,
+        namespaceName: String,
+        host: String,
+        deploymentName: String,
+        bcsUrl: String,
+        token: String
+    ) {
+        val ingressRedisKey = "$ingressRedisPrefixKey:$namespaceName"
+        val ingressName = redisOperation.get(ingressRedisKey)
+        val ingress =
+            bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).withName(ingressName).get()
+        ingress.spec.rules.removeIf { rule -> rule.host == MessageFormat(host).format(arrayOf(deploymentName)) }
+        BcsClientUtils.createIngress(bcsUrl, token, namespaceName, ingress)
     }
 }

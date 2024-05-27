@@ -82,6 +82,10 @@ class ServiceBcsResourceImpl @Autowired constructor(
     }
 
     override fun bcsStopApp(userId: String, stopApp: StopApp): Result<Boolean> {
+        return bcsDeployService.stopBcsApp(userId, stopApp)
+    }
+
+    override fun stopApp(userId: String, stopApp: StopApp): Result<Boolean> {
         return bcsDeployService.stopApp(userId, stopApp)
     }
 
