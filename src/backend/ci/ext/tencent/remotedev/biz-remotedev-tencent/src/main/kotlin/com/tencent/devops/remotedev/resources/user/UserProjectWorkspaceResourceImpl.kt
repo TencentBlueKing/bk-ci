@@ -90,7 +90,6 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             pmUserId = userId,
             projectId = projectId,
             cgsId = null,
-            autoAssign = false,
             workspaceCreate = workspace
         )
         return Result(true)
