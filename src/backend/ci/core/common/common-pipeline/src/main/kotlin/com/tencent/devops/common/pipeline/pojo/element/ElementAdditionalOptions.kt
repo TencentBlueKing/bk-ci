@@ -66,8 +66,10 @@ data class ElementAdditionalOptions(
     @get:Schema(title = "插件post信息", required = false)
     var elementPostInfo: ElementPostInfo? = null,
     @get:Schema(title = "是否设置自定义环境变量", required = false)
-    val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
-    @get:Schema(title = "自定义环境变量", required = false)
+    @Deprecated("不需要判断是否开启env，使用新字段")
+    val enableCustomEnv: Boolean? = true,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    @Deprecated("移到Element级别来维护，与Job保持层级一致")
     val customEnv: List<NameAndValue>? = null
 )
 
