@@ -102,7 +102,8 @@
 
         logout (): void {
             try {
-                const url = new URL(window.getLoginUrl())
+                const loginUrl = window.getLoginUrl()
+                const url = new URL(loginUrl.startsWith('//') ? `${location.protocol}${loginUrl}` : loginUrl)
                 url.searchParams.append('is_from_logout', '1')
                 console.log(url.href)
                 window.location.href = url.href
