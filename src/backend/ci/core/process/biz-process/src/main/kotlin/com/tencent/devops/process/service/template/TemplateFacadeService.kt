@@ -2319,7 +2319,12 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
-        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId, userId = userId)
+        modelCheckPlugin.checkModelIntegrity(
+            model = template,
+            projectId = projectId,
+            userId = userId,
+            isTemplate = true
+        )
         checkPipelineParam(template)
     }
 
