@@ -131,13 +131,16 @@ class SubPipelineStatusService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             keys = keys
-        ).filter { it.value.isNotBlank() }
-        if (buildVariables.size != keys.size) {
-            logger.warn(
-                "The parent pipeline status cannot be updated, " +
-                        "because an abnormal variable exists[$buildVariables]"
-            )
-            return
+        )
+        keys.forEach {
+            // 存在异常值，则直接返回
+            if (buildVariables[it].isNullOrBlank()){
+                logger.warn(
+                    "The parent pipeline status cannot be updated, " +
+                            "because an abnormal variable exists[$buildVariables]"
+                )
+                return
+            }
         }
         pipelineRuntimeService.getBuildInfo(
             projectId = buildVariables[PIPELINE_START_PARENT_PROJECT_ID]!!,
