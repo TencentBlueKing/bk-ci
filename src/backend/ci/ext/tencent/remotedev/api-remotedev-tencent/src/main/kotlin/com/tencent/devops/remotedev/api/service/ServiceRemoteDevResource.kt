@@ -329,7 +329,7 @@ interface ServiceRemoteDevResource {
 
     @Operation(summary = "获取镜像列表")
     @GET
-    @Path("/list")
+    @Path("/image/list")
     fun getWorkspaceImageList(
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
