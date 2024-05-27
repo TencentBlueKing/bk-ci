@@ -27,10 +27,9 @@
 
 package com.tencent.devops.common.api.util
 
-import sun.reflect.ConstructorAccessor
-import sun.reflect.FieldAccessor
 import sun.reflect.ReflectionFactory
 import java.lang.reflect.AccessibleObject
+import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import kotlin.reflect.full.isSubclassOf
@@ -131,8 +130,7 @@ object EnumUtil {
         var modifiers: Int = modifiersField.getInt(field)
         modifiers = modifiers and Modifier.FINAL.inv()
         modifiersField.setInt(field, modifiers)
-        val fieldAccessor: FieldAccessor = reflectionFactory.newFieldAccessor(field, false)
-        fieldAccessor.set(target, value)
+        field.set(target, value)
     }
 
     @Throws(NoSuchFieldException::class, IllegalAccessException::class)
@@ -155,7 +153,7 @@ object EnumUtil {
     inline fun <reified T : Any> getConstructorAccessor(
         enumClass: Class<T>,
         additionalParameterTypes: Array<Class<out Any>>
-    ): ConstructorAccessor? {
+    ): Constructor<out Any>? {
         val parameterTypes = arrayOfNulls<Class<*>?>(additionalParameterTypes.size + 2)
         parameterTypes[0] = String::class.java // enum class first field: field name
         parameterTypes[1] = Int::class.javaPrimitiveType // enum class second field: ordinal
@@ -163,14 +161,17 @@ object EnumUtil {
         enumClass.declaredConstructors.forEach { constructor ->
             if (compareParameterType(constructor.parameterTypes, parameterTypes)) {
                 try {
-                    return reflectionFactory.newConstructorAccessor(constructor)
+                    constructor.isAccessible = true
+                    return constructor
                 } catch (ignored: IllegalArgumentException) {
                     // skip illegal argument try next one
                 }
             }
         }
 
-        return reflectionFactory.newConstructorAccessor(enumClass.getDeclaredConstructor(*parameterTypes))
+        val constructor = enumClass.getDeclaredConstructor(*parameterTypes)
+        constructor.isAccessible = true
+        return constructor
     }
 
     fun compareParameterType(constructorParameterType: Array<Class<*>>, parameterTypes: Array<Class<*>?>): Boolean {
@@ -181,7 +182,8 @@ object EnumUtil {
             if (constructorParameterType[i] !== parameterTypes[i]) {
                 if (constructorParameterType[i].isPrimitive && parameterTypes[i]!!.isPrimitive) {
                     if (constructorParameterType[i].kotlin.javaPrimitiveType
-                        !== parameterTypes[i]!!.kotlin.javaPrimitiveType) {
+                        !== parameterTypes[i]!!.kotlin.javaPrimitiveType
+                    ) {
                         return false
                     }
                 }
