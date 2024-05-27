@@ -280,6 +280,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     }
 
     override fun disableAgent(projects: Set<String>) {
-        thirdPartAgentService.disableAgent(projects)
+        thirdPartAgentService.disableAgent(projects, null)
     }
 }
