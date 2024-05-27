@@ -29,38 +29,22 @@ package com.tencent.devops.dispatch.kubernetes.bcs.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
 import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsDeployService
 import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsQueryService
-import com.tencent.devops.dispatch.kubernetes.bcs.util.BcsClientUtils
 import com.tencent.devops.dispatch.kubernetes.client.SecretClient
 import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
-import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceBcsResourceImpl @Autowired constructor(
+class ServiceKubernetesManagementResourceImpl @Autowired constructor(
     private val bcsDeployService: BcsDeployService,
     private val bcsQueryService: BcsQueryService,
     private val secretClient: SecretClient
-) : ServiceBcsResource {
-
-    override fun createNamespace(
-        namespaceName: String,
-        createBcsNameSpaceRequest: CreateBcsNameSpaceRequest
-    ): Result<Boolean> {
-        BcsClientUtils.createNamespace(
-            bcsUrl = createBcsNameSpaceRequest.bcsUrl,
-            token = createBcsNameSpaceRequest.token,
-            namespaceName = namespaceName,
-            labelInfo = createBcsNameSpaceRequest.kubernetesLabel,
-            limitRangeInfo = createBcsNameSpaceRequest.limitRangeInfo
-        )
-        return Result(true)
-    }
+) : ServiceKubernetesManagementResource {
 
     override fun createImagePullSecretTest(
         userId: String,
@@ -77,7 +61,7 @@ class ServiceBcsResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
+    override fun deployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
         return bcsDeployService.deployApp(userId, deployApp)
     }
 
@@ -89,11 +73,11 @@ class ServiceBcsResourceImpl @Autowired constructor(
         return bcsDeployService.stopApp(userId, stopApp)
     }
 
-    override fun getBcsDeploymentInfo(userId: String, deploymentName: String): Result<Deployment?> {
+    override fun getDeploymentInfo(userId: String, deploymentName: String): Result<Deployment?> {
         return bcsQueryService.getBcsDeploymentInfo(userId, deploymentName)
     }
 
-    override fun getBcsDeploymentInfos(userId: String, deploymentNames: String): Result<Map<String, Deployment>> {
+    override fun getDeploymentInfos(userId: String, deploymentNames: String): Result<Map<String, Deployment>> {
         return bcsQueryService.getBcsDeploymentInfos(userId, deploymentNames)
     }
 }

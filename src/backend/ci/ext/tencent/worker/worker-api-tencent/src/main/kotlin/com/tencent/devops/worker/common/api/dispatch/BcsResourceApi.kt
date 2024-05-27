@@ -38,7 +38,7 @@ import okhttp3.RequestBody
 class BcsResourceApi : AbstractBuildResourceApi() {
 
     fun deployApp(userId: String, deployAppJsonStr: String): Result<Boolean> {
-        val path = "/ms/dispatch/api/build/bcs/deploy/app"
+        val path = "/ms/dispatch/api/build/kubernetes/management/deploy/app"
         val body = RequestBody.create(
             "application/json; charset=utf-8".toMediaTypeOrNull(),
             deployAppJsonStr
@@ -53,7 +53,7 @@ class BcsResourceApi : AbstractBuildResourceApi() {
         userId: String,
         deploymentName: String
     ): Result<Deployment> {
-        val path = "/ms/dispatch/api/build/bcs/deployments/$deploymentName"
+        val path = "/ms/dispatch/api/build/kubernetes/management/deployments/$deploymentName"
         val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
         val request = buildGet(path, headMap)
         val responseContent = request(request, "get deployment info fail")

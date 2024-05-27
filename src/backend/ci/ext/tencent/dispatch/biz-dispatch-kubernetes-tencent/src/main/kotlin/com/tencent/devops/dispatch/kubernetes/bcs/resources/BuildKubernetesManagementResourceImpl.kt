@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.bcs.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.service.BuildBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.BuildKubernetesManagementResource
 import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsDeployService
 import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsQueryService
 import com.tencent.devops.dispatch.pojo.DeployApp
@@ -37,10 +37,10 @@ import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildBcsResourceImpl @Autowired constructor(
+class BuildKubernetesManagementResourceImpl @Autowired constructor(
     private val bcsDeployService: BcsDeployService,
     private val bcsQueryService: BcsQueryService
-) : BuildBcsResource {
+) : BuildKubernetesManagementResource {
 
     override fun getBcsDeploymentInfo(
         userId: String,

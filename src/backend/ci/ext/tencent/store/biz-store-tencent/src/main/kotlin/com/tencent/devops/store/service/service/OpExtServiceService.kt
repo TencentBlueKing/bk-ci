@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
 import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -437,13 +437,13 @@ class OpExtServiceService @Autowired constructor(
             version = version,
             checkPermissionFlag = checkPermissionFlag
         )
-        val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
+        val bcsDeployAppResult = client.get(ServiceKubernetesManagementResource::class).bcsDeployApp(
             userId = userId,
             deployApp = deployApp
         )
         logger.info("bcsDeployAppResult is :$bcsDeployAppResult")
         if (bcsDeployAppResult.isOk()) {
-            val bcsStopAppResult = client.get(ServiceBcsResource::class).bcsStopApp(
+            val bcsStopAppResult = client.get(ServiceKubernetesManagementResource::class).bcsStopApp(
                 userId = userId,
                 stopApp = StopApp(
                     bcsUrl = extServiceBcsConfig.masterUrl,

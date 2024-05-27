@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
 import com.tencent.devops.dispatch.pojo.AppDeployment
 import com.tencent.devops.dispatch.pojo.AppIngress
 import com.tencent.devops.dispatch.pojo.AppService
@@ -204,7 +204,7 @@ class ExtServiceBcsService {
             version = version,
             checkPermissionFlag = checkPermissionFlag
         )
-        val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
+        val bcsDeployAppResult = client.get(ServiceKubernetesManagementResource::class).bcsDeployApp(
             userId = userId,
             deployApp = deployApp
         )
@@ -270,7 +270,7 @@ class ExtServiceBcsService {
             }
         }
         // 停止扩展服务部署
-        val bcsStopAppResult = client.get(ServiceBcsResource::class).stopApp(
+        val bcsStopAppResult = client.get(ServiceKubernetesManagementResource::class).stopApp(
             userId = userId,
             stopApp = StopApp(
                 bcsUrl = extServiceBcsConfig.masterUrl,
@@ -305,7 +305,7 @@ class ExtServiceBcsService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val deployment = client.get(ServiceBcsResource::class).getBcsDeploymentInfo(userId, serviceCode).data
+        val deployment = client.get(ServiceKubernetesManagementResource::class).getBcsDeploymentInfo(userId, serviceCode).data
         logger.info("getExtServiceDeployStatus deployment is:$deployment")
         return Result(deployment?.status)
     }

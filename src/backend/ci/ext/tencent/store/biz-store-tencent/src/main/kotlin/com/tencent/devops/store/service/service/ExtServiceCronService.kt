@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
@@ -93,7 +93,7 @@ class ExtServiceCronService @Autowired constructor(
                 val serviceCodes = serviceRecords.map { it.serviceCode }.toSet().joinToString(",")
                 // 批量获取扩展服务部署信息
                 val serviceDeploymentMap =
-                    client.get(ServiceBcsResource::class).getBcsDeploymentInfos(
+                    client.get(ServiceKubernetesManagementResource::class).getBcsDeploymentInfos(
                         userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
                         deploymentNames = serviceCodes
                     ).data
