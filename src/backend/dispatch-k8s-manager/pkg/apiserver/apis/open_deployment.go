@@ -17,7 +17,7 @@ func initDeploymentApis(r *gin.RouterGroup) {
 	{
 		deployment.GET("/:deploymentName", getDeployment)
 		deployment.POST("", createDeployment)
-		deployment.DELETE("/:deploymentName", deleteBuilder)
+		deployment.DELETE("/:deploymentName", deleteDeployment)
 	}
 }
 
