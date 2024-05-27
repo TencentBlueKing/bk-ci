@@ -69,7 +69,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.template.dao.MarketTemplateDao
 import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
 import com.tencent.devops.store.template.dao.TemplateLabelRelDao
-import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
+import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.HOTTEST
@@ -102,6 +102,7 @@ import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.template.service.MarketTemplateService
 import com.tencent.devops.store.template.service.TemplateCategoryService
 import com.tencent.devops.store.template.service.TemplateLabelService
@@ -210,8 +211,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         storeId = atomRecord.id,
                         storeCode = atomRecord.atomCode,
                         storeName = atomRecord.name,
+                        storeType = StoreTypeEnum.ATOM,
                         version = atomRecord.version,
-                        publicFlag = atomRecord.defaultFlag
+                        publicFlag = atomRecord.defaultFlag,
+                        status = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
+                        logoUrl = atomRecord.logoUrl,
+                        publisher = atomRecord.publisher,
+                        classifyId = atomRecord.classifyId
                     )
                     Optional.of(storeBaseInfo)
                 } else {
@@ -775,14 +781,16 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         )
         val installStoreComponentResult = storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = ArrayList(addMarketTemplateResultKeys),
             storeId = template.id,
-            storeCode = templateCode,
-            storeType = StoreTypeEnum.TEMPLATE,
+            installStoreReq = InstallStoreReq(
+                projectCodes = ArrayList(addMarketTemplateResultKeys),
+                storeCode = templateCode,
+                storeType = StoreTypeEnum.TEMPLATE
+            ),
             publicFlag = template.publicFlag,
             channelCode = channelCode
         )
-        val result = if (projectCodeList.isNullOrEmpty()) {
+        val result = if (projectCodeList.isEmpty()) {
             installStoreComponentResult
         } else {
             I18nUtil.generateResponseDataObject(
@@ -986,10 +994,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             if (storeBaseInfo != null) {
                 storeProjectService.installStoreComponent(
                     userId = userId,
-                    projectCodeList = arrayListOf(projectCode),
                     storeId = storeBaseInfo.storeId,
-                    storeCode = storeBaseInfo.storeCode,
-                    storeType = storeType,
+                    installStoreReq = InstallStoreReq(
+                        projectCodes = arrayListOf(projectCode),
+                        storeCode = storeBaseInfo.storeCode,
+                        storeType = storeType
+                    ),
                     publicFlag = storeBaseInfo.publicFlag,
                     channelCode = ChannelCode.BS
                 )

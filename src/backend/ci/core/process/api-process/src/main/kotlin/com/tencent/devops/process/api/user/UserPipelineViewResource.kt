@@ -308,4 +308,17 @@ interface UserPipelineViewResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Set<Long>>
+
+    @Operation(summary = "用户有权限添加的静态流水线组")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listPermissionStaticViews")
+    fun listPermissionStaticViews(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<List<PipelineNewViewSummary>>
 }

@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
@@ -74,6 +75,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEv
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineProgressRateService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
@@ -133,7 +135,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineProgressRateService: PipelineProgressRateService
 ) {
 
     companion object {
@@ -186,7 +189,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
-        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(projectId, buildInfo.pipelineId)
+        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
+            projectId, buildInfo.pipelineId, buildId, buildInfo
+        )
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
 
@@ -495,7 +500,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
             return claim(
                 task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId,
-                asCodeEnabled = pipelineAsCodeService.asCodeEnabled(task.projectId, task.pipelineId) == true
+                asCodeEnabled = pipelineAsCodeService.asCodeEnabled(
+                    task.projectId, task.pipelineId, buildId, buildInfo
+                ) == true
             )
         } finally {
             containerIdLock.unlock()
@@ -550,8 +557,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, task.executeCount)
             }
@@ -745,8 +754,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     message = updateTaskStatusInfo.message,
                     tag = updateTaskStatusInfo.taskId,
-                    jobId = updateTaskStatusInfo.containerHashId,
-                    executeCount = updateTaskStatusInfo.executeCount
+                    containerHashId = updateTaskStatusInfo.containerHashId,
+                    executeCount = updateTaskStatusInfo.executeCount,
+                    jobId = null,
+                    stepId = updateTaskStatusInfo.stepId
                 )
             }
         }
@@ -784,8 +795,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
             }
         }
@@ -804,7 +817,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             "ENGINE|$buildId|BCT_DONE|$projectId|j($vmSeqId)|${result.taskId}|$buildStatus|" +
                 "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
         )
-        buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = task?.containerHashId)
+        buildLogPrinter.stopLog(
+            buildId = buildId,
+            tag = result.elementId,
+            containerHashId = task?.containerHashId,
+            stepId = task?.stepId
+        )
     }
 
     private fun getCompleteTaskBuildStatus(
@@ -919,7 +937,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        executeCount: Int? = null
+        executeCount: Int? = null,
+        jobHeartbeatRequest: JobHeartbeatRequest?
     ): HeartBeatInfo {
         LOG.info("ENGINE|$projectId|$buildId|HEART_BEAT|j($vmSeqId)|$vmName|$executeCount")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
@@ -933,6 +952,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
             cancelTaskIds.add(cancelTaskId)
         }
+        pipelineProgressRateService.reportProgressRate(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount ?: 1,
+            jobHeartbeatRequest = jobHeartbeatRequest
+        )
         return HeartBeatInfo(
             projectId = projectId,
             buildId = buildId,
@@ -986,8 +1011,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     message = errMsg,
                     tag = taskId,
-                    jobId = containerHashId,
-                    executeCount = executeCount ?: 1
+                    containerHashId = containerHashId,
+                    executeCount = executeCount ?: 1,
+                    jobId = null,
+                    stepId = stepId
                 )
             }
         }

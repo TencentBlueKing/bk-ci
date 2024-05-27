@@ -115,16 +115,19 @@ interface OpJobQuotaProjectResource {
         jobQuota: JobQuotaProject
     ): Result<Boolean>
 
-    @Operation(summary = "清零项目的当月已运行时间")
+    @Operation(summary = "清零异常的构建配额记录")
     @POST
     @Path("/project/{projectId}/vm/{vmType}")
-    fun restore(
+    fun restoreProjectRunningJobs(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
+        @Parameter(description = "构建时间", required = true)
+        @QueryParam("createTime")
+        createTime: String,
         @Parameter(description = "构建来源", required = false)
         @QueryParam("channelCode")
         channelCode: String = ChannelCode.BS.name

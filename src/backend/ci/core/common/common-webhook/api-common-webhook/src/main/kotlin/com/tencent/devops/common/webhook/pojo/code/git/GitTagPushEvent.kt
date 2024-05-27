@@ -68,5 +68,9 @@ fun GitTagPushEvent.isDeleteTag(): Boolean {
     ) {
         return true
     }
+    // 非工蜂代码库Tag删除
+    if (action_kind == null && after.filter { it != '0' }.isBlank()) {
+        return true
+    }
     return false
 }

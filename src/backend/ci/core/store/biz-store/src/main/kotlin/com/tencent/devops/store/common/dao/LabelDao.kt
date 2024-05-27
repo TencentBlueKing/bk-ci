@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.records.TLabelRecord
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.LabelRequest
+import com.tencent.devops.store.pojo.common.label.Label
+import com.tencent.devops.store.pojo.common.label.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result

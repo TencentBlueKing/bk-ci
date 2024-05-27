@@ -30,7 +30,6 @@ package com.tencent.devops.common.pipeline.type.agent
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ThirdPartyAgentEnvDispatchType(
@@ -41,11 +40,14 @@ data class ThirdPartyAgentEnvDispatchType(
     @get:Schema(title = "工作空间")
     var workspace: String?,
     @get:Schema(title = "agent类型,默认NAME")
-    val agentType: AgentType = AgentType.NAME,
+    override val agentType: AgentType = AgentType.NAME,
     // 第三方构建机用docker作为构建机
-    val dockerInfo: ThirdPartyAgentDockerInfo?
-) : DispatchType(
-    envName
+    val dockerInfo: ThirdPartyAgentDockerInfo?,
+    override var reusedInfo: ReusedInfo?
+) : ThirdPartyAgentDispatch(
+    value = envName,
+    agentType = agentType,
+    reusedInfo = reusedInfo
 ) {
     override fun cleanDataBeforeSave() {
         this.envName = this.envName.trim()

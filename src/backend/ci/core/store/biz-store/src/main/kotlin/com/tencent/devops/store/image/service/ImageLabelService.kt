@@ -29,7 +29,7 @@ package com.tencent.devops.store.image.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.image.dao.ImageLabelRelDao
-import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.common.service.LabelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v2.models.stage
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
+import com.tencent.devops.process.yaml.v2.check.PreStageCheck
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**

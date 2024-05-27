@@ -27,7 +27,10 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
@@ -126,8 +129,10 @@ class JobQuotaService constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -143,8 +148,10 @@ class JobQuotaService constructor(
                     params = arrayOf(jobType.displayName, "${startupEvent.retryTime}")
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -164,8 +171,10 @@ class JobQuotaService constructor(
                     params = arrayOf(jobType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}")
                 ),
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerHashId,
-                executeCount = executeCount ?: 1
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
 
             startupEvent.retryTime += 1
@@ -177,6 +186,13 @@ class JobQuotaService constructor(
         } else {
             logger.info("$logPrefix DemoteQueue Job Maximum number of retries reached. " +
                     "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
+            val errorMessage = I18nUtil.getCodeLanMessage(DispatchSdkErrorCode.JOB_QUOTA_EXCESS.toString())
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = DispatchSdkErrorCode.JOB_QUOTA_EXCESS,
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
+            )
         }
     }
 

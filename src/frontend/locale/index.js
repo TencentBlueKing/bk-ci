@@ -1,9 +1,8 @@
 import axios from 'axios'
 import { lang, locale } from 'bk-magic-vue'
 import cookies from 'js-cookie'
-import Vue from 'vue'
 import VueI18n from 'vue-i18n'
-const DEFAULT_LOCALE = window.INIT_LOCALE ?? 'zh-CN'
+const DEFAULT_LOCALE = window.INIT_LOCALE || 'zh-CN'
 const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
@@ -59,7 +58,6 @@ function getLsLocale () {
     try {
         const cookieLocale = cookies.get(LS_KEY) || DEFAULT_LOCALE
         
-        console.log(cookieLocale, cookies.get(LS_KEY), window.INIT_LOCALE)
         return localeAliasMap[cookieLocale.toLowerCase()] ?? DEFAULT_LOCALE
     } catch (error) {
         return DEFAULT_LOCALE
@@ -79,21 +77,24 @@ function setLsLocale (locale) {
 }
 
 export default (r, initSetLocale = false) => {
-    Vue.use(VueI18n)
     const { messages, localeList } = importAll(r)
     
     const initLocale = getLsLocale()
     // export localeList
+    
     const i18n = new VueI18n({
         locale: initLocale,
         fallbackLocale: initLocale,
-        messages
+        messages: localeList.reduce((acc, { key }) => {
+            acc[key] = {
+                ...lang[initLocale.replace('-', '')],
+                ...messages[key]
+            }
+            return acc
+        }, {})
     })
-    if (initSetLocale) {
-        setLocale(initLocale)
-    }
-
-    locale.i18n((key, value) => i18n.t(key, value))
+    locale.i18n((...args) => i18n.t(...args))
+    setLocale(initLocale, initSetLocale)
 
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         const localeModuleId = getLocalModuleId(module, locale)
@@ -113,21 +114,23 @@ export default (r, initSetLocale = false) => {
         })
     }
 
-    async function setLocale (localeLang) {
+    async function setLocale (localeLang, initSetLocale) {
         Object.keys(loadedModule).forEach(mod => {
             const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
                 dynamicLoadModule(module, localeLang)
             }
         })
-        if (localeLang !== localeAliasMap[window.INIT_LOCALE]) {
-            await syncLocaleBackend(localeLang)
-        }
         i18n.locale = localeLang
         setLsLocale(localeLang)
         locale.use(lang[localeLang.replace('-', '')])
+
         axios.defaults.headers.common['Accept-Language'] = localeLang
         document.querySelector('html').setAttribute('lang', localeLang)
+        
+        if (initSetLocale && localeLang !== localeAliasMap[window.INIT_LOCALE]) {
+            await syncLocaleBackend(localeLang)
+        }
         
         return localeLang
     }
@@ -139,7 +142,7 @@ export default (r, initSetLocale = false) => {
                 'en-US': 'en' // 英文
             }
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang, bkLocalEnum[localeLang])
-            await Promise.all([
+            await Promise.any([
                 axios.put('/ms/project/api/user/locales/update', {
                     language: backendLocalEnum[localeLang]
                 }),

@@ -73,8 +73,7 @@
     |- common                   # 通用模块
       |- common-auth            # 权限模块
         |- common-auth-api      # 权限模块的接口抽象
-        |- common-auth-sample   # 权限模块示例实现
-        |- common-auth-blueking # 对接蓝鲸权限中心的实现
+        |- common-auth-provider   # 权限模块接口实现
     |- dispatch    # 构建调度微服务总目录
     |- environment # 环境管理微服务总目录
     |- log         # 日志微服务总目录

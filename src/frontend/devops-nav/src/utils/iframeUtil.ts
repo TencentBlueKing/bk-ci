@@ -1,5 +1,6 @@
-import eventBus from './eventBus'
 
+import { showLoginPopup } from '@/utils/util'
+import eventBus from './eventBus'
 interface UrlParam {
     url: string
     refresh: boolean
@@ -41,9 +42,7 @@ function iframeUtil (router: any) {
         }
     }
 
-    utilMap.toggleLoginDialog = function () {
-        location.href = window.getLoginUrl()
-    }
+    utilMap.toggleLoginDialog = showLoginPopup
 
     utilMap.popProjectDialog = function (project: Project): void {
         eventBus.$emit('show-project-dialog', project)
@@ -97,15 +96,14 @@ function iframeUtil (router: any) {
         send(target, 'leaveCancelOrder', '')
     }
 
-    utilMap.leaveConfirm = function ({ title, content = '离开后，新编辑的数据将丢失', type, subHeader, theme, cancelText }):void {
+    utilMap.leaveConfirm = function ({ content = '离开后，新编辑的数据将丢失', type, subHeader, theme, ...restConf }):void {
         const iframeBox: any = document.getElementById('iframe-box')
         eventBus.$bkInfo({
             type: type || theme,
             theme: theme || type,
-            title,
             subTitle: content,
-            cancelText,
             subHeader: subHeader ? eventBus.$createElement('p', {}, subHeader) : null,
+            ...restConf,
             confirmFn: () => {
                 utilMap.leaveConfirmOrder(iframeBox.contentWindow)
             },

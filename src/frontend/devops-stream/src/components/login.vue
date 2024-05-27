@@ -32,7 +32,7 @@
         computed,
         watch,
         getCurrentInstance
-    } from '@vue/composition-api'
+    } from 'vue'
     import {
         common
     } from '@/http'

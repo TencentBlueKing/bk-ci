@@ -4,28 +4,28 @@
             <bk-date-picker
                 class="date-picker mr15"
                 :value="daterange"
-                type="daterange"
+                type="datetimerange"
                 :placeholder="$t('codelib.选择日期范围')"
                 :options="{
                     disabledDate: time => time.getTime() > Date.now()
                 }"
                 :shortcuts="shortcuts"
                 :key="repoId"
+                @clear="handleClearDaterange"
                 @change="handleChangeDaterange"
+                @pick-success="handlePickSuccess"
             >
             </bk-date-picker>
-            <bk-search-select
+            <search-select
                 ref="searchSelect"
-                class="search-select"
+                class="search-input"
                 v-model="searchValue"
                 :data="searchList"
                 clearable
                 :show-condition="false"
-                :placeholder="$t('codelib.触发器类型/事件类型/触发人/流水线名称')"
-                @menu-child-select="handleMenuChildSelect"
-                :key="repoId"
+                :placeholder="filterTips"
             >
-            </bk-search-select>
+            </search-select>
             <span class="refresh-icon" @click="handleRefresh">
                 <bk-icon type="refresh" />
             </span>
@@ -58,6 +58,7 @@
         </section>
         <EmptyTableStatus
             v-else
+            v-bkloading="{ isLoading: pageLoading }"
             :type="isSearch ? 'search-empty' : 'empty'"
             @clear="resetFilter"
         />
@@ -69,12 +70,14 @@
     } from 'vuex'
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimelineCollapse from './timeline-collapse.vue'
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         name: 'basicSetting',
         components: {
             EmptyTableStatus,
-            TimelineCollapse
+            TimelineCollapse,
+            SearchSelect: () => import('@blueking/search-select')
         },
         props: {
             curRepo: {
@@ -96,16 +99,24 @@
         },
         data () {
             const setDefaultDaterange = () => {
-                const endTime = new Date()
-                const startTime = new Date()
-                startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
-                return [startTime, endTime]
+                // 获取当前日期
+                const now = new Date()
+
+                // 获取一周前的日期
+                const oneWeekAgo = new Date()
+                oneWeekAgo.setDate(now.getDate() - 7)
+
+                // 创建开始和结束日期对象
+                const start = new Date(oneWeekAgo.setHours(0, 0, 0))
+                const end = new Date(now.setHours(23, 59, 59))
+                return [start, end]
             }
             
             return {
                 eventList: [],
                 timelineMap: {},
                 searchValue: [],
+                daterangeCache: [],
                 daterange: setDefaultDaterange(),
                 page: 1,
                 pageSize: 20,
@@ -124,6 +135,9 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            filterTips () {
+                return this.searchList.map(item => item.name).join(' / ')
             },
             searchList () {
                 const list = [
@@ -147,7 +161,22 @@
                     },
                     {
                         name: this.$t('codelib.流水线名称'),
-                        id: 'pipelineName'
+                        id: 'pipelineId',
+                        remoteMethod: (keyword) => {
+                            return this.fetchPipelinesByName({
+                                projectId: this.projectId,
+                                keyword
+                            })
+                        }
+                    },
+                    {
+                        name: this.$t('codelib.触发结果'),
+                        id: 'reason',
+                        children: [
+                            { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS' },
+                            { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED' },
+                            { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH' }
+                        ]
                     }
                 ]
                 return list.filter((data) => {
@@ -175,7 +204,6 @@
                 this.isInitTime = true
             },
             daterange (newVal, oldVal) {
-                console.log(newVal, 1111111)
                 if (oldVal[0]) this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
@@ -253,8 +281,7 @@
         methods: {
             ...mapActions('codelib', [
                 'fetchTriggerEventList',
-                'fetchEventType',
-                'fetchTriggerType'
+                'fetchPipelinesByName'
             ]),
          
             handleScroll (event) {
@@ -341,31 +368,32 @@
                 this.getListData()
             },
 
-            handleMenuChildSelect () {
-                setTimeout(() => {
-                    if (this.searchValue.length === 4) {
-                        this.$refs.searchSelect.hidePopper()
-                    }
-                })
+            handleClearDaterange () {
+                this.daterange = ['', '']
             },
-
+            
             handleChangeDaterange (date, type) {
-                const startTime = new Date(`${date[0]} 00:00:00`).getTime() || ''
-                const endTime = new Date(`${date[1]} 23:59:59`).getTime() || ''
-                this.daterange = [startTime, endTime]
+                const startTime = new Date(date[0]).getTime() || ''
+                const endTime = new Date(date[1]).getTime() || ''
+                this.daterangeCache = [startTime, endTime]
+            },
+            
+            handlePickSuccess () {
+                this.daterange = this.daterangeCache
             },
 
             async handleRefresh () {
+                this.page = 1
                 this.pageLoading = true
                 this.hasLoadEnd = false
-                this.daterange = this.setDefaultDaterange()
-                // await this.getListData()
+                await this.getListData()
             },
 
             replayEvent () {
                 this.pageLoading = true
+                this.hasLoadEnd = false
                 setTimeout(() => {
-                    this.handleRefresh()
+                    this.daterange = this.setDefaultDaterange()
                 }, 1000)
             }
         }
@@ -391,8 +419,8 @@
             cursor: pointer;
         }
         .date-picker {
-            max-width: 300px;
-            min-width: 200px;
+            max-width: 400px;
+            min-width: 340px;
         }
         .search-select {
             width: 100%;
@@ -466,6 +494,13 @@
         }
         ::v-deep .bk-loading {
             background-color: #fff !important;
+        }
+    }
+    .search-input {
+        flex: 1;
+        background: white;
+        ::placeholder {
+            color: #c4c6cc;
         }
     }
 </style>

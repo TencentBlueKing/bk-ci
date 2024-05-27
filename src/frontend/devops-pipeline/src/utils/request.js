@@ -37,7 +37,7 @@ function errorHandler (error) {
 }
 
 request.interceptors.response.use(response => {
-    const { data: { status, message, code, result } } = response
+    const { data: { data, status, message, code, result } } = response
     const httpStatus = response.status
     if (httpStatus === 401) {
         bus.$toggleLoginDialog(true)
@@ -48,13 +48,13 @@ request.interceptors.response.use(response => {
         }
         return Promise.reject(errMsg)
     } else if (httpStatus === 403) {
-        const errorMsg = { httpStatus, code: httpStatus, message: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err403')) || 'Permission Deny' }
+        const errorMsg = { httpStatus, code: httpStatus, message: message ?? (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err403')) }
         return Promise.reject(errorMsg)
     } else if ((typeof status !== 'undefined' && status !== 0) || (typeof result !== 'undefined' && !result)) {
-        const errorMsg = { httpStatus, message, code: code || status }
+        const errorMsg = { httpStatus, message, code: code || status, data }
         return Promise.reject(errorMsg)
     } else if (httpStatus === 400) {
-        const errorMsg = { httpStatus, message: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err400')) || 'service is abnormal' }
+        const errorMsg = { httpStatus, message: message ?? (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err400')) ?? 'service is abnormal' }
         return Promise.reject(errorMsg)
     } else if (httpStatus > 400) {
         const err = {

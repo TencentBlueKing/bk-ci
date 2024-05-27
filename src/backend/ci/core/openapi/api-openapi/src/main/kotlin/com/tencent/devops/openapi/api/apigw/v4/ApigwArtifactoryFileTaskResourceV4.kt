@@ -90,9 +90,12 @@ interface ApigwArtifactoryFileTaskResourceV4 {
         @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "taskId", required = true)
+        @Parameter(description = "taskId", required = false)
         @QueryParam("taskId")
-        taskId: String
+        taskId: String?,
+        @Parameter(description = "stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<FileTaskInfo?>
 
     @Operation(summary = "清理文件托管任务", tags = ["v4_app_file_task_clear", "v4_user_file_task_clear"])
@@ -117,8 +120,11 @@ interface ApigwArtifactoryFileTaskResourceV4 {
         @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "taskId", required = true)
+        @Parameter(description = "taskId", required = false)
         @QueryParam("taskId")
-        taskId: String
+        taskId: String?,
+        @Parameter(description = "stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 }

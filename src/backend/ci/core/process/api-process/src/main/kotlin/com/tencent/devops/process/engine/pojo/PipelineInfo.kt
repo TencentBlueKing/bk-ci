@@ -29,6 +29,8 @@ package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -63,7 +65,7 @@ data class PipelineInfo(
     @get:Schema(title = "任务数")
     val taskCount: Int,
     @get:Schema(title = "版本名称")
-    var versionName: String = "init",
+    var versionName: String = "",
     @get:Schema(title = "ID")
     val id: Long?,
     @get:Schema(title = "流水线组名称列表", required = false)
@@ -81,5 +83,9 @@ data class PipelineInfo(
     @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null,
     @get:Schema(title = "约束模式下的模板信息", required = false)
-    var templateInfo: TemplateInfo? = null
+    var templateInfo: TemplateInfo? = null,
+    @get:Schema(title = "最新流水线版本状态（如有任何发布版本则为发布版本）", required = false)
+    var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
+    @get:Schema(title = "流水线权限", required = false)
+    var permissions: PipelinePermissions? = null
 )

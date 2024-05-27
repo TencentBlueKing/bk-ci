@@ -33,19 +33,20 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.atom.service.MarketAtomStatisticService
+import com.tencent.devops.store.atom.service.impl.AtomMemberServiceImpl
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.atom.service.MarketAtomService
-import com.tencent.devops.store.atom.service.MarketAtomStatisticService
-import com.tencent.devops.store.atom.service.impl.AtomMemberServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -90,7 +91,7 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
                 messageCode = StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(username)
-                )
+            )
         }
         return marketAtomStatisticService.getAtomPipelinesByCode(atomCode, username, page, pageSize)
     }
@@ -109,5 +110,9 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomRely(getRelyAtom: GetRelyAtom): Result<Map<String, Map<String, Any>>?> {
         return Result(marketAtomService.getAtomsRely(getRelyAtom = getRelyAtom))
+    }
+
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Result<Map<String, Any>> {
+        return Result(marketAtomService.getAtomsDefaultValue(atom = atom))
     }
 }

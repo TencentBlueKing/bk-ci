@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.IModelTemplate
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -55,8 +56,10 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -128,13 +131,23 @@ abstract class Element(
     open var errorCode: Int? = null,
     @get:Schema(title = "错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorMsg: String? = null,
-    @get:Schema(title = "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @get:Schema(
+        title = "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
     open var atomName: String? = null,
     @get:Schema(title = "所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyCode: String? = null,
-    @get:Schema(title = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
-    open var classifyName: String? = null
-) {
+    @get:Schema(
+        title = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false
+    )
+    open var classifyName: String? = null,
+    @get:Schema(title = "任务运行进度", required = false)
+    open var progressRate: Double? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
+) : IModelTemplate {
 
     open fun getAtomCode() = getClassType()
 
@@ -147,6 +160,8 @@ abstract class Element(
     }
 
     open fun cleanUp() {}
+
+    open fun transferYaml(defaultValue: JSONObject?): PreStep? = null
 
     open fun isElementEnable(): Boolean {
         return additionalOptions?.enable ?: true
