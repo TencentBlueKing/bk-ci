@@ -27,8 +27,8 @@ class OpenPipelineTaskResourceImpl @Autowired constructor(
             buildId = buildId
         )
 
-        return  if (buildInfo == null) {
-             Result(status = -1, message = "Build[$buildId] is not found!")
+        return if (buildInfo == null) {
+            Result(status = -1, message = "Build[$buildId] is not found!")
         } else if (!taskId.isNullOrBlank()) { // 查指定task的状态
             val tStatus = pipelineTaskService.getTaskStatus(projectId = projectId, buildId = buildId, taskId = taskId)
             if (tStatus == null) {
