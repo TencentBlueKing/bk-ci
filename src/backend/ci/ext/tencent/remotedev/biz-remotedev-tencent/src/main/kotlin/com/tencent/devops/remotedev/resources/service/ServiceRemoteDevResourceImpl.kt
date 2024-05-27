@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -39,6 +40,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
@@ -62,7 +64,8 @@ class ServiceRemoteDevResourceImpl(
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val deliverControl: DeliverControl
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -228,11 +231,11 @@ class ServiceRemoteDevResourceImpl(
             }
             AsyncExecute.dispatch(
                 rabbitTemplate, AsyncPipelineEvent(
-                    userId = info.userId ?: operator,
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
+                userId = info.userId ?: operator,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam
+            )
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)
@@ -430,5 +433,15 @@ class ServiceRemoteDevResourceImpl(
                 quotas = res.quotas?.mapValues { it.value - (mix?.get(it.key) ?: 0) }
             )
         )
+    }
+
+    override fun assignUser(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean> {
+        deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
+        return Result(true)
     }
 }

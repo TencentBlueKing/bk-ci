@@ -55,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -78,6 +79,7 @@ class DeliverControl @Autowired constructor(
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
     private val httpCallBackService: HttpCallBackService,
+    private val permissionService: PermissionService,
     private val gitProxyTGitService: GitProxyTGitService
 ) {
 
@@ -153,6 +155,7 @@ class DeliverControl @Autowired constructor(
         assigns: List<ProjectWorkspaceAssign>
     ) {
         logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
+        permissionService.checkUserManager(userId, projectId)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,

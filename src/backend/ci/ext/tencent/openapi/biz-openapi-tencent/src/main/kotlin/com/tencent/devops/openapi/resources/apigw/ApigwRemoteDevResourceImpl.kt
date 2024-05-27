@@ -7,6 +7,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -242,6 +243,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             machineType = machineType,
             count = count,
             available = available
+        )
+    }
+
+    override fun assignWorkspaceUsers(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        workspaceName: String,
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean> {
+        logger.info("assignWorkspaceUsers $userId|$projectId|$workspaceName|$assigns")
+        return client.get(ServiceRemoteDevResource::class).assignUser(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            assigns = assigns
         )
     }
 }
