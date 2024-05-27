@@ -306,6 +306,11 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     override fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>) {
+        // 保存时将旧customEnv赋值给新的上一级customEnv
+        val oldCustomEnv = element.additionalOptions?.customEnv
+        if (!oldCustomEnv.isNullOrEmpty()) {
+            element.customEnv = (element.customEnv ?: emptyList()).plus(oldCustomEnv)
+        }
         if (!element.additionalOptions?.timeoutVar.isNullOrBlank()) {
             val obj = Timeout.decTimeout(timeoutVar = element.additionalOptions?.timeoutVar, contextMap = contextMap)
             if (obj.change && obj.replaceByVar) {
