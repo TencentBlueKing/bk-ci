@@ -44,5 +44,7 @@ data class WindowsWorkspaceCreate(
     @get:Schema(title = "镜像id")
     val imageId: String = "",
     @get:Schema(title = "指定工作空间，优先级比count高。")
-    val assignNames: List<String> = emptyList()
+    val assignNames: List<String> = emptyList(),
+    @get:Schema(title = "如需指定工作空间owner，需要和assignNames/count对应。且值不为空")
+    val assignOwners: List<String> = emptyList()
 )
