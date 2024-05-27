@@ -263,7 +263,8 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                     dslContext = context,
                     storeCode = serviceCode,
                     storeType = StoreTypeEnum.SERVICE,
-                    pipelineId = serviceMarketInitPipelineResp.pipelineId
+                    pipelineId = serviceMarketInitPipelineResp.pipelineId,
+                    projectCode = projectCode
                 )
                 extServiceDao.setServiceStatusById(
                     dslContext = context,

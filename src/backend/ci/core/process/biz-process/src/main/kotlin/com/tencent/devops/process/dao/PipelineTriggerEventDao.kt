@@ -43,7 +43,9 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedFix
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
 import org.jooq.Condition
@@ -137,6 +139,7 @@ class PipelineTriggerEventDao {
         triggerUser: String? = null,
         pipelineId: String? = null,
         pipelineName: String? = null,
+        reason: String?,
         startTime: Long? = null,
         endTime: Long? = null,
         limit: Int,
@@ -155,7 +158,8 @@ class PipelineTriggerEventDao {
             pipelineId = pipelineId,
             pipelineName = pipelineName,
             startTime = startTime,
-            endTime = endTime
+            endTime = endTime,
+            reason = reason
         )
         return dslContext.select(
             t2.DETAIL_ID,
@@ -210,6 +214,7 @@ class PipelineTriggerEventDao {
         triggerUser: String? = null,
         pipelineId: String? = null,
         pipelineName: String? = null,
+        reason: String?,
         startTime: Long? = null,
         endTime: Long? = null
     ): Long {
@@ -225,6 +230,7 @@ class PipelineTriggerEventDao {
             triggerType = triggerType,
             pipelineId = pipelineId,
             pipelineName = pipelineName,
+            reason = reason,
             startTime = startTime,
             endTime = endTime
         )
@@ -323,6 +329,7 @@ class PipelineTriggerEventDao {
         eventSource: String? = null,
         projectId: String,
         eventType: String? = null,
+        reason: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
         startTime: Long? = null,
@@ -337,6 +344,7 @@ class PipelineTriggerEventDao {
             eventSource = eventSource,
             eventId = eventId,
             eventType = eventType,
+            reason = reason,
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
@@ -359,6 +367,7 @@ class PipelineTriggerEventDao {
         eventSource: String? = null,
         projectId: String,
         eventType: String? = null,
+        reason: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
         startTime: Long? = null,
@@ -375,6 +384,7 @@ class PipelineTriggerEventDao {
             eventSource = eventSource,
             eventId = eventId,
             eventType = eventType,
+            reason = reason,
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
@@ -491,7 +501,8 @@ class PipelineTriggerEventDao {
         eventId: Long? = null,
         pipelineName: String? = null,
         projectId: String,
-        pipelineId: String? = null
+        pipelineId: String? = null,
+        reason: String? = null
     ): List<Condition> {
         val conditions = mutableListOf<Condition>()
         with(t2) {
@@ -506,6 +517,9 @@ class PipelineTriggerEventDao {
             }
             if (!pipelineId.isNullOrBlank()) {
                 conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!reason.isNullOrBlank()) {
+                conditions.add(REASON.eq(reason))
             }
         }
         return conditions
@@ -560,6 +574,7 @@ class PipelineTriggerEventDao {
         eventSource: String? = null,
         eventId: Long? = null,
         eventType: String? = null,
+        reason: String? = null,
         triggerUser: String? = null,
         triggerType: String? = null,
         pipelineId: String? = null,
@@ -586,7 +601,8 @@ class PipelineTriggerEventDao {
                 eventId = eventId,
                 projectId = projectId,
                 pipelineName = pipelineName,
-                pipelineId = pipelineId
+                pipelineId = pipelineId,
+                reason = reason
             )
         )
         return conditions
@@ -638,6 +654,45 @@ class PipelineTriggerEventDao {
             PipelineTriggerFailedFix(JsonUtil.to(reasonDetail, object : TypeReference<List<String>>() {}))
         } else {
             JsonUtil.to(reasonDetail, PipelineTriggerReasonDetail::class.java)
+        }
+    }
+
+    fun triggerReasonStatistics(
+        dslContext: DSLContext,
+        projectId: String,
+        eventId: Long,
+        pipelineId: String? = null,
+        pipelineName: String? = null
+    ): PipelineTriggerReasonStatistics {
+        return with(T_PIPELINE_TRIGGER_DETAIL) {
+            val conditions = mutableListOf(
+                EVENT_ID.eq(eventId),
+                PROJECT_ID.eq(projectId)
+            ).let {
+                if (!pipelineId.isNullOrBlank()) {
+                    it.add(PIPELINE_ID.eq(pipelineId))
+                }
+                if (!pipelineName.isNullOrBlank()) {
+                    it.add(PIPELINE_NAME.eq(pipelineName))
+                }
+                it
+            }
+            dslContext.select(
+                REASON,
+                count()
+            ).from(this)
+                .where(conditions)
+                .groupBy(REASON)
+                .fetch()
+                .associate {
+                    it.value1() to it.value2()
+                }.let {
+                    PipelineTriggerReasonStatistics(
+                        triggerSuccess = it[PipelineTriggerReason.TRIGGER_SUCCESS.name] ?: 0,
+                        triggerFailed = it[PipelineTriggerReason.TRIGGER_FAILED.name] ?: 0,
+                        triggerNotMatch = it[PipelineTriggerReason.TRIGGER_NOT_MATCH.name] ?: 0
+                    )
+                }
         }
     }
 }

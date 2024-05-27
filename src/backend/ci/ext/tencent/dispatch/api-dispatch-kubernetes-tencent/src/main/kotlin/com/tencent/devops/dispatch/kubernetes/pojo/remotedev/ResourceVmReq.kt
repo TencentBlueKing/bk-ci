@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ResourceVmReq(
     val zoneId: String?,
-    val machineType: String?
+    val machineType: String?,
+    val internal: Boolean?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

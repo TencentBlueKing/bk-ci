@@ -79,7 +79,8 @@ interface StoreProjectService {
     fun uninstall(
         storeType: StoreTypeEnum,
         storeCode: String,
-        projectCode: String
+        projectCode: String,
+        instanceIdList: List<String>? = null
     ): Result<Boolean>
 
     /**
@@ -95,9 +96,10 @@ interface StoreProjectService {
      * 获取项目下关联的组件信息
      * @return key:storeCode,value:version
      */
-    fun getInstalledComponent(
+    fun getProjectComponents(
         projectCode: String,
         storeType: Byte,
-        storeProjectTypes: List<Byte>
+        storeProjectTypes: List<Byte>,
+        instanceId: String? = null
     ): Map<String, String?>?
 }

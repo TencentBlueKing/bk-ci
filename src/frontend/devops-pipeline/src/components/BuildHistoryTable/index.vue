@@ -109,6 +109,7 @@
                         <stage-steps
                             v-if="props.row.stageStatus"
                             :steps="props.row.stageStatus"
+                            :build-id="props.row.id"
                         ></stage-steps>
                         <span v-else>--</span>
                     </template>
@@ -471,9 +472,7 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableColumnKeys: initSortedColumns,
-                pipelineChanged: false,
-                initedVersion: false
+                tableColumnKeys: initSortedColumns
             }
         },
         computed: {
@@ -499,7 +498,7 @@
                 return this.$route.params.pipelineId
             },
             routePipelineVersion () {
-                return this.$route.params.version ? parseInt(this.$route.params.version) : ''
+                return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo?.releaseVersion
             },
             canEdit () {
                 return this.pipelineInfo?.permissions.canEdit ?? true
@@ -610,8 +609,16 @@
                         startTime: item.startTime ? convertTime(item.startTime) : '--',
                         endTime: item.endTime ? convertTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
-                        totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
-                        executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
+                        totalTime: item.totalTime
+                            ? `${convertMStoString(item.totalTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
+                            })`
+                            : '--',
+                        executeTime: item.executeTime
+                            ? `${convertMStoString(item.executeTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
+                            })`
+                            : '--',
                         visibleMaterial:
                             Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],
                         sumSize: convertFileSize(sumSize, 'B'),
@@ -653,31 +660,20 @@
             }
         },
         watch: {
-            activePipelineVersion: {
-                deep: true,
-                handler (newVal, oldVal) {
-                    if (this.pipelineChanged || !this.initedVersion || (newVal?.version !== this.routePipelineVersion)) {
-                        this.pipelineChanged = false
-                        this.initedVersion = true
-                        this.handlePageChange(1)
-                    }
+            'activePipelineVersion.version' (newVersion) {
+                if ((newVersion !== this.routePipelineVersion)) {
+                    this.handlePageChange(1)
                 }
-            },
-            pipelineId () {
-                this.pipelineChanged = true
             },
             historyQuerys: {
                 handler (val) {
                     const { query, searchKey, page, pageSize } = val
-                
                     const queryMap = new URLSearchParams({
                         page,
                         pageSize,
                         ...query,
                         ...flatSearchKey(searchKey)
                     })
-
-                    console.log(1111, flatSearchKey(searchKey))
                     this.$router.push({
                         query: Object.fromEntries(queryMap.entries())
                     })
@@ -692,13 +688,12 @@
                     pageSize: this.$route.query?.pageSize ? parseInt(this.$route.query?.pageSize, 10) : 20
                 })
             }
+            if (this.routePipelineVersion) {
+                this.requestHistory()
+            }
         },
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
-            if (this.routePipelineVersion) {
-                this.initedVersion = true
-                this.requestHistory()
-            }
         },
 
         beforeDestroy () {

@@ -148,6 +148,40 @@ BEGIN
         ALTER TABLE T_STORE_MEMBER DROP INDEX `uni_inx_tam_code_name_type`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PIPELINE_REL'
+                    AND COLUMN_NAME = 'PROJECT_CODE') THEN
+       ALTER TABLE T_STORE_PIPELINE_REL ADD COLUMN `PROJECT_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '项目代码';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                    AND COLUMN_NAME = 'PROJECT_CODE'
+                    AND COLUMN_TYPE = 'varchar(32)') THEN
+       ALTER TABLE T_STORE_PROJECT_REL MODIFY COLUMN PROJECT_CODE varchar(64) NOT NULL COMMENT '所属项目';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_APPROVE_REL'
+                    AND COLUMN_NAME = 'TEST_PROJECT_CODE'
+                    AND COLUMN_TYPE = 'varchar(32)') THEN
+       ALTER TABLE T_ATOM_APPROVE_REL MODIFY COLUMN TEST_PROJECT_CODE varchar(64) NOT NULL COMMENT '调试项目编码';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                    AND COLUMN_NAME = 'INSTANCE_ID') THEN
+       ALTER TABLE T_STORE_PROJECT_REL ADD COLUMN `INSTANCE_ID` varchar(256) COMMENT '实例ID';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

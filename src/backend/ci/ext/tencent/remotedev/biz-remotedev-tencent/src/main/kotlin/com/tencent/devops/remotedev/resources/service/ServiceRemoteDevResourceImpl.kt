@@ -11,12 +11,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
-import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
@@ -24,11 +26,13 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
+import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -37,9 +41,9 @@ import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import java.net.URLDecoder
 
 @RestResource
 @Suppress("ALL")
@@ -57,7 +61,8 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceLoginService: WorkspaceLoginService,
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
-    private val expertSupportService: ExpertSupportService
+    private val expertSupportService: ExpertSupportService,
+    private val whiteListService: WhiteListService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -186,12 +191,12 @@ class ServiceRemoteDevResourceImpl(
                 pmUserId = owner ?: operator,
                 projectId = projectId,
                 cgsId = cgs.cgsId,
-                autoAssign = !owner.isNullOrEmpty(),
                 workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
                     baseImageId = 0,
-                    count = 1
+                    count = 1,
+                    assignOwners = owner?.let { listOf(owner) } ?: emptyList()
                 )
             )
             Thread.sleep(500)
@@ -303,6 +308,7 @@ class ServiceRemoteDevResourceImpl(
         projectId: String,
         data: WindowsWorkspaceCreate
     ): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(
             createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = projectId)
         )
@@ -314,11 +320,12 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
+
         return Result(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = true,
+                needPermission = !permissionService.hasUserManager(userId, projectId),
                 checkDeleteImmediately = true
             )
         )
@@ -342,11 +349,86 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(null)
         }
+        permissionService.checkViewerPermission(userId, workspaceName, projectId)
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspaceName,
                 notStatus = null
             ).firstOrNull()
+        )
+    }
+
+    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
+    }
+
+    override fun updateUsageLimit(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        count: Int,
+        available: Boolean?
+    ): Result<QuotaInApiRes> {
+        val mix = if (available == true) {
+            val using = workspaceService.getWorkspaceList4WeSec(
+                projectId = projectId,
+                notStatus = listOf(WorkspaceStatus.DELETED),
+                ownerName = if (projectId == null) userId else null
+            )
+            using.associate {
+                it.machineType to using.count { c -> c.machineType == it.machineType }
+            }
+        } else null
+        logger.info("update usage limit for $userId|$projectId|$machineType|$count|$mix")
+        val spec = windowsResourceConfigService.getAllType(withUnavailable = true, onlySpecModel = true)
+            .associate { it.size to 0 }
+        val res = when {
+            machineType != null -> {
+                checkNotNull(projectId)
+                QuotaInApiRes(
+                    project = windowsResourceConfigService.updateAndGetProjectTotalQuota(
+                        userId = userId,
+                        projectId = projectId,
+                        quota = 0
+                    ),
+                    quotas = spec.plus(
+                        windowsResourceConfigService.updateAndGetAllSpec(
+                            projectId = projectId,
+                            machineType = machineType,
+                            count = count
+                        )
+                    )
+                )
+            }
+
+            projectId != null -> {
+                QuotaInApiRes(
+                    project = windowsResourceConfigService.updateAndGetProjectTotalQuota(
+                        userId = userId,
+                        projectId = projectId,
+                        quota = count
+                    ),
+                    quotas = spec.plus(
+                        windowsResourceConfigService.updateAndGetAllSpec(
+                            projectId = projectId,
+                            machineType = null,
+                            count = 0
+                        )
+                    )
+                )
+            }
+
+            else -> {
+                QuotaInApiRes(user = whiteListService.updateAndGetWindowsLimit(userId, count))
+            }
+        }
+        // 对mix做计算
+        return Result(
+            res.copy(
+                user = res.user?.let { it - (mix?.values?.sum() ?: 0) },
+                project = res.project?.let { it - (mix?.values?.sum() ?: 0) },
+                quotas = res.quotas?.mapValues { it.value - (mix?.get(it.key) ?: 0) }
+            )
         )
     }
 }

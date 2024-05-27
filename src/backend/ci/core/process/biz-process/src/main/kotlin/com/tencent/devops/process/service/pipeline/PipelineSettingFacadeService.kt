@@ -68,6 +68,7 @@ import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -106,6 +107,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         content = ActionAuditContent.PIPELINE_EDIT_SAVE_SETTING_CONTENT
     )
     fun saveSetting(
+        context: DSLContext? = null,
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -115,7 +117,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
         updateLabels: Boolean = true,
-        updateVersion: Boolean = true
+        updateVersion: Boolean = true,
+        isTemplate: Boolean = false
     ): PipelineSetting {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
@@ -136,6 +139,8 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
+        // 对齐新旧通知配置，统一根据新list数据保存
+        setting.fixSubscriptions()
         modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         ActionAuditContext.current().setInstance(setting)
         val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
@@ -150,11 +155,13 @@ class PipelineSettingFacadeService @Autowired constructor(
         } ?: 1
 
         val pipelineName = pipelineRepositoryService.saveSetting(
+            context = context,
             userId = userId,
             setting = setting,
             version = settingVersion,
             versionStatus = versionStatus,
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            isTemplate = isTemplate
         )
 
         if (pipelineName.name != pipelineName.oldName) {

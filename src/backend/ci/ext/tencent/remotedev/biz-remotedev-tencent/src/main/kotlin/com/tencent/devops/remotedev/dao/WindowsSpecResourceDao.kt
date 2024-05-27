@@ -53,6 +53,15 @@ class WindowsSpecResourceDao {
         }
     }
 
+    fun fetchAllQuota(
+        dslContext: DSLContext,
+        projectId: String
+    ): Map<String, Int> {
+        with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch().associate { it.size to it.quota }
+        }
+    }
+
     fun fetchSpec(
         projectId: String?,
         machineType: String?,

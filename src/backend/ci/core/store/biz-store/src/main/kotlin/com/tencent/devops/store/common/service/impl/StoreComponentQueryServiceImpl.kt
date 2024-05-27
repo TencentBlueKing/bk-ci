@@ -98,7 +98,6 @@ import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -186,7 +185,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     lateinit var labelDao: LabelDao
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
         private val executor = Executors.newFixedThreadPool(30)
     }
 
@@ -197,7 +195,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         page: Int,
         pageSize: Int
     ): Page<MyStoreComponent>? {
-        logger.info("getMyComponents params:[$userId|$storeType|$name|$page|$pageSize]")
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         // 获取有权限的组件代码列表
         val (count, records) = queryMyComponents(
@@ -363,6 +360,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 return@forEach
             }
             val storeCode = processingStoreRecord[tStoreBase.STORE_CODE] as String
+            val logoUrl = processingStoreRecord[tStoreBase.LOGO_URL]
             val storeBaseInfo = StoreBaseInfo(
                 storeId = processingStoreRecord[tStoreBase.ID] as String,
                 storeCode = storeCode,
@@ -371,7 +369,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 version = version,
                 publicFlag = publicFlagInfoMap[storeCode] ?: false,
                 status = processingStoreRecord[tStoreBase.STATUS] as String,
-                logoUrl = processingStoreRecord[tStoreBase.LOGO_URL],
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 publisher = processingStoreRecord[tStoreBase.PUBLISHER] as String,
                 classifyId = processingStoreRecord[tStoreBase.CLASSIFY_ID] as String
             )
@@ -490,7 +490,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeType: StoreTypeEnum,
         storeId: String
     ): StoreDetailInfo? {
-        logger.info("getComponentDetailInfoById:Input:($userId,$storeType,$storeId)")
         val storeBaseRecord = storeBaseQueryDao.getComponentById(dslContext, storeId) ?: return null
         val storeCode = storeBaseRecord.storeCode
         val storeFeatureRecord = storeBaseFeatureQueryDao.getBaseFeatureByCode(
@@ -533,6 +532,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeCode = storeCode,
             storeType = storeType
         )
+        val logoUrl = storeBaseRecord.logoUrl
         return StoreDetailInfo(
             storeId = storeId,
             storeCode = storeCode,
@@ -541,12 +541,16 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             version = storeBaseRecord.version,
             status = storeBaseRecord.status,
             classify = classify,
-            logoUrl = storeBaseRecord.logoUrl,
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            },
             versionInfo = versionLog,
             downloads = statistic.downloads,
             score = statistic.score,
             summary = storeBaseRecord.summary,
-            description = storeBaseRecord.description,
+            description = storeBaseRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                 dslContext = dslContext,
                 userId = userId,
@@ -571,7 +575,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     override fun getComponentDetailInfoByCode(userId: String, storeType: String, storeCode: String): StoreDetailInfo? {
-        logger.info("getComponentDetailInfoByCode:Input:($userId,$storeCode,$storeType)")
         return storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -591,7 +594,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val page = storeInfoQuery.page
         val pageSize = storeInfoQuery.pageSize
         val projectCode = storeInfoQuery.projectCode
-        logger.info("getMainPageComponents:Input:($userId,$storeType,$page,$pageSize)")
         storeInfoQuery.validate()
         val watcher = Watcher("getMainPageComponents|$userId|$storeType")
         try {
@@ -698,13 +700,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean
     ): Page<MarketItem> {
-        logger.info(
-            "queryComponents:Input:" +
-                "($userId,${storeInfoQuery.storeType},${storeInfoQuery.page},${storeInfoQuery.pageSize})"
-        )
+        val watcher = Watcher("queryComponents|$userId|$storeInfoQuery")
         storeInfoQuery.validate()
         // 获取用户组织架构
+        watcher.start("getUserDeptList")
         val userDeptList = storeUserService.getUserDeptList(userId)
+        watcher.start("queryComponentData")
         return doList(
             userId = userId,
             userDeptList = userDeptList,
@@ -718,7 +719,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeType: String,
         storeCode: String
     ): StoreShowVersionInfo {
-        logger.info("getComponentShowVersionInfo:Input:($userId,$storeCode,$storeType)")
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         val record = storeBaseQueryDao.getNewestComponentByCode(
             dslContext = dslContext,
@@ -767,59 +767,63 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     private fun handleQueryStoreCodes(
         storeInfoQuery: StoreInfoQuery
     ) {
-        val updateFlag = storeInfoQuery.updateFlag ?: return
         val projectCode = storeInfoQuery.projectCode!!
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
-        val normalStoreCodes = mutableSetOf<String>()
-        // 查询项目已安裝的组件版本信息
-        val installedMap = storeProjectService.getInstalledComponent(
+        val validStoreCodes = mutableSetOf<String>()
+        // 查询项目下已安装的组件版本信息
+        val installComponentMap = storeProjectService.getProjectComponents(
             projectCode = projectCode,
             storeType = storeType.type.toByte(),
-            storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte())
+            storeProjectTypes = listOf(
+                StoreProjectTypeEnum.COMMON.type.toByte()
+            ),
+            instanceId = storeInfoQuery.instanceId
         ) ?: emptyMap()
-        // 查询项目下关联的调试组件
-        val testStoreCodes = storeProjectService.getInstalledComponent(
+        validStoreCodes.addAll(installComponentMap.keys)
+        // 查询项目下可调试的组件版本信息
+        val testComponentMap = storeProjectService.getProjectComponents(
             projectCode = projectCode,
             storeType = storeType.type.toByte(),
-            storeProjectTypes = listOf(StoreProjectTypeEnum.TEST.type.toByte())
-        )?.keys?.toSet()
-        // 非调试组件列表
-        normalStoreCodes.addAll(installedMap.keys)
+            storeProjectTypes = listOf(
+                StoreProjectTypeEnum.TEST.type.toByte()
+            ),
+            instanceId = storeInfoQuery.instanceId
+        ) ?: emptyMap()
+        validStoreCodes.addAll(testComponentMap.keys)
         val publicComponentList = storeBaseFeatureQueryDao.getAllPublicComponent(dslContext, storeType)
-        normalStoreCodes.addAll(publicComponentList)
-        testStoreCodes?.let { normalStoreCodes.removeAll(it) }
+        validStoreCodes.addAll(publicComponentList)
         val tStoreBase = TStoreBase.T_STORE_BASE
-        // 查询非调试项目组件最新发布版本信息
+        // 查询非测试或者审核中组件最新发布版本信息
         val componentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
             dslContext = dslContext,
-            storeCodes = normalStoreCodes,
+            storeCodes = validStoreCodes,
             storeType = storeType,
             testComponentFlag = false
         ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] }).toMutableMap()
-        // 查询调试项目组件最新版本信息
-        val testComponentVersionMap = testStoreCodes?.let { list ->
-            storeBaseQueryDao.getValidComponentsByCodes(
-                dslContext = dslContext,
-                storeCodes = list,
-                storeType = storeType,
-                testComponentFlag = true
-            ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
-        }
-        testComponentVersionMap?.let { componentVersionMap.putAll(testComponentVersionMap) }
+        // 查询测试或者审核中组件最新版本信息
+        val testComponentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
+            dslContext = dslContext,
+            storeCodes = validStoreCodes,
+            storeType = storeType,
+            testComponentFlag = true
+        ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
+        val testStoreCodes = testComponentVersionMap.keys
+        componentVersionMap.putAll(testComponentVersionMap)
         // 比较当前安装的版本与组件最新版本
         val finalNormalStoreCodes = mutableSetOf<String>()
         val finalTestStoreCodes = mutableSetOf<String>()
         componentVersionMap.forEach {
             val storeCode = it.key
             val version = it.value
-            val installedVersion = installedMap[it.key]
-            val shouldAddStoreCode = if (updateFlag) {
-                installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
-            } else {
-                installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
+            val updateFlag = storeInfoQuery.updateFlag
+            val installedVersion = installComponentMap[storeCode]
+            val shouldAddStoreCode = when {
+                updateFlag == null -> true
+                updateFlag -> installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
+                else -> installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
             }
             if (shouldAddStoreCode) {
-                if (testStoreCodes?.contains(storeCode) == true) {
+                if (testStoreCodes.contains(storeCode)) {
                     finalTestStoreCodes.add(storeCode)
                 } else {
                     finalNormalStoreCodes.add(storeCode)
@@ -836,17 +840,19 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean = false
     ): Future<Page<MarketItem>> {
-        logger.info("doList|storeType:${storeInfoQuery.storeType}")
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
         return executor.submit(
             Callable {
+                val watcher = Watcher(id = "doQueryDataList|$userId|$userDeptList|$storeInfoQuery")
                 referer?.let {
                     ThreadLocalUtil.set(REFERER, referer)
                 }
                 val results: List<MarketItem>?
+                watcher.start("getStoreInfos")
                 // 分页查询组件信息
                 val (count, storeInfos) = getStoreInfos(storeInfoQuery)
                 try {
+                    watcher.start("handleMarketItem")
                     results = handleMarketItem(
                         userId = userId,
                         userDeptList = userDeptList,
@@ -875,6 +881,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         urlProtocolTrim: Boolean = false,
         storeInfos: List<Record>
     ): List<MarketItem> {
+        val watcher = Watcher(id = "handleMarketItem|$userId|$userDeptList|$storeInfoQuery")
         val results = mutableListOf<MarketItem>()
         val storeCodeList = mutableListOf<String>()
         val storeIds = mutableListOf<String>()
@@ -887,34 +894,42 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeIds.add(it[tStoreBaseFeature.ID] as String)
         }
         // 获取组件可见范围
+        watcher.start("generateStoreVisibleData")
         val storeVisibleData =
             storeCommonService.generateStoreVisibleData(storeCodeList, storeTypeEnum)
         // 获取组件统计信息
+        watcher.start("getStatisticByCodeList")
         val storeStatisticData = storeTotalStatisticService.getStatisticByCodeList(
             storeType = storeTypeEnum.type.toByte(),
             storeCodeList = storeCodeList
         )
         // 获取用户
+        watcher.start("batchListMember")
         val memberData = storeMemberService.batchListMember(storeCodeList, storeTypeEnum).data
         // 获取项目下已安装组件
+        watcher.start("getInstalledComponents")
         val installedInfoMap = projectCode?.let {
-            storeProjectService.getInstalledComponent(
+            storeProjectService.getProjectComponents(
                 projectCode = it,
                 storeType = storeTypeEnum.type.toByte(),
-                storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte())
+                storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte()),
+                instanceId = storeInfoQuery.instanceId
             )
         }
         // 获取分类
+        watcher.start("getAllClassify")
         val classifyList = classifyService.getAllClassify(storeTypeEnum.type.toByte()).data
         val classifyMap = mutableMapOf<String, String>()
         classifyList?.forEach {
             classifyMap[it.id] = it.classifyCode
         }
         // 获取组件荣誉信息及指标
+        watcher.start("getHonorInfosByStoreCodes")
         val storeHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeTypeEnum, storeCodeList)
         val storeIndexInfosMap =
             storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
         val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
+        watcher.start("handleStoreInfos")
         storeInfos.forEach { record ->
             val storeId = record[tStoreBase.ID]
             val storeCode = record[tStoreBase.STORE_CODE]

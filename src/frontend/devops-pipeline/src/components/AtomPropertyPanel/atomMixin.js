@@ -20,6 +20,8 @@
 import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
+import Tips from '@/components/AtomFormComponent/Tips'
+import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
 import NotifyType from '@/components/AtomFormComponent/notifyType'
 import Accordion from '@/components/atomFormField/Accordion'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
@@ -32,7 +34,10 @@ import CheckInline from '@/components/atomFormField/CheckInline'
 import CodeModeInput from '@/components/atomFormField/CodeModeInput'
 import CodeModeSelector from '@/components/atomFormField/CodeModeSelector'
 import CompanyStaffInput from '@/components/atomFormField/CompanyStaffInput'
+import CompositeInput from '@/components/atomFormField/CompositeInput'
+import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
 import CronTimer from '@/components/atomFormField/CronTimer/week'
+import EnumButton from '@/components/atomFormField/EnumButton'
 import EnumInput from '@/components/atomFormField/EnumInput'
 import ExperienceInput from '@/components/atomFormField/ExperienceInput'
 import GitRequestSelector from '@/components/atomFormField/GitRequestSelector'
@@ -53,6 +58,7 @@ import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
+import FormFieldGroup from './FormFieldGroup'
 
 const atomMixin = {
     props: {
@@ -101,7 +107,13 @@ const atomMixin = {
         QualitygateTips,
         AutoComplete,
         DevopsSelect,
-        AtomMarkdown
+        AtomMarkdown,
+        FormFieldGroup,
+        CompositeInput,
+        ConditionalInputSelector,
+        EnumButton,
+        TipsSimple,
+        Tips
     },
     computed: {
         ...mapGetters('atom', [

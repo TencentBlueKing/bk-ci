@@ -243,8 +243,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 deliverControl.safeInitialization(
                     projectId = workspace.projectId,
                     userId = event.userId,
-                    workspaceName = event.workspaceName,
-                    autoAssign = event.autoAssign
+                    workspaceName = event.workspaceName
                 )
             }
         } else {

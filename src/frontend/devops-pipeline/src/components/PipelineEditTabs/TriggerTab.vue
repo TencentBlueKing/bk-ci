@@ -37,7 +37,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import AtomPropertyPanel from '../AtomPropertyPanel'
     import AtomSelector from '../AtomSelector'
 
@@ -90,6 +90,11 @@
                             }
                         })
                     }
+                }
+            },
+            editingElementPos (val) {
+                if (!val) {
+                    this.element = null
                 }
             }
         },

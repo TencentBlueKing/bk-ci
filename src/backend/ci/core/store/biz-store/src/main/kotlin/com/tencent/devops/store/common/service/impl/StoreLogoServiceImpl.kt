@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StoreLogoDao
 import com.tencent.devops.store.common.service.StoreLogoService
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.logo.Logo
 import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.logo.StoreLogoReq
@@ -89,7 +90,8 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         contentLength: Long,
         sizeLimitFlag: Boolean?,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        storeType: StoreTypeEnum?
     ): Result<StoreLogoInfo?> {
         val fileName = disposition.fileName
         logger.info("uploadStoreLogo upload file fileName is:$fileName,contentLength is:$contentLength")
@@ -154,12 +156,17 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                 output.close()
             }
         }
-        val logoUrl = uploadStoreLogo(userId, file).data
+        val fileRepoPath = if (storeType != null) {
+            "file/${storeType.name.lowercase()}/$fileType/${file.name}"
+        } else {
+            null
+        }
+        val logoUrl = uploadStoreLogo(userId, file, fileRepoPath).data
         logger.info("uploadStoreLogo logoUrl is:$logoUrl")
         return Result(StoreLogoInfo(logoUrl))
     }
 
-    abstract fun uploadStoreLogo(userId: String, file: File): Result<String?>
+    abstract fun uploadStoreLogo(userId: String, file: File, fileRepoPath: String? = null): Result<String?>
 
     /**
      * 获取logo列表

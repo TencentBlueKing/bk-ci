@@ -1,16 +1,17 @@
 package com.tencent.devops.process.service.template
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -23,11 +24,10 @@ import org.springframework.stereotype.Service
 @Service
 class TemplateSettingService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val client: Client,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineSettingDao: PipelineSettingDao,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineInfoExtService: PipelineInfoExtService,
     private val templateCommonService: TemplateCommonService,
     private val templateDao: TemplateDao
@@ -55,16 +55,17 @@ class TemplateSettingService @Autowired constructor(
                 name = setting.pipelineName,
                 desc = setting.desc
             )
-            saveTemplatePipelineSetting(userId, setting, true)
+            saveTemplatePipelineSetting(context, userId, setting, true)
         }
         return true
     }
 
     fun saveTemplatePipelineSetting(
+        context: DSLContext? = null,
         userId: String,
         setting: PipelineSetting,
         isTemplate: Boolean = false
-    ): Int {
+    ): PipelineSetting {
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
             projectId = setting.projectId,
@@ -80,31 +81,44 @@ class TemplateSettingService @Autowired constructor(
             pipelineDesc = setting.desc
         )
         logger.info("Save the template pipeline setting - ($setting)")
-        return pipelineSettingDao.saveSetting(dslContext, setting, isTemplate)
+        return pipelineSettingFacadeService.saveSetting(
+            context = context,
+            userId = userId,
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            setting = setting,
+            isTemplate = isTemplate
+        )
     }
 
     fun insertTemplateSetting(
         context: DSLContext,
+        userId: String,
         projectId: String,
         templateId: String,
         pipelineName: String,
         isTemplate: Boolean
-    ) {
-        pipelineSettingDao.insertNewSetting(
-            dslContext = context,
+    ): PipelineSetting {
+        val failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
+        val failType = failNotifyTypes.split(",").filter { i -> i.isNotBlank() }
+            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+        val failSubscription = Subscription(
+            types = failType,
+            groups = emptySet(),
+            users = "\${{ci.actor}}",
+            content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+        )
+        val setting = PipelineSetting.defaultSetting(
+            projectId = projectId, pipelineId = templateId, pipelineName = pipelineName,
+            maxPipelineResNum = null, failSubscription = failSubscription
+        )
+        return pipelineSettingFacadeService.saveSetting(
+            context = context,
+            userId = userId,
             projectId = projectId,
             pipelineId = templateId,
-            pipelineName = pipelineName,
-            isTemplate = isTemplate,
-            failNotifyTypes = pipelineInfoExtService.failNotifyChannel(),
-            pipelineAsCodeSettings = try {
-                client.get(ServiceProjectResource::class).get(projectId).data
-                    ?.properties?.pipelineAsCodeSettings
-            } catch (ignore: Throwable) {
-                logger.warn("[$projectId]|Failed to sync project|templateId=$templateId", ignore)
-                null
-            },
-            settingVersion = 1
+            setting = setting,
+            isTemplate = isTemplate
         )
     }
 
