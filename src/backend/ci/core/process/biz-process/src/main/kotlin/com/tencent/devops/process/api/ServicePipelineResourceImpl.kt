@@ -401,17 +401,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode,
-        checkFlag: Boolean
+        checkFlag: Boolean?
     ): Result<Boolean> {
-        if (checkFlag) {
-            checkParams(userId, projectId)
-        }
+        checkParams(userId, projectId)
         pipelineInfoFacadeService.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode) && checkFlag
+            checkPermission = ChannelCode.isNeedAuth(channelCode) && checkFlag == true
         )
         return Result(true)
     }
