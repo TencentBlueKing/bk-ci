@@ -514,7 +514,10 @@ interface UserPipelineResource {
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
         @Parameter(description = "排序规则", required = false)
         @QueryParam("collation")
-        collation: PipelineCollation?
+        collation: PipelineCollation?,
+        @Parameter(description = "按流水线过滤", required = false)
+        @QueryParam("filterByPipelineName")
+        filterByPipelineName: String?,
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
     @Operation(summary = "流水线重命名")

@@ -115,13 +115,13 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -195,9 +195,9 @@ class PipelineRepositoryService constructor(
                 }
             }
             if (maxConRunningQueueSize != null && (
-                    this.maxConRunningQueueSize!! <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                        this.maxConRunningQueueSize!! > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
-                    )
+                        this.maxConRunningQueueSize!! <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+                                this.maxConRunningQueueSize!! > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                        )
             ) {
                 throw InvalidParamException(
                     I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
@@ -407,11 +407,11 @@ class PipelineRepositoryService constructor(
             )
         }
         val c = (
-            stage.containers.getOrNull(0)
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-                )
-            ) as TriggerContainer
+                stage.containers.getOrNull(0)
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+                    )
+                ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
@@ -589,9 +589,9 @@ class PipelineRepositoryService constructor(
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
                 "matrix maxConcurrency number(${option.maxConcurrency}) " +
-                    "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                    "matrix maxConcurrency(${option.maxConcurrency}) " +
-                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                        "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                        "matrix maxConcurrency(${option.maxConcurrency}) " +
+                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixYamlCheckUtils.checkYaml(
@@ -912,7 +912,7 @@ class PipelineRepositoryService constructor(
                         }
                         logger.info(
                             "PROCESS|updateDraft|version=$version|versionName=$versionName" +
-                                "operationLogType=$operationLogType|base=$realBaseVersion"
+                                    "operationLogType=$operationLogType|base=$realBaseVersion"
                         )
                     }
                     // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
@@ -945,7 +945,7 @@ class PipelineRepositoryService constructor(
                         }
                         logger.info(
                             "PROCESS|updateBranch|version=$version|versionName=$versionName" +
-                                "operationLogType=$operationLogType"
+                                    "operationLogType=$operationLogType"
                         )
                     }
                     // 3 通过分支发布 —— 将要通过分支发布的草稿直接更新为分支版本
@@ -980,7 +980,7 @@ class PipelineRepositoryService constructor(
                         }
                         logger.info(
                             "PROCESS|releaseByBranch|version=$version|versionName=$versionName" +
-                                "operationLogType=$operationLogType"
+                                    "operationLogType=$operationLogType"
                         )
                     }
                     // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
@@ -1745,7 +1745,8 @@ class PipelineRepositoryService constructor(
         offset: Int? = null,
         limit: Int? = null,
         sortType: PipelineSortType,
-        collation: PipelineCollation
+        collation: PipelineCollation,
+        filterByPipelineName: String?
     ): List<PipelineInfo> {
         val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
@@ -1755,7 +1756,8 @@ class PipelineRepositoryService constructor(
             offset = offset,
             limit = limit,
             sortType = sortType,
-            collation = collation
+            collation = collation,
+            filterByPipelineName = filterByPipelineName
         )
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
@@ -1938,7 +1940,7 @@ class PipelineRepositoryService constructor(
                 ) ?: ""
                 logger.info(
                     "PROCESS|updateSettingVersion|version=$version|" +
-                        "versionNum=$versionNum|versionName=$versionName"
+                            "versionNum=$versionNum|versionName=$versionName"
                 )
                 val newModel = releaseResource.model.copy(
                     name = savedSetting.pipelineName, desc = savedSetting.desc
