@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.Constants.COLUMN_SERVER_ID
 import com.tencent.devops.environment.constant.Constants.COLUMN_SEVER_LAN_IP
 import com.tencent.devops.environment.constant.Constants.COLUMN_SFW_NAME
 import com.tencent.devops.environment.constant.Constants.COLUMN_SVR_BAK_OPERATOR
@@ -18,12 +19,13 @@ import com.tencent.devops.environment.constant.DEFAULT_SYTEM_USER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
+import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbGetQueryInfoReq
 import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbKeyValues
 import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbPagingInfo
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbDataIns
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbResp
-import org.jooq.Record5
+import org.jooq.Record6
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
@@ -65,31 +67,45 @@ class TencentQueryFromCmdbService {
 
     /*
      *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
-     *  ext中实现：从cmdb中 用ip查询机器的主备负责人
+     *  ext中实现：从cmdb中 用serverId查询机器的主备负责人（提示用户时，还是用ip标识机器）
      */
-    fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record5<Long, String, Long, Long, String>>) {
-        val nodeIpList: List<String> = nodeRecords.mapNotNull { it[T_NODE_NODE_IP] as? String } // 所有host对应的ip
-        val nodeIpToNodeMap = nodeRecords.associateBy { it[T_NODE_NODE_IP] as? String } // 所有host的：ip - 记录 映射
-        val cmdbIpToCmdbDataMap = queryCmdbInfoFromIp(
-            nodeIpList.toSet(),
-            COLUMN_SVR_BAK_OPERATOR, COLUMN_SVR_OPERATOR, COLUMN_SVR_IP,
-            COLUMN_SVR_NAME, COLUMN_SFW_NAME, COLUMN_SEVER_LAN_IP
+    fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record6<Long, String, Long, Long, String, Long>>) {
+        val nodeServerIdSet = nodeRecords.mapNotNull { it[T_NODE_SERVER_ID] as? Long }.toSet() // 所有host对应的serverId
+        val nodeServerIdToNodeMap = nodeRecords.associateBy {
+            it[T_NODE_SERVER_ID] as? Long
+        } // 所有host的：serverId - 记录 映射
+        val cmdbInfoList = queryCmdbInfo(
+            keyValues = CmdbKeyValues(
+                serverIdStrList = nodeServerIdSet.joinToString(separator = ";")
+            ),
+            COLUMN_SVR_BAK_OPERATOR, COLUMN_SVR_OPERATOR, COLUMN_SVR_IP, COLUMN_SEVER_LAN_IP,
+            COLUMN_SVR_NAME, COLUMN_SFW_NAME, COLUMN_SERVER_ID
         )
-        val ipNotInCmdb = mutableListOf<String>()
-        val unauthorisedIpList = nodeIpList.filter {
-            if (null != cmdbIpToCmdbDataMap?.get(it)) {
-                val isOperator = userId == cmdbIpToCmdbDataMap[it]?.svrOperator ||
-                    nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == cmdbIpToCmdbDataMap[it]?.svrOperator
-                val isBakOpertor = cmdbIpToCmdbDataMap[it]?.svrBakOperator?.split(";")?.contains(userId) ?: false ||
-                    cmdbIpToCmdbDataMap[it]?.svrBakOperator?.split(";")
-                        ?.contains(nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String) ?: false
-                !isOperator && !isBakOpertor
+        val cmdbServerIdToCmdbDataMap = cmdbInfoList?.associateBy { it.serverId!! } ?: mapOf()
+        // 没有serverId的节点记录，也认为该节点不在CMDB中
+        val ipNotInCmdb = nodeRecords.filterNot { nodeServerIdSet.contains(it[T_NODE_SERVER_ID] as? Long) }.map {
+            it[T_NODE_NODE_IP] as String
+        }.toMutableList()
+        val unauthorisedServerIdList = nodeServerIdSet.filter {
+            if (null != cmdbServerIdToCmdbDataMap[it]) {
+                val createdUser = nodeServerIdToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String
+                val isOperator =
+                    userId == cmdbServerIdToCmdbDataMap[it]?.svrOperator ||
+                        createdUser == cmdbServerIdToCmdbDataMap[it]?.svrOperator
+                val isBakOperator =
+                    cmdbServerIdToCmdbDataMap[it]?.svrBakOperator?.split(";")?.contains(userId) ?: false ||
+                        cmdbServerIdToCmdbDataMap[it]?.svrBakOperator?.split(";")?.contains(createdUser) ?: false
+                !isOperator && !isBakOperator
             } else { // 机器不在CMDB中
-                ipNotInCmdb.add(it)
+                ipNotInCmdb.add(nodeServerIdToNodeMap[it]?.get(T_NODE_NODE_IP) as String)
                 false
             }
         }
-        if (unauthorisedIpList.isNotEmpty() || ipNotInCmdb.isNotEmpty()) {
+        if (unauthorisedServerIdList.isNotEmpty() || ipNotInCmdb.isNotEmpty()) {
+            val unauthorisedIpToNodeMap = unauthorisedServerIdList.map {
+                nodeServerIdToNodeMap[it]
+            }.associateBy { it?.get(T_NODE_NODE_IP) as String }
+            val unauthorisedIpList = unauthorisedIpToNodeMap.keys
             logger.warn(
                 "[isOperatorOrBakOperator] unauthorisedIpList: ${unauthorisedIpList.joinToString()}, " +
                     "notInCmdbIpList: ${ipNotInCmdb.joinToString()}"
@@ -101,7 +117,7 @@ class TencentQueryFromCmdbService {
                     unauthorisedIpList.joinToString(","),
                     userId,
                     unauthorisedIpList.joinToString(", ") {
-                        it + " - " + nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String
+                        it + " - " + unauthorisedIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String
                     }
                 )
             )

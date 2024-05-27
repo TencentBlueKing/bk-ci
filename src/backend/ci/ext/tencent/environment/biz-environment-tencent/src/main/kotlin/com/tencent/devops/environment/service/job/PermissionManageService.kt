@@ -32,7 +32,7 @@ import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import org.jooq.DSLContext
-import org.jooq.Record5
+import org.jooq.Record6
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -73,7 +73,7 @@ class PermissionManageService @Autowired constructor(
         dslContext: DSLContext,
         projectId: String,
         hostList: List<Host>
-    ): List<Record5<Long, String, Long, Long, String>> {
+    ): List<Record6<Long, String, Long, Long, String, Long>> {
         val recordByHostIdList = mutableListOf<Host>()
         val getRecordByIpAndBkCloudId = mutableListOf<Host>()
         hostList.map {

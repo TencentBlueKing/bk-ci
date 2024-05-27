@@ -52,7 +52,7 @@ import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record4
-import org.jooq.Record5
+import org.jooq.Record6
 import org.jooq.Record7
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -555,7 +555,7 @@ class CmdbNodeDao {
         dslContext: DSLContext,
         projectId: String,
         hostList: List<Host>
-    ): List<Record5<Long, String, Long, Long, String>> {
+    ): List<Record6<Long, String, Long, Long, String, Long>> {
         val hostIdList = hostList.map { it.bkHostId }
         return with(TNode.T_NODE) {
             val nodeRecord = dslContext.select(
@@ -563,7 +563,8 @@ class CmdbNodeDao {
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 HOST_ID.`as`(T_NODE_HOST_ID),
                 CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
-                CREATED_USER.`as`(T_NODE_CREATED_USER)
+                CREATED_USER.`as`(T_NODE_CREATED_USER),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(HOST_ID.`in`(hostIdList))
                 .and(PROJECT_ID.eq(projectId))
@@ -588,7 +589,7 @@ class CmdbNodeDao {
         dslContext: DSLContext,
         projectId: String,
         hostList: List<Host>
-    ): List<Record5<Long, String, Long, Long, String>> {
+    ): List<Record6<Long, String, Long, Long, String, Long>> {
         val ipList = hostList.map { it.ip }
         val ipToRecordMap = hostList.associateBy { it.ip }
         return with(TNode.T_NODE) {
@@ -597,13 +598,17 @@ class CmdbNodeDao {
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 HOST_ID.`as`(T_NODE_HOST_ID),
                 CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
-                CREATED_USER.`as`(T_NODE_CREATED_USER)
+                CREATED_USER.`as`(T_NODE_CREATED_USER),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_IP.`in`(ipList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
             nodeRecord.mapNotNull {
-                if (ipToRecordMap[it[T_NODE_NODE_IP] as? String]?.bkCloudId == it[T_NODE_CLOUD_AREA_ID] as? Long) {
+                if (
+                    ipToRecordMap[it[T_NODE_NODE_IP] as? String]?.bkCloudId == it[T_NODE_CLOUD_AREA_ID] as? Long ||
+                    ipToRecordMap[it[T_NODE_NODE_IP] as? String]?.bkCloudId == 0L
+                ) {
                     it
                 } else null
             }

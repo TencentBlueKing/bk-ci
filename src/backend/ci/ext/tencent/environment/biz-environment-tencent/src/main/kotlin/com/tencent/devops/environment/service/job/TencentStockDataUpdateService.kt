@@ -188,13 +188,13 @@ class TencentStockDataUpdateService @Autowired constructor(
         // 节点serverId（只更新有serverId的部署节点，正常情况下，部署节点记录都应该有serverId）
         val nodeServerIdList = cmdbNodesRecords.mapNotNull { it[T_NODE_SERVER_ID] as? Long }.toSet()
         // 节点：cmdb信息（从cmdb查到的，节点在cmdb中）
-        val cmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfo(
+        val cmdbInfoList = tencentQueryFromCmdbService.queryCmdbInfo(
             keyValues = CmdbKeyValues(
                 serverIdStrList = nodeServerIdList.joinToString(separator = ";")
             ),
             COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME, COLUMN_SERVER_ID
         )
-        val serverIdToCmdbInfoMap = cmdbInfoMap?.associateBy { it.serverId!! } ?: mapOf()
+        val serverIdToCmdbInfoMap = cmdbInfoList?.associateBy { it.serverId!! } ?: mapOf()
         // 2.1.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 改成 NOT_IN_CMDB
         val invalidServerIdList = nodeServerIdList.filterNot { serverIdToCmdbInfoMap.containsKey(it) }
         cmdbNodeDao.updateNodeNotInCmdbByServerIdList(dslContext, invalidServerIdList)
