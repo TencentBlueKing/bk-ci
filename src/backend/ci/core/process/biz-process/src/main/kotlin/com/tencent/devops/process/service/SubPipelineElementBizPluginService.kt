@@ -91,9 +91,11 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         container: Container,
         element: Element,
         contextMap: Map<String, String>,
-        appearedCnt: Int
+        appearedCnt: Int,
+        isTemplate: Boolean
     ): ElementCheckResult {
-        if (projectId.isNullOrBlank()) return ElementCheckResult(true)
+        // 模板保存时不需要校验子流水线权限
+        if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
         val (subProjectId, subPipelineId, subPipelineName) = when (element) {
             is SubPipelineCallElement -> {
                 resolveSubPipelineCall(

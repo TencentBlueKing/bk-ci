@@ -15,11 +15,11 @@
 </template>
 
 <script>
+    import optionConfigMixin from '@/store/modules/common/optionConfigMixin'
     import Vue from 'vue'
     import { mapActions, mapState } from 'vuex'
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
-    import optionConfigMixin from '@/store/modules/common/optionConfigMixin'
+    import atomMixin from './atomMixin'
     export default {
         name: 'atom-config',
         mixins: [atomMixin, validMixins, optionConfigMixin],
@@ -90,6 +90,17 @@
                 if (this.element.additionalOptions && this.element.additionalOptions[name] === undefined) {
                     Vue.set(this.element.additionalOptions, name, value)
                 }
+                let clearFields = {}
+                if (
+                    value === this.ATOM_OPTION[name]?.clearValue
+                    && Array.isArray(this.ATOM_OPTION[name]?.clearFields)
+                ) {
+                    // 重置关联的值，可配置相关的联动值
+                    clearFields = this.ATOM_OPTION[name].clearFields.reduce((acc, key) => {
+                        acc[key] = this.getFieldDefault(key, this.ATOM_OPTION)
+                        return acc
+                    }, {})
+                }
 
                 const currentfailControl = [...new Set(name === 'failControl' ? value : this.atomOption.failControl)] // 去重
 
@@ -105,6 +116,7 @@
                     ...this.atomOption,
                     manualRetry,
                     [name]: value,
+                    ...clearFields,
                     continueWhenFailed: continueable,
                     retryWhenFailed: retryable,
                     failControl

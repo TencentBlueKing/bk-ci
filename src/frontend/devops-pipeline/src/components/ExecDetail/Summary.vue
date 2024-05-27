@@ -39,7 +39,7 @@
                 </div>
                 <span class="no-exec-material" v-else>--</span>
             </div>
-            <div>
+            <div style="overflow: hidden;">
                 <span class="exec-detail-summary-info-block-title">{{ $t("history.tableMap.pipelineVersion") }}</span>
                 <div class="exec-detail-summary-info-block-content">
                     <bk-popover v-if="isConstraintTemplate"
@@ -267,7 +267,7 @@
     > div {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      
       &:first-child {
         margin-left: -16px;
       }
@@ -304,9 +304,6 @@
             }
 
           }
-          .visible-material-row {
-            height: 38px;
-            }
         }
       }
     }
