@@ -28,7 +28,7 @@
                 size="14"
                 class="stage-entry-error-icon"
             />
-            <span @click.stop v-if="reactiveData.canSkipElement" class="check-total-stage">
+            <span @click.stop v-else-if="reactiveData.canSkipElement" class="check-total-stage">
                 <bk-checkbox
                     class="atom-canskip-checkbox"
                     v-model="stage.runStage"
@@ -37,13 +37,23 @@
                 ></bk-checkbox>
             </span>
             <span
-                v-if="canStageRetry"
+                v-else-if="canStageRetry"
                 @click.stop="triggerStageRetry"
                 class="stage-single-retry"
             >
                 {{ t("retry") }}
             </span>
-            <span v-if="!stage.isError" class="stage-entry-btns">
+            <stage-check-icon
+                v-else-if="showStageCheck(stage.checkOut)"
+                class="check-out-icon"
+                check-type="checkOut"
+                :stage-index="stageIndex"
+                :stage-check="stage.checkOut"
+                :is-exec-detail="reactiveData.isExecDetail"
+                :user-name="reactiveData.userName"
+                :stage-status="stageStatusCls"
+            />
+            <span v-else class="stage-entry-btns">
                 <Logo
                     class="copy-stage"
                     v-if="showCopyStage"
@@ -58,16 +68,6 @@
                     class="add-plus-icon close"
                 />
             </span>
-            <stage-check-icon
-                v-if="showStageCheck(stage.checkOut)"
-                class="check-out-icon"
-                check-type="checkOut"
-                :stage-index="stageIndex"
-                :stage-check="stage.checkOut"
-                :is-exec-detail="reactiveData.isExecDetail"
-                :user-name="reactiveData.userName"
-                :stage-status="stageStatusCls"
-            />
         </div>
         <span class="stage-connector">
             <Logo size="14" name="right-shape" class="connector-angle" />
