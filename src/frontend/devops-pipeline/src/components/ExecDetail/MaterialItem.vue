@@ -244,6 +244,7 @@
             // padding: 0 0 8px 0;
             display: grid;
             grid-gap: 20px;
+            height: 38px;
             grid-auto-flow: column;
             &.fit-content {
                 grid-auto-columns: minmax(auto, max-content) 36px;
