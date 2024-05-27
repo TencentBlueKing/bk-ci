@@ -156,7 +156,11 @@ func ListDeployment(workloadCoreLabel string) ([]*appsv1.Deployment, error) {
 }
 
 func GetDeployment(deploymentName string) (*appsv1.Deployment, error) {
-	deployment, err := infs.deployment.Deployments(config.Config.Kubernetes.NameSpace).Get(deploymentName)
+	deployment, err := kubeClient.AppsV1().Deployments(config.Config.Kubernetes.NameSpace).Get(
+		context.TODO(),
+		deploymentName,
+		metav1.GetOptions{},
+	)
 
 	if err != nil {
 		return nil, err
