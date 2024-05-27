@@ -27,12 +27,16 @@
 
 package com.tencent.devops.worker.common
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -51,6 +55,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
@@ -219,7 +224,8 @@ object Runner {
                         obj = buildTask.taskId,
                         exception = RemoteServiceException("Not valid build elementId")
                     )
-
+                    // 处理task和job级别的上下文
+                    combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                     try {
@@ -402,12 +408,12 @@ object Runner {
     /**
      *  为插件级变量填充Job前序产生的流水线变量，以及插件级的ENV
      */
-    private fun combineTaskVariables(
+    private fun combineVariables(
         buildTask: BuildTask,
         jobBuildVariables: BuildVariables
     ) {
         // 如果之前的插件不是在构建机执行, 会缺少环境变量
-        val taskBuildVariable = buildTask.buildVariable ?: emptyMap()
+        val taskBuildVariable = buildTask.buildVariable?.toMutableMap() ?: mutableMapOf()
         val taskBuildParameters = taskBuildVariable.map { (key, value) ->
             BuildParameters(key, value)
         }.associateBy { it.key }
@@ -419,9 +425,32 @@ object Runner {
             .values.toList()
 
         // 填充插件级的ENV参数
-        val params = buildTask.params
-        if (params != null && null != params[Element::customEnv.name]) {
-            // TODO 把ITask的方法移到这里
+        val customEnvStr = buildTask.params?.get(Element::customEnv.name)
+        if (customEnvStr != null) {
+            val customEnv = try {
+                JsonUtil.toOrNull(customEnvStr, object : TypeReference<List<NameAndValue>>() {})
+            } catch (ignore: Throwable) {
+                logger.warn("Parse customEnv with error: ", ignore)
+                null
+            }
+            if (customEnv.isNullOrEmpty()) return
+            val jobVariables = jobBuildVariables.variables.toMutableMap()
+            customEnv.forEach {
+                if (!it.key.isNullOrBlank()) {
+                    // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
+                    val value = EnvReplacementParser.parse(
+                        value = it.value ?: "",
+                        contextMap = jobVariables,
+                        onlyExpression = jobBuildVariables.pipelineAsCodeSettings?.enable,
+                        functions = SpecialFunctions.functions,
+                        output = SpecialFunctions.output
+                    )
+                    jobVariables["envs.${it.key}"] = value
+                    taskBuildVariable[it.key!!] = value
+                }
+            }
+            buildTask.buildVariable = taskBuildVariable
+            jobBuildVariables.variables = jobVariables
         }
     }
 }

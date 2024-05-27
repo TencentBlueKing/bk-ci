@@ -27,16 +27,11 @@
 
 package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.EnvReplacementParser
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.expression.SpecialFunctions
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -60,43 +55,7 @@ abstract class ITask {
         buildVariables: BuildVariables,
         workspace: File
     ) {
-        val params = buildTask.params
-        val jobBuildVariables = combineVariables(buildTask, buildVariables)
-        if (params != null && null != params[Element::customEnv.name]) {
-            val customEnvStr = params[Element::customEnv.name]
-            val customEnv = try {
-                JsonUtil.toOrNull(customEnvStr, List::class.java) as List<NameAndValue>?
-            } catch (ignore: Throwable) {
-                logger.warn("Parse customEnv with error: ", ignore)
-                null
-            }
-            if (customEnv?.isNotEmpty() == true) {
-                val variables = buildTask.buildVariable?.toMutableMap()
-                val variablesBuild = jobBuildVariables.variables.toMutableMap()
-                if (variables != null) {
-                    customEnv.forEach {
-                        if (!it.key.isNullOrBlank()) {
-                            // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
-                            val value = EnvReplacementParser.parse(
-                                value = it.value ?: "",
-                                contextMap = variablesBuild,
-                                onlyExpression = buildVariables.pipelineAsCodeSettings?.enable,
-                                functions = SpecialFunctions.functions,
-                                output = SpecialFunctions.output
-                            )
-                            variablesBuild["envs.${it.key}"] = value
-                            variables[it.key!!] = value
-                        }
-                    }
-                    return execute(
-                        buildTask.copy(buildVariable = variables),
-                        jobBuildVariables.copy(variables = variablesBuild),
-                        workspace
-                    )
-                }
-            }
-        }
-        execute(buildTask, jobBuildVariables, workspace)
+        execute(buildTask, buildVariables, workspace)
     }
 
     /**
