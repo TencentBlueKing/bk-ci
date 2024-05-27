@@ -75,7 +75,8 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         container: Container,
         element: T,
         contextMap: Map<String, String>,
-        appearedCnt: Int
+        appearedCnt: Int,
+        isTemplate: Boolean
     ) = ElementCheckResult(true)
 }
 
