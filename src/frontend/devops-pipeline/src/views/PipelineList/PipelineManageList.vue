@@ -117,12 +117,12 @@
                 v-if="isTableLayout"
                 :filter-params="filters"
                 :max-height="$refs.tableBox?.offsetHeight"
+                :filter-by-pipeline-name="filterByPipelineName"
                 ref="pipelineBox"
             />
             <pipelines-card-view
                 v-else-if="isCardLayout"
                 :filter-params="filters"
-                :filter-by-pipeline-name="filterByPipelineName"
                 ref="pipelineBox"
             />
 
