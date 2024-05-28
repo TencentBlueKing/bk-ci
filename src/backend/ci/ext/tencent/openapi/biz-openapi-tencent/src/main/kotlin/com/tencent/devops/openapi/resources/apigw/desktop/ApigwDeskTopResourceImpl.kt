@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.desktop.ApigwDeskTopResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
@@ -16,6 +17,17 @@ class ApigwDeskTopResourceImpl @Autowired constructor(private val client: Client
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwDeskTopResourceImpl::class.java)
+    }
+
+    override fun getToken(
+        appCode: String?,
+        apigwType: String?,
+        desktopIP: String,
+        devxGwToken: String,
+        sign: DesktopTokenSign
+    ): Result<String> {
+        logger.info("$apigwType|$appCode|getToken|sign=$sign")
+        return client.get(ServiceRemoteDevResource::class).getToken(desktopIP = desktopIP, sign = sign)
     }
 
     override fun getProjectWorkspace(

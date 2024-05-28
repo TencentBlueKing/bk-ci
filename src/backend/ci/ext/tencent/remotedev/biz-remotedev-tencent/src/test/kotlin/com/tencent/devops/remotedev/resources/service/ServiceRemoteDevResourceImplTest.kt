@@ -1,0 +1,64 @@
+package com.tencent.devops.remotedev.resources.service
+
+import com.tencent.devops.remotedev.config.BkConfig
+import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import io.mockk.mockk
+import org.junit.jupiter.api.Test
+
+class ServiceRemoteDevResourceImplTest {
+
+    val bkConfig = BkConfig()
+    private val workspaceTemplate = ServiceRemoteDevResourceImpl(
+        permissionService = mockk(),
+        workspaceService = mockk(),
+        desktopWorkspaceService = mockk(),
+        createControl = mockk(),
+        deleteControl = mockk(),
+        workspaceCommon = mockk(),
+        windowsResourceConfigService = mockk(),
+        notifyControl = mockk(),
+        client = mockk(),
+        redisOperation = mockk(),
+        workspaceLoginService = mockk(),
+        startWorkspaceService = mockk(),
+        rabbitTemplate = mockk(),
+        expertSupportService = mockk(),
+        bkConfig = bkConfig
+    )
+
+    @Test
+    fun check() {
+        val ws = WeSecProjectWorkspace(
+            workspaceName = "workspace name",
+            projectId = "",
+            creator = "",
+            owner = "",
+            createTime = "",
+            regionId = "",
+            innerIp = "1.2.3",
+            status = WorkspaceStatus.RUNNING,
+            realOwner = "",
+            displayName = "",
+            ownerDepartments = null,
+            currentLoginUsers = null,
+            machineType = "",
+            macAddress = ""
+        )
+        val sign = DesktopTokenSign(
+            fingerprint = "",
+            appId = "",
+            fileName = "",
+            fileVersion = "",
+            fileUpdateTime = "",
+            productName = "",
+            productVersion = "",
+            sha1 = "",
+            timestamp = 123,
+            publicKey = "",
+            sign = ""
+        )
+        workspaceTemplate.check(ws, sign, ws.innerIp!!)
+    }
+}

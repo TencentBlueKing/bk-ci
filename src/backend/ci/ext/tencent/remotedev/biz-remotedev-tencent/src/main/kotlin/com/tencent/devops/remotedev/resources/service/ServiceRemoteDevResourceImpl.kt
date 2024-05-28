@@ -1,9 +1,11 @@
 package com.tencent.devops.remotedev.resources.service
 
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -11,14 +13,16 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
-import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.BkConfig
+import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
-import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -38,9 +42,13 @@ import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import com.tencent.devops.remotedev.utils.RsaUtil
+import java.net.URLDecoder
+import java.util.Base64
+import javax.ws.rs.core.Response
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import java.net.URLDecoder
 
 @RestResource
 @Suppress("ALL")
@@ -58,7 +66,8 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceLoginService: WorkspaceLoginService,
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
-    private val expertSupportService: ExpertSupportService
+    private val expertSupportService: ExpertSupportService,
+    private val bkConfig: BkConfig
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -356,5 +365,52 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
         return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
+    }
+
+    override fun getToken(desktopIP: String, sign: DesktopTokenSign): Result<String> {
+        val ws = workspaceService.getWorkspaceList4WeSec(
+            ip = desktopIP
+        ).firstOrNull() ?: throwTokenFail(desktopIP, "unknown ip", "not find $desktopIP")
+        check(ws, sign, desktopIP)
+        // TODO 校验store接口
+        val dToken = permissionService.init1Password(
+            ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner"),
+            ws.workspaceName,
+            60
+        )
+        val rsaPublicKey = RsaUtil.generatePublicKey(Base64.getDecoder().decode(sign.publicKey))
+        return Result(RsaUtil.rsaEncrypt(dToken, rsaPublicKey))
+    }
+
+    fun check(
+        ws: WeSecProjectWorkspace,
+        sign: DesktopTokenSign,
+        desktopIP: String
+    ) {
+        // 校验指纹
+        val realFingerprint = DigestUtils.md5Hex("${ws.macAddress}${bkConfig.desktopSdkToken}")
+        if (realFingerprint != sign.fingerprint) {
+            throwTokenFail(desktopIP, "wrong fingerprint", "$realFingerprint != ${sign.fingerprint}")
+        }
+        // 校验签名
+        // <md5(mac_addr+token)>,<appid>,<原始文件名>,<文件版本>,<修改日期>,<产品名称>,<产品版本>,<exe文件的sha1>,<当前10位时间戳>
+        val unsigned = "${sign.fingerprint}," +
+            "${sign.appId}," +
+            "${sign.fileName}," +
+            "${sign.fileVersion}," +
+            "${sign.fileUpdateTime}," +
+            "${sign.productName}," +
+            "${sign.productVersion}," +
+            "${sign.sha1}," +
+            "${sign.timestamp}"
+        val realSigned = ShaUtils.hmacSha1(bkConfig.desktopSdkToken.toByteArray(), unsigned.toByteArray())
+        if (realSigned != sign.sign) {
+            throwTokenFail(desktopIP, "wrong sign", "$realSigned != ${sign.sign}")
+        }
+    }
+
+    private fun throwTokenFail(desktopIP: String, failMessage: String, failDetailMessage: String): Nothing {
+        logger.warn("$desktopIP get token fail:$failMessage.<$failDetailMessage>")
+        throw CustomException(Response.Status.FORBIDDEN, failMessage)
     }
 }

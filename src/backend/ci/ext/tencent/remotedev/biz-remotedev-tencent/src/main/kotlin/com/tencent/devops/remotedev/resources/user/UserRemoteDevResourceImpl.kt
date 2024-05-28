@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -42,11 +41,12 @@ import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
-import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.Executors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
 
 @RestResource
 @Suppress("ALL")
@@ -55,11 +55,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val workspaceCommon: WorkspaceCommon,
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
-    private val client: Client,
-    private val txcService: TxcService
+    private val txcService: TxcService,
+    private val redisCache: RedisCacheService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -113,7 +112,13 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
-        return Result(permissionService.init1Password(userId, workspaceName))
+        return Result(
+            permissionService.init1Password(
+                userId,
+                workspaceName,
+                redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull()
+            )
+        )
     }
 
     override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {

@@ -25,49 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api
+package com.tencent.devops.remotedev.api.open
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
+import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
-@Tag(name = "AUTH_LOCAL_MANAGER", description = "权限校验--管理员相关")
-@Path("/open/service/auth/local/manager")
+@Tag(name = "OPEN_REMOTE_DEV", description = "Open-remoteDev")
+@Path("/open/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceLocalManagerService {
+interface OpenResource {
+    @Operation(summary = "校验token")
     @GET
-    @Path("/projects/{projectCode}/")
-    @Operation(summary = "校验用户是否有超级管理员权限")
+    @Path("/desktop_token_check")
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    fun validateUserActionPermission(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "待校验用户ID", required = true)
-        userId: String,
+    fun desktopTokenCheck(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,
-        @PathParam("projectCode")
-        @Parameter(description = "资源类型", required = true)
-        projectCode: String,
-        @QueryParam("resourceType")
-        @Parameter(description = "资源类型", required = true)
-        resourceType: String,
-        @QueryParam("action")
-        @Parameter(description = "资源类型", required = true)
-        action: String
-    ): Result<Boolean>
+        @QueryParam("dToken")
+        @Parameter(description = "dToken", required = false)
+        dToken: String
+    ): Result<UserOnePassword>
 }

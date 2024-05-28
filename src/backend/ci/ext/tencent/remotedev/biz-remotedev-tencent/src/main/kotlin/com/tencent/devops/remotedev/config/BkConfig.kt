@@ -47,4 +47,7 @@ class BkConfig {
     val bkvisionUrl: String = ""
     @Value("\${bkvision.shareId:}")
     val bkvisionShareId: String = ""
+
+    @Value("\${remoteDev.desktopSdkToken:}")
+    val desktopSdkToken: String = ""
 }

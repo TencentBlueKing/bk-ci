@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -282,4 +283,14 @@ interface ServiceRemoteDevResource {
         @QueryParam("type")
         type: QuotaType
     ): Result<Map<String, Map<String, Int>>>
+
+    @Operation(summary = "云桌面SDK获取应用token", tags = ["v4_app_desktop_sdk_token"])
+    @POST
+    @Path("/token")
+    fun getToken(
+        @Parameter(description = "IP", required = false)
+        @QueryParam("desktopIP")
+        desktopIP: String,
+        sign: DesktopTokenSign
+    ): Result<String>
 }
