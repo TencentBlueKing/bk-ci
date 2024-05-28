@@ -34,9 +34,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -59,6 +61,7 @@ interface ServicePermissionAuthResource {
     @GET
     @Path("/projects/{projectCode}/action/validate")
     @Operation(summary = "校验用户是否有具体操作的权限")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun validateUserActionPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -77,6 +80,7 @@ interface ServicePermissionAuthResource {
     @GET
     @Path("/projects/{projectCode}/resource/validate")
     @Operation(summary = "校验用户是否有具体资源的操作权限")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun validateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -102,6 +106,7 @@ interface ServicePermissionAuthResource {
     @GET
     @Path("/projects/{projectCode}/relation/validate")
     @Operation(summary = "校验用户是否有具体资源实例的操作权限")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun validateUserResourcePermissionByRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -132,6 +137,7 @@ interface ServicePermissionAuthResource {
     @POST
     @Path("/projects/{projectCode}/instance/validate")
     @Operation(summary = "校验用户是否有具体资源实例的操作权限")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun validateUserResourcePermissionByInstance(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -154,6 +160,7 @@ interface ServicePermissionAuthResource {
     @POST
     @Path("/projects/{projectCode}/relation/validate/batch")
     @Operation(summary = "批量校验用户是否有具体资源实例的操作权限")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun batchValidateUserResourcePermissionByRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -183,6 +190,7 @@ interface ServicePermissionAuthResource {
     @GET
     @Path("/projects/{projectCode}/action/instanceAndParent")
     @Operation(summary = "获取用户所拥有指定权限下的指定类型资源和类型父资源code列表")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getUserResourceAndParentByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -207,6 +215,7 @@ interface ServicePermissionAuthResource {
     @GET
     @Path("/projects/{projectCode}/actions/instance/map")
     @Operation(summary = "获取用户某项目下多操作的资源实例列表")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getUserResourcesByPermissions(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -231,6 +240,7 @@ interface ServicePermissionAuthResource {
     @GET
     @Path("/projects/{projectCode}/action/instance")
     @Operation(summary = "获取用户某项目下指定操作的资源实例列表")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getUserResourceByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -255,6 +265,7 @@ interface ServicePermissionAuthResource {
     @POST
     @Path("/projects/{projectCode}/actions/instance/filter")
     @Operation(summary = "过滤用户某项目下多操作的资源实例列表")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun filterUserResourcesByPermissions(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -280,6 +291,7 @@ interface ServicePermissionAuthResource {
     @Path("/projects/{projectCode}/create/relation")
     @POST
     @Operation(summary = "创建权限中心资源")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun resourceCreateRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
@@ -307,6 +319,7 @@ interface ServicePermissionAuthResource {
     @Path("/projects/{projectCode}/modify/relation")
     @PUT
     @Operation(summary = "修改权限中心资源")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun resourceModifyRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -331,6 +344,7 @@ interface ServicePermissionAuthResource {
     @Path("/projects/{projectCode}/delete/relation")
     @DELETE
     @Operation(summary = "删除权限中心资源")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun resourceDeleteRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -352,6 +366,7 @@ interface ServicePermissionAuthResource {
     @Path("/projects/{projectCode}/cancel/relation")
     @PUT
     @Operation(summary = "取消权限中心资源")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun resourceCancelRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "操作用户ID", required = true)
@@ -376,6 +391,7 @@ interface ServicePermissionAuthResource {
     @Path("/projects/{projectCode}/grant")
     @POST
     @Operation(summary = "授权实例级别权限")
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun grantInstancePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "操作用户ID", required = true)
