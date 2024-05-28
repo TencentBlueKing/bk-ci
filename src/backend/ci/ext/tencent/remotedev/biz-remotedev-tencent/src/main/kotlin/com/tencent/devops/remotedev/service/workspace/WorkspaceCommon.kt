@@ -559,6 +559,11 @@ class WorkspaceCommon @Autowired constructor(
             mountType = WorkspaceMountType.START,
             ownerType = ws.ownerType
         )
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = ws.workspaceName,
+            status = WorkspaceStatus.RUNNING
+        )
     }
 
     fun shareWorkspace(
