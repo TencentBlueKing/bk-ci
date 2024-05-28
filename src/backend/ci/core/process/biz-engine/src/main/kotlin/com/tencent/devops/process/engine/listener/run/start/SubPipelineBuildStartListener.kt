@@ -25,27 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.listener.run
+package com.tencent.devops.process.engine.listener.run.start
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.process.engine.control.BuildStartControl
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
+import com.tencent.devops.process.service.SubPipelineStatusService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-/**
- *  MQ实现的流水线开始构建事件
- *
- * @version 1.0
- */
 @Component
-class PipelineBuildStartListener @Autowired constructor(
-    private val buildControl: BuildStartControl,
+class SubPipelineBuildStartListener @Autowired constructor(
+    private val subPipelineStatusService: SubPipelineStatusService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildStartEvent>(pipelineEventDispatcher) {
+) : BaseListener<PipelineBuildStartBroadCastEvent>(pipelineEventDispatcher) {
 
-    override fun run(event: PipelineBuildStartEvent) {
-        buildControl.handle(event)
+    override fun run(event: PipelineBuildStartBroadCastEvent) {
+        subPipelineStatusService.onAsyncStart(event)
     }
 }

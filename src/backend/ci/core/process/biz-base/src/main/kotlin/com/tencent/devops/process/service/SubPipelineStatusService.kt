@@ -30,13 +30,16 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -50,7 +53,8 @@ import org.springframework.stereotype.Service
 @Service
 class SubPipelineStatusService @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     companion object {
@@ -74,7 +78,7 @@ class SubPipelineStatusService @Autowired constructor(
     /**
      * 异步启动子流水线
      */
-    fun onAsyncStart(event: PipelineBuildStartEvent) {
+    fun onAsyncStart(event: PipelineBuildStartBroadCastEvent) {
         with(event) {
             try {
                 updateParentPipelineTaskStatus(
@@ -155,6 +159,16 @@ class SubPipelineStatusService @Autowired constructor(
                 taskId = buildVariables[PIPELINE_START_PARENT_BUILD_TASK_ID]!!,
                 executeCount = it.executeCount ?: 1,
                 asyncStatus = asyncStatus
+            )
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "updateTaskStatus",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = it.startUser,
+                    buildId = buildId,
+                    refreshTypes = RefreshType.DETAIL.binary
+                )
             )
         }
     }
