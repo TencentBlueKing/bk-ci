@@ -377,7 +377,7 @@ interface ApigwRemoteDevResource {
 
     @Operation(summary = "提供给Devcloud获取云桌面镜像列表", tags = ["v4_app_query_workspace_image_list"])
     @GET
-    @Path("/project/workspace/image/list")
+    @Path("/workspace/image/list")
     fun queryWorkspaceImageList(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
