@@ -39,13 +39,14 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -69,12 +70,13 @@ class PipelineElementService @Autowired constructor(
         pipelineId: String,
         startValues: Map<String, String>? = null,
         startParamsMap: MutableMap<String, BuildParameters>? = null,
-        handlePostFlag: Boolean = true
+        handlePostFlag: Boolean = true,
+        queryDslContext: DSLContext? = null
     ) {
         val watcher = Watcher(id = "fillElementWhenNewBuild#$pipelineId")
         watcher.start("getTemplateIdByPipeline")
         val templateId = if (model.instanceFromTemplate == true) {
-            templateService.getTemplateIdByPipeline(projectId, pipelineId)
+            templateService.getTemplateIdByPipeline(projectId, pipelineId, queryDslContext)
         } else {
             null
         }
@@ -108,7 +110,7 @@ class PipelineElementService @Autowired constructor(
                     var skip = false
                     if (startValues != null) {
                         // 优化循环
-                        val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                        val key = ElementUtils.getSkipElementVariableName(element.id)
                         if (startValues[key] == "true" && startParamsMap != null) {
                             startParamsMap[key] = BuildParameters(
                                 key = key, value = "true", valueType = BuildFormPropertyType.TEMPORARY

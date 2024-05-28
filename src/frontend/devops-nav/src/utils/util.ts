@@ -1,5 +1,4 @@
 import { showLoginModal } from '@blueking/login-modal'
-
 export function firstUpperCase (str: string): string {
     try {
         return str[0].toUpperCase() + str.slice(1)

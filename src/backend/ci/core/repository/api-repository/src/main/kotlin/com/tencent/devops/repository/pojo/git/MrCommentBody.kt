@@ -27,9 +27,9 @@
 
 package com.tencent.devops.repository.pojo.git
 
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 data class MrCommentBody(
-    @ApiParam("报表数据", required = true)
+    @Parameter(description = "报表数据", required = true)
     val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
 )

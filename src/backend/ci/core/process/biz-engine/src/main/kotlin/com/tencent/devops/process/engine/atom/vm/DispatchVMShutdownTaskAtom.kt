@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
+import com.tencent.devops.process.engine.atom.parser.DispatchTypeBuilder
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
@@ -55,7 +56,8 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val buildingHeartBeatUtils: BuildingHeartBeatUtils
+    private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
+    private val dispatchTypeBuilder: DispatchTypeBuilder
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
         return JsonUtil.mapTo(task.taskParams, VMBuildContainer::class.java)
@@ -85,7 +87,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 buildResult = true,
-                routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                routeKeySuffix = dispatchTypeBuilder.getDispatchType(task, param).routeKeySuffix?.routeKeySuffix,
                 executeCount = task.executeCount
             )
         )
@@ -101,7 +103,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
         // 同步Job执行状态
         buildLogPrinter.stopLog(
             buildId = buildId,
-            jobId = task.containerHashId,
+            containerHashId = task.containerHashId,
             executeCount = task.executeCount
         )
 
@@ -137,7 +139,9 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
-                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                        routeKeySuffix = dispatchTypeBuilder
+                            .getDispatchType(task, param)
+                            .routeKeySuffix?.routeKeySuffix,
                         executeCount = task.executeCount
                     )
                 )

@@ -25,6 +25,12 @@
             },
             {
               "id": "project_manage"
+            },
+            {
+              "id": "project_manage-archived-pipeline"
+            },
+            {
+              "id": "project_api-operate"
             }
           ]
         },
@@ -58,6 +64,9 @@
             },
             {
               "id": "pipeline_manage"
+            },
+            {
+              "id": "pipeline_archive"
             }
           ]
         },
@@ -338,6 +347,108 @@
                 },
                 {
                   "id": "quality_group_edit"
+                }
+              ]
+            },
+            {
+              "name": "云桌面",
+              "name_en": "Cgs Permissions",
+              "actions": [
+                {
+                  "id": "cgs_create"
+                },
+                {
+                  "id": "cgs_list"
+                },
+                {
+                  "id": "cgs_view"
+                },
+                {
+                  "id": "cgs_stop"
+                },
+                {
+                  "id": "cgs_start"
+                },
+                {
+                  "id": "cgs_restart"
+                },
+                {
+                  "id": "cgs_assign"
+                },
+                {
+                  "id": "cgs_edit-type"
+                },
+                {
+                  "id": "cgs_rebuild-system-disk"
+                },
+                {
+                  "id": "cgs_make-image"
+                },
+                {
+                  "id": "cgs_expand-disk"
+                },
+                {
+                  "id": "cgs_delete"
+                },
+                {
+                  "id": "cgs_share"
+                },
+                {
+                  "id": "cgs_edit"
+                }
+              ]
+            },
+            {
+              "name": "镜像",
+              "name_en": "Image Notice Group Permissions",
+              "actions": [
+                {
+                  "id": "image_list"
+                },
+                {
+                  "id": "image_delete"
+                },
+                {
+                  "id": "image_edit"
+                }
+              ]
+            },
+            {
+              "name": "代理仓库",
+              "name_en": "Code Proxy Permissions",
+              "actions": [
+                {
+                  "id": "code_proxy_create"
+                },
+                {
+                  "id": "code_proxy_list"
+                },
+                {
+                  "id": "code_proxy_delete"
+                }
+              ]
+            },
+            {
+              "name": "流水线模板",
+              "name_en": "Pipeline Template Permissions",
+              "actions": [
+                {
+                  "id": "pipeline_template_view"
+                },
+                {
+                  "id": "pipeline_template_edit"
+                },
+                {
+                  "id": "pipeline_template_delete"
+                },
+                {
+                  "id": "pipeline_template_create"
+                },
+                {
+                  "id": "pipeline_template_list"
+                },
+                {
+                  "id": "pipeline_template_manage"
                 }
               ]
             }

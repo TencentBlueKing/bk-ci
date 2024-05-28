@@ -623,5 +623,6 @@
     "可以尝试 调整关键词 或": "You can try adjusting keywords or ",
     "确认离开当前页？": "Are you sure to leave now?",
     "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
-    "离开": "Leave"
+    "离开": "Leave",
+    "无该项目的模板安装权限": "No permission to install the project template"
 }

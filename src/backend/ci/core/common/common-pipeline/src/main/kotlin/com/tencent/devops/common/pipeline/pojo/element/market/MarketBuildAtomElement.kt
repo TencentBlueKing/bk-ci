@@ -29,26 +29,28 @@ package com.tencent.devops.common.pipeline.pojo.element.market
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
+import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
-@ApiModel("流水线模型-插件市场第三方构建环境类插件", description = MarketBuildAtomElement.classType)
+@Schema(title = "流水线模型-插件市场第三方构建环境类插件", description = MarketBuildAtomElement.classType)
 data class MarketBuildAtomElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "任务名称由用户自己填写",
-    @ApiModelProperty("id将由后台生成", required = false)
+    @get:Schema(title = "id将由后台生成", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("插件的唯一标识", required = true)
+    @get:Schema(title = "插件的唯一标识", required = true)
     private val atomCode: String = "",
-    @ApiModelProperty("插件版本", required = false)
+    @get:Schema(title = "插件版本", required = false)
     override var version: String = "1.*",
-    @ApiModelProperty("用户自定义ID", required = false)
+    @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @ApiModelProperty("插件参数数据", required = true)
+    @get:Schema(title = "插件参数数据", required = true)
     val data: Map<String, Any> = mapOf(),
-    @ApiModelProperty("附加参数", required = false)
+    @get:Schema(title = "附加参数", required = false)
     override var additionalOptions: ElementAdditionalOptions? = null
 ) : Element(name, id, status, additionalOptions = additionalOptions) {
 
@@ -58,6 +60,18 @@ data class MarketBuildAtomElement(
 
     override fun getAtomCode(): String {
         return atomCode
+    }
+
+    override fun transferYaml(defaultValue: JSONObject?): PreStep {
+        val input = data["input"] as Map<String, Any>? ?: emptyMap()
+        return PreStep(
+            name = name,
+            id = stepId,
+            // 插件上的
+            ifFiled = TransferUtil.parseStepIfFiled(this),
+            uses = "${getAtomCode()}@$version",
+            with = TransferUtil.simplifyParams(defaultValue, input).ifEmpty { null }
+        )
     }
 
     override fun getClassType() = classType

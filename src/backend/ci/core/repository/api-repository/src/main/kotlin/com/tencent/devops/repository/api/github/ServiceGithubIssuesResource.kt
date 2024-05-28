@@ -30,11 +30,11 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
-import com.tencent.devops.common.sdk.github.response.CreateIssueCommentResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.repository.sdk.github.request.CreateIssueCommentRequest
+import com.tencent.devops.repository.sdk.github.response.CreateIssueCommentResponse
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -42,17 +42,17 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ISSUES_GITHUB"], description = "服务-github-issues")
+@Tag(name = "SERVICE_ISSUES_GITHUB", description = "服务-github-issues")
 @Path("/service/github/issues")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubIssuesResource {
 
-    @ApiOperation("创建issue评论")
+    @Operation(summary = "创建issue评论")
     @POST
     @Path("/createIssueComment")
     fun createIssueComment(
-        @ApiParam("授权token", required = true)
+        @Parameter(description = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: CreateIssueCommentRequest

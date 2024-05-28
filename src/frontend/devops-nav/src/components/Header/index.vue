@@ -4,7 +4,6 @@
             <router-link
                 class="header-logo"
                 to="/console/"
-                @click.native="setDocumentTitle"
             >
                 <span>
                     <Logo
@@ -374,12 +373,8 @@
             this.isShowTooltip = false
         }
 
-        setDocumentTitle () {
-            document.title = String(this.$t('documentTitleHome'))
-        }
-
         handleChangeLang (item) {
-            this.$setLocale(item.id).then(() => {
+            this.$setLocale(item.id, true).then(() => {
                 location.reload()
             })
         }

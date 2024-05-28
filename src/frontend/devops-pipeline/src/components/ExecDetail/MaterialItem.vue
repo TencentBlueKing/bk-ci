@@ -1,9 +1,11 @@
 <template>
-    <div class="exec-material-row">
+    <div :class="['exec-material-row', {
+        'fit-content': isFitContent
+    }]">
         <div class="material-row-info-spans">
             <span v-for="field in materialInfoKeys" :key="field">
                 <logo :name="iconArray[field] || 'commit'" size="14" />
-                <!-- <bk-link
+                <bk-link
                     v-if="includeLink(field)"
                     class="material-span"
                     theme="primary"
@@ -11,9 +13,9 @@
                     :href="getLink(field)"
                 >
                     {{ formatField(field) }}
-                </bk-link> -->
+                </bk-link>
                 <span
-                    v-if="isMR && field === 'webhookSourceTarget'"
+                    v-else-if="isMR && field === 'webhookSourceTarget'"
                     class="mr-source-target"
                 >
                     <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookSourceBranch, allowHTML: false }">{{ material.webhookSourceBranch }}</span>
@@ -27,13 +29,18 @@
                     :delay="[300, 0]"
                     class="material-span-tooltip-box"
                 >
-                    <span class="material-span">
+                    <span :class="{
+                              'material-span': true,
+                              'material-url': field === 'materialId'
+                          }"
+                        @click="handleToLink(field)"
+                    >
                         {{ materialInfoValueMap[field] }}
                     </span>
                 </bk-popover>
             </span>
         </div>
-        <span v-if="showMore" @mouseenter="emitMouseEnter" class="exec-more-material">
+        <span v-if="showMore" @mouseenter="emitMouseEnter" @click="emitClick" class="exec-more-material">
             <i class="devops-icon icon-ellipsis" />
         </span>
     </div>
@@ -42,12 +49,16 @@
     import Logo from '@/components/Logo'
     import { getMaterialIconByType } from '@/utils/util'
     export default {
-        emits: ['mouseEnter'],
+        emits: ['mouseEnter', 'click'],
         components: {
             Logo
         },
         props: {
             isWebhook: Boolean,
+            isFitContent: {
+                type: Boolean,
+                default: true
+            },
             showMore: {
                 type: Boolean,
                 default: true
@@ -62,6 +73,7 @@
             isMR () {
                 return [
                     'MERGE_REQUEST',
+                    'PULL_REQUEST',
                     'MERGE_REQUEST_ACCEPT'
                 ].includes(this.material?.webhookEventType)
             },
@@ -86,7 +98,11 @@
                     noteId: 'webhook-note',
                     issueIid: 'webhook-issue',
                     reviewId: 'webhook-review',
-                    webhookSourceTarget: 'branch'
+                    webhookSourceTarget: 'branch',
+                    parentPipelineName: 'pipeline',
+                    parentBuildNum: 'sharp',
+                    materialName: scmIcon,
+                    materialId: 'link'
                 }
             },
             materialInfoKeys () {
@@ -105,6 +121,7 @@
                             'webhookCommitId'
                         ]
                     case 'MERGE_REQUEST':
+                    case 'PULL_REQUEST':
                         return [
                             'webhookAliasName',
                             'webhookSourceTarget',
@@ -147,11 +164,21 @@
                             'webhookAliasName',
                             'webhookCommitId'
                         ]
-                    default:
+                    case 'PARENT_PIPELINE':
                         return [
-                            'webhookAliasName',
-                            'webhookBranch'
+                            'parentPipelineName',
+                            'parentBuildNum'
                         ]
+                    default:
+                        return this.material?.materialId
+                            ? [
+                                'materialName',
+                                'materialId'
+                            ]
+                            : [
+                                'webhookAliasName',
+                                'webhookBranch'
+                            ]
                 }
             },
             materialInfoValueMap () {
@@ -165,16 +192,20 @@
             emitMouseEnter () {
                 this.$emit('mouseenter')
             },
+            emitClick () {
+                this.$emit('click')
+            },
             includeLink (field) {
                 return [
                     'newCommitId',
-                    // 'reviewId',
+                    'reviewId',
                     'issueIid',
                     'noteId',
                     'mrIid',
-                    'tagName'
-                    // 'webhookCommitId'
-                ].includes(field) && !this.isSVN
+                    'tagName',
+                    'webhookCommitId',
+                    'parentBuildNum'
+                ].includes(field) && !this.isSVN && this.getLink(field)
             },
             formatField (field) {
                 switch (field) {
@@ -191,26 +222,98 @@
                 }
             },
             getLink (field) {
-                // const webHookRepo = this.material?.webhookRepoUrl?.replace?.(/\.git$/, '') ?? ''
                 switch (field) {
                     case 'newCommitId':
                         return this.material?.url ?? ''
-                    // case 'reviewId':
-                    //     return `${webHookRepo}/reviews/${this.material[field]}` ?? ''
-                    // case 'issueIid':
-                    //     return `${webHookRepo}/issues/${this.material[field]}` ?? ''
-                    // case 'noteId':
-                    //     return `${webHookRepo}/merge_requests/${this.material.mrIid}/comments#note_${this.material[field]}` ?? ''
-                    // case 'mrIid':
-                    //     return this.material?.mrUrl ?? `${webHookRepo}/merge_requests/${this.material[field]}` ?? ''
-                    // case 'tagName':
-                    //     return `${webHookRepo}/-/tags/${this.material[field]}` ?? ''
-                    // case 'webhookCommitId':
-                    //     return `${webHookRepo}/commit/${this.material[field]}` ?? ''
                     default:
-                        return ''
+                        return this.material?.linkUrl ?? ''
+                }
+            },
+
+            handleToLink (field) {
+                if (field === 'materialId') {
+                    window.open(this.getLink(field), '_blink')
                 }
             }
         }
     }
 </script>
+<style lang="scss">
+    @import "@/scss/mixins/ellipsis";
+    .exec-material-row {
+            // padding: 0 0 8px 0;
+            display: grid;
+            grid-gap: 20px;
+            height: 38px;
+            grid-auto-flow: column;
+            &.fit-content {
+                grid-auto-columns: minmax(auto, max-content) 36px;
+                .material-row-info-spans {
+                    grid-auto-columns: minmax(auto, max-content);
+                }
+            }
+
+            .material-row-info-spans {
+                display: grid;
+                grid-auto-flow: column;
+                grid-gap: 20px;
+                > span {
+                    @include ellipsis();
+                    display: inline-flex;
+                    min-width: auto;
+                    align-items: center;
+                    > svg {
+                        flex-shrink: 0;
+                        margin-right: 6px;
+                    }
+                }
+            }
+            &.visible-material-row {
+              border: 1px solid transparent;
+              padding-bottom: 0px;
+              align-items: center;
+
+            }
+            .exec-more-material {
+                display: inline-flex;
+                align-items: center;
+
+            }
+
+            .mr-source-target {
+                display: grid;
+                align-items: center;
+                grid-auto-flow: column;
+                grid-gap: 6px;
+                .icon-arrows-right {
+                    color: #C4C6CC;
+                    font-weight: 800;
+                }
+                > span {
+                    @include ellipsis();
+                }
+            }
+            .material-span-tooltip-box {
+                flex: 1;
+                overflow: hidden;
+                font-size: 0;
+                > .bk-tooltip-ref {
+                    width: 100%;
+                    .material-span {
+                        width: 100%;
+                    }
+                }
+            }
+            .material-span {
+              @include ellipsis();
+              font-size: 12px;
+              .bk-link-text {
+                font-size: 12px;
+              }
+            }
+            .material-url {
+                color: #3a84ff;
+                cursor: pointer;
+            }
+          }
+</style>

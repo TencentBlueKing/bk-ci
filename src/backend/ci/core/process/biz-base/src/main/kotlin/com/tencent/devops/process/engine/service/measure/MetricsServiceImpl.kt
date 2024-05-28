@@ -45,7 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.dao.PipelineStageTagDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -113,6 +113,7 @@ class MetricsServiceImpl constructor(
             pipelineName = pipelineName ?: "",
             buildId = buildId,
             buildNum = buildInfo.buildNum,
+            trigger = buildInfo.trigger,
             repoUrl = webhookInfo?.webhookRepoUrl,
             branch = webhookInfo?.webhookBranch,
             startUser = buildInfo.startUser,
@@ -227,7 +228,7 @@ class MetricsServiceImpl constructor(
         )
         containerMetricsDatas.add(
             BuildEndContainerMetricsData(
-                containerId = container.containerId ?: "",
+                containerId = container.id ?: "",
                 successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
                 costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
                 atomCodes = containerAtomCodes,

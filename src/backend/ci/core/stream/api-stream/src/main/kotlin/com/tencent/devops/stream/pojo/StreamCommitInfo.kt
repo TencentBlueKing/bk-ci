@@ -29,46 +29,45 @@ package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.sdk.github.response.CommitResponse
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.scm.pojo.Commit
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("git 查询代码库项目信息| USER 使用")
+@Schema(title = "git 查询代码库项目信息| USER 使用")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StreamCommitInfo(
     @JsonProperty("author_email")
-    @ApiModelProperty(name = "author_email")
+    @get:Schema(title = "author_email")
     val authorEmail: String?,
     @JsonProperty("author_name")
-    @ApiModelProperty(name = "author_name")
+    @get:Schema(title = "author_name")
     val authorName: String?,
     @JsonProperty("authored_date")
-    @ApiModelProperty(name = "authored_date")
+    @get:Schema(title = "authored_date")
     val authoredDate: String?,
     @JsonProperty("committed_date")
-    @ApiModelProperty(name = "committed_date")
+    @get:Schema(title = "committed_date")
     val committedDate: String?,
     @JsonProperty("committer_email")
-    @ApiModelProperty(name = "committer_email")
+    @get:Schema(title = "committer_email")
     val committerEmail: String?,
     @JsonProperty("committer_name")
-    @ApiModelProperty(name = "committer_name")
+    @get:Schema(title = "committer_name")
     val committerName: String?,
     @JsonProperty("created_at")
-    @ApiModelProperty(name = "created_at")
+    @get:Schema(title = "created_at")
     val createdAt: String,
     val id: String,
     val message: String?,
     @JsonProperty("parent_ids")
-    @ApiModelProperty(name = "parent_ids")
+    @get:Schema(title = "parent_ids")
     val parentIds: List<String>?,
     @JsonProperty("short_id")
-    @ApiModelProperty(name = "short_id")
+    @get:Schema(title = "short_id")
     val shortId: String?,
     val title: String?,
     @JsonProperty("scroll_object_id")
-    @ApiModelProperty(name = "scroll_object_id")
+    @get:Schema(title = "scroll_object_id")
     val scrollObjectId: Any?
 ) {
     constructor(c: Commit) : this(

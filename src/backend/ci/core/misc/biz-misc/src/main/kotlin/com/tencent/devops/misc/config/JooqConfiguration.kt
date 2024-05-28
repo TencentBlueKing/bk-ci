@@ -76,11 +76,12 @@ class JooqConfiguration {
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
-            val matchResult = pkgRegex.toRegex().find(packageName)
-            if (matchResult != null) {
-                val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
+            val matchResult = pkgRegex.toRegex().findAll(packageName)
+            if (matchResult.any()) {
+                val module = matchResult.last().value.substring(1)
+                val configuration = configurationMap["${module}JooqConfiguration"]
                 return if (configuration != null) {
-                    LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
+                    LOG.info("dslContext_init|${module}JooqConfiguration|${declaringClass.name}")
                     DSL.using(configuration)
                 } else {
                     null
@@ -160,6 +161,15 @@ class JooqConfiguration {
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
         return generateDefaultConfiguration(environmentDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun imageJooqConfiguration(
+        @Qualifier("imageDataSource")
+        imageDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(imageDataSource, executeListenerProviders)
     }
 
     private fun generateDefaultConfiguration(

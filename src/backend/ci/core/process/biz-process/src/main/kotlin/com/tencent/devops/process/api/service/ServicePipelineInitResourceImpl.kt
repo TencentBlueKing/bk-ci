@@ -28,42 +28,22 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
-import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineResp
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
-import com.tencent.devops.process.pojo.CheckImageInitPipelineResp
-import com.tencent.devops.process.service.AtomMarketInitPipelineService
-import com.tencent.devops.process.service.store.CheckImageInitPipelineService
+import com.tencent.devops.process.service.store.StoreInitPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineInitResourceImpl @Autowired constructor(
-    private val atomMarketInitPipelineService: AtomMarketInitPipelineService,
-    private val checkImageInitPipelineService: CheckImageInitPipelineService
+    private val storeInitPipelineService: StoreInitPipelineService
 ) : ServicePipelineInitResource {
 
-    override fun initAtomMarketPipeline(
+    override fun initStorePipeline(
         userId: String,
-        projectCode: String,
-        atomMarketInitPipelineReq: AtomMarketInitPipelineReq
-    ): Result<AtomMarketInitPipelineResp> {
-        return atomMarketInitPipelineService.initPipeline(
-            userId = userId,
-            projectCode = projectCode,
-            atomMarketInitPipelineReq = atomMarketInitPipelineReq
-        )
-    }
-
-    override fun initCheckImagePipeline(
-        userId: String,
-        projectCode: String,
-        checkImageInitPipelineReq: CheckImageInitPipelineReq
-    ): Result<CheckImageInitPipelineResp> {
-        return checkImageInitPipelineService.initCheckImagePipeline(
-            userId = userId,
-            projectCode = projectCode,
-            checkImageInitPipelineReq = checkImageInitPipelineReq
-        )
+        projectId: String,
+        storeInitPipelineReq: StoreInitPipelineReq
+    ): Result<StoreInitPipelineResp> {
+        return storeInitPipelineService.initPipeline(userId, projectId, storeInitPipelineReq)
     }
 }

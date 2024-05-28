@@ -32,41 +32,50 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_USER"], description = "用户信息接口")
+@Tag(name = "SERVICE_USER", description = "用户信息接口")
 @Path("/service/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceUserResource {
     @GET
     @Path("/cachedDetail")
-    @ApiOperation("从缓存中查询用户详细信息")
+    @Operation(summary = "从缓存中查询用户详细信息")
     fun getDetailFromCache(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<UserDeptDetail>
 
     @GET
     @Path("/projects/{projectCode}/roles")
-    @ApiOperation("获取项目指定角色用户")
+    @Operation(summary = "获取项目指定角色用户")
     fun getProjectUserRoles(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @QueryParam("roleId")
         roleId: BkAuthGroup
     ): Result<List<String>>
+
+    @POST
+    @Path("/cachedDetail/list")
+    @Operation(summary = "从缓存中查询用户详细信息列表")
+    fun listDetailFromCache(
+        @Parameter(description = "用户ID列表", required = true)
+        userIds: List<String>
+    ): Result<List<UserDeptDetail>>
 }

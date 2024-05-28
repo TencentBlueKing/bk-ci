@@ -53,7 +53,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
@@ -90,7 +90,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineAtomReplaceHistoryDao: PipelineAtomReplaceHistoryDao,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val templateFacadeService: TemplateFacadeService,
@@ -480,7 +480,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 userId = template.creator,
                 templateId = templateId,
                 versionName = templateModel.versionName,
-                template = model
+                template = model,
+                checkPermissionFlag = false
             ).toInt()
             val templateVersion = templateModel.version.toInt()
             pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
@@ -510,7 +511,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String,
         userId: String
     ) {
-        if (pipelineIdSet == null || pipelineIdSet.isEmpty()) {
+        if (pipelineIdSet.isNullOrEmpty()) {
             logger.info("pipelineIdSet is empty, skip")
             return
         }
@@ -525,7 +526,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             userId = userId
         )
         // 查询需要替换插件的流水线集合
-        val pipelineModelList = pipelineResDao.listLatestModelResource(dslContext, pipelineIdSet)
+        val pipelineModelList = pipelineResourceDao.listLatestModelResource(dslContext, pipelineIdSet)
         pipelineModelList?.forEach nextPipelineModel@{ pipelineModelObj ->
             try {
                 if (replacePipelineModelAtom(
@@ -726,7 +727,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (projectManager == null) {
             val projectManagers =
                 client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
-            if (projectManagers == null || projectManagers.isEmpty()) {
+            if (projectManagers.isNullOrEmpty()) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = ProcessMessageCode.QUERY_USER_INFO_FAIL
@@ -852,7 +853,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 toAtomCode = toAtomCode,
                 toAtomVersion = toAtomVersion,
                 fromField = fromParamName,
-                fromFieldValue = fromAtomInputParamMap?.get(fromParamName),
+                fromFieldValue = fromAtomInputParamMap?.get(fromParamName) ?: paramReplaceInfo.toParamDefaultValue,
                 toField = toParamName,
                 toFieldDefaultValue = paramReplaceInfo.toParamValue
             )
@@ -882,8 +883,10 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             } else {
                 fromAtomInputParamMap?.get(fromParamName)
             }
-            if (inputParamValue != null) {
-                toAtomInputParamMap[toAtomInputParamName] = inputParamValue
+            // 被替换插件参数没有值则用配置的默认值作为替换插件参数值
+            val toAtomInputParamValue = inputParamValue ?: paramReplaceInfo.toParamDefaultValue
+            if (toAtomInputParamValue != null) {
+                toAtomInputParamMap[toAtomInputParamName] = toAtomInputParamValue
             }
             return true
         }

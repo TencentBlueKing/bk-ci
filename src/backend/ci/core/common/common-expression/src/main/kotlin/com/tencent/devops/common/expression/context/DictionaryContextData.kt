@@ -32,13 +32,13 @@ import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
 import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import java.util.TreeMap
 
-class DictionaryContextData :
+open class DictionaryContextData :
     PipelineContextData(PipelineContextDataType.DICTIONARY),
     Iterable<Pair<String, PipelineContextData?>>,
     IReadOnlyObject {
 
-    private var mIndexLookup: TreeMap<String, Int>? = null
-    private var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
+    protected open var mIndexLookup: TreeMap<String, Int>? = null
+    protected open var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
 
     override val values: Iterable<Any?>
         get() {
@@ -56,7 +56,7 @@ class DictionaryContextData :
         return Pair(null, false)
     }
 
-    private val indexLookup: MutableMap<String, Int>
+    protected val indexLookup: MutableMap<String, Int>
         get() {
             if (mIndexLookup == null) {
                 mIndexLookup = TreeMap<String, Int>()
@@ -88,13 +88,13 @@ class DictionaryContextData :
         }
     }
 
-    operator fun get(k: String): PipelineContextData? {
+    open operator fun get(k: String): PipelineContextData? {
         // Existing
         val index = indexLookup[k] ?: return null
         return list[index].value
     }
 
-    operator fun IReadOnlyObject.get(key: String): Any? {
+    open operator fun IReadOnlyObject.get(key: String): Any? {
         val index = indexLookup[key] ?: return null
         return list[index].value
     }
@@ -155,7 +155,7 @@ class DictionaryContextData :
         return mList.map { pair -> Pair(pair.key, pair.value); }.iterator()
     }
 
-    private data class DictionaryContextDataPair(
+    protected data class DictionaryContextDataPair(
         val key: String,
         val value: PipelineContextData?
     )

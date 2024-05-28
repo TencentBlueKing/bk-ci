@@ -37,8 +37,8 @@ package com.tencent.devops.process.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -56,6 +56,7 @@ object ProcessMessageCode {
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
 
     const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip" // 非定时触发，直接跳过
+    const val BK_RETRY_TIMED_TRIGGER_SKIP = "bkRetryTimedTriggerSkip" // 重试定时触发的构建，直接跳过
     const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty" // 第一阶段的环境不能为空
     const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed" // 质量红线({0})检测已通过
     const val BK_QUALITY_CHECK_INTERCEPTED = "bkQualityCheckIntercepted" // 质量红线({0})检测被拦截
@@ -64,13 +65,17 @@ object ProcessMessageCode {
     const val BK_QUALITY_CHECK_RESULT = "bkQualityCheckResult" // 检测红线结果
     const val BK_AUDIT_TIMEOUT = "bkAuditTimeout" // 审核超时
     const val BK_AUDIT_RESULT = "bkAuditResult" // 步骤审核结束，审核结果：[{0}]，审核人：{1}
+
     // 正在处理当前上报的任务, 请稍等。。。
     const val BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT = "bkProcessingCurrentReportedTaskPleaseWait"
+
     // <viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>
     const val BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER = "bkViewIdAndNameCannotBeEmptyTogether"
+
     // 因【Git事件触发】插件中，MR Request Hook勾选了【MR为同源同目标分支时，等待队列只保留最新触发的任务】配置，该次构建已被新触发的构建
     const val BK_TRIGGERED_BY_GIT_EVENT_PLUGIN = "bkTriggeredByGitEventPlugin"
     const val BK_BUILD_IN_REVIEW_STATUS = "bkBuildInReviewStatus" // 项目【{0}】下的流水线【{1}】#{2} 构建处于待审核状态
+
     // 用户（{0}) 没有流水线({1})的执行权限
     const val BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS = "bkUserNoPipelineExecutePermissions"
     const val BK_REMOTE_CALL_SOURCE_IP = "bkRemoteCallSourceIp" // 本次远程调用的来源IP是[$sourceIp]
@@ -152,6 +157,7 @@ object ProcessMessageCode {
     const val ERROR_NORMAL_STAGE_JOB_CONDITION = "2101066" // 流水线: 普通stage下的[{0}]Job运行条件配置错误: {0}
     const val ERROR_EMPTY_JOB = "2101067" // 流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件
     const val ERROR_PIPELINE_MODEL_TOO_LARGE = "2101068" // 流水线: 流水线模型超限，阈值为[{0}]个字符，请联系发布者
+
     // 流水线: 流水线下[{0}]的[{1}]数量超限，阈值为[{2}]个，请联系发布者
     const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101069"
     const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值超限，阈值为[{2}]个字符，请联系发布者
@@ -168,8 +174,10 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
     const val ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD = "2101083" // 流水线版本还存在构建记录，不允许删除
     const val ERROR_JOB_TIME_OUT_PARAM_VAR = "2101084" // Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)
+
     // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
     const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085"
+
     // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
     const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086"
     const val GIT_INVALID = "2101087" // 无效的GIT仓库
@@ -185,6 +193,7 @@ object ProcessMessageCode {
     const val ERROR_JOB_MATRIX_YAML_CONFIG_ERROR = "2101097" // Job[{0]的矩阵YAML配置错误:
     const val ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE = "2101098" // {0} 非 {1} 流水线
     const val ERROR_NO_MATCHING_PIPELINE = "2101099" // 没有找到对应的流水线
+
     // 子流水线不允许循环调用,循环流水线:projectId:{0},pipelineId:{1}
     const val ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL = "2101100"
     const val ERROR_MAX_PIPELINE_COUNT_PER_PROJECT = "2101101" // 该项目最多只能创建{0}条流水线
@@ -210,6 +219,7 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ENV_ID_IS_NULL = "2101120" // 环境ID未初始化
     const val ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS = "2101121" // 以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames
     const val ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI = "2101122" // 用户没有操作这些环境的权限！环境：$noExistsEnvNames
+
     // "以下这些环境id不存在,请重新修改流水线！id：
     const val ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS = "2101123"
     const val ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL = "2101124" // 支持 目标环境类型: {0}
@@ -281,16 +291,78 @@ object ProcessMessageCode {
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
     const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
     const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
+    const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101183" // 用户没有操作模板的权限
+
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID = "2101184" // 流水线版本[{0}]不存在
+    const val ERROR_NO_PIPELINE_DRAFT_EXISTS = "2101185" // 该流水不存在草稿版本
+    const val ERROR_OCCURRED_IN_TRANSFER = "2101186" // 转换时出现报错
+    const val ERROR_PIPELINE_CONSTANTS_BLANK_ERROR = "2101187" // 常量({0})的取值为空
+    const val ERROR_PIPELINE_YAML_FILENAME = "2101188" // 流水线YAML文件后缀{0}不正确
+    const val ERROR_PIPELINE_WITH_EMPTY_STAGE = "2101189" // 编辑保存stage不能为空
+    const val ERROR_NO_RELEASE_PIPELINE_VERSION = "2101190" // 无发布版本的流水线无法执行
+
+    const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101191" // 触发详情{0}不存在
+    const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101192" // 触发事件{0}不存在
+    const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101193" // 触发类型{0}不支持重放
+    const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101194" // 重放流水线ID不能为空
+    const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101195" // webhook {0} 不存在
+
+    const val ERROR_GET_GIT_PROJECT_INFO = "2101196" // 获取git项目信息失败
+    const val ERROR_GET_GIT_MERGE_INFO = "2101197" // 获取mr信息失败
+    const val ERROR_GET_GIT_MERGE_REVIEW = "2101198" // 获取mr view信息失败
+    const val ERROR_GET_GIT_MERGE_CHANGE = "2101199" // 获取mr change信息失败
+    const val ERROR_GET_GIT_FILE_TREE = "2101200" // 获取git文件树失败
+    const val ERROR_GET_YAML_CONTENT = "2101201" // 获取yaml文件内容失败
+    const val ERROR_GET_GIT_FILE_INFO = "2101202" // 获取文件信息失败
+    const val ERROR_CI_YAML_NEED_MERGE_OR_REBASE = "2101203" //
+    const val ERROR_DEVNET_TIMEOUT = "2101204" //
+    const val UNKNOWN_ERROR = "2101205"
+    const val YAML_VIEW_CANNOT_DELETE = "2101206" // 由开启 PAC 模式自动创建，不支持手动修改和删除
+    const val YAML_VIEW_CANNOT_UPDATE = "2101207" // 由开启 PAC 模式自动创建，不支持手动添加/移除流水线
+    const val YAML_VIEW_CANNOT_BULK_REMOVE = "2101208" // 由开启 PAC 模式自动创建，删除流水线请前往代码库操作
+    const val ERROR_GET_COMMIT_INFO = "2101209" // 获取commit信息失败
+    const val ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH = "2101210" // 已开启PAC模式,不能删除默认分支yaml关联的流水线
+    const val ERROR_YAML_CONTENT_IS_EMPTY = "2101211" // yaml文件内容不能为空
+    const val ERROR_YAML_FILE_NAME_FORMAT = "2101212" // yaml文件名格式错误,仅支持yaml、yml后缀和一级子目录
+    const val ERROR_PIPELINE_BOUND_YAML = "2101213" // 流水线已绑定文件{0},不能修改
+    const val ERROR_PIPELINE_BOUND_REPO = "2101214" // 流水线已绑定代码库{0},不能修改
+    const val ERROR_YAML_BOUND_PIPELINE = "2101215" // 文件{0}已绑定流水线{1}
+    const val ERROR_YAML_PUSH_NO_REPO_PERMISSION = "2101216" // 发布必须仓库developer以上权限
+    const val ERROR_REPO_NO_INIT = "2101217" // 默认分支不存在,请先初始化代码库
+    const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
+    const val ERROR_VERSION_IS_NOT_UPDATED = "2101219" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
+    const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
+    const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
+    const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容为空，请检查
+    const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101235" // 创建分支失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_BRANCH_NO_PERMISSION = "2101236" // 用户{0}没有代码库{1}的创建分支权限
+    const val ERROR_YAML_PUSH_CREATE_FILE = "2101237" // 创建文件失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_FILE_NO_PERMISSION = "2101238" // 用户{0}没有工蜂仓库{1}的创建文件权限
+    const val ERROR_YAML_PUSH_CREATE_MERGE_REQUEST = "2101239" // 创建mr失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_MERGE_REQUEST_NO_PERMISSION = "2101240" // 用户{0}没有工蜂仓库{1}的创建mr权限
+    const val ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION = "2101241" // 工蜂仓库({0})不存在或没有权限访问
+    const val ERROR_TGIT_SERVER_EXCEPTION = "2101242" // 工蜂服务异常
+
+    const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
+    // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
+
+    const val ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY = "2101243" // 定时触发SVN分支不能为空
+    const val ERROR_PIPELINE_ELEMENT_CHECK_FAILED = "2101244" // 流水线有效性校验失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
+
     // 开始对文件（{0}）执行Gcloud相关操作，详情请去gcloud官方地址查看：
     const val BK_START_PERFORMING_GCLOUD_OPERATION = "bkStartPerformingGcloudOperation"
     const val BK_START_UPLOAD_OPERATION = "bkStartUploadOperation" // 开始执行 \"上传动态资源版本\" 操作
     const val BK_OPERATION_PARAMETERS = "bkOperationParameters" // \"上传动态资源版本\" 操作参数：
     const val BK_QUERY_VERSION_UPLOAD = "bkQueryVersionUpload" // 开始执行 \"查询版本上传 CDN 任务状态\" 操作\n
     const val BK_WAIT_QUERY_VERSION = "bkWaitQueryVersion" // \"等待查询版本上传 CDN 任务状态\" 操作执行完毕: \n
+
     // \"查询版本上传 CDN 任务状态\" 操作 成功执行完毕\n
     const val BK_OPERATION_COMPLETED_SUCCESSFULLY = "bkOperationCompletedSuccessfully"
     const val BK_FAILED_UPLOAD_FILE = "bkFailedUploadFile" // 上传文件失败:
@@ -303,6 +375,7 @@ object ProcessMessageCode {
     const val BK_MESSAGE_SUBJECT_EMPTY = "bkMessageSubjectEmpty" // 邮件主题为空
     const val BK_EXPERIENCE_PATH_EMPTY = "bkExperiencePathEmpty" // 体验路径为空
     const val BK_INCORRECT_NOTIFICATION_METHOD = "bkIncorrectNotificationMethod" // 通知方式不正确
+
     // 版本体验({0})创建成功
     const val BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY = "bkVersionExperienceCreatedSuccessfully"
     const val BK_VIEW_RESULT = "bkViewResult" // 查看结果:
@@ -310,6 +383,7 @@ object ProcessMessageCode {
     const val BK_MESSAGE_CONTENT_EMPTY = "bkMessageContentEmpty" // Message Body is empty(消息内容为空)
     const val BK_EMPTY_TITLE = "bkEmptyTitle" // Message Title is empty(标题为空)
     const val BK_COMPUTER_VIEW_DETAILS = "bkComputerViewDetails" // {0}\n\n电脑查看详情：{1}\n手机查看详情：{2}
+
     // send enterprise wechat message(发送企业微信消息):\n{0}\nto\n{1}
     const val BK_SEND_WECOM_MESSAGE = "bkSendWecomMessage"
     const val BK_INVALID_NOTIFICATION_RECIPIENT = "bkInvalidNotificationRecipient" // 通知接收者不合法:
@@ -319,8 +393,10 @@ object ProcessMessageCode {
     const val BK_SEND_WECOM_CONTENT_FAILED = "bkSendWecomContentFailed" // 发送企业微信内容: ({0}) 到 {1}失败:
     const val BK_PULL_GIT_WAREHOUSE_CODE = "bkPullGitWarehouseCode" // 拉取Git仓库代码
     const val BK_AUTOMATIC_EXPORT_NOT_SUPPORTED = "bkAutomaticExportNotSupported"
+
     // ### 可以通过 runs-on: macos-10.15 使用macOS公共构建集群。
     const val BK_BUILD_CLUSTERS_THROUGH = "bkBuildClustersThrough"
+
     // 注意默认的Xcode版本为12.2，若需自定义，请在JOB下自行执行 xcode-select 命令切换 ###
     const val BK_NOTE_DEFAULT_XCODE_VERSION = "bkNoteDefaultXcodeVersion"
     const val BK_PLEASE_USE_STAGE_AUDIT = "bkPleaseUseStageAudit" // 人工审核插件请改用Stage审核 ###
@@ -331,15 +407,19 @@ object ProcessMessageCode {
     const val BK_PIPELINED_ID = "bkPipelinedId" // # 流水线ID:
     const val BK_EXPORT_TIME = "bkExportTime" // # 导出时间:
     const val BK_EXPORT_SYSTEM_CREDENTIALS = "bkExportSystemCredentials"
+
     // # 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n
     const val BK_SENSITIVE_INFORMATION_IN_PARAMETERS = "bkSensitiveInformationInParameters"
+
     // # 注意：[插件]Stream不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n
     const val BK_STREAM_NOT_SUPPORT = "bkStreamNotSupport"
+
     // # \n# tips：部分参数导出会存在\[该字段限制导出，请手动填写]\,需要手动指定。原因有:\n
     const val BK_PARAMETERS_BE_EXPORTED = "bkParametersBeExported"
     const val BK_IDENTIFIED_SENSITIVE_INFORMATION = "bkIdentifiedSensitiveInformation" // # ①识别出为敏感信息，不支持导出\n
     const val BK_UNKNOWN_CONTEXT_EXISTS = "bkUnknownContextExists" // # ②部分字段校验格式时存在未知上下文，不支持导出\n
     const val BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE = "bkAutomaticExportNotSupportedImage"
+
     // ###请直接填入镜像(TLinux2.2公共镜像)的URL地址，若存在鉴权请增加 credentials 字段###
     const val BK_ENTER_URL_ADDRESS_IMAGE = "bkEnterUrlAddressImage"
     const val BK_ADMINISTRATOR = "bkAdministrator" // 管理员
@@ -350,20 +430,26 @@ object ProcessMessageCode {
     const val BK_CHECK_INTEGRITY_YAML = "bkCheckIntegrityYaml" // 请检查YAML的完整性，或切换为研发商店推荐的插件后再导出
     const val BK_BEE_CI_NOT_SUPPORT = "bkBeeCiNotSupport" // 工蜂CI不支持蓝盾老版本插件
     const val BK_SEARCH_STORE = "bkSearchStore" // 请在研发商店搜索新插件替换
+
     // # 注意：工蜂CI暂不支持当前类型的构建机
     const val BK_NOT_SUPPORT_CURRENT_CONSTRUCTION_MACHINE = "bkNotSupportCurrentConstructionMachine"
     const val BK_EXPORT = "bkExport" // 的导出,
     const val BK_CHECK_POOL_FIELD = "bkCheckPoolField" // 需检查JOB({0})的Pool字段
     const val BK_CONSTRUCTION_MACHINE_NOT_SUPPORTED = "bkConstructionMachineNotSupported" // # 注意：暂不支持当前类型的构建机
+
     // # 注意：【{0}】的环境【{1}】在新业务下可能不存在，
     const val BK_NOT_EXIST_UNDER_NEW_BUSINESS = "bkNotExistUnderNewBusiness"
+
     // 请手动修改成存在的环境，并检查操作系统是否正确
     const val BK_CHECK_OPERATING_SYSTEM_CORRECT = "bkCheckOperatingSystemCorrect"
+
     // # 注意：【{0}】的节点【{1}】在新业务下可能不存在，
     const val BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS = "bkNodeNotExistUnderNewBusiness"
     const val BK_PLEASE_MANUALLY_MODIFY = "bkPleaseManuallyModify" // 请手动修改成存在的节点
+
     // # 注意：【{0}】仅对PCG业务可见，请检查当前业务是否属于PCG！ \n
     const val BK_ONLY_VISIBLE_PCG_BUSINESS = "bkOnlyVisiblePcgBusiness"
+
     // # 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），
     const val BK_WORKER_BEE_CI_NOT_SUPPORT = "bkWorkerBeeCiNotSupport"
     const val BK_MODIFICATION_GUIDELINES = "bkModificationGuidelines"
@@ -386,16 +472,21 @@ object ProcessMessageCode {
     const val BK_JOB_QUEUE_TIMEOUT = "bkJobQueueTimeout" // Job排队超时，请检查并发配置/Queue timeout
     const val BK_TRIGGER_USER = "bkTriggerUser" // 触发人(trigger user)
     const val BK_START_USER = "bkStartUser" // 执行人(start user)
+
     // [自定义变量全部满足时不运行](Don‘t run it when all the custom variables are matched)
     const val BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED = "bkWhenTheCustomVariablesAreAllSatisfied"
+
     // [自定义变量全部满足时运行](Run it when all the custom variables are matched)
     const val BK_CUSTOM_VARIABLES_ARE_ALL_SATISFIED = "bkCustomVariablesAreAllSatisfied"
     const val BK_CHECK_TASK_RUN_CONDITION = "bkCheckTaskRunCondition" // 检查插件运行条件/Check Task Run Condition:
     const val BK_TASK_DISABLED = "bkTaskDisabled" // [插件被禁用](Task disabled) = true
+
     // [只有前面有任务失败时才运行](Only when a previous task has failed)
     const val BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED = "bkOnlyWhenPreviousTaskHasFailed"
+
     // [即使前面有插件运行失败也运行，除非被取消才不运行] (Even if a previous task has failed, unless the build was canceled)
     const val BK_IT_DOES_NOT_RUN_UNLESS_IT_IS_CANCELED = "bkItDoesNotRunUnlessItIsCanceled"
+
     // [即使前面有插件运行失败也运行，即使被取消也运行](Run even if a previous plugin failed, and run even if it was cancelled)
     const val BK_RUNS_EVEN_IF_CANCELED = "bkRunsEvenIfCanceled"
     const val BK_JOB_FAILURE_OR_CANCEL = "bkJobFailureOrCancel" // Job失败或被取消(Job failure or cancel) skip=true
@@ -403,10 +494,12 @@ object ProcessMessageCode {
     const val BK_RELEASE_LOCK = "bkReleaseLock" // 释放互斥组锁(Release Lock)
     const val BK_GET_LOCKED = "bkGetLocked" // 获得锁定(Matched) 锁定期(Exp):
     const val BK_QUEUE_DISABLED = "bkQueueDisabled" // 未开启排队(Queue disabled)
+
     // 当前排队数(Queuing)[{0}], 已等待(Waiting)[{1}} seconds]
     const val BK_CURRENT_NUMBER_OF_QUEUES = "bkCurrentNumberOfQueues"
     const val BK_QUEUE_FULL = "bkQueueFull" // 队列满(Queue full)
     const val BK_ENQUEUE = "bkEnqueue" // 当前排队数(Queuing)[{0}]. 入队等待(Enqueue)
+
     // Job#{0}|互斥组Mutex[{1}]|
     const val BK_MUTUALLY_EXCLUSIVE_GROUPS = "bkMutuallyExclusiveGroups"
     const val BK_LOCKED = "bkLocked" // 锁定中(Running)
@@ -417,6 +510,7 @@ object ProcessMessageCode {
     const val BK_PREVIOUS_STAGE_SUCCESS = "bkPreviousStageSuccess" // [上游 Stage 成功时](Previous Stage Success):
     const val BK_UNEXECUTE_TASK = "bkUnexecuteTask" // 终止构建，跳过(UnExecute Task)
     const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
+
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
     const val BK_MAX_PARALLEL = "bkMaxParallel" // 并行上限/Max parallel:
@@ -431,4 +525,16 @@ object ProcessMessageCode {
     const val BK_QUALITY_IN = "bkQualityIn" // 质量红线(准入)
     const val BK_QUALITY_OUT = "bkQualityOut" // 质量红线(准出)
     const val BK_BUILD_FINISHED_AND_DENY_PAUSE = "bkBuildFinishedAndDenyPause" // 构建已结束，禁止暂停请求
+
+    // TODO: AgentReuseMutex
+    const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
+    const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
+    const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
+    const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
+
+    const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
+    // 没有子流水线执行权限错误标题
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
+    // 没有子流水线执行权限错误消息
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
 }

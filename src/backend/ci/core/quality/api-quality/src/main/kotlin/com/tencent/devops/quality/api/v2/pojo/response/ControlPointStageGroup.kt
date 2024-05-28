@@ -28,9 +28,9 @@
 package com.tencent.devops.quality.api.v2.pojo.response
 
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("控制点的分组响应")
+@Schema(title = "控制点的分组响应")
 data class ControlPointStageGroup(
     val stage: String,
     val controlPoints: List<QualityControlPoint>

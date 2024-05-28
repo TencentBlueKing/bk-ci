@@ -41,7 +41,11 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -58,8 +62,10 @@ import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -82,7 +88,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val subPipelineStatusService: SubPipelineStatusService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) {
 
     companion object {
@@ -206,7 +213,11 @@ class SubPipelineStartUpService @Autowired constructor(
                 params = arrayOf(pipelineId),
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
-
+        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
+        }
         val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId
@@ -216,10 +227,24 @@ class SubPipelineStartUpService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
         )
 
+        val parentBuildInfo = pipelineRuntimeService.getBuildInfo(
+            projectId = parentProjectId,
+            buildId = parentBuildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(parentBuildId)
+        )
+
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val model = getModel(projectId, pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
+            val resource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId, pipelineId, readyToBuildPipelineInfo.version
+            ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+                )
+            val model = resource.model
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             // #6090 拨乱反正
@@ -231,10 +256,29 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId)
             params[PIPELINE_START_PARENT_PIPELINE_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId)
+            params[PIPELINE_START_PARENT_PIPELINE_NAME] =
+                BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
+            params[PIPELINE_START_PARENT_BUILD_NUM] =
+                BuildParameters(key = PIPELINE_START_PARENT_BUILD_NUM, value = parentBuildInfo.buildNum)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId)
+            params[PIPELINE_GIT_EVENT_URL] =
+                BuildParameters(
+                    key = PIPELINE_GIT_EVENT_URL,
+                    value = pipelineUrlBean.genBuildDetailUrl(
+                        projectCode = parentProjectId,
+                        pipelineId = parentPipelineId,
+                        buildId = parentBuildId,
+                        position = null,
+                        stageId = null,
+                        needShortUrl = false
+                    )
+                )
+            // 给触发材料展示时使用
+            params[PIPELINE_WEBHOOK_EVENT_TYPE] =
+                BuildParameters(key = PIPELINE_WEBHOOK_EVENT_TYPE, value = CodeEventType.PARENT_PIPELINE.name)
             // 兼容子流水线插件按照名称调用,传递的参数没有在子流水线变量中声明，仍然可以传递
             parameters.forEach {
                 if (!params.containsKey(it.key)) {
@@ -243,7 +287,6 @@ class SubPipelineStartUpService @Autowired constructor(
             }
             // 校验父流水线最后修改人是否有子流水线执行权限
             checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
-
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
                 userId = readyToBuildPipelineInfo.lastModifyUser,
@@ -253,7 +296,9 @@ class SubPipelineStartUpService @Autowired constructor(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 model = model,
-                frequencyLimit = false
+                frequencyLimit = false,
+                versionName = resource.versionName,
+                yamlVersion = resource.yamlVersion
             ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
@@ -270,7 +315,7 @@ class SubPipelineStartUpService @Autowired constructor(
     }
 
     private fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(projectId, pipelineId, version)
+        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -309,7 +354,9 @@ class SubPipelineStartUpService @Autowired constructor(
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
-        val existModel = pipelineRepositoryService.getModel(projectId, pipelineId, pipeline.version) ?: return
+        val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId, pipelineId, pipeline.version
+        )?.model ?: return
 
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->

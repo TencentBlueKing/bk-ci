@@ -27,11 +27,10 @@
 
 package com.tencent.devops.ticket.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("证书-证书列表")
+@Schema(title = "证书-证书列表")
 data class Certs(
-    @ApiModelProperty("证书列表", required = true)
+    @get:Schema(title = "证书列表", required = true)
     val certs: List<Cert>
 )

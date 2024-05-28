@@ -4,7 +4,8 @@
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
         row-key="pipelineId"
-        height="100%"
+        :max-height="maxHeight"
+        row-auto-height
         :data="pipelineList"
         :size="tableSize"
         :pagination="pagination"
@@ -15,9 +16,6 @@
         :default-sort="sortField"
         @selection-change="handleSelectChange"
         @header-dragend="handelHeaderDragend"
-        @row-mouse-enter="handleRowMouseEnter"
-        @row-mouse-leave="handleRowMouseLeave"
-        :row-style="{ height: '56px' }"
         v-on="$listeners"
         :key="viewId"
     >
@@ -29,12 +27,14 @@
             </bk-button>
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
-            <template slot-scope="{ row, $index }">
+        <bk-table-column v-if="!isPatchView && !isDeleteView" width="30" fixed="left">
+            <template slot-scope="{ row }">
                 <bk-button
-                    v-show="showCollectIndex === $index || row.hasCollect"
                     text
-                    class="icon-star-btn"
+                    :class="{
+                        'icon-star-btn': true,
+                        'is-collect': row.hasCollect
+                    }"
                     :theme="row.hasCollect ? 'warning' : ''"
                     @click="collectHandler(row)">
                     <i :class="{
@@ -45,24 +45,37 @@
                 </bk-button>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
+        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <span
-                    v-if="props.row.permissions && !props.row.permissions.canView"
-                    class="pointer"
-                    @click="applyPermission(props.row)"
-                >
-                    {{props.row.pipelineName}}
-                </span>
-                <router-link
-                    v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
-                    class="pipeline-cell-link"
-                    :disabled="props.row.permissions && !props.row.permissions.canView"
-                    :to="props.row.historyRoute">
-                    {{props.row.pipelineName}}
-                </router-link>
-                <span v-else>{{props.row.pipelineName}}</span>
+                <div class="pipeline-name-wrapper" :key="props.row.pipelineName">
+                    <div class="pipeline-name" v-bk-overflow-tips>
+                        <span
+                            v-if="props.row.permissions && !props.row.permissions.canView"
+                            class="pointer"
+                            @click="applyPermission(props.row)"
+                        >
+                            {{props.row.pipelineName}}
+                        </span>
+                        <router-link
+                            v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
+                            class="pipeline-cell-link"
+                            :disabled="props.row.permissions && !props.row.permissions.canView"
+                            :to="props.row.historyRoute">
+                            {{props.row.pipelineName}}
+                        </router-link>
+                        <span v-else>{{props.row.pipelineName}}</span>
+                    </div>
+                    <logo
+                        v-if="props.row.templateId"
+                        class="ml5 template-mode-icon"
+                        name="template-mode"
+                        size="12"
+                        v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
+                    />
+                    <bk-tag v-if="props.row.onlyDraftVersion" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
+                    <bk-tag v-else-if="props.row.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('history.branch') }}</bk-tag>
+                </div>
             </template>
         </bk-table-column>
         <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
@@ -73,7 +86,7 @@
                         :ref="`groupName_${props.$index}`"
                         v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
-                        v-bk-tooltips="{ content: viewName, delay: [300, 0], allowHTML: false }"
+                        v-bk-overflow-tips="{ delay: [500, 0], interactive: false }"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
@@ -92,9 +105,9 @@
                         <div slot="content">
                             <bk-tag
                                 v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
-                                ext-cls="pipeline-group-name-tag"
+                                ext-cls="pipeline-group-name-tag pipeline-group-more-tag"
                                 :key="hiddenGroup"
-                                v-bk-tooltips="{ content: hiddenGroup, delay: [300, 0], allowHTML: false }"
+                                v-bk-overflow-tips="{ delay: [500, 0], interactive: false }"
                                 @click="goGroup(hiddenGroup)"
                             >
                                 {{hiddenGroup}}
@@ -109,11 +122,11 @@
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
             <bk-table-column :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
-            <bk-table-column :width="tableWidthMap.createTime" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column :width="tableWidthMap.createTime" sortable="custom" :label="$t('createTime')" prop="createTime" :formatter="formatTime" />
             <bk-table-column :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column :width="tableWidthMap.createTime" key="createTime" :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
+            <bk-table-column :width="tableWidthMap.createTime" key="createTime" :label="$t('createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
             <bk-table-column :width="tableWidthMap.deleteTime" key="updateTime" :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
             <bk-table-column :width="tableWidthMap.lastModifyUser" key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>
@@ -126,19 +139,29 @@
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
-                            <router-link
+                            <span
                                 class="pipeline-cell-link pipeline-exec-msg-title"
                                 :disabled="props.row.permissions && !props.row.permissions.canView"
+                                v-perm="{
+                                    hasPermission: props.row.permissions && props.row.permissions.canView,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: props.row.pipelineId,
+                                        action: RESOURCE_ACTION.VIEW
+                                    }
+                                }"
                                 :event="props.row.permissions && props.row.permissions.canView ? 'click' : ''"
-                                :to="props.row.latestBuildRoute"
+                                @click="$router.push(props.row.latestBuildRoute)"
                             >
                                 <b>#{{ props.row.latestBuildNum }}</b>
                                 |
                                 <span>{{ props.row.lastBuildMsg }}</span>
-                            </router-link>
+                            </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
-                                    <logo :name="props.row.trigger" size="16" />
+                                    <logo :name="props.row.startType" size="16" />
                                     <span>{{ props.row.latestBuildUserId }}</span>
                                 </span>
                                 <span v-if="props.row.webhookAliasName" class="desc">
@@ -168,7 +191,7 @@
                 </div>
             </bk-table-column>
             <bk-table-column v-if="allRenderColumnMap.creator" :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
-            <bk-table-column v-if="allRenderColumnMap.created" :width="tableWidthMap.created" :label="$t('created')" prop="createTime">
+            <bk-table-column v-if="allRenderColumnMap.createTime" :width="tableWidthMap.createTime" :label="$t('created')" sortable="custom" prop="createTime">
                 <template slot-scope="props">
                     {{ prettyDateTimeFormat(props.row.createTime) }}
                 </template>
@@ -181,6 +204,8 @@
                     text
                     theme="primary"
                     v-perm="{
+                        hasPermission: props.row.permissions && props.row.permissions.canManage,
+                        disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
                             resourceType: 'project',
@@ -197,6 +222,8 @@
                     theme="primary"
                     :disabled="!isManage"
                     v-perm="{
+                        hasPermission: props.row.permissions && props.row.permissions.canManage,
+                        disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
                             resourceType: 'project',
@@ -218,12 +245,31 @@
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <span v-bk-tooltips="props.row.tooltips">
+                    <span v-if="!props.row.released">
+                        <bk-button
+                            text
+                            class="exec-pipeline-btn"
+                            @click="goEdit(props.row)"
+                            v-perm="{
+                                hasPermission: props.row.permissions && props.row.permissions.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: props.row.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            {{ $t('edit') }}
+                        </bk-button>
+                    </span>
+                    <span v-else v-bk-tooltips="props.row.tooltips">
                         <bk-button
                             text
                             theme="primary"
                             class="exec-pipeline-btn"
-                            :disabled="props.row.disabled || props.row.lock"
+                            :disabled="props.row.disabled"
                             v-perm="{
                                 hasPermission: props.row.permissions && props.row.permissions.canExecute,
                                 disablePermissionApi: true,
@@ -261,13 +307,14 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
     import ExtMenu from '@/components/pipelineList/extMenu'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
         CACHE_PIPELINE_TABLE_WIDTH_MAP,
         DELETED_VIEW_ID,
-        RECENT_USED_VIEW_ID,
-        TABLE_COLUMN_CACHE
+        PIPELINE_TABLE_COLUMN_CACHE,
+        PIPELINE_TABLE_LIMIT_CACHE,
+        RECENT_USED_VIEW_ID
     } from '@/store/constants'
     import {
         PROJECT_RESOURCE_ACTION,
@@ -285,9 +332,13 @@
             PipelineStatusIcon,
             PipelineListEmpty
         },
-        mixins: [piplineActionMixin],
+        mixins: [pipelineActionMixin],
         props: {
             isPatchView: Boolean,
+            maxHeight: {
+                type: [Number, String],
+                default: 'auto'
+            },
             filterParams: {
                 type: Object,
                 default: () => ({})
@@ -300,14 +351,14 @@
                 selectionLength: 0,
                 pagination: {
                     current: parseInt(this.$route.query.page ?? 1),
-                    limit: parseInt(this.$route.query.pageSize ?? 50),
+                    limit: 50,
                     count: 0
                 },
                 visibleTagCountList: {},
                 RESOURCE_ACTION,
                 PROJECT_RESOURCE_ACTION,
                 tableWidthMap: {},
-                tableSize: 'small',
+                tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
                 showCollectIndex: -1
@@ -322,9 +373,6 @@
             ]),
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
-            },
-            maxheight () {
-                return this.$refs?.pipelineTable?.$el?.parent?.clientHeight
             },
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID
@@ -375,7 +423,6 @@
 
         watch: {
             '$route.params.viewId': function (viewId) {
-                this.$refs?.pipelineTable?.clearSort?.()
                 this.requestList({
                     viewId,
                     page: 1
@@ -389,7 +436,7 @@
                 }
             },
             filterParams: function (filterMap, oldFilterMap) {
-                if (!isShallowEqual(filterMap, oldFilterMap)) {
+                if (!isShallowEqual(filterMap, oldFilterMap) && Object.keys(filterMap).length > 0) {
                     this.requestList({
                         ...filterMap,
                         page: 1
@@ -407,6 +454,9 @@
             }
         },
         mounted () {
+            const { pageSize } = this.$route.query
+            const tableLimit = JSON.parse(localStorage.getItem(PIPELINE_TABLE_LIMIT_CACHE)) || 50
+            pageSize ? this.pagination.limit = parseInt(pageSize) : this.pagination.limit = tableLimit
             this.tableColumn = [
                 {
                     id: 'pipelineName',
@@ -434,7 +484,7 @@
                     label: this.$t('creator')
                 },
                 {
-                    id: 'created',
+                    id: 'createTime',
                     label: this.$t('created')
                 },
                 {
@@ -443,7 +493,7 @@
                     disabled: true
                 }
             ]
-            const columnsCache = JSON.parse(localStorage.getItem(TABLE_COLUMN_CACHE))
+            const columnsCache = JSON.parse(localStorage.getItem(PIPELINE_TABLE_COLUMN_CACHE))
             if (columnsCache) {
                 this.selectedTableColumn = columnsCache.columns
                 this.tableSize = columnsCache.size
@@ -455,7 +505,7 @@
                     { id: 'lastExecTime' },
                     { id: 'lastModify' },
                     { id: 'creator' },
-                    { id: 'created' },
+                    { id: 'createTime' },
                     { id: 'operate' }
                 ]
             }
@@ -474,8 +524,7 @@
                 updateTime: 154,
                 lastModifyUser: '',
                 latestExec: 484,
-                created: 154,
-                pipelineId: 60
+                pipelineId: 120
             }
             this.requestList()
         },
@@ -500,6 +549,9 @@
             handleSelectChange (selection, ...args) {
                 this.selectionLength = selection.length
                 this.$emit('selection-change', selection, ...args)
+                this.$nextTick(() => {
+                    this.$refs?.pipelineTable?.doLayout?.()
+                })
             },
             goGroup (groupName) {
                 const group = this.groupNamesMap[groupName]
@@ -512,11 +564,24 @@
                 }
             },
             handlePageLimitChange (limit) {
+                localStorage.setItem(PIPELINE_TABLE_LIMIT_CACHE, JSON.stringify(limit))
                 this.pagination.limit = limit
+                this.$router.replace({
+                    query: {
+                        ...this.$route.query,
+                        pageSize: limit
+                    }
+                })
                 this.$nextTick(this.requestList)
             },
             handlePageChange (page) {
                 this.pagination.current = page
+                this.$router.replace({
+                    query: {
+                        ...this.$route.query,
+                        page
+                    }
+                })
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
@@ -525,11 +590,10 @@
                     const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
                     localStorage.setItem('pipelineSortType', sortType)
                     localStorage.setItem('pipelineSortCollation', collation)
-                    this.$router.push({
-                        ...this.$route,
+                    this.$router.replace({
                         query: {
                             ...this.$route.query,
-                            sortType: sortType,
+                            sortType,
                             collation
                         }
                     })
@@ -552,6 +616,7 @@
                         current: page
                     })
                     this.pipelineList = records
+                    console.log(this.pipelineList, 111)
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPos, 100)
@@ -579,7 +644,7 @@
 
                 this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
                     if (Array.isArray(pipeline.viewNames)) {
-                        const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`].clientWidth * 2
+                        const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`]?.clientWidth * 2
                         const groupNameLength = pipeline.viewNames.length
                         const moreTag = this.$refs?.[`groupNameMore_${index}`]?.$el
                         const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
@@ -612,12 +677,6 @@
                 // this.tableWidthMap.pipelineName -= 1
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             },
-            handleRowMouseEnter (index) {
-                this.showCollectIndex = index
-            },
-            handleRowMouseLeave (index) {
-                this.showCollectIndex = -1
-            },
             setTableColumn (val) {
                 if (val) {
                     this.tableColumn.splice(1, 0, {
@@ -631,10 +690,19 @@
             handleSettingChange ({ fields, size }) {
                 this.selectedTableColumn = fields
                 this.tableSize = size
-                localStorage.setItem(TABLE_COLUMN_CACHE, JSON.stringify({
+                localStorage.setItem(PIPELINE_TABLE_COLUMN_CACHE, JSON.stringify({
                     columns: fields,
                     size
                 }))
+            },
+            goEdit (pipeline) {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    params: {
+                        projectId: pipeline.projectId,
+                        pipelineId: pipeline.pipelineId
+                    }
+                })
             }
         }
     }
@@ -643,6 +711,7 @@
 
 <style lang="scss">
     @import '@/scss/conf.scss';
+    @import '@/scss/mixins/ellipsis';
     .primary {
         color: $primaryColor;
     }
@@ -660,15 +729,21 @@
         align-items: center;
         justify-content: center;
         background: #EAEBF0;
+        grid-gap: 10px;
         height: 32px;
+        grid-gap: 10px;
     }
     .latest-build-multiple-row {
         display: flex;
         flex-direction: column;
     }
     .pipeline-list-table {
+        &.bk-table-enable-row-transition .bk-table-body td {
+            transition: none;
+        }
         td {
             position: inherit;
+
         }
         .bk-table-body-wrapper {
             td {
@@ -677,20 +752,102 @@
                 }
             }
         }
-        ::-webkit-scrollbar {
-            background-color: white;
+        .pipeline-name-wrapper {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
         }
-        ::-webkit-scrollbar-thumb {
-            background-color: #DCDEE5 !important;
+        .pipeline-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-    }
-    .exec-pipeline-btn {
-        width: 55px;
-        text-align: left;
-        overflow: hidden;
-    }
-    .icon-star-btn {
-        position: relative;
-        font-size: 14px !important;
+        .template-mode-icon {
+            flex-shrink: 0;
+            position: relative;
+            top: 2px;
+        }
+        .exec-pipeline-btn {
+            width: 55px;
+            text-align: left;
+            overflow: hidden;
+        }
+        .icon-star-btn {
+            position: relative;
+            font-size: 14px !important;
+            z-index: 999;
+            display: none;
+        }
+        .is-collect {
+            display: block
+        }
+        .bk-table-row.hover-row {
+            .icon-star-btn {
+                display: block
+            }
+        }
+
+        .pipeline-latest-exec-cell {
+            display: flex;
+            align-items: center;
+            .pipeline-exec-status-icon {
+                display: inline-flex;
+                font-size: 22px;
+                margin-right: 10px;
+
+            }
+            .pipeline-exec-msg {
+                display: flex;
+                flex-direction: column;
+                font-size: 12px;
+                line-height: 20px;
+                margin-left: 12px;
+                overflow: hidden;
+                .desc {
+                    color: #979BA5;
+                }
+                .pipeline-exec-msg-title {
+                    @include ellipsis();
+                    flex: 1;
+                    cursor: pointer;
+                    > span {
+                        color: #63656e;
+                        &:hover {
+                            color: $primaryColor;
+                        }
+                    }
+                }
+                .pipeline-exec-msg-desc {
+                    display: grid;
+                    column-gap: 16px;
+                    grid-template-columns: auto auto auto;
+                    > span {
+                        display: flex;
+                        align-items: center;
+                        overflow: hidden;
+                        > span {
+                            display: flex;
+                            @include ellipsis();
+                            min-width: 0;
+                            margin-left: 6px;
+                        }
+                    }
+                }
+            }
+        }
+        .pipeline-operation-cell {
+            display: flex;
+            align-items: center;
+            text-wrap: nowrap;
+            .more-action-menu {
+                font-size: 0;
+                cursor: pointer;
+                .more-action-menu-trigger {
+                    font-size: 18px;
+                    padding: 0 6px;
+                }
+            }
+        }
     }
 </style>

@@ -1,5 +1,5 @@
-import BkPipeline from '@/index.vue'
 import '@/icon'
+import BkPipeline from '@/index.vue'
 import { loadI18nMessages, useLang } from '@/locale'
 import './src/index.scss'
 
@@ -9,9 +9,6 @@ function install (Vue, opts = {}) {
 }
 
 BkPipeline.install = install
-if (typeof window !== 'undefined' && window.Vue) {
-    install(window.Vue)
-}
 
 export default BkPipeline
 export { loadI18nMessages, useLang }

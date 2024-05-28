@@ -27,16 +27,14 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
@@ -47,8 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
     private val rabbitTemplate: RabbitTemplate,
-    private val pipelineWebhookService: PipelineWebhookService,
-    private val pipelineWebhookBuildLogService: PipelineWebhookBuildLogService
+    private val pipelineWebhookService: PipelineWebhookService
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
         return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(
@@ -58,7 +55,15 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
     }
 
     override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
-        return Result(pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
+        return Result(
+            pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit)?.id ?: ""
+        )
+    }
+
+    override fun webhookCommitNew(projectId: String, webhookCommit: WebhookCommit): Result<BuildId?> {
+        return Result(
+            pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit)
+        )
     }
 
     override fun listScmWebhook(
@@ -75,29 +80,6 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 page = page,
                 pageSize = pageSize
-            )
-        )
-    }
-
-    override fun listPipelineWebhookBuildLog(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        repoName: String?,
-        commitId: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?> {
-        return Result(
-            pipelineWebhookBuildLogService.listWebhookBuildLogDetail(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                repoName = repoName,
-                commitId = commitId,
-                page = page,
-                pageSize = pageSize
-
             )
         )
     }

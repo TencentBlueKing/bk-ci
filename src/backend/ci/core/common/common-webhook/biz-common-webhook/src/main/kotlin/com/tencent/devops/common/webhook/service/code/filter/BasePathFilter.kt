@@ -35,6 +35,10 @@ abstract class BasePathFilter(
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
     private val excludedPaths: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String,
+    // 排除过滤失败原因
+    private val excludedFailedReason: String,
     private val caseSensitive: Boolean = true
 ) : WebhookFilter {
 
@@ -51,7 +55,7 @@ abstract class BasePathFilter(
     }
 
     private fun hasNoPathSpecs(): Boolean {
-        return includedPaths.isEmpty() && excludedPaths.isEmpty()
+        return includedPaths.isEmpty() && (excludedPaths.isEmpty() || triggerOnPath.isEmpty())
     }
 
     @SuppressWarnings("NestedBlockDepth", "ReturnCount", "ComplexMethod")
@@ -63,7 +67,8 @@ abstract class BasePathFilter(
                 includedPaths.forEach userPath@{ userPath ->
                     if (isPathMatch(eventPath, userPath)) {
                         matchIncludePaths.add(eventPath)
-                        matchUserPaths.add(userPath)
+                        // 提取最终匹配路径
+                        matchUserPaths.add(extractMatchUserPath(eventPath, userPath))
                         return@eventPath
                     }
                 }
@@ -74,7 +79,6 @@ abstract class BasePathFilter(
         } else {
             matchIncludePaths.addAll(triggerOnPath)
         }
-
         val matchExcludedPaths = mutableSetOf<String>()
         if (excludedPaths.isNotEmpty()) {
             matchIncludePaths.forEach eventPath@{ eventPath ->
@@ -90,11 +94,25 @@ abstract class BasePathFilter(
         // 1. 包含不为空，过滤为空,判断matchIncludePaths是否为空
         // 2. 包含为空，过滤不为空,matchIncludePaths与triggerOnPath相同,判断matchIncludePaths与matchExcludedPaths大小
         return when {
-            excludedPaths.isEmpty() && includedPaths.isNotEmpty() && matchIncludePaths.isEmpty() -> false
-            matchIncludePaths.size == matchExcludedPaths.size -> false
+            excludedPaths.isEmpty() && includedPaths.isNotEmpty() && matchIncludePaths.isEmpty() -> {
+                response.failedReason = includedFailedReason
+                false
+            }
+
+            matchIncludePaths.size == matchExcludedPaths.size -> {
+                response.failedReason = excludedFailedReason
+                false
+            }
+
             else -> true
         }
     }
 
     abstract fun isPathMatch(eventPath: String, userPath: String): Boolean
+
+    // 默认匹配路径取[userPath],存量流水线有引用此值,谨慎修改!!!
+    open fun extractMatchUserPath(
+        eventPath: String,
+        userPath: String
+    ) = userPath
 }

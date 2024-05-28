@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 
@@ -43,125 +44,151 @@ object ProjectUtils {
     fun packagingBean(
         tProjectRecord: TProjectRecord,
         managePermission: Boolean? = null,
-        showUserManageIcon: Boolean? = null
+        showUserManageIcon: Boolean? = null,
+        viewPermission: Boolean? = null,
+        pipelineTemplateInstallPerm: Boolean? = null,
+        projectOrganizationInfo: ProjectOrganizationInfo? = null
     ): ProjectVO {
-        return ProjectVO(
-            /* 已经投产旧插件的使用字段兼容 */
-            project_id = tProjectRecord.projectId,
-            project_name = tProjectRecord.projectName,
-            project_code = tProjectRecord.englishName ?: "",
-            cc_app_id = tProjectRecord.ccAppId ?: 0,
-            cc_app_name = tProjectRecord.ccAppName ?: "",
-            hybrid_cc_app_id = tProjectRecord.hybridCcAppId,
-            id = tProjectRecord.id,
-            projectId = tProjectRecord.projectId ?: "",
-            projectName = tProjectRecord.projectName,
-            projectCode = tProjectRecord.englishName ?: "",
-            projectType = tProjectRecord.projectType ?: 0,
-            approvalStatus = tProjectRecord.approvalStatus ?: 0,
-            approvalTime = if (tProjectRecord.approvalTime == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
-            },
-            approver = tProjectRecord.approver ?: "",
-            bgId = tProjectRecord.bgId?.toString(),
-            bgName = tProjectRecord.bgName ?: "",
-            ccAppId = tProjectRecord.ccAppId ?: 0,
-            ccAppName = tProjectRecord.ccAppName ?: "",
-            centerId = tProjectRecord.centerId?.toString(),
-            centerName = tProjectRecord.centerName ?: "",
-            createdAt = DateTimeUtil.toDateTime(tProjectRecord.createdAt, "yyyy-MM-dd"),
-            creator = tProjectRecord.creator ?: "",
-            dataId = tProjectRecord.dataId ?: 0,
-            deployType = tProjectRecord.deployType ?: "",
-            deptId = tProjectRecord.deptId?.toString(),
-            deptName = tProjectRecord.deptName ?: "",
-            description = tProjectRecord.description ?: "",
-            englishName = tProjectRecord.englishName ?: "",
-            extra = tProjectRecord.extra ?: "",
-            offlined = tProjectRecord.isOfflined,
-            secrecy = tProjectRecord.isSecrecy,
-            helmChartEnabled = tProjectRecord.isHelmChartEnabled,
-            kind = tProjectRecord.kind,
-            logoAddr = tProjectRecord.logoAddr ?: "",
-            remark = tProjectRecord.remark ?: "",
-            updator = tProjectRecord.updator,
-            updatedAt = if (tProjectRecord.updatedAt == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.updatedAt, "yyyy-MM-dd")
-            },
-            useBk = tProjectRecord.useBk,
-            enabled = tProjectRecord.enabled ?: true,
-            gray = tProjectRecord.routerTag == "gray",
-            hybridCcAppId = tProjectRecord.hybridCcAppId,
-            enableExternal = tProjectRecord.enableExternal,
-            pipelineLimit = tProjectRecord.pipelineLimit,
-            routerTag = tProjectRecord.routerTag,
-            relationId = tProjectRecord.relationId,
-            properties = tProjectRecord.properties?.let { self ->
-                JsonUtil.to(self, ProjectProperties::class.java)
-            },
-            subjectScopes = tProjectRecord.subjectScopes?.let {
-                JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
-            },
-            authSecrecy = tProjectRecord.authSecrecy,
-            managePermission = managePermission,
-            showUserManageIcon = showUserManageIcon,
-            channelCode = tProjectRecord.channel
-        )
+        val isUseFixedOrganization = projectOrganizationInfo != null
+        return with(tProjectRecord) {
+            ProjectVO(
+                /* 已经投产旧插件的使用字段兼容 */
+                project_id = projectId,
+                project_name = projectName,
+                project_code = englishName ?: "",
+                cc_app_id = ccAppId ?: 0,
+                cc_app_name = ccAppName ?: "",
+                hybrid_cc_app_id = hybridCcAppId,
+                id = id,
+                projectId = projectId ?: "",
+                projectName = projectName,
+                projectCode = englishName ?: "",
+                projectType = projectType ?: 0,
+                approvalStatus = approvalStatus ?: 0,
+                approvalTime = if (approvalTime == null) {
+                    ""
+                } else {
+                    DateTimeUtil.toDateTime(approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
+                },
+                approver = approver ?: "",
+                bgId = (if (isUseFixedOrganization) projectOrganizationInfo?.bgId else bgId)?.toString(),
+                bgName = (if (isUseFixedOrganization) projectOrganizationInfo?.bgName else bgName),
+                ccAppId = ccAppId ?: 0,
+                ccAppName = ccAppName ?: "",
+                centerId = (if (isUseFixedOrganization) projectOrganizationInfo?.centerId else centerId)?.toString(),
+                centerName = (if (isUseFixedOrganization) projectOrganizationInfo?.centerName else centerName),
+                createdAt = DateTimeUtil.toDateTime(createdAt, "yyyy-MM-dd"),
+                creator = creator ?: "",
+                dataId = dataId ?: 0,
+                deployType = deployType ?: "",
+                deptId = (if (isUseFixedOrganization) projectOrganizationInfo?.deptId else deptId)?.toString(),
+                deptName = (if (isUseFixedOrganization) projectOrganizationInfo?.deptName else deptName),
+                businessLineId = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
+                businessLineName = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineName else businessLineName),
+                description = description ?: "",
+                englishName = englishName ?: "",
+                extra = extra ?: "",
+                offlined = isOfflined,
+                secrecy = isSecrecy,
+                helmChartEnabled = isHelmChartEnabled,
+                kind = kind,
+                logoAddr = logoAddr ?: "",
+                remark = remark ?: "",
+                updator = updator,
+                updatedAt = if (updatedAt == null) {
+                    ""
+                } else {
+                    DateTimeUtil.toDateTime(updatedAt, "yyyy-MM-dd")
+                },
+                useBk = useBk,
+                enabled = enabled ?: true,
+                gray = routerTag == "gray",
+                hybridCcAppId = hybridCcAppId,
+                enableExternal = enableExternal,
+                pipelineLimit = pipelineLimit,
+                routerTag = routerTag,
+                relationId = relationId,
+                properties = properties.takeIf { !it.isNullOrBlank() }?.let { JsonUtil.to(it, ProjectProperties::class.java) },
+                subjectScopes = subjectScopes.takeIf { !it.isNullOrBlank() }?.let {
+                    JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
+                },
+                authSecrecy = authSecrecy,
+                managePermission = managePermission,
+                showUserManageIcon = showUserManageIcon,
+                channelCode = channel,
+                productId = productId,
+                canView = viewPermission,
+                pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
+            )
+        }
     }
 
-    fun packagingBean(tProjectRecord: TProjectRecord, projectApprovalInfo: ProjectApprovalInfo?): ProjectDiffVO {
+    fun packagingBean(
+        tProjectRecord: TProjectRecord,
+        projectApprovalInfo: ProjectApprovalInfo?,
+        projectOrganizationInfo: ProjectOrganizationInfo? = null
+    ): ProjectDiffVO {
+        val isUseFixedOrganization = projectOrganizationInfo != null
         val subjectScopes = tProjectRecord.subjectScopes?.let {
             JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
         }
-        return ProjectDiffVO(
-            id = tProjectRecord.id,
-            projectId = tProjectRecord.projectId,
-            projectName = tProjectRecord.projectName,
-            afterProjectName = projectApprovalInfo?.projectName ?: tProjectRecord.projectName,
-            projectCode = tProjectRecord.englishName ?: "",
-            approvalStatus = tProjectRecord.approvalStatus ?: 0,
-            approvalTime = if (tProjectRecord.approvalTime == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
-            },
-            approver = tProjectRecord.approver ?: "",
-            bgId = tProjectRecord.bgId?.toString(),
-            afterBgId = projectApprovalInfo?.bgId ?: tProjectRecord.bgId?.toString(),
-            bgName = tProjectRecord.bgName ?: "",
-            afterBgName = projectApprovalInfo?.bgName ?: tProjectRecord.bgName ?: "",
-            centerId = tProjectRecord.centerId?.toString(),
-            afterCenterId = projectApprovalInfo?.centerId ?: tProjectRecord.centerId?.toString(),
-            centerName = tProjectRecord.centerName ?: "",
-            afterCenterName = projectApprovalInfo?.centerName ?: tProjectRecord.centerName ?: "",
-            createdAt = DateTimeUtil.toDateTime(tProjectRecord.createdAt, "yyyy-MM-dd"),
-            creator = tProjectRecord.creator ?: "",
-            deptId = tProjectRecord.deptId?.toString(),
-            afterDeptId = projectApprovalInfo?.deptId ?: tProjectRecord.deptId?.toString(),
-            deptName = tProjectRecord.deptName ?: "",
-            afterDeptName = projectApprovalInfo?.deptName ?: tProjectRecord.deptName ?: "",
-            description = tProjectRecord.description ?: "",
-            afterDescription = projectApprovalInfo?.description ?: tProjectRecord.description ?: "",
-            englishName = tProjectRecord.englishName ?: "",
-            logoAddr = tProjectRecord.logoAddr ?: "",
-            afterLogoAddr = projectApprovalInfo?.logoAddr ?: tProjectRecord.logoAddr ?: "",
-            remark = tProjectRecord.remark ?: "",
-            updator = tProjectRecord.updator,
-            updatedAt = if (tProjectRecord.updatedAt == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.updatedAt, "yyyy-MM-dd")
-            },
-            subjectScopes = subjectScopes,
-            afterSubjectScopes = projectApprovalInfo?.subjectScopes ?: subjectScopes,
-            authSecrecy = tProjectRecord.authSecrecy,
-            afterAuthSecrecy = projectApprovalInfo?.authSecrecy ?: tProjectRecord.authSecrecy,
-            projectType = tProjectRecord.projectType,
-            afterProjectType = projectApprovalInfo?.projectType
-        )
+        return with(tProjectRecord) {
+            ProjectDiffVO(
+                id = id,
+                projectId = projectId,
+                projectName = projectName,
+                afterProjectName = projectApprovalInfo?.projectName ?: projectName,
+                projectCode = englishName ?: "",
+                approvalStatus = approvalStatus ?: 0,
+                approvalTime = if (approvalTime == null) {
+                    ""
+                } else {
+                    DateTimeUtil.toDateTime(approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
+                },
+                approver = approver ?: "",
+                bgId = (if (isUseFixedOrganization) projectOrganizationInfo?.bgId else bgId)?.toString(),
+                afterBgId = projectApprovalInfo?.bgId ?: bgId?.toString(),
+                bgName = (if (isUseFixedOrganization) projectOrganizationInfo?.bgName else bgName),
+                afterBgName = projectApprovalInfo?.bgName ?: bgName,
+                businessLineId = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
+                afterBusinessLineId = projectApprovalInfo?.businessLineId ?: businessLineId,
+                businessLineName = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineName else businessLineName),
+                afterBusinessLineName = projectApprovalInfo?.businessLineName ?: businessLineName,
+                centerId = (if (isUseFixedOrganization) projectOrganizationInfo?.centerId else centerId)?.toString(),
+                afterCenterId = projectApprovalInfo?.centerId ?: centerId?.toString(),
+                centerName = (if (isUseFixedOrganization) projectOrganizationInfo?.centerName else centerName),
+                afterCenterName = projectApprovalInfo?.centerName ?: centerName,
+                createdAt = DateTimeUtil.toDateTime(createdAt, "yyyy-MM-dd"),
+                creator = creator ?: "",
+                deptId = (if (isUseFixedOrganization) projectOrganizationInfo?.deptId else deptId)?.toString(),
+                afterDeptId = projectApprovalInfo?.deptId ?: deptId?.toString(),
+                deptName = (if (isUseFixedOrganization) projectOrganizationInfo?.deptName else deptName),
+                afterDeptName = projectApprovalInfo?.deptName ?: deptName,
+                description = description ?: "",
+                afterDescription = projectApprovalInfo?.description ?: description ?: "",
+                englishName = englishName ?: "",
+                logoAddr = logoAddr ?: "",
+                afterLogoAddr = projectApprovalInfo?.logoAddr ?: logoAddr ?: "",
+                remark = remark ?: "",
+                updator = updator,
+                updatedAt = if (updatedAt == null) {
+                    ""
+                } else {
+                    DateTimeUtil.toDateTime(updatedAt, "yyyy-MM-dd")
+                },
+                subjectScopes = subjectScopes,
+                afterSubjectScopes = projectApprovalInfo?.subjectScopes ?: subjectScopes,
+                authSecrecy = authSecrecy,
+                afterAuthSecrecy = projectApprovalInfo?.authSecrecy ?: authSecrecy,
+                projectType = projectType,
+                afterProjectType = projectApprovalInfo?.projectType,
+                productId = productId,
+                afterProductId = projectApprovalInfo?.productId
+            )
+        }
     }
 }

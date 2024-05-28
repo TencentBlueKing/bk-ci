@@ -27,29 +27,28 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("手动触发返回结果")
+@Schema(title = "手动触发返回结果")
 data class TriggerBuildResult(
-    @ApiModelProperty("蓝盾项目ID")
+    @get:Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("分支")
+    @get:Schema(title = "分支")
     val branch: String,
-    @ApiModelProperty("Custom commit message")
+    @get:Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
+    @get:Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @ApiModelProperty("触发的构建ID")
+    @get:Schema(title = "触发的构建ID")
     val buildId: String,
-    @ApiModelProperty("触发的构建详情页")
+    @get:Schema(title = "触发的构建详情页")
     val buildUrl: String
 )
 
-@ApiModel("App手动触发返回结果")
+@Schema(title = "App手动触发返回结果")
 data class AppTriggerBuildResult(
-    @ApiModelProperty("构建ID")
+    @get:Schema(title = "构建ID")
     val id: String
 )

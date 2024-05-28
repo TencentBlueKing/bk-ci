@@ -38,15 +38,20 @@ if service_name == "bkrepo" then
     return
 end
 
+-- 服务重写
+if service_name == "dispatch-docker" or service_name == "dispatch-kubernetes" then
+    service_name = "dispatch"
+elseif service_name == "image" or service_name == "monitoring" or service_name == "plugin" then
+    service_name = "misc"
+end
+
 -- 获取灰度设置
 local cache_tail = ""
-local ns_config = nil
+local ns_config = config.ns
 
 if ngx.var.devops_region ~= "DEVNET" then
-    ns_config = config.ns
     cache_tail = ".normal.idc"
 else
-    ns_config = config.ns_devnet
     cache_tail = ".normal.devnet"
 end
 

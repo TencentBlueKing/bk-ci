@@ -32,12 +32,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.StoreStatistic
-import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -47,62 +47,62 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STORE_STATISTIC"], description = "研发商店-统计")
+@Tag(name = "USER_STORE_STATISTIC", description = "研发商店-统计")
 @Path("/user/store/statistic")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStoreStatisticResource {
 
-    @ApiOperation("获取store组件基本统计数据信息")
+    @Operation(summary = "获取store组件基本统计数据信息")
     @Path("/types/{storeType}/codes/{storeCode}")
     @GET
     fun getStatisticByCode(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @ApiParam("插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<StoreStatistic>
 
-    @ApiOperation("获取store组件统计趋势数据信息")
+    @Operation(summary = "获取store组件统计趋势数据信息")
     @Path("/types/{storeType}/codes/{storeCode}/trend/data")
     @GET
     fun getStatisticTrendDataByCode(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @ApiParam("插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(description = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("startTime")
         startTime: String,
-        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(description = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("endTime")
         endTime: String
     ): Result<StoreStatisticTrendData>
 
-    @ApiOperation("获取store组件错误码信息")
+    @Operation(summary = "获取store组件错误码信息")
     @Path("/types/{storeType}/codes/{storeCode}/errorCode")
     @GET
     fun getStoreErrorCodeInfo(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<StoreErrorCodeInfo>

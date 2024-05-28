@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -185,10 +186,11 @@ class QualityMetadataService @Autowired constructor(
     fun serviceSetTestMetadata(
         userId: String,
         elementType: String,
+        extra: String,
         metadataList: List<QualityMetaData>
     ): Map<String, Long> {
         logger.info("QUALITY|setTestMetadata userId: $userId, elementType: $elementType")
-        val data = metadataDao.listByElementType(dslContext, elementType)?.filter { it.extra == "IN_READY_TEST" }
+        val data = metadataDao.listByElementType(dslContext, elementType)?.filter { it.extra == extra }
         val lastMetadataIdMap = data?.map { it.dataId to it.id }?.toMap() ?: mapOf()
         val newDataId = metadataList.map { it.dataId!! }
         val lastDataId = lastMetadataIdMap.keys
@@ -213,8 +215,8 @@ class QualityMetadataService @Autowired constructor(
     fun serviceRefreshMetadata(elementType: String): Map<String, String> {
         logger.info("QUALITY|refreshMetadata elementType: $elementType")
         val data = metadataDao.listByElementType(dslContext, elementType)
-        val testData = data?.filter { it.extra == "IN_READY_TEST" } ?: listOf()
-        val prodData = data?.filter { it.extra != "IN_READY_TEST" } ?: listOf()
+        val testData = data?.filter { it.extra == IN_READY_TEST } ?: listOf()
+        val prodData = data?.filter { !(it.extra.startsWith(IN_READY_TEST)) } ?: listOf()
         val userId = testData.firstOrNull()?.createUser ?: ""
 
         val resultMap = mutableMapOf<String, String>()
@@ -266,10 +268,10 @@ class QualityMetadataService @Autowired constructor(
         return resultMap
     }
 
-    fun serviceDeleteTestMetadata(elementType: String): Int {
-        logger.info("QUALITY|deleteTestMetadata elementType: $elementType")
+    fun serviceDeleteTestMetadata(elementType: String, extra: String): Int {
+        logger.info("QUALITY|deleteTestMetadata elementType: $elementType | extra:$extra")
         val data = metadataDao.listByElementType(dslContext, elementType)
-        val testData = data?.filter { it.extra == "IN_READY_TEST" } ?: listOf()
+        val testData = data?.filter { it.extra == extra } ?: listOf()
         return metadataDao.delete(testData.map { it.id }, dslContext)
     }
 

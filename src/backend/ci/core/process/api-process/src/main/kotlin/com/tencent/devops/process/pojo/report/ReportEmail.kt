@@ -27,15 +27,14 @@
 
 package com.tencent.devops.process.pojo.report
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("自定义产出物报告-发送邮件")
+@Schema(title = "自定义产出物报告-发送邮件")
 data class ReportEmail(
-    @ApiModelProperty("接收人列表", required = false)
+    @get:Schema(title = "接收人列表", required = false)
     val receivers: Set<String>,
-    @ApiModelProperty("标题", required = false)
+    @get:Schema(title = "标题", required = false)
     val title: String,
-    @ApiModelProperty("html地址", required = false)
+    @get:Schema(title = "html地址", required = false)
     val html: String
 )

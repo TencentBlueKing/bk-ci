@@ -29,14 +29,13 @@ package com.tencent.devops.store.pojo.template
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("关联模板请求报文体")
+@Schema(title = "关联模板请求报文体")
 data class MarketTemplateRelRequest(
-    @ApiModelProperty("项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @ApiModelProperty("模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val templateName: String
 )

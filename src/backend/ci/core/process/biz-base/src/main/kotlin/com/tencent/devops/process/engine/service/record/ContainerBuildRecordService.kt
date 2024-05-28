@@ -45,8 +45,8 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -69,9 +69,9 @@ class ContainerBuildRecordService(
     private val recordTaskDao: BuildRecordTaskDao,
     private val containerBuildDetailService: ContainerBuildDetailService,
     recordModelService: PipelineRecordModelService,
-    pipelineResDao: PipelineResDao,
+    pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
-    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineResourceVersionDao: PipelineResourceVersionDao,
     pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
@@ -84,9 +84,9 @@ class ContainerBuildRecordService(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation,
     recordModelService = recordModelService,
-    pipelineResDao = pipelineResDao,
+    pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
     pipelineElementService = pipelineElementService
 ) {
 
@@ -445,6 +445,28 @@ class ContainerBuildRecordService(
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordContainer.timestamps) }
             )
         }
+    }
+
+    /**
+     * 获取job在stage中的执行順序
+     * */
+    fun getContainerOrderInStage(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        stageId: String,
+        containerId: String
+    ): Int {
+        val containerIdList = recordContainerDao.getLatestNormalRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount
+        ).map { it.containerId }
+        return containerIdList.indexOf(containerId)
     }
 
     companion object {

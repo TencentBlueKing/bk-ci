@@ -27,17 +27,16 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("错误码信息")
+@Schema(title = "错误码信息")
 data class ErrorCodeInfoDO(
-    @ApiModelProperty("错误类型")
+    @get:Schema(title = "错误类型")
     val errorType: Int?,
-    @ApiModelProperty("错误类型名称")
+    @get:Schema(title = "错误类型名称")
     val errorTypeName: String?,
-    @ApiModelProperty("错误的标识码")
+    @get:Schema(title = "错误的标识码")
     val errorCode: Int,
-    @ApiModelProperty("错误描述信息")
+    @get:Schema(title = "错误描述信息")
     val errorMsg: String?
 )

@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { buildEnvMap, jobConst } from '@/utils/pipelineConst'
+import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
@@ -27,6 +27,74 @@ function isSkip (status) {
 }
 
 export default {
+    isCurPipelineLocked: state => {
+        return state.pipelineInfo?.runLockType === 'LOCK'
+    },
+    hasDraftPipeline: state => {
+        return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
+    },
+    getDraftBaseVersionName: (state, getters) => {
+        return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
+    },
+    pipelineHistoryViewable: state => {
+        return [
+            VERSION_STATUS_ENUM.BRANCH,
+            VERSION_STATUS_ENUM.RELEASED
+        ].includes(state.pipelineInfo?.latestVersionStatus)
+    },
+    isBranchVersion: state => {
+        return state.activePipelineVersion?.status === VERSION_STATUS_ENUM.BRANCH
+    },
+    isReleasePipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED
+    },
+    onlyBranchPipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
+    },
+    isReleaseVersion: state => {
+        return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === VERSION_STATUS_ENUM.RELEASED
+    },
+    isOutdatedVersion: state => {
+        return state.activePipelineVersion?.version < state.pipelineInfo?.releaseVersion
+    },
+    isActiveDraftVersion: state => {
+        return state.activePipelineVersion?.isDraft ?? false
+    },
+    pacEnabled: state => {
+        return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    yamlInfo: state => {
+        return state.pipelineInfo?.yamlInfo
+    },
+    getPipelineSubscriptions: state => type => {
+        return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []
+    },
+    curPipelineParams: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []
+    },
+    curPipelineBuildNoConfig: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        const semver = firstJob?.params?.filter(param => semverVersionKeySet.has(param.id))
+        return firstJob?.buildNo
+            ? {
+                ...firstJob.buildNo,
+                semver: semver.reduce((acc, cur) => ({
+                    ...acc,
+                    [cur.id]: cur.defaultValue
+                }), {})
+            }
+            : null
+    },
+    fullPipeline: state => {
+        return {
+            ...state.pipeline,
+            stages: [
+                state.pipeline.stages[0],
+                ...state.pipelineWithoutTrigger.stages
+            ]
+        }
+    },
     getAtomCodeListByCategory: state => category => {
         return state.atomCodeList.filter(atomCode => {
             const atom = state.atomMap[atomCode]
@@ -110,7 +178,7 @@ export default {
     },
     getEditingElementPos: state => state.editingElementPos,
     isEditing: state => {
-        return state.pipeline && state.pipeline.editing
+        return state.isPipelineEditing
     },
     checkPipelineInvalid: (state, getters) => (stages, pipelineSetting) => {
         try {
@@ -135,6 +203,7 @@ export default {
                 if (index !== 0 && stage.checkIn) {
                     const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
                     if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                        Vue.set(stage.checkIn, 'isReviewError', true)
                         throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
                     }
                 }
@@ -201,6 +270,7 @@ export default {
                 message: ''
             }
         } catch (e) {
+            console.trace(e)
             return {
                 message: e.message,
                 inValid: true
@@ -240,7 +310,7 @@ export default {
         } catch (_) {
             container = null
         }
-        if (container !== null) {
+        if (container) {
             if (isVmContainer(container['@type']) && !container.buildEnv) {
                 Vue.set(container, 'buildEnv', {})
             }
@@ -296,12 +366,12 @@ export default {
         return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo
     },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
-        // const isDocker = getters.isDockerBuildResource(container)
+        const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
         const isThirdDocker = getters.isThirdDockerContainer(container)
         const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)
@@ -313,8 +383,8 @@ export default {
             : []
     },
     getElement: state => (container, index) => {
-        const element = container && Array.isArray(container.elements) ? container.elements[index] : null
-        if (element !== null) {
+        const element = Array.isArray(container?.elements) ? container.elements[index] : null
+        if (element) {
             typeof element.isError === 'undefined' && Vue.set(element, 'isError', false)
         }
         return element
@@ -326,7 +396,7 @@ export default {
         }
     }),
     isVmContainer: state => container => isVmContainer(container['@type']),
-    isTriggerContainer: state => container => isTriggerContainer(container['@type']),
+    isTriggerContainer: state => container => isTriggerContainer(container?.['@type']),
     isCodePullAtom: state => atom => isCodePullAtom(atom['@type']),
     isNormalContainer: state => container => isNormalContainer(container['@type']),
     defaultBuildNo: state => defaultBuildNo,
@@ -339,7 +409,7 @@ export default {
         if (!state.hideSkipExecTask) {
             return state.execDetail
         }
-        console.time('getExecDetail')
+
         const stages = state.execDetail.model?.stages?.filter(stage => !isSkip(stage.status)).map(stage => {
             const containers = stage.containers.filter((container) => !isSkip(container.status)).map(container => {
                 const elements = container.elements.filter(
@@ -370,7 +440,6 @@ export default {
                 containers
             }
         })
-        console.timeEnd('getExecDetail')
         return Object.assign({}, state.execDetail, {
             model: {
                 ...state.execDetail.model,

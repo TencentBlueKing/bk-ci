@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("下架插件请求报文")
+@Schema(title = "下架插件请求报文")
 data class AtomOfflineReq(
-    @ApiModelProperty("下架原因")
+    @get:Schema(title = "下架原因")
     val reason: String?,
-    @ApiModelProperty("版本号")
+    @get:Schema(title = "版本号")
     val version: String? = null
 )

@@ -27,19 +27,18 @@
 package com.tencent.devops.project.pojo
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.web.annotation.BkField
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("数据库表分片配置")
+@Schema(title = "数据库表分片配置")
 data class TableShardingConfig(
-    @ApiModelProperty("集群名称")
+    @get:Schema(title = "集群名称")
     @field:BkField(minLength = 1, maxLength = 64)
     val clusterName: String,
-    @ApiModelProperty("模块标识")
+    @get:Schema(title = "模块标识")
     val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据库表名称")
+    @get:Schema(title = "数据库表名称")
     @field:BkField(minLength = 1, maxLength = 128)
     val tableName: String,
-    @ApiModelProperty("分表数量")
+    @get:Schema(title = "分表数量")
     val shardingNum: Int
 )

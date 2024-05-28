@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
+import com.tencent.devops.project.pojo.StaffInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import org.springframework.stereotype.Service
 
@@ -75,5 +76,21 @@ class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
 
     override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Boolean {
         return true
+    }
+
+    override fun getDeptStaffsWithLevel(deptId: String, level: Int): List<StaffInfo> {
+        val mock = mutableListOf<StaffInfo>()
+        mock.add(
+            StaffInfo(
+                loginName = "mock",
+                departmentName = "mock Dept",
+                fullName = "mock full name",
+                chineseName = "模拟",
+                groupId = "0",
+                groupName = "mock group",
+                statusId = "0"
+            )
+        )
+        return mock
     }
 }

@@ -27,7 +27,9 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
@@ -38,6 +40,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
@@ -97,6 +101,39 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         return event.ref.replace("refs/tags/", "")
     }
 
+    override fun getEventDesc(event: GitTagPushEvent): String {
+        val createFrom = when {
+            event.isDeleteTag() -> {
+                // 删除标签时展示删除前的tag提交点
+                GitUtils.getShortSha(event.before)
+            }
+            event.create_from.isNullOrBlank() || event.checkout_sha == event.create_from -> {
+                GitUtils.getShortSha(event.checkout_sha)
+            }
+
+            else -> {
+                event.create_from
+            }
+        }
+        return I18Variable(
+            code = if (event.isDeleteTag()) {
+                WebhookI18nConstants.TGIT_TAG_DELETE_EVENT_DESC
+            } else {
+                WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC
+            },
+            params = listOf(
+                "$createFrom",
+                "${event.repository.homepage}/-/tags/${getBranchName(event)}",
+                getBranchName(event),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GitTagPushEvent): String {
+        return event.project_id.toString()
+    }
+
     override fun retrieveParams(
         event: GitTagPushEvent,
         projectId: String?,
@@ -128,6 +165,8 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/-/tags/${getBranchName(event)}"
         startParams[PIPELINE_GIT_TAG_MESSAGE] = event.message ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
+        startParams[PIPELINE_GIT_ACTION] = event.operation_kind ?: ""
         return startParams
     }
 
@@ -150,23 +189,47 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 triggerOnEventType = getEventType(),
                 eventType = eventType
             )
+            val eventTag = getBranchName(event)
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = eventTag,
                 includedBranches = WebhookUtils.convert(tagName),
-                excludedBranches = WebhookUtils.convert(excludeTagName)
+                excludedBranches = WebhookUtils.convert(excludeTagName),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_NAME_NOT_MATCH,
+                    params = listOf(eventTag)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_NAME_IGNORED,
+                    params = listOf(eventTag)
+                ).toJsonStr()
             )
+            val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
                 triggerOnUser = getUsername(event),
                 includedUsers = WebhookUtils.convert(includeUsers),
-                excludedUsers = WebhookUtils.convert(excludeUsers)
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
+            val fromBranch = event.create_from ?: ""
             val fromBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = event.create_from ?: "",
+                triggerOnBranchName = fromBranch,
                 includedBranches = WebhookUtils.convert(fromBranches),
-                excludedBranches = emptyList()
+                excludedBranches = emptyList(),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_SOURCE_BRANCH_NOT_MATCH,
+                    params = listOf(fromBranch)
+                ).toJsonStr(),
+                excludedFailedReason = ""
             )
             return listOf(urlFilter, eventTypeFilter, branchFilter, userFilter, fromBranchFilter)
         }

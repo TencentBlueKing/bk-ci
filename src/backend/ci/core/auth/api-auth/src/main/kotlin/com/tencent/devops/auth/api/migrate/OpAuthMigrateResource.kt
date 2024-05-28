@@ -28,91 +28,116 @@
 
 package com.tencent.devops.auth.api.migrate
 
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
+@Tag(name = "AUTH_MIGRATE", description = "权限-迁移")
 @Path("/op/auth/migrate")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpAuthMigrateResource {
     @POST
     @Path("/v3ToRbac")
-    @ApiOperation("v3权限批量升级到rbac权限")
+    @Operation(summary = "v3权限批量升级到rbac权限")
     fun v3ToRbacAuth(
-        @ApiParam("迁移项目", required = true)
+        @Parameter(description = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 
     @POST
     @Path("/v0ToRbac")
-    @ApiOperation("v0权限批量升级到rbac权限")
+    @Operation(summary = "v0权限批量升级到rbac权限")
     fun v0ToRbacAuth(
-        @ApiParam("迁移项目", required = true)
+        @Parameter(description = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 
     @POST
     @Path("/allToRbac")
-    @ApiOperation("权限全部升级到rbac权限")
+    @Operation(summary = "权限全部升级到rbac权限")
     fun allToRbacAuth(): Result<Boolean>
 
     @POST
     @Path("/toRbacAuthByCondition")
-    @ApiOperation("按条件升级到rbac权限")
+    @Operation(summary = "按条件升级到rbac权限")
     fun toRbacAuthByCondition(
-        @ApiParam("按条件迁移项目实体", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
 
     @POST
     @Path("/{projectCode}/compareResult")
-    @ApiOperation("对比迁移结果")
+    @Operation(summary = "对比迁移结果")
     fun compareResult(
-        @ApiParam("项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Boolean>
 
     @POST
-    @Path("/{projectCode}/migrateResource")
-    @ApiOperation("迁移特定资源类型资源")
-    fun migrateResource(
-        @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("资源类型", required = true)
-        @QueryParam("resourceType")
-        resourceType: String,
-        @ApiParam("项目创建人", required = true)
-        @QueryParam("projectCreator")
-        projectCreator: String
+    @Path("/migrateSpecificResource")
+    @Operation(summary = "迁移特定资源类型资源")
+    fun migrateSpecificResource(
+        @Parameter(description = "迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateSpecificResourceOfAllProject")
+    @Operation(summary = "迁移所有项目的特定资源类型资源")
+    fun migrateSpecificResourceOfAllProject(
+        @Parameter(description = "迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
 
     @POST
     @Path("/grantGroupAdditionalAuthorization")
-    @ApiOperation("授予项目下自定义用户组RBAC新增的权限")
+    @Operation(summary = "授予项目下自定义用户组RBAC新增的权限")
     fun grantGroupAdditionalAuthorization(
-        @ApiParam("迁移项目", required = true)
+        @Parameter(description = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 
     @POST
-    @Path("/handoverPermissions")
-    @ApiOperation("权限交接")
-    fun handoverPermissions(
-        @ApiParam("权限交接请求体", required = true)
+    @Path("/handoverAllPermissions")
+    @Operation(summary = "权限交接-全量")
+    fun handoverAllPermissions(
+        @Parameter(description = "权限交接请求体", required = true)
         permissionHandoverDTO: PermissionHandoverDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/handoverPermissions")
+    @Operation(summary = "权限交接")
+    fun handoverPermissions(
+        @Parameter(description = "权限交接请求体", required = true)
+        permissionHandoverDTO: PermissionHandoverDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateMonitorResource")
+    @Operation(summary = "迁移监控空间权限资源")
+    fun migrateMonitorResource(
+        @Parameter(description = "迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/autoRenewal")
+    @Operation(summary = "自动续期")
+    fun autoRenewal(
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
 }

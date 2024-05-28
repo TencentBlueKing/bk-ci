@@ -16,18 +16,60 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+import { isPlainObject } from 'lodash-es'
 export const regionList = ['TC', 'SH', 'BJ', 'GZ', 'CD', 'GY', 'GROUP']
+
+export const CODE_REPOSITORY_SEARCH_VAL = 'codelib_search_val'
+export const TABLE_COLUMN_CACHE = 'codelib_list_columns'
+export const CODE_REPOSITORY_CACHE = 'codelib_repository_payload'
+export const CACHE_CODELIB_TABLE_WIDTH_MAP = 'cache_codelib_table_width_map'
+
+/**
+ * @desc 列表列显示缓存
+*/
+export const listColumnsCache = {
+    key: 'list_column_display',
+    setItem (key, value) {
+        const lastValue = listColumnsCache.getItem() || {}
+        localStorage.setItem(listColumnsCache.key, JSON.stringify({
+            ...lastValue,
+            [key]: value
+        }))
+    },
+    getItem (key) {
+        try {
+            const allCache = JSON.parse(localStorage.getItem(listColumnsCache.key))
+            if (!isPlainObject(allCache)) {
+                return false
+            }
+            if (!key) {
+                return allCache
+            }
+            if (!allCache[key]) {
+                return false
+            }
+            if (!allCache[key].columns || !allCache[key].size) {
+                return false
+            }
+            return allCache[key]
+        } catch {
+            return false
+        }
+    },
+    clearItem () {
+        localStorage.removeItem(listColumnsCache.key)
+    }
+}
 
 export const codelibConfig = {
     svn: {
-        credentialTypes: 'SSH_PRIVATEKEY',
+        credentialTypes: 'SSH_PRIVATEKEY,TOKEN_SSH_PRIVATEKEY',
         addType: 'SSH_PRIVATEKEY',
         label: 'SVN',
         typeName: 'codeSvn'
     },
     svn_http: {
-        credentialTypes: 'USERNAME_PASSWORD',
+        credentialTypes: 'USERNAME_PASSWORD,TOKEN_USERNAME_PASSWORD',
         addType: 'USERNAME_PASSWORD',
         label: 'SVN',
         typeName: 'codeSvn'
@@ -43,8 +85,8 @@ export const codelibConfig = {
         typeName: 'github'
     },
     git_http: {
-        credentialTypes: 'TOKEN_USERNAME_PASSWORD',
-        addType: 'TOKEN_USERNAME_PASSWORD',
+        credentialTypes: 'USERNAME_PASSWORD,TOKEN_USERNAME_PASSWORD',
+        addType: 'USERNAME_PASSWORD',
         label: 'Git',
         typeName: 'codeGit'
     },
@@ -84,6 +126,7 @@ export const codelibTypes = [
     'SVN',
     'GitHub',
     'GitLab',
+    // 'Git',
     'TGit',
     'P4'
 ]
@@ -95,7 +138,6 @@ export const codelibTypes = [
  */
 export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     let type = typeName.toLowerCase().replace(/^\S*?([gitlab|git|svn|github|tgit|p4])/i, '$1')
-
     if (type === 'svn' && svnType === 'http') {
         type = 'svn_http'
     }
@@ -108,7 +150,6 @@ export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     if (type === 'gitlab' && authType === 'HTTP') {
         type = 'gitlab_http'
     }
-
     return codelibConfig[type]
 }
 

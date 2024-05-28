@@ -248,6 +248,10 @@ object AuthUtils {
         return instanceList
     }
 
+    fun isExpired(expirationTimestamp: Long): Boolean {
+        return System.currentTimeMillis() / 1000 > expirationTimestamp
+    }
+
     private fun checkProject(projectId: String, expression: ExpressionDTO): Pair<Boolean, Set<String>> {
         val instanceList = mutableSetOf<String>()
         val values = expression.value.toString().split(",")

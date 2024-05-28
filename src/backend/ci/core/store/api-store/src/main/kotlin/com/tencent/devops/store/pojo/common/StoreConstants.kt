@@ -67,6 +67,7 @@ const val ATOM_NAMESPACE = "namespace" // 插件命名空间
 const val ATOM_UPLOAD_ID_KEY_PREFIX = "ATOM_UPLOAD_ID" // 插件包上传ID值Key前缀
 const val STORE_PUBLIC_FLAG_KEY_PREFIX = "STORE_PUBLIC_FLAG_KEY" // 公共组件Key前缀
 const val STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX = "STORE_NORMAL_PROJECT_RUN_INFO_KEY" // 组件对应普通项目的运行时信息Key前缀
+const val STORE_LATEST_TEST_FLAG_KEY_PREFIX = "STORE_LATEST_TEST_FLAG"
 
 const val SERVICE_COLLABORATOR_APPLY_MOA_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_MOA_TEMPLATE" //  扩展服务协作开发申请MOA审批消息通知模板
 const val SERVICE_COLLABORATOR_APPLY_REFUSE_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_REFUSE" // 扩展服务协作开发申请被拒的消息通知模板
@@ -95,6 +96,7 @@ const val KEY_LABEL_ID = "labelId"
 const val KEY_LABEL_CODE = "labelCode"
 const val KEY_LABEL_NAME = "labelName"
 const val KEY_LABEL_TYPE = "labelType"
+const val KEY_STORE_ID = "storeId"
 const val KEY_STORE_CODE = "storeCode"
 const val KEY_HOT_FLAG = "hotFlag"
 const val KEY_STORE_TYPE = "storeType"
@@ -139,6 +141,8 @@ const val KEY_FINISH_KILL_FLAG = "finishKillFlag"
 const val KEY_INDEX_CODE = "indexCode"
 const val KEY_RELEASE_INFO = "releaseInfo"
 const val KEY_VERSION_INFO = "versionInfo"
+const val KEY_RELEASE_TYPE = "releaseType"
+const val KEY_YAML_FLAG = "yamlFlag"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"

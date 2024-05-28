@@ -10,7 +10,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.container.ResourceInfo
@@ -22,13 +21,14 @@ import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 
 @Provider
 @BkInterfaceI18n
 @Component
-class BkWriterInterceptor : WriterInterceptor {
+class BkWriterInterceptor(
+    private val commonConfig: CommonConfig,
+    private val client: Client
+) : WriterInterceptor {
 
     @Context
     private var resourceInfo: ResourceInfo? = null
@@ -45,17 +45,19 @@ class BkWriterInterceptor : WriterInterceptor {
      * @param context 拦截器上下文
      */
     override fun aroundWriteTo(context: WriterInterceptorContext?) {
-        // 判断请求用户的语言是否和默认语言是否一致，如果一致则无需进行国际化替换
-        val defaultLanguage = SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
-        val i18nLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        if (context == null || resourceInfo == null || i18nLanguage == defaultLanguage) {
+        if (context == null || resourceInfo == null) {
             context?.proceed()
             return
         }
         // 1、只需拦截标上BkInterfaceI18n注解的接口
         val method = resourceInfo!!.resourceMethod
+        // 判断请求用户的语言是否和默认语言是否一致，如果一致且接口的响应数据不是从缓存中获取的则无需进行国际化替换
+        val defaultLanguage = commonConfig.devopsDefaultLocaleLanguage
+        val i18nLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         val bkInterfaceI18nAnnotation = AnnotationUtils.findAnnotation(method, BkInterfaceI18n::class.java)
-        if (bkInterfaceI18nAnnotation == null) {
+        if (bkInterfaceI18nAnnotation == null ||
+            (i18nLanguage == defaultLanguage && !bkInterfaceI18nAnnotation.responseDataCacheFlag)
+        ) {
             context.proceed()
             return
         }
@@ -227,15 +229,13 @@ class BkWriterInterceptor : WriterInterceptor {
         dbI18ndbKeyMap: MutableMap<String, String>,
         bkI18nFieldMap: MutableMap<String, I18nFieldInfo>
     ) {
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         // 获取模块标识
-        val moduleCode = I18nUtil.getModuleCode(attributes)
+        val moduleCode = I18nUtil.getModuleCode()
         // 获取用户ID
         val userId = I18nUtil.getRequestUserId()
         // 根据用户ID获取语言信息
         val language = I18nUtil.getLanguage(userId)
         val i18nMessageMap = mutableMapOf<String, String>()
-        val client = SpringContextUtil.getBean(Client::class.java)
         val i18nKeys = dbI18ndbKeyMap.values.toList()
         // 切割国际化key列表，分批获取key的国际化信息
         ListUtils.partition(i18nKeys, SIZE).forEach { rids ->

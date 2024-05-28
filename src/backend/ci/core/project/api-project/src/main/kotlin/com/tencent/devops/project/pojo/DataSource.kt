@@ -28,22 +28,23 @@ package com.tencent.devops.project.pojo
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("数据源")
+@Schema(title = "数据源")
 data class DataSource(
-    @ApiModelProperty("集群名称")
+    @get:Schema(title = "集群名称", required = true)
     @field:BkField(minLength = 1, maxLength = 64)
     val clusterName: String,
-    @ApiModelProperty("模块标识")
+    @get:Schema(title = "模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据源名称")
+    @get:Schema(title = "数据源名称", required = true)
     @field:BkField(minLength = 1, maxLength = 128)
     val dataSourceName: String,
-    @ApiModelProperty("容量是否满标识")
+    @get:Schema(title = "容量是否满标识", required = true)
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
     val fullFlag: Boolean = false,
-    @ApiModelProperty("数据源URL")
-    val dsUrl: String?
+    @get:Schema(title = "数据源URL", required = false)
+    val dsUrl: String? = null,
+    @get:Schema(title = "数据标签", required = false)
+    val dataTag: String? = null
 )

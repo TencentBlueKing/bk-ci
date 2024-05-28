@@ -27,27 +27,41 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.enums.VersionStatus
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线名称与Id")
+@Schema(title = "流水线名称与Id")
 data class PipelineDetailInfo(
-    @ApiModelProperty("流水线Id")
+    @get:Schema(title = "流水线Id")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("是否收藏")
+    @get:Schema(title = "是否收藏")
     val hasCollect: Boolean,
-    @ApiModelProperty("canManualStartup")
-    val canManualStartup: Int,
-    @ApiModelProperty("是否关联模板")
+    @get:Schema(title = "canManualStartup")
+    val canManualStartup: Boolean,
+    @get:Schema(title = "是否关联模板")
     val instanceFromTemplate: Boolean,
-    @ApiModelProperty("流水线版本")
-    val pipelineVersion: String,
-    @ApiModelProperty("部署时间")
-    val deploymentTime: String,
-    @ApiModelProperty("是否有编辑权限")
+    @get:Schema(title = "流水线版本")
+    val pipelineVersion: Int,
+    @get:Schema(title = "发布时间-时间戳")
+    val deploymentTime: Long,
+    @get:Schema(title = "是否有编辑权限")
     val hasPermission: Boolean,
-    @ApiModelProperty("关联模板ID", required = false)
-    var templateId: String? = null
+    @get:Schema(title = "关联模板ID", required = false)
+    var templateId: String? = null,
+    @get:Schema(title = "关联模板版本", required = false)
+    var templateVersion: Long? = null,
+    @get:Schema(title = "流水线描述")
+    val pipelineDesc: String,
+    @get:Schema(title = "创建者")
+    val creator: String,
+    @get:Schema(title = "创建时间")
+    val createTime: Long = 0,
+    @get:Schema(title = "更新时间")
+    val updateTime: Long = 0,
+    @get:Schema(title = "最新流水线版本状态（如有任何发布版本则为发布版本）", required = false)
+    var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
+    @get:Schema(title = "流水线组名称列表", required = false)
+    var viewNames: List<String>?
 )

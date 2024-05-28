@@ -27,23 +27,31 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
@@ -51,16 +59,17 @@ import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.StageCommonSetting
-import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.setting.TaskCommonSetting
 import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
-import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.utils.PipelineVersionUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -77,44 +86,82 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val jobCommonSettingConfig: JobCommonSettingConfig,
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
     private val auditService: AuditService,
-    private val client: Client,
+    private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
+    private val logger = LoggerFactory.getLogger(PipelineSettingFacadeService::class.java)
+
+    /**
+     * 修改配置时需要返回具体的版本号用于传递
+     */
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceIds = "#setting?.pipelineId",
+            instanceNames = "#setting?.pipelineName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#setting?.projectId")],
+        scopeId = "#setting?.projectId",
+        content = ActionAuditContent.PIPELINE_EDIT_SAVE_SETTING_CONTENT
+    )
     fun saveSetting(
+        context: DSLContext? = null,
         userId: String,
+        projectId: String,
+        pipelineId: String,
         setting: PipelineSetting,
+        versionStatus: VersionStatus = VersionStatus.RELEASED,
         checkPermission: Boolean = true,
-        version: Int = 0,
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
-        updateLabels: Boolean = true
-    ): String {
+        updateLabels: Boolean = true,
+        updateVersion: Boolean = true,
+        isTemplate: Boolean = false
+    ): PipelineSetting {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.EDIT
             checkEditPermission(
                 userId = userId,
-                projectId = setting.projectId,
-                pipelineId = setting.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
                     arrayOf(
                         userId,
-                        setting.projectId,
+                        projectId,
                         permission.getI18n(language),
-                        setting.pipelineId
+                        pipelineId
                     )
                 )
             )
         }
+        // 对齐新旧通知配置，统一根据新list数据保存
+        setting.fixSubscriptions()
+        modelCheckPlugin.checkSettingIntegrity(setting, projectId)
+        ActionAuditContext.current().setInstance(setting)
+        val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { latest ->
+            if (updateVersion) PipelineVersionUtils.getSettingVersion(
+                currVersion = latest.version,
+                originSetting = latest,
+                newSetting = PipelineSettingVersion.convertFromSetting(setting)
+            ) else latest.version
+        } ?: 1
 
         val pipelineName = pipelineRepositoryService.saveSetting(
+            context = context,
             userId = userId,
             setting = setting,
-            version = version,
-            updateLastModifyUser = updateLastModifyUser
+            version = settingVersion,
+            versionStatus = versionStatus,
+            updateLastModifyUser = updateLastModifyUser,
+            isTemplate = isTemplate
         )
 
         if (pipelineName.name != pipelineName.oldName) {
@@ -149,7 +196,13 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
 
         // 刷新流水线组
-        pipelineViewGroupService.updateGroupAfterPipelineUpdate(setting.projectId, setting.pipelineId, userId)
+        pipelineViewGroupService.updateGroupAfterPipelineUpdate(
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            pipelineName = setting.pipelineName,
+            creator = userId,
+            userId = userId
+        )
 
         if (dispatchPipelineUpdateEvent) {
             pipelineEventDispatcher.dispatch(
@@ -157,12 +210,12 @@ class PipelineSettingFacadeService @Autowired constructor(
                     source = "update_pipeline",
                     projectId = setting.projectId,
                     pipelineId = setting.pipelineId,
-                    version = version,
+                    version = settingVersion,
                     userId = userId
                 )
             )
         }
-        return setting.pipelineId
+        return setting.copy(version = settingVersion)
     }
 
     fun userGetSetting(
@@ -171,7 +224,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode = ChannelCode.BS,
         version: Int = 0,
-        checkPermission: Boolean = false
+        checkPermission: Boolean = false,
+        detailInfo: PipelineDetailInfo? = null
     ): PipelineSetting {
 
         if (checkPermission) {
@@ -194,41 +248,14 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-
-        var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
-        val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
-        val labels = ArrayList<String>()
-        groups.forEach {
-            labels.addAll(it.labels)
-        }
-        if (settingInfo == null) {
-            val pipeline = client.get(ServicePipelineResource::class).getPipelineInfo(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode
-            ).data
-            settingInfo = PipelineSetting(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = pipeline?.pipelineName ?: "unknown pipeline name",
-                desc = pipeline?.pipelineDesc ?: "",
-                runLockType = PipelineRunLockType.MULTIPLE,
-                successSubscription = Subscription(),
-                failSubscription = Subscription(),
-                labels = labels,
-                pipelineAsCodeSettings = PipelineAsCodeSettings()
-            )
-        } else {
-            settingInfo.labels = labels
-        }
-
-        if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
-            val ve = pipelineSettingVersionService.getSubscriptionsVer(userId, projectId, pipelineId, version)
-            settingInfo.successSubscription = ve.successSubscription
-            settingInfo.failSubscription = ve.failSubscription
-        }
-
-        return settingInfo
+        return pipelineSettingVersionService.getPipelineSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            detailInfo = detailInfo,
+            channelCode = channelCode,
+            version = version
+        )
     }
 
     fun getCommonSetting(userId: String): PipelineCommonSetting {
@@ -282,6 +309,13 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        content = ActionAuditContent.PIPELINE_EDIT_CONTENT
+    )
     fun updatePipelineModel(
         userId: String,
         updatePipelineModelRequest: UpdatePipelineModelRequest,
@@ -298,7 +332,6 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             }
         }
-
         pipelineRepositoryService.batchUpdatePipelineModel(
             userId = userId,
             pipelineModelVersionList = pipelineModelVersionList
@@ -315,7 +348,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         return oldSetting.copy(
             projectId = projectId,
             pipelineId = newPipelineId,
-            pipelineName = pipelineName
+            pipelineName = pipelineName,
+            pipelineAsCodeSettings = PipelineAsCodeSettings()
         )
     }
 

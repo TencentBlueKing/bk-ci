@@ -27,20 +27,19 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线文件路径模型")
+@Schema(title = "流水线文件路径模型")
 data class StreamGitPipelineDir(
-    @ApiModelProperty("当前流水线文件子路径", required = false)
+    @get:Schema(title = "当前流水线文件子路径", required = false)
     val currentPath: String?,
-    @ApiModelProperty("所有子路径", required = false)
+    @get:Schema(title = "所有子路径", required = false)
     var allPath: List<AllPathPair>?
 )
 
 data class AllPathPair(
-    @ApiModelProperty("子路径", required = true)
+    @get:Schema(title = "子路径", required = true)
     val path: String,
-    @ApiModelProperty("文件夹名字", required = true)
+    @get:Schema(title = "文件夹名字", required = true)
     val name: String
 )

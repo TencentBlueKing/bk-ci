@@ -4,14 +4,19 @@
             <div slot="dropdown-trigger" class="more-operation-entry">
                 <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
             </div>
-            <div :key="curPipelineId" class="more-operation-dropmenu" slot="dropdown-content">
+            <div
+                v-if="curPipelineId"
+                :key="curPipelineId"
+                class="more-operation-dropmenu"
+                slot="dropdown-content"
+            >
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
                     <template v-for="(action, aIndex) in parent">
                         <li
                             v-if="!action.hidden"
                             :key="aIndex"
                             v-perm="{
-                                permissionData: action.permissionData
+                                ...action.vPerm
                             }"
                             @click="action.handler"
                         >
@@ -21,13 +26,6 @@
                 </ul>
             </div>
         </bk-dropdown-menu>
-        <rename-dialog
-            :is-show="isRenameDialogShow"
-            v-bind="curPipeline"
-            :project-id="$route.params.projectId"
-            @close="toggleRenameDialog"
-            @done="renameDone"
-        />
         <copy-pipeline-dialog
             :is-copy-dialog-show="pipelineActionState.isCopyDialogShow"
             :pipeline="pipelineActionState.activePipeline"
@@ -40,6 +38,7 @@
         />
         <import-pipeline-popup
             :handle-import-success="handleImportModifyPipeline"
+            :pipeline-name="pipelineName"
             :is-show.sync="showImportDialog"
         ></import-pipeline-popup>
         <remove-confirm-dialog
@@ -47,110 +46,146 @@
             :is-show="pipelineActionState.isConfirmShow"
             :pipeline-list="pipelineActionState.activePipelineList"
             @close="closeRemoveConfirmDialog"
-            @done="goHome"
+            @done="afterRemovePipeline"
         />
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
+        <disable-dialog
+            :value="showDisableDialog"
+            :pipeline-id="$route.params.pipelineId"
+            :pipeline-name="pipelineName"
+            :lock="isCurPipelineLocked"
+            :pac-enabled="pacEnabled"
+            @close="closeDisablePipeline"
+            @done="afterDisablePipeline"
+        />
     </div>
 </template>
 
 <script>
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
-    import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
+    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import {
-        PROJECT_RESOURCE_ACTION,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
+    import { RESOURCE_ACTION, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     export default {
         components: {
             ImportPipelinePopup,
             exportDialog,
             CopyPipelineDialog,
             SaveAsTemplateDialog,
-            RenameDialog,
-            RemoveConfirmDialog
+            RemoveConfirmDialog,
+            DisableDialog
         },
         mixins: [pipelineActionMixin],
         data () {
             return {
-                isRenameDialogShow: false,
                 hasNoPermission: false,
                 showExportDialog: false,
-                showImportDialog: false
+                showImportDialog: false,
+                showDisableDialog: false
             }
         },
         computed: {
+            ...mapState('atom', ['pipelineInfo']),
             ...mapState('pipelines', ['pipelineActionState']),
-            ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
-            }),
+            ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked']),
             isTemplatePipeline () {
-                return this.curPipeline?.instanceFromTemplate ?? false
+                return this.pipelineInfo?.instanceFromTemplate ?? false
+            },
+            pipelineName () {
+                return this.pipelineInfo?.pipelineName ?? ''
             },
             curPipelineId () {
-                return this.curPipeline?.pipelineId
+                return this.pipelineInfo?.pipelineId
             },
             actionConfMenus () {
-                const { projectId, pipelineId } = this.$route.params
+                const { projectId } = this.$route.params
                 const pipeline = {
-                    pipelineId,
+                    ...(this.pipelineInfo ?? {}),
                     projectId,
-                    ...this.curPipeline
+                    pac: this.pacEnabled
                 }
                 return [
                     [
                         {
-                            label: 'rename',
-                            handler: () => {
-                                this.toggleRenameDialog(true)
-                            },
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
-                            }
+                            label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
+                            handler: this.toggleCollect
                         },
                         {
-                            label: this.curPipeline.hasCollect ? 'uncollect' : 'collect',
-                            handler: this.toggleCollect
+                            label: 'rename',
+                            handler: () => {
+                                this.$router.push({
+                                    name: 'pipelinesEdit',
+                                    query: {
+                                        tab: pipelineTabIdMap.setting
+                                    }
+                                })
+                            }
                         }
                     ],
                     [
                         {
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
                             }
                         },
                         {
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
                             hidden: this.isTemplatePipeline,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
                             }
                         },
+                        ...(pipeline.templateId
+                            ? [
+                                {
+                                    label: 'copyAsTemplateInstance',
+                                    handler: () => this.copyAsTemplateInstance(pipeline),
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'project',
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }
+                            ]
+                            : []),
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
                             }
                         },
                         {
@@ -160,7 +195,7 @@
                                 projectId,
                                 resourceType: 'project',
                                 resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
                             }
                         },
                         {
@@ -168,15 +203,35 @@
                             label: 'newlist.jumpToTemp',
                             handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
+                        }
+                    ],
+                    [
+                        {
+                            label: this.isCurPipelineLocked ? 'enable' : 'disable',
+                            handler: () => this.disablePipeline(),
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
+                            }
                         },
                         {
                             label: 'delete',
                             handler: () => this.deleteHandler(pipeline),
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.DELETE
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canDelete,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.DELETE
+                                }
                             }
                         }
                     ]
@@ -184,73 +239,46 @@
             }
         },
         methods: {
-            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom']),
-            ...mapActions('pipelines', ['setPipelineSetting', 'requestToggleCollect']),
-            ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
-            toggleRenameDialog (show = false) {
-                this.isRenameDialogShow = show
-            },
-            renameDone (name) {
-                this.$nextTick(() => {
-                    this.updateCurPipelineByKeyValue({
-                        key: 'pipelineName',
-                        value: name
-                    })
-                    this.pipelineSetting
-                        && Object.keys(this.pipelineSetting).length
-                        && this.updatePipelineSetting({
-                            container: this.pipelineSetting,
-                            param: {
-                                pipelineName: name
-                            }
-                        })
-                })
-            },
+            ...mapActions('atom', ['setPipelineEditing', 'setEditFrom']),
+            ...mapActions('pipelines', ['requestToggleCollect']),
             exportPipeline () {
                 this.showExportDialog = true
+            },
+            disablePipeline () {
+                this.showDisableDialog = true
+            },
+            closeDisablePipeline () {
+                this.showDisableDialog = false
             },
             importModifyPipeline () {
                 this.showImportDialog = true
             },
-            handleImportModifyPipeline (result) {
+            handleImportModifyPipeline () {
                 this.showImportDialog = false
-                this.setEditFrom(true)
                 this.$nextTick(() => {
-                    console.log('this.curPipeline', this.curPipeline)
-                    const pipelineVersion = this.curPipeline.pipelineVersion
-                    const pipelineName = this.curPipeline.pipelineName
-                    this.setPipelineSetting({
-                        ...result.setting,
-                        pipelineName,
-                        pipelineId: this.curPipeline.pipelineId,
-                        projectId: this.$route.params.projectId
-                    })
-                    this.setPipeline({
-                        ...result.model,
-                        name: pipelineName,
-                        latestVersion: pipelineVersion,
-                        instanceFromTemplate: false
-                    })
-                    this.setPipelineEditing(true)
                     this.$router.push({
                         name: 'pipelinesEdit'
                     })
                 })
             },
+            afterDisablePipeline (enable) {
+                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                    runLockType: enable ? 'MULTIPLE' : 'LOCK'
+                })
+            },
 
             async toggleCollect () {
-                const isCollect = !this.curPipeline.hasCollect
+                const isCollect = !this.pipelineInfo?.hasCollect
                 let message = isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc')
                 let theme = 'success'
                 try {
                     await this.requestToggleCollect({
                         projectId: this.$route.params.projectId,
-                        ...this.curPipeline,
+                        ...this.pipelineInfo,
                         isCollect
                     })
-                    this.updateCurPipelineByKeyValue({
-                        key: 'hasCollect',
-                        value: isCollect
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                        hasCollect: isCollect
                     })
                 } catch (err) {
                     message = err.message || err
@@ -261,6 +289,16 @@
                         theme
                     })
                 }
+            },
+            copyAsTemplateInstance (pipeline) {
+                const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
+                const { templateId, projectId, templateVersion } = pipeline
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}`
+            },
+            afterRemovePipeline () {
+                this.$router.push({
+                    name: 'PipelineManageList'
+                })
             }
         }
     }
@@ -303,6 +341,9 @@
   > ul {
     &:first-child {
       border-bottom: 1px solid #dcdee5;
+    }
+    &:last-child {
+      border-top: 1px solid #dcdee5;
     }
     > li {
       font-size: 12px;

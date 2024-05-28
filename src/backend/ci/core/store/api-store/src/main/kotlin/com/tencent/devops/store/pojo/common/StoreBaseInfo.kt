@@ -27,19 +27,29 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("组件基本信息")
+@Schema(title = "组件基本信息")
 data class StoreBaseInfo(
-    @ApiModelProperty("组件Id", required = true)
+    @get:Schema(title = "组件Id", required = true)
     val storeId: String,
-    @ApiModelProperty("组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @ApiModelProperty("组件名称", required = true)
+    @get:Schema(title = "组件名称", required = true)
     val storeName: String,
-    @ApiModelProperty("组件版本号", required = true)
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @get:Schema(title = "组件版本号", required = true)
     val version: String,
-    @ApiModelProperty("是否为公共组件", required = true)
-    val publicFlag: Boolean
+    @get:Schema(title = "是否为公共组件", required = true)
+    val publicFlag: Boolean,
+    @get:Schema(title = "状态", required = true)
+    val status: String = "",
+    @get:Schema(title = "logo地址")
+    val logoUrl: String? = null,
+    @get:Schema(title = "发布者")
+    val publisher: String,
+    @get:Schema(title = "分类ID")
+    val classifyId: String
 )

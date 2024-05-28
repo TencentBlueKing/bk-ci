@@ -30,23 +30,18 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODECC_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.model.project.tables.records.TProjectRecord
-import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
@@ -57,7 +52,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Suppress("UNUSED")
+@Suppress("ALL")
 @Service
 class ProjectTagService @Autowired constructor(
     val dslContext: DSLContext,
@@ -344,7 +339,7 @@ class ProjectTagService @Autowired constructor(
         }
         // 容器化项目需要将本地tag中的kubernetes-去掉来比较
         val localTag = bkTag.getLocalTag()
-        val clusterTag = if (isContainerProject) localTag.replace("kubernetes-", "") else localTag
+        val clusterTag = localTag.replace("kubernetes-", "")
         // 默认集群是不会有routerTag的信息
         if (projectTag.isNullOrBlank()) {
             // 只有默认集群在routerTag为空的时候才返回true
@@ -370,114 +365,6 @@ class ProjectTagService @Autowired constructor(
         if (!routerTagList!!.contains(routerTag)) {
             throw ParamBlankException("routerTag error:system unknown routerTag")
         }
-    }
-
-    fun getProjectListByFlag(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean,
-        codeCCGrayFlag: Boolean,
-        repoGrayFlag: Boolean
-    ): com.tencent.devops.project.pojo.Result<Map<String, Any?>?> {
-        val dataObj = mutableMapOf<String, Any?>()
-
-        val routerTag = if (grayFlag) grayTag else null
-
-        val otherRouterTagMaps = mutableMapOf<String, String>()
-        if (codeCCGrayFlag && grayTag != null) {
-            otherRouterTagMaps[SystemEnums.CODECC.name] = grayTag
-        }
-        if (repoGrayFlag && grayTag != null) {
-            otherRouterTagMaps[SystemEnums.REPO.name] = grayTag
-        }
-
-        val projectInfos = projectDao.getProjectList(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            offset = offset,
-            limit = limit,
-            routerTag = routerTag,
-            otherRouterTagMaps = otherRouterTagMaps
-        )
-        val totalCount = projectDao.getProjectCount(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            routerTag = routerTag,
-            otherRouterTagMaps = otherRouterTagMaps
-        )
-        val dataList = mutableListOf<ProjectInfoResponse>()
-
-        for (i in projectInfos.indices) {
-            val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponse(projectData)
-            dataList.add(projectInfo)
-        }
-        dataObj["projectList"] = dataList
-        dataObj["count"] = totalCount
-        return com.tencent.devops.project.pojo.Result(dataObj)
-    }
-
-    private fun getProjectInfoResponse(projectData: TProjectRecord): ProjectInfoResponse {
-        val otherRouterTagMap = projectData.otherRouterTags?.let {
-            JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
-        } ?: emptyMap()
-
-        val projectProperties = projectData.properties?.let {
-            JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
-        } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
-        return ProjectInfoResponse(
-            projectId = projectData.projectId,
-            projectName = projectData.projectName,
-            projectEnglishName = projectData.englishName,
-            creatorBgName = projectData.creatorBgName,
-            creatorDeptName = projectData.creatorDeptName,
-            creatorCenterName = projectData.creatorCenterName,
-            bgId = projectData.bgId,
-            bgName = projectData.bgName,
-            deptId = projectData.deptId,
-            deptName = projectData.deptName,
-            centerId = projectData.centerId,
-            centerName = projectData.centerName,
-            projectType = projectData.projectType,
-            approver = projectData.approver,
-            approvalTime = projectData.approvalTime?.timestampmilli(),
-            approvalStatus = projectData.approvalStatus,
-            secrecyFlag = projectData.isSecrecy,
-            creator = projectData.creator,
-            createdAtTime = projectData.createdAt.timestampmilli(),
-            ccAppId = projectData.ccAppId,
-            useBk = projectData.useBk,
-            offlinedFlag = projectData.isOfflined,
-            kind = projectData.kind,
-            enabled = projectData.enabled ?: true,
-            grayFlag = projectData.routerTag == grayTag,
-            codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
-            repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
-            hybridCCAppId = projectData.hybridCcAppId,
-            enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc,
-            pipelineLimit = projectData.pipelineLimit,
-            properties = projectProperties
-        )
     }
 
     companion object {

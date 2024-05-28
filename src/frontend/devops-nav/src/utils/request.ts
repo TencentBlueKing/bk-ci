@@ -1,9 +1,10 @@
 import { showLoginPopup } from '@/utils/util'
-import axios from 'axios'
+import axios, { AxiosError, AxiosResponse } from 'axios'
 import Vue from 'vue'
 
 const request = axios.create({
     baseURL: API_URL_PREFIX,
+    maxRedirects: 0,
     validateStatus: status => {
         if (status > 400) {
             console.warn(`HTTP 请求出错 status: ${status}`)
@@ -15,13 +16,17 @@ const request = axios.create({
     xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
 })
 
-function errorHandler (error: object) {
-    console.log('error catch', error)
+function errorHandler (error: AxiosError) {
+    if (typeof error.response.data === 'undefined') {
+        // HACK REDIRECT 302
+        showLoginPopup()
+    }
     return Promise.reject(Error('网络出现问题，请检查你的网络是否正常'))
 }
 
-request.interceptors.response.use(response => {
+request.interceptors.response.use((response: AxiosResponse) => {
     const { data: { code, data, message, status }, status: httpStatus } = response
+
     if (httpStatus === 401) {
         showLoginPopup()
     } else if (httpStatus === 503) {

@@ -39,7 +39,10 @@ import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.process.yaml.v2.models.format
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
@@ -81,7 +84,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "ComplexMethod")
 class StreamYamlTrigger @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
@@ -261,7 +264,7 @@ class StreamYamlTrigger @Autowired constructor(
         } else {
             triggerMatcher.isMatch(action)
         }
-        val (isTriggerBody, _, isTiming, isDelete, repoHookName) = tr
+        val (isTriggerBody, triggerOn, isTiming, isDelete, repoHookName) = tr
         val (isTrigger, notTriggerReason) = isTriggerBody
         logger.info(
             "StreamYamlTrigger|triggerBuild|pipelineId|" +
@@ -281,8 +284,9 @@ class StreamYamlTrigger @Autowired constructor(
                 reasonParams = listOf(notTriggerReason ?: "")
             )
         }
+        fixTriggerSetting(action, triggerOn)
 
-        val startParams = GitActionCommon.getStartParams(action, tr.triggerOn)
+        val startParams = GitActionCommon.getStartParams(action, triggerOn)
 
         // 替换yaml模板
         val yamlReplaceResult = prepareCIBuildYaml(action) ?: return false
@@ -386,6 +390,16 @@ class StreamYamlTrigger @Autowired constructor(
         return true
     }
 
+    private fun fixTriggerSetting(action: BaseAction, triggerOn: TriggerOn?) {
+        if (triggerOn?.mr?.reportCommitCheck != null) {
+            action.data.setting.enableCommitCheck = triggerOn.mr?.reportCommitCheck!!
+        }
+
+        if (triggerOn?.mr?.blockMr != null) {
+            action.data.setting.enableMrBlock = triggerOn.mr?.blockMr!!
+        }
+    }
+
     private fun getDisplayName(action: BaseAction): String {
         val originYaml = action.data.context.originYaml!!
         val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
@@ -450,8 +464,33 @@ class StreamYamlTrigger @Autowired constructor(
                     pools = resourcePoolExt.values.toList()
                 )
             )
+            val transferData = YamlTransferData()
 
-            val (normalYaml, transferData) = ScriptYmlUtils.normalizeGitCiYaml(newPreYamlObject, filePath)
+            val stages = ScriptYmlUtils.formatStage(
+                newPreYamlObject,
+                transferData
+            )
+            val finally = ScriptYmlUtils.preJobs2Jobs(newPreYamlObject.finally, transferData)
+
+            val normalYaml = with(newPreYamlObject) {
+                ScriptBuildYaml(
+                    name = if (!name.isNullOrBlank()) {
+                        name!!
+                    } else {
+                        filePath
+                    },
+                    version = version,
+                    triggerOn = action.data.context.triggerOn,
+                    variables = variables,
+                    extends = extends,
+                    resource = resources,
+                    notices = notices,
+                    stages = stages,
+                    finally = finally,
+                    label = label ?: emptyList(),
+                    concurrency = concurrency
+                )
+            }
             return YamlReplaceResult(
                 preYaml = newPreYamlObject,
                 normalYaml = normalYaml,
@@ -472,12 +511,15 @@ class StreamYamlTrigger @Autowired constructor(
                 is YamlBlankException -> {
                     Triple(isMr, "${e.repo} ${e.filePath} is null", TriggerReason.CI_YAML_CONTENT_NULL)
                 }
+
                 is YamlBehindException -> {
                     Triple(isMr, e.filePath, TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE)
                 }
+
                 is YamlFormatException, is JsonProcessingException, is CustomException, is TypeCastException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_TEMPLATE_ERROR)
                 }
+
                 is StackOverflowError -> {
                     Triple(isMr, "Yaml file has circular dependency", TriggerReason.CI_YAML_TEMPLATE_ERROR)
                 }
@@ -485,6 +527,7 @@ class StreamYamlTrigger @Autowired constructor(
                 is StreamTriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
+
                 else -> {
                     logger.warn("StreamYamlTrigger|prepareCIBuildYaml|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)

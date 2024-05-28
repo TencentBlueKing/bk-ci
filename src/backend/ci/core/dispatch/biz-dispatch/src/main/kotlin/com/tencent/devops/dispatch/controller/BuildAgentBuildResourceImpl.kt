@@ -27,6 +27,8 @@
 
 package com.tencent.devops.dispatch.controller
 
+import com.google.common.cache.Cache
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -34,23 +36,31 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugDoneInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugInfo
 import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 @RestResource
 @Suppress("ALL")
-class BuildAgentBuildResourceImpl constructor(
+class BuildAgentBuildResourceImpl @Autowired constructor(
     private val thirdPartyAgentBuildService: ThirdPartyAgentService,
-    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
+    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService,
+    private val redisOperation: RedisOperation
 ) : BuildAgentBuildResource {
 
     override fun startBuild(
@@ -146,6 +156,38 @@ class BuildAgentBuildResourceImpl constructor(
         return Result(thirdPartyAgentDockerService.fetchDebugStatus(debugId))
     }
 
+    private val agentAskRequestCache: Cache<String, String> = CacheBuilder.newBuilder().maximumSize(10000)
+        .expireAfterWrite(3, TimeUnit.SECONDS).build()
+
+    override fun thirdPartyAgentAsk(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        data: ThirdPartyAskInfo
+    ): AgentResult<ThirdPartyAskResp> {
+        checkParam(projectId, agentId, secretKey)
+
+        val requestAgentId = agentAskRequestCache.getIfPresent(agentId)
+        if (requestAgentId != null) {
+            logger.warn("agentHeartbeat|$projectId|$agentId| request too frequently")
+            return AgentResult(1, "request too frequently")
+        } else {
+            val lockKey = "environment:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
+            val redisLock = RedisLock(redisOperation, lockKey, 1)
+            if (redisLock.tryLock()) {
+                agentAskRequestCache.put(agentId, agentId)
+            } else {
+                return AgentResult(1, "request too frequently")
+            }
+        }
+        return thirdPartyAgentBuildService.ask(
+            projectId = projectId,
+            agentId = agentId,
+            secretKey = secretKey,
+            info = data
+        )
+    }
+
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException(
@@ -174,5 +216,9 @@ class BuildAgentBuildResourceImpl constructor(
                 )
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildAgentBuildResourceImpl::class.java)
     }
 }

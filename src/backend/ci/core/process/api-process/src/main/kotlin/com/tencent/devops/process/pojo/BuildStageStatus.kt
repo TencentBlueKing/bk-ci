@@ -28,25 +28,24 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("历史构建阶段状态")
+@Schema(title = "历史构建阶段状态")
 data class BuildStageStatus(
-    @ApiModelProperty("阶段ID", required = true)
+    @get:Schema(title = "阶段ID", required = true)
     val stageId: String,
-    @ApiModelProperty("阶段名称", required = true)
+    @get:Schema(title = "阶段名称", required = true)
     val name: String,
-    @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "阶段状态", required = false, readOnly = true)
     var status: String? = null,
-    @ApiModelProperty("阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
-    @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "阶段启动时间", required = false, readOnly = true)
     var startEpoch: Long? = null,
-    @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器运行时间", required = false, readOnly = true)
     var elapsed: Long? = null,
-    @ApiModelProperty("各项耗时", required = true)
+    @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    @ApiModelProperty("前端", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "前端", required = false, readOnly = true)
     var showMsg: String? = null
 )

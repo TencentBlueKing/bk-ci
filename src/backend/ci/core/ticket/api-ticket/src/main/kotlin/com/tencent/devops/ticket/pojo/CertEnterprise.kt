@@ -27,17 +27,16 @@
 
 package com.tencent.devops.ticket.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("证书-ios企业证书加密内容")
+@Schema(title = "证书-ios企业证书加密内容")
 data class CertEnterprise(
-    @ApiModelProperty("Base64编码的加密公钥", required = true)
+    @get:Schema(title = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @ApiModelProperty("mobileProvision描述文件名", required = true)
+    @get:Schema(title = "mobileProvision描述文件名", required = true)
     val mobileProvisionFileName: String,
-    @ApiModelProperty("Base64编码的加密后mobileProvision描述文件内容", required = true)
+    @get:Schema(title = "Base64编码的加密后mobileProvision描述文件内容", required = true)
     val mobileProvisionContent: String,
-    @ApiModelProperty("文件的Sha1值", required = true)
+    @get:Schema(title = "文件的Sha1值", required = true)
     val mobileProvisionSha1: String
 )

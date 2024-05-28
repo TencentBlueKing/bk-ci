@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,90 +46,90 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_BUILD"], description = "构建-构建资源")
+@Tag(name = "BUILD_BUILD", description = "构建-构建资源")
 @Path("/build/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildBuildResource {
-    @ApiOperation("获取流水线构建单条历史")
+    @Operation(summary = "获取流水线构建单条历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
     @Path("/{projectId}/{pipelineId}/{buildNum}/history")
     fun getSingleHistoryBuild(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("流水线buildNum", required = true)
+        @Parameter(description = "流水线buildNum", required = true)
         @PathParam("buildNum")
         buildNum: String,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
 
-    @ApiOperation("获取流水线最近成功构建")
+    @Operation(summary = "获取流水线最近成功构建")
     @GET
     @Path("/{projectId}/{pipelineId}/latestSuccessBuild")
     fun getLatestSuccessBuild(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
 
-    @ApiOperation("获取构建详情")
+    @Operation(summary = "获取构建详情")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<ModelDetail>
 
-    @ApiOperation("获取子流水线变量")
+    @Operation(summary = "获取子流水线变量")
     @GET
     @Path("/taskIds/{taskId}/subVar")
     fun getSubBuildVars(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("任务ID", required = false)
+        @Parameter(description = "任务ID", required = false)
         @PathParam("taskId")
         taskId: String
     ): Result<Map<String, String>>
 
-    @ApiOperation("获取当前构建的构建详情页")
+    @Operation(summary = "获取当前构建的构建详情页")
     @GET
     @Path("/detail_url")
     fun getBuildDetailUrl(
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String
     ): Result<String>
