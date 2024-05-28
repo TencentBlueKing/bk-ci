@@ -7,9 +7,9 @@
                 :placeholder="$t('restore.restoreSearchTips')"
                 right-icon="bk-icon icon-search"
                 :value="filters.filterByPipelineName"
-                @enter="handelBlur"
-                @clear="handelBlur"
-                @right-icon-click="handelBlur"
+                @enter="handleSearch"
+                @clear="handleSearch"
+                @right-icon-click="handleSearch"
             />
         </div>
         <template v-else>
@@ -448,7 +448,7 @@
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()
             },
-            handelBlur (filterByPipelineName) {
+            handleSearch (filterByPipelineName) {
                 this.filters = {
                     filterByPipelineName
                 }
