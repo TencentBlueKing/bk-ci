@@ -163,10 +163,10 @@ class SubPipelineStatusService @Autowired constructor(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
                     source = "updateTaskStatus",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
                     userId = it.startUser,
-                    buildId = buildId,
+                    buildId = it.buildId,
                     refreshTypes = RefreshType.DETAIL.binary
                 )
             )
