@@ -26,7 +26,7 @@ function errorHandler (error: AxiosError) {
 
 request.interceptors.response.use((response: AxiosResponse) => {
     const { data: { code, data, message, status }, status: httpStatus } = response
-    
+
     if (httpStatus === 401) {
         showLoginPopup()
     } else if (httpStatus === 503) {
