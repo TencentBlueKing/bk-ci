@@ -137,4 +137,12 @@ class OpServiceResourceImpl @Autowired constructor(
     override fun deleteVisibleDept(userId: String, serviceCode: String, deptIds: String): Result<Boolean> {
         return storeVisibleDeptService.deleteVisibleDept(userId, serviceCode, deptIds, StoreTypeEnum.SERVICE)
     }
+
+    override fun migrateService(userId: String, serviceId: String): Result<Boolean> {
+        return opExtServiceService.migrateService(
+            userId = userId,
+            serviceId = serviceId,
+            checkPermissionFlag = false
+        )
+    }
 }
