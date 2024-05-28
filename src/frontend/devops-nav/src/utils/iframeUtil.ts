@@ -1,3 +1,4 @@
+import { showLoginPopup } from '@/utils/util'
 import eventBus from './eventBus'
 
 interface UrlParam {
@@ -41,9 +42,7 @@ function iframeUtil (router: any) {
         }
     }
 
-    utilMap.toggleLoginDialog = function () {
-        location.href = window.getLoginUrl()
-    }
+    utilMap.toggleLoginDialog = showLoginPopup
 
     utilMap.popProjectDialog = function (project: Project): void {
         eventBus.$emit('show-project-dialog', project)
