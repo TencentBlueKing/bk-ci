@@ -253,6 +253,7 @@ class PipelineBuildFacadeService(
                 // 当值是boolean类型的时候，需要转为boolean类型
                 param.value = if (param.constant == true) {
                     param.value = param.defaultValue
+                    param.readOnly = true
                 } else if (param.defaultValue is Boolean) {
                     realValue?.toString()?.toBoolean()
                 } else {
