@@ -204,7 +204,7 @@ class ExtServiceBcsService {
             version = version,
             checkPermissionFlag = checkPermissionFlag
         )
-        val bcsDeployAppResult = client.get(ServiceKubernetesManagementResource::class).bcsDeployApp(
+        val bcsDeployAppResult = client.get(ServiceKubernetesManagementResource::class).deployApp(
             userId = userId,
             deployApp = deployApp
         )
@@ -305,7 +305,7 @@ class ExtServiceBcsService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val deployment = client.get(ServiceKubernetesManagementResource::class).getBcsDeploymentInfo(userId, serviceCode).data
+        val deployment = client.get(ServiceKubernetesManagementResource::class).getDeploymentInfo(userId, serviceCode).data
         logger.info("getExtServiceDeployStatus deployment is:$deployment")
         return Result(deployment?.status)
     }

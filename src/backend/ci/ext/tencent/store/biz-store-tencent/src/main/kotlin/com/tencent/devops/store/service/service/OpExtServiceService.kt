@@ -437,7 +437,7 @@ class OpExtServiceService @Autowired constructor(
             version = version,
             checkPermissionFlag = checkPermissionFlag
         )
-        val bcsDeployAppResult = client.get(ServiceKubernetesManagementResource::class).bcsDeployApp(
+        val bcsDeployAppResult = client.get(ServiceKubernetesManagementResource::class).deployApp(
             userId = userId,
             deployApp = deployApp
         )
