@@ -8,6 +8,7 @@
                 right-icon="bk-icon icon-search"
                 v-model="filterByPipelineName"
                 @enter="handelBlur"
+                @clear="handelBlur"
                 @right-icon-click="handelBlur"
             />
         </div>
