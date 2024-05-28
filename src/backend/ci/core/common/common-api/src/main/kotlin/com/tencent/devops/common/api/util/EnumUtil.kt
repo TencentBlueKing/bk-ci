@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.util
 
+import org.apache.commons.lang3.reflect.MethodUtils
 import sun.reflect.ReflectionFactory
 import java.lang.reflect.AccessibleObject
 import java.lang.reflect.Constructor
@@ -130,7 +131,15 @@ object EnumUtil {
         var modifiers: Int = modifiersField.getInt(field)
         modifiers = modifiers and Modifier.FINAL.inv()
         modifiersField.setInt(field, modifiers)
-        field.set(target, value)
+
+        val fieldAccessor = MethodUtils.invokeMethod(field, true, "acquireFieldAccessor", false)
+        MethodUtils.invokeMethod(
+            fieldAccessor,
+            true,
+            "set",
+            arrayOf(target, value),
+            arrayOf<Class<*>>(Object::class.java, Object::class.java)
+        )
     }
 
     @Throws(NoSuchFieldException::class, IllegalAccessException::class)
@@ -150,7 +159,7 @@ object EnumUtil {
     }
 
     @Throws(NoSuchMethodException::class)
-    inline fun <reified T : Any> getConstructorAccessor(
+    inline fun <reified T : Any> getConstructor(
         enumClass: Class<T>,
         additionalParameterTypes: Array<Class<out Any>>
     ): Constructor<out Any>? {
@@ -204,7 +213,10 @@ object EnumUtil {
         params[0] = value
         params[1] = Integer.valueOf(ordinal)
         System.arraycopy(additionalValues, 0, params, 2, additionalValues.size)
-        return enumClass.cast(getConstructorAccessor(enumClass, additionalTypes)!!.newInstance(params))
+        val constructor = getConstructor(enumClass, additionalTypes)
+        val constructorAccessor = MethodUtils.invokeMethod(constructor, true, "acquireConstructorAccessor")
+        val instance = MethodUtils.invokeMethod(constructorAccessor, true, "newInstance", params)
+        return enumClass.cast(instance)
     }
 
     val reflectionFactory: ReflectionFactory = ReflectionFactory.getReflectionFactory()
