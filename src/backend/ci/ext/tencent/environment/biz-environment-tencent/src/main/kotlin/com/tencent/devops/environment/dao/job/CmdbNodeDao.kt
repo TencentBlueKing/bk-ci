@@ -517,11 +517,16 @@ class CmdbNodeDao {
         }
     }
 
-    fun getCmdbNodesHostIdNullLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record2<String, Long>> {
+    fun getCmdbNodesHostIdNullLimit(
+        dslContext: DSLContext,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_IP.`as`(T_NODE_NODE_IP),
-                NODE_ID.`as`(T_NODE_NODE_ID)
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(HOST_ID.isNull)

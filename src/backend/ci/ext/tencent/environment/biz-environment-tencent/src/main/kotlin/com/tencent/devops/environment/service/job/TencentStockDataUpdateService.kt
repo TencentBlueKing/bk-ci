@@ -397,19 +397,19 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun addNodeToCCByPage(page: Int) {
-        val cmdbNodesRecords =
-            cmdbNodeDao.getCmdbNodesHostIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE) // 所有"部署"节点 record
-        val cmdbNodesIp = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet() // 所有"部署"节点 ip
-        val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_NODE_IP] as String } // 所有"部署"节点 ip - record
-        val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(
-            cmdbNodesIp, COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME
-        ) // 所有"部署"节点 ip - cmdb信息
-        if (!ipToCmdbInfoMap.isNullOrEmpty()) {
-            val svrIdToCmdbInfoMap = ipToCmdbInfoMap.values
-                .associateBy { it.serverId } // 所有"部署"节点 svrId - cmdb信息
-            val svrIdList = ipToCmdbInfoMap.values.mapNotNull { it.serverId } // 所有"部署"节点 svrId
+        val cmdbNodesRecords = cmdbNodeDao.getCmdbNodesHostIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+        val cmdbNodeServerIdSet = cmdbNodesRecords.map { it[T_NODE_SERVER_ID] as Long }.toSet()
+        val nodeServerIdToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_SERVER_ID] as Long }
+        val cmdbInfoList = tencentQueryFromCmdbService.queryCmdbInfo(
+            keyValues = CmdbKeyValues(
+                serverIdStrList = cmdbNodeServerIdSet.joinToString(separator = ";")
+            ),
+            COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME
+        ) // 所有"部署"节点 cmdb信息
+        val serverIdToCmdbInfoMap = cmdbInfoList?.associateBy { it.serverId }
+        if (!serverIdToCmdbInfoMap.isNullOrEmpty()) {
             // 所有"部署"节点 用svrId查询在不在CC中
-            val (_, _, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(svrIdList)
+            val (_, _, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(cmdbNodeServerIdSet.toList())
             // 不在CC中 - 通过节点svrId 添加到CC中，查出host_id和云区域id，写入db对应记录
             if (notInCCSvrIdList.isNotEmpty()) {
                 val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
@@ -419,7 +419,7 @@ class TencentStockDataUpdateService @Autowired constructor(
                 val hostIdToCCinfo = svrIdQueryCCList?.associateBy { it.bkHostId }
                 val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
                     CCUpdateInfo(
-                        nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.svrIp]
+                        nodeId = nodeServerIdToNodesRecords[serverIdToCmdbInfoMap[notInCCSvrIdList[index]]?.serverId]
                             ?.get(T_NODE_NODE_ID) as Long,
                         bkCloudId = hostIdToCCinfo?.get(value)?.bkCloudId?.toLong(),
                         bkHostId = value,
