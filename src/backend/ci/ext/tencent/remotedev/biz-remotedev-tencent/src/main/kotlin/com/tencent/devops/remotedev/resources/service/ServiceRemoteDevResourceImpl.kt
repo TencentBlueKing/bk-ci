@@ -467,7 +467,7 @@ class ServiceRemoteDevResourceImpl(
             throwTokenFail(desktopIP, "wrong fingerprint", "$realFingerprint != ${sign.fingerprint}")
         }
         // 校验签名
-        // <md5(mac_addr+token)>,<appid>,<原始文件名>,<文件版本>,<修改日期>,<产品名称>,<产品版本>,<exe文件的sha1>,<当前10位时间戳>
+        // <md5(mac_addr+token)>,<appid>,<原始文件名>,<文件版本>,<修改日期>,<产品名称>,<产品版本>,<exe文件的sha1>,<当前10位时间戳>,<public key>
         val unsigned = "${sign.fingerprint}," +
             "${sign.appId}," +
             "${sign.fileName}," +
@@ -476,7 +476,8 @@ class ServiceRemoteDevResourceImpl(
             "${sign.productName}," +
             "${sign.productVersion}," +
             "${sign.sha1}," +
-            "${sign.timestamp}"
+            "${sign.timestamp}," +
+            sign.publicKey
         val realSigned = ShaUtils.hmacSha1(bkConfig.desktopSdkToken.toByteArray(), unsigned.toByteArray())
         if (realSigned != sign.sign) {
             throwTokenFail(desktopIP, "wrong sign", "$realSigned != ${sign.sign}")
