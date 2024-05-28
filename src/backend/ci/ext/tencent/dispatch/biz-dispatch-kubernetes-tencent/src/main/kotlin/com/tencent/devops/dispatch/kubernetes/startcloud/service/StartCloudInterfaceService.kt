@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.startcloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.service.utils.ByteUtils
+import com.tencent.devops.dispatch.kubernetes.bcs.client.WorkspaceBcsClient
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -54,6 +55,7 @@ import org.springframework.stereotype.Service
 class StartCloudInterfaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
+    private val workspaceBcsClient: WorkspaceBcsClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val workspaceStartCloudClient: WorkspaceStartCloudClient
@@ -114,7 +116,7 @@ class StartCloudInterfaceService @Autowired constructor(
     }
 
     fun getWorkspaceInfoByEid(eid: String): WorkspaceInfo {
-        val workspaceStatus = workspaceClient.getWorkspaceInfo(
+        val workspaceStatus = workspaceBcsClient.startGetWorkspaceInfo(
             userId = "admin",
             environmentOperate = EnvironmentOperate(eid)
         )
@@ -137,7 +139,7 @@ class StartCloudInterfaceService @Autowired constructor(
     // 同步更新云桌面资源池列表
     fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
         val resList = mutableListOf<EnvironmentResourceData>()
-        val cgs = workspaceClient.listCgs()
+        val cgs = workspaceBcsClient.startListCgs()
         cgs.forEach {
             resList.add(
                 EnvironmentResourceData(
@@ -249,7 +251,7 @@ class StartCloudInterfaceService @Autowired constructor(
     // 获取vm空闲资源
     fun getAllVmResource() {
         val resList = mutableListOf<ResourceVmRespDataMachineResource>()
-        val cgs = workspaceStartCloudClient.getResourceVm(ResourceVmReq(null, null, false))
+        val cgs = workspaceBcsClient.startGetResourceVm(ResourceVmReq(null, null, false))
         cgs?.forEach { resource ->
             resource.machineResources?.forEach { mas ->
                 resList.add(

@@ -242,7 +242,7 @@ export function ifShowNotice (currentNotice) {
 }
 
 export function showLoginPopup () {
-    const successUrl = `${window.location.origin}/console/static/login_success.html`
+    const successUrl = `${window.location.origin}/console/static/login_done.html`
 
     // 系统的登录页地址
     let siteLoginUrl = window.getLoginUrl()

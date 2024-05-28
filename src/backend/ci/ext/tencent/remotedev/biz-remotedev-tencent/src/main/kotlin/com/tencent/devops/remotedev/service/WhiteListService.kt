@@ -70,6 +70,21 @@ class WhiteListService @Autowired constructor(
         return true
     }
 
+    fun updateAndGetWindowsLimit(userId: String, limit: Int): Int {
+        val get = whiteListDao.get(dslContext, userId, WhiteListType.WINDOWS_GPU)?.windowsGpuLimit ?: 0
+        if (limit != 0) {
+            whiteListDao.addOrUpdate(
+                dslContext,
+                WhiteList(
+                    name = userId,
+                    type = WhiteListType.WINDOWS_GPU,
+                    windowsGpuLimit = limit + get
+                )
+            )
+        }
+        return limit + get
+    }
+
     fun addGPUWhiteListUser(
         userId: String,
         whiteListUser: String,

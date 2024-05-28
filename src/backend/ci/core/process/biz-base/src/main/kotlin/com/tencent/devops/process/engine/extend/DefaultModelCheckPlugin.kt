@@ -81,7 +81,12 @@ open class DefaultModelCheckPlugin constructor(
     open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
-    override fun checkModelIntegrity(model: Model, projectId: String?, userId: String): Int {
+    override fun checkModelIntegrity(
+        model: Model,
+        projectId: String?,
+        userId: String,
+        isTemplate: Boolean
+    ): Int {
         var metaSize = 0
         // 检查流水线名称
         PipelineUtils.checkPipelineName(
@@ -156,7 +161,8 @@ open class DefaultModelCheckPlugin constructor(
                 atomVersions = atomVersions,
                 contextMap = contextMap,
                 atomInputParamList = atomInputParamList,
-                elementCheckResults = elementCheckResults
+                elementCheckResults = elementCheckResults,
+                isTemplate = isTemplate
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -232,7 +238,8 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>,
-        elementCheckResults: MutableList<ElementCheckResult>
+        elementCheckResults: MutableList<ElementCheckResult>,
+        isTemplate: Boolean
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -268,7 +275,8 @@ open class DefaultModelCheckPlugin constructor(
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,
                     contextMap = contextMap,
-                    elementCheckResults = elementCheckResults
+                    elementCheckResults = elementCheckResults,
+                    isTemplate = isTemplate
                 )
             }
         }
@@ -284,7 +292,8 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         contextMap: Map<String, String>,
-        elementCheckResults: MutableList<ElementCheckResult>
+        elementCheckResults: MutableList<ElementCheckResult>,
+        isTemplate: Boolean
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
@@ -295,7 +304,8 @@ open class DefaultModelCheckPlugin constructor(
             container = this,
             element = element,
             contextMap = contextMap,
-            appearedCnt = eCnt
+            appearedCnt = eCnt,
+            isTemplate = isTemplate
         )
         if (elementCheckResult?.result == false) {
             elementCheckResults.add(elementCheckResult)
@@ -306,6 +316,11 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     override fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>) {
+        // 保存时将旧customEnv赋值给新的上一级customEnv
+        val oldCustomEnv = element.additionalOptions?.customEnv
+        if (!oldCustomEnv.isNullOrEmpty()) {
+            element.customEnv = (element.customEnv ?: emptyList()).plus(oldCustomEnv)
+        }
         if (!element.additionalOptions?.timeoutVar.isNullOrBlank()) {
             val obj = Timeout.decTimeout(timeoutVar = element.additionalOptions?.timeoutVar, contextMap = contextMap)
             if (obj.change && obj.replaceByVar) {

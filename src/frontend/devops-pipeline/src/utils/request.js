@@ -25,6 +25,7 @@ import { isAbsoluteURL, randomString } from './util'
 
 const request = axios.create({
     baseURL: API_URL_PREFIX,
+    maxRedirects: 0,
     validateStatus: status => {
         if (status > 400) {
             console.warn(`HTTP 请求出错 status: ${status}`)
@@ -35,6 +36,10 @@ const request = axios.create({
 })
 
 function errorHandler (error) {
+    if (typeof error.response.data === 'undefined') {
+        // HACK REDIRECT 302
+        bus.$toggleLoginDialog(true)
+    }
     return Promise.reject(error)
 }
 
