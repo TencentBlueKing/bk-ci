@@ -44,7 +44,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "BUILD_KUBERNETES_MANAGEMENT", description = "Kubernetes-Management服务")
-@Path("/build/kubernetes/management")
+@Path("/build/bcs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildKubernetesManagementResource {
