@@ -2,7 +2,15 @@
     <main class="pipeline-list-main">
         <div class="recycle-bin-header" v-if="isDeleteView">
             <h5>{{$t('restore.recycleBin')}}</h5>
-            <bk-input :placeholder="$t('restore.restoreSearchTips')" />
+            <bk-input
+                clearable
+                :placeholder="$t('restore.restoreSearchTips')"
+                right-icon="bk-icon icon-search"
+                v-model="filterByPipelineName"
+                @enter="handelBlur"
+                @clear="handelBlur"
+                @right-icon-click="handelBlur"
+            />
         </div>
         <template v-else>
             <h5 class="current-pipeline-group-name">
@@ -114,6 +122,7 @@
             <pipelines-card-view
                 v-else-if="isCardLayout"
                 :filter-params="filters"
+                :filter-by-pipeline-name="filterByPipelineName"
                 ref="pipelineBox"
             />
 
@@ -228,7 +237,8 @@
                     action: this.toggleImportPipelinePopup
                 }],
                 RESOURCE_ACTION,
-                PROJECT_RESOURCE_ACTION
+                PROJECT_RESOURCE_ACTION,
+                filterByPipelineName: ''
             }
         },
         computed: {
@@ -439,6 +449,14 @@
             },
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()
+            },
+            handelBlur (value) {
+                this.filterByPipelineName = value
+                this.$refs.pipelineBox?.requestList?.({
+                    page: 1,
+                    pageSize: 50,
+                    filterByPipelineName: this.filterByPipelineName || null
+                })
             }
         }
     }

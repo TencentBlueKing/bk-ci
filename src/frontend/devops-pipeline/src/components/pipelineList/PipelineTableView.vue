@@ -342,6 +342,10 @@
             filterParams: {
                 type: Object,
                 default: () => ({})
+            },
+            filterByPipelineName: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -608,6 +612,7 @@
                         page: this.pagination.current,
                         pageSize: this.pagination.limit,
                         viewId: this.$route.params.viewId,
+                        filterByPipelineName: this.filterByPipelineName || null,
                         ...this.filterParams,
                         ...query
                     })
