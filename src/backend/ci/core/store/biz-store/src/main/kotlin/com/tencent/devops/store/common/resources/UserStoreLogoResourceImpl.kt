@@ -30,10 +30,11 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreLogoResource
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
+import com.tencent.devops.store.pojo.common.logo.Logo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
 import com.tencent.devops.store.common.service.StoreLogoService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
@@ -47,13 +48,15 @@ class UserStoreLogoResourceImpl @Autowired constructor(
         userId: String,
         contentLength: Long,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        storeType: StoreTypeEnum?
     ): Result<StoreLogoInfo?> {
         return storeLogoService.uploadStoreLogo(
             userId = userId,
             contentLength = contentLength,
             inputStream = inputStream,
-            disposition = disposition
+            disposition = disposition,
+            storeType = storeType
         )
     }
 

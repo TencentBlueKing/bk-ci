@@ -234,11 +234,11 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 )
             }
             val sourceVersion = pipelineReplaceHistory.sourceVersion
-            val sourceModel = pipelineRepositoryService.getModel(
+            val sourceModel = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = sourceVersion
-            )
+            )?.model
             if (sourceModel == null) {
                 val params = arrayOf("$pipelineId+$sourceVersion")
                 throw ErrorCodeException(

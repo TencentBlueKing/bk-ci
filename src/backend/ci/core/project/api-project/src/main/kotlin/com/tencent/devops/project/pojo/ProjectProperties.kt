@@ -45,5 +45,7 @@ data class ProjectProperties(
     @get:Schema(title = "是否开启流水线模板管理", required = false)
     var enableTemplatePermissionManage: Boolean? = null,
     @get:Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db")
-    val dataTag: String? = null
+    val dataTag: String? = null,
+    @get:Schema(title = "当项目不活跃时，是否禁用")
+    var disableWhenInactive: Boolean? = null
 )

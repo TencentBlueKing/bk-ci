@@ -75,10 +75,13 @@ class UserNodeResourceImpl @Autowired constructor(
         nodeIp: String?,
         displayName: String?,
         createdUser: String?,
-        lastModifiedUser: String?
+        lastModifiedUser: String?,
+        keywords: String?
     ): Result<Page<NodeWithPermission>> {
         return Result(
-            nodeService.listNew(userId, projectId, page, pageSize, nodeIp, displayName, createdUser, lastModifiedUser)
+            nodeService.listNew(
+                userId, projectId, page, pageSize, nodeIp, displayName, createdUser, lastModifiedUser, keywords
+            )
         )
     }
 

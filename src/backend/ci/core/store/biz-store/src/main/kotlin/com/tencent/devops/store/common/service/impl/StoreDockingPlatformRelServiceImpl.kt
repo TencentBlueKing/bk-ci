@@ -32,7 +32,7 @@ import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.common.dao.StoreDockingPlatformDao
 import com.tencent.devops.store.common.dao.StoreDockingPlatformRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreDockingPlatformRelService
 import org.jooq.DSLContext

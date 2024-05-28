@@ -275,12 +275,6 @@ export default {
       },
       deep: true
     },
-    projectCode: {
-      handler (val) {
-        this.searchSelectValue = []
-      },
-      deep: true
-    },
     curProject: {
       async handler (val) {
         if (val && val.englishName !== this.$route.query.project_code) {
@@ -416,7 +410,7 @@ export default {
         {
           resourceType: this.resourceType,
           projectId: this.projectCode,
-          resourceName: encodeURI(keyWords)
+          resourceName: keyWords
         },
         {
           page,

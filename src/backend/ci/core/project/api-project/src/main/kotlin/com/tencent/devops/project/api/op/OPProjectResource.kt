@@ -221,4 +221,11 @@ interface OPProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<OperationalProductVO>>
+
+    @PUT
+    @Path("/setDisableWhenInactiveFlag")
+    fun setDisableWhenInactiveFlag(
+        @Parameter(description = "项目ID列表", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }

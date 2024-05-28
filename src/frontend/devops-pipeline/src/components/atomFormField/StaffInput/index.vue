@@ -1,16 +1,21 @@
 <template>
-    <bk-tag-input
-        v-model="tagValue"
-        allow-create
-        clearable
-        :placeholder="placeholder"
-        :search-key="['id', 'name']"
-        separator=","
-        :disabled="disabled"
-        :create-tag-validator="checkVariable"
-        :paste-fn="paste"
-        :list="list">
-    </bk-tag-input>
+    <div class="staff-input">
+        <div v-if="prependText" class="group-text prepend-box">
+            {{ prependText }}
+        </div>
+        <bk-tag-input
+            v-model="tagValue"
+            allow-create
+            clearable
+            :placeholder="placeholder"
+            :search-key="['id', 'name']"
+            separator=","
+            :disabled="disabled"
+            :create-tag-validator="checkVariable"
+            :paste-fn="paste"
+            :list="list">
+        </bk-tag-input>
+    </div>
 </template>
 
 <script>
@@ -36,6 +41,10 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            prependText: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -62,6 +71,8 @@
                 const url = this.listUrl || `/project/api/user/users/projectUser/${this.$route.params.projectId}/${this.$route.params.pipelineId}/map`
                 this.$ajax.get(`${url}`).then(res => {
                     this.list = res.data
+                }).catch(e => {
+                    console.log(e)
                 })
             },
             // 检验变量
@@ -76,3 +87,17 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .staff-input {
+        display: flex;
+        .prepend-box {
+            border: 1px solid #c4c6cc;
+            border-right: none;
+            padding: 0 15px;
+        }
+        .bk-tag-selector {
+            flex: 1;
+        }
+    }
+</style>

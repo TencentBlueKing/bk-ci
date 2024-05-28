@@ -10,3 +10,4 @@ devops-gitci/src/conf
 .codecc
 .idea
 .vscode
+*.pem

@@ -42,8 +42,12 @@ data class LogMessage(
     val timestamp: Long,
     @get:Schema(title = "标签")
     val tag: String = "",
+    @get:Schema(title = "step Id")
+    val stepId: String = "",
     @get:Schema(title = "job id")
     val jobId: String = "",
+    @get:Schema(title = "container Hash Id")
+    val containerHashId: String = "",
     @get:Schema(title = "日志类型")
     val logType: LogType = LogType.LOG,
     @get:Schema(title = "执行次数")

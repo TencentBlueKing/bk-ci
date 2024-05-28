@@ -205,8 +205,10 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             buildId = event.buildId,
             message = sb.toString(),
             tag = tag,
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = null,
+            stepId = event.stepId
         )
         sb.clear()
     }

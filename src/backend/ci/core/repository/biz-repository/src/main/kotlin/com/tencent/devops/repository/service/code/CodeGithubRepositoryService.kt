@@ -37,11 +37,12 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVAL
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.GithubRepository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.service.github.GithubTokenService
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -72,7 +73,8 @@ class CodeGithubRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.GITHUB
+                type = ScmType.GITHUB,
+                enablePac = repository.enablePac
             )
             repositoryGithubDao.create(
                 dslContext = transactionContext,
@@ -152,12 +154,16 @@ class CodeGithubRepositoryService @Autowired constructor(
             projectName = record.projectName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId.toLong()
+            gitProjectId = record.gitProjectId.toLong(),
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
-        return repositoryIds.associateWith { RepoAuthInfo(authType = RepoAuthType.OAUTH.name, credentialId = "") }
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
+        return repositoryIds.associateWith {
+            RepositoryDetailInfo(authType = RepoAuthType.OAUTH.name, credentialId = "")
+        }
     }
 
     private fun getProjectId(repository: GithubRepository, userId: String): Long {
@@ -187,4 +193,21 @@ class CodeGithubRepositoryService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGithubRepositoryService::class.java)
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 }

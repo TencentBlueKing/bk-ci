@@ -28,7 +28,10 @@
 
 package com.tencent.devops.metrics.dao
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.model.metrics.tables.TProjectBuildSummaryDaily
 import com.tencent.devops.model.metrics.tables.TProjectUserDaily
 import org.jooq.DSLContext
@@ -92,6 +95,27 @@ class ProjectBuildSummaryDao {
                 LocalDateTime.now()
             ).onDuplicateKeyIgnore()
                 .execute()
+        }
+    }
+
+    fun getProjectUserCount(
+        dslContext: DSLContext,
+        baseQueryReq: BaseQueryReqVO
+    ): ProjectUserCountV0? {
+        val startDateTime =
+            DateTimeUtil.stringToLocalDate(baseQueryReq.startTime!!)!!.atStartOfDay()
+        val endDateTime =
+            DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
+        return with(TProjectUserDaily.T_PROJECT_USER_DAILY) {
+            val users = dslContext.selectDistinct(USER_ID).from(this)
+                .where(PROJECT_ID.eq(baseQueryReq.projectId))
+                .and(CREATE_TIME.between(startDateTime, endDateTime))
+                .fetchInto(String::class.java)
+            ProjectUserCountV0(
+                projectId = baseQueryReq.projectId!!,
+                userCount = users.size,
+                users = users.joinToString(separator = ",")
+            )
         }
     }
 

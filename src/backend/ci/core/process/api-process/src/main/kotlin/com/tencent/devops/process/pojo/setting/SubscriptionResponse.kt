@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "设置-订阅消息")

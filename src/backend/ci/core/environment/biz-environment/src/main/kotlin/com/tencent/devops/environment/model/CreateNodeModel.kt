@@ -52,5 +52,6 @@ data class CreateNodeModel(
     var lastBuildTime: LocalDateTime? = null,
     var hostId: Long?,
     var cloudAreaId: Long?,
-    var osType: String?
+    var osType: String?,
+    val serverId: Long?
 )

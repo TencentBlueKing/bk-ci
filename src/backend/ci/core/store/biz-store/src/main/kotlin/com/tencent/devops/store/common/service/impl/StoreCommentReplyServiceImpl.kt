@@ -38,8 +38,8 @@ import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
 import com.tencent.devops.store.common.dao.StoreCommentDao
 import com.tencent.devops.store.common.dao.StoreCommentReplyDao
 import com.tencent.devops.store.pojo.common.STORE_COMMENT_REPLY_NOTIFY_TEMPLATE
-import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommentReplyService
 import com.tencent.devops.store.common.service.StoreCommonService

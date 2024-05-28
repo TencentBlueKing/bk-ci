@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
+import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.ByteArrayOutputStream
@@ -61,7 +62,8 @@ object CommandLineUtils {
         buildId: String? = null,
         jobId: String? = null,
         stepId: String? = null,
-        charsetType: String? = null
+        charsetType: String? = null,
+        taskId: String? = null
     ): String {
 
         val result = StringBuilder()
@@ -100,6 +102,10 @@ object CommandLineUtils {
                 lineParser.forEach {
                     tmpLine = it.onParseLine(tmpLine)
                 }
+                reportProgressRate(
+                    taskId = taskId,
+                    tmpLine = tmpLine
+                )
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
                     appendGateToFile(tmpLine, executor.workingDirectory, ScriptEnvUtils.getQualityGatewayEnvFile())
@@ -147,8 +153,8 @@ object CommandLineUtils {
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
                     errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
-                            "Error message tracking:\n" +
-                            errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
+                        "Error message tracking:\n" +
+                        errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
         } catch (ignored: Throwable) {
@@ -164,6 +170,24 @@ object CommandLineUtils {
             )
         }
         return result.toString()
+    }
+
+    private fun reportProgressRate(
+        taskId: String?,
+        tmpLine: String
+    ) {
+        val pattern = Pattern.compile("::set-progress-rate\\s*(.*)")
+        val matcher = pattern.matcher(tmpLine)
+        if (matcher.find()) {
+            val progressRate = matcher.group(1)
+            if (taskId != null) {
+                Heartbeat.recordTaskProgressRate(
+                    taskId = taskId,
+                    progressRate = progressRate.toDouble()
+                )
+            }
+            logger.info("report progress rate:$tmpLine|$taskId|$progressRate")
+        }
     }
 
     private fun appendResultToFile(

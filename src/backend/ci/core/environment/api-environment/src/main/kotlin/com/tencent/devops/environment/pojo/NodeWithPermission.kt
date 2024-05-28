@@ -34,7 +34,7 @@ data class NodeWithPermission(
     @get:Schema(title = "环境 HashId", required = true)
     val nodeHashId: String,
     @get:Schema(title = "节点 Id", required = true)
-    val nodeId: Long,
+    val nodeId: String,
     @get:Schema(title = "节点名称", required = true)
     val name: String,
     @get:Schema(title = "IP", required = true)

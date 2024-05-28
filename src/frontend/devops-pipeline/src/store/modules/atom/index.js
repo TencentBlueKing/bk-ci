@@ -25,8 +25,13 @@ export default {
     namespaced: true,
     state: {
         showAtomSelectorPopup: false,
+        showVariable: false,
         pipeline: null,
+        pipelineWithoutTrigger: null,
+        pipelineYaml: '',
+        pipelineSetting: null,
         template: null,
+        pipelineInfo: null,
         fetchingAtmoModal: false,
         fetchingContainer: false,
         commendAtomCount: 0,
@@ -62,14 +67,13 @@ export default {
         execDetail: null,
         hideSkipExecTask: false,
         globalEnvs: null,
-        executeStatus: false,
+        commonParams: [],
         saveStatus: false,
         stageTagList: [],
         defaultStageTags: [],
         showReviewDialog: false,
         reviewInfo: null,
         showStageReviewPanel: {},
-        importedPipelineJson: null,
         atomVersionChangedKeys: [],
         pipelineLimit: {
             stageLimit: 20,
@@ -77,7 +81,12 @@ export default {
             atomLimit: 50
         },
         pipelineCommonSetting: {},
-        editfromImport: false
+        editfromImport: false,
+        isPipelineEditing: false,
+        activePipelineVersion: null,
+        yamlHighlightBlockMap: {},
+        switchingVersion: false,
+        isElementModified: false
     },
     mutations,
     actions,

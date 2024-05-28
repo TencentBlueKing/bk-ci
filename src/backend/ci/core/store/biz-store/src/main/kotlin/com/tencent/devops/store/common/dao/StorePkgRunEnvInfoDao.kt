@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStorePkgRunEnvInfo
 import com.tencent.devops.model.store.tables.records.TStorePkgRunEnvInfoRecord
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
-import com.tencent.devops.store.pojo.common.StorePkgRunEnvRequest
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
