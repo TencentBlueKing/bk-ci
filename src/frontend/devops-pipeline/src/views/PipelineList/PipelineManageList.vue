@@ -6,7 +6,7 @@
                 clearable
                 :placeholder="$t('restore.restoreSearchTips')"
                 right-icon="bk-icon icon-search"
-                v-model="filterByPipelineName"
+                :value="filters.filterByPipelineName"
                 @enter="handelBlur"
                 @clear="handelBlur"
                 @right-icon-click="handelBlur"
@@ -117,7 +117,6 @@
                 v-if="isTableLayout"
                 :filter-params="filters"
                 :max-height="$refs.tableBox?.offsetHeight"
-                :filter-by-pipeline-name="filterByPipelineName"
                 ref="pipelineBox"
             />
             <pipelines-card-view
@@ -237,8 +236,7 @@
                     action: this.toggleImportPipelinePopup
                 }],
                 RESOURCE_ACTION,
-                PROJECT_RESOURCE_ACTION,
-                filterByPipelineName: ''
+                PROJECT_RESOURCE_ACTION
             }
         },
         computed: {
@@ -450,13 +448,10 @@
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()
             },
-            handelBlur (value) {
-                this.filterByPipelineName = value
-                this.$refs.pipelineBox?.requestList?.({
-                    page: 1,
-                    pageSize: 50,
-                    filterByPipelineName: this.filterByPipelineName || null
-                })
+            handelBlur (filterByPipelineName) {
+                this.filters = {
+                    filterByPipelineName
+                }
             }
         }
     }
