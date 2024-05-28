@@ -21,7 +21,7 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
-           
+
             <bk-button
                 :disabled="saveStatus || !isEditing"
                 :loading="saveStatus"
@@ -68,7 +68,7 @@
                     />
                 </span>
             </bk-button>
-            
+
             <!-- <more-actions /> -->
             <release-button
                 :can-release="canRelease && !isEditing"
