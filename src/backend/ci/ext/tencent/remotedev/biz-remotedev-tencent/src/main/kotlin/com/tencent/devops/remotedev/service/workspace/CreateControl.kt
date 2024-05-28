@@ -718,8 +718,7 @@ class CreateControl @Autowired constructor(
         }
         val gameId = workspaceCommon.getGameIdAndAppId(projectId, checkOwnerType)
         val workspaceName = when (checkOwnerType) {
-            WorkspaceOwnerType.PROJECT -> generateWorkspaceName(projectId)
-            // 异常处理对个人云桌面来说，会直接复用旧workspaceName
+            WorkspaceOwnerType.PROJECT -> oldWorkspaceName ?: generateWorkspaceName(projectId)
             WorkspaceOwnerType.PERSONAL -> oldWorkspaceName ?: generateWorkspaceName(userId)
         }
         val mountType = WorkspaceMountType.START
@@ -745,6 +744,11 @@ class CreateControl @Autowired constructor(
             winConfigId = windowsConfig.id?.toInt(),
             zoneId = vm.zoneId.replace(Regex("\\d+"), "")
         )
+        if (oldWs != null) {
+            // 直接硬删除记录。新的工作空间会复用原先的name
+            workspaceDao.deleteWorkspace(oldWs.workspaceName, dslContext)
+            client.get(ServiceRemoteDevResource::class).deleteWorkspace(userId, workspaceName)
+        }
         when (checkOwnerType) {
             WorkspaceOwnerType.PROJECT -> {
                 val projectInfo = kotlin.runCatching {
@@ -771,11 +775,6 @@ class CreateControl @Autowired constructor(
             }
 
             WorkspaceOwnerType.PERSONAL -> {
-                if (oldWs != null) {
-                    // 对于个人云桌面而言，直接硬删除记录。新的工作空间会复用原先的name
-                    workspaceDao.deleteWorkspace(oldWs.workspaceName, dslContext)
-                    client.get(ServiceRemoteDevResource::class).deleteWorkspace(userId, workspaceName)
-                }
                 val userInfo = kotlin.runCatching {
                     client.get(ServiceTxUserResource::class).get(userId)
                 }.onFailure { logger.warn("get user $userId info error|${it.message}") }
