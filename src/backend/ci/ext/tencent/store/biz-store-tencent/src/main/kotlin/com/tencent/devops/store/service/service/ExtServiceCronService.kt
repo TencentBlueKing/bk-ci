@@ -93,7 +93,7 @@ class ExtServiceCronService @Autowired constructor(
                 val serviceCodes = serviceRecords.map { it.serviceCode }.toSet().joinToString(",")
                 // 批量获取扩展服务部署信息
                 val serviceDeploymentMap =
-                    client.get(ServiceKubernetesManagementResource::class).getBcsDeploymentInfos(
+                    client.get(ServiceKubernetesManagementResource::class).getDeploymentInfos(
                         userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
                         deploymentNames = serviceCodes
                     ).data
