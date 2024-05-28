@@ -124,24 +124,6 @@ class TencentQueryFromCmdbService {
         }
     }
 
-    fun queryCmdbInfoFromIp(nodeIpList: Set<String>, vararg reqColumn: String): Map<String, CmdbDataIns>? {
-        val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(
-            bkAppCode = bkAppCode,
-            bkAppSecret = bkAppSecret,
-            operator = DEFAULT_SYTEM_USER,
-            reqColumn = reqColumn.toList(),
-            keyValues = CmdbKeyValues(
-                svrIpStrList = nodeIpList.joinToString(separator = ";")
-            ),
-            pagingInfo = CmdbPagingInfo(DEFAULT_START_INDEX, PAGE_SIZE, DEFAULT_RETURN_TOTAL_ROWS)
-        )
-        val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
-        val responseBody = executePostRequest(
-            headers, cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, cmdbGetQueryInfoReq
-        )
-        return getNodeIpToCmdbDataMap(responseBody)
-    }
-
     fun queryCmdbInfo(keyValues: CmdbKeyValues, vararg reqColumn: String): List<CmdbDataIns>? {
         val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(
             bkAppCode = bkAppCode,
@@ -187,19 +169,6 @@ class TencentQueryFromCmdbService {
             )
         }
         return ccPostRes
-    }
-
-    private fun getNodeIpToCmdbDataMap(responseBody: String?): Map<String, CmdbDataIns> {
-        val cmdbData: List<CmdbDataIns>?
-        try {
-            cmdbData = mapper.readValue<CmdbResp>(responseBody!!).data.data
-        } catch (e: Exception) {
-            throw CustomException(
-                Response.Status.INTERNAL_SERVER_ERROR,
-                "CMDB api response error."
-            )
-        }
-        return cmdbData?.associateBy { it.svrIp!! } ?: mapOf()
     }
 
     private fun getNodeCmdbData(responseBody: String?): List<CmdbDataIns>? {

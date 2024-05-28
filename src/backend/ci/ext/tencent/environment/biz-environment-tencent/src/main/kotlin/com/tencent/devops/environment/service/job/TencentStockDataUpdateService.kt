@@ -472,12 +472,13 @@ class TencentStockDataUpdateService @Autowired constructor(
         // 2. 要写入server id的所有节点ip
         val nodeIpList = nodeRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         // 3. 请求cmdb，查询serverId，得到：ip - cmdbInfo
-        val cmdbInfo = tencentQueryFromCmdbService.queryCmdbInfoFromIp(
-            nodeIpList, COLUMN_SVR_IP, COLUMN_SEVER_LAN_IP
+        val cmdbInfo = tencentQueryFromCmdbService.queryCmdbInfo(
+            CmdbKeyValues(
+                svrIpStrList = nodeIpList.joinToString(separator = ";")
+            ),
+            COLUMN_SVR_IP, COLUMN_SEVER_LAN_IP
         )
-        val nodeIpToServerIdMap = cmdbInfo?.map { (key, value) ->
-            key to value.serverId
-        }?.toMap()
+        val nodeIpToServerIdMap = cmdbInfo?.associate { it.svrIp!! to it.serverId }
         // 4. 根据ip更新数据库中的部署节点
         if (!nodeIpToServerIdMap.isNullOrEmpty()) {
             cmdbNodeDao.batchUpdateNodeSeverIdByIp(dslContext, nodeIpToServerIdMap)
