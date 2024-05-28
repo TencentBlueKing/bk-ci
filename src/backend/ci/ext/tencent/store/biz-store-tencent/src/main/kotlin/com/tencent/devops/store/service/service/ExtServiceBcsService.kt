@@ -259,13 +259,17 @@ class ExtServiceBcsService {
         var host = ""
         when {
             grayFlag == null -> {
+                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName
                 grayHost = extServiceIngressConfig.grayHost
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName
                 host = extServiceIngressConfig.host
             }
             grayFlag -> {
+                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName
                 grayHost = extServiceIngressConfig.grayHost
             }
             else -> {
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName
                 host = extServiceIngressConfig.host
             }
         }
