@@ -28,11 +28,13 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -42,7 +44,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
         return CodeTGitWebHookTriggerElement::class.java
     }
 
-    @SuppressWarnings("ComplexMethod")
+    @SuppressWarnings("ComplexMethod", "LongMethod")
     override fun getWebhookElementParams(
         element: CodeTGitWebHookTriggerElement,
         variables: Map<String, String>
@@ -69,6 +71,41 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             }
             params.block = isBlock(element)
             params.branchName = EnvUtils.parseEnv(branchName!!, variables)
+            params.version = element.version
+            when {
+                // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
+                eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                    params.includeMrAction = CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE
+                }
+
+                eventType == CodeEventType.MERGE_REQUEST &&
+                        !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                        includeMrAction == null -> {
+                    params.includeMrAction = joinToString(
+                        listOf(
+                            CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
+                            CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
+                            CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+                        )
+                    )
+                }
+
+                eventType == CodeEventType.PUSH &&
+                        !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                        includePushAction == null -> {
+                    params.includePushAction = joinToString(
+                        listOf(
+                            CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
+                            CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
+                        )
+                    )
+                }
+
+                else -> {
+                    params.includeMrAction = joinToString(includeMrAction)
+                    params.includePushAction = joinToString(includePushAction)
+                }
+            }
             params.eventType = eventType
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
             params.pathFilterType = pathFilterType

@@ -1274,9 +1274,22 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId
         )
         // 返回时将别名name补全为id
-        resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+        resource?.model?.stages?.forEachIndexed { index, s ->
+            if (index == 0) (s.containers[0] as TriggerContainer).params.forEach { param ->
                 param.name = param.name ?: param.id
+            } else {
+                s.containers.forEach { c ->
+                    c.elements.forEach { e ->
+                        // 保存时将旧customEnv赋值给新的上一级customEnv
+                        val oldCustomEnv = e.additionalOptions?.customEnv?.filter {
+                            !(it.key == "param1" && it.value == "")
+                        }
+                        if (!oldCustomEnv.isNullOrEmpty()) {
+                            e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
+                        }
+                        e.additionalOptions?.customEnv = null
+                    }
+                }
             }
         }
         return resource

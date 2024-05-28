@@ -6,14 +6,15 @@ import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -22,6 +23,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -283,6 +285,27 @@ interface ServiceRemoteDevResource {
         @QueryParam("type")
         type: QuotaType
     ): Result<Map<String, Map<String, Int>>>
+
+    @Operation(summary = "更新项目/个人在使用云桌面上的配额")
+    @PUT
+    @Path("/update_usage_limit")
+    fun updateUsageLimit(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "机型", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
+        @Parameter(description = "配额增量(可负，可零，可正)", required = true)
+        @QueryParam("count")
+        count: Int,
+        @Parameter(description = "返回可用配额", required = false)
+        @QueryParam("available")
+        available: Boolean?
+    ): Result<QuotaInApiRes>
 
     @Operation(summary = "云桌面SDK获取应用token", tags = ["v4_app_desktop_sdk_token"])
     @POST

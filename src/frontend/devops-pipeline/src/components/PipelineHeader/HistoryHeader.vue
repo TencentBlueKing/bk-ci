@@ -35,7 +35,7 @@
                 :pipeline-id="pipelineId"
             />
         </div>
-        <aside class="pipeline-history-right-aside">
+        <aside v-show="!(isSwitchPipeline || switchingVersion)" class="pipeline-history-right-aside">
             <VersionDiffEntry
                 v-if="!isReleaseVersion"
                 :text="false"

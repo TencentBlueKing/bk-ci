@@ -58,6 +58,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -174,6 +175,9 @@
                     params: {
                         ...this.$route.params,
                         version
+                    },
+                    query: {
+                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
                     }
                 })
             }

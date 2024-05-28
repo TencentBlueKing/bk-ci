@@ -68,7 +68,6 @@ class ExternalResourceImpl @Autowired constructor(
         projectId: String,
         userId: String,
         workspaceName: String,
-        autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ): Result<Boolean> {
         if (key != externalKey) return Result(false)
@@ -77,7 +76,6 @@ class ExternalResourceImpl @Autowired constructor(
             workspaceName = workspaceName,
             projectId = projectId,
             userId = userId,
-            autoAssign = autoAssign,
             softwareList = softwareList
         )
         return Result(true)

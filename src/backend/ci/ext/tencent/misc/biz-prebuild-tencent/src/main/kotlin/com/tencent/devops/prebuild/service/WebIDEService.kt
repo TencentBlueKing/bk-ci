@@ -383,7 +383,7 @@ class WebIDEService @Autowired constructor(
                 maxQueueMinutes = 60,
                 maxRunningMinutes = 900,
                 buildEnv = null,
-                customBuildEnv = null,
+                customEnv = null,
                 thirdPartyAgentId = agentId,
                 thirdPartyAgentEnvId = null,
                 thirdPartyWorkspace = null,

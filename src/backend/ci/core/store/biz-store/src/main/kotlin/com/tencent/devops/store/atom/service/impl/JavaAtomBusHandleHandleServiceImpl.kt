@@ -44,4 +44,17 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         // worker就是通过java取的osArch，故无需转换
         return osArch
     }
+
+    override fun handleTarget(reqTarget: String?, target: String): String {
+        if (reqTarget.isNullOrBlank()) {
+            return target
+        }
+        val javaPath = reqTarget.substringBefore("-jar").trim()
+        // 获取插件配置的JVM指令
+        val jvmOptions = target.substringAfter("java").substringBefore("-jar").trim()
+        // 获取插件jar包路径
+        val jarPath = reqTarget.substringAfter("-jar").trim()
+
+        return "$javaPath $jvmOptions -jar $jarPath"
+    }
 }

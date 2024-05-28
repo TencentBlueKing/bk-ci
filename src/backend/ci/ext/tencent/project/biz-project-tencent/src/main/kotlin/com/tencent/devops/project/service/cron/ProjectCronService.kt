@@ -1,20 +1,22 @@
 package com.tencent.devops.project.service.cron
 
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.project.service.ProjectCostAllocationService
+import com.tencent.devops.project.service.ProjectBillsService
 import com.tencent.devops.project.service.ProjectNotifyService
 import com.tencent.devops.project.service.ProjectOperationalProductService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Service
 class ProjectCronService constructor(
     val projectNotifyService: ProjectNotifyService,
-    val projectCostAllocationService: ProjectCostAllocationService,
+    val projectBillsService: ProjectBillsService,
     val redisOperation: RedisOperation,
     val projectOperationalProductService: ProjectOperationalProductService
 ) {
@@ -27,6 +29,7 @@ class ProjectCronService constructor(
         private const val PROJECT_CRON_KEY = "project_cron_key"
         private val logger = LoggerFactory.getLogger(ProjectCronService::class.java)
         private const val PROCESS_INACTIVE_PROJECT_BG = "process_inactive_project_bg"
+        private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     }
 
     @Scheduled(cron = "0 0 6 * * ?")
@@ -75,10 +78,16 @@ class ProjectCronService constructor(
         }
     }
 
-    // 每周一8点开始检测项目活跃度
-    @Scheduled(cron = "0 0 8 ? * MON")
+    /**
+     * 每周日8点开始检测项目活跃度
+     * 处理逻辑：
+     *（1）若项目未关联运营产品，连续两个月不活跃，则禁用；
+     *（2）若项目已关联运营产品，连续四个月不活跃，则禁用；
+     *（3）发邮件。
+     * */
+    @Scheduled(cron = "0 0 8 ? * SUN")
     @Suppress("NestedBlockDepth")
-    fun processInactiveProjectRegularly() {
+    fun checkInactiveProjectRegularly() {
         if (!enable) {
             return
         }
@@ -86,22 +95,42 @@ class ProjectCronService constructor(
             logger.info("process inactive project regularly |start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                val bgIds = redisOperation.get(key = PROCESS_INACTIVE_PROJECT_BG)
-                if (bgIds.isNullOrBlank()) {
-                    logger.info("bg ids is null or blank")
-                    return
-                }
-                projectCostAllocationService.processInactiveProjectByCondition(
-                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                        bgIdList = bgIds.split(",").map { it.toLong() }
-                    )
-                )
+                projectBillsService.checkInactiveProject(projectConditionDTO = ProjectConditionDTO())
                 logger.info("process inactive project regularly  |finish")
             } else {
                 logger.info("process inactive project regularly  |running")
             }
         } catch (e: Exception) {
             logger.warn("process inactive project regularly  |error", e)
+        }
+    }
+
+    /**
+     * 每周一8点开始检测项目是否关联运营产品
+     * 处理逻辑：
+     * 对未关联运营产品的项目，连续三周发送邮件，若第四周还未处理的项目，则禁用。
+     * */
+    @Scheduled(cron = "0 0 3 ? * MON")
+    fun checkProjectRelatedProductRegularly() {
+        if (!enable) {
+            return
+        }
+        try {
+            logger.info("check project related product regularly|start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                val bgIds = redisOperation.get(key = PROCESS_INACTIVE_PROJECT_BG)
+                if (bgIds.isNullOrBlank()) {
+                    logger.info("bg ids is null or blank")
+                    return
+                }
+                projectBillsService.checkProjectRelatedProduct()
+                logger.info("check project related product regularly|finish")
+            } else {
+                logger.info("check project related product regularly|running")
+            }
+        } catch (e: Exception) {
+            logger.warn("check project related product regularly|error", e)
         }
     }
 
@@ -116,6 +145,30 @@ class ProjectCronService constructor(
             logger.info("update obs product|finish")
         } catch (e: Exception) {
             logger.warn("update obs product | error", e)
+        }
+    }
+
+    /**
+     * 定期上报货币化数据
+     * */
+    fun reportBillDataRegularly() {
+        if (!enable) {
+            return
+        }
+        try {
+            logger.info("report bill data regularly|start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                val currentYearAndMonthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"))
+                projectBillsService.reportBillsData(
+                    yearAndMonthOfReportStr = currentYearAndMonthDate
+                )
+                logger.info("check project related product regularly|finish")
+            } else {
+                logger.info("check project related product regularly|running")
+            }
+        } catch (e: Exception) {
+            logger.warn("check project related product regularly|error", e)
         }
     }
 }

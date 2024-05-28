@@ -43,12 +43,14 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
-import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
@@ -79,7 +81,12 @@ open class DefaultModelCheckPlugin constructor(
     open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
-    override fun checkModelIntegrity(model: Model, projectId: String?, userId: String): Int {
+    override fun checkModelIntegrity(
+        model: Model,
+        projectId: String?,
+        userId: String,
+        isTemplate: Boolean
+    ): Int {
         var metaSize = 0
         // 检查流水线名称
         PipelineUtils.checkPipelineName(
@@ -154,7 +161,8 @@ open class DefaultModelCheckPlugin constructor(
                 atomVersions = atomVersions,
                 contextMap = contextMap,
                 atomInputParamList = atomInputParamList,
-                elementCheckResults = elementCheckResults
+                elementCheckResults = elementCheckResults,
+                isTemplate = isTemplate
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
@@ -168,19 +176,8 @@ open class DefaultModelCheckPlugin constructor(
             DependOnUtils.checkRepeatedJobId(stage)
         }
 
-        // 批量校验插件有效性
-        if (elementCheckResults.isNotEmpty()) {
-            val elementCheckResultMap = elementCheckResults.filterNot {
-                it.errorTitle.isNullOrBlank() || it.errorMessage.isNullOrBlank()
-            }.groupBy({ it.errorTitle!! }, { it.errorMessage!! })
-                .map { PipelineCheckFailedReason(it.key, it.value) }
-            if (elementCheckResultMap.isNotEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
-                    data = elementCheckResultMap
-                )
-            }
-        }
+        // 批量校验插件参数有效性
+        checkElementInput(elementCheckResults)
 
         return metaSize
     }
@@ -241,7 +238,8 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>,
-        elementCheckResults: MutableList<ElementCheckResult>
+        elementCheckResults: MutableList<ElementCheckResult>,
+        isTemplate: Boolean
     ): Int /* MetaSize*/ {
         var metaSize = 0
         containers.forEach { container ->
@@ -277,7 +275,8 @@ open class DefaultModelCheckPlugin constructor(
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,
                     contextMap = contextMap,
-                    elementCheckResults = elementCheckResults
+                    elementCheckResults = elementCheckResults,
+                    isTemplate = isTemplate
                 )
             }
         }
@@ -293,7 +292,8 @@ open class DefaultModelCheckPlugin constructor(
         atomVersions: MutableSet<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
         contextMap: Map<String, String>,
-        elementCheckResults: MutableList<ElementCheckResult>
+        elementCheckResults: MutableList<ElementCheckResult>,
+        isTemplate: Boolean
     ) {
         val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
             ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
@@ -304,7 +304,8 @@ open class DefaultModelCheckPlugin constructor(
             container = this,
             element = element,
             contextMap = contextMap,
-            appearedCnt = eCnt
+            appearedCnt = eCnt,
+            isTemplate = isTemplate
         )
         if (elementCheckResult?.result == false) {
             elementCheckResults.add(elementCheckResult)
@@ -315,6 +316,14 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     override fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>) {
+        // 保存时将旧customEnv赋值给新的上一级customEnv
+        val oldCustomEnv = element.additionalOptions?.customEnv?.filter {
+            !(it.key == "param1" && it.value == "")
+        }
+        if (!oldCustomEnv.isNullOrEmpty()) {
+            element.customEnv = (element.customEnv ?: emptyList()).plus(oldCustomEnv)
+        }
+        element.additionalOptions?.customEnv = null
         if (!element.additionalOptions?.timeoutVar.isNullOrBlank()) {
             val obj = Timeout.decTimeout(timeoutVar = element.additionalOptions?.timeoutVar, contextMap = contextMap)
             if (obj.change && obj.replaceByVar) {
@@ -340,6 +349,27 @@ open class DefaultModelCheckPlugin constructor(
                 logger.info(
                     "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
                             "|bad timeout: ${obj.beforeChangeStr}"
+                )
+            }
+        }
+    }
+
+    private fun checkElementInput(elementCheckResults: MutableList<ElementCheckResult>) {
+        if (elementCheckResults.isNotEmpty()) {
+            val pipelineCheckErrors = elementCheckResults.filterNot {
+                it.errorTitle.isNullOrBlank() || it.errorMessage.isNullOrBlank()
+            }.groupBy({ it.errorTitle!! }, { it.errorMessage!! })
+                .map { PipelineCheckFailedErrors.ErrorInfo(it.key, it.value.toSet()) }
+            if (pipelineCheckErrors.isNotEmpty()) {
+                val failedReason = PipelineCheckFailedErrors(
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
+                    ),
+                    errors = pipelineCheckErrors
+                )
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
+                    params = arrayOf(JsonUtil.toJson(failedReason))
                 )
             }
         }

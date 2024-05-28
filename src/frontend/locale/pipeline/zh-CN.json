@@ -407,6 +407,7 @@
     "diff": "差异对比",
     "needToUpdate": "需更新",
     "noNeedToUpdate": "无需更新",
+    "updateFailed": "更新失败",
     "updating": "正在更新",
     "instanceEmptyTitle": "创建你的第一个实例",
     "instanceEmptyDesc": "创建自己的实例，快速生成你想要的流水线",
@@ -1016,7 +1017,8 @@
     "remindTime": "小时提醒一次",
     "codelib": "代码库",
     "branches": "分支",
-    "codelibConfigs": "代码库配置"
+    "codelibConfigs": "代码库配置",
+    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录"
   },
   "storeMap": {
     "textarea": "文本框",
