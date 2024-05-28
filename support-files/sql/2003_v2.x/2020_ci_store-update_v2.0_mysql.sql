@@ -108,6 +108,80 @@ BEGIN
         ALTER TABLE T_STORE_APPROVE DROP INDEX `inx_tsa_status`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_STATISTICS_DAILY'
+                    AND COLUMN_NAME = 'DAILY_ACTIVE_DURATION') THEN
+        ALTER TABLE T_STORE_STATISTICS_DAILY ADD COLUMN `DAILY_ACTIVE_DURATION` decimal(15,2) COMMENT '每日活跃时长，单位：小时';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_STATISTICS_TOTAL'
+                    AND COLUMN_NAME = 'RECENT_ACTIVE_DURATION') THEN
+        ALTER TABLE T_STORE_STATISTICS_TOTAL ADD COLUMN `RECENT_ACTIVE_DURATION` decimal(15,2) COMMENT '总活跃时长，单位：小时';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                    AND COLUMN_NAME = 'VERSION') THEN
+        ALTER TABLE T_STORE_PROJECT_REL ADD COLUMN `VERSION` varchar(256) COMMENT '版本号';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_MEMBER'
+                     AND INDEX_NAME = 'UNI_INX_TSM_TYPE_CODE_NAME') THEN
+        ALTER TABLE T_STORE_MEMBER ADD INDEX `UNI_INX_TSM_TYPE_CODE_NAME`(`STORE_TYPE`, `STORE_CODE`,`USERNAME`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_MEMBER'
+                     AND INDEX_NAME = 'uni_inx_tam_code_name_type') THEN
+        ALTER TABLE T_STORE_MEMBER DROP INDEX `uni_inx_tam_code_name_type`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PIPELINE_REL'
+                    AND COLUMN_NAME = 'PROJECT_CODE') THEN
+       ALTER TABLE T_STORE_PIPELINE_REL ADD COLUMN `PROJECT_CODE` varchar(64) NOT NULL DEFAULT '' COMMENT '项目代码';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                    AND COLUMN_NAME = 'PROJECT_CODE'
+                    AND COLUMN_TYPE = 'varchar(32)') THEN
+       ALTER TABLE T_STORE_PROJECT_REL MODIFY COLUMN PROJECT_CODE varchar(64) NOT NULL COMMENT '所属项目';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_APPROVE_REL'
+                    AND COLUMN_NAME = 'TEST_PROJECT_CODE'
+                    AND COLUMN_TYPE = 'varchar(32)') THEN
+       ALTER TABLE T_ATOM_APPROVE_REL MODIFY COLUMN TEST_PROJECT_CODE varchar(64) NOT NULL COMMENT '调试项目编码';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_PROJECT_REL'
+                    AND COLUMN_NAME = 'INSTANCE_ID') THEN
+       ALTER TABLE T_STORE_PROJECT_REL ADD COLUMN `INSTANCE_ID` varchar(256) COMMENT '实例ID';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

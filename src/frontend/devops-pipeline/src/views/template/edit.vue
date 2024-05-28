@@ -19,7 +19,7 @@
                     </span>
                     <bk-button
                         v-else-if="template.templateType !== 'CONSTRAINT' && isEnabledPermission"
-                        @click="savePipeline()"
+                        @click="savePipeline"
                         theme="primary"
                         v-perm="{
                             permissionData: {
@@ -34,7 +34,8 @@
                     </bk-button>
                     <bk-button
                         v-else-if="!isEnabledPermission"
-                        @click="savePipeline()" theme="primary"
+                        @click="savePipeline"
+                        theme="primary"
                         :disabled="isSaveDisable"
                     >
                         {{ $t('save') }}
@@ -107,10 +108,27 @@
             :close-icon="false"
             :auto-close="false"
             width="400"
-            @confirm="saveTemplate">
+            @confirm="saveTemplate"
+        >
             <div>
-                <form-field v-if="showVersionDialog" required="true" :label="$t('template.saveAsVersion')" :is-error="errors.has(&quot;saveVersionName&quot;)" :error-msg="errors.first(&quot;saveVersionName&quot;)">
-                    <auto-complete v-validate="Object.assign({}, { max: 64, required: true })" :list="versionList" name="saveVersionName" open-list="true" :placeholder="$t('template.versionInputTips')" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
+                <form-field
+                    v-if="showVersionDialog"
+                    required="true"
+                    :label="$t('template.saveAsVersion')"
+                    :is-error="errors.has('saveVersionName')"
+                    :error-msg="errors.first('saveVersionName')"
+                >
+                    <auto-complete
+                        v-validate="autoCompleteRules"
+                        :list="versionList"
+                        name="saveVersionName"
+                        open-list="true"
+                        :placeholder="$t('template.versionInputTips')"
+                        :value="saveVersionName"
+                        display-key="name"
+                        setting-key="versionName"
+                        :handle-change="handleVersionChange"
+                    />
                 </form-field>
             </div>
         </bk-dialog>
@@ -118,18 +136,19 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
-    import Pipeline from '@/components/Pipeline'
-    import AutoComplete from '@/components/atomFormField/AutoComplete'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import MiniMap from '@/components/MiniMap'
-    import {
-        convertMStoStringByRule,
-        navConfirm
-    } from '@/utils/util'
+    import Pipeline from '@/components/Pipeline'
+    import AutoComplete from '@/components/atomFormField/AutoComplete'
     import {
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import {
+        convertMStoStringByRule,
+        navConfirm,
+        showPipelineCheckMsg
+    } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -165,6 +184,12 @@
             ...mapState([
                 'fetchError'
             ]),
+            autoCompleteRules () {
+                return {
+                    max: 64,
+                    required: true
+                }
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -214,7 +239,7 @@
             this.requestMatchTemplateRules()
         },
         beforeDestroy () {
-            this.setPipeline()
+            this.setPipeline(null)
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -225,6 +250,7 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
+            // TODO: 优化
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',
@@ -301,10 +327,15 @@
                         })
                     }
                 } catch (err) {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
+                    if (err.code === 2101244) {
+                        showPipelineCheckMsg(this.$bkMessage, err.message, this.$createElement)
+                    } else {
+                        this.$showTips({
+                            message: err.message || err,
+                            theme: 'error'
+                        })
+                    }
+                   
                     result = false
                 } finally {
                     this.isSaving = false
@@ -347,8 +378,8 @@
                 if (this.template.hasPermission && this.currentVersionId !== row.version && this.template.templateType !== 'CONSTRAINT') {
                     const content = `${this.$t('delete')}${row.versionName}`
                     navConfirm({ type: 'warning', content, cancelText: this.$t('cancel') })
-                        .then(() => {
-                            this.confirmDeleteVersion(row)
+                        .then((val) => {
+                            val && this.confirmDeleteVersion(row)
                         }).catch(() => {})
                 }
             },

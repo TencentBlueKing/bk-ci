@@ -30,6 +30,15 @@
                     <bk-form-item v-if="showVariable">
                         <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
                     </bk-form-item>
+                    <bk-form-item v-if="showCondition" :label="$t('storeMap.customConditionExp')">
+                        <vuex-input
+                            :value="customConditionExpress"
+                            name="customCondition"
+                            :handle-change="handleUpdateStageControl"
+                        >
+                        </vuex-input>
+                    </bk-form-item>
+
                 </section>
             </bk-form>
         </div>
@@ -39,6 +48,7 @@
 <script>
     import { mapActions } from 'vuex'
     import Accordion from '@/components/atomFormField/Accordion'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import FormField from '@/components/AtomPropertyPanel/FormField'
 
@@ -47,7 +57,8 @@
         components: {
             Accordion,
             KeyValueNormal,
-            FormField
+            FormField,
+            VuexInput
         },
         props: {
             stageControl: {
@@ -93,7 +104,10 @@
                 }
             },
             variables () {
-                return this.stageControl && Array.isArray(this.stageControl.customVariables) ? this.stageControl.customVariables : []
+                return Array.isArray(this.stageControl?.customVariables) ? this.stageControl?.customVariables : []
+            },
+            customConditionExpress () {
+                return this.stageControl?.customCondition ?? ''
             },
             conditionConf () {
                 return [
@@ -106,6 +120,10 @@
                         name: this.$t('storeMap.varMatch')
                     },
                     {
+                        id: 'CUSTOM_CONDITION_MATCH',
+                        name: this.$t('storeMap.customCondition')
+                    },
+                    {
                         id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                         name: this.$t('storeMap.varNotMatch')
                     }
@@ -113,6 +131,9 @@
             },
             showVariable () {
                 return ['CUSTOM_VARIABLE_MATCH', 'CUSTOM_VARIABLE_MATCH_NOT_RUN'].indexOf(this.stageCondition) > -1
+            },
+            showCondition () {
+                return ['CUSTOM_CONDITION_MATCH'].indexOf(this.stageCondition) > -1
             }
         },
         watch: {
@@ -141,6 +162,7 @@
                     this.handleStageChange('stageControlOption', {
                         enable: true,
                         runCondition: 'AFTER_LAST_FINISHED',
+                        customCondition: '',
                         customVariables: [{ key: 'param1', value: '' }],
                         manualTrigger: false,
                         triggerUsers: [],

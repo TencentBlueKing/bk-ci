@@ -50,6 +50,12 @@ class CommonConfig {
     val devopsHostGateway: String? = null
 
     /**
+     * Devops白名单代理
+     */
+    @Value("\${devopsGateway.whiteProxy:#{null}}")
+    val devopsWhiteProxy: String? = null
+
+    /**
      * DevOps API网关地址
      */
     @Value("\${devopsGateway.api:#{null}}")

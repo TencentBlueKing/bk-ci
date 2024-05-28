@@ -34,7 +34,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.template.dao.MarketTemplateDao
 import com.tencent.devops.store.template.dao.StoreTemplateDao
-import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum

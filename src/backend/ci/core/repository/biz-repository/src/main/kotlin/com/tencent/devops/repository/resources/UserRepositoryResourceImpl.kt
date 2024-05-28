@@ -44,6 +44,7 @@ import com.tencent.devops.repository.api.UserRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.RepoTriggerRefVo
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -51,6 +52,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryPermissionService
@@ -185,7 +187,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         permission: Permission,
         page: Int?,
         pageSize: Int?,
-        aliasName: String?
+        aliasName: String?,
+        enablePac: Boolean?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -211,7 +214,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             authPermission = bkAuthPermission,
             offset = limit.offset,
             limit = limit.limit,
-            aliasName = aliasName
+            aliasName = aliasName,
+            enablePac = enablePac
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
@@ -312,6 +316,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         repositoryHashId: String,
         eventType: String?,
         triggerConditionMd5: String?,
+        taskRepoType: RepositoryType?,
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<RepoPipelineRefVo>> {
@@ -324,6 +329,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
                 repositoryHashId = repositoryHashId,
                 eventType = eventType,
                 triggerConditionMd5 = triggerConditionMd5,
+                taskRepoType = taskRepoType,
                 limit = limit.limit,
                 offset = limit.offset
             )
@@ -380,5 +386,23 @@ class UserRepositoryResourceImpl @Autowired constructor(
             repoRename = repoRename
         )
         return Result(true)
+    }
+
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        repositoryType: ScmType
+    ): Result<AuthorizeResult> {
+        return Result(
+            repositoryService.isOAuth(
+                userId = userId,
+                projectId = projectId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl,
+                repositoryType = repositoryType
+            )
+        )
     }
 }

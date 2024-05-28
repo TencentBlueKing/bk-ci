@@ -50,7 +50,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
@@ -74,7 +74,7 @@ import kotlin.reflect.jvm.isAccessible
 @Service
 class RepoPipelineRefService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val modelTaskDao: PipelineModelTaskDao,
@@ -251,7 +251,12 @@ class RepoPipelineRefService @Autowired constructor(
         container.elements.filterIsInstance<WebHookTriggerElement>().forEach e@{ element ->
             val (triggerType, eventType, repositoryConfig) =
                 RepositoryConfigUtils.buildWebhookConfig(element = element, variables = variables)
-
+            // 当事件触发代码库类型为self时,不需要解析代码库引用,因为保存时还不知道关联的代码库,只有发布时才知道
+            if (repositoryConfig.repositoryType == RepositoryType.ID &&
+                repositoryConfig.repositoryHashId.isNullOrBlank()
+            ) {
+                return@e
+            }
             repoPipelineRefInfos.add(
                 RepoPipelineRefInfo(
                     projectId = projectId,

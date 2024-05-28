@@ -96,7 +96,8 @@ object ShellUtil {
         workspace: File = dir,
         print2Logger: Boolean = true,
         jobId: String? = null,
-        stepId: String? = null
+        stepId: String? = null,
+        taskId: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -115,7 +116,8 @@ object ShellUtil {
             executeErrorMessage = "",
             jobId = jobId,
             buildId = buildId,
-            stepId = stepId
+            stepId = stepId,
+            taskId = taskId
         )
     }
 
@@ -197,17 +199,27 @@ object ShellUtil {
         if (!continueNoneZero) {
             command.append("set -e\n")
         } else {
-            LoggerService.addNormalLine(MessageUtil.getMessageByLocale(
-                WorkerMessageCode.BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO,
-                AgentEnv.getLocaleLanguage()
-            ))
+            LoggerService.addNormalLine(
+                MessageUtil.getMessageByLocale(
+                    WorkerMessageCode.BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO,
+                    AgentEnv.getLocaleLanguage()
+                )
+            )
             command.append("set +e\n")
         }
 
-        command.append(setEnv.replace(oldValue = "##resultFile##",
-            newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
-        command.append(setGateValue.replace(oldValue = "##gateValueFile##",
-            newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
+        command.append(
+            setEnv.replace(
+                oldValue = "##resultFile##",
+                newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""
+            )
+        )
+        command.append(
+            setGateValue.replace(
+                oldValue = "##gateValueFile##",
+                newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""
+            )
+        )
         command.append(". ${userScriptFile.absolutePath}")
         userScriptFile.writeText(script)
         file.writeText(command.toString())
@@ -226,7 +238,8 @@ object ShellUtil {
         executeErrorMessage: String? = null,
         buildId: String? = null,
         jobId: String? = null,
-        stepId: String? = null
+        stepId: String? = null,
+        taskId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -237,7 +250,8 @@ object ShellUtil {
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
                 jobId = jobId,
-                stepId = stepId
+                stepId = stepId,
+                taskId = taskId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"

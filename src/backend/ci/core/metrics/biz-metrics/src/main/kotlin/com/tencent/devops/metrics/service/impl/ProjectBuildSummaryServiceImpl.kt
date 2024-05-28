@@ -31,6 +31,8 @@ package com.tencent.devops.metrics.service.impl
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.metrics.service.CacheProjectInfoService
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import org.jooq.DSLContext
@@ -97,5 +99,14 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun getProjectActiveUserCount(
+        baseQueryReq: BaseQueryReqVO
+    ): ProjectUserCountV0? {
+        return projectBuildSummaryDao.getProjectUserCount(
+            dslContext = dslContext,
+            baseQueryReq = baseQueryReq
+        )
     }
 }

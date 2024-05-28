@@ -27,8 +27,8 @@
         <transition name="slide-right">
             <Logo size="16" name="pause" v-if="isPause"></Logo>
         </transition>
-        <span>
-            <slot v-if="defaultStatus"></slot>
+        <span v-if="defaultStatus">
+            <slot></slot>
         </span>
     </span>
 </template>

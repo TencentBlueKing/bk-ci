@@ -73,7 +73,10 @@ interface UserStreamPipelineResource {
         pageSize: Int?,
         @Parameter(description = "目录", required = false)
         @QueryParam("filePath")
-        filePath: String?
+        filePath: String?,
+        @Parameter(description = "目录", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<Page<StreamGitProjectPipeline>>
 
     @Operation(summary = "项目下所有流水线文件路径目录")

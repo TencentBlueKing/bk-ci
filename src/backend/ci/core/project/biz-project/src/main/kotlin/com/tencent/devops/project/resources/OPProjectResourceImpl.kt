@@ -172,4 +172,10 @@ class OPProjectResourceImpl @Autowired constructor(
             projectService.getOperationalProducts()
         )
     }
+
+    override fun setDisableWhenInactiveFlag(projectCodes: List<String>): Result<Boolean> {
+        return Result(
+            projectService.setDisableWhenInactiveFlag(projectCodes)
+        )
+    }
 }

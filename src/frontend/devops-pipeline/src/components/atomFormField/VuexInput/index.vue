@@ -26,7 +26,7 @@
                 const { value, name } = e.target
                 const trimVal = isBlur ? value.trim() : value
 
-                if (trimVal !== String(this.value).trim() || trimVal !== '') {
+                if (trimVal !== String(this.value).trim()) {
                     this.$emit('input', trimVal)
                     this.handleChange(name, trimVal)
                 }

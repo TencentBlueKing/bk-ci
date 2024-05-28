@@ -27,7 +27,7 @@
                 </template>
                 
                 <template>
-                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThridSlave">
+                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThirdSlave">
                         <i class="devops-icon icon-plus-circle"></i>
                         <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                     </div>
@@ -88,12 +88,12 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import Selector from '@/components/atomFormField/Selector'
     import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import Selector from '@/components/atomFormField/Selector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'container-node-selector',
@@ -145,7 +145,7 @@
                 type: Function,
                 default: () => () => {}
             },
-            addThridSlave: {
+            addThirdSlave: {
                 type: Function,
                 default: () => () => {}
             },

@@ -6,5 +6,6 @@ data class SetContextVarData(
     val buildId: String,
     val contextName: String,
     val contextVal: String,
-    val readOnly: Boolean?
+    val readOnly: Boolean?,
+    val rewriteReadOnly: Boolean?
 )

@@ -289,23 +289,68 @@ object ProcessMessageCode {
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
     const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
-    const val GROUP_IS_EXIST = "2101186" // 分组({0})已存在/group ({0}) is already exist
-    const val GROUP_LABEL_IS_EXIST = "2101187" // 分组标签({0})已存在/group label ({0}) is already exist
-    const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101189" // 用户没有操作模板的权限
+    const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
+    const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
+    const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101183" // 用户没有操作模板的权限
 
-    const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
-    const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101182" // 触发事件{0}不存在
-    const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101183" // 触发类型{0}不支持重放
-    const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101184" // 重放流水线ID不能为空
-    const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID = "2101184" // 流水线版本[{0}]不存在
+    const val ERROR_NO_PIPELINE_DRAFT_EXISTS = "2101185" // 该流水不存在草稿版本
+    const val ERROR_OCCURRED_IN_TRANSFER = "2101186" // 转换时出现报错
+    const val ERROR_PIPELINE_CONSTANTS_BLANK_ERROR = "2101187" // 常量({0})的取值为空
+    const val ERROR_PIPELINE_YAML_FILENAME = "2101188" // 流水线YAML文件后缀{0}不正确
+    const val ERROR_PIPELINE_WITH_EMPTY_STAGE = "2101189" // 编辑保存stage不能为空
+    const val ERROR_NO_RELEASE_PIPELINE_VERSION = "2101190" // 无发布版本的流水线无法执行
+
+    const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101191" // 触发详情{0}不存在
+    const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101192" // 触发事件{0}不存在
+    const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101193" // 触发类型{0}不支持重放
+    const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101194" // 重放流水线ID不能为空
+    const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101195" // webhook {0} 不存在
+
+    const val ERROR_GET_GIT_PROJECT_INFO = "2101196" // 获取git项目信息失败
+    const val ERROR_GET_GIT_MERGE_INFO = "2101197" // 获取mr信息失败
+    const val ERROR_GET_GIT_MERGE_REVIEW = "2101198" // 获取mr view信息失败
+    const val ERROR_GET_GIT_MERGE_CHANGE = "2101199" // 获取mr change信息失败
+    const val ERROR_GET_GIT_FILE_TREE = "2101200" // 获取git文件树失败
+    const val ERROR_GET_YAML_CONTENT = "2101201" // 获取yaml文件内容失败
+    const val ERROR_GET_GIT_FILE_INFO = "2101202" // 获取文件信息失败
+    const val ERROR_CI_YAML_NEED_MERGE_OR_REBASE = "2101203" //
+    const val ERROR_DEVNET_TIMEOUT = "2101204" //
+    const val UNKNOWN_ERROR = "2101205"
+    const val YAML_VIEW_CANNOT_DELETE = "2101206" // 由开启 PAC 模式自动创建，不支持手动修改和删除
+    const val YAML_VIEW_CANNOT_UPDATE = "2101207" // 由开启 PAC 模式自动创建，不支持手动添加/移除流水线
+    const val YAML_VIEW_CANNOT_BULK_REMOVE = "2101208" // 由开启 PAC 模式自动创建，删除流水线请前往代码库操作
+    const val ERROR_GET_COMMIT_INFO = "2101209" // 获取commit信息失败
+    const val ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH = "2101210" // 已开启PAC模式,不能删除默认分支yaml关联的流水线
+    const val ERROR_YAML_CONTENT_IS_EMPTY = "2101211" // yaml文件内容不能为空
+    const val ERROR_YAML_FILE_NAME_FORMAT = "2101212" // yaml文件名格式错误,仅支持yaml、yml后缀和一级子目录
+    const val ERROR_PIPELINE_BOUND_YAML = "2101213" // 流水线已绑定文件{0},不能修改
+    const val ERROR_PIPELINE_BOUND_REPO = "2101214" // 流水线已绑定代码库{0},不能修改
+    const val ERROR_YAML_BOUND_PIPELINE = "2101215" // 文件{0}已绑定流水线{1}
+    const val ERROR_YAML_PUSH_NO_REPO_PERMISSION = "2101216" // 发布必须仓库developer以上权限
+    const val ERROR_REPO_NO_INIT = "2101217" // 默认分支不存在,请先初始化代码库
     const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
+    const val ERROR_VERSION_IS_NOT_UPDATED = "2101219" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
     const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
+    const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
+    const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容为空，请检查
+    const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101235" // 创建分支失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_BRANCH_NO_PERMISSION = "2101236" // 用户{0}没有代码库{1}的创建分支权限
+    const val ERROR_YAML_PUSH_CREATE_FILE = "2101237" // 创建文件失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_FILE_NO_PERMISSION = "2101238" // 用户{0}没有工蜂仓库{1}的创建文件权限
+    const val ERROR_YAML_PUSH_CREATE_MERGE_REQUEST = "2101239" // 创建mr失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_MERGE_REQUEST_NO_PERMISSION = "2101240" // 用户{0}没有工蜂仓库{1}的创建mr权限
+    const val ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION = "2101241" // 工蜂仓库({0})不存在或没有权限访问
+    const val ERROR_TGIT_SERVER_EXCEPTION = "2101242" // 工蜂服务异常
 
     const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
     // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
     const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
     // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
     const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
+
+    const val ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY = "2101243" // 定时触发SVN分支不能为空
+    const val ERROR_PIPELINE_ELEMENT_CHECK_FAILED = "2101244" // 流水线有效性校验失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -484,4 +529,12 @@ object ProcessMessageCode {
     // TODO: AgentReuseMutex
     const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
     const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
+    const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
+    const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
+
+    const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
+    // 没有子流水线执行权限错误标题
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
+    // 没有子流水线执行权限错误消息
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
 }
