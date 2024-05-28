@@ -150,7 +150,7 @@ class SubPipelineStatusService @Autowired constructor(
             pipelineId = buildVariables[PIPELINE_START_PARENT_PIPELINE_ID]!!,
             buildId = buildVariables[PIPELINE_START_PARENT_BUILD_ID]!!
         )?.let {
-            logger.info("start update parent pipeline asyncStatus|${it.projectId}|${it.pipelineId}|" +
+            logger.info("start update parent pipeline asyncStatus[$asyncStatus]|${it.projectId}|${it.pipelineId}|" +
                     "${it.buildId}|${it.executeCount}|")
             pipelineRuntimeService.updateAsyncStatus(
                 projectId = it.projectId,
