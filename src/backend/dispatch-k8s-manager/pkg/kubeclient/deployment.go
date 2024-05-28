@@ -109,6 +109,19 @@ func CreateNativeDeployment(deployment *appsv1.Deployment) error {
 	return nil
 }
 
+func UpdateNativeDeployment(deployment *appsv1.Deployment) error {
+	_, err := kubeClient.AppsV1().Deployments(config.Config.Kubernetes.NameSpace).Update(
+		context.TODO(),
+		deployment,
+		metav1.UpdateOptions{},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func PatchDeployment(deploymentName string, jsonPatch []byte) error {
 	_, err := kubeClient.AppsV1().Deployments(config.Config.Kubernetes.NameSpace).Patch(
 		context.TODO(),
