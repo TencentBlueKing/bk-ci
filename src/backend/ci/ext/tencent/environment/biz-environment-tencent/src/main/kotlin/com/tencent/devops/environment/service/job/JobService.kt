@@ -29,6 +29,10 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_SCRIPT_EXECUTE_HOST_EMPTY
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
@@ -124,7 +128,7 @@ class JobService @Autowired constructor(
         if (allHostList.isNullOrEmpty()) {
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                "Host is empty."
+                I18nUtil.getCodeLanMessage(ERROR_SCRIPT_EXECUTE_HOST_EMPTY)
             )
         }
         if (allHostList.isNotEmpty()) {
@@ -190,13 +194,13 @@ class JobService @Autowired constructor(
         if (allExecuteTargetHostList.isEmpty()) {
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                "Execute target host is empty."
+                I18nUtil.getCodeLanMessage(ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY)
             )
         }
         if (allFileSourceHostList.isEmpty()) {
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                "File source host is empty."
+                I18nUtil.getCodeLanMessage(ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY)
             )
         }
         val allHostList = allExecuteTargetHostList.plus(allFileSourceHostList)
@@ -439,7 +443,7 @@ class JobService @Autowired constructor(
         jobInstanceId: Long,
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
-        ApigwJobCloudApi.setJobOperationName("queryJobInstanceStatus")
+        ApigwJobCloudApi.setJobOperationName(::queryJobInstanceStatus.name)
         val jobCloudQueryJobInstanceStatusRes: JobCloudResult<JobCloudQueryJobInstanceStatusResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudQueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult ?: ""
@@ -506,7 +510,7 @@ class JobService @Autowired constructor(
         start: Int?,
         length: Int?
     ): JobResult<GetAccountListResult> {
-        ApigwJobCloudApi.setJobOperationName("getAccountList")
+        ApigwJobCloudApi.setJobOperationName(::getAccountList.name)
         val jobCloudGetAccountListRes: JobCloudResult<JobCloudGetAccountListResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudGetAccountListResult::class.java,
@@ -551,7 +555,7 @@ class JobService @Autowired constructor(
         jobInstanceId: Long,
         stepInstanceId: Long
     ): JobResult<GetStepInstanceDetailResult> {
-        ApigwJobCloudApi.setJobOperationName("getStepInstanceDetail")
+        ApigwJobCloudApi.setJobOperationName(::getStepInstanceDetail.name)
         val jobCloudGetStepInstanceDetailRes: JobCloudResult<JobCloudGetStepInstanceDetailResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudGetStepInstanceDetailResult::class.java, jobInstanceId, stepInstanceId
@@ -674,7 +678,7 @@ class JobService @Autowired constructor(
         status: Int?,
         tag: String?
     ): JobResult<GetStepInstanceStatusResult> {
-        ApigwJobCloudApi.setJobOperationName("getStepInstanceStatus")
+        ApigwJobCloudApi.setJobOperationName(::getStepInstanceStatus.name)
         val jobCloudGetStepInstanceStatusRes: JobCloudResult<JobCloudGetStepInstanceStatusResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudGetStepInstanceStatusResult::class.java,

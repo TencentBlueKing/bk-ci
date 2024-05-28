@@ -40,7 +40,6 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_CLOUD_ID
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_INNERIP
@@ -52,6 +51,7 @@ import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_LINUX
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_SOLARIS
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_UNIX
 import com.tencent.devops.environment.constant.Constants.OS_TYPE_CC_CODE_WINDOWS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
@@ -456,7 +456,7 @@ class CmdbNodeService @Autowired constructor(
         }
         if (invalidIps.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
+                errorCode = ERROR_NODE_IP_ILLEGAL_USER,
                 params = arrayOf(invalidIps.joinToString(","), userId)
             )
         }

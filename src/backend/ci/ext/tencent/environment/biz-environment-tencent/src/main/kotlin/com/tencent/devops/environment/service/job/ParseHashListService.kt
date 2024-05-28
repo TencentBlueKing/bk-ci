@@ -27,7 +27,9 @@
 
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_LIST_NODE_NOT_IN_CC_OR_CMDB
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_LIST_NODE_NOT_IN_CC_OR_CMDB
 import com.tencent.devops.environment.constant.T_ENV_ENV_ID
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
@@ -42,7 +44,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service("ParseHashListService")
 class ParseHashListService @Autowired constructor(
@@ -92,9 +93,9 @@ class ParseHashListService @Autowired constructor(
                 null == it[T_NODE_HOST_ID] as? Long || null == it[T_NODE_CLOUD_AREA_ID] as? Long
             }.map { it[T_NODE_NODE_IP] as String }
             if (notInCCNodeList.isNotEmpty()) {
-                throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "Node $notInCCNodeList in env list is not in CC/CMDB"
+                throw ErrorCodeException(
+                    errorCode = ERROR_ENV_LIST_NODE_NOT_IN_CC_OR_CMDB,
+                    params = arrayOf(notInCCNodeList.joinToString(", "))
                 )
             }
             val nodeHostList = nodeRecord.map {
@@ -121,9 +122,9 @@ class ParseHashListService @Autowired constructor(
                 null == it[T_NODE_HOST_ID] as? Long || null == it[T_NODE_CLOUD_AREA_ID] as? Long
             }.map { it[T_NODE_NODE_IP] as String }
             if (notInCCNodeList.isNotEmpty()) {
-                throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "Node $notInCCNodeList in node list is not in CC/CMDB"
+                throw ErrorCodeException(
+                    errorCode = ERROR_NODE_LIST_NODE_NOT_IN_CC_OR_CMDB,
+                    params = arrayOf(notInCCNodeList.joinToString(", "))
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")

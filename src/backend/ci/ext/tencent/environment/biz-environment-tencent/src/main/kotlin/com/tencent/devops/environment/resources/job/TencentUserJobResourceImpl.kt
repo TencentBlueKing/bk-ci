@@ -3,7 +3,9 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentUserJobResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
@@ -180,8 +182,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than one month."
+                message = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT)
             )
         }
     }

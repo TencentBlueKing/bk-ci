@@ -33,6 +33,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_AGENT_STATUS_QUERY_EMPTY_JOB_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
@@ -262,8 +264,8 @@ data class AgentService @Autowired constructor(
     private fun checkAgentStatusTimed(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
         if (null == jobId) {
             throw CustomException(
-                Response.Status.INTERNAL_SERVER_ERROR,
-                "Empty job id."
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(ERROR_AGENT_STATUS_QUERY_EMPTY_JOB_ID)
             )
         }
         if (null == ipList) return

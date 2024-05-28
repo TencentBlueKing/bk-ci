@@ -16,7 +16,9 @@ import com.tencent.devops.environment.constant.Constants.COLUMN_SVR_IP
 import com.tencent.devops.environment.constant.Constants.COLUMN_SVR_NAME
 import com.tencent.devops.environment.constant.Constants.COLUMN_SVR_OPERATOR
 import com.tencent.devops.environment.constant.DEFAULT_SYTEM_USER
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_CMDB_RESPONSE
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL
 import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
@@ -111,7 +113,7 @@ class TencentQueryFromCmdbService {
                     "notInCmdbIpList: ${ipNotInCmdb.joinToString()}"
             )
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL,
+                errorCode = ERROR_NODE_IP_ILLEGAL,
                 params = arrayOf(
                     ipNotInCmdb.joinToString(","),
                     unauthorisedIpList.joinToString(","),
@@ -158,14 +160,14 @@ class TencentQueryFromCmdbService {
         } catch (timeoutError: SocketTimeoutException) {
             logger.error("Query CMDB interface time out. Error:", timeoutError)
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT,
-                defaultMessage = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_CMDB_INTERFACE_TIME_OUT)
+                errorCode = ERROR_CMDB_INTERFACE_TIME_OUT,
+                defaultMessage = I18nUtil.getCodeLanMessage(ERROR_CMDB_INTERFACE_TIME_OUT)
             )
         } catch (error: Exception) {
             logger.error("Query CMDB interface error. Error:", error)
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_CMDB_RESPONSE,
-                defaultMessage = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_CMDB_RESPONSE)
+                errorCode = ERROR_CMDB_RESPONSE,
+                defaultMessage = I18nUtil.getCodeLanMessage(ERROR_CMDB_RESPONSE)
             )
         }
         return ccPostRes

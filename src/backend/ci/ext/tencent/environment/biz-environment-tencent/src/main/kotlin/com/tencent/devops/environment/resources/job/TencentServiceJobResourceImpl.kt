@@ -30,7 +30,9 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
@@ -234,8 +236,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than one month."
+                message = I18nUtil.getCodeLanMessage(ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT)
             )
         }
     }
