@@ -9,28 +9,12 @@
                 class="select-custom"
                 :value="item"
                 name
-                :disabled="disabled || (repositoryType !== 'SELF' && !repoHashId)"
+                :disabled="disabled || isLoading || (repositoryType !== 'SELF' && !repoHashId)"
                 type="text"
-                v-bind="selectInputOption"
+                :options="branchesList"
                 :handle-change="(name, value) => handleChangeBranch(value, index)"
             >
             </select-input>
-            <!-- <bk-select
-                :disabled="disabled || !repoHashId"
-                :placeholder="placeholder"
-                :loading="isLoading"
-                :value="item"
-                @change="(item) => handleChangeBranch(item, index)"
-                ext-cls="select-custom"
-                searchable>
-                <bk-option
-                    v-for="option in branchesList"
-                    :key="option.key"
-                    :disabled="curValue.includes(option.key)"
-                    :id="option.key"
-                    :name="option.value">
-                </bk-option>
-            </bk-select> -->
             <i
                 class="bk-icon icon-plus-circle"
                 @click="plusParam()" />
@@ -75,16 +59,6 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
-            },
-            selectInputOption () {
-                if (!this.repoHashId) return {}
-                return {
-                    optionsConf: {
-                        paramId: 'value',
-                        paramName: 'key',
-                        url: `${PROCESS_API_URL_PREFIX}/user/buildParam/${this.projectId}/${this.repoHashId}/gitRefs`
-                    }
-                }
             }
         },
         watch: {
@@ -108,7 +82,7 @@
             }
         },
         created () {
-            // this.getBranchesList()
+            this.getBranchesList()
             if (this.value.length) {
                 this.curValue = JSON.parse(JSON.stringify(this.value))
             } else {
@@ -125,7 +99,13 @@
                 if (!this.repoHashId) return
                 this.isLoading = true
                 this.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/buildParam/${this.projectId}/${this.repoHashId}/gitRefs`).then(res => {
-                    this.branchesList = res.data
+                    this.branchesList = res.data.map(i => {
+                        return {
+                            ...i,
+                            id: i.value,
+                            name: i.key
+                        }
+                    })
                 }).finally(() => {
                     this.isLoading = false
                 })

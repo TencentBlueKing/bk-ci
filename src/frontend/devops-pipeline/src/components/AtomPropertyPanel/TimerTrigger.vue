@@ -57,7 +57,7 @@
                             :url="getCodeUrl"
                             name="repoHashId"
                             :value="element['repoHashId']"
-                            :handle-change="handleUpdateElement"
+                            :handle-change="(name, val) => handleChangeRepoHashId(name, val)"
                         >
                         </request-selector>
                         <vuex-input
@@ -215,6 +215,10 @@
                 this.handleUpdateElement('branches', [])
                 this.handleUpdateElement('repoHashId', '')
                 this.handleUpdateElement('repositoryType', val)
+            },
+            handleChangeRepoHashId (name, val) {
+                this.handleUpdateElement(name, val)
+                this.handleUpdateElement('branches', [])
             }
         }
     }
