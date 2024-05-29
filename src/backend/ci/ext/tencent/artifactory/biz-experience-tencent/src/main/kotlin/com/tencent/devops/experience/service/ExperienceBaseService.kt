@@ -274,7 +274,9 @@ class ExperienceBaseService @Autowired constructor(
         }
 
         val isInDept = lazy {
-            if (isOuter) return@lazy { false } else {
+            if (isOuter) {
+                return@lazy false
+            } else {
                 val userDeptDetail =
                     client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return@lazy false
                 for (depts in getGroupIdToDept(groupIds, false).values) {
