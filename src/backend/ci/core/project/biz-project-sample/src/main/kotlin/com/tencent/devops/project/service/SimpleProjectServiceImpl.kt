@@ -51,8 +51,10 @@ import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
 import org.jooq.DSLContext
@@ -216,6 +218,15 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
+        return listOf(
+            OperationalProductVO(
+                productId = -1,
+                productName = "其他"
+            )
+        )
+    }
+
     override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
         return with(tProjectRecord) {
             ProjectOrganizationInfo(
@@ -231,14 +242,24 @@ class SimpleProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun remindUserOfRelatedProduct(userId: String, englishName: String): Boolean {
+        return false
+    }
+
     override fun buildRouterTag(routerTag: String?): String? = null
 
     override fun updateProjectRouterTag(englishName: String) = Unit
 
     override fun validateProjectRelateProduct(
-        userId: String,
-        enabled: Boolean,
-        productId: Int?
+        projectProductValidateDTO: ProjectProductValidateDTO
+    ) = Unit
+
+    override fun validateProjectOrganization(
+        projectChannel: ProjectChannelCode?,
+        bgId: Long,
+        bgName: String,
+        deptId: Long?,
+        deptName: String?
     ) = Unit
 
     companion object {

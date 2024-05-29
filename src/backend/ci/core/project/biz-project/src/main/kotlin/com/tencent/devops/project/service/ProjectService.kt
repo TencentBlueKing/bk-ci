@@ -30,7 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OperationalProductVO
@@ -47,12 +47,12 @@ import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
 @Suppress("ALL")
 interface ProjectService {
@@ -173,7 +173,7 @@ interface ProjectService {
         projectId: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<ProjectWithPermission>
+    ): Pagination<ProjectByConditionDTO>
 
     fun list(userId: String): List<ProjectVO>
 
@@ -189,11 +189,11 @@ interface ProjectService {
 
     fun getAllProject(): List<ProjectVO>
 
-    fun listMigrateProjects(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+    fun listProjectsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
         limit: Int,
         offset: Int
-    ): List<ProjectWithPermission>
+    ): List<ProjectByConditionDTO>
 
     /**
      * 获取用户已的可访问项目列表=
@@ -236,6 +236,8 @@ interface ProjectService {
 
     fun updateProjectProperties(userId: String? = null, projectCode: String, properties: ProjectProperties): Boolean
 
+    fun setDisableWhenInactiveFlag(projectCodes: List<String>): Boolean
+
     fun cancelCreateProject(userId: String, projectId: String): Boolean
 
     fun cancelUpdateProject(userId: String, projectId: String): Boolean
@@ -251,6 +253,8 @@ interface ProjectService {
 
     fun getOperationalProducts(): List<OperationalProductVO>
 
+    fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO>
+
     fun updateProjectProductId(
         englishName: String,
         productName: String? = null,
@@ -265,4 +269,17 @@ interface ProjectService {
     fun fixProjectOrganization(
         tProjectRecord: TProjectRecord
     ): ProjectOrganizationInfo
+
+    fun getProjectListByProductId(
+        productId: Int
+    ): List<ProjectBaseInfo>
+
+    fun getExistedEnglishName(
+        englishNameList: List<String>
+    ): List<String>?
+
+    fun remindUserOfRelatedProduct(
+        userId: String,
+        englishName: String
+    ): Boolean
 }

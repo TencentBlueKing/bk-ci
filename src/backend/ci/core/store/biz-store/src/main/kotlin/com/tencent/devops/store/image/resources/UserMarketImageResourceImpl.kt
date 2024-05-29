@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.UserMarketImageResource
-import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest

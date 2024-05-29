@@ -51,5 +51,7 @@ data class TemplatePipeline(
     @get:Schema(title = "是否有编辑权限", required = false)
     val hasPermission: Boolean,
     @get:Schema(title = "流水线模板状态", required = false)
-    val status: TemplatePipelineStatus
+    val status: TemplatePipelineStatus,
+    @get:Schema(title = "模板实例化错误信息", required = false)
+    val instanceErrorInfo: String? = null
 )

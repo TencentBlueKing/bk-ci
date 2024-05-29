@@ -26,7 +26,6 @@ module.exports = (env = {}, argv) => {
         entry: [
             'axios',
             'vee-validate',
-            'bkui-pipeline',
             'vue-i18n',
             'moment'
         ],
@@ -35,6 +34,14 @@ module.exports = (env = {}, argv) => {
             filename: '[name].dll.js',
             library: 'lib',
             path: path.join(__dirname, 'dist')
+        },
+        externals: {
+            vue: {
+                commonjs: 'vue',
+                commonjs2: 'vue',
+                amd: 'vue',
+                root: 'Vue'
+            }
         },
         resolve: {
             fallback: {
@@ -84,6 +91,7 @@ module.exports = (env = {}, argv) => {
             ]
         },
         plugins: [
+            // new BundleAnalyzerPlugin(),
             new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/),
             new webpack.DllPlugin({
                 context: __dirname,

@@ -40,9 +40,10 @@
                                         action: RESOURCE_ACTION.USE
                                     }
                                 }"
+                                v-bk-tooltips="$t('codelib.重放此事件，符合条件的流水线将触发执行')"
                                 @click.stop="handleReplayAll(eventId)"
                             >
-                                {{ $t('codelib.一键重新触发') }}
+                                {{ $t('codelib.全部重放') }}
                             </a>
                             <bk-icon
                                 :class="{
@@ -53,6 +54,19 @@
                             />
                         </div>
                         
+                    </div>
+                    <div v-if="activeIndex === index" class="filter-tab">
+                        <div
+                            v-for="(tab, tabIndex) in filterTabList"
+                            :key="tabIndex"
+                            :class="{
+                                'tab-item': true,
+                                'active': filterTab === tab.id
+                            }"
+                            @click="handleToggleTab(tab)">
+                            {{ tab.name }}
+                            <span class="num">{{ reasonNumMap[tab.key] }}</span>
+                        </div>
                     </div>
                     <div
                         class="trigger-list-table"
@@ -85,7 +99,9 @@
                                     <td class="replay-btn">
                                         <div class="cell">
                                             <a
-                                                class="click-trigger"
+                                                :class="{
+                                                    'click-trigger': isZH
+                                                }"
                                                 v-perm="{
                                                     hasPermission: curRepo.canUse,
                                                     disablePermissionApi: true,
@@ -96,9 +112,10 @@
                                                         action: RESOURCE_ACTION.USE
                                                     }
                                                 }"
+                                                v-bk-tooltips="$t('codelib.重放此事件，仅触发当前流水线')"
                                                 @click="handleReplay(detail)"
                                             >
-                                                {{ $t('codelib.重新触发') }}
+                                                {{ $t('codelib.重放') }}
                                             </a>
                                         </div>
                                     </td>
@@ -164,6 +181,7 @@
             }
         },
         data () {
+            const reason = this.searchValue.find(i => i.id === 'reason')?.values[0].id || ''
             return {
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
@@ -175,27 +193,42 @@
                     current: 1,
                     limit: 10,
                     count: 0
-                }
+                },
+                isZH: true,
+                filterTab: reason,
+                reason,
+                reasonNumMap: {}
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            filterTabList () {
+                return [
+                    { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS', key: 'triggerSuccess' },
+                    { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED', key: 'triggerFailed' },
+                    { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH', key: 'triggerNotMatch' }
+                ]
             }
+        },
+        created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
         },
         methods: {
             ...mapActions('codelib', [
                 'fetchEventDetail',
+                'fetchTriggerReasonNum',
                 'replayAllEvent',
                 'replayEvent'
             ]),
 
             /**
-             * 一键重新触发
+             * 全部重放
              */
             handleReplayAll (eventId) {
                 this.$bkInfo({
-                    title: this.$t('codelib.是否一键重新触发？'),
+                    title: this.$t('codelib.是否全部重放？'),
                     subTitle: this.$t('codelib.将使用此事件重新触发关联的流水线'),
                     confirmLoading: true,
                     confirmFn: async () => {
@@ -242,23 +275,25 @@
             /**
              * 展示触发事件详情
              */
-            handleShowDetail (data, index) {
+            async handleShowDetail (data, index) {
                 this.pagination.current = 1
                 this.activeIndex === index ? this.activeIndex = -1 : this.activeIndex = index
                 if (this.activeIndex === -1) return
                 this.eventId = data.eventId
-                this.getEventDetail()
+                await this.handleFetchTriggerReasonNum()
+                await this.getEventDetail()
             },
 
             getEventDetail () {
                 this.isLoading = true
-                const pipelineName = this.searchValue.find(i => i.id === 'pipelineName')?.values[0].name || ''
+                const pipelineId = this.searchValue.find(i => i.id === 'pipelineId')?.values[0].id || ''
                 this.fetchEventDetail({
                     projectId: this.projectId,
                     eventId: this.eventId,
                     page: this.pagination.current,
                     pageSize: this.pagination.limit,
-                    pipelineName
+                    reason: this.filterTab,
+                    pipelineId
                 }).then(res => {
                     this.eventDetailList = res.records
                     this.pagination.count = res.count
@@ -277,6 +312,27 @@
             },
             getEventDescTitle (str) {
                 return str.replace(/(<\/?font.*?>)|(<\/?span.*?>)|(<\/?a.*?>)/gi, '')
+            },
+            handleToggleTab (tab) {
+                this.filterTab = tab.id
+                this.getEventDetail()
+            },
+
+            async handleFetchTriggerReasonNum () {
+                try {
+                    const pipelineId = this.searchValue.find(i => i.id === 'pipelineId')?.values[0].id || ''
+
+                    this.reasonNumMap = await this.fetchTriggerReasonNum({
+                        projectId: this.projectId,
+                        eventId: this.eventId,
+                        pipelineId
+                    })
+                    if (!this.reason) {
+                        this.filterTab = this.filterTabList.find(i => this.reasonNumMap[i.key] > 0)?.id
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
             }
         }
     }
@@ -357,6 +413,9 @@
                 transform: rotate(90deg);
             }
         }
+        .trigger-user {
+            color: #979BA5;
+        }
         .trigger-time {
             padding-left: 8px;
             color: #979BA5;
@@ -369,9 +428,40 @@
                 color: red;
             }
         }
+        .filter-tab {
+            display: flex;
+            align-items: center;
+            width: fit-content;
+            height: 42px;
+            border: 1px solid #dfe0e5;
+            border-bottom: none;
+            .tab-item {
+                font-size: 12px;
+                height: 42px;
+                line-height: 42px;
+                padding: 0 15px;
+                border-right: 1px solid #dfe0e5;
+                cursor: pointer;
+                &:last-child {
+                    border: none
+                }
+                &:hover {
+                    color: #3a84ff;
+                }
+                &.active {
+                    color: #3a84ff;
+                }
+            }
+            .num {
+                color: #979ba5;
+                background: #f0f5ff;
+                border-radius: 50%;
+                padding: 2px;
+            }
+        }
         .trigger-list-table {
             width: 100%;
-            margin: 8px 0;
+            margin-bottom: 8px;
             border: 1px solid #dfe0e5;
             border-radius: 2px;
             transition: opacity 3s linear;
@@ -405,6 +495,10 @@
             .cell {
                 display: inline-block;
                 width: 110px;
+            }
+            .click-trigger {
+                display: inline-block;
+                margin-left: 22px;
             }
         }
     }

@@ -9,7 +9,7 @@
     import { AttachAddon } from 'xterm-addon-attach'
     import 'xterm/css/xterm.css'
     export default {
-        name: 'Console',
+        name: 'MyTerminal',
         props: {
             consoleType: {
                 type: String,

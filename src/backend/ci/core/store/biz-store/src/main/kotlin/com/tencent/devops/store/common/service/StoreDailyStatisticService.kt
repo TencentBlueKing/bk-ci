@@ -27,7 +27,9 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import java.time.LocalDateTime
 
 interface StoreDailyStatisticService {
@@ -45,4 +47,16 @@ interface StoreDailyStatisticService {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): List<StoreDailyStatistic>?
+
+    /**
+     * 更新组件的每日统计信息
+     * @param storeCode 组件标识
+     * @param storeType 组件类型
+     * @param storeDailyStatisticRequest 每日统计信息
+     */
+    fun updateDailyStatisticInfo(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeDailyStatisticRequest: StoreDailyStatisticRequest
+    ): Boolean
 }

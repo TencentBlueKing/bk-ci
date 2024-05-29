@@ -38,6 +38,7 @@ import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
@@ -170,8 +171,13 @@ class AtomCommonDao : AbstractStoreCommonDao() {
                     storeId = atomRecord.id,
                     storeCode = atomRecord.atomCode,
                     storeName = atomRecord.name,
+                    storeType = StoreTypeEnum.ATOM,
                     version = atomRecord.version,
-                    publicFlag = atomRecord.defaultFlag
+                    publicFlag = atomRecord.defaultFlag,
+                    status = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
+                    logoUrl = atomRecord.logoUrl,
+                    publisher = atomRecord.publisher,
+                    classifyId = atomRecord.classifyId
                 )
             } else {
                 null

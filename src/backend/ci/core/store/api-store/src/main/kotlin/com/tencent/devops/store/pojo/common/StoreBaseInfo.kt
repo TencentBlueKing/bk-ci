@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组件基本信息")
@@ -37,8 +38,18 @@ data class StoreBaseInfo(
     val storeCode: String,
     @get:Schema(title = "组件名称", required = true)
     val storeName: String,
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum,
     @get:Schema(title = "组件版本号", required = true)
     val version: String,
     @get:Schema(title = "是否为公共组件", required = true)
-    val publicFlag: Boolean
+    val publicFlag: Boolean,
+    @get:Schema(title = "状态", required = true)
+    val status: String = "",
+    @get:Schema(title = "logo地址")
+    val logoUrl: String? = null,
+    @get:Schema(title = "发布者")
+    val publisher: String,
+    @get:Schema(title = "分类ID")
+    val classifyId: String
 )

@@ -35,15 +35,15 @@ data class PipelinePermissions(
     @get:Schema(title = "管理员权限", required = true)
     val canManage: Boolean,
     @get:Schema(title = "删除权限", required = true)
-    val canDelete: Boolean,
+    val canDelete: Boolean = false,
     @get:Schema(title = "查看权限", required = true)
-    val canView: Boolean,
+    val canView: Boolean = false,
     @get:Schema(title = "编辑权限", required = true)
-    val canEdit: Boolean,
+    val canEdit: Boolean = false,
     @get:Schema(title = "执行权限", required = true)
-    val canExecute: Boolean,
+    val canExecute: Boolean = false,
     @get:Schema(title = "下载权限", required = true)
-    val canDownload: Boolean,
+    val canDownload: Boolean = false,
     @get:Schema(title = "分享权限", required = true)
-    val canShare: Boolean
+    val canShare: Boolean = false
 )

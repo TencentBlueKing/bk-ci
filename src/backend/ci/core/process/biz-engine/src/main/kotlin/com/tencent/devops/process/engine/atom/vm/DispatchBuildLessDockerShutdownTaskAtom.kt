@@ -102,8 +102,9 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
         // 同步Job执行状态
         buildLogPrinter.stopLog(
             buildId = buildId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount,
+            stepId = task.stepId
         )
 
         // 关闭心跳

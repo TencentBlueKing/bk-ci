@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectVO
@@ -210,5 +211,21 @@ interface OPProjectResource {
         @Parameter(description = "产品名称", required = true)
         @QueryParam("productName")
         productName: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/product/getOperationalProducts")
+    @Operation(summary = "查询运营产品")
+    fun getOperationalProducts(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<List<OperationalProductVO>>
+
+    @PUT
+    @Path("/setDisableWhenInactiveFlag")
+    fun setDisableWhenInactiveFlag(
+        @Parameter(description = "项目ID列表", required = true)
+        projectCodes: List<String>
     ): Result<Boolean>
 }

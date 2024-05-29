@@ -67,8 +67,8 @@ data class GitCodeFileInfo(
     val commitId: String,
     @JsonProperty("content")
     @get:Schema(title = "content")
-    val content: String,
+    val content: String?,
     @JsonProperty("encoding")
     @get:Schema(title = "encoding")
-    val encoding: String
+    val encoding: String?
 )

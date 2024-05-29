@@ -45,7 +45,7 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
 import com.tencent.devops.store.pojo.common.KEY_VAR_VALUE
-import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
+import com.tencent.devops.store.pojo.common.env.StoreEnvVarRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext

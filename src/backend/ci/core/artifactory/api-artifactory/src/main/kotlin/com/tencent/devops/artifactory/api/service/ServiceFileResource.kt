@@ -82,7 +82,10 @@ interface ServiceFileResource {
         staticFlag: Boolean? = false,
         @Parameter(description = "文件类型", required = false)
         @QueryParam("fileType")
-        fileType: FileTypeEnum? = null
+        fileType: FileTypeEnum? = null,
+        @Parameter(description = "文件路径", required = false)
+        @QueryParam("filePath")
+        filePath: String? = null
     ): Result<String?>
 
     @Operation(summary = "下载文件")

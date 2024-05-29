@@ -27,11 +27,11 @@
 
 package com.tencent.devops.store.pojo.template
 
-import com.tencent.devops.store.pojo.common.Category
-import com.tencent.devops.store.pojo.common.HonorInfo
-import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.category.Category
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
-import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板详情")
