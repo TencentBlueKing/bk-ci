@@ -445,7 +445,9 @@ class ProjectBillsService constructor(
                     throw RemoteServiceException("request failed, response:($it)")
                 }
                 val responseStr = it.body!!.string()
-                val responseDTO = objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
+                val responseDTO = objectMapper.readValue(
+                    responseStr,
+                    object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
                 if (responseDTO.code != 200L || !responseDTO.result) {
                     // 请求错误
                     logger.warn("request failed, message:(${responseDTO.message})")
