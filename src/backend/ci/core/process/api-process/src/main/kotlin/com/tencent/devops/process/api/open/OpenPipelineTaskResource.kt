@@ -28,10 +28,10 @@
 package com.tencent.devops.process.api.open
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.process.pojo.open.BuildStatusInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -61,5 +61,5 @@ interface OpenPipelineTaskResource {
         @Parameter(description = "任务ID，可选，如果传了则查询相应任务的状态，否则就查询整体构建的状态", required = false)
         @QueryParam("taskId")
         taskId: String?
-    ): Result<BuildStatus?>
+    ): Result<BuildStatusInfo?> // { "startUser" : "启动人", "debug" : "true/false 是否调试版本", "status" : RUNNING }
 }
