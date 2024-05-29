@@ -462,7 +462,7 @@ class ServiceRemoteDevResourceImpl(
         desktopIP: String
     ) {
         // 校验指纹
-        val realFingerprint = DigestUtils.md5Hex("${ws.macAddress}${bkConfig.desktopSdkToken}")
+        val realFingerprint = DigestUtils.md5Hex("${ws.macAddress}${bkConfig.desktopSdkToken}").uppercase()
         if (realFingerprint != sign.fingerprint) {
             throwTokenFail(desktopIP, "wrong fingerprint", "$realFingerprint != ${sign.fingerprint}")
         }
@@ -478,7 +478,7 @@ class ServiceRemoteDevResourceImpl(
             "${sign.sha1}," +
             "${sign.timestamp}," +
             sign.publicKey
-        val realSigned = ShaUtils.hmacSha1(bkConfig.desktopSdkToken.toByteArray(), unsigned.toByteArray())
+        val realSigned = ShaUtils.hmacSha1(bkConfig.desktopSdkToken.toByteArray(), unsigned.toByteArray()).uppercase()
         if (realSigned != sign.sign) {
             throwTokenFail(desktopIP, "wrong sign", "$realSigned != ${sign.sign}")
         }
