@@ -6,8 +6,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.common.web.annotation.BkApiPermission
-import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import io.swagger.v3.oas.annotations.Operation
@@ -37,7 +35,6 @@ interface ServiceResourceMemberResource {
     @GET
     @Path("/{projectCode}/getResourceGroupUsers")
     @Operation(summary = "获取特定资源下用户组成员")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getResourceGroupMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -59,7 +56,6 @@ interface ServiceResourceMemberResource {
     @GET
     @Path("/{projectCode}/getResourceUsers")
     @Operation(summary = "拉取资源下所有成员，并按项目角色组分组成员信息返回")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getResourceGroupAndMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -78,7 +74,6 @@ interface ServiceResourceMemberResource {
     @POST
     @Path("/{projectCode}/batchAddResourceGroupMembers/")
     @Operation(summary = "用户组添加成员")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun batchAddResourceGroupMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -96,7 +91,6 @@ interface ServiceResourceMemberResource {
     @DELETE
     @Path("/{projectCode}/batchDeleteResourceGroupMembers/")
     @Operation(summary = "用户组删除成员")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun batchDeleteResourceGroupMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)

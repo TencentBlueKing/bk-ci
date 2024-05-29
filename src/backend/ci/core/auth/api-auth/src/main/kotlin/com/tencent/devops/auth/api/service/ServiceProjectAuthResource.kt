@@ -35,8 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.common.web.annotation.BkApiPermission
-import com.tencent.devops.common.web.constant.BkApiHandleType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -58,7 +56,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/{projectCode}/users/byGroup")
     @Operation(summary = "获取项目成员 (需要对接的权限中心支持该功能才可以)")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getProjectUsers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -77,7 +74,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/{projectCode}/users")
     @Operation(summary = "拉取项目所有成员，并按项目角色组分组成员信息返回")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getProjectGroupAndUserList(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -90,7 +86,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/users/{userId}")
     @Operation(summary = "获取用户有管理权限的项目Code")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getUserProjects(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -103,7 +98,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/users/{userId}/{action}")
     @Operation(summary = "获取用户有某种项目资源类型权限的项目Code")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getUserProjectsByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -122,7 +116,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/{projectCode}/users/{userId}/isProjectUsers")
     @Operation(summary = "判断是否某个项目中某个组角色的成员")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun isProjectUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -144,7 +137,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/{projectCode}/users/{userId}/checkProjectManager")
     @Operation(summary = "判断是否是项目管理员")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun checkProjectManager(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -163,7 +155,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/projectIds/{projectId}/checkManager")
     @Operation(summary = "判断是否是项目管理员或CI管理员")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun checkManager(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -179,7 +170,6 @@ interface ServiceProjectAuthResource {
     @POST
     @Path("/{projectCode}/createUser")
     @Operation(summary = "添加单个用户到指定项目指定分组")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun createProjectUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -198,7 +188,6 @@ interface ServiceProjectAuthResource {
     @POST
     @Path("/{projectCode}/batchCreateProjectUser/{roleCode}")
     @Operation(summary = "批量添加用户到指定项目指定分组")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun batchCreateProjectUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -219,7 +208,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/{projectCode}/roles")
     @Operation(summary = "获取项目角色")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getProjectRoles(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
@@ -235,7 +223,6 @@ interface ServiceProjectAuthResource {
     @GET
     @Path("/{projectCode}/getProjectPermissionInfo")
     @Operation(summary = "获取项目权限信息")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getProjectPermissionInfo(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
