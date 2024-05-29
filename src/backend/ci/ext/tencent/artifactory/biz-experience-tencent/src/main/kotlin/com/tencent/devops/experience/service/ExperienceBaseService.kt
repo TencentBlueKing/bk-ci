@@ -68,7 +68,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 // 服务共用部分在这里
-@SuppressWarnings("LongParameterList", "TooManyFunctions")
+@SuppressWarnings("LongParameterList", "TooManyFunctions", "ComplexCondition")
 @Service
 class ExperienceBaseService @Autowired constructor(
     private val experienceGroupDao: ExperienceGroupDao,
@@ -274,10 +274,10 @@ class ExperienceBaseService @Autowired constructor(
         }
 
         val isInDept = lazy {
-            if (isOuter) return@lazy false else {
+            if (isOuter) return@lazy { false } else {
+                val userDeptDetail =
+                    client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return@lazy false
                 for (depts in getGroupIdToDept(groupIds, false).values) {
-                    val userDeptDetail =
-                        client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return@lazy false
                     for (dept in depts) {
                         if (userDeptDetail.bgId == dept || userDeptDetail.deptId == dept ||
                             userDeptDetail.centerId == dept || userDeptDetail.groupId == dept
