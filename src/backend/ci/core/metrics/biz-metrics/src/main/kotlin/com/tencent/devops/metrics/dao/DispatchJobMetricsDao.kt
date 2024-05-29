@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.MaxJobConcurrencyVO
@@ -124,6 +125,7 @@ class DispatchJobMetricsDao {
                 ).`as`("第三方构建机最大并发")
             ).from(subQuery)
                 .groupBy(subQuery.field("PROJECT_ID", String::class.java))
+                .skipCheck()
                 .fetchAny()?.let {
                     MaxJobConcurrencyVO(
                         projectId = it.value1(),

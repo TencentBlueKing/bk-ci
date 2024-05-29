@@ -347,7 +347,7 @@ class ProjectBillsService constructor(
             } else {
                 LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue - 1, 15)
             }
-            val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 14)
+            val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 15)
             do {
                 val projects = projectService.listProjectsByCondition(
                     projectConditionDTO = ProjectConditionDTO(
