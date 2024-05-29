@@ -28,8 +28,6 @@
 package com.tencent.devops.project.api.open
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.web.annotation.BkApiPermission
-import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -53,7 +51,6 @@ interface OpenProjectResource {
     @GET
     @Path("/{projectId}")
     @Operation(summary = "获取项目信息")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun get(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "token")
@@ -66,7 +63,6 @@ interface OpenProjectResource {
     @POST
     @Path("/listByProjectCodes")
     @Operation(summary = "查询指定项目")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun listByProjectCodes(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "token")
@@ -78,7 +74,6 @@ interface OpenProjectResource {
     @GET
     @Path("/getOperationalProducts")
     @Operation(summary = "查询运营产品")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun getOperationalProducts(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "token")

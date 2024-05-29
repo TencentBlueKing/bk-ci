@@ -29,8 +29,6 @@ package com.tencent.devops.artifactory.api.service
 
 import com.tencent.bkrepo.webhook.pojo.payload.node.NodeCreatedEventPayload
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.web.annotation.BkApiPermission
-import com.tencent.devops.common.web.constant.BkApiHandleType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -50,7 +48,6 @@ interface OpenArtifactoryResource {
     @POST
     @Path("/artifactList")
     @Operation(summary = "更新流水线构件列表")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun updateArtifactList(
         @Parameter(description = "认证token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
