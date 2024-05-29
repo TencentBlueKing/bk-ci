@@ -37,7 +37,7 @@
                             ext-cls="group-box"
                             :clearable="false"
                             :disabled="disabled"
-                            @change="(val) => handleUpdateElement('repositoryType', val)"
+                            @change="(val) => handleChangeRepositoryType(val)"
                         >
                             <bk-option
                                 v-for="item in codelibConfigList"
@@ -66,14 +66,14 @@
                             placeholder="将自动监听所属PAC代码库，无需设置"
                             class="input-selector"
                         >
-
                         </vuex-input>
                     </div>
                 </form-field>
     
-                <form-field v-if="repositoryType === 'ID'" class="cron-build-tab" :label="$t('editPage.branches')">
+                <form-field class="cron-build-tab" :label="$t('editPage.branches')">
                     <BranchParameterArray
                         name="branches"
+                        :repository-type="element['repositoryType']"
                         :disabled="disabled"
                         :repo-hash-id="element['repoHashId']"
                         :value="element['branches']"
@@ -109,7 +109,7 @@
                 advance: this.notEmptyArray('advanceExpression'),
                 isShowCodelibConfig: this.element.repoHashId || this.element.noScm,
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
-                repositoryType: 'ID'
+                repositoryType: this.element.repositoryType || 'ID'
             }
         },
         computed: {
@@ -210,6 +210,11 @@
                 this.updateProps({
                     [name]: value
                 })
+            },
+            handleChangeRepositoryType (val) {
+                this.handleUpdateElement('branches', [])
+                this.handleUpdateElement('repoHashId', '')
+                this.handleUpdateElement('repositoryType', val)
             }
         }
     }

@@ -5,7 +5,17 @@
             v-for="(item, index) in curValue"
             :key="index"
         >
-            <bk-select
+            <select-input
+                class="select-custom"
+                :value="item"
+                name
+                :disabled="disabled || (repositoryType !== 'SELF' && !repoHashId)"
+                type="text"
+                v-bind="selectInputOption"
+                :handle-change="(name, value) => handleChangeBranch(value, index)"
+            >
+            </select-input>
+            <!-- <bk-select
                 :disabled="disabled || !repoHashId"
                 :placeholder="placeholder"
                 :loading="isLoading"
@@ -20,7 +30,7 @@
                     :id="option.key"
                     :name="option.value">
                 </bk-option>
-            </bk-select>
+            </bk-select> -->
             <i
                 class="bk-icon icon-plus-circle"
                 @click="plusParam()" />
@@ -36,14 +46,21 @@
 
 <script>
     import mixins from '../mixins'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import {
         PROCESS_API_URL_PREFIX
     } from '@/store/constants'
     export default {
         name: 'branch-parameter-array',
+        components: {
+            SelectInput
+        },
         mixins: [mixins],
         props: {
             repoHashId: {
+                type: String
+            },
+            repositoryType: {
                 type: String
             }
         },
@@ -58,6 +75,16 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            selectInputOption () {
+                if (!this.repoHashId) return {}
+                return {
+                    optionsConf: {
+                        paramId: 'value',
+                        paramName: 'key',
+                        url: `${PROCESS_API_URL_PREFIX}/user/buildParam/${this.projectId}/${this.repoHashId}/gitRefs`
+                    }
+                }
             }
         },
         watch: {
@@ -70,14 +97,18 @@
                 handler (val) {
                     this.handleChange(this.name, [])
                     this.curValue = ['']
-                    if (val) {
-                        this.getBranchesList()
-                    }
+                }
+            },
+
+            repositoryType: {
+                handler (val) {
+                    this.handleChange(this.name, [])
+                    this.curValue = ['']
                 }
             }
         },
         created () {
-            this.getBranchesList()
+            // this.getBranchesList()
             if (this.value.length) {
                 this.curValue = JSON.parse(JSON.stringify(this.value))
             } else {
@@ -86,7 +117,7 @@
         },
         methods: {
             handleChangeBranch (val, index) {
-                this.curValue[index] = val
+                this.$set(this.curValue, index, val)
                 const params = this.curValue.filter(i => !!i)
                 this.handleChange(this.name, params)
             },
