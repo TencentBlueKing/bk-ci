@@ -25,37 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.resources
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
-import com.tencent.devops.store.common.service.SensitiveApiService
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
-    private val sensitiveApiService: SensitiveApiService
-) : ServiceSensitiveApiPermissionResource {
-
-    override fun verifyApi(
-        installedPkgShaContent: String?,
-        osName: String?,
-        osArch: String?,
-        storeCode: String,
-        apiName: String,
-        storeType: String,
-        version: String?
-    ): Result<Boolean> {
-        return sensitiveApiService.verifyApi(
-            installedPkgShaContent = installedPkgShaContent,
-            osName = osName,
-            osArch = osArch,
-            storeType = StoreTypeEnum.valueOf(storeCode),
-            storeCode = storeCode,
-            apiName = apiName,
-            version = version
-        )
-    }
-}
+@Schema(title = "更新组件已安装包sha1摘要值请求报文")
+data class InstalledPkgShaContentRequest(
+    @get:Schema(title = "已安装包sha1摘要值", required = true)
+    val installedPkgShaContent: String,
+    @get:Schema(title = "操作系统名称", required = false)
+    val osName: String? = null,
+    @get:Schema(title = "操作系统CPU架构", required = false)
+    val osArch: String? = null,
+)
