@@ -15,7 +15,7 @@
                                 :data-vv-scope="`option-${index}`"
                                 :disabled="disabled"
                                 :handle-change="(name, value) => handleEdit(name, value, index)"
-                                v-validate="`required|unique:${list.map(p => p.key).join(',')}|max: 50`"
+                                v-validate="keyRule"
                                 name="key"
                                 :placeholder="$t('editPage.optionValTips')"
                                 :value="param.key" />
@@ -25,7 +25,7 @@
                                 :data-vv-scope="`option-${index}`"
                                 :disabled="disabled"
                                 :handle-change="(name, value) => handleEdit(name, value, index)"
-                                v-validate="`unique:${list.map(p => p.value).join(',')}`"
+                                v-validate="valueRule"
                                 name="value"
                                 :placeholder="$t('editPage.optionNameTips')"
                                 :value="param.value" />
@@ -74,6 +74,14 @@
             return {
                 batchInput: '',
                 list: []
+            }
+        },
+        computed: {
+            keyRule () {
+                return `required|unique:${this.list.map(p => p.key).join(',')}`
+            },
+            valueRule () {
+                return `unique:${this.list.map(p => p.value).join(',')}|max: 100`
             }
         },
         created () {
