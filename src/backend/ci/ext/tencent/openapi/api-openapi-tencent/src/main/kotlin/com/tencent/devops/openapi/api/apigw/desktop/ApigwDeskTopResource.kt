@@ -1,12 +1,18 @@
 package com.tencent.devops.openapi.api.apigw.desktop
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_ARCH
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_NAME
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_VERSION
 import com.tencent.devops.common.api.auth.DEVX_HEADER_GW_TOKEN
 import com.tencent.devops.common.api.auth.DEVX_HEADER_NGGW_CLIENT_ADDRESS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.DesktopTokenSignBody
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
@@ -37,15 +43,33 @@ interface ApigwDeskTopResource {
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "IP", required = false)
+        @Parameter(description = "IP", required = true)
         @HeaderParam(DEVX_HEADER_NGGW_CLIENT_ADDRESS)
         @BkField(patternStyle = BkStyleEnum.IP_STYLE, required = true, message = "need ipv4")
         desktopIP: String,
-        @Parameter(description = "devx token", required = false)
+        @Parameter(description = "devx token", required = true)
         @HeaderParam(DEVX_HEADER_GW_TOKEN)
         @BkField(minLength = 32, maxLength = 32, required = true, message = "need token")
         devxGwToken: String,
-        sign: DesktopTokenSign
+        @Parameter(description = "文件sha1", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_SHA_CONTENT)
+        sha1: String,
+        @Parameter(description = "操作系统类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_OS_NAME)
+        osName: String,
+        @Parameter(description = "架构", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_OS_ARCH)
+        osArch: String,
+        @Parameter(description = "应用id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_STORE_CODE)
+        storeCode: String,
+        @Parameter(description = "应用类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_STORE_TYPE)
+        storeType: String,
+        @Parameter(description = "应用版本", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_STORE_VERSION)
+        storeVersion: String,
+        sign: DesktopTokenSignBody
     ): Result<String>
 
     @Operation(

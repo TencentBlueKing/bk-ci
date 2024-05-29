@@ -446,7 +446,6 @@ class ServiceRemoteDevResourceImpl(
             ip = desktopIP
         ).firstOrNull() ?: throwTokenFail(desktopIP, "unknown ip", "not find $desktopIP")
         check(ws, sign, desktopIP)
-        // TODO 校验store接口
         val dToken = permissionService.init1Password(
             ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner"),
             ws.workspaceName,
