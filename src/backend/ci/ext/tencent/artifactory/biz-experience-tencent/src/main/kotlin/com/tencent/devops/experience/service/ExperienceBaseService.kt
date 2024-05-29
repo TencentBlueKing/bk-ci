@@ -57,14 +57,15 @@ import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecor
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import java.time.LocalDateTime
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 // 服务共用部分在这里
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
@@ -275,20 +276,13 @@ class ExperienceBaseService @Autowired constructor(
         val isInDept = lazy {
             if (isOuter) return@lazy false else {
                 for (depts in getGroupIdToDept(groupIds, false).values) {
+                    val userDeptDetail =
+                        client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return@lazy false
                     for (dept in depts) {
-                        val staffInfoList =
-                            try {
-                                client.get(ServiceProjectOrganizationResource::class)
-                                    .getDeptStaffsWithLevel(dept, 10).data ?: continue
-                            } catch (e: Exception) {
-                                logger.warn("getDeptStaffsWithLevel failed", e)
-                                continue
-                            }
-
-                        for (staffInfo in staffInfoList) {
-                            if (staffInfo.loginName == userId) {
-                                return@lazy true
-                            }
+                        if (userDeptDetail.bgId == dept || userDeptDetail.deptId == dept ||
+                            userDeptDetail.centerId == dept || userDeptDetail.groupId == dept
+                        ) {
+                            return@lazy true
                         }
                     }
                 }
