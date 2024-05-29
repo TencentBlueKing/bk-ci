@@ -86,8 +86,10 @@
                 if (this.batchInput && typeof this.batchInput === 'string') {
                     opts = this.batchInput.split('\n').map(opt => {
                         const v = opt.trim()
-                        const res = v.match(/^([\w\.\\\/]+)=(\S+)$/) || [v, v, v]
-                        const [, key, value] = res
+                        const res = v.indexOf('=') > -1
+                            ? [v.slice(0, v.indexOf('=')), v.slice(v.indexOf('=') + 1)]
+                            : [v, v]
+                        const [key, value] = res
                         return {
                             key,
                             value
