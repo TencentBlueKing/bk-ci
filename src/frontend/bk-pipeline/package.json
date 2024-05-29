@@ -49,11 +49,10 @@
     "mini-css-extract-plugin": "^2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
-    "semver": "6.3.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
     "vue-loader": "^15.10.0",
-    "webpack": "^5.58.1"
+    "webpack": "^5.76.1"
   },
   "dependencies": {
     "vuedraggable": "^2.24.3"
@@ -63,8 +62,8 @@
     "url": "git+https://github.com/Tencent/bk-ci.git"
   },
   "peerDependencies": {
-    "vue": "~2.7.16",
-    "bk-magic-vue": "2.5.9-beta.9"
+    "bk-magic-vue": "2.5.9-beta.9",
+    "vue": "~2.7.16"
   },
   "keywords": [
     "pipeline",

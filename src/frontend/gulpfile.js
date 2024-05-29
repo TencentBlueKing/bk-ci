@@ -95,7 +95,7 @@ task('build', series([cb => {
         return acc
     }, '')
     console.log(envQueryStr)
-    require('child_process').exec(`lerna run public:${env} ${scopeStr} `, {
+    require('child_process').exec(`pnpm run public:${env} -r ${scopeStr} `, {
         maxBuffer: 5000 * 1024,
         env: {
             ...process.env,

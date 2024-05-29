@@ -11,7 +11,6 @@
     "gulp-rename": "^1.4.0",
     "gulp-svg-sprite": "^2.0.3",
     "husky": "^7.0.2",
-    "lerna": "^4.0.0",
     "lint-staged": "^10.2.11",
     "node-fetch": "^2.6.0",
     "ora": "^3.4.0",
@@ -25,49 +24,16 @@
     "glob-parent": "5.1.2"
   },
   "scripts": {
-    "start": "lerna bootstrap",
-    "build:dev": "lerna run public:dev --parallel",
-    "build:test": "lerna run public:test --parallel",
-    "build:master": "lerna run public:master --parallel",
-    "build:external": "lerna run public:external --parallel",
+    "build:dev": "pnpm -r run public:dev",
+    "build:test": "pnpm -r run public:test",
+    "build:master": "pnpm -r run public:master",
+    "build:external": "pnpm -r run public:external",
     "changelog": "conventional-changelog -c changelog.config.js -p github -i CHANGELOG.md -s",
     "public": "gulp -d frontend"
   },
   "lint-staged": {
     "*.{js,ts,tsx,vue}": [
       "eslint --fix"
-    ]
-  },
-  "workspaces": {
-    "packages": [
-      "devops-codelib",
-      "devops-environment",
-      "devops-atomstore",
-      "devops-ticket",
-      "devops-pipeline",
-      "devops-quality",
-      "devops-nav",
-      "devops-turbo",
-      "devops-stream",
-      "devops-metrics",
-      "devops-manage",
-      "devops-permission",
-      "bk-pipeline",
-      "bk-permission"
-    ],
-    "nohoist": [
-      "bk-permission",
-      "bk-permission/**",
-      "bkui-pipeline",
-      "bkui-pipeline/**",
-      "devops-stream",
-      "devops-stream/**",
-      "devops-metrics",
-      "devops-metrics/**",
-      "devops-manage",
-      "devops-manage/**",
-      "devops-permission",
-      "devops-permission/**"
     ]
   },
   "dependencies": {
