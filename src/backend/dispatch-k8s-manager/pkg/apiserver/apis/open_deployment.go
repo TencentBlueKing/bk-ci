@@ -3,6 +3,7 @@ package apis
 import (
 	"disaptch-k8s-manager/pkg/kubeclient"
 	"disaptch-k8s-manager/pkg/logs"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -70,7 +71,7 @@ func createDeployment(c *gin.Context) {
 			return
 		}
 	} else {
-		logs.Info("Deployment: %s exist, update.", deployment.Name)
+		logs.Info(fmt.Sprintf("Deployment: %s exist, update.", deployment.Name))
 		updateErr := kubeclient.UpdateNativeDeployment(deployment)
 		if updateErr != nil {
 			fail(c, http.StatusInternalServerError, updateErr)
