@@ -337,7 +337,7 @@ class ProjectBillsService constructor(
         projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 10
+            val limit = 100
             var count = 0
             val yearAndMonthOfReportDate = LocalDate.parse(
                 yearAndMonthOfReportStr + "01", DateTimeFormatter.ofPattern("yyyyMMdd")
