@@ -21,178 +21,174 @@
 const optionConfigMixin = {
     data () {
         return {
-            ATOM_OPTION: {
-                enable: {
-                    rule: {},
-                    type: 'boolean',
-                    component: 'atom-checkbox',
-                    text: this.$t('storeMap.enableAtom'),
-                    default: true
-                },
-                continueWhenFailed: {
-                    isHidden: true,
-                    default: false
-                },
+            ATOM_OPTION: {}
+        }
+    },
+    created () {
+        this.ATOM_OPTION = {
+            enable: {
+                rule: {},
+                type: 'boolean',
+                component: 'atom-checkbox',
+                text: this.$t('storeMap.enableAtom'),
+                default: true
+            },
+            continueWhenFailed: {
+                isHidden: true,
+                default: false
+            },
 
-                retryWhenFailed: {
-                    isHidden: true,
-                    default: false
-                },
-                failControl: {
-                    component: 'atom-checkbox-list',
-                    label: this.$t('storeMap.WhenPluginFailed'),
-                    default: [],
-                    list: [
-                        {
-                            id: 'continueWhenFailed',
-                            name: this.$t('storeMap.continueWhenFailed')
-                        },
-                        {
-                            id: 'retryWhenFailed',
-                            name: this.$t('storeMap.automaticRetry')
-                        },
-                        {
-                            id: 'MANUAL_RETRY',
-                            name: this.$t('storeMap.manualRetry')
-                        }
-                    ]
-                },
-                manualSkip: {
-                    component: 'enum-input',
-                    // label: this.$t('storeMap.skipType'),
-                    default: false,
-                    list: [{
-                        value: false,
-                        label: this.$t('storeMap.autoSkip')
-                    }, {
-                        value: true,
-                        label: this.$t('storeMap.manualSkip')
-                    }],
-                    extCls: 'manual-skip-options',
-                    isHidden: (element) => {
-                        return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('continueWhenFailed')))
+            retryWhenFailed: {
+                isHidden: true,
+                default: false
+            },
+            failControl: {
+                component: 'atom-checkbox-list',
+                label: this.$t('storeMap.WhenPluginFailed'),
+                default: [],
+                list: [
+                    {
+                        id: 'continueWhenFailed',
+                        name: this.$t('storeMap.continueWhenFailed')
+                    },
+                    {
+                        id: 'retryWhenFailed',
+                        name: this.$t('storeMap.automaticRetry')
+                    },
+                    {
+                        id: 'MANUAL_RETRY',
+                        name: this.$t('storeMap.manualRetry')
                     }
-                },
-                manualRetry: {
-                    default: false,
-                    isHidden: true
-                },
-                retryCount: {
-                    rule: { numeric: true, max_value: 5, min_value: 1 },
-                    component: 'vuex-input',
-                    label: this.$t('storeMap.retryCount'),
-                    placeholder: this.$t('storeMap.retryCountPlaceholder'),
-                    default: '1',
-                    extCls: 'retry-count-input',
-                    isHidden: (element) => {
-                        return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('retryWhenFailed')))
-                    }
-                },
-                // enableCustomEnv: {
-                //     rule: {},
-                //     type: 'boolean',
-                //     component: 'atom-checkbox',
-                //     text: this.$t('storeMap.customEnv'),
-                //     default: false,
-                //     clearValue: false,
-                //     clearFields: ['customEnv']
-                // },
-                pauseBeforeExec: {
-                    rule: {},
-                    type: 'boolean',
-                    label: this.$t('storeMap.pauseConfLabel'),
-                    desc: this.$t('storeMap.runManual'),
-                    component: 'atom-checkbox',
-                    text: this.$t('storeMap.pauseAtom'),
-                    default: false,
-                    extCls: 'pause-conf-options',
-                    isHidden: (element) => {
-                        return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
-                    }
-                },
-                subscriptionPauseUser: {
-                    rule: {},
-                    component: 'vuex-input',
-                    label: this.$t('storeMap.pauseNotify'),
-                    desc: this.$t('storeMap.pauseNotifyTip'),
-                    default: this.$userInfo.username,
-                    extCls: 'pause-conf-user',
-                    isHidden: (element) => {
-                        return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
-                    }
-                },
-                timeoutVar: {
-                    rule: { timeoutsRule: true },
-                    component: 'vuex-input',
-                    label: this.$t('storeMap.atomTimeout'),
-                    desc: this.$t('storeMap.timeoutDesc'),
-                    placeholder: this.$t('storeMap.timeoutPlaceholder'),
-                    default: '900'
-                },
-                runCondition: {
-                    rule: {},
-                    component: 'selector',
-                    label: this.$t('storeMap.atomRunCondition'),
-                    default: 'PRE_TASK_SUCCESS',
-                    list: [
-                        {
-                            id: 'PRE_TASK_SUCCESS',
-                            name: this.$t('storeMap.atomPreSuc')
-                        },
-                        {
-                            id: 'PRE_TASK_FAILED_BUT_CANCEL',
-                            name: this.$t('storeMap.atomEvenFail')
-                        },
-                        {
-                            id: 'PRE_TASK_FAILED_EVEN_CANCEL',
-                            name: this.$t('storeMap.atomEvenCancel')
-                        },
-                        {
-                            id: 'PRE_TASK_FAILED_ONLY',
-                            name: this.$t('storeMap.atomOnlyFail')
-                        },
-                        {
-                            id: 'CUSTOM_VARIABLE_MATCH',
-                            name: this.$t('storeMap.varMatch')
-                        },
-                        {
-                            id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
-                            name: this.$t('storeMap.varNotMatch')
-                        },
-                        {
-                            id: 'CUSTOM_CONDITION_MATCH',
-                            name: this.$t('storeMap.customCondition')
-                        },
-                        {
-                            id: 'PARENT_TASK_CANCELED_OR_TIMEOUT',
-                            name: this.$t('storeMap.userCancelExec')
-                        }
-                    ]
-                },
-                customVariables: {
-                    rule: {},
-                    component: 'key-value-normal',
-                    default: [{ key: 'param1', value: '' }],
-                    allowNull: false,
-                    label: this.$t('storeMap.customVar'),
-                    isHidden: (element) => {
-                        return !(element.additionalOptions && (element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH' || element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
-                    }
-                },
-                customCondition: {
-                    rule: {},
-                    component: 'vuex-input',
-                    default: '',
-                    required: true,
-                    label: this.$t('storeMap.customConditionExp'),
-                    isHidden: (element) => {
-                        return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'
-                    }
-                },
-                otherTask: {
-                    isHidden: true,
-                    default: ''
+                ]
+            },
+            manualSkip: {
+                component: 'enum-input',
+                // label: this.$t('storeMap.skipType'),
+                default: this.atomOptionConfig.defaultFailPolicy
+                    ? this.atomOptionConfig.defaultFailPolicy !== 'AUTO_CONTINUE'
+                    : false,
+                list: [{
+                    value: false,
+                    label: this.$t('storeMap.autoSkip')
+                }, {
+                    value: true,
+                    label: this.$t('storeMap.manualSkip')
+                }],
+                extCls: 'manual-skip-options',
+                isHidden: (element) => {
+                    return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('continueWhenFailed')))
                 }
+            },
+            manualRetry: {
+                default: false,
+                isHidden: true
+            },
+            retryCount: {
+                rule: { numeric: true, max_value: 5, min_value: 1 },
+                component: 'vuex-input',
+                label: this.$t('storeMap.retryCount'),
+                placeholder: this.$t('storeMap.retryCountPlaceholder'),
+                default: this.atomOptionConfig.retryTimes || 1,
+                extCls: 'retry-count-input',
+                isHidden: (element) => {
+                    return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('retryWhenFailed')))
+                }
+            },
+            pauseBeforeExec: {
+                rule: {},
+                type: 'boolean',
+                label: this.$t('storeMap.pauseConfLabel'),
+                desc: this.$t('storeMap.runManual'),
+                component: 'atom-checkbox',
+                text: this.$t('storeMap.pauseAtom'),
+                default: false,
+                extCls: 'pause-conf-options',
+                isHidden: (element) => {
+                    return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
+                }
+            },
+            subscriptionPauseUser: {
+                rule: {},
+                component: 'vuex-input',
+                label: this.$t('storeMap.pauseNotify'),
+                desc: this.$t('storeMap.pauseNotifyTip'),
+                default: this.$userInfo.username,
+                extCls: 'pause-conf-user',
+                isHidden: (element) => {
+                    return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
+                }
+            },
+            timeoutVar: {
+                rule: { timeoutsRule: true },
+                component: 'vuex-input',
+                label: this.$t('storeMap.atomTimeout'),
+                desc: this.$t('storeMap.timeoutDesc'),
+                placeholder: this.$t('storeMap.timeoutPlaceholder'),
+                default: this.atomOptionConfig.defaultTimeout || '900'
+            },
+            runCondition: {
+                rule: {},
+                component: 'selector',
+                label: this.$t('storeMap.atomRunCondition'),
+                default: 'PRE_TASK_SUCCESS',
+                list: [
+                    {
+                        id: 'PRE_TASK_SUCCESS',
+                        name: this.$t('storeMap.atomPreSuc')
+                    },
+                    {
+                        id: 'PRE_TASK_FAILED_BUT_CANCEL',
+                        name: this.$t('storeMap.atomEvenFail')
+                    },
+                    {
+                        id: 'PRE_TASK_FAILED_EVEN_CANCEL',
+                        name: this.$t('storeMap.atomEvenCancel')
+                    },
+                    {
+                        id: 'PRE_TASK_FAILED_ONLY',
+                        name: this.$t('storeMap.atomOnlyFail')
+                    },
+                    {
+                        id: 'CUSTOM_VARIABLE_MATCH',
+                        name: this.$t('storeMap.varMatch')
+                    },
+                    {
+                        id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
+                        name: this.$t('storeMap.varNotMatch')
+                    },
+                    {
+                        id: 'CUSTOM_CONDITION_MATCH',
+                        name: this.$t('storeMap.customCondition')
+                    },
+                    {
+                        id: 'PARENT_TASK_CANCELED_OR_TIMEOUT',
+                        name: this.$t('storeMap.userCancelExec')
+                    }
+                ]
+            },
+            customVariables: {
+                rule: {},
+                component: 'key-value-normal',
+                default: [{ key: 'param1', value: '' }],
+                allowNull: false,
+                label: this.$t('storeMap.customVar'),
+                isHidden: (element) => {
+                    return !(element.additionalOptions && (element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH' || element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
+                }
+            },
+            customCondition: {
+                rule: {},
+                component: 'vuex-input',
+                default: '',
+                required: true,
+                label: this.$t('storeMap.customConditionExp'),
+                isHidden: (element) => {
+                    return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'
+                }
+            },
+            otherTask: {
+                isHidden: true,
+                default: ''
             }
         }
     },
@@ -203,12 +199,33 @@ const optionConfigMixin = {
                     additionalOptions[key] = this.getFieldDefault(key, this.ATOM_OPTION)
                 }
             })
-            additionalOptions.failControl = [
-                ...(additionalOptions.continueWhenFailed ? ['continueWhenFailed'] : []),
-                ...(additionalOptions.retryWhenFailed ? ['retryWhenFailed'] : []),
-                ...(additionalOptions.manualRetry ? ['MANUAL_RETRY'] : [])
-            ]
+            const { continueWhenFailed, retryWhenFailed, manualRetry } = additionalOptions
+            if (continueWhenFailed || retryWhenFailed || manualRetry) {
+                additionalOptions.failControl = [
+                    ...(additionalOptions.continueWhenFailed ? ['continueWhenFailed'] : []),
+                    ...(additionalOptions.retryWhenFailed ? ['retryWhenFailed'] : []),
+                    ...(additionalOptions.manualRetry ? ['MANUAL_RETRY'] : [])
+                ]
+            } else {
+                additionalOptions.failControl = this.getDefaultFailControl()
+            }
             return additionalOptions
+        },
+
+        getDefaultFailControl () {
+            if (!this.atomOptionConfig.defaultRetryPolicy?.length) return []
+            return this.atomOptionConfig.defaultRetryPolicy?.map(i => {
+                let str = ''
+                switch (i) {
+                    case 'AUTO_RETRY':
+                        str = 'retryWhenFailed'
+                        break
+                    case 'MANUALLY_RETRY':
+                        str = 'MANUAL_RETRY'
+                        break
+                }
+                return str
+            })
         },
         getFieldDefault (key, model) {
             if (typeof model[key]?.default === 'object') {
