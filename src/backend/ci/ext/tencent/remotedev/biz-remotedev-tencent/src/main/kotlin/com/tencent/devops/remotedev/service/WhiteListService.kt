@@ -1,11 +1,13 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WhiteListDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WhiteList
 import com.tencent.devops.remotedev.pojo.WhiteListType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
@@ -17,8 +19,8 @@ import org.springframework.stereotype.Service
 class WhiteListService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cacheService: RedisCacheService,
-    private val client: Client,
-    private val whiteListDao: WhiteListDao
+    private val whiteListDao: WhiteListDao,
+    private val workspaceDao: WorkspaceDao
 ) {
 
     companion object {
@@ -143,6 +145,19 @@ class WhiteListService @Autowired constructor(
 
     fun checkInGPUWhiteList(user: String): Boolean {
         return cacheService.checkWindowsGpuLimit(user) > 0
+    }
+
+    fun windowsGpuCheck(userId: String, count: Int) {
+        windowsNumberLimit(
+            userId = userId,
+            value = workspaceDao.countUserWorkspace(
+                dslContext = dslContext,
+                userId = userId,
+                unionShared = false,
+                status = WorkspaceStatus.Types.USING.status(),
+                systemType = WorkspaceSystemType.WINDOWS_GPU
+            ) + count
+        )
     }
 
     /* 有关数量的限制:
