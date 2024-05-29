@@ -38,7 +38,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProjectMiscDao {
-
     fun getMinId(
         dslContext: DSLContext,
         projectIdList: List<String>? = null

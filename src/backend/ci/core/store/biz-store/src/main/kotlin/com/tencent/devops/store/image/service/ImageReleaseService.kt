@@ -42,7 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -51,10 +51,6 @@ import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
-import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_PUBLISH_REPO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
@@ -62,6 +58,12 @@ import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
+import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_PUBLISH_REPO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.image.dao.ImageAgentTypeDao
 import com.tencent.devops.store.image.dao.ImageCategoryRelDao
 import com.tencent.devops.store.image.dao.ImageDao
@@ -74,14 +76,14 @@ import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
@@ -91,20 +93,16 @@ import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
-import java.time.LocalDateTime
-import java.util.Base64
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Base64
 
 @Suppress("ALL")
-@Service
 abstract class ImageReleaseService {
 
     private final val CATEGORY_PIPELINE_JOB = "PIPELINE_JOB"
@@ -478,7 +476,7 @@ abstract class ImageReleaseService {
             // 更新标签信息
             imageLabelRelDao.deleteByImageId(context, imageId)
             val labelIdList = marketImageUpdateRequest.labelIdList
-            if (null != labelIdList && labelIdList.isNotEmpty()) {
+            if (!labelIdList.isNullOrEmpty()) {
                 imageLabelRelDao.batchAdd(context, userId, imageId, labelIdList)
             }
             if (runCheckPipeline) {
@@ -665,6 +663,15 @@ abstract class ImageReleaseService {
             "${imageRecord.imageRepoUrl}/${imageRecord.imageRepoName}:${imageRecord.imageTag}"
         }
         val imageSourceType = imageRecord.imageSourceType
+        val imageRepoUrl = imageRecord.imageRepoUrl
+        val startParams = mutableMapOf<String, String>() // 启动参数
+        startParams["imageCode"] = imageCode
+        startParams["imageName"] = dockerImageName
+        startParams["version"] = version
+        imageSourceType?.let { startParams["imageType"] = it }
+        userName?.let { startParams["registryUser"] = it }
+        password?.let { startParams["registryPwd"] = it }
+        imageRepoUrl?.let { startParams["registryHost"] = it }
         if (null == imagePipelineRelRecord) {
             val pipelineModelConfig = businessConfigDao.get(
                 dslContext = context,
@@ -679,43 +686,43 @@ abstract class ImageReleaseService {
             paramMap.forEach { (key, value) ->
                 pipelineModel = pipelineModel.replace("#{$key}", value)
             }
-            val checkImageInitPipelineReq = CheckImageInitPipelineReq(
+            val storeInitPipelineReq = StoreInitPipelineReq(
                 pipelineModel = pipelineModel,
-                imageCode = imageCode,
-                imageName = dockerImageName,
-                version = version,
-                imageType = imageSourceType,
-                registryUser = userName,
-                registryPwd = password,
-                registryHost = imageRecord.imageRepoUrl
+                startParams = startParams
             )
-            val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
-            logger.info("runCheckImagePipeline checkImageInitPipelineResp is:$checkImageInitPipelineResp")
-            if (null != checkImageInitPipelineResp) {
-                storePipelineRelDao.add(context, imageCode, StoreTypeEnum.IMAGE, checkImageInitPipelineResp.pipelineId)
+            val storeInitPipelineResp = client.get(ServicePipelineInitResource::class)
+                .initStorePipeline(userId, projectCode!!, storeInitPipelineReq).data
+            logger.info("runCheckImagePipeline storeInitPipelineResp is:$storeInitPipelineResp")
+            if (null != storeInitPipelineResp) {
+                storePipelineRelDao.add(
+                    dslContext = context,
+                    storeCode = imageCode,
+                    storeType = StoreTypeEnum.IMAGE,
+                    pipelineId = storeInitPipelineResp.pipelineId,
+                    projectCode = projectCode
+                )
+                val buildId = storeInitPipelineResp.buildId
+                val imageStatus = if (buildId.isNullOrBlank()) {
+                    ImageStatusEnum.CHECK_FAIL
+                } else {
+                    storePipelineBuildRelDao.add(
+                        dslContext = context,
+                        storeId = imageId,
+                        pipelineId = storeInitPipelineResp.pipelineId,
+                        buildId = buildId
+                    )
+                    ImageStatusEnum.CHECKING
+                }
                 marketImageDao.updateImageStatusById(
                     dslContext = context,
                     imageId = imageId,
-                    imageStatus = checkImageInitPipelineResp.imageCheckStatus.status.toByte(),
+                    imageStatus = imageStatus.status.toByte(),
                     userId = userId,
                     msg = null
                 )
-                val buildId = checkImageInitPipelineResp.buildId
-                if (null != buildId) {
-                    storePipelineBuildRelDao.add(context, imageId, checkImageInitPipelineResp.pipelineId, buildId)
-                }
             }
         } else {
             // 触发执行流水线
-            val startParams = mutableMapOf<String, String>() // 启动参数
-            startParams["imageCode"] = imageCode
-            startParams["imageName"] = dockerImageName
-            startParams["version"] = version
-            imageSourceType?.let { startParams["imageType"] = it }
-            userName?.let { startParams["registryUser"] = it }
-            password?.let { startParams["registryPwd"] = it }
-            imageRecord.imageRepoUrl?.let { startParams["registryHost"] = it }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,

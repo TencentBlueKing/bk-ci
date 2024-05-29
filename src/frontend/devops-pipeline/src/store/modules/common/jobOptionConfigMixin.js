@@ -121,6 +121,10 @@ const jobOptionConfigMixin = {
                 {
                     id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                     name: this.$t('storeMap.varNotMatch')
+                },
+                {
+                    id: 'CUSTOM_CONDITION_MATCH',
+                    name: this.$t('storeMap.customCondition')
                 }
             ],
             finallyRunConditionList: [
@@ -153,6 +157,15 @@ const jobOptionConfigMixin = {
                     text: this.$t('storeMap.enableJob'),
                     default: true
                 },
+                // enableCustomEnv: {
+                //     rule: {},
+                //     type: 'boolean',
+                //     component: 'atom-checkbox',
+                //     text: this.$t('storeMap.customEnv'),
+                //     default: false,
+                //     clearValue: false,
+                //     clearFields: ['customEnv']
+                // },
                 dependOnType: {
                     component: 'enum-input',
                     label: this.$t('storeMap.dependOn'),
@@ -230,8 +243,13 @@ const jobOptionConfigMixin = {
                     }
                 },
                 customCondition: {
-                    isHidden: true,
-                    default: ''
+                    component: 'vuex-input',
+                    default: '',
+                    required: true,
+                    label: this.$t('storeMap.customConditionExp'),
+                    isHidden: (container) => {
+                        return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'
+                    }
                 }
             }
         },
@@ -253,15 +271,21 @@ const jobOptionConfigMixin = {
         }
     },
     methods: {
-        getJobOptionDefault (OPTION = this.JOB_OPTION) {
-            return Object.keys(OPTION).reduce((formProps, key) => {
-                if (OPTION[key] && typeof OPTION[key].default === 'object') {
-                    formProps[key] = JSON.parse(JSON.stringify(OPTION[key].default))
-                } else {
-                    formProps[key] = OPTION[key].default
+        getJobOptionDefault (model, values) {
+            return Object.keys(model).reduce((formProps, key) => {
+                if (!Object.prototype.hasOwnProperty.apply(values, [key])) {
+                    formProps[key] = this.getFieldDefault(key, model)
                 }
                 return formProps
-            }, {})
+            }, {
+                ...values
+            })
+        },
+        getFieldDefault (key, model) {
+            if (typeof model[key]?.default === 'object') {
+                return JSON.parse(JSON.stringify(model[key].default))
+            }
+            return model[key].default
         }
     }
 }

@@ -27,7 +27,9 @@
 
 package com.tencent.devops.common.pipeline.event
 
+import com.tencent.devops.common.pipeline.pojo.secret.ISecretParam
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(title = "项目的流水线回调配置")
 data class ProjectPipelineCallBack(
@@ -42,5 +44,9 @@ data class ProjectPipelineCallBack(
     @get:Schema(title = "密钥", required = false)
     val secretToken: String?,
     @get:Schema(title = "回调是否启用", required = false)
-    val enable: Boolean? = true
+    val enable: Boolean? = true,
+    @get:Schema(title = "回调是否启用", required = false)
+    val failureTime: LocalDateTime? = null,
+    @get:Schema(title = "凭证参数", required = false)
+    val secretParam: ISecretParam? = null
 )

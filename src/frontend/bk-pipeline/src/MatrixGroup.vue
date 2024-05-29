@@ -34,12 +34,12 @@
 </template>
 
 <script>
-    import StatusIcon from './StatusIcon'
     import Job from './Job'
     import Logo from './Logo'
-    import { STATUS_MAP, CLICK_EVENT_NAME } from './constants'
-    import { getDependOnDesc, eventBus, isTriggerContainer } from './util'
+    import StatusIcon from './StatusIcon'
+    import { CLICK_EVENT_NAME, STATUS_MAP } from './constants'
     import { localeMixins } from './locale'
+    import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
     
     export default {
         components: {

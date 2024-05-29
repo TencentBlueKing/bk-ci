@@ -18,7 +18,6 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import SettingBase from '@/components/pipelineSetting/settingBase/index.vue'
     import { navConfirm } from '@/utils/util'
 
@@ -47,7 +46,6 @@
             this.addLeaveListenr()
         },
         beforeDestroy () {
-            this.resetPipelineSetting()
             this.removeLeaveListenr()
         },
         beforeRouteUpdate (to, from, next) {
@@ -57,9 +55,6 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
-            ...mapActions('pipelines', [
-                'resetPipelineSetting'
-            ]),
             setState ({ isLoading, isEditing }) {
                 this.isLoading = isLoading
                 this.isEditing = isEditing
@@ -67,7 +62,7 @@
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
                     navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
-                        .then(() => next())
+                        .then(next)
                         .catch(() => next(false))
                 } else {
                     next(true)

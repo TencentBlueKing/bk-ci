@@ -191,6 +191,34 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "project_api-operate",
+        "name": "api操作",
+        "name_en": "Api Operate",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "pipeline_list",
         "name": "流水线列表",
         "name_en": "Pipeline List",

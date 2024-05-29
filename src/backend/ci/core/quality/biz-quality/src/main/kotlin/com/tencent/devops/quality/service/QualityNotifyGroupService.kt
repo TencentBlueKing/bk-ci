@@ -29,12 +29,19 @@ package com.tencent.devops.quality.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.constant.QualityMessageCode
@@ -125,6 +132,15 @@ class QualityNotifyGroupService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.QUALITY_GROUP_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.QUALITY_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.QUALITY_GROUP_CREATE_CONTENT
+    )
     fun create(userId: String, projectId: String, group: GroupCreate) {
         qualityPermissionService.validateGroupPermission(
             userId = userId,
@@ -156,6 +172,10 @@ class QualityNotifyGroupService @Autowired constructor(
             creator = userId,
             updator = userId
         )
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(group.name)
+            .setInstance(group)
         qualityPermissionService.createGroupResource(userId, projectId, groupId, group.name)
     }
 
@@ -209,6 +229,15 @@ class QualityNotifyGroupService @Autowired constructor(
         return GroupUsers(innerUsers = innerUsersSet, outerUsers = outerUsersSet)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.QUALITY_GROUP_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.QUALITY_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.QUALITY_GROUP_EDIT_CONTENT
+    )
     fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         val language = I18nUtil.getLanguage(userId)
@@ -224,13 +253,12 @@ class QualityNotifyGroupService @Autowired constructor(
                 arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        if (qualityNotifyGroupDao.getOrNull(dslContext, groupId) == null) {
-            throw ErrorCodeException(
+        qualityNotifyGroupDao.getOrNull(dslContext, groupId)
+            ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_NOT_EXISTS,
                 params = arrayOf(groupHashId)
             )
-        }
         if (qualityNotifyGroupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
@@ -238,6 +266,12 @@ class QualityNotifyGroupService @Autowired constructor(
                 params = arrayOf(group.name)
             )
         }
+
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(group.name)
+            .setOriginInstance(serviceGet(groupHashId))
+            .setInstance(group)
 
         val outerUsers = regex.split(group.outerUsers)
         val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
@@ -258,6 +292,15 @@ class QualityNotifyGroupService @Autowired constructor(
         qualityPermissionService.modifyGroupResource(projectId = projectId, groupId = groupId, groupName = group.name)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.QUALITY_GROUP_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.QUALITY_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.QUALITY_GROUP_DELETE_CONTENT
+    )
     fun delete(userId: String, projectId: String, groupHashId: String) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         val language = I18nUtil.getLanguage(userId)
@@ -273,8 +316,11 @@ class QualityNotifyGroupService @Autowired constructor(
                 arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-
         qualityPermissionService.deleteGroupResource(projectId = projectId, groupId = groupId)
+        val qualityGroupInfo = qualityNotifyGroupDao.get(dslContext, groupId)
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(qualityGroupInfo.name)
         qualityNotifyGroupDao.delete(dslContext = dslContext, projectId = projectId, id = groupId)
     }
 

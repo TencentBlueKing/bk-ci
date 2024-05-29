@@ -37,6 +37,26 @@ data class GitMergeRequestEvent(
     val manual_unlock: Boolean? = false,
     val object_attributes: GitMRAttributes
 ) : GitEvent() {
+
+    // 新建
+    fun isCreated() = object_attributes.action == ACTION_CREATED
+
+    // 源分支更新
+    fun isUpdate() = object_attributes.action == ACTION_UPDATED &&
+            object_attributes.extension_action == "push-update"
+
+    // MR基本信息更新
+    fun isUpdateInfo() = object_attributes.action == ACTION_UPDATED
+
+    // 合并
+    fun isClosed() = object_attributes.action == ACTION_CLOSED
+
+    // 重新打开
+    fun isReopen() = object_attributes.action == ACTION_REOPENED
+
+    // 合并
+    fun isMerged() = object_attributes.action == ACTION_MERGED
+
     companion object {
         const val classType = "merge_request"
         const val ACTION_CREATED = "open"

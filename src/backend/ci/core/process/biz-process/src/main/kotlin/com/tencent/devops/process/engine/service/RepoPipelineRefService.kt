@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
@@ -49,7 +50,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
@@ -73,7 +74,7 @@ import kotlin.reflect.jvm.isAccessible
 @Service
 class RepoPipelineRefService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val modelTaskDao: PipelineModelTaskDao,
@@ -101,11 +102,7 @@ class RepoPipelineRefService @Autowired constructor(
     ) {
         logger.info("updateRepositoryPipelineRef, [$userId|$action|$projectId|$pipelineId]")
         var model: Model? = null
-        val channel = pipelineInfoDao.getPipelineInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )?.channel ?: return
+        var channel = ""
         if (action != "delete_pipeline") {
             val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
             if (modelString.isNullOrBlank()) {
@@ -118,6 +115,12 @@ class RepoPipelineRefService @Autowired constructor(
                 logger.warn("parse process($pipelineId) model fail", ignored)
                 return
             }
+            // 渠道
+            channel = pipelineInfoDao.getPipelineInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.channel ?: ChannelCode.BS.name
         }
         try {
             analysisPipelineRefAndSave(
@@ -248,7 +251,12 @@ class RepoPipelineRefService @Autowired constructor(
         container.elements.filterIsInstance<WebHookTriggerElement>().forEach e@{ element ->
             val (triggerType, eventType, repositoryConfig) =
                 RepositoryConfigUtils.buildWebhookConfig(element = element, variables = variables)
-
+            // 当事件触发代码库类型为self时,不需要解析代码库引用,因为保存时还不知道关联的代码库,只有发布时才知道
+            if (repositoryConfig.repositoryType == RepositoryType.ID &&
+                repositoryConfig.repositoryHashId.isNullOrBlank()
+            ) {
+                return@e
+            }
             repoPipelineRefInfos.add(
                 RepoPipelineRefInfo(
                     projectId = projectId,

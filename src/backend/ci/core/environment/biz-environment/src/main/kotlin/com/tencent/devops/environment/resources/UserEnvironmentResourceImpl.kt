@@ -27,10 +27,12 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
@@ -66,6 +68,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "createEnvironment"])
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_CREATE)
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
@@ -77,6 +80,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.createEnvironment(userId, projectId, environment))
     }
 
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_EDIT)
     override fun update(
         userId: String,
         projectId: String,
@@ -111,6 +115,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_VIEW)
     override fun get(userId: String, projectId: String, envHashId: String): Result<EnvWithPermission> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
@@ -119,11 +124,11 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.getEnvironment(userId, projectId, envHashId))
     }
 
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
     override fun delete(userId: String, projectId: String, envHashId: String): Result<Boolean> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
-
         envService.deleteEnvironment(userId, projectId, envHashId)
         return Result(true)
     }
@@ -137,7 +142,22 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listAllEnvNodes(userId, projectId, listOf(envHashId)))
     }
 
+    @BkTimed(extraTags = ["operate", "getEnv"])
+    override fun listNodesNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashId: String
+    ): Result<Page<NodeBaseInfo>> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, listOf(envHashId)))
+    }
+
     @BkTimed(extraTags = ["operate", "createNode"])
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_EDIT)
     override fun addNodes(
         userId: String,
         projectId: String,
@@ -156,6 +176,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_EDIT)
     override fun deleteNodes(
         userId: String,
         projectId: String,
@@ -218,6 +239,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_EDIT)
     override fun setShareEnv(
         userId: String,
         projectId: String,
@@ -229,12 +251,14 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
     override fun deleteShareEnv(userId: String, projectId: String, envHashId: String): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
         envService.deleteShareEnv(userId, projectId, envHashId)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
     override fun deleteShareEnvBySharedProj(
         userId: String,
         projectId: String,

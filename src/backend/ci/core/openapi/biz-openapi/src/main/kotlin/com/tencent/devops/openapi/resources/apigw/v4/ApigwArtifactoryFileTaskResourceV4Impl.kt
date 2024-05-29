@@ -37,6 +37,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwArtifactoryFileTaskResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -67,15 +68,24 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        taskId: String
+        taskId: String?,
+        stepId: String?
     ): Result<FileTaskInfo?> {
         logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|get status|$projectId|$pipelineId|$buildId|$taskId")
+        val realTaskId = if (stepId != null) {
+            client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
+                projectId, buildId, taskId, stepId
+            ).data?.taskId
+        } else taskId
+        if (realTaskId == null) {
+            throw ParamBlankException("Invalid taskId&stepId")
+        }
         return client.get(ServiceArtifactoryFileTaskResource::class).getStatus(
             userId = userId,
             projectId = projectId,
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
-            taskId = taskId
+            taskId = realTaskId
         )
     }
 
@@ -86,15 +96,24 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        taskId: String
+        taskId: String?,
+        stepId: String?
     ): Result<Boolean> {
         logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|clear file task|$projectId|$pipelineId|$buildId|$taskId")
+        val realTaskId = if (stepId != null) {
+            client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
+                projectId, buildId, taskId, stepId
+            ).data?.taskId
+        } else taskId
+        if (realTaskId == null) {
+            throw ParamBlankException("Invalid taskId&stepId")
+        }
         return client.get(ServiceArtifactoryFileTaskResource::class).clearFileTask(
             userId = userId,
             projectId = projectId,
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
-            taskId = taskId
+            taskId = realTaskId
         )
     }
 

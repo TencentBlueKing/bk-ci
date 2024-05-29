@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -68,7 +69,7 @@ class OPRepositoryService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
     private val githubRepositoryService: GithubRepositoryService,
     private val credentialService: CredentialService,
-    private val repositoryService: RepositoryService
+    private val repoPipelineRefDao: RepoPipelineRefDao
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -548,6 +549,17 @@ class OPRepositoryService @Autowired constructor(
             logger.warn("get codeGit project info failed,projectName=[$projectName] | $e ")
             null
         }
+    }
+
+    fun removeRepositoryPipelineRef(projectId: String, repoHashId: String) {
+        logger.info("start remove repository pipeline ref,projectId=[$projectId]|repoHashId=[$repoHashId]")
+        val repositoryId = HashUtil.decodeOtherIdToLong(repoHashId)
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId)
+        val counts = repoPipelineRefDao.removeRepositoryPipelineRefsById(
+            repoId = repository.repositoryId,
+            dslContext = dslContext
+        )
+        logger.info("end remove repository pipeline ref,change counts=[$counts]")
     }
 
     companion object {

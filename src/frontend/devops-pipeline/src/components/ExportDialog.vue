@@ -8,9 +8,7 @@
         @cancel="handleCancel">
         <ul class="export-list">
             <li v-for="exportItem in exportList" :key="exportItem.exportUrl" class="export-item">
-                <svg class="export-icon">
-                    <use :xlink:href="`#icon-${exportItem.icon}`"></use>
-                </svg>
+                <logo :name="exportItem.icon" class="export-icon" />
                 <h5 class="export-title">{{ exportItem.title }}</h5>
                 <p class="export-tip">{{ exportItem.tips }}<a :href="exportItem.tipsLink" v-if="exportItem.tipsLink" target="_blank">{{ $t('newlist.knowMore') }}</a></p>
                 <bk-button class="export-button" @click="downLoadFromApi(exportItem.exportUrl, exportItem.name)" :loading="isDownLoading">{{ $t('newlist.exportPipelineJson') }}</bk-button>
@@ -21,9 +19,13 @@
 
 <script>
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { mapActions, mapGetters } from 'vuex'
+    import Logo from '@/components/Logo'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
+        components: {
+            Logo
+        },
         props: {
             isShow: Boolean
         },
@@ -35,9 +37,9 @@
         },
 
         computed: {
-            ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
-            }),
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
 
             projectId () {
                 return this.$route.params.projectId
@@ -48,8 +50,7 @@
             },
 
             pipelineName () {
-                const pipeline = this.curPipeline || {}
-                return pipeline.pipelineName
+                return this.pipelineInfo?.pipelineName ?? '--'
             },
 
             exportList () {

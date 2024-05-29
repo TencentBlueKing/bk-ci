@@ -30,5 +30,6 @@ package com.tencent.devops.process.pojo.template
 enum class TemplatePipelineStatus {
     PENDING_UPDATE, // 待更新
     UPDATING, // 更新中
-    UPDATED // 已更新
+    UPDATED, // 已更新
+    FAILED // 更新失败
 }

@@ -74,9 +74,8 @@
             position: absolute;
             bottom: -3px;
             color: #FFFFFF;
-            font-size: 12px;
-            scale: 83%;
-            line-height: 12px;
+            font-size: 9px;
+            line-height: 1;
             width: 69%;
             text-align: center;
         }

@@ -181,9 +181,15 @@ open class SVNApi {
     private fun request(svnConfig: SVNConfig, url: String) =
         Request.Builder().url(url).header("apiKey", svnConfig.apiKey)
 
-    open fun request(host: String, token: String, url: String, page: String): Request.Builder {
-        return if (page.isNotEmpty()) Request.Builder()
-            .url("$host/$url?$page")
+    open fun request(
+        host: String,
+        token: String,
+        url: String,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Request.Builder {
+        return if (page != null && pageSize != null) Request.Builder()
+            .url("$host/$url?page=$page&per_page=$pageSize")
             .header("PRIVATE-TOKEN", token)
         else Request.Builder()
             .url("$host/$url")
@@ -191,7 +197,7 @@ open class SVNApi {
     }
 
     fun post(host: String, token: String, url: String, body: String) =
-        request(host, token, url, "").post(RequestBody.create(mediaType, body)).build()
+        request(host, token, url).post(RequestBody.create(mediaType, body)).build()
 
     fun getWebhooks(
         host: String,
@@ -203,7 +209,8 @@ open class SVNApi {
             host = host,
             url = "svn/projects/$fullName/hooks",
             token = token,
-            page = ""
+            page = 1,
+            pageSize = MAX_PAGE_SIZE
         ).get().build()
         val body = getBody(request)
         logger.info("Get the webhook($body)")
@@ -229,8 +236,7 @@ open class SVNApi {
         val request = request(
             host = host,
             url = "svn/projects/$fullName/hooks",
-            token = token,
-            page = ""
+            token = token
         )
             .post(
                 RequestBody.create(
@@ -256,8 +262,7 @@ open class SVNApi {
         val request = request(
             host = host,
             url = "svn/projects/$fullName/tree?$queryParam",
-            token = token,
-            page = ""
+            token = token
         ).get().build()
         val body = getBody(request)
         logger.info("Get the svn file list($body)")
@@ -282,5 +287,10 @@ open class SVNApi {
             return null
         }
         return JsonUtil.getObjectMapper().readValue(responseBody)
+    }
+
+    companion object {
+        // 接口分页最大行数
+        const val MAX_PAGE_SIZE = 500
     }
 }

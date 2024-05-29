@@ -47,10 +47,10 @@ import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.PublishersDataService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
-import com.tencent.devops.store.pojo.common.PublisherDeptInfo
-import com.tencent.devops.store.pojo.common.PublisherInfo
-import com.tencent.devops.store.pojo.common.PublishersRequest
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.publication.PublisherDeptInfo
+import com.tencent.devops.store.pojo.common.publication.PublisherInfo
+import com.tencent.devops.store.pojo.common.publication.PublishersRequest
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.time.LocalDateTime

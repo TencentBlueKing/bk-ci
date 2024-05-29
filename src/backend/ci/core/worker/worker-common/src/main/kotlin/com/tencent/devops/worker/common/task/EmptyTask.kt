@@ -27,13 +27,19 @@
 
 package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.api.exception.ExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import java.io.File
 
 class EmptyTask(private val type: String) : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        throw ExecuteException("Received unimplemented build task: $type")
+        throw TaskExecuteException(
+            errorMsg = "Received unimplemented build task: $type",
+            errorCode = ErrorCode.USER_INPUT_INVAILD,
+            errorType = ErrorType.USER
+        )
     }
 }

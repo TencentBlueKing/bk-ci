@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.store.image.service.ImageFeatureService
 import com.tencent.devops.store.image.service.ImageService
@@ -91,6 +92,16 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 interfaceName = "/image/imageCodes/{imageCode}/imageVersions/{imageVersion}"
+            )
+        )
+    }
+
+    override fun getImagesByCodeAndVersion(userId: String, imageCode: String, version: String?): Result<ImageDetail> {
+        return Result(
+            imageService.getImageDetailByCodeAndVersion(
+                userId = userId,
+                imageCode = imageCode,
+                imageVersion = version
             )
         )
     }
