@@ -58,6 +58,7 @@ func doBuild(
 	var exitGroup process.ProcessExitGroup
 	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true")
 	if enableExitGroup {
+		logs.Info("DEVOPS_AGENT_ENABLE_EXIT_GROUP enable")
 		exitGroup, err = process.NewProcessExitGroup()
 		if err != nil {
 			errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
@@ -155,6 +156,7 @@ func StartProcessCmd(command string, args []string, workDir string, envMap map[s
 			CreationFlags:    createNewConsole,
 			NoInheritHandles: true,
 		}
+		logs.Info("DEVOPS_AGENT_ENABLE_NEW_CONSOLE enabled")
 	}
 
 	if len(args) > 0 {

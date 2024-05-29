@@ -85,18 +85,22 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 	}
 
 	// agent环境变量
-	flag := false
 	if heartbeatResponse.Envs != nil {
-		config.GApiEnvVars.RangeDo(func(k, v string) bool {
-			if heartbeatResponse.Envs[k] != v {
-				flag = true
-				return false
+		if config.GApiEnvVars.Size() <= 0 {
+			config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+		} else {
+			flag := false
+			config.GApiEnvVars.RangeDo(func(k, v string) bool {
+				if heartbeatResponse.Envs[k] != v {
+					flag = true
+					return false
+				}
+				return true
+			})
+			if flag {
+				config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 			}
-			return true
-		})
-	}
-	if flag {
-		config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+		}
 	}
 
 	/*
