@@ -22,10 +22,11 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.image.response.ImageDetail
+import java.util.concurrent.TimeUnit
+import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class TransferCacheService @Autowired constructor(
@@ -39,12 +40,13 @@ class TransferCacheService @Autowired constructor(
     private val atomDefaultValueCache = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, Map<String, String>> { key ->
+        .build<String, JSONObject> { key ->
             kotlin.runCatching {
                 val (atomCode, version) = key.split("@")
-                client.get(ServiceMarketAtomResource::class)
-                    .getAtomsDefaultValue(ElementThirdPartySearchParam(atomCode, version)).data
-            }.onFailure { logger.warn("get $key default value error.", it) }.getOrNull() ?: emptyMap()
+                val res = client.get(ServiceMarketAtomResource::class)
+                    .getAtomsDefaultValue(ElementThirdPartySearchParam(atomCode, version)).data ?: emptyMap()
+                JSONObject(res)
+            }.onFailure { logger.warn("get $key default value error.", it) }.getOrNull() ?: JSONObject()
         }
     private val storeImageInfoCache = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -147,7 +149,7 @@ class TransferCacheService @Autowired constructor(
             }.onFailure { logger.warn("get $key dockerResource value error.", it) }.getOrNull()
         }
 
-    fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: emptyMap()
+    fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: JSONObject()
 
     fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?) =
         storeImageInfoCache.get("$userId@@$imageCode@@${imageVersion ?: ""}")

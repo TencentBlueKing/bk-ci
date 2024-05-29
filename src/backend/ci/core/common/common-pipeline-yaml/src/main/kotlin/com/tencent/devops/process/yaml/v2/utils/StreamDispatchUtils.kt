@@ -158,7 +158,7 @@ object StreamDispatchUtils {
         if (poolName == "docker") {
             var image = defaultImage
             var credentialId = ""
-            var env: Map<String, String>?
+            var env: Map<String, Any?>?
 
             if (job.runsOn.container != null) {
                 try {

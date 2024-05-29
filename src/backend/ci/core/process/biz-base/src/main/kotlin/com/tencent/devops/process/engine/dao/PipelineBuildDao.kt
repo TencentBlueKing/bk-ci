@@ -1732,7 +1732,7 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
-                    versionName = t.versionName,
+                    versionName = t.versionName ?: "V${t.version}(init)",
                     yamlVersion = t.yamlVersion,
                     buildNum = t.buildNum,
                     trigger = t.trigger,

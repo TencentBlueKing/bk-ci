@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.IModelTemplate
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -59,6 +60,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -124,6 +126,8 @@ abstract class Element(
     open var stepId: String? = null, // 用于上下文键值设置
     @get:Schema(title = "各项耗时", required = true)
     open var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    open var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
     @get:Schema(title = "错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
@@ -138,8 +142,11 @@ abstract class Element(
     @get:Schema(title = "所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyCode: String? = null,
     @get:Schema(
-        title = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+        title = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false
+    )
     open var classifyName: String? = null,
+    @get:Schema(title = "任务运行进度", required = false)
+    open var progressRate: Double? = null,
     override var template: String? = null,
     override var ref: String? = null,
     override var variables: Map<String, String>? = null
@@ -157,7 +164,7 @@ abstract class Element(
 
     open fun cleanUp() {}
 
-    open fun transferYaml(defaultValue: Map<String, String>?): PreStep? = null
+    open fun transferYaml(defaultValue: JSONObject?): PreStep? = null
 
     open fun isElementEnable(): Boolean {
         return additionalOptions?.enable ?: true

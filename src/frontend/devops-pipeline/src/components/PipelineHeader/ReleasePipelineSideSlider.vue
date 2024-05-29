@@ -18,8 +18,14 @@
                     <label for="enablePac">
                         {{ $t("pacMode") }}
                     </label>
-                    <bk-switcher :disabled="pacEnabled" theme="primary" name="enablePac"
-                        v-model="releaseParams.enablePac" @change="handlePacEnableChange" />
+                    <bk-switcher
+                        :disabled="pacEnabled || isTemplatePipeline"
+                        theme="primary"
+                        name="enablePac"
+                        :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
+                        v-model="releaseParams.enablePac"
+                        @change="handlePacEnableChange"
+                    />
                 </aside>
                 <aside v-if="releaseParams.enablePac" class="release-pipeline-pac-conf-rightside">
                     <label for="enablePac">
@@ -216,6 +222,9 @@
             },
             pipelineName () {
                 return this.pipelineSetting?.pipelineName
+            },
+            isTemplatePipeline () {
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             viewNames () {
                 return this.pipelineInfo?.viewNames || []

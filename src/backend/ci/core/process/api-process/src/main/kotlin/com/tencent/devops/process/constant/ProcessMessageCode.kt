@@ -535,6 +535,9 @@ object ProcessMessageCode {
     const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
     const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
 
-    const val BK_NOT_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotExecutePermissionErrorTitle" // 没有执行权限错误标题
-    const val BK_NOT_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotExecutePermissionErrorMessage" // 没有执行权限错误消息
+    const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
+    // 没有子流水线执行权限错误标题
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
+    // 没有子流水线执行权限错误消息
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
 }

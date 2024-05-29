@@ -4,6 +4,7 @@ import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
+import org.json.JSONObject
 
 object TransferUtil {
     fun parseStepIfFiled(
@@ -32,19 +33,29 @@ object TransferUtil {
         }
     }
 
-    fun simplifyParams(defaultValue: Map<String, String>?, input: Map<String, Any>): MutableMap<String, Any> {
+    /*
+    * 简化input, 如果是默认值则去掉
+    * */
+    fun simplifyParams(defaultValue: JSONObject?, input: Map<String, Any>): MutableMap<String, Any> {
         val out = input.toMutableMap()
-        defaultValue?.forEach {
-            val value = out[it.key]
-            if (value is String && it.value == value) {
-                out.remove(it.key)
+        defaultValue?.keys()?.forEach { key ->
+            val inputValue = out[key] ?: return@forEach
+            if (JSONObject(key to defaultValue[key]).similar(JSONObject(key to inputValue))) {
+                out.remove(key)
             }
-            if (value is Boolean && it.value == value.toString()) {
-                out.remove(it.key)
-            }
-            // 单独针对list的情况
-            if (value is List<*> && it.value == value.joinToString(separator = ",")) {
-                out.remove(it.key)
+        }
+        return out
+    }
+
+    /*
+    * 填充input，如果input没有，defaultValueMap有，则填充进去。
+    * */
+    fun mixParams(defaultValue: JSONObject?, input: Map<String, Any?>?): MutableMap<String, Any?> {
+        val out = input?.toMutableMap() ?: mutableMapOf()
+        defaultValue?.toMap()?.forEach { (k, v) ->
+            val value = out[k]
+            if (value == null) {
+                out[k] = v
             }
         }
         return out

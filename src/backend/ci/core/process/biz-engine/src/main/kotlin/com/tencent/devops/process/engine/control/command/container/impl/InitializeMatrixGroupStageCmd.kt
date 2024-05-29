@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -249,7 +250,11 @@ class InitializeMatrixGroupStageCmd(
 
                 contextCaseList.forEach { contextCase ->
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
-                    val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
+                    val customBuildEnv = mutableMapOf<String, String>()
+                    modelContainer.customEnv?.forEach {
+                        if (!it.key.isNullOrBlank()) customBuildEnv[it.key!!] = it.value ?: ""
+                    }
+                    val allContext = customBuildEnv.plus(contextCase)
                     val contextPair = if (asCodeEnabled) {
                         EnvReplacementParser.getCustomExecutionContextByMap(allContext)
                     } else null
@@ -267,7 +272,7 @@ class InitializeMatrixGroupStageCmd(
                     }
                     val customDispatchType = parsedInfo?.dispatchType
                     val customBaseOS = parsedInfo?.baseOS
-                    val customBuildEnv = parsedInfo?.buildEnv
+                    val buildEnv = parsedInfo?.buildEnv
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
@@ -299,7 +304,7 @@ class InitializeMatrixGroupStageCmd(
                         mutexGroup = mutexGroup,
                         executeCount = context.executeCount,
                         containPostTaskFlag = modelContainer.containPostTaskFlag,
-                        customBuildEnv = allContext,
+                        customEnv = allContext.map { NameAndValue(it.key, it.value) },
                         baseOS = customBaseOS ?: modelContainer.baseOS,
                         vmNames = modelContainer.vmNames,
                         dockerBuildVersion = modelContainer.dockerBuildVersion,
@@ -308,7 +313,7 @@ class InitializeMatrixGroupStageCmd(
                                 itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
                                 itd
                             },
-                        buildEnv = customBuildEnv ?: modelContainer.buildEnv,
+                        buildEnv = buildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
                             EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         },

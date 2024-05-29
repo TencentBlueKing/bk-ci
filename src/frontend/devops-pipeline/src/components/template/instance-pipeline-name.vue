@@ -88,7 +88,7 @@
                             message = this.$t('template.nameExists')
                             theme = 'error'
                         } else {
-                            this.$emit('comfire', this.pipelineName.trim())
+                            this.$emit('confirm', this.pipelineName.trim())
                         }
                     } catch (err) {
                         message = err.message || err

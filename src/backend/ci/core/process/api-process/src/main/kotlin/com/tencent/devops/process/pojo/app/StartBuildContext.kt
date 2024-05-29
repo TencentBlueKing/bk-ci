@@ -66,6 +66,9 @@ import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -314,13 +317,23 @@ data class StartBuildContext(
         }
 
         private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
-            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name &&
-                params[PIPELINE_START_TYPE] != StartType.PIPELINE.name
-            ) {
+            // 支持webhookInfo的启动类型
+            val startTypes = listOf(
+                StartType.WEB_HOOK.name,
+                StartType.PIPELINE.name,
+                StartType.SERVICE.name,
+                StartType.REMOTE.name
+            )
+            val startType = params[PIPELINE_START_TYPE]
+            if (!startTypes.contains(startType)) {
                 return null
             }
             return WebhookInfo(
-                codeType = params[BK_REPO_WEBHOOK_REPO_TYPE],
+                codeType = if (supportCustomMaterials(startType)) {
+                    startType
+                } else {
+                    params[BK_REPO_WEBHOOK_REPO_TYPE]
+                },
                 nameWithNamespace = params[BK_REPO_WEBHOOK_REPO_NAME],
                 webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE],
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL],
@@ -350,9 +363,22 @@ data class StartBuildContext(
                 parentPipelineName = params[PIPELINE_START_PARENT_PIPELINE_NAME],
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
                 parentBuildNum = params[PIPELINE_START_PARENT_BUILD_NUM],
-                linkUrl = params[PIPELINE_GIT_EVENT_URL]
+                linkUrl = if (supportCustomMaterials(startType)) {
+                    // 自定义触发材料
+                    params[BK_CI_MATERIAL_URL]
+                } else {
+                    params[PIPELINE_GIT_EVENT_URL]
+                },
+                materialId = params[BK_CI_MATERIAL_ID],
+                materialName = params[BK_CI_MATERIAL_NAME]
             )
         }
+
+        /**
+         * 是否支持自定义触发材料
+         */
+        private fun supportCustomMaterials(startType: String?) = startType == StartType.REMOTE.name ||
+                startType == StartType.SERVICE.name
 
         /**
          * 简易只为实现推送PipelineBuildStartEvent事件所需要的参数，不是全部

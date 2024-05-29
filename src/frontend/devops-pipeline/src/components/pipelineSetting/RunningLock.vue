@@ -66,6 +66,7 @@
                         :max-length="128"
                         :maxlength="128"
                         v-model="pipelineSetting.concurrencyGroup"
+                        @change="val => handleBaseInfoChange('concurrencyGroup', val)"
                     />
                 </bk-form-item>
 
@@ -89,6 +90,7 @@
                             :disabled="!editable"
                             :placeholder="$t('settings.itemPlaceholder')"
                             v-model="pipelineSetting.maxQueueSize"
+                            @change="val => handleBaseInfoChange('maxQueueSize', val)"
                         >
                             <template slot="append">
                                 <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
@@ -105,6 +107,7 @@
                             :disabled="!editable"
                             :placeholder="$t('settings.itemPlaceholder')"
                             v-model="pipelineSetting.waitQueueTimeMinute"
+                            @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
                         >
                             <template slot="append">
                                 <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>

@@ -54,7 +54,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId.PROJECT
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -93,7 +93,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateHistoryInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
@@ -867,9 +867,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectId: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<ProjectWithPermission> {
+    ): Pagination<ProjectByConditionDTO> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val projectsResp = mutableListOf<ProjectWithPermission>()
+        val projectsResp = mutableListOf<ProjectByConditionDTO>()
         // 拉取出该用户有访问权限的项目
         val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
         projectDao.listProjectsForApply(
@@ -881,7 +881,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             limit = sqlLimit.limit
         ).forEach {
             projectsResp.add(
-                ProjectWithPermission(
+                ProjectByConditionDTO(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
@@ -995,18 +995,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun listMigrateProjects(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+    override fun listProjectsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
         limit: Int,
         offset: Int
-    ): List<ProjectWithPermission> {
-        return projectDao.listMigrateProjects(
+    ): List<ProjectByConditionDTO> {
+        return projectDao.listProjectsByCondition(
             dslContext = dslContext,
-            migrateProjectConditionDTO = migrateProjectConditionDTO,
+            projectConditionDTO = projectConditionDTO,
             limit = limit,
             offset = offset
         ).map {
-            ProjectWithPermission(
+            ProjectByConditionDTO(
                 projectName = it.projectName,
                 englishName = it.englishName,
                 permission = true,
@@ -1219,6 +1219,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             ActionAuditContext.current()
                 .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
         }
+        projectDispatcher.dispatch(
+            ProjectEnableStatusBroadCastEvent(
+                userId = userId ?: "",
+                projectId = englishName,
+                enabled = enabled
+            )
+        )
         projectDao.updateUsableStatus(
             dslContext = dslContext,
             userId = userId,
@@ -1400,6 +1407,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun getProjectByName(projectName: String): ProjectVO? {
         return projectDao.getProjectByName(dslContext, projectName)
+    }
+
+    override fun setDisableWhenInactiveFlag(projectCodes: List<String>): Boolean {
+        projectCodes.forEach {
+            val projectInfo = getByEnglishName(
+                englishName = it
+            ) ?: return@forEach
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.disableWhenInactive = false
+            projectDao.updatePropertiesByCode(
+                dslContext = dslContext,
+                projectCode = it,
+                properties = properties
+            )
+        }
+        return true
     }
 
     override fun updateProjectProperties(
