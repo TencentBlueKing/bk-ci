@@ -155,7 +155,7 @@ CREATE TABLE `T_LEAF_ALLOC` (
 
 ##### 6、按照分表数量新建表（如果只分库不分表可以忽略该步骤）
 
-示例：T_ATOM_OVERVIEW_DATA表分表数量为2，需要新建T_ATOM_OVERVIEW_DATA（**供jooq生成数据模型，不存数据**）、T_ATOM_OVERVIEW_DATA_0、T_ATOM_OVERVIEW_DATA_2 这三张表。
+示例：T_ATOM_OVERVIEW_DATA表分表数量为2，需要新建T_ATOM_OVERVIEW_DATA（**供jooq生成数据模型，不存数据**）、T_ATOM_OVERVIEW_DATA_0、T_ATOM_OVERVIEW_DATA_1 这三张表。
 
 
 
@@ -259,7 +259,7 @@ curl -X PUT "http://xxx/api/op/process/db/projects/{projectId}/data/migrate?canc
 
 **注意：**
 
-1、迁移项目前需要向项目的负责人明确迁移时是否要取消当前正在运行的构建（**不允许取消构建可能存在迁移后数据不一致的情况**），如果用户允许迁移接口的cancelFlag字段传true，不允许cancelFlag字段传false。
+1、迁移项目前需要向项目的负责人明确迁移时是否要取消当前正在运行的构建（**不允许取消构建可能存在迁移后数据不一致的情况**），如果允许取消：cancelFlag字段传true，不允许取消：cancelFlag字段传false。
 
 2、迁移失败后该项目的流量还是处于锁定状态，如果不继续迁移了，需要调用project微服务的项目流量解锁接口进行解锁，该接口调用示例如下：
 
@@ -274,4 +274,3 @@ curl -X PUT "http://xxx/api/op/projects/{projectId}/pipeline/build/unlock" -H "a
 把新增的db配置的tag置为null后，则说明新增db已经正式加入默认集群，为新项目创建分片路由规则时也可能会将新增的db分配给该项目使用。
 
 UPDATE devops_ci_project.T_DATA_SOURCE  SET  TAG = **null** WHERE ID = 'xxxxxx';
-
