@@ -64,18 +64,18 @@ func createDeployment(c *gin.Context) {
 	}
 
 	deploymentInfo, err := kubeclient.GetDeployment(deployment.Name)
-	if err == nil || deploymentInfo == nil {
-		logs.Info(fmt.Sprintf("Deployment: %s not exist, create.", deployment.Name))
-		createErr := kubeclient.CreateNativeDeployment(deployment)
-		if createErr != nil {
-			fail(c, http.StatusInternalServerError, createErr)
-			return
-		}
-	} else {
+	if err != nil && deploymentInfo != nil {
 		logs.Info(fmt.Sprintf("Deployment: %s exist, update.", deployment.Name))
 		updateErr := kubeclient.UpdateNativeDeployment(deployment)
 		if updateErr != nil {
 			fail(c, http.StatusInternalServerError, updateErr)
+			return
+		}
+	} else {
+		logs.Info(fmt.Sprintf("Deployment: %s not exist, create.", deployment.Name))
+		createErr := kubeclient.CreateNativeDeployment(deployment)
+		if createErr != nil {
+			fail(c, http.StatusInternalServerError, createErr)
 			return
 		}
 	}
