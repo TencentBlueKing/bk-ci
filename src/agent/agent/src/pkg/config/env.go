@@ -38,6 +38,12 @@ func (e *GEnvVarsT) RangeDo(do func(k, v string) bool) {
 	}
 }
 
+func (e *GEnvVarsT) Size() int {
+	e.lock.RLock()
+	defer e.lock.RUnlock()
+	return len(e.envs)
+}
+
 // FetchEnvAndCheck 查询是否有某个环境变量，同时校验是否符合要求
 func FetchEnvAndCheck(key string, checkValue string) bool {
 	v, ok := FetchEnv(key)
