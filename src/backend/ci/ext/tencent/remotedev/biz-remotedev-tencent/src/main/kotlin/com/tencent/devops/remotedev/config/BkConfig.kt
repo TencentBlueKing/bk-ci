@@ -48,6 +48,6 @@ class BkConfig {
     @Value("\${bkvision.shareId:}")
     val bkvisionShareId: String = ""
 
-    @Value("\${remoteDev.desktopSdkToken:}")
+    @Value("\${remoteDev.desktopSdkToken:D1oXVCZnVQ9Vu65eXG5R}")
     val desktopSdkToken: String = ""
 }
