@@ -61,8 +61,12 @@
                 {{ $t('newui.const') }}
             </header>
             <div v-if="activeName.has(4)" class="params-collapse-content">
-                <pipeline-params-form ref="paramsForm" disabled :param-values="constantValues"
-                    :params="constantParams" />
+                <pipeline-params-form
+                    ref="paramsForm"
+                    disabled
+                    :param-values="constantValues"
+                    :params="constantParams"
+                />
             </div>
         </template>
         <template v-if="otherParams.length > 0">
