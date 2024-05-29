@@ -410,7 +410,7 @@ class ProjectBillsService constructor(
                             bills.add(bkBillDTO)
                         }
                         val dataSourceBillsDTO = BkDataSourceBillsDTO(
-                            dataSourceName = "蓝盾服务费",
+                            dataSourceName = "蓝盾服务",
                             bills = bills
                         )
                         val summaryBillDTO = BkSummaryBillDTO(
