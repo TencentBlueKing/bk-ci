@@ -351,8 +351,7 @@ class ProjectBillsService constructor(
             do {
                 val projects = projectService.listProjectsByCondition(
                     projectConditionDTO = ProjectConditionDTO(
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        channelCode = ProjectChannelCode.BS.name
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
                     ),
                     limit = limit,
                     offset = offset
