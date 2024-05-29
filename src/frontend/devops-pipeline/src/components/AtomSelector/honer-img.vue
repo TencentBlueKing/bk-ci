@@ -76,6 +76,7 @@
             color: #FFFFFF;
             font-size: 9px;
             line-height: 1;
+            width: 69%;
             text-align: center;
         }
     }
