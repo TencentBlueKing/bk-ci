@@ -32,13 +32,13 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
@@ -78,7 +78,7 @@ class SubPipelineStatusService @Autowired constructor(
     /**
      * 异步启动子流水线
      */
-    fun onAsyncStart(event: PipelineBuildStartBroadCastEvent) {
+    fun onAsyncStart(event: PipelineBuildStartEvent) {
         with(event) {
             try {
                 updateParentPipelineTaskStatus(
@@ -167,7 +167,8 @@ class SubPipelineStatusService @Autowired constructor(
                     pipelineId = it.pipelineId,
                     userId = it.startUser,
                     buildId = it.buildId,
-                    refreshTypes = RefreshType.DETAIL.binary
+                    refreshTypes = RefreshType.RECORD.binary,
+                    executeCount = it.executeCount ?: 1,
                 )
             )
         }

@@ -86,6 +86,7 @@ import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.SubPipelineStatusService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
@@ -122,7 +123,8 @@ class BuildStartControl @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val buildLogPrinter: BuildLogPrinter,
     private val meterRegistry: MeterRegistry,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val subPipelineStatusService: SubPipelineStatusService
 ) {
 
     companion object {
@@ -180,6 +182,9 @@ class BuildStartControl @Autowired constructor(
         )
 
         buildLogPrinter.stopLog(buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount)
+        watcher.start("updateParentPipelineTaskStatus")
+        subPipelineStatusService.onAsyncStart(this)
+        watcher.stop()
         startPipelineCount()
     }
 
