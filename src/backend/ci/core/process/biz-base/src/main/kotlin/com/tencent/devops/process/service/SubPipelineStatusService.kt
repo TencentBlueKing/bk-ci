@@ -168,7 +168,7 @@ class SubPipelineStatusService @Autowired constructor(
                     userId = it.startUser,
                     buildId = it.buildId,
                     refreshTypes = RefreshType.RECORD.binary,
-                    executeCount = it.executeCount ?: 1,
+                    executeCount = it.executeCount ?: 1
                 )
             )
         }
