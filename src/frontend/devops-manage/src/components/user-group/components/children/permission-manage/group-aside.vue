@@ -22,8 +22,8 @@
         <div
           :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
           @click="handleChooseGroup(group)"
-          v-show="group.groupId !== renameGroupId"
-        >
+          >
+          <!-- v-show="group.groupId !== renameGroupId" -->
           <span class="group-name" :title="group.name">{{ group.name }}</span>
           <span class="user-num">
             <img src="../../../svg/user.svg?inline" class="group-icon">
@@ -218,7 +218,16 @@ export default {
         .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
         .then(({ data }) => {
           this.hasLoadEnd = !data.hasNext;
-          this.groupList.push(...data.records);
+          // this.groupList.push(...data.records);
+          this.groupList.push({
+            "managerId": 7997,
+            "defaultGroup": true,
+            "groupId": 0,
+            "name": "全部项目成员",
+            "displayName": "全部项目成员",
+            "userCount": 2,
+            "departmentCount": 0
+          });
           // 首页需要加载
           if (this.page === 1) {
             const chooseGroup = this.groupList.find(group => +group.groupId === +this.$route.query?.groupId) || this.groupList[0];
