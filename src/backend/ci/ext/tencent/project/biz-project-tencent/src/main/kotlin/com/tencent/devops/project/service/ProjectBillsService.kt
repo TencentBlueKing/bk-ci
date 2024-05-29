@@ -423,7 +423,7 @@ class ProjectBillsService constructor(
                         count += 1
                     } catch (ignore: Exception) {
                         logger.warn("report bills data failed!${ignore.message}|${it.englishName}")
-                    }1
+                    }
                 }
                 offset += limit
             } while (projects.size == limit)
