@@ -62,7 +62,7 @@ func createDeployment(c *gin.Context) {
 	}
 
 	deploymentInfo, err := kubeclient.GetDeployment(deployment.Name)
-	if err != nil || deploymentInfo == nil {
+	if err == nil || deploymentInfo == nil {
 		createErr := kubeclient.CreateNativeDeployment(deploymentInfo)
 		if createErr != nil {
 			fail(c, http.StatusInternalServerError, createErr)
