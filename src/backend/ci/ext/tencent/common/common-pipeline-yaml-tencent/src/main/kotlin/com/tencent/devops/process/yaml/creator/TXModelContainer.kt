@@ -90,7 +90,9 @@ class TXModelContainer @Autowired(required = false) constructor(
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
             buildEnv = TXStreamDispatchUtils.getBuildEnv(job),
-            customBuildEnv = job.env,
+            // 针对Stream内网版本兼容
+            customBuildEnv = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
+            customEnv = ModelCommon.getCustomEnv(job.env),
             jobControlOption = getJobControlOption(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),

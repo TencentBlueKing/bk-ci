@@ -189,7 +189,8 @@ class BuildRecordTaskDao {
         projectId: String,
         buildId: String,
         executeCount: Int,
-        matrixContainerIds: List<String>
+        matrixContainerIds: List<String>,
+        stageId: String? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -198,6 +199,9 @@ class BuildRecordTaskDao {
             conditions.add(EXECUTE_COUNT.lessOrEqual(executeCount))
             if (matrixContainerIds.isNotEmpty()) {
                 conditions.add(CONTAINER_ID.notIn(matrixContainerIds))
+            }
+            if (stageId != null) {
+                conditions.add(STAGE_ID.eq(stageId))
             }
             // 获取每个最大执行次数
             val max = DSL.select(

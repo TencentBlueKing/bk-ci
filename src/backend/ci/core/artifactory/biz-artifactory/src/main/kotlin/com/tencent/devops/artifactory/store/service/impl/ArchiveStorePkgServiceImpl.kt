@@ -300,8 +300,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         storeCode: String,
         version: String,
         osName: String?,
-        osArch: String?,
-        idcFlag: Boolean
+        osArch: String?
     ): String {
         val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
             storeCode = storeCode,
@@ -328,15 +327,13 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         return createPkgShareUri(
             userId = userId,
             storeType = storeType,
-            pkgPath = storePkgEnvInfo.pkgRepoPath,
-            idcFlag = idcFlag
+            pkgPath = storePkgEnvInfo.pkgRepoPath
         )
     }
 
     abstract fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String,
-        idcFlag: Boolean
+        pkgPath: String
     ): String
 }

@@ -293,7 +293,7 @@ object TXStreamDispatchUtils {
             ),
             macOS = null,
             third = null,
-            env = job.env,
+            env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
             buildType = buildType
         )
 
@@ -312,7 +312,7 @@ object TXStreamDispatchUtils {
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
                     buildType = buildType
                 )
             } catch (e: Exception) {
@@ -335,7 +335,7 @@ object TXStreamDispatchUtils {
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
                     buildType = buildType
                 )
             }

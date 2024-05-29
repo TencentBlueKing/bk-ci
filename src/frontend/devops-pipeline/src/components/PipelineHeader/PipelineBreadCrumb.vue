@@ -96,42 +96,21 @@
                     this.$updateTabTitle?.(title)
                 },
                 immediate: true
-            },
-            '$route.params.pipelineId' (val) {
-                if (val) {
-                    this.requestPipelineSummary({
-                        projectId: this.$route.params.projectId,
-                        pipelineId: val
-                    })
-                }
             }
         },
         created () {
-            this.setSwitchingPipelineVersion(true)
             this.fetchPipelineList()
         },
         methods: {
             ...mapActions({
-                searchPipelineList: 'pipelines/searchPipelineList',
-                setSwitchingPipelineVersion: 'atom/setSwitchingPipelineVersion',
-                requestPipelineSummary: 'atom/requestPipelineSummary'
+                searchPipelineList: 'pipelines/searchPipelineList'
             }),
             async fetchPipelineList () {
                 const { projectId, pipelineId } = this.$route.params
                 try {
-                    const [list, pipelineInfo] = await Promise.all([
-                        this.search(),
-                        ...(
-                            pipelineId
-                                ? [this.requestPipelineSummary({
-                                    projectId,
-                                    pipelineId
-                                })]
-                                : []
-                        )
-                    ])
+                    const list = await this.search()
 
-                    this.pipelineList = this.generatePipelineList(list, pipelineInfo)
+                    this.pipelineList = this.generatePipelineList(list)
                 } catch (err) {
                     this.handleError(err, {
                         projectId,
@@ -148,19 +127,13 @@
                     this.$router.push({
                         name,
                         params: {
-                            ...$route.params,
                             projectId: $route.params.projectId,
                             pipelineId
                         }
                     })
-                    await this.requestPipelineSummary({
-                        pipelineId,
-                        projectId: $route.params.projectId
-                    })
-
                     // 清空搜索
                     const list = await this.search()
-                    this.pipelineList = this.generatePipelineList(list, cur)
+                    this.pipelineList = this.generatePipelineList(list)
                 } catch (error) {
                     this.handleError(error, {
                         projectId: this.$route.params.projectId,

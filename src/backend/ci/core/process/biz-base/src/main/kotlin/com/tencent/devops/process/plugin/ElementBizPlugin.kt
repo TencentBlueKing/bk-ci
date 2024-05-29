@@ -67,7 +67,7 @@ interface ElementBizPlugin<T : Element> {
     fun beforeDelete(element: T, param: BeforeDeleteParam)
 
     /**
-     * 检查[element]插件以及出现的次数[appearedCnt]是否符合要求
+     * 检查[element]插件合法性
      */
     fun check(
         projectId: String?,
@@ -76,6 +76,7 @@ interface ElementBizPlugin<T : Element> {
         container: Container,
         element: T,
         contextMap: Map<String, String>,
-        appearedCnt: Int
+        appearedCnt: Int,
+        isTemplate: Boolean
     ): ElementCheckResult
 }

@@ -7,11 +7,11 @@ on:
   push:
     branches: [master]
     paths:
-    - "src/frontend/**"
+      - "src/frontend/**"
   pull_request:
     branches: [master, release-*]
     paths:
-    - "src/frontend/**"
+      - "src/frontend/**"
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -24,24 +24,26 @@ jobs:
     name: Build frontend
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16
-    - uses: actions/cache@v3
-      id: yarn-cache
-      with:
-        path: src/frontend/**/node_modules
-        key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
-    - name: prefer offline
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
-      run: yarn --prefer-offline && yarn install
-      working-directory: src/frontend
-    - run: yarn public
-      working-directory: src/frontend
-    - uses: actions/upload-artifact@v3
-      if: ${{ inputs.upload == 'true'  }}
-      with:
-        name: frontend
-        path: src/frontend/frontend/
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions/cache@v3
+        id: yarn-cache
+        with:
+          path: src/frontend/**/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('src/frontend/**/package.json') }}
+      - name: prefer offline
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn --prefer-offline && yarn install
+        working-directory: src/frontend
+      - run: |
+          export NODE_OPTIONS=--openssl-legacy-provider
+          yarn public
+        working-directory: src/frontend
+      - uses: actions/upload-artifact@v3
+        if: ${{ inputs.upload == 'true'  }}
+        with:
+          name: frontend
+          path: src/frontend/frontend/

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.creator
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -99,5 +100,19 @@ object ModelCommon {
         }
 
         return parseReceivers
+    }
+
+    fun getCustomEnv(env: Map<String, Any?>?): List<NameAndValue>? {
+        if (env == null) return null
+        val nameAndValueList = mutableListOf<NameAndValue>()
+        env.forEach {
+            nameAndValueList.add(
+                NameAndValue(
+                    key = it.key,
+                    value = it.value.toString()
+                )
+            )
+        }
+        return nameAndValueList
     }
 }
