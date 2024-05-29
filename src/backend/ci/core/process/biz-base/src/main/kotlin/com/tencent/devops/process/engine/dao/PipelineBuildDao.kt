@@ -1740,7 +1740,7 @@ class PipelineBuildDao {
                     // queueTime在数据库中必定会写值，不为空，以防万一用当前时间兜底
                     queueTime = t.queueTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
                     startUser = t.startUser,
-                    triggerUser = t.triggerUser,
+                    triggerUser = t.triggerUser ?: t.startUser ?: "",
                     startTime = t.startTime?.timestampmilli(),
                     endTime = t.endTime?.timestampmilli(),
                     taskCount = t.taskCount,
@@ -1802,7 +1802,7 @@ class PipelineBuildDao {
                     status = BuildStatus.values()[t.status],
                     queueTime = t.queueTime?.timestampmilli() ?: 0L,
                     startUser = t.startUser,
-                    triggerUser = t.triggerUser,
+                    triggerUser = t.triggerUser ?: t.startUser ?: "",
                     startTime = t.startTime?.timestampmilli() ?: 0L,
                     endTime = t.endTime?.timestampmilli() ?: 0L,
                     taskCount = t.taskCount,

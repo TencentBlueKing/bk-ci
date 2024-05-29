@@ -150,7 +150,7 @@ class PipelineBuildService(
             )?.settingVersion?.let {
                 pipelineSettingVersionService.getPipelineSetting(
                     userId = userId,
-                    projectId = pipeline.pipelineId,
+                    projectId = pipeline.projectId,
                     pipelineId = pipeline.pipelineId,
                     detailInfo = null,
                     version = it
