@@ -91,6 +91,8 @@ object StoreMessageCode {
     const val GET_ATOM_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
     // 研发商店：插件配置文件[task.json]config配置格式不正确,{0}
     const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
+    // 研发商店：java插件配置文件[task.json]target配置不正确,java插件的target命令配置需要以java开头
+    const val TASK_JSON_TARGET_IS_INVALID = "2120041"
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确

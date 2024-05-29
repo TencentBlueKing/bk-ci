@@ -28,7 +28,9 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.atom.service.AtomBusHandleService
+import com.tencent.devops.store.constant.StoreMessageCode
 
 class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
@@ -38,6 +40,15 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         } else {
             osName.lowercase()
         }
+    }
+
+    override fun checkTarget(target: String): Boolean {
+        if (!target.startsWith("java")) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.TASK_JSON_TARGET_IS_INVALID
+            )
+        }
+        return true
     }
 
     override fun handleOsArch(osName: String, osArch: String): String {
