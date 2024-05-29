@@ -63,8 +63,8 @@ func createDeployment(c *gin.Context) {
 		return
 	}
 
-	deploymentInfo, err := kubeclient.GetDeployment(deployment.Name)
-	if err != nil && deploymentInfo != nil {
+	deploymentInfo, _ := kubeclient.GetDeployment(deployment.Name)
+	if deploymentInfo != nil {
 		logs.Info(fmt.Sprintf("Deployment: %s exist, update.", deployment.Name))
 		updateErr := kubeclient.UpdateNativeDeployment(deployment)
 		if updateErr != nil {
