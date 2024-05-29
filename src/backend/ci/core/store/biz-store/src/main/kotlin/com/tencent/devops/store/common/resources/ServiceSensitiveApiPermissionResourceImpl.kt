@@ -52,7 +52,7 @@ class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
             installedPkgShaContent = installedPkgShaContent,
             osName = osName,
             osArch = osArch,
-            storeType = StoreTypeEnum.valueOf(storeCode),
+            storeType = StoreTypeEnum.valueOf(storeType),
             storeCode = storeCode,
             apiName = apiName,
             version = version
