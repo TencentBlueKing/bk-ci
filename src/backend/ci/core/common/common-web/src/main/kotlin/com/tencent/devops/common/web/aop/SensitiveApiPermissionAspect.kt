@@ -29,7 +29,14 @@ package com.tencent.devops.common.web.aop
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_ARCH
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_NAME
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_STORE_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.auth.SIGN_HEADER_NONCE
 import com.tencent.devops.common.api.auth.SIGN_HEADER_TIMESTAMP
 import com.tencent.devops.common.api.auth.SING_HEADER_SIGNATURE
@@ -37,6 +44,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.PROFILE_DEVX
 import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
@@ -63,53 +71,84 @@ class SensitiveApiPermissionAspect constructor(
 
     private val apiPermissionCache = Caffeine.newBuilder()
         .maximumSize(CACHE_MAX_SIZE)
-        .build<String/*atomCode:apiName*/, Boolean>()
+        .build<String, Boolean>()
 
     @Before("pointCut()")
     fun doBefore(jp: JoinPoint) {
         val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
-        val buildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
-        val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         val method = (jp.signature as MethodSignature).method
         val apiName = method.getAnnotation(SensitiveApiPermission::class.java)?.value
-
-        val (atomCode, signToken) = if (buildId != null && vmSeqId != null) {
-            AtomRuntimeUtil.getRunningAtomValue(
-                redisOperation = redisOperation, buildId = buildId, vmSeqId = vmSeqId
-            ) ?: Pair(null, null)
-        } else {
-            Pair(null, null)
-        }
-
-        if (apiName != null && atomCode != null) {
-            logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
-            if (enableSensitiveApi &&
-                !verifyToken(request, signToken) &&
-                !verifyApi(buildId, vmSeqId, atomCode, apiName)
-            ) {
-                logger.warn("$buildId|$vmSeqId|$atomCode|$apiName|verify sensitive api failed")
-                throw ErrorCodeException(
-                    statusCode = 401,
-                    errorCode = CommonMessageCode.ERROR_SENSITIVE_API_NO_AUTH,
-                    params = arrayOf(atomCode, apiName),
-                    defaultMessage = "Unauthorized: sensitive api $apiName cannot be used by $atomCode"
+        val referer = request.getHeader(REFERER)
+        var verifyFlag = false
+        val storeCode: String?
+        if (referer.contains(PROFILE_DEVX)) {
+            val installedPkgShaContent = request.getHeader(AUTH_HEADER_DEVOPS_SHA_CONTENT)
+            val osName = request.getHeader(AUTH_HEADER_DEVOPS_OS_NAME)
+            val osArch = request.getHeader(AUTH_HEADER_DEVOPS_OS_ARCH)
+            storeCode = request.getHeader(AUTH_HEADER_DEVOPS_STORE_CODE)
+            val storeType = request.getHeader(AUTH_HEADER_DEVOPS_STORE_TYPE)
+            val version = request.getHeader(AUTH_HEADER_DEVOPS_STORE_VERSION)
+            val checkParamFlag = !storeType.isNullOrBlank() && !storeCode.isNullOrBlank() && !version.isNullOrBlank()
+            if (checkParamFlag && !apiName.isNullOrBlank()) {
+                verifyFlag = verifyApi(
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    apiName = apiName,
+                    version = version,
+                    installedPkgShaContent = installedPkgShaContent,
+                    osName = osName,
+                    osArch = osArch
                 )
             }
+        } else {
+            val buildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
+            val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+            val (atomCode, signToken) = if (buildId != null && vmSeqId != null) {
+                AtomRuntimeUtil.getRunningAtomValue(
+                    redisOperation = redisOperation, buildId = buildId, vmSeqId = vmSeqId
+                ) ?: Pair(null, null)
+            } else {
+                Pair(null, null)
+            }
+            storeCode = atomCode
+            if (apiName != null && storeCode != null) {
+                verifyFlag = !verifyToken(request, signToken) &&
+                    !verifyApi("ATOM", storeCode, apiName)
+            }
+        }
+
+        logger.info("$storeCode|$apiName|using sensitive api")
+        if (enableSensitiveApi && verifyFlag) {
+            logger.warn("$storeCode|$apiName|verify sensitive api failed")
+            throw ErrorCodeException(
+                statusCode = 401,
+                errorCode = CommonMessageCode.ERROR_SENSITIVE_API_NO_AUTH,
+                params = arrayOf(storeCode ?: "", apiName ?: ""),
+                defaultMessage = "Unauthorized: sensitive api $apiName cannot be used by $storeCode"
+            )
         }
     }
 
+    @Suppress("LongParameterList")
     private fun verifyApi(
-        buildId: String,
-        vmSeqId: String,
-        atomCode: String,
-        apiName: String
+        storeType: String,
+        storeCode: String,
+        apiName: String,
+        version: String? = null,
+        installedPkgShaContent: String? = null,
+        osName: String? = null,
+        osArch: String? = null
     ): Boolean {
-        val cacheKey = "$atomCode:$apiName"
-        logger.info("buildId:$buildId|vmSeqId:$vmSeqId|atomCode:$atomCode|apiName:$apiName|verify sensitive api")
+        val cacheKey = "$storeType:$storeCode:$apiName"
         return apiPermissionCache.getIfPresent(cacheKey) ?: run {
             val apiPermission = client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
-                atomCode = atomCode,
-                apiName = apiName
+                installedPkgShaContent = installedPkgShaContent,
+                osName = osName,
+                osArch = osArch,
+                storeCode = storeCode,
+                apiName = apiName,
+                storeType = storeType,
+                version = version
             ).data == true
             // 只有验证通过的插件才缓存,没有验证通过的插件状态是动态的
             if (apiPermission) {
