@@ -56,7 +56,7 @@ data class BuildTask(
     @get:Schema(title = "任务参数", required = false)
     val params: Map<String, String>? = null,
     @get:Schema(title = "环境参数", required = false)
-    val buildVariable: Map<String, String>? = null,
+    var buildVariable: Map<String, String>? = null,
     @get:Schema(title = "容器类型", required = false)
     val containerType: String? = null,
     @get:Schema(title = "签名token", required = false)

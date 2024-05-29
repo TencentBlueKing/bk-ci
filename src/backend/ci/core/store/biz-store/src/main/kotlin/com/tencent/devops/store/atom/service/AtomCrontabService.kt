@@ -30,12 +30,7 @@ package com.tencent.devops.store.atom.service
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.store.atom.dao.MarketAtomDao
-import com.tencent.devops.store.atom.dao.MarketAtomOfflineDao
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -50,55 +45,12 @@ import java.util.Date
 
 @Service
 class AtomCrontabService @Autowired constructor(
-    private val marketAtomDao: MarketAtomDao,
-    private val marketAtomOfflineDao: MarketAtomOfflineDao,
     private val marketAtomStatisticService: MarketAtomStatisticService,
-    private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomCrontabService::class.java)
-        private const val DEFAULT_PAGE_SIZE = 50
-    }
-
-    /**
-     * 执行下架插件操作
-     */
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
-    fun doOfflineAtom() {
-        val lock = RedisLock(redisOperation, "doOfflineAtom", 60L)
-        try {
-            lock.lock()
-            // 获取到期插件
-            val atoms = marketAtomOfflineDao.getExpiredAtoms(dslContext)
-
-            atoms.forEach {
-                // 执行下架操作
-                logger.info("expired atom is: {}", it.atomCode)
-                dslContext.transaction { t ->
-                    val context = DSL.using(t)
-                    marketAtomDao.setAtomStatusByCode(
-                        dslContext = context,
-                        atomCode = it.atomCode,
-                        atomOldStatus = AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                        atomNewStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
-                        userId = "system",
-                        msg = null,
-                        latestFlag = null
-                    )
-                    marketAtomOfflineDao.setStatus(context, it.id, 1, "system")
-                }
-
-                // 通知开发者、使用方插件已下架 -- todo
-
-                logger.info("offline atom {} success", it.atomCode)
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to offline atom: {}", ignored)
-        } finally {
-            lock.unlock()
-        }
     }
 
     @Scheduled(cron = "0 10 0 * * ?") // 每天零点十分执行一次

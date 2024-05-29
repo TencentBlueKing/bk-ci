@@ -31,4 +31,8 @@ class OpExpertSupportImpl @Autowired constructor(
     override fun deleteConfig(userId: String, id: Long) {
         expertSupportService.deleteSupportConfig(id)
     }
+
+    override fun deleteConfigWithData(userId: String, data: CreateExpertSupportConfigData) {
+        expertSupportService.deleteConfigWithData(data)
+    }
 }

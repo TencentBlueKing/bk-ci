@@ -70,32 +70,28 @@ class EventTypeFilterTest {
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST,
-            action = "merge"
-        )
-        Assertions.assertFalse(eventTypeFilter.doFilter(response))
-
-        eventTypeFilter = EventTypeFilter(
-            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST,
-            action = "open"
+            eventType = CodeEventType.MERGE_REQUEST
         )
         Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST_ACCEPT,
-            action = "open"
+            eventType = CodeEventType.MERGE_REQUEST
         )
-        Assertions.assertFalse(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST_ACCEPT,
-            action = "merge"
+            eventType = CodeEventType.MERGE_REQUEST_ACCEPT
+        )
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
+
+        eventTypeFilter = EventTypeFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnEventType = CodeEventType.MERGE_REQUEST,
+            eventType = CodeEventType.MERGE_REQUEST
         )
         Assertions.assertTrue(eventTypeFilter.doFilter(response))
     }

@@ -61,6 +61,9 @@ interface ServiceFileResource {
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        @Parameter(description = "文件路径", required = false)
+        @QueryParam("fileRepoPath")
+        fileRepoPath: String? = null
     ): Result<String?>
 }

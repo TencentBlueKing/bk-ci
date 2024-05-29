@@ -205,4 +205,19 @@ interface OpWindowsConfigResource {
         @PathParam("quota")
         quota: Int
     ): Result<Boolean>
+
+    @Operation(summary = "设置云研发项目管理员")
+    @PUT
+    @Path("/add/{projectId}/manager")
+    fun addProjectRemotedevManager(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "管理员，多人用分号分隔", required = true)
+        @QueryParam("manager")
+        manager: String
+    ): Result<Boolean>
 }

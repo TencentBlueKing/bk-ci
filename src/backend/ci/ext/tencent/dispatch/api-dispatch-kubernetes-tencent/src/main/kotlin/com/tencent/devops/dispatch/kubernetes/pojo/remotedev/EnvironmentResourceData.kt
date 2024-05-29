@@ -27,7 +27,8 @@ data class EnvironmentResourceData(
     val image: String?,
     val cpu: String?,
     val mem: String?,
-    val registerCgsTime: LocalDateTime?
+    val registerCgsTime: LocalDateTime?,
+    val internal: Boolean?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

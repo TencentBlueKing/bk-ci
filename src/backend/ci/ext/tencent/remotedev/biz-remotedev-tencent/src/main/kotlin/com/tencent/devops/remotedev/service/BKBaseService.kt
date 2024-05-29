@@ -42,34 +42,34 @@ class BKBaseService @Autowired constructor(
             TimeScope.DAY -> {
                 gal.add(Calendar.DAY_OF_WEEK, -1)
                 "SELECT minute2, COUNT(DISTINCT user_id) AS unum " +
-                        "FROM 100656_cgs_report_game_all " +
-                        "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
-                        "AND project_id = '$projectId' " +
-                        "GROUP BY minute2 " +
-                        "ORDER BY minute2 " +
-                        "LIMIT 721"
+                    "FROM 100656_cgs_report_game_all " +
+                    "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
+                    "AND project_id = '$projectId' " +
+                    "GROUP BY minute2 " +
+                    "ORDER BY minute2 " +
+                    "LIMIT 721"
             }
 
             TimeScope.WEEK -> {
                 gal.add(Calendar.WEEK_OF_MONTH, -1)
                 "SELECT minute10, COUNT(DISTINCT user_id) AS unum " +
-                        "FROM 100656_cgs_report_game_all " +
-                        "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
-                        "AND project_id = '$projectId' " +
-                        "GROUP BY minute10 " +
-                        "ORDER BY minute10 " +
-                        "LIMIT 1009"
+                    "FROM 100656_cgs_report_game_all " +
+                    "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
+                    "AND project_id = '$projectId' " +
+                    "GROUP BY minute10 " +
+                    "ORDER BY minute10 " +
+                    "LIMIT 1009"
             }
 
             else -> {
                 gal.add(Calendar.HOUR_OF_DAY, -1)
                 "SELECT minute1, COUNT(DISTINCT user_id) AS unum " +
-                        "FROM 100656_cgs_report_game_all " +
-                        "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
-                        "AND project_id = '$projectId' " +
-                        "GROUP BY minute1 " +
-                        "ORDER BY minute1 " +
-                        "LIMIT 61"
+                    "FROM 100656_cgs_report_game_all " +
+                    "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
+                    "AND project_id = '$projectId' " +
+                    "GROUP BY minute1 " +
+                    "ORDER BY minute1 " +
+                    "LIMIT 61"
             }
         }
 
@@ -160,9 +160,9 @@ class BKBaseService @Autowired constructor(
         result: MutableMap<String, Int> = mutableMapOf()
     ): Map<String, Int> {
         val sql = "select zone_id,inner_ip,count(distinct thedate) as cnt " +
-                "from 100656_ads_desktop_daily_activity_res " +
-                "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
-                "group by inner_ip,zone_id LIMIT $limit OFFSET $offset"
+            "from 100656_ads_desktop_daily_activity_res " +
+            "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
+            "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
 
         val resp = doHttp(sql) ?: return result
 
@@ -172,7 +172,7 @@ class BKBaseService @Autowired constructor(
             } ?: return result
             if (resp.data.list.size == limit) {
                 fetchActiveIps(
-                    date, offset + limit, limit, result
+                    date = date, limit = limit, offset = offset + limit, result = result
                 )
             }
         } catch (e: Exception) {
@@ -193,7 +193,7 @@ class BKBaseService @Autowired constructor(
         val sql = "select zone_id,inner_ip,sum(activity_minus_cnt) as cnt " +
             "from 100656_ads_desktop_daily_activity_res " +
             "where thedate > '${date.format(theDateFormat)}' " +
-            "group by inner_ip,zone_id LIMIT $limit OFFSET $offset"
+            "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
 
         val resp = doHttp(sql) ?: return result
 
@@ -203,7 +203,7 @@ class BKBaseService @Autowired constructor(
             } ?: return result
             if (resp.data.list.size == limit) {
                 fetchActiveTimes(
-                    date, offset + limit, limit, result
+                    date = date, limit = limit, offset = offset + limit, result = result
                 )
             }
         } catch (e: Exception) {
@@ -257,9 +257,9 @@ class BKBaseService @Autowired constructor(
         result: MutableMap<String, String> = mutableMapOf()
     ): Map<String, String> {
         val sql = "SELECT node_id, MAX(dtEventTime) " +
-                "FROM 100656_cgs_report_game_all " +
-                "WHERE thedate >= '${date.format(theDateFormat)}' " +
-                "GROUP BY node_id LIMIT $limit OFFSET $offset"
+            "FROM 100656_cgs_report_game_all " +
+            "WHERE thedate >= '${date.format(theDateFormat)}' " +
+            "GROUP BY node_id order by node_id LIMIT $limit OFFSET $offset"
 
         val resp = doHttp(sql) ?: return result
 
@@ -269,7 +269,7 @@ class BKBaseService @Autowired constructor(
             } ?: return result
             if (resp.data.list.size == limit) {
                 fetchOnlineIps(
-                    date, offset + limit, limit, result
+                    date = date, limit = limit, offset = offset + limit, result = result
                 )
             }
         } catch (e: Exception) {
@@ -286,7 +286,7 @@ class BKBaseService @Autowired constructor(
         val sql = "SELECT node_id, MAX(dtEventTime) " +
             "FROM 100656_cgs_report_game_all " +
             "WHERE where node_id in (${
-            nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
+                nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
             }) " +
             "GROUP BY node_id"
 

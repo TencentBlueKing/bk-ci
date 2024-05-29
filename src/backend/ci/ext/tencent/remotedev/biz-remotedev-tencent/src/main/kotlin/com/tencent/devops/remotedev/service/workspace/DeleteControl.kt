@@ -166,6 +166,8 @@ class DeleteControl @Autowired constructor(
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+
             // 发送处理事件
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -173,7 +175,8 @@ class DeleteControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 
@@ -211,7 +214,7 @@ class DeleteControl @Autowired constructor(
             val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).ifEmpty {
                 listOf(workspace.createUserId)
             }
-            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+            notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                 userIds = userIds.toMutableSet(),
                 workspaceName = workspace.workspaceName,
                 cc = mutableSetOf(workspace.createUserId),
@@ -369,6 +372,7 @@ class DeleteControl @Autowired constructor(
             doDeleteWS(true, userId, workspaceName, null)
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -377,7 +381,8 @@ class DeleteControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
             return true
@@ -433,7 +438,8 @@ class DeleteControl @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.DISTRIBUTING,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 if (workspace.projectId in whiteListProject) {
@@ -512,7 +518,8 @@ class DeleteControl @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.STOPPED,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 if (workspace.projectId in whiteListProject) {
@@ -550,7 +557,7 @@ class DeleteControl @Autowired constructor(
                         )
                         if (it) {
                             val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                                 userIds = userIds.toMutableSet(),
                                 workspaceName = workspace.workspaceName,
                                 cc = mutableSetOf(workspace.createUserId),
@@ -602,13 +609,15 @@ class DeleteControl @Autowired constructor(
                 actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
             )
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = workspaceCommon.getSystemOperator(workspace.createUserId, workspace.workspaceMountType),
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 

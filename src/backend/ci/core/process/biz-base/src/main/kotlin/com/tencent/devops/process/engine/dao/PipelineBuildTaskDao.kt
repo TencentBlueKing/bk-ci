@@ -38,6 +38,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record3
@@ -46,8 +48,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions", "LongParameterList")
 @Repository
@@ -223,12 +223,21 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun get(dslContext: DSLContext, projectId: String, buildId: String, taskId: String?): PipelineBuildTask? {
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String?,
+        stepId: String?
+    ): PipelineBuildTask? {
         return with(T_PIPELINE_BUILD_TASK) {
 
             val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (taskId != null) {
                 where.and(TASK_ID.eq(taskId))
+            }
+            if (stepId != null) {
+                where.and(STEP_ID.eq(stepId))
             }
             where.fetchAny(mapper)
         }

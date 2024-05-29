@@ -57,14 +57,14 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.scss$/,
-                    use: [{
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            publicPath: (resourcePath, context) => {
-                                return ''
+                    use: [isDev
+                        ? 'style-loader'
+                        : {
+                            loader: MiniCssExtractPlugin.loader,
+                            options: {
+                                publicPath: (resourcePath, context) => ''
                             }
-                        }
-                    }, 'css-loader', 'sass-loader']
+                        }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
@@ -74,6 +74,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     exclude: /node_modules/,
                     options: {
                         fix: true,
+                        emitWarning: false,
                         formatter: require('eslint-friendly-formatter')
                     }
                 },
@@ -98,9 +99,11 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
+            new webpack.HotModuleReplacementPlugin(),
             new VueLoaderPlugin(),
             new BundleWebpackPlugin({
                 dist: envDist,
+                isDev,
                 bundleName: 'assets_bundle'
             }),
             new MiniCssExtractPlugin({
@@ -127,6 +130,26 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
             minimize: !isDev,
+            splitChunks: {
+                cacheGroups: {
+                    bkMagicVue: {
+                        test: module => {
+                            return /bk-magic-vue/.test(module.context)
+                        },
+                        name: 'bk-magic-vue-chunk', // chunk 的名字
+                        chunks: 'all', // 可能的值 'async', 'initial', 'all',
+                        reuseExistingChunk: true
+                        
+                    },
+                    default: {
+                        minChunks: 2,
+                        priority: -20,
+                        reuseExistingChunk: true
+                    }
+
+                }
+            },
+              
             minimizer: [
                 new CssMinimizerPlugin({
                     minimizerOptions: {
@@ -167,6 +190,10 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             client: {
                 webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
+            // https: {
+            //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
+            //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
+            // },
             hot: isDev,
             port
         }

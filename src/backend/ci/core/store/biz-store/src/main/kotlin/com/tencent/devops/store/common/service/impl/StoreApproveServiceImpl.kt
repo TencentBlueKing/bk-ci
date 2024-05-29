@@ -40,9 +40,9 @@ import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.common.dao.StoreApproveDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.pojo.common.StoreApproveDetail
-import com.tencent.devops.store.pojo.common.StoreApproveInfo
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.approval.StoreApproveDetail
+import com.tencent.devops.store.pojo.common.approval.StoreApproveInfo
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ApproveTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum

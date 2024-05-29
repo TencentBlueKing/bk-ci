@@ -638,7 +638,7 @@
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
-                    pipelineId: this.curPipeline.pipelineId,
+                    pipelineId: this.curPipeline.pipelineId || this.$route.params.pipelineId,
                     ...this.filterData,
                 }
                 return pipelines.getPipelineBuildList(this.projectId, params).then((res = {}) => {

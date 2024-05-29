@@ -40,35 +40,35 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.store.common.dao.CategoryDao
 import com.tencent.devops.store.common.dao.ClassifyDao
-import com.tencent.devops.store.constant.StoreMessageCode.BK_AFTER_IMAGE_STORE_ONLINE
-import com.tencent.devops.store.constant.StoreMessageCode.BK_AUTOMATICALLY_CONVERTED
-import com.tencent.devops.store.constant.StoreMessageCode.BK_COPY_FOR_BUILD_IMAGE
-import com.tencent.devops.store.constant.StoreMessageCode.BK_IMAGE_STORE_ONLINE
-import com.tencent.devops.store.constant.StoreMessageCode.BK_OLD_VERSION_BUILD_IMAGE
-import com.tencent.devops.store.constant.StoreMessageCode.BK_OTHER
-import com.tencent.devops.store.constant.StoreMessageCode.BK_PIPELINED_JOB
-import com.tencent.devops.store.constant.StoreMessageCode.BK_PROJECT_MANAGER_CAN_OPERATION
+import com.tencent.devops.store.constant.StoreConstants.BK_AFTER_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreConstants.BK_AUTOMATICALLY_CONVERTED
+import com.tencent.devops.store.constant.StoreConstants.BK_COPY_FOR_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreConstants.BK_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreConstants.BK_OLD_VERSION_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreConstants.BK_OTHER
+import com.tencent.devops.store.constant.StoreConstants.BK_PIPELINED_JOB
+import com.tencent.devops.store.constant.StoreConstants.BK_PROJECT_MANAGER_CAN_OPERATION
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_ID
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.image.dao.ImageFeatureDao
 import com.tencent.devops.store.image.dao.OpImageDao
-import com.tencent.devops.store.pojo.common.ClassifyRequest
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
-import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 
 @Service
 class OpImageDataTransferService @Autowired constructor(

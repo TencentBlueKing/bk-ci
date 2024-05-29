@@ -34,8 +34,9 @@ import java.io.File
 
 class IpaSignUtilTest {
 
-    private val inputStreamFile = "./test.ipa"
-    private val outputStreamStreamFile = "./test_md5.ipa"
+    private val tmpRoot = "./test"
+    private val inputStreamFile = "./test/test.ipa"
+    private val outputStreamStreamFile = "./test/test_md5.ipa"
 
     /*
     * 复制流到目标文件，并计算md5
@@ -52,9 +53,6 @@ class IpaSignUtilTest {
         val outputStreamFile = File(outputStreamStreamFile)
         val md5 = IpaFileUtil.copyInputStreamToFile(inputStream, outputStreamFile)
         Assertions.assertEquals(FileUtil.getMD5(testFile), md5)
-        if (!exists) {
-            testFile.delete()
-        }
-        outputStreamFile.delete()
+        IpaFileUtil.deleteDir(File(tmpRoot))
     }
 }

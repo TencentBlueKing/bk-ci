@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.store.common.service.StoreApproveService
 import com.tencent.devops.store.common.service.TxStoreMoaApproveCallBackService
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
 import org.slf4j.LoggerFactory

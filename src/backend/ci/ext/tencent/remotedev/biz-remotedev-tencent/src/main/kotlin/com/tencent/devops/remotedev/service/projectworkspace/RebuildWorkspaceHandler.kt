@@ -164,6 +164,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -179,7 +180,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
                     mountType = WorkspaceMountType.START,
-                    imageCosFile = rebuildReq.imageCosFile
+                    imageCosFile = rebuildReq.imageCosFile,
+                    gameId = gameId.first
                 )
             )
 
@@ -241,8 +243,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 deliverControl.safeInitialization(
                     projectId = workspace.projectId,
                     userId = event.userId,
-                    workspaceName = event.workspaceName,
-                    autoAssign = event.autoAssign
+                    workspaceName = event.workspaceName
                 )
             }
         } else {

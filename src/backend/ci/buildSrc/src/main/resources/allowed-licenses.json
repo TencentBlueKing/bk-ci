@@ -130,6 +130,22 @@
       "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
     },
     {
+      "moduleLicense": "MIT license",
+      "moduleVersion": "1.28",
+      "moduleName": "org.jvnet.winp:winp"
+    },
+    {
+      "moduleLicense": "The MIT license",
+      "moduleVersion": "1.28",
+      "moduleName": "org.jvnet.winp:winp"
+    },
+    {
+      "moduleLicense": "GNU Lesser General Public License v2.1 or later",
+      "moduleVersion": "5.14.0",
+      "moduleName": "net.java.dev.jna:jna",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
+    },
+    {
       "moduleLicense": "LGPL, version 2.1",
       "moduleVersion": "3.4.0",
       "moduleName": "net.java.dev.jna:platform",

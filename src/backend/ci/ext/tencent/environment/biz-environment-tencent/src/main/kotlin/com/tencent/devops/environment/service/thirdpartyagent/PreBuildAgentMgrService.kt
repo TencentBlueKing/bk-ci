@@ -86,7 +86,7 @@ class PreBuildAgentMgrService @Autowired constructor(
                 projectId = projectId,
                 ip = initIp ?: "",
                 name = "",
-                osName = os.name.toLowerCase(),
+                osName = os.name.lowercase(),
                 status = NodeStatus.NORMAL,
                 type = NodeType.THIRDPARTY,
                 userId = userId,
@@ -144,7 +144,7 @@ class PreBuildAgentMgrService @Autowired constructor(
                     agentVersion = it[T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION] as? String
                 )
             }
-            cmdbNodeDao.updateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)
+            cmdbNodeDao.batchUpdateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)
 
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
             environmentPermissionService.createNode(

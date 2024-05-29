@@ -230,6 +230,9 @@ function prezero (num) {
 }
 
 export function convertTime (ms) {
+    if (!ms) {
+        return '--'
+    }
     const time = new Date(ms)
 
     return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(

@@ -41,6 +41,7 @@ import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -300,7 +301,9 @@ class PipelineLayout private constructor(
                     maxQueueMinutes = 60,
                     maxRunningMinutes = job.timeoutMinutes ?: 900,
                     buildEnv = buildEnv,
-                    customBuildEnv = job.env,
+                    // 针对内网版本兼容
+                    customBuildEnv = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
+                    customEnv = job.env?.map { NameAndValue(it.key, it.value?.toString() ?: "") },
                     thirdPartyAgentId = null,
                     thirdPartyAgentEnvId = null,
                     thirdPartyWorkspace = null,
@@ -474,7 +477,8 @@ class PipelineLayout private constructor(
         } else {
             BuildType.DEVCLOUD
         }
-
+        var env = mutableMapOf<String, String>()
+        job.env?.forEach { (k, v) -> env[k] = v?.toString() ?: "" }
         return if (job.runsOn.container == null) {
             Pool(
                 container = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
@@ -484,7 +488,7 @@ class PipelineLayout private constructor(
                 ),
                 macOS = null,
                 third = null,
-                env = job.env,
+                env = env.takeIf { it.isNotEmpty() },
                 buildType = buildType
             )
         } else {
@@ -502,7 +506,7 @@ class PipelineLayout private constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = env.takeIf { it.isNotEmpty() },
                     buildType = buildType
                 )
             } catch (e: Exception) {
@@ -521,7 +525,7 @@ class PipelineLayout private constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = env.takeIf { it.isNotEmpty() },
                     buildType = buildType
                 )
             }
@@ -537,7 +541,8 @@ class PipelineLayout private constructor(
                 displayName = agentId,
                 workspace = userLocalProjectInfo.workspace,
                 agentType = AgentType.ID,
-                dockerInfo = null
+                dockerInfo = null,
+                reusedInfo = null
             )
         }
 
@@ -548,7 +553,8 @@ class PipelineLayout private constructor(
                 envProjectId = null,
                 workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME,
-                dockerInfo = null
+                dockerInfo = null,
+                reusedInfo = null
             )
         }
 

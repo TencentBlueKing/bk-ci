@@ -33,8 +33,7 @@ import org.slf4j.LoggerFactory
 class EventTypeFilter(
     private val pipelineId: String,
     private val triggerOnEventType: CodeEventType,
-    private val eventType: CodeEventType?,
-    private val action: String? = null
+    private val eventType: CodeEventType?
 ) : WebhookFilter {
 
     companion object {
@@ -43,39 +42,15 @@ class EventTypeFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
-            "$pipelineId|triggerOnEventType:$triggerOnEventType|eventType:$eventType|action:$action|eventType filter"
+            "$pipelineId|triggerOnEventType:$triggerOnEventType|eventType:$eventType|eventType filter"
         )
-        return when (eventType) {
-            null -> true
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT ->
-                isAllowedByMrAction()
+        return when {
+            eventType == null -> true
+            // MERGE_REQUEST_ACCEPT本质上是MERGE_REQUEST,仅action不同
+            eventType == CodeEventType.MERGE_REQUEST_ACCEPT && triggerOnEventType == CodeEventType.MERGE_REQUEST ->
+                true
             else ->
-                isAllowedByEventType()
+                eventType == triggerOnEventType
         }
-    }
-
-    private fun isAllowedByEventType(): Boolean {
-        return eventType == triggerOnEventType
-    }
-
-    private fun isAllowedByMrAction(): Boolean {
-        if (triggerOnEventType != CodeEventType.MERGE_REQUEST ||
-            isMrAndMergeAction() ||
-            isMrAcceptNotMergeAction()
-        ) {
-            logger.warn(
-                "$pipelineId|Git mr web hook not match with triggerOnEventType($triggerOnEventType) or action($action)"
-            )
-            return false
-        }
-        return true
-    }
-
-    private fun isMrAndMergeAction(): Boolean {
-        return eventType == CodeEventType.MERGE_REQUEST && action == "merge"
-    }
-
-    private fun isMrAcceptNotMergeAction(): Boolean {
-        return eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
     }
 }

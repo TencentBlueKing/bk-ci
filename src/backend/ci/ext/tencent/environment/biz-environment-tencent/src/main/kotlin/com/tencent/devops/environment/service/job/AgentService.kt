@@ -112,7 +112,6 @@ data class AgentService @Autowired constructor(
 
         private const val DEFAULT_INSTALL_AGENT_JOB_TYPE = "REINSTALL_AGENT"
         private const val DEFAULT_INSTALL_AGENT_AP_ID = 1 // 节点管理预发布/正式环境 apId均固定为1
-        private const val DEFAULT_INSTALL_AGENT_PORT = "36000"
         private const val DEFAULT_IS_MANUAL = false
         private const val DEFAULT_CLOUD_ID = 0
         private const val DEFAULT_PLACE_HOLDER = -1
@@ -199,7 +198,7 @@ data class AgentService @Autowired constructor(
                     password = if (null == it.password && "PASSWORD" == it.authType) {
                         throw ParamBlankException("The password cannot be empty.")
                     } else it.password,
-                    port = DEFAULT_INSTALL_AGENT_PORT,
+                    port = it.port,
                     key = if ("KEY" == it.authType) FileUtils.convertFileContentToString(keyFile) else it.key,
                     isManual = DEFAULT_IS_MANUAL,
                     retention = null,
@@ -427,7 +426,7 @@ data class AgentService @Autowired constructor(
         }
         val queryAgentHostIdList = hostIdToAgentVersionInfoMap?.keys?.filterNotNull()
         queryAgentHostIdList?.map { hostIdToNodeStatus[it] = getNodeStatus(hostIdToAgentVersionInfoMap[it]) }
-        cmdbNodeDao.updateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
+        cmdbNodeDao.batchUpdateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
         return queryAgentTaskStatusRes
     }
 

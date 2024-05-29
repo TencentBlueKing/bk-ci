@@ -98,7 +98,7 @@
                                     />
                                 </div>
                             </div>
-                            <div class="pipeline-item add-item" @click="addPipelineName()" v-if="!hashVal">
+                            <div class="pipeline-item add-item" @click="addPipelineName" v-if="!hashVal">
                                 <i class="plus-icon"></i>
                                 <span>{{ $t('template.addPipelineInstance') }}</span>
                             </div>
@@ -162,16 +162,20 @@
                 <span class="cancel-btn" @click="toInstanceManage()">{{ $t('cancel') }}</span>
             </div>
         </div>
-        <instance-pipeline-name :show-instance-create="showInstanceCreate"
-            @comfire="comfireHandler"
-            @cancel="cancelHandler"></instance-pipeline-name>
-        <instance-message :show-instance-message="showInstanceMessage"
+        <instance-pipeline-name
+            :show-instance-create="showInstanceCreate"
+            @confirm="confirmHandler"
+            @cancel="cancelHandler">
+        </instance-pipeline-name>
+        <instance-message
+            :show-instance-message="showInstanceMessage"
             :success-list="successList"
             :fail-list="failList"
             :fail-message="failMessage"
             @cancel="cancelMessage">
         </instance-message>
-        <bk-dialog v-model="showUpdateDialog"
+        <bk-dialog
+            v-model="showUpdateDialog"
             :close-icon="false"
             header-position="left"
             :title="$t('template.updateDialogTitle')">
@@ -188,16 +192,16 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import innerHeader from '@/components/devops/inner_header'
-    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
-    import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
-    import instanceMessage from '@/components/template/instance-message.vue'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import EnumInput from '@/components/atomFormField/EnumInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import Logo from '@/components/Logo'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import innerHeader from '@/components/devops/inner_header'
+    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import instanceMessage from '@/components/template/instance-message.vue'
+    import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -380,7 +384,7 @@
             handlePipeLineName () {
                 const params = this.$route.params || {}
                 const name = params.pipelineName
-                if (name) this.comfireHandler(name)
+                if (name) this.confirmHandler(name)
             },
 
             handlePipelineParams (data) {
@@ -486,7 +490,7 @@
             handelCancelSave (index) {
                 this.$set(this.pipelineNameList[index], 'isEditing', false)
             },
-            comfireHandler (data) {
+            confirmHandler (data) {
                 const tmpParam = [].concat(this.deepCopy(this.paramList))
                 const pipelineParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) === -1)
                 const versionParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) > -1)
@@ -577,7 +581,6 @@
                                     })
                                     this.toInstanceManage()
                                 } else if (failCount) {
-                                    console.log(res, '11111111')
                                     this.successList = res.successPipelines || []
                                     this.failList = res.failurePipelines || []
                                     this.failMessage = res.failureMessages || []
@@ -608,9 +611,6 @@
 
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
     .create-instance-wrapper {
         flex-direction: column;

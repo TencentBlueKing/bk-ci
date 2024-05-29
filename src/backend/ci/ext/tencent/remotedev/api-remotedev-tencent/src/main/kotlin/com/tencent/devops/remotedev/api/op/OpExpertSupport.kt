@@ -70,4 +70,14 @@ interface OpExpertSupport {
         @QueryParam("id")
         id: Long
     )
+    @Operation(summary = "根据类型和内容删除专家协助配置")
+    @DELETE
+    @Path("/deleteConfigWithData")
+    fun deleteConfigWithData(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "创建数据")
+        data: CreateExpertSupportConfigData
+    )
 }

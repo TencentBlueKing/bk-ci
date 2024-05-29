@@ -9,7 +9,7 @@
     import { FitAddon } from 'xterm-addon-fit'
     import 'xterm/css/xterm.css'
     export default {
-        name: 'Console',
+        name: 'MyTerminal',
         props: {
             consoleType: {
                 type: String,
