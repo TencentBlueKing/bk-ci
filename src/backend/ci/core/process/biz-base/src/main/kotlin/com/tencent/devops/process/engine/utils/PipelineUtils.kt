@@ -101,36 +101,20 @@ object PipelineUtils {
      *  检查stage审核参数是否符合规范
      */
     @Suppress("NestedBlockDepth")
-    fun checkStageReviewParam(reviewParams: List<ManualReviewParam>?) {
+    fun checkStageReviewParam(reviewParams: List<ManualReviewParam>?, checkAllFlag: Boolean? = true) {
         reviewParams?.forEach { param ->
             when (param.valueType) {
                 ManualReviewParamType.MULTIPLE -> {
                     val value = param.value
                     if (value is String && value.isBlank()) {
                         param.value = null
-                    }
-                    if (value is List<*>) {
+                    } else if (value is List<*> && checkAllFlag == true) {
                         value.forEach { checkVariablesLength(param.key, it.toString()) }
                     }
                 }
-
                 else -> {
                     checkVariablesLength(param.key, param.value.toString())
                 }
-            }
-        }
-    }
-
-    fun checkStageBlankManualReviewParam(reviewParams: List<ManualReviewParam>?) {
-        reviewParams?.forEach { param ->
-            when (param.valueType) {
-                ManualReviewParamType.MULTIPLE -> {
-                    val value = param.value
-                    if (value is String && value.isBlank()) {
-                        param.value = null
-                    }
-                }
-                else -> {}
             }
         }
     }
