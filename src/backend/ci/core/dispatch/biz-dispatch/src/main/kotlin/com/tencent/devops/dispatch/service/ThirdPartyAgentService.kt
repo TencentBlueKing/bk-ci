@@ -757,7 +757,7 @@ class ThirdPartyAgentService @Autowired constructor(
             return
         }
 
-        if (agent.ip == newIp) {
+        if (agent.ip == newIp || agent.ip.isIgnoreLocalIp() || newIp.isIgnoreLocalIp()) {
             return
         }
 
@@ -808,5 +808,7 @@ class ThirdPartyAgentService @Autowired constructor(
         private const val QUEUE_RETRY_COUNT = 3
 
         private const val AGENT_REPEATED_INSTALL_ALARM = "environment:thirdparty:goagent:repeatedinstall"
+
+        private fun String.isIgnoreLocalIp() = this.trim() == "127.0.0.1" || this.trim().startsWith("192.168.")
     }
 }
