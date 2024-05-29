@@ -5,7 +5,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 /**
  * open接口返回的构建状态封装
  */
-data class BuildStatusInfo (
+data class BuildStatusInfo(
     val startUser: String,
     val debug: Boolean,
     val status: BuildStatus
