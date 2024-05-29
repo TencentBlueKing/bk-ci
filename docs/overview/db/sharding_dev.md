@@ -15,7 +15,7 @@
 
 #### 二、增加分库分表配置
 
-#####   1、在devops_project数据库的T_DATA_SOURCE表插入分区库的记录，T_TABLE_SHARDING_CONFIG表插入分区表的记录（只分库不分表的情况下可以不用配置），数据库表的结构如下： 
+#####   1、在devops_ci_project数据库的T_DATA_SOURCE表插入分区库的记录，T_TABLE_SHARDING_CONFIG表插入分区表的记录（只分库不分表的情况下可以不用配置），数据库表的结构如下： 
 
 ```
 CREATE TABLE `T_DATA_SOURCE` (
@@ -36,15 +36,15 @@ CREATE TABLE `T_DATA_SOURCE` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='模块数据源配置';
 
 sql示例:
-INSERT INTO devops_project.T_DATA_SOURCE
+INSERT INTO devops_ci_project.T_DATA_SOURCE
 (ID, MODULE_CODE, DATA_SOURCE_NAME, FULL_FLAG, CREATOR, MODIFIER, UPDATE_TIME, CREATE_TIME, CLUSTER_NAME, DS_URL, TAG, `TYPE`)
 VALUES('eae3670d3716427881c93fde46e28532', 'PROCESS', 'ds_0', 0, 'system', 'system', '2022-01-11 15:42:20.280', '2022-01-11 15:42:20.280', 'prod', 'xxxxx', NULL, 'DB');
 
-INSERT INTO devops_project.T_DATA_SOURCE
+INSERT INTO devops_ci_project.T_DATA_SOURCE
 (ID, MODULE_CODE, DATA_SOURCE_NAME, FULL_FLAG, CREATOR, MODIFIER, UPDATE_TIME, CREATE_TIME, CLUSTER_NAME, DS_URL, TAG, `TYPE`)
 VALUES('eae3670d3716427881c93fde46e28533', 'PROCESS', 'ds_1', 0, 'system', 'system', '2022-01-19 11:04:45.529', '2022-01-11 15:42:20.280', 'prod', 'xxxxx', NULL, 'DB');
 
-INSERT INTO devops_project.T_DATA_SOURCE
+INSERT INTO devops_ci_project.T_DATA_SOURCE
 (ID, MODULE_CODE, DATA_SOURCE_NAME, FULL_FLAG, CREATOR, MODIFIER, UPDATE_TIME, CREATE_TIME, CLUSTER_NAME, DS_URL, TAG, `TYPE`)
 VALUES('eae3670d3716427881c93fde46e26537', 'PROCESS', 'archive_ds_0', 0, 'system', 'system', '2024-01-03 18:31:10.459', '2024-01-03 18:31:10.459', 'stream', 'xxxxx', 'archive', 'ARCHIVE_DB');
 
@@ -70,16 +70,22 @@ CREATE TABLE `T_TABLE_SHARDING_CONFIG` (
 ```
 spring:
   datasource:
-    # 数据源配置（勿随便变更配置项的顺序）
+    # 普通库数据源配置（勿随便变更配置项的顺序）
     dataSourceConfigs:
       - index: 0
-        url: jdbc:mysql://xxx01:10000/devops_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+        url: jdbc:mysql://xxx01:10000/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
         username: ENC(xxxxx)
         password: ENC(xxxxx)
       - index: 1
-        url: jdbc:mysql://xxx02:10000/devops_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+        url: jdbc:mysql://xxx02:10000/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
         username: ENC(xxxxx)
         password: ENC(xxxxx)
+    # 归档库数据源配置（勿随便变更配置项的顺序）     
+   archiveDataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://archivexxx01:10000/devops_ci_archive_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+        username: ENC(xxxxx)
+        password: ENC(xxxxx)     
 ```
 
 
@@ -96,7 +102,7 @@ sharding:
   tableShardingStrategy:
     archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveTableShardingAlgorithm" # 归档库分表路由算法实现类
     shardingField: PROJECT_ID # 分表分片键
-  archiveFlag: Y  # 是否使用归档库标识；Y：是，N：否
+  archiveFlag: Y  # 是否使用归档库标识；Y：是，N：否  
   defaultFlag: Y  # 是否使用默认库标识；Y：是，N：否
   routing:
     cacheSize: 100000  # 缓存分片规则最大数量
@@ -132,7 +138,7 @@ spring:
 
 ##### 5、分布式ID配置
 
-   蓝盾数据库表的ID分为UUID(**全局唯一**)和数据库自增长主键ID(**非全局唯一**)，我们为数据库自增长主键ID的表开发了基于号段模式实现的分布式ID方案 ，该方案需在devops_project数据库的T_LEAF_ALLOC表插入业务ID生成方案配置的记录  ，数据库表的结构如下： 
+   蓝盾数据库表的ID分为UUID(**全局唯一**)和数据库自增长主键ID(**非全局唯一**)，我们为数据库自增长主键ID的表开发了基于号段模式实现的分布式ID方案 ，该方案需在devops_ci_project数据库的T_LEAF_ALLOC表插入业务ID生成方案配置的记录  ，数据库表的结构如下： 
 
 ```
 CREATE TABLE `T_LEAF_ALLOC` (
@@ -226,7 +232,9 @@ client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAM
 
 ##### 1、为新增的db配置指定tag
 
-示例：INSERT INTO devops_project.T_DATA_SOURCE
+示例：
+
+INSERT INTO devops_ci_project.T_DATA_SOURCE
 (ID, MODULE_CODE, DATA_SOURCE_NAME, FULL_FLAG, CREATOR, MODIFIER, UPDATE_TIME, CREATE_TIME, CLUSTER_NAME, DS_URL, TAG, `TYPE`)
 VALUES('eae3670d3716427881c93fde46e28501', 'PROCESS', 'ds_3', 0, 'system', 'system', '2023-08-29 15:44:40.694', '2023-08-29 15:44:40.694', 'prod', 'xxx', '**tagxxx**', 'DB');
 
@@ -258,4 +266,12 @@ curl -X PUT "http://xxx/api/op/process/db/projects/{projectId}/data/migrate?canc
 ```
 curl -X PUT "http://xxx/api/op/projects/{projectId}/pipeline/build/unlock" -H "accept: application/json" -H "X-DEVOPS-UID: xxx"
 ```
+
+
+
+##### 3、把新增的db配置的tag置为null
+
+把新增的db配置的tag置为null后，则说明新增db已经正式加入默认集群，为新项目创建分片路由规则时也可能会将新增的db分配给该项目使用。
+
+UPDATE devops_ci_project.T_DATA_SOURCE  SET  TAG = **null** WHERE ID = 'xxxxxx';
 
