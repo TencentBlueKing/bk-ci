@@ -94,21 +94,6 @@ interface ApigwRemoteDevResource {
         projectId: String?
     ): Result<List<RemotedevProject>>
 
-    @Operation(summary = "获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm"])
-    @GET
-    @Path("/project/cvm")
-    fun queryProjectRemoteDevCvm(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam("project_id")
-        projectId: String?
-    ): Result<List<RemotedevCvmData>>
-
     @Operation(summary = "提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
     @GET
     @Path("/check/cgs/permission")
@@ -354,7 +339,7 @@ interface ApigwRemoteDevResource {
         available: Boolean?
     ): Result<QuotaInApiRes>
 
-    @Operation(summary = "获取指定云研发项目的CVM信息列表", tags = ["v4_app_remotedev_cvm_list"])
+    @Operation(summary = "获取指定云研发项目的CVM信息列表", tags = ["v4_app_remotedev_cvm"])
     @GET
     @Path("/{projectId}/devcloud/cvmList")
     fun fetchCvmList(

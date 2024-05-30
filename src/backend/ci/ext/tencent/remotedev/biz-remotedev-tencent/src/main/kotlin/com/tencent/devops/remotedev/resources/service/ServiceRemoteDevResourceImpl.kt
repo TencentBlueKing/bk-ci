@@ -22,7 +22,6 @@ import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
@@ -124,10 +123,6 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
         return Result(workspaceService.getWorkspaceProject(projectId))
-    }
-
-    override fun queryProjectRemoteDevCvm(projectId: String?): Result<List<RemotedevCvmData>> {
-        return Result(workspaceService.getRemotedevCvm(projectId))
     }
 
     override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {

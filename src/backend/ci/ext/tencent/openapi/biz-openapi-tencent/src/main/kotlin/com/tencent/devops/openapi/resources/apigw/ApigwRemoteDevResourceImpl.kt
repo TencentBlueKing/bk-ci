@@ -70,15 +70,6 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).getRemotedevProjects(projectId)
     }
 
-    override fun queryProjectRemoteDevCvm(
-        appCode: String?,
-        apigwType: String?,
-        projectId: String?
-    ): Result<List<RemotedevCvmData>> {
-        logger.info("Get  project cvm")
-        return client.get(ServiceRemoteDevResource::class).queryProjectRemoteDevCvm(projectId)
-    }
-
     override fun checkUserCgsPermission(
         appCode: String?,
         apigwType: String?,

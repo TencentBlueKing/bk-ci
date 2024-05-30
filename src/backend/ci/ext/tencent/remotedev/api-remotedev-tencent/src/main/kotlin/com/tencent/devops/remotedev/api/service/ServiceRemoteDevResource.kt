@@ -10,7 +10,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
@@ -86,15 +85,6 @@ interface ServiceRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
-
-    @Operation(summary = "获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
-    @GET
-    @Path("/project/cvm")
-    fun queryProjectRemoteDevCvm(
-        @Parameter(description = "project_id", required = false)
-        @QueryParam("project_id")
-        projectId: String?
-    ): Result<List<RemotedevCvmData>>
 
     @Operation(summary = "校验是否是当前项目下的云桌面")
     @GET
