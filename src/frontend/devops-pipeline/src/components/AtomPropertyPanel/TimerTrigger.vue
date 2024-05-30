@@ -62,8 +62,9 @@
                         </request-selector>
                         <vuex-input
                             v-else
-                            disabled
-                            placeholder="将自动监听所属PAC代码库，无需设置"
+                            :disabled="repositoryType === 'SELF'"
+                            :key="repositoryType"
+                            :placeholder="repositoryType === 'SELF' ? '将自动监听所属PAC代码库，无需设置' : '请输入代码库别名'"
                             class="input-selector"
                         >
                         </vuex-input>
@@ -134,13 +135,15 @@
                 return [
                     {
                         value: 'ID',
-                        label: '选择代码库',
-                        key: 'repositoryHashId'
+                        label: '选择代码库'
+                    },
+                    {
+                        value: 'NAME',
+                        label: '输入别名'
                     },
                     {
                         value: 'SELF',
-                        label: '监听PAC',
-                        key: ''
+                        label: '监听PAC'
                     }
                 ]
             }
