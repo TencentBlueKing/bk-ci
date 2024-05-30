@@ -61,10 +61,19 @@ func createService(c *gin.Context) {
 		return
 	}
 
-	err := kubeclient.CreateService(service)
-	if err != nil {
-		fail(c, http.StatusInternalServerError, err)
-		return
+	serviceInfo, _ := kubeclient.GetService(service.Name)
+	if serviceInfo != nil {
+		err := kubeclient.UpdateService(service)
+		if err != nil {
+			fail(c, http.StatusInternalServerError, err)
+			return
+		}
+	} else {
+		err := kubeclient.CreateService(service)
+		if err != nil {
+			fail(c, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	ok(c, "")

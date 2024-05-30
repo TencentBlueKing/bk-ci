@@ -20,6 +20,19 @@ func CreateService(service *corev1.Service) error {
 	return nil
 }
 
+func UpdateService(service *corev1.Service) error {
+	_, err := kubeClient.CoreV1().Services(config.Config.Kubernetes.NameSpace).Update(
+		context.TODO(),
+		service,
+		metav1.UpdateOptions{},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func DeleteService(serviceName string) error {
 	return kubeClient.CoreV1().Services(config.Config.Kubernetes.NameSpace).Delete(
 		context.TODO(),

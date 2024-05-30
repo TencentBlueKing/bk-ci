@@ -61,10 +61,19 @@ func createIngress(c *gin.Context) {
 		return
 	}
 
-	err := kubeclient.CreateIngress(ingress)
-	if err != nil {
-		fail(c, http.StatusInternalServerError, err)
-		return
+	ingressInfo, _ := kubeclient.GetIngress(ingress.Name)
+	if ingressInfo != nil {
+		err := kubeclient.UpdateIngress(ingress)
+		if err != nil {
+			fail(c, http.StatusInternalServerError, err)
+			return
+		}
+	} else {
+		err := kubeclient.CreateIngress(ingress)
+		if err != nil {
+			fail(c, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	ok(c, "")
