@@ -35,12 +35,12 @@ data class DesktopTokenSignBody(
     val fingerprint: String,
     @get:Schema(title = "原始文件名")
     val fileName: String,
+    @get:Schema(title = "文件版本")
+    val fileVersion: String,
     @get:Schema(title = "修改日期")
     val fileUpdateTime: String,
     @get:Schema(title = "产品名称")
     val productName: String,
-    @get:Schema(title = "产品版本")
-    val productVersion: String,
     @get:Schema(title = "产品名称")
     val timestamp: Long,
     @get:Schema(title = "公钥")
