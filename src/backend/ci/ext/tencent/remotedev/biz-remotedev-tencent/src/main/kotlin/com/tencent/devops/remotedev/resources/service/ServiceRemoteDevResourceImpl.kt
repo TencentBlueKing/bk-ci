@@ -16,10 +16,12 @@ import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -37,6 +39,11 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -62,7 +69,12 @@ class ServiceRemoteDevResourceImpl(
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val rebuildWorkspaceHandler: RebuildWorkspaceHandler,
+    private val startWorkspaceHandler: StartWorkspaceHandler,
+    private val stopWorkspaceHandler: StopWorkspaceHandler,
+    private val restartWorkspaceHandler: RestartWorkspaceHandler,
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -430,5 +442,46 @@ class ServiceRemoteDevResourceImpl(
                 quotas = res.quotas?.mapValues { it.value - (mix?.get(it.key) ?: 0) }
             )
         )
+    }
+
+    override fun reBuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean> {
+        rebuildWorkspaceHandler.rebuildWorkspace(
+            userId = userId,
+            workspaceName = workspaceName,
+            rebuildReq = rebuildReq
+        )
+        return Result(true)
+    }
+
+    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        startWorkspaceHandler.startWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun restartWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun makeImageByVm(
+        userId: String,
+        workspaceName: String,
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean> {
+        makeWorkspaceImageHandler.makeWorkspaceImage(
+            userId = userId,
+            workspaceName = workspaceName,
+            makeImageReq = makeImageReq
+        )
+        return Result(true)
     }
 }

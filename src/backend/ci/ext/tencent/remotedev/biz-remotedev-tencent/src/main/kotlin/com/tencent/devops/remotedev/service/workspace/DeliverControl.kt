@@ -55,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -74,6 +75,7 @@ class DeliverControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
+    private val permissionService: PermissionService,
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
@@ -148,16 +150,16 @@ class DeliverControl @Autowired constructor(
     )
     fun assignUser2Workspace(
         userId: String,
-        projectId: String,
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ) {
-        logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
+        logger.info("assignUser2Workspace|$userId|$workspaceName|$assigns")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        permissionService.checkUserManager(userId, workspace.projectId)
         val assign2Owner = assigns.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
@@ -178,7 +180,7 @@ class DeliverControl @Autowired constructor(
                 workspaceCommon.updateHostMonitor(
                     workspaceName = workspaceName,
                     props = workspaceCommon.genWorkspaceCCInfo(
-                        projectId,
+                        workspace.projectId,
                         workspace.displayName.ifBlank { workspaceName },
                         assign2Owner.userId
                     ),
@@ -219,7 +221,7 @@ class DeliverControl @Autowired constructor(
                     workspaceCommon.updateHostMonitor(
                         workspaceName = workspaceName,
                         props = workspaceCommon.genWorkspaceCCInfo(
-                            projectId,
+                            workspace.projectId,
                             workspace.displayName.ifBlank { workspaceName },
                             assign2Owner.userId
                         ),
@@ -254,7 +256,7 @@ class DeliverControl @Autowired constructor(
         }
 
         // 同步tgit proxy
-        gitProxyTGitService.refreshProjectTGitSpecUser(projectId)
+        gitProxyTGitService.refreshProjectTGitSpecUser(workspace.projectId)
     }
 
     fun softwareInstallationCompleteCallback(

@@ -9,8 +9,10 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -243,5 +245,38 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             count = count,
             available = available
         )
+    }
+
+    override fun reBuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean> {
+        logger.info("reBuildWorkspace $userId|$userId|$workspaceName|$rebuildReq")
+        return client.get(ServiceRemoteDevResource::class).reBuildWorkspace(userId, workspaceName, rebuildReq)
+    }
+
+    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("startWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).startWorkspace(userId, workspaceName)
+    }
+
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("stopWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).stopWorkspace(userId, workspaceName)
+    }
+
+    override fun restartWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("restartWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).restartWorkspace(userId, workspaceName)
+    }
+
+    override fun makeImageByVm(
+        userId: String,
+        workspaceName: String,
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean> {
+        logger.info("makeImageByVm $userId|$workspaceName|$makeImageReq")
+        return client.get(ServiceRemoteDevResource::class).makeImageByVm(userId, workspaceName, makeImageReq)
     }
 }
