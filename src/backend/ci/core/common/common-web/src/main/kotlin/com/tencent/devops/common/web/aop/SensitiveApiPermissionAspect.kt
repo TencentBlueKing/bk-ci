@@ -112,13 +112,12 @@ class SensitiveApiPermissionAspect constructor(
             }
             storeCode = atomCode
             if (apiName != null && storeCode != null) {
-                verifyFlag = !verifyToken(request, signToken) &&
-                    !verifyApi("ATOM", storeCode, apiName)
+                verifyFlag = verifyToken(request, signToken) && verifyApi("ATOM", storeCode, apiName)
             }
         }
 
         logger.info("$storeCode|$apiName|using sensitive api")
-        if (enableSensitiveApi && verifyFlag) {
+        if (enableSensitiveApi && !verifyFlag) {
             logger.warn("$storeCode|$apiName|verify sensitive api failed")
             throw ErrorCodeException(
                 statusCode = 401,
