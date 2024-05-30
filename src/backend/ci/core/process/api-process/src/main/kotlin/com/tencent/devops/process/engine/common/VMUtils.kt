@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.engine.common
 
+import kotlin.random.Random
+
 /**
  *
  * @version 1.0
@@ -59,6 +61,16 @@ object VMUtils {
     fun getWaitLabel() = "Wait_Finish_Job#"
 
     fun getEndLabel() = "end-"
+
+    fun getContainerJobId(containerId: Int): String {
+        val random = Random(containerId)
+        val sequence = StringBuilder()
+        for (i in 0 until 3) {
+            val randomChar = ('A'..'z').random(random)
+            sequence.append(randomChar)
+        }
+        return "job_$sequence"
+    }
 
     fun isVMTask(taskId: String) = taskId.startsWith(getStartVmLabel()) ||
         taskId.startsWith(getStopVmLabel()) ||
