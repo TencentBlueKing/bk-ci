@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.resources.service
 
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -26,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
@@ -36,6 +38,7 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -62,7 +65,8 @@ class ServiceRemoteDevResourceImpl(
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val devcloudService: DevcloudService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -228,11 +232,11 @@ class ServiceRemoteDevResourceImpl(
             }
             AsyncExecute.dispatch(
                 rabbitTemplate, AsyncPipelineEvent(
-                    userId = info.userId ?: operator,
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
+                userId = info.userId ?: operator,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam
+            )
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)
@@ -430,5 +434,14 @@ class ServiceRemoteDevResourceImpl(
                 quotas = res.quotas?.mapValues { it.value - (mix?.get(it.key) ?: 0) }
             )
         )
+    }
+
+    override fun fetchCvmList(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<DevcloudCVMData>?> {
+        return Result(devcloudService.fetchCVMList(userId, projectId, page, pageSize))
     }
 }
