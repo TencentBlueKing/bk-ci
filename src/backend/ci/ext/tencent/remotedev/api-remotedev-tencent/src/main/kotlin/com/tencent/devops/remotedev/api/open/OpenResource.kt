@@ -29,22 +29,17 @@ package com.tencent.devops.remotedev.api.open
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkApiPermission
-import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.remotedev.pojo.UserOnePassword
-import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Tag(name = "OPEN_REMOTE_DEV", description = "Open-remoteDev")
 @Path("/open/")
@@ -54,7 +49,6 @@ interface OpenResource {
     @Operation(summary = "校验token")
     @GET
     @Path("/desktop_token_check")
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     fun desktopTokenCheck(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
