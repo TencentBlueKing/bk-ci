@@ -112,7 +112,7 @@ class SensitiveApiPermissionAspect constructor(
             }
             storeCode = atomCode
             if (apiName != null && storeCode != null) {
-                verifyFlag = verifyToken(request, signToken) && verifyApi("ATOM", storeCode, apiName)
+                verifyFlag = verifyToken(request, signToken) || verifyApi("ATOM", storeCode, apiName)
             }
         }
 
