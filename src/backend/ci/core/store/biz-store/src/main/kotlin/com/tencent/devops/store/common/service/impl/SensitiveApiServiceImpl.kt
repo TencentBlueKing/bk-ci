@@ -253,20 +253,29 @@ class SensitiveApiServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 version = version,
                 storeType = storeType
-            ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            ) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$storeType:$storeCode:$version")
+            )
             val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
                 dslContext = dslContext,
                 storeId = storeId,
                 osName = osName,
                 osArch = osArch
-            )?.get(0) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            )?.getOrNull(0) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$osName:$osArch")
+            )
             val dbInstalledPkgShaContent = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
                 envId = baseEnvRecord.id,
                 fieldName = KEY_INSTALLED_PKG_SHA_CONTENT
-            )?.get(0)?.fieldValue ?: baseEnvRecord.shaContent
-            if (installedPkgShaContent != dbInstalledPkgShaContent) {
-                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            )?.getOrNull(0)?.fieldValue ?: baseEnvRecord.shaContent
+            if (installedPkgShaContent.lowercase() != dbInstalledPkgShaContent) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                    params = arrayOf(AUTH_HEADER_DEVOPS_SHA_CONTENT, "wrong sha1 content")
+                )
             }
         }
         // 判断组件是否有使用该API接口的权限
