@@ -4,6 +4,7 @@
   "private": true,
   "description": "",
   "dependencies": {
+    "@babel/runtime": "^7.15.4",
     "@blueking/bkcharts": "^2.0.10",
     "clipboard": "^2.0.4",
     "codemirror": "5.61.0",

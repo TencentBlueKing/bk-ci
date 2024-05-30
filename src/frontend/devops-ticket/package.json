@@ -4,6 +4,7 @@
   "description": "",
   "private": true,
   "dependencies": {
+    "@babel/runtime": "^7.15.4",
     "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vuex-class": "^0.3.0"

@@ -4,8 +4,12 @@
   "description": "",
   "private": true,
   "dependencies": {
+    "@babel/runtime": "^7.15.4",
+    "@blueking/search-select": "0.0.1-beta.2",
+    "ace-builds": "^1.4.12",
     "clipboard": "^1.7.1",
     "echarts": "^5.3.2",
+    "lodash": "^4.17.21",
     "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",

@@ -1,5 +1,5 @@
 import { showLoginPopup } from '@/utils/util'
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import Vue from 'vue'
 
 const request = axios.create({
@@ -14,7 +14,7 @@ const request = axios.create({
     withCredentials: true,
     xsrfCookieName: 'backend_csrftoken', // 注入csrfToken
     xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
-})
+} as AxiosRequestConfig)
 
 function errorHandler (error: AxiosError) {
     if (typeof error.response.data === 'undefined') {

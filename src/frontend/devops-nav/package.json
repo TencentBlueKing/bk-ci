@@ -66,6 +66,7 @@
     "webpack": "^5.76.1"
   },
   "dependencies": {
+    "@babel/runtime": "^7.15.4",
     "@blueking/login-modal": "1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "axios": "0.28.0",
@@ -73,6 +74,9 @@
     "bk-permission": "^0.0.28",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
+    "sockjs-client": "1.3.0",
+    "stompjs": "2.3.3",
+    "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.18.1",

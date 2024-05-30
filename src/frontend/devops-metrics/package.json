@@ -21,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@babel/runtime": "^7.15.4",
     "@blueking/bkcharts": "3.7.0-beta.2",
     "bkui-vue": "0.0.1-beta.416",
     "dayjs": "^1.11.2",

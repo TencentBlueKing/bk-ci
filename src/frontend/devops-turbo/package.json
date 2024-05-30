@@ -51,6 +51,7 @@
     "public:external": "cross-env NODE_ENV=external webpack --mode production"
   },
   "dependencies": {
+    "@babel/runtime": "^7.15.4",
     "@blueking/bkcharts": "^2.0.10",
     "vue": "~2.7.16"
   }
