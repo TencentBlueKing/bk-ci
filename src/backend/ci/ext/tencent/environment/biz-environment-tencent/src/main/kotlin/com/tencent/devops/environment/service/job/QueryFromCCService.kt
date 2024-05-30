@@ -31,18 +31,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.constant.Constants.FIELD_BAK_OPERATOR
-import com.tencent.devops.environment.constant.Constants.FIELD_BK_CLOUD_ID
-import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_ID
-import com.tencent.devops.environment.constant.Constants.FIELD_BK_HOST_INNERIP
-import com.tencent.devops.environment.constant.Constants.FIELD_OPERATOR
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER
-import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
-import com.tencent.devops.environment.constant.T_NODE_HOST_ID
-import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.pojo.job.ccreq.CCAddHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCDeleteHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCFindHostBizRelationsReq
@@ -58,7 +48,6 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.jooq.Record5
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -103,41 +92,6 @@ class QueryFromCCService {
         const val DEFAULT_PAGE_START = 0
         const val AND_CONDITATION = "AND"
         const val IN_OPERATION = "in"
-    }
-
-    /**
-     *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
-     *  core中实现：从CC中 用对应T_NODE表中记录的host_id查询机器的主备负责人
-     */
-    fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record5<Long, String, Long, Long, String>>) {
-        val nodeIpList: List<String> = nodeRecords.mapNotNull { it[T_NODE_NODE_IP] as? String } // 所有host对应的ip
-        val nodeIpToNodeMap = nodeRecords.associateBy { it[T_NODE_NODE_IP] as? String } // 所有host的：ip - 记录 映射
-        val nodeHostIdList: List<Long> = nodeRecords.mapNotNull { it[T_NODE_HOST_ID] as? Long } // 所有host对应的id
-
-        val ccResp = queryCCListHostWithoutBizByInRules(
-            listOf(FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_HOST_INNERIP, FIELD_OPERATOR, FIELD_BAK_OPERATOR),
-            nodeHostIdList, FIELD_BK_HOST_ID
-        )
-        if (null != ccResp.data) {
-            val ccData = ccResp.data.info
-            val ccIpToNodeMap = ccData.associateBy { it.bkHostInnerip }
-            val invalidIpList = nodeIpList.filter {
-                val isOperator = userId == ccIpToNodeMap[it]?.operator ||
-                    nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == ccIpToNodeMap[it]?.operator
-                val isBakOpertor = ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(userId)!! ||
-                    ccIpToNodeMap[it]?.bkBakOperator?.split(",")
-                        ?.contains(nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String)!!
-                !isOperator && !isBakOpertor
-            }
-
-            if (invalidIpList.isNotEmpty()) {
-                logger.warn("[isOperatorOrBakOperator] invalidIpList: ${invalidIpList.joinToString()}")
-                throw ErrorCodeException(
-                    errorCode = ERROR_NODE_IP_ILLEGAL_USER,
-                    params = arrayOf(invalidIpList.joinToString(","), userId)
-                )
-            }
-        }
     }
 
     fun <T> queryCCListHostWithoutBizByInRules(

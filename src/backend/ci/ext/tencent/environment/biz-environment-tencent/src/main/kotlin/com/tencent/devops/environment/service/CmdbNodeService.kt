@@ -56,6 +56,7 @@ import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
+import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.model.CreateNodeModel
@@ -152,50 +153,51 @@ class CmdbNodeService @Autowired constructor(
                     bakOperator = it.bakOperator,
                     ip = it.ip,
                     displayIp = it.displayIp,
-                    osName = it.osName
+                    osName = it.osName,
+                    serverId = it.serverId
                 )
             }
         )
         // 判断cmdbNodePage中的nodes，是否在蓝盾db中
-        val cmdbIpList = cmdbNodePage.nodes.map { it.ip }
-        val cmdbNodeRecord = cmdbNodeDao.getCmdbNodesByIpAndProjectId(
-            dslContext, projectId, cmdbIpList
+        val cmdbServerIdList = cmdbNodePage.nodes.map { it.serverId }
+        val cmdbNodeRecord = cmdbNodeDao.getCmdbNodesByServerIdAndProjectId(
+            dslContext, projectId, cmdbServerIdList
         )
-        val ipToCmdbNodeRecordMap = cmdbNodeRecord.associateBy { it[T_NODE_NODE_IP] as String }
+        val serverIdToCmdbNodeRecordMap = cmdbNodeRecord.associateBy { it[T_NODE_SERVER_ID] as Long }
         // 1. 在 - 读取节点状态，且importStatus置为true
-        val mutableCmdbIpList = cmdbIpList.toMutableList()
-        pageFromCmdb.records.filter { it.ip in ipToCmdbNodeRecordMap.keys }.map {
-            it.nodeStatus = ipToCmdbNodeRecordMap[it.ip]?.get(T_NODE_NODE_STATUS) as String
+        val mutableCmdbServerIdList = cmdbServerIdList.toMutableList()
+        pageFromCmdb.records.filter { it.serverId in serverIdToCmdbNodeRecordMap.keys }.map {
+            it.nodeStatus = serverIdToCmdbNodeRecordMap[it.serverId]?.get(T_NODE_NODE_STATUS) as String
             it.importStatus = true
-            mutableCmdbIpList.remove(it.ip)
+            mutableCmdbServerIdList.remove(it.serverId)
         }
         // 2. 不在 - 重新查询节点状态：在不在CC（得到host_id）-> nodeman中查是否已经安装 -> job中查agent状态+版本号
-        val nodeCCInfoList = if (mutableCmdbIpList.isNotEmpty()) {
+        val nodeCCInfoList = if (mutableCmdbServerIdList.isNotEmpty()) {
             queryFromCCService.queryCCListHostWithoutBizByInRules(
-                listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP),
-                mutableCmdbIpList,
-                FIELD_BK_HOST_INNERIP
+                listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID),
+                mutableCmdbServerIdList,
+                FIELD_BK_SVR_ID
             ).data?.info
         } else null
         // 2.1 在cc
-        val ipToAgentVersionInfoMap = if (!nodeCCInfoList.isNullOrEmpty()) {
+        val serverIdToAgentVersionInfoMap = if (!nodeCCInfoList.isNullOrEmpty()) {
             nodeCCInfoList.map {
-                mutableCmdbIpList.remove(it.bkHostInnerip)
+                mutableCmdbServerIdList.remove(it.svrId)
             }
             queryAgentStatusService.getAgentVersions(
                 nodeCCInfoList.map {
                     AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
                 }
-            )?.associateBy { it.ip }
+            )?.associateBy { it.serverId }
         } else null
-        if (!ipToAgentVersionInfoMap.isNullOrEmpty()) {
-            pageFromCmdb.records.filterNot { it.ip in ipToCmdbNodeRecordMap.keys }.map {
-                it.nodeStatus = getNodeStatus(ipToAgentVersionInfoMap[it.ip])
+        if (!serverIdToAgentVersionInfoMap.isNullOrEmpty()) {
+            pageFromCmdb.records.filterNot { it.serverId in serverIdToCmdbNodeRecordMap.keys }.map {
+                it.nodeStatus = getNodeStatus(serverIdToAgentVersionInfoMap[it.serverId])
             }
         }
         // 2.2 不在cc
-        if (mutableCmdbIpList.isNotEmpty()) {
-            pageFromCmdb.records.filter { it.ip in mutableCmdbIpList }.map {
+        if (mutableCmdbServerIdList.isNotEmpty()) {
+            pageFromCmdb.records.filter { it.serverId in mutableCmdbServerIdList }.map {
                 it.nodeStatus = NodeStatus.NOT_IN_CC.name
             }
         }
@@ -470,7 +472,7 @@ class CmdbNodeService @Autowired constructor(
      * 2.1 单ip/多ip，不在cc，不能导入CC - ieg的机器，需要用户手动处理，调用侧导入蓝盾并更新节点状态为NOT_IN_CC
      * 2.2 多ip，不在cc，不能导入CC - 有ip已经在CC中，本次导入去掉这个ip不导入，调用侧导入蓝盾并更新节点状态为NOT_IN_CC
      * 3. 单ip/多ip，不在cc，可以导入CC - 导入，查CCInfo更新信息
-     * 返回值：无论在不在CC中的节点信息 CCInfo
+     * @return 无论在不在CC中的节点信息 CCInfo
      */
     private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
         // 通过节点svrId查询：节点是否在CC中

@@ -423,19 +423,20 @@ class CmdbNodeDao {
 
     // -------------------------------get node record(s)-------------------------------
 
-    fun getCmdbNodesByIpAndProjectId(
+    fun getCmdbNodesByServerIdAndProjectId(
         dslContext: DSLContext,
         projectId: String,
-        nodeIpList: List<String>
-    ): Result<Record3<Long, String, String>> {
+        nodeServerIdList: List<Long>
+    ): Result<Record4<Long, String, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_IP.`as`(T_NODE_NODE_IP),
-                NODE_STATUS.`as`(T_NODE_NODE_STATUS)
+                NODE_STATUS.`as`(T_NODE_NODE_STATUS),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(NODE_IP.`in`(nodeIpList))
+                .and(SERVER_ID.`in`(nodeServerIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }
