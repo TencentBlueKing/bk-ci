@@ -202,7 +202,8 @@ class BuildRecordContainerDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int
+        executeCount: Int,
+        stageId: String? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = BUILD_ID.eq(buildId)
@@ -210,6 +211,7 @@ class BuildRecordContainerDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(EXECUTE_COUNT.lessOrEqual(executeCount))
                 .and(MATRIX_GROUP_ID.isNull)
+                .let { if (stageId != null) it.and(STAGE_ID.eq(stageId)) else it }
             // 获取每个最大执行次数
             val max = DSL.select(
                 CONTAINER_ID.`as`(KEY_CONTAINER_ID),

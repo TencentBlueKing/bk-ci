@@ -30,26 +30,55 @@
                 <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
-                <form-field class="cron-build-tab" :required="false" :label="$t('editPage.codelib')">
-                    <request-selector
-                        v-bind="codelibOption"
-                        :popover-min-width="250"
-                        :disabled="disabled"
-                        :url="getCodeUrl"
-                        name="repoHashId"
-                        :value="element['repoHashId']"
-                        :handle-change="handleUpdateElement"
-                    >
-                    </request-selector>
+                <form-field class="cron-build-tab" :desc="$t('editPage.timerTriggerCodelibTips')" :required="false" :label="$t('editPage.codelib')">
+                    <div class="conditional-input-selector">
+                        <bk-select
+                            v-model="repositoryType"
+                            ext-cls="group-box"
+                            :clearable="false"
+                            :disabled="disabled"
+                            @change="(val) => handleUpdateElement('repositoryType', val)"
+                        >
+                            <bk-option
+                                v-for="item in codelibConfigList"
+                                :key="item.value"
+                                :id="item.value"
+                                :name="item.label"
+                            >
+                                <slot name="option-item" v-bind="item"></slot>
+                            </bk-option>
+                        </bk-select>
+                        <request-selector
+                            v-if="repositoryType === 'ID'"
+                            class="input-selector"
+                            v-bind="codelibOption"
+                            :popover-min-width="250"
+                            :disabled="disabled"
+                            :url="getCodeUrl"
+                            name="repoHashId"
+                            :value="element['repoHashId']"
+                            :handle-change="handleUpdateElement"
+                        >
+                        </request-selector>
+                        <vuex-input
+                            v-else
+                            disabled
+                            placeholder="将自动监听所属PAC代码库，无需设置"
+                            class="input-selector"
+                        >
+
+                        </vuex-input>
+                    </div>
                 </form-field>
     
-                <form-field class="cron-build-tab" :label="$t('editPage.branches')">
+                <form-field v-if="repositoryType === 'ID'" class="cron-build-tab" :label="$t('editPage.branches')">
                     <BranchParameterArray
                         name="branches"
                         :disabled="disabled"
                         :repo-hash-id="element['repoHashId']"
                         :value="element['branches']"
                         :handle-change="handleUpdateElement"
+                        :key="element['repoHashId']"
                     >
                     </BranchParameterArray>
                 </form-field>
@@ -79,7 +108,8 @@
                 isShowBasicRule: this.notEmptyArray('newExpression'),
                 advance: this.notEmptyArray('advanceExpression'),
                 isShowCodelibConfig: this.element.repoHashId || this.element.noScm,
-                advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || ''
+                advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
+                repositoryType: 'ID'
             }
         },
         computed: {
@@ -92,6 +122,27 @@
                     paramName: 'aliasName',
                     searchable: true
                 }
+            },
+            curComponent () {
+                return this.codelibConfigList.find(i => i.value === this.repositoryType) || {
+                    type: 'request-selector',
+                    key: 'repositoryHashId',
+                    required: false
+                }
+            },
+            codelibConfigList () {
+                return [
+                    {
+                        value: 'ID',
+                        label: '选择代码库',
+                        key: 'repositoryHashId'
+                    },
+                    {
+                        value: 'SELF',
+                        label: '监听PAC',
+                        key: ''
+                    }
+                ]
             }
         },
         watch: {

@@ -594,13 +594,14 @@
                         icon: !output.folder ? extForFile(res.name) : 'folder',
                         include: this.getInclude(output)
                     }
-                    this.isLoading = false
                 } catch (err) {
                     this.handleError(err, {
                         projectId,
                         resourceCode: pipelineId,
                         action: this.$permissionResourceAction.EXECUTE
                     })
+                } finally {
+                    this.isLoading = false
                 }
             },
             getFolderSize (payload) {

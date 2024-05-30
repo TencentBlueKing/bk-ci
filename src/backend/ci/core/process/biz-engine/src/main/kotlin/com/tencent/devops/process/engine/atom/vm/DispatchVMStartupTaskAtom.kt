@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -111,10 +112,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         // 解决BUG:93319235,env变量提前替换
         val context = pipelineContextService.getAllBuildContext(runVariables)
-        val buildEnv = param.customBuildEnv?.map { mit ->
-            mit.key to EnvUtils.parseEnv(mit.value, context)
-        }?.toMap()
-        val fixParam = param.copy(customBuildEnv = buildEnv)
+        val buildEnv = param.customEnv?.map { mit ->
+            NameAndValue(mit.key, EnvUtils.parseEnv(mit.value, context))
+        }
+        val fixParam = param.copy(customEnv = buildEnv)
 
         try {
             atomResponse = if (!checkBeforeStart(task, param, context)) {
@@ -247,7 +248,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
 
         val dispatchType = dispatchTypeBuilder.getDispatchType(task, param)
-
+        val customBuildEnv = mutableMapOf<String, String>()
+        param.customEnv?.forEach {
+            if (!it.key.isNullOrBlank()) customBuildEnv[it.key!!] = it.value ?: ""
+        }
         pipelineEventDispatcher.dispatch(
             PipelineAgentStartupEvent(
                 source = "vmStartupTaskAtom",
@@ -269,7 +273,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
-                customBuildEnv = param.customBuildEnv,
+                customBuildEnv = customBuildEnv,
                 jobId = container.jobId,
                 ignoreEnvAgentIds = ignoreEnvAgentIds
             )

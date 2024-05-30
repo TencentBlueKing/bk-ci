@@ -545,7 +545,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val defaultFlag = atom.defaultFlag
             // 非默认类插件需要校验是否有插件的查看权限
             if (null != defaultFlag && !defaultFlag) {
-                val count = storeProjectRelDao.countInstalledProject(
+                val count = storeProjectRelDao.countStoreProject(
                     dslContext = dslContext,
                     projectCode = projectCode,
                     storeCode = atomCode,

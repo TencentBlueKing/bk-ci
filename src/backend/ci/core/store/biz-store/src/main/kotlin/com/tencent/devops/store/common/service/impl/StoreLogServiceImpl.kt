@@ -32,11 +32,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreLogService
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -51,7 +52,8 @@ class StoreLogServiceImpl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val storePipelineRelDao: StorePipelineRelDao,
-    private val storeMemberDao: StoreMemberDao
+    private val storeMemberDao: StoreMemberDao,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : StoreLogService {
 
     override fun getInitLogs(
@@ -70,7 +72,7 @@ class StoreLogServiceImpl @Autowired constructor(
         }
         val queryLogsResult = client.get(ServiceLogResource::class)
             .getInitLogs(
-                userId = userId,
+                userId = getQueryUserId(projectCode, userId),
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -104,7 +106,7 @@ class StoreLogServiceImpl @Autowired constructor(
         }
         val queryLogsResult = client.get(ServiceLogResource::class)
             .getAfterLogs(
-                userId = userId,
+                userId = getQueryUserId(projectCode, userId),
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -142,7 +144,7 @@ class StoreLogServiceImpl @Autowired constructor(
         }
         val queryLogsResult = client.get(ServiceLogResource::class)
             .getMoreLogs(
-                userId = userId,
+                userId = getQueryUserId(projectCode, userId),
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -189,5 +191,14 @@ class StoreLogServiceImpl @Autowired constructor(
             )
         }
         return Result(true)
+    }
+
+    private fun getQueryUserId(projectCode: String, userId: String): String {
+        return if (projectCode == storeInnerPipelineConfig.innerPipelineProject) {
+            // 如果查看的是平台统一项目下的流水线日志，则使用平台用户身份查看
+            storeInnerPipelineConfig.innerPipelineUser
+        } else {
+            userId
+        }
     }
 }

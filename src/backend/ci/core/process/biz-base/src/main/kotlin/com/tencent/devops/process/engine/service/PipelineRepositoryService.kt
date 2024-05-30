@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -109,10 +108,8 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import com.tencent.devops.process.utils.PipelineVersionUtils
@@ -689,21 +686,8 @@ class PipelineRepositoryService constructor(
                         users = "\${{ci.actor}}",
                         content = NotifyTemplateUtils.getCommonShutdownFailureContent()
                     ).takeIf { failType.isNotEmpty() }
-                    PipelineSetting(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        pipelineName = model.name,
-                        version = 1,
-                        desc = model.desc ?: "",
-                        maxPipelineResNum = maxPipelineResNum,
-                        waitQueueTimeMinute = DateTimeUtil.minuteToSecond(
-                            PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-                        ),
-                        maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
-                        runLockType = PipelineRunLockType.MULTIPLE,
-                        failSubscription = failSubscription ?: Subscription(),
-                        failSubscriptionList = failSubscription?.let { listOf(it) },
-                        pipelineAsCodeSettings = PipelineAsCodeSettings()
+                    PipelineSetting.defaultSetting(
+                        projectId, pipelineId, model.name, maxPipelineResNum, failSubscription
                     )
                 }
 
@@ -1290,9 +1274,22 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId
         )
         // 返回时将别名name补全为id
-        resource?.let {
-            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+        resource?.model?.stages?.forEachIndexed { index, s ->
+            if (index == 0) (s.containers[0] as TriggerContainer).params.forEach { param ->
                 param.name = param.name ?: param.id
+            } else {
+                s.containers.forEach { c ->
+                    c.elements.forEach { e ->
+                        // 保存时将旧customEnv赋值给新的上一级customEnv
+                        val oldCustomEnv = e.additionalOptions?.customEnv?.filter {
+                            !(it.key == "param1" && it.value == "")
+                        }
+                        if (!oldCustomEnv.isNullOrEmpty()) {
+                            e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
+                        }
+                        e.additionalOptions?.customEnv = null
+                    }
+                }
             }
         }
         return resource
@@ -1656,11 +1653,13 @@ class PipelineRepositoryService constructor(
     }
 
     fun saveSetting(
+        context: DSLContext? = null,
         userId: String,
         setting: PipelineSetting,
         version: Int,
         versionStatus: VersionStatus,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        isTemplate: Boolean = false
     ): PipelineName {
         setting.checkParam()
 
@@ -1677,10 +1676,10 @@ class PipelineRepositoryService constructor(
         }
 
         var oldName: String = setting.pipelineName
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
+        (context ?: dslContext).transaction { t ->
+            val transactionContext = DSL.using(t)
             val old = pipelineSettingDao.getSetting(
-                dslContext = context,
+                dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId
             )
@@ -1688,7 +1687,7 @@ class PipelineRepositoryService constructor(
                 oldName = old.pipelineName
             }
             if (versionStatus.isReleasing()) pipelineInfoDao.update(
-                dslContext = context,
+                dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
                 userId = userId,
@@ -1701,7 +1700,7 @@ class PipelineRepositoryService constructor(
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {
                     pipelineSettingVersionDao.deleteEarlyVersion(
-                        dslContext = context,
+                        dslContext = transactionContext,
                         projectId = setting.projectId,
                         pipelineId = setting.pipelineId,
                         currentVersion = version,
@@ -1709,15 +1708,18 @@ class PipelineRepositoryService constructor(
                     )
                 }
                 pipelineSettingVersionDao.saveSetting(
-                    dslContext = context,
+                    dslContext = transactionContext,
                     setting = setting,
                     version = version,
+                    isTemplate = isTemplate,
                     id = client.get(ServiceAllocIdResource::class).generateSegmentId(
                         PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
                     ).data
                 )
             }
-            if (versionStatus.isReleasing()) pipelineSettingDao.saveSetting(context, setting).toString()
+            if (versionStatus.isReleasing()) pipelineSettingDao.saveSetting(
+                transactionContext, setting, isTemplate
+            ).toString()
         }
 
         return PipelineName(name = setting.pipelineName, oldName = oldName)

@@ -106,6 +106,13 @@ data class CodeGitWebHookTriggerElement(
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"
+        const val MERGE_ACTION_OPEN = "open"
+        const val MERGE_ACTION_CLOSE = "close"
+        const val MERGE_ACTION_REOPEN = "reopen"
+        const val MERGE_ACTION_PUSH_UPDATE = "push-update"
+        const val MERGE_ACTION_MERGE = "merge"
+        const val PUSH_ACTION_CREATE_BRANCH = "new-branch"
+        const val PUSH_ACTION_PUSH_FILE = "push-file"
     }
 
     override fun getClassType() = classType
@@ -123,6 +130,7 @@ data class CodeGitWebHookTriggerElement(
         val props = when (eventType) {
             CodeEventType.PUSH -> {
                 listOf(
+                    vuexInput(name = "action", value = joinToString(includePushAction)),
                     vuexInput(name = "branchName", value = branchName),
                     vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     vuexInput(name = "includePaths", value = includePaths),
@@ -134,6 +142,7 @@ data class CodeGitWebHookTriggerElement(
 
             CodeEventType.MERGE_REQUEST -> {
                 listOf(
+                    vuexInput(name = "action", value = joinToString(includeMrAction)),
                     vuexInput(name = "branchName", value = branchName),
                     vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     vuexInput(name = "includeSourceBranchName", value = includeSourceBranchName),
@@ -163,7 +172,9 @@ data class CodeGitWebHookTriggerElement(
                 listOf(
                     vuexInput(name = "tagName", value = tagName),
                     vuexInput(name = "excludeTagName", value = excludeTagName),
-                    vuexInput(name = "fromBranches", value = fromBranches)
+                    vuexInput(name = "fromBranches", value = fromBranches),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
 

@@ -74,4 +74,6 @@ class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
             }
         }
     }
+
+    override fun handleTarget(reqTarget: String?, target: String): String = target
 }

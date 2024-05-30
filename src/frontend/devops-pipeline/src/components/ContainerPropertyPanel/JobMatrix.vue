@@ -15,10 +15,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'job-mutual',
@@ -70,9 +70,7 @@
                 this.updateContainerParams('matrixGroupFlag', enable)
             },
             initOptionConfig () {
-                if (this.matrixControlOption === undefined || JSON.stringify(this.matrixControlOption) === '{}') {
-                    this.updateContainerParams('matrixControlOption', this.getJobOptionDefault(this.JOB_MATRIX))
-                }
+                this.updateContainerParams('matrixControlOption', this.getJobOptionDefault(this.JOB_MATRIX, this.matrixControlOption))
             }
         }
     }

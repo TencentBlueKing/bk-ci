@@ -59,7 +59,9 @@ data class StoreWebsocketPush(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreWebsocketPush::class.java)
-        private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
+        private val atomReleaseService by lazy {
+            SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
+        }
     }
 
     override fun findSession(page: String): Set<String> {
@@ -84,11 +86,11 @@ data class StoreWebsocketPush(
 
     override fun buildMqMessage(): SendMessage {
         return AmdMessage(
-                atomId = atomId,
-                notifyPost = notifyPost,
-                userId = userId,
-                page = page,
-                sessionList = findSession(page!!)
+            atomId = atomId,
+            notifyPost = notifyPost,
+            userId = userId,
+            page = page,
+            sessionList = findSession(page!!)
         )
     }
 

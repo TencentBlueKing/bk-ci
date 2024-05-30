@@ -68,6 +68,15 @@
                 >
                     {{ $t("details.hideSkipStep") }}
                 </bk-checkbox>
+                <bk-checkbox
+                    :true-value="true"
+                    :false-value="false"
+                    v-model="isExpandAllMatrix"
+                    @change="expandAllMatrix"
+                    style="margin-right: 16px;"
+                >
+                    {{ $t("details.isExpandJob") }}
+                </bk-checkbox>
                 <bk-button text theme="primary" @click="showCompleteLog">
                     <i class="devops-icon icon-txt"></i>
                     {{ $t("history.viewLog") }}
@@ -274,6 +283,7 @@
                 showLog: false,
                 retryTaskId: '',
                 skipTask: false,
+                isExpandAllMatrix: this.$route.hash.indexOf('collapsedAllJob') === -1,
                 failedContainer: false,
                 activeTab: 'errors',
                 currentAtom: {},
@@ -479,6 +489,7 @@
                 viewportContent.style.height = `${parent?.scrollHeight}px`
                 this.scrollElement = '.pipeline-model-scroll-viewport'
                 this.initMiniMapScroll()
+                this.expandAllMatrix()
             })
         },
         beforeDestroy () {
@@ -866,6 +877,26 @@
                 const tab = window.open('about:blank')
                 const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            expandAllMatrix () {
+                try {
+                    for (let i = 0; i < this.execDetail.model.stages.length; i++) {
+                        const stage = this.execDetail.model.stages[i]
+                        for (let j = 0; j < stage.containers.length; j++) {
+                            const matrix = stage.containers[j]
+                            if (matrix.matrixGroupFlag) {
+                                for (let k = 0; k < matrix.groupContainers.length; k++) {
+                                    const container = matrix.groupContainers[k]
+                                    this.$refs.bkPipeline.expandMatrix(stage.id, matrix.id, container.id, this.isExpandAllMatrix)
+                                }
+                            } else {
+                                this.$refs.bkPipeline.expandJob(stage.id, matrix.id, this.isExpandAllMatrix)
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('expaned error', error)
+                }
             }
         }
     }

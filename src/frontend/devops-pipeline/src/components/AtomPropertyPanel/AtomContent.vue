@@ -77,16 +77,39 @@
 
                 <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
-                    <div v-if="atom.atomModal" :is="AtomComponent" :atom="atom.atomModal" :element-index="elementIndex"
-                        :container-index="containerIndex" :stage-index="stageIndex" :element="element"
-                        :container="container" :stage="stage" :atom-props-model="atom.atomModal.props"
-                        :set-parent-validate="setAtomValidate" :disabled="!editable" class="atom-content">
+                    <div
+                        v-if="atom.atomModal"
+                        :is="AtomComponent"
+                        :atom="atom.atomModal"
+                        :element-index="elementIndex"
+                        :container-index="containerIndex"
+                        :stage-index="stageIndex"
+                        :element="element"
+                        :container="container"
+                        :stage="stage"
+                        :atom-props-model="atom.atomModal.props"
+                        :set-parent-validate="setAtomValidate"
+                        :disabled="!editable"
+                        class="atom-content"
+                    >
                     </div>
+                    <CustomEnvField
+                        v-if="isVmContainer(container)"
+                        :value="element.customEnv"
+                        @change="handleUpdateAtom"
+                        :disabled="!editable"
+                    />
                     <div class="atom-option">
-                        <atom-option v-if="element['@type'] !== 'manualTrigger'" :element-index="elementIndex"
-                            :container-index="containerIndex" :stage-index="stageIndex" :element="element"
-                            :container="container" :set-parent-validate="setAtomValidate" :disabled="!editable">
-                        </atom-option>
+                        <atom-option
+                            v-if="element['@type'] !== 'manualTrigger'"
+                            :element-index="elementIndex"
+                            :container-index="containerIndex"
+                            :stage-index="stageIndex"
+                            :element="element"
+                            :container="container"
+                            :set-parent-validate="setAtomValidate"
+                            :disabled="!editable"
+                        />
                     </div>
                 </div>
             </div>
@@ -104,6 +127,7 @@
 </template>
 
 <script>
+    import CustomEnvField from '@/components/CustomEnvField'
     import Logo from '@/components/Logo'
     import QualitygateTips from '@/components/atomFormField/QualitygateTips'
     import Selector from '@/components/atomFormField/Selector'
@@ -135,6 +159,7 @@
     import SubPipelineCall from './SubPipelineCall'
     import TimerTrigger from './TimerTrigger'
     import Unity3dBuild from './Unity3dBuild'
+    import CodeWebHookTrigger from './CodeWebHookTrigger'
 
     export default {
         name: 'atom-content',
@@ -161,7 +186,8 @@
             CodeGitWebHookTrigger,
             SubPipelineCall,
             ManualReviewUserTask,
-            Logo
+            Logo,
+            CustomEnvField
         },
         props: {
             elementIndex: Number,
@@ -199,6 +225,7 @@
                 'getDefaultVersion',
                 'classifyCodeListByCategory',
                 'getElement',
+                'isVmContainer',
                 'getContainer',
                 'getContainers',
                 'getStage',
@@ -355,7 +382,11 @@
                     return RemoteAtom
                 }
                 if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
-                    return NormalAtomV2
+                    const atomMap = {
+                        codeTGitWebHookTrigger: CodeWebHookTrigger,
+                        codeP4WebHookTrigger: CodeWebHookTrigger
+                    }
+                    return atomMap[this.atomCode] || NormalAtomV2
                 }
                 const atomMap = {
                     timerTrigger: TimerTrigger,

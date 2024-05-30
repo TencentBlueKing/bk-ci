@@ -54,6 +54,9 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
@@ -147,7 +150,7 @@ class PipelineBuildService(
             )?.settingVersion?.let {
                 pipelineSettingVersionService.getPipelineSetting(
                     userId = userId,
-                    projectId = pipeline.pipelineId,
+                    projectId = pipeline.projectId,
                     pipelineId = pipeline.pipelineId,
                     detailInfo = null,
                     version = it
@@ -349,7 +352,28 @@ class PipelineBuildService(
             ),
             readOnly = true
         )
-
+        // 自定义触发源材料信息
+        startValues?.get(BK_CI_MATERIAL_ID)?.let {
+            pipelineParamMap[BK_CI_MATERIAL_ID] = BuildParameters(
+                key = BK_CI_MATERIAL_ID,
+                value = it,
+                readOnly = true
+            )
+        }
+        startValues?.get(BK_CI_MATERIAL_NAME)?.let {
+            pipelineParamMap[BK_CI_MATERIAL_NAME] = BuildParameters(
+                key = BK_CI_MATERIAL_NAME,
+                value = it,
+                readOnly = true
+            )
+        }
+        startValues?.get(BK_CI_MATERIAL_URL)?.let {
+            pipelineParamMap[BK_CI_MATERIAL_URL] = BuildParameters(
+                key = BK_CI_MATERIAL_URL,
+                value = it,
+                readOnly = true
+            )
+        }
         // 链路
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrBlank()) { // 保存链路信息
