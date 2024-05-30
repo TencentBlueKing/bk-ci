@@ -64,14 +64,15 @@
 <script>
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import { mapActions, mapState, mapGetters } from 'vuex'
     import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { TEMPLATE_RESOURCE_ACTION, RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_ACTION, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     export default {
         components: {
@@ -116,6 +117,17 @@
                         {
                             label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
                             handler: this.toggleCollect
+                        },
+                        {
+                            label: 'rename',
+                            handler: () => {
+                                this.$router.push({
+                                    name: 'pipelinesEdit',
+                                    query: {
+                                        tab: pipelineTabIdMap.setting
+                                    }
+                                })
+                            }
                         }
                     ],
                     [

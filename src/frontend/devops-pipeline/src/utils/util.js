@@ -755,7 +755,9 @@ export function getMaterialIconByType (type) {
         CODE_GITLAB: 'CODE_GITLAB',
         GITHUB: 'codeGithubWebHookTrigger',
         CODE_TGIT: 'CODE_GIT',
-        CODE_P4: 'CODE_P4'
+        CODE_P4: 'CODE_P4',
+        CODE_REMOTE: 'remoteTrigger',
+        CODE_SERVICE: 'openApi'
     }
     return materialIconMap[type] ?? 'CODE_GIT'
 }
@@ -866,4 +868,37 @@ export function flatSearchKey (searchKey) {
         }
         return searchMap
     }, {})
+}
+
+export function parseErrorMsg (msg) {
+    try {
+        return JSON.parse(msg)
+    } catch (e) {
+        return {
+            message: msg
+        }
+    }
+}
+
+export function showPipelineCheckMsg (showTooltips, message, h) {
+    const errorInfo = parseErrorMsg(message)
+    showTooltips({
+        theme: 'error',
+        delay: 0,
+        ellipsisLine: 0,
+        message: h('div', {
+            class: 'pipeline-save-error-list-box'
+        }, errorInfo.errors.map(item => h('div', {
+            class: 'pipeline-save-error-list-item'
+        }, [
+            h('p', {}, item.errorTitle),
+            h('ul', {
+                class: 'pipeline-save-error-list'
+            }, item.errorDetails.map(err => h('li', {
+                domProps: {
+                    innerHTML: err
+                }
+            })))
+        ])))
+    })
 }

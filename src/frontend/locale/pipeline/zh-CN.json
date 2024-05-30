@@ -405,6 +405,7 @@
     "diff": "差异对比",
     "needToUpdate": "需更新",
     "noNeedToUpdate": "无需更新",
+    "updateFailed": "更新失败",
     "updating": "正在更新",
     "instanceEmptyTitle": "创建你的第一个实例",
     "instanceEmptyDesc": "创建自己的实例，快速生成你想要的流水线",
@@ -867,6 +868,12 @@
     "paramValueTips": "请输入变量值",
     "selectParamValueTips": "请选择变量值",
     "selectOptions": "下拉选项",
+    "batchAdd": "批量添加",
+    "batchAddTips": "● 多个选项用换行符分隔\n ● 每个选项不能包含英文逗号\n ● 重复的选项将只会显示一个\n ● 与 HTML select 标签类似，选项支持 value=name / value 两种格式",
+    "batchAddBtn": "解析并添加",
+    "optionSetting": "选项设置",
+    "optionValTips": "请输入value",
+    "optionNameTips": "请输入name（为空则与value一致）",
     "optionsDesc": "多个选项用换行符分隔<br>每个选项不能包含英文逗号<br>重复的选项将只会显示一个<br>与HTML select标签类似，选项支持value=name / value两种格式",
     "optionTips": "多行记录请换行输入",
     "chineseName": "中文名称",
@@ -1008,7 +1015,8 @@
     "remindTime": "小时提醒一次",
     "codelib": "代码库",
     "branches": "分支",
-    "codelibConfigs": "代码库配置"
+    "codelibConfigs": "代码库配置",
+    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录"
   },
   "storeMap": {
     "textarea": "文本框",

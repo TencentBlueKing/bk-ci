@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.0.3](#v203)
+   - [Changelog since v2.0.2](#changelog-since-v202)
+
 - [v2.0.2](#v202)
    - [Changelog since v2.0.1](#changelog-since-v201)
 
@@ -13,6 +16,14 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.0.3
+## Changelog since v2.0.2
+#### 新增
+- [新增] 登录失效弹窗规范修改 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8125)
+
+#### 修复
+- [修复] 开源社区，项目管理界面 开源版权限需放开 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10382)
+- [修复] 社区版simple权限中心前端应该隐藏最大授权范围 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10040)
 # v2.0.2
 ## Changelog since v2.0.1
 #### 新增

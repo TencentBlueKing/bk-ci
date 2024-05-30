@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.IModelTemplate
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -125,6 +126,8 @@ abstract class Element(
     open var stepId: String? = null, // 用于上下文键值设置
     @get:Schema(title = "各项耗时", required = true)
     open var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    open var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
     @get:Schema(title = "错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
