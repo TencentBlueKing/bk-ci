@@ -9,7 +9,7 @@
                 class="select-custom"
                 :value="item"
                 name
-                :disabled="disabled || isLoading || (repositoryType !== 'SELF' && !repoHashId)"
+                :disabled="disabled || isLoading || (!['SELF', 'NAME'].includes(repositoryType) && !repoHashId)"
                 type="text"
                 :options="branchesList"
                 :handle-change="(name, value) => handleChangeBranch(value, index)"
