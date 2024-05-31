@@ -53,6 +53,9 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -61,9 +64,6 @@ import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Repository
@@ -524,7 +524,7 @@ class PipelineBuildDao {
         concurrencyGroup: String,
         pipelineId: String? = null
     ): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -534,7 +534,8 @@ class PipelineBuildDao {
             }
             select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -544,6 +545,12 @@ class PipelineBuildDao {
             }
             select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny(debugMapper)
+        }
+        return when {
+            release == null -> debug
+            debug == null -> release
+            release.queueTime > debug.queueTime -> debug
+            else -> release
         }
     }
 
