@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -111,6 +112,8 @@ object AgentEnv {
                 }
             }
         }
+
+        agentId?.let { SensitiveValueService.addSensitiveValue(it) }
         return agentId!!
     }
 
@@ -147,6 +150,8 @@ object AgentEnv {
                 }
             }
         }
+
+        secretKey?.let { SensitiveValueService.addSensitiveValue(it) }
         return secretKey!!
     }
 

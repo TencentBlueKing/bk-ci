@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
@@ -42,7 +42,7 @@ import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -81,18 +81,18 @@ interface ServiceProjectResource {
     fun getAllProject(): Result<List<ProjectVO>>
 
     @POST
-    @Path("/listMigrateProjects/{offset}/{limit}")
+    @Path("/listProjectsByCondition/{offset}/{limit}")
     @Operation(summary = "条件迁移项目实体")
-    fun listMigrateProjects(
+    fun listProjectsByCondition(
         @Parameter(description = "条件迁移项目实体", required = false)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+        projectConditionDTO: ProjectConditionDTO,
         @Parameter(description = "limit", required = true)
         @PathParam("limit")
         limit: Int,
         @Parameter(description = "offset", required = true)
         @PathParam("offset")
         offset: Int
-    ): Result<List<ProjectWithPermission>>
+    ): Result<List<ProjectByConditionDTO>>
 
     @POST
     @Path("/")
@@ -360,4 +360,22 @@ interface ServiceProjectResource {
         @Parameter(description = "产品名称", required = true)
         projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean>
+
+    @GET
+    @Path("/getProjectListByProductId")
+    @Operation(summary = "根据运营产品ID获取项目列表接口")
+    fun getProjectListByProductId(
+        @Parameter(description = "产品ID", required = true)
+        @QueryParam("productId")
+        productId: Int
+    ): Result<List<ProjectBaseInfo>>
+
+    @GET
+    @Path("/getExistedEnglishName")
+    @Operation(summary = "传入项目ID列表，返回其中存在的项目ID列表接口")
+    fun getExistedEnglishName(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("englishName")
+        englishName: List<String>
+    ): Result<List<String>?>
 }

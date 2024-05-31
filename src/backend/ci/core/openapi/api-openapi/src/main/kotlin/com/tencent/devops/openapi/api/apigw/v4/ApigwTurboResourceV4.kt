@@ -29,13 +29,16 @@ package com.tencent.devops.openapi.api.apigw.v4
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
+import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
 import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -117,4 +120,37 @@ interface ApigwTurboResourceV4 {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Response<TurboPlanDetailVO>
+
+    @POST
+    @Operation(summary = "新增加速方案", tags = ["v4_app_turbo_plan_add_new", "v4_user_turbo_plan_add_new"])
+    @Path("/projectId/{projectId}/addTurboPlan")
+    fun addNewTurboPlan(
+        @Parameter(description = "蓝盾项目id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户信息", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "新增加速方案请求数据信息", required = true)
+        @Valid
+        turboPlanModel: TurboPlanModel
+    ): Response<String?>
+
+    @GET
+    @Operation(summary = "DevCloud专用资源统计查询接口", tags = ["v4_app_server_resources", "v4_user_server_resources"])
+    @Path("/server_resources")
+    fun getServerResourcesSummary(
+        @Parameter(description = "起始统计日期")
+        @QueryParam(value = "startDate")
+        startDate: String?,
+        @Parameter(description = "截止统计日期")
+        @QueryParam("endDate")
+        endDate: String?,
+        @Parameter(description = "页数")
+        @QueryParam(value = "pageNum")
+        pageNum: Int?,
+        @Parameter(description = "每页多少条")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Response<Page<ProjectResourceUsageVO>>
 }

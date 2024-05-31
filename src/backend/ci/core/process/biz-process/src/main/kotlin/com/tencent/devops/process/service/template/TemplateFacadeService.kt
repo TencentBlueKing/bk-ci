@@ -34,6 +34,7 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_INSTANCE_ERROR_INFO
 import com.tencent.devops.common.api.constant.KEY_UPDATED_TIME
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_VERSION_NAME
@@ -60,41 +61,42 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
-import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
-import com.tencent.devops.process.engine.service.PipelineInfoExtService
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -123,11 +125,11 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -159,7 +161,6 @@ class TemplateFacadeService @Autowired constructor(
     private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
@@ -167,24 +168,23 @@ class TemplateFacadeService @Autowired constructor(
     private val stageTagService: StageTagService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val paramService: ParamFacadeService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineInfoExtService: PipelineInfoExtService
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
+    private val templateCommonService: TemplateCommonService,
+    private val templateSettingService: TemplateSettingService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
     private val maxSyncInstanceNum: Int = 10
-
-    @Value("\${template.maxSaveVersionNum:300}")
-    private val maxSaveVersionNum: Int = 300
 
     @Value("\${template.maxUpdateInstanceNum:100}")
     private val maxUpdateInstanceNum: Int = 100
@@ -214,11 +214,11 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             permission = AuthPermission.CREATE
         )
-        checkTemplate(template, projectId)
+        checkTemplate(template, projectId, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            checkTemplateName(context, template.name, projectId, templateId)
+            templateCommonService.checkTemplateName(context, template.name, projectId, templateId)
             updateModelParam(template)
             val version = templateDao.create(
                 dslContext = context,
@@ -229,11 +229,12 @@ class TemplateFacadeService @Autowired constructor(
                 userId = userId,
                 template = JsonUtil.toJson(template, formatted = false),
                 storeFlag = false,
-                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
+                desc = template.desc
             )
-
-            insertTemplateSetting(
+            templateSettingService.insertTemplateSetting(
                 context = context,
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 pipelineName = template.name,
@@ -287,7 +288,7 @@ class TemplateFacadeService @Autowired constructor(
         val newTemplateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            checkTemplateName(context, copyTemplateReq.templateName, projectId, newTemplateId)
+            templateCommonService.checkTemplateName(context, copyTemplateReq.templateName, projectId, newTemplateId)
             val version = templateDao.createTemplate(
                 dslContext = context,
                 projectId = projectId,
@@ -302,7 +303,8 @@ class TemplateFacadeService @Autowired constructor(
                 srcTemplateId = srcTemplateId,
                 storeFlag = false,
                 weight = 0,
-                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
+                desc = template.desc
             )
 
             pipelineTemplatePermissionService.createResource(
@@ -313,15 +315,18 @@ class TemplateFacadeService @Autowired constructor(
             )
 
             if (copyTemplateReq.isCopySetting) {
-                val setting = copySetting(
-                    getTemplateSetting(projectId, userId, srcTemplateId),
+                val setting = templateSettingService.copySetting(
+                    templateSettingService.getTemplateSetting(projectId, userId, srcTemplateId),
                     newTemplateId,
                     copyTemplateReq.templateName
                 )
-                saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
-                insertTemplateSetting(
+                templateSettingService.insertTemplateSetting(
                     context = context,
+                    userId = userId,
                     projectId = projectId,
                     templateId = newTemplateId,
                     isTemplate = true,
@@ -360,17 +365,18 @@ class TemplateFacadeService @Autowired constructor(
             permission = AuthPermission.CREATE
         )
 
-        val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-            )
+        val template = pipelineResourceDao.getLatestVersionModelString(
+                dslContext, projectId, saveAsTemplateReq.pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+        )
         val templateModel: Model = objectMapper.readValue(template)
         checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            checkTemplateName(context, saveAsTemplateReq.templateName, projectId, templateId)
+            templateCommonService.checkTemplateName(context, saveAsTemplateReq.templateName, projectId, templateId)
             val version = templateDao.create(
                 dslContext = context,
                 projectId = projectId,
@@ -380,7 +386,8 @@ class TemplateFacadeService @Autowired constructor(
                 userId = userId,
                 template = template,
                 storeFlag = false,
-                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
+                desc = null
             )
 
             pipelineTemplatePermissionService.createResource(
@@ -391,8 +398,8 @@ class TemplateFacadeService @Autowired constructor(
             )
 
             if (saveAsTemplateReq.isCopySetting) {
-                val setting = copySetting(
-                    setting = getTemplateSetting(
+                val setting = templateSettingService.copySetting(
+                    setting = templateSettingService.getTemplateSetting(
                         projectId = projectId,
                         userId = userId,
                         templateId = saveAsTemplateReq.pipelineId
@@ -400,10 +407,13 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateId,
                     templateName = saveAsTemplateReq.templateName
                 )
-                saveTemplatePipelineSetting(userId, setting, true)
+                templateSettingService.saveTemplatePipelineSetting(
+                    context, userId, setting, true
+                )
             } else {
-                insertTemplateSetting(
+                templateSettingService.insertTemplateSetting(
                     context = context,
+                    userId = userId,
                     projectId = projectId,
                     templateId = templateId,
                     pipelineName = saveAsTemplateReq.templateName,
@@ -500,6 +510,7 @@ class TemplateFacadeService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(templateId)
+        templateCommonService.checkPermission(projectId, userId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val instanceSize =
@@ -546,6 +557,7 @@ class TemplateFacadeService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(templateId)
+        templateCommonService.checkPermission(projectId, userId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val instanceSize =
@@ -590,16 +602,19 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateId: String,
         versionName: String,
-        template: Model
+        template: Model,
+        checkPermissionFlag: Boolean = true
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
-            userId = userId,
-            projectId = projectId,
-            templateId = templateId,
-            permission = AuthPermission.EDIT
-        )
-        checkTemplate(template, projectId)
+        if (checkPermissionFlag) {
+            pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                permission = AuthPermission.EDIT
+            )
+        }
+        checkTemplate(template, projectId, userId)
         checkTemplateAtomsForExplicitVersion(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
@@ -608,10 +623,10 @@ class TemplateFacadeService @Autowired constructor(
             )
         }
         var version: Long = 0
-        checkTemplateName(dslContext, template.name, projectId, templateId)
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(template.name)
+        templateCommonService.checkTemplateName(dslContext, template.name, projectId, templateId)
         updateModelParam(template)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -653,87 +668,21 @@ class TemplateFacadeService @Autowired constructor(
                 srcTemplateId = latestTemplate.srcTemplateId,
                 storeFlag = latestTemplate.storeFlag,
                 weight = latestTemplate.weight,
-                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
+                desc = template.desc
             )
-            pipelineTemplatePermissionService.modifyResource(
-                userId = userId,
-                projectId = projectId,
-                templateId = templateId,
-                templateName = template.name
-            )
+            if (checkPermissionFlag) {
+                pipelineTemplatePermissionService.modifyResource(
+                    userId = userId,
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateName = template.name
+                )
+            }
             logger.info("Get the update template version $version")
         }
 
         return version
-    }
-
-    @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_TEMPLATE_EDIT,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_SETTING_CONTENT
-    )
-    fun updateTemplateSetting(
-        projectId: String,
-        userId: String,
-        templateId: String,
-        setting: PipelineSetting
-    ): Boolean {
-        logger.info("Start to update the template setting - [$projectId|$userId|$templateId]")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
-            userId = userId,
-            projectId = projectId,
-            templateId = templateId,
-            permission = AuthPermission.EDIT
-        )
-        ActionAuditContext.current()
-            .setInstanceId(templateId)
-            .setInstanceName(templateId)
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            checkTemplateName(
-                dslContext = context,
-                name = setting.pipelineName,
-                projectId = projectId,
-                templateId = templateId
-            )
-            pipelineTemplatePermissionService.modifyResource(
-                userId = userId,
-                projectId = projectId,
-                templateId = templateId,
-                templateName = setting.pipelineName
-            )
-            saveTemplatePipelineSetting(userId, setting, true)
-        }
-        return true
-    }
-
-    fun getTemplateSetting(projectId: String, userId: String, templateId: String): PipelineSetting {
-
-        val setting = pipelineRepositoryService.getSetting(projectId, templateId)
-        if (setting == null) {
-            logger.warn("Fail to get the template setting - [$projectId|$userId|$templateId]")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
-            )
-        }
-        val hasPermission = pipelineTemplatePermissionService.checkPipelineTemplatePermission(
-            projectId = projectId,
-            userId = userId,
-            permission = AuthPermission.EDIT,
-            templateId = templateId
-        )
-        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
-        val labels = ArrayList<String>()
-        groups.forEach {
-            labels.addAll(it.labels)
-        }
-        setting.labels = labels
-        setting.hasPermission = hasPermission
-        return setting
     }
 
     fun listTemplate(
@@ -746,7 +695,7 @@ class TemplateFacadeService @Autowired constructor(
         keywords: String? = null
     ): TemplateListModel {
         logger.info("[$projectId|$userId|$templateType|$storeFlag|$page|$pageSize|$keywords] List template")
-        val hasManagerPermission = hasManagerPermission(projectId, userId)
+        val hasManagerPermission = templateCommonService.hasManagerPermission(projectId, userId)
         val result = ArrayList<TemplateModel>()
         val templateWithPermission = getTemplateListAndCount(
             userId = userId,
@@ -967,7 +916,7 @@ class TemplateFacadeService @Autowired constructor(
             dslContext = context,
             pipelineIds = templateIdList,
             projectId = projectId
-        ).map { it.pipelineId to it }.toMap()
+        ).associateBy { it.pipelineId }
         templates.forEach { record ->
             val templateId = record[tTemplate.ID]
             val type = record[tTemplate.TYPE]
@@ -990,7 +939,7 @@ class TemplateFacadeService @Autowired constructor(
                 val model: Model = objectMapper.readValue(modelStr)
 
                 val setting = settings[templateId]
-                val templateName = setting?.name ?: model.name
+                val templateName = setting?.pipelineName ?: model.name
 
                 // 根据keywords搜索过滤
                 if (!keywords.isNullOrBlank() && !templateName.contains(keywords)) return@forEach
@@ -1090,19 +1039,24 @@ class TemplateFacadeService @Autowired constructor(
                             getCode(projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element))
                                 ?: return@element
                         )
+
                         is GithubElement -> codes.add(
                             getCode(projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element))
                                 ?: return@element
                         )
+
                         is CodeSvnElement -> codes.add(
                             getCode(projectId, RepositoryConfigUtils.buildConfig(element)) ?: return@element
                         )
+
                         is CodeGitWebHookTriggerElement -> codes.add(
                             getCode(projectId, RepositoryConfigUtils.buildConfig(element)) ?: return@element
                         )
+
                         is CodeGithubWebHookTriggerElement -> codes.add(
                             getCode(projectId, RepositoryConfigUtils.buildConfig(element)) ?: return@element
                         )
+
                         is CodeSVNWebHookTriggerElement -> codes.add(
                             getCode(projectId, RepositoryConfigUtils.buildConfig(element)) ?: return@element
                         )
@@ -1132,6 +1086,7 @@ class TemplateFacadeService @Autowired constructor(
                     }
                     return result.data!!.url
                 }
+
                 RepositoryType.NAME -> {
                     // 仓库名是以变量来替换的
                     val repositoryName = repositoryConfig.getURLEncodeRepositoryId()
@@ -1201,16 +1156,21 @@ class TemplateFacadeService @Autowired constructor(
             dslContext = dslContext,
             pipelineIds = templateIdList,
             projectId = projectId
-        ).map { it.pipelineId to it }.toMap()
+        ).associateBy { it.pipelineId }
+        val pipelinesWithLabels = projectId?.let {
+            pipelineLabelPipelineDao.exitsLabelPipelines(dslContext, projectId, templateIdList)
+        }
         val tTemplate = TTemplate.T_TEMPLATE
         templates.forEach { record ->
             val type = record[tTemplate.TYPE]
             val srcTemplateId = record[tTemplate.SRC_TEMPLATE_ID]
             val templateId = record[tTemplate.ID]
+            val setting = settings[templateId]
             val key = if (type == TemplateType.CONSTRAINT.name) srcTemplateId else templateId
             val optionalTemplateInfo = generateOptionalTemplate(
-                settings = settings,
+                setting = setting,
                 record = record,
+                pipelinesWithLabels = pipelinesWithLabels,
                 srcTemplates = srcTemplates
             ) ?: return@forEach
             result[key] = optionalTemplateInfo
@@ -1224,8 +1184,9 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun generateOptionalTemplate(
-        settings: Map<String, TPipelineSettingRecord>,
+        setting: PipelineSetting?,
         record: Record,
+        pipelinesWithLabels: Set<String>?,
         srcTemplates: Map<String, Record>?
     ): OptionalTemplate? {
         val tTemplate = TTemplate.T_TEMPLATE
@@ -1241,11 +1202,10 @@ class TemplateFacadeService @Autowired constructor(
             val modelStr = templateRecord[tTemplate.TEMPLATE]
             val version = templateRecord[tTemplate.VERSION] as Long
             val model: Model = objectMapper.readValue(modelStr)
-            val setting = settings[templateId]
             val logoUrl = record[tTemplate.LOGO_URL]
             val categoryStr = record[tTemplate.CATEGORY]
             OptionalTemplate(
-                name = setting?.name ?: model.name,
+                name = setting?.pipelineName ?: model.name,
                 templateId = templateId,
                 projectId = templateRecord[tTemplate.PROJECT_ID],
                 version = version,
@@ -1255,7 +1215,10 @@ class TemplateFacadeService @Autowired constructor(
                 logoUrl = logoUrl ?: "",
                 category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
                     .readValue(categoryStr, List::class.java) as List<String> else listOf(),
-                stages = model.stages
+                stages = model.stages,
+                cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(
+                    setting, pipelinesWithLabels
+                )
             )
         } else {
             null
@@ -1312,7 +1275,7 @@ class TemplateFacadeService @Autowired constructor(
             template.creator
         )
         val model: Model = objectMapper.readValue(template.template)
-        model.name = setting.name
+        model.name = setting.pipelineName
         model.desc = setting.desc
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
         val labels = ArrayList<String>()
@@ -1335,8 +1298,8 @@ class TemplateFacadeService @Autowired constructor(
             versions = versions,
             currentVersion = currentVersion,
             latestVersion = latestVersion,
-            templateName = setting.name,
-            description = setting.desc ?: "",
+            templateName = setting.pipelineName,
+            description = setting.desc,
             creator = if (isConstrainedFlag) latestTemplate.creator else template.creator,
             template = templateResult,
             templateType = if (isConstrainedFlag) TemplateType.CONSTRAINT.name else template.type,
@@ -1419,7 +1382,7 @@ class TemplateFacadeService @Autowired constructor(
         )
         val v1Model: Model = instanceCompareModel(
             objectMapper.readValue(
-                content = pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, null)
+                content = pipelineResourceDao.getVersionModelString(dslContext, projectId, pipelineId, null)
                     ?: throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -1635,6 +1598,7 @@ class TemplateFacadeService @Autowired constructor(
                         defaultStageTagId = defaultStageTagId
                     )
                 instanceModel.templateId = templateId
+                // TODO #9145 创建流水线实例时的yaml覆盖逻辑
                 val pipelineId = pipelineInfoFacadeService.createPipeline(
                     userId = userId,
                     projectId = projectId,
@@ -1646,12 +1610,12 @@ class TemplateFacadeService @Autowired constructor(
                     buildNo = buildNo,
                     param = param,
                     fixTemplateVersion = version
-                )
+                ).pipelineId
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     if (useTemplateSettings) {
-                        val setting = copySetting(
-                            setting = getTemplateSetting(
+                        val setting = templateSettingService.copySetting(
+                            setting = templateSettingService.getTemplateSetting(
                                 projectId = projectId,
                                 userId = userId,
                                 templateId = templateId
@@ -1659,10 +1623,13 @@ class TemplateFacadeService @Autowired constructor(
                             pipelineId = pipelineId,
                             templateName = instance.pipelineName
                         )
-                        saveTemplatePipelineSetting(userId, setting)
+                        templateSettingService.saveTemplatePipelineSetting(
+                            context, userId, setting
+                        )
                     } else {
-                        insertTemplateSetting(
+                        templateSettingService.insertTemplateSetting(
                             context = context,
+                            userId = userId,
                             projectId = projectId,
                             templateId = pipelineId,
                             pipelineName = pipelineName,
@@ -1855,6 +1822,8 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = templateInstanceUpdate.pipelineId,
             model = instanceModel,
+            // TODO #9145 修改流水线实例时的yaml覆盖逻辑
+            yaml = null,
             channelCode = ChannelCode.BS,
             checkPermission = true,
             checkTemplate = false
@@ -1871,8 +1840,8 @@ class TemplateFacadeService @Autowired constructor(
             )
 
             if (useTemplateSettings) {
-                val setting = copySetting(
-                    setting = getTemplateSetting(
+                val setting = templateSettingService.copySetting(
+                    setting = templateSettingService.getTemplateSetting(
                         projectId = projectId,
                         userId = userId,
                         templateId = templateId
@@ -1880,8 +1849,53 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = templateInstanceUpdate.pipelineId,
                     templateName = templateInstanceUpdate.pipelineName
                 )
-                saveTemplatePipelineSetting(userId, setting)
+                pipelineSettingFacadeService.saveSetting(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = templateInstanceUpdate.pipelineId,
+                    setting = setting,
+                    checkPermission = true,
+                    dispatchPipelineUpdateEvent = false
+                )
+            } else {
+                // 不应用模板设置但是修改了流水线名称,需要重命名流水线
+                val setting = pipelineSettingDao.getSetting(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = templateInstanceUpdate.pipelineId
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
+                )
+                if (setting.pipelineName != templateInstanceUpdate.pipelineName) {
+                    setting.pipelineName = templateInstanceUpdate.pipelineName
+                    pipelineSettingFacadeService.saveSetting(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = templateInstanceUpdate.pipelineId,
+                        setting = setting,
+                        checkPermission = true,
+                        dispatchPipelineUpdateEvent = false
+                    )
+                }
             }
+        }
+    }
+
+    fun updateInstanceErrorInfo(
+        projectId: String,
+        pipelineId: String,
+        errorInfo: String?
+    ) {
+        if (errorInfo == null) return
+        try {
+            templatePipelineDao.updateInstanceErrorInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                errorInfo = errorInfo
+            )
+        } catch (ignored: Exception) {
+            logger.warn("Failed to update instance error info|$projectId|$pipelineId$errorInfo")
         }
     }
 
@@ -1925,11 +1939,29 @@ class TemplateFacadeService @Autowired constructor(
                         data = null,
                         defaultMessage = exception.defaultMessage
                     ).message ?: exception.defaultMessage ?: "unknown!"
-                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
+                    // ERROR_PIPELINE_ELEMENT_CHECK_FAILED输出的是一个json,需要格式化输出
+                    val reason = if (exception.errorCode == ERROR_PIPELINE_ELEMENT_CHECK_FAILED) {
+                        JsonUtil.to(message, PipelineCheckFailedErrors::class.java)
+                    } else {
+                        PipelineCheckFailedMsg(message)
+                    }
+                    updateInstanceErrorInfo(
+                        projectId = projectId,
+                        pipelineId = templateInstanceUpdate.pipelineId,
+                        errorInfo = JsonUtil.toJson(reason, false)
+                    )
+                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：${reason.message}")
                 } catch (t: Throwable) {
                     val message =
                         if (!t.message.isNullOrBlank() && t.message!!.length > maxErrorReasonLength)
                             t.message!!.substring(0, maxErrorReasonLength) + "......" else t.message
+                    message?.let {
+                        updateInstanceErrorInfo(
+                            projectId = projectId,
+                            pipelineId = templateInstanceUpdate.pipelineId,
+                            errorInfo = JsonUtil.toJson(PipelineCheckFailedMsg(it), false)
+                        )
+                    }
                     failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
                     logger.warn("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|$message")
                 }
@@ -1982,10 +2014,6 @@ class TemplateFacadeService @Autowired constructor(
         return true
     }
 
-    fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {
-        return setting.copy(pipelineId = pipelineId, pipelineName = templateName)
-    }
-
     /**
      * 删除流水线参数中的流水线常量
      */
@@ -2036,30 +2064,6 @@ class TemplateFacadeService @Autowired constructor(
             labels = instance.labels,
             instanceFromTemplate = true
         )
-    }
-
-    private fun saveTemplatePipelineSetting(
-        userId: String,
-        setting: PipelineSetting,
-        isTemplate: Boolean = false
-    ): Int {
-        pipelineGroupService.updatePipelineLabel(
-            userId = userId,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            labelIds = setting.labels
-        )
-        pipelineInfoDao.update(
-            dslContext = dslContext,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            userId = userId,
-            updateVersion = false,
-            pipelineName = setting.pipelineName,
-            pipelineDesc = setting.desc
-        )
-        logger.info("Save the template pipeline setting - ($setting)")
-        return pipelineSettingDao.saveSetting(dslContext, setting, isTemplate)
     }
 
     private fun instanceParamModel(userId: String, projectId: String, model: Model): Model {
@@ -2214,21 +2218,24 @@ class TemplateFacadeService @Autowired constructor(
                 )
             }
             val templatePipelineVersion = it[KEY_VERSION] as Long
+            val instanceErrorInfo = it[KEY_INSTANCE_ERROR_INFO] as String?
             val templatePipelineStatus = generateTemplatePipelineStatus(
                 templateInstanceItems = templateInstanceItems,
                 templatePipelineId = pipelineId,
                 templatePipelineVersion = templatePipelineVersion,
-                version = version
+                version = version,
+                instanceErrorInfo = instanceErrorInfo
             )
             TemplatePipeline(
                 templateId = it[KEY_TEMPLATE_ID] as String,
                 versionName = it[KEY_VERSION_NAME] as String,
                 version = templatePipelineVersion,
                 pipelineId = pipelineId,
-                pipelineName = pipelineSetting[0].name,
+                pipelineName = pipelineSetting[0].pipelineName,
                 updateTime = (it[KEY_UPDATED_TIME] as LocalDateTime).timestampmilli(),
                 hasPermission = hasPermissionList.contains(pipelineId),
-                status = templatePipelineStatus
+                status = templatePipelineStatus,
+                instanceErrorInfo = instanceErrorInfo
             )
         }
         val sortTemplatePipelines = templatePipelines.sortedWith { a, b ->
@@ -2270,22 +2277,22 @@ class TemplateFacadeService @Autowired constructor(
         templateInstanceItems: Result<TTemplateInstanceItemRecord>?,
         templatePipelineId: String,
         templatePipelineVersion: Long,
-        version: Long
+        version: Long,
+        instanceErrorInfo: String?
     ): TemplatePipelineStatus {
-        var templatePipelineStatus = TemplatePipelineStatus.UPDATED
-        run lit@{
-            templateInstanceItems?.forEach { templateInstanceItem ->
-                if (templateInstanceItem.pipelineId == templatePipelineId) {
-                    // 任务表中有记录说明模板实例处于更新中
-                    templatePipelineStatus = TemplatePipelineStatus.UPDATING
-                    return@lit
-                }
-            }
-            if (templatePipelineVersion != version) {
-                templatePipelineStatus = TemplatePipelineStatus.PENDING_UPDATE
-            }
+        return when {
+            templateInstanceItems?.any { it.pipelineId == templatePipelineId } ?: false ->
+                TemplatePipelineStatus.UPDATING
+
+            !instanceErrorInfo.isNullOrBlank() ->
+                TemplatePipelineStatus.FAILED
+
+            templatePipelineVersion != version ->
+                TemplatePipelineStatus.PENDING_UPDATE
+
+            else ->
+                TemplatePipelineStatus.UPDATED
         }
-        return templatePipelineStatus
     }
 
     fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {
@@ -2315,13 +2322,18 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板是不是合法
      */
-    private fun checkTemplate(template: Model, projectId: String? = null) {
+    private fun checkTemplate(template: Model, projectId: String? = null, userId: String) {
         if (template.name.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
-        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
+        modelCheckPlugin.checkModelIntegrity(
+            model = template,
+            projectId = projectId,
+            userId = userId,
+            isTemplate = true
+        )
         checkPipelineParam(template)
     }
 
@@ -2351,7 +2363,7 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
+    fun checkTemplate(templateId: String, projectId: String? = null, userId: String): Boolean {
         val templateRecord = if (projectId.isNullOrEmpty()) {
             templateDao.getLatestTemplate(dslContext, templateId)
         } else {
@@ -2360,7 +2372,7 @@ class TemplateFacadeService @Autowired constructor(
         val modelStr = templateRecord.template
         if (modelStr != null) {
             val model = JsonUtil.to(modelStr, Model::class.java)
-            checkTemplate(model, projectId)
+            checkTemplate(template = model, projectId = projectId, userId = userId)
         }
         return true
     }
@@ -2390,10 +2402,10 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    private fun getPipelineName(records: Result<TPipelineSettingRecord>, pipelineId: String): String? {
+    private fun getPipelineName(records: List<PipelineSetting>, pipelineId: String): String? {
         records.forEach {
             if (it.pipelineId == pipelineId) {
-                return it.name
+                return it.pipelineName
             }
         }
         return null
@@ -2425,60 +2437,8 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    private fun checkTemplateName(
-        dslContext: DSLContext,
-        name: String,
-        projectId: String,
-        templateId: String
-    ) {
-        val count = pipelineSettingDao.getSettingByName(
-            dslContext = dslContext,
-            name = name,
-            projectId = projectId,
-            pipelineId = templateId,
-            isTemplate = true
-        )?.value1() ?: 0
-        if (count > 0) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS
-            )
-        }
-        // 判断提交的模板数量是否超过系统规定的阈值
-        val versionNameNum = templateDao.countTemplateVersionNum(dslContext, projectId, templateId)
-        if (versionNameNum >= maxSaveVersionNum) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT,
-                params = arrayOf(maxSaveVersionNum.toString())
-            )
-        }
-    }
-
-    private fun insertTemplateSetting(
-        context: DSLContext,
-        projectId: String,
-        templateId: String,
-        pipelineName: String,
-        isTemplate: Boolean
-    ) {
-        pipelineSettingDao.insertNewSetting(
-            dslContext = context,
-            projectId = projectId,
-            pipelineId = templateId,
-            pipelineName = pipelineName,
-            isTemplate = isTemplate,
-            failNotifyTypes = pipelineInfoExtService.failNotifyChannel(),
-            pipelineAsCodeSettings = try {
-                client.get(ServiceProjectResource::class).get(projectId).data
-                    ?.properties?.pipelineAsCodeSettings
-            } catch (ignore: Throwable) {
-                logger.warn("[$projectId]|Failed to sync project|templateId=$templateId", ignore)
-                null
-            }
-        )
-    }
-
     fun listLatestModel(projectId: String, pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
-        val modelResources = pipelineResDao.listLatestModelResource(dslContext, pipelineIds, projectId)
+        val modelResources = pipelineResourceDao.listLatestModelResource(dslContext, pipelineIds, projectId)
         return modelResources?.map { modelResource ->
             modelResource.value1() to modelResource.value3()
         }?.toMap() ?: mapOf()
@@ -2499,7 +2459,7 @@ class TemplateFacadeService @Autowired constructor(
             val modelStr = templateRecord.template
             if (modelStr != null) {
                 val model = JsonUtil.to(modelStr, Model::class.java)
-                checkTemplate(model, projectId)
+                checkTemplate(model, projectId, userId)
             }
         }
         val projectTemplateMap = mutableMapOf<String, String>()
@@ -2518,7 +2478,7 @@ class TemplateFacadeService @Autowired constructor(
                 name = templateName,
                 isTemplate = true
             )
-            if (pipelineSettingRecord.size > 0) {
+            if (pipelineSettingRecord.isNotEmpty()) {
                 return@transaction
             }
             val templateId = UUIDUtil.generate()
@@ -2536,7 +2496,8 @@ class TemplateFacadeService @Autowired constructor(
                 srcTemplateId = templateCode,
                 storeFlag = true,
                 weight = 0,
-                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
+                desc = null
             )
             pipelineTemplatePermissionService.createResource(
                 userId = userId,
@@ -2544,8 +2505,9 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 templateName = templateName
             )
-            insertTemplateSetting(
+            templateSettingService.insertTemplateSetting(
                 context = context,
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 isTemplate = true,
@@ -2630,8 +2592,9 @@ class TemplateFacadeService @Autowired constructor(
             val tTemplate = TTemplate.T_TEMPLATE
             val type = it[tTemplate.TYPE]
             val optionalTemplateInfo = generateOptionalTemplate(
-                settings = emptyMap(),
+                setting = null,
                 record = it,
+                pipelinesWithLabels = null,
                 srcTemplates = srcTemplates
             ) ?: return@forEach
             templateList.add(

@@ -67,7 +67,8 @@ class CommandShellImpl : ICommand {
             continueNoneZero = continueNoneZero,
             errorMessage = errorMessage,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            taskId = taskId
         )
     }
 }

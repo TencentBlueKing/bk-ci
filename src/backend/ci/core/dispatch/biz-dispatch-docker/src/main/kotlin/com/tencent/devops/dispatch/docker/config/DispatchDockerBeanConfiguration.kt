@@ -30,9 +30,9 @@ package com.tencent.devops.dispatch.docker.config
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyServiceImpl
-import com.tencent.devops.dispatch.docker.service.ExtDebugServiceImpl
-import com.tencent.devops.dispatch.docker.service.ExtDockerResourceOptionsService
-import com.tencent.devops.dispatch.docker.service.ExtDockerResourceOptionsServiceImpl
+import com.tencent.devops.dispatch.docker.service.debug.impl.ExtDebugServiceImpl
+import com.tencent.devops.dispatch.docker.service.ExtDockerResourceService
+import com.tencent.devops.dispatch.docker.service.ExtDockerResourceServiceImpl
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +44,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.Ordered
 
-@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @DependsOn(value = ["jooqConfiguration"])
@@ -64,6 +63,6 @@ class DispatchDockerBeanConfiguration @Autowired constructor(
     fun extDebugService() = ExtDebugServiceImpl()
 
     @Bean
-    @ConditionalOnMissingBean(ExtDockerResourceOptionsService::class)
-    fun extDockerResourceOptionsService() = ExtDockerResourceOptionsServiceImpl()
+    @ConditionalOnMissingBean(ExtDockerResourceService::class)
+    fun extDockerResourceService() = ExtDockerResourceServiceImpl()
 }

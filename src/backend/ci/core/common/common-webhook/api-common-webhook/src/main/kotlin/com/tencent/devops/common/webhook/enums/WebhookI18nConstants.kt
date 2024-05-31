@@ -49,6 +49,7 @@ object WebhookI18nConstants {
     const val TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC = "bkTgitReviewChangeRequiredEventDesc"
     const val TGIT_REVIEW_CREATED_EVENT_DESC = "bkTgitReviewCreatedEventDesc"
     const val TGIT_TAG_PUSH_EVENT_DESC = "bkTgitTagPushEventDesc"
+    const val TGIT_TAG_DELETE_EVENT_DESC = "bkTgitTagDeleteEventDesc"
 
     // Github事件描述
     const val GITHUB_PUSH_EVENT_DESC = "bkGithubPushEventDesc"
@@ -130,6 +131,12 @@ object WebhookI18nConstants {
 
     // Github Pr操作类型不匹配
     const val PR_ACTION_NOT_MATCH = "bkRepoTriggerPrActionNotMatch"
+
+    // Github Mr操作类型不匹配
+    const val MR_ACTION_NOT_MATCH = "bkRepoTriggerMrActionNotMatch"
+
+    // Github Push操作类型不匹配
+    const val PUSH_ACTION_NOT_MATCH = "bkRepoTriggerPushActionNotMatch"
 
     // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"

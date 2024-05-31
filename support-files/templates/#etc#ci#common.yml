@@ -153,9 +153,6 @@ spring:
       - index: 31
         name: T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO
         databaseShardingStrategy: SHARDING
-      - index: 32
-        name: T_PIPELINE_BUILD_COMMITS
-        databaseShardingStrategy: SHARDING
       - index: 33
         name: T_PIPELINE_RULE
         broadcastFlag: true
@@ -260,6 +257,7 @@ devopsGateway:
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   fileDevnetGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   fileIdcGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  whiteProxy: __BK_CI_PRIVATE_URL__
 
 # certificate server 配置
 certificate:
@@ -338,6 +336,7 @@ bkci:
 process:
   clearBaseBuildData: true  # 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）5672
   deletedPipelineStoreDays: 30 # 回收站已删除流水线保存天数
+  archivePipelineStoreDays: 735 # 归档流水线保存天数
 
 net:
   proxy:

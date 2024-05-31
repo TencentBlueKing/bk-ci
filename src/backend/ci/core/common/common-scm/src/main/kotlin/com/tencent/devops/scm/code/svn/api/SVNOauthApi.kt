@@ -32,9 +32,9 @@ import okhttp3.Request
 @Suppress("ALL")
 open class SVNOauthApi : SVNApi() {
 
-    override fun request(host: String, token: String, url: String, page: String): Request.Builder {
-        return if (page.isEmpty())
-            Request.Builder().url("$host/$url?access_token=$token")
-        else Request.Builder().url("$host/$url?access_token=$token&$page")
+    override fun request(host: String, token: String, url: String, page: Int?, pageSize: Int?): Request.Builder {
+        return if (page != null && pageSize != null)
+            Request.Builder().url("$host/$url?access_token=$token&page=$page&per_page=$pageSize")
+        else Request.Builder().url("$host/$url?access_token=$token")
     }
 }

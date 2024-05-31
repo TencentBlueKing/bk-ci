@@ -1,9 +1,10 @@
 <template>
     <section>
-        <section v-if="!connectError" style="height: 100%" v-bkloading="{
-            isLoading,
-            title: loadingTitle
-        }">
+        <section
+            v-if="!connectError" style="height: 100%" v-bkloading="{
+                isLoading,
+                title: loadingTitle
+            }">
             <div class="console-header">
                 <bk-button class="debug-btn" theme="danger" @click="stopDebug">{{$t('pipeline.stopDebug')}}</bk-button>
                 <p class="debug-tips" v-show="isRunning">{{ fromRunningTips }}</p>
@@ -25,13 +26,13 @@
 <script>
     import { mapState } from 'vuex'
     import { pipelines } from '@/http'
-    import Console from '@/components/Xterm/Console'
+    import MyTerminal from '@/components/Xterm/Console'
     import emptyTips from '@/components/empty-tips'
 
     export default {
         name: 'WebSSH',
         components: {
-            'my-terminal': Console,
+            MyTerminal,
             emptyTips
         },
         data () {

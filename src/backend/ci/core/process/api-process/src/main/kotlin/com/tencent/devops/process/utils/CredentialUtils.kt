@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
+import java.util.Base64
 
 @Suppress("ALL")
 object CredentialUtils {
@@ -40,19 +42,42 @@ object CredentialUtils {
         when {
             repository is CodeSvnRepository && repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP -> {
                 // 兼容老的数据，老的数据是用的是password, 新的是username_password
-                return if (credentialType == CredentialType.USERNAME_PASSWORD) {
-                    if (credentials.size <= 1) {
-                        logger.warn("Fail to get the username($credentials) of the svn repo $repository")
-                        Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
-                    } else {
-                        Credential(username = credentials[0], privateKey = credentials[1], passPhrase = null)
+                return when (credentialType) {
+                    CredentialType.USERNAME_PASSWORD -> {
+                        if (credentials.size <= 1) {
+                            logger.warn("Fail to get the username($credentials) of the svn repo $repository")
+                            Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
+                        } else {
+                            Credential(username = credentials[0], privateKey = credentials[1], passPhrase = null)
+                        }
                     }
-                } else {
-                    Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
+
+                    CredentialType.TOKEN_USERNAME_PASSWORD -> {
+                        Credential(
+                            svnToken = credentials[0],
+                            username = credentials.getOrElse(1) { "" },
+                            privateKey = credentials.getOrElse(2) { "" },
+                            passPhrase = null
+                        )
+                    }
+
+                    else -> {
+                        Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
+                    }
                 }
             }
+
+            repository is CodeSvnRepository && credentialType == CredentialType.TOKEN_SSH_PRIVATEKEY ->
+                return Credential(
+                    svnToken = credentials[0],
+                    privateKey = credentials.getOrElse(1) { "" },
+                    username = repository.userName,
+                    passPhrase = credentials.getOrElse(2) { "" }
+                )
+
             repository is CodeP4Repository && credentialType == CredentialType.USERNAME_PASSWORD ->
                 return Credential(username = credentials[0], privateKey = "", passPhrase = credentials[1])
+
             else -> {
                 val privateKey = credentials[0]
                 val passPhrase = if (credentials.size > 1) {
@@ -70,6 +95,18 @@ object CredentialUtils {
         }
     }
 
+    fun decode(encode: String?, publicKey: String, privateKey: ByteArray): String {
+        if (encode.isNullOrBlank()) return ""
+        val decoder = Base64.getDecoder()
+        return String(
+            DHUtil.decrypt(
+                decoder.decode(encode),
+                decoder.decode(publicKey),
+                privateKey
+            )
+        )
+    }
+
     private val logger = LoggerFactory.getLogger(CredentialUtils::class.java)
 }
 
@@ -77,5 +114,6 @@ data class Credential(
     val username: String,
     val privateKey: String, // password or private key
     val passPhrase: String?, // passphrase for ssh private key
+    val svnToken: String? = "",
     var credentialType: CredentialType? = null
 )

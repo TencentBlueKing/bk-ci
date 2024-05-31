@@ -48,6 +48,11 @@ dependencies {
     api("com.github.ben-manes.caffeine:caffeine")
     api("io.github.resilience4j:resilience4j-circuitbreaker")
     api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+    api(project(":core:misc:api-image"))
+    // jenkins java代码依赖
+    api("org.jvnet.winp:winp")
+    api("net.java.dev.jna:jna")
+    api("org.jenkins-ci:version-number")
 }
 
 configurations.forEach {

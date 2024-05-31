@@ -17,23 +17,23 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import Vue from 'vue'
 import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+import Vue from 'vue'
 
 import {
-    STORE_API_URL_PREFIX,
+    DIALOG_LOADING_MUTATION,
+    FETCH_ERROR,
+    PROCESS_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
     SET_CODELIBS_MUTATION,
-    TICKET_API_URL_PREFIX,
-    PROCESS_API_URL_PREFIX,
-    SET_TICKETS_MUTATION,
-    UPDATE_CODE_LIB_MUTATION,
-    TOGGLE_CODE_LIB_DIALOG,
-    FETCH_ERROR,
-    DIALOG_LOADING_MUTATION,
     SET_OAUTH_MUTATION,
+    SET_TEMPLATE_CODELIB,
+    SET_TICKETS_MUTATION,
     SET_T_GIT_OAUTH_MUTATION,
-    SET_TEMPLATE_CODELIB
+    STORE_API_URL_PREFIX,
+    TICKET_API_URL_PREFIX,
+    TOGGLE_CODE_LIB_DIALOG,
+    UPDATE_CODE_LIB_MUTATION
 } from './constants'
 const vue = new Vue()
 
@@ -354,7 +354,7 @@ const actions = {
         repoUrl,
         repositoryType
     }) {
-        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
     },
 
     /**
@@ -408,7 +408,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac/check`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/checkCiDirExists`)
     },
 
     /**
@@ -418,7 +418,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/disable`)
     },
 
     /**
@@ -428,7 +428,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/enablePac`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/enable`)
     },
 
     /**
@@ -440,14 +440,16 @@ const actions = {
         page,
         pageSize,
         eventType,
-        triggerConditionMd5
+        triggerConditionMd5,
+        taskRepoType
     }) {
         return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listRepoPipelineRef`, {
             params: {
                 page,
                 pageSize,
                 eventType,
-                triggerConditionMd5
+                triggerConditionMd5,
+                taskRepoType
             }
         })
     },
@@ -464,11 +466,12 @@ const actions = {
         eventId = '',
         eventType = '',
         triggerUser = '',
-        pipelineName = '',
+        pipelineId = '',
         startTime = '',
-        endTime = ''
+        endTime = '',
+        reason = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineId=${pipelineId}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}&reason=${reason}`)
     },
 
     /**
@@ -479,10 +482,11 @@ const actions = {
         eventId,
         page,
         pageSize,
-        pipelineName
+        reason,
+        pipelineId
     }) {
         let queryUrl = ''
-        queryUrl = pipelineName ? `page=${page}&pageSize=${pageSize}&pipelineName=${pipelineName}` : `page=${page}&pageSize=${pageSize}`
+        queryUrl = pipelineId ? `page=${page}&pageSize=${pageSize}&reason=${reason}&pipelineId=${pipelineId}` : `reason=${reason}&page=${page}&pageSize=${pageSize}`
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail?${queryUrl}`)
     },
 
@@ -540,6 +544,72 @@ const actions = {
         queryOfflineFlag = false
     }) {
         return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
+    },
+
+    /**
+     * PAC - 重试同步YAML
+     */
+    retrySyncRepository ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/retry`)
+    },
+
+    /**
+     * PAC - 获取Yaml同步状态
+     */
+    getYamlSyncStatus ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/getYamlSyncStatus`)
+    },
+
+    /**
+     * PAC - 获取开启pac的流水线数量
+     */
+    getPacPipelineCount ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/count`)
+    },
+
+    /**
+     * PAC - 获取同步失败的流水线列表
+     */
+    getListYamlSync ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listSyncFailedYaml`)
+    },
+
+    getYamlPipelines ({ commit }, {
+        projectId,
+        repositoryHashId,
+        page,
+        pageSize
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listYamlPipeline?page=${page}&pageSize=${pageSize}`)
+    },
+    
+    fetchPipelinesByName ({ commit }, {
+        projectId,
+        keyword = ''
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${keyword}`).then(data => data.map(_ => ({
+            id: _.pipelineId,
+            name: _.pipelineName
+        })))
+    },
+    fetchTriggerReasonNum ({ commit }, {
+        projectId,
+        eventId,
+        pipelineId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/triggerReasonStatistics?pipelineId=${pipelineId}`)
     }
 }
 

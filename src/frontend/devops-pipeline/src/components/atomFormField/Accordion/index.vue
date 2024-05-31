@@ -100,8 +100,9 @@
                 transition: all 0.3s ease;
             }
             &[active] {
+                .devops-icon,
                 .icon-angle-right {
-                    transform: rotate(90deg)
+                    transform: rotate(180deg)
                 }
             }
         }

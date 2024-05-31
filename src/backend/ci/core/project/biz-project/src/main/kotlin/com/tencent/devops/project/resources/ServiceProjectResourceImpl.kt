@@ -27,8 +27,11 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -41,7 +44,7 @@ import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -83,14 +86,14 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getAllProject())
     }
 
-    override fun listMigrateProjects(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO,
+    override fun listProjectsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
         limit: Int,
         offset: Int
-    ): Result<List<ProjectWithPermission>> {
+    ): Result<List<ProjectByConditionDTO>> {
         return Result(
-            projectService.listMigrateProjects(
-                migrateProjectConditionDTO = migrateProjectConditionDTO,
+            projectService.listProjectsByCondition(
+                projectConditionDTO = projectConditionDTO,
                 limit = limit,
                 offset = offset
             )
@@ -117,6 +120,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(englishName))
     }
 
+    @AuditEntry(actionId = PROJECT_CREATE)
     override fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
@@ -134,6 +138,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = PROJECT_CREATE)
     override fun createExtSystem(
         userId: String,
         projectInfo: ProjectCreateInfo,
@@ -153,6 +158,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PROJECT_EDIT)
     override fun update(
         userId: String,
         projectId: String,
@@ -255,5 +261,19 @@ class ServiceProjectResourceImpl @Autowired constructor(
             projectOrganizationInfo = projectOrganizationInfo
         )
         return Result(true)
+    }
+
+    override fun getProjectListByProductId(productId: Int): Result<List<ProjectBaseInfo>> {
+        return Result(
+            projectService.getProjectListByProductId(
+                productId = productId
+            )
+        )
+    }
+
+    override fun getExistedEnglishName(englishName: List<String>): Result<List<String>?> {
+        return Result(
+            projectService.getExistedEnglishName(englishName)
+        )
     }
 }

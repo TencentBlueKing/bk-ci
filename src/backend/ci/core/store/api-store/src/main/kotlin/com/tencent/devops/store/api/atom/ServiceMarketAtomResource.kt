@@ -36,12 +36,13 @@ import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -163,4 +164,11 @@ interface ServiceMarketAtomResource {
         @Parameter(description = "getRelyAtom", required = false)
         getRelyAtom: GetRelyAtom
     ): Result<Map<String, Map<String, Any>>?>
+
+    @Operation(summary = "查看插件参数的依赖关系")
+    @POST
+    @Path("/atom/default_value")
+    fun getAtomsDefaultValue(
+        atom: ElementThirdPartySearchParam
+    ): Result<Map<String, Any>>
 }

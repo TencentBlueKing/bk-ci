@@ -262,9 +262,14 @@ object MQ {
     const val EXCHANGE_PROJECT_CREATE_FANOUT = "e.project.create.exchange.fanout"
     const val EXCHANGE_PROJECT_UPDATE_FANOUT = "e.project.update.exchange.fanout"
     const val EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT = "e.project.update.logo.exchange.fanout"
+    const val EXCHANGE_PROJECT_ENABLE_FANOUT = "e.project.enable.exchange.fanout"
     const val QUEUE_PROJECT_CREATE_EVENT = "q.project.create.project.queue"
     const val QUEUE_PROJECT_UPDATE_EVENT = "q.project.update.project.queue"
     const val QUEUE_PROJECT_UPDATE_LOGO_EVENT = "q.project.update.logo.project.queue"
+    const val QUEUE_PROJECT_ENABLE_EVENT = "q.project.enable.project.queue"
+    const val QUEUE_PROJECT_CREATE_CALLBACK_EVENT = "q.project.create.project.callback.queue"
+    const val QUEUE_PROJECT_UPDATE_CALLBACK_EVENT = "q.project.update.project.callback.queue"
+    const val QUEUE_PROJECT_ENABLE_CALLBACK_EVENT = "q.project.enable.project.callback.queue"
 
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
@@ -319,4 +324,16 @@ object MQ {
 
     // 数据库分片
     const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
+
+    // pac每条流水线触发事件
+    const val EXCHANGE_PIPELINE_YAML_LISTENER = "e.pipeline.yaml.listener"
+    // pac开启流水线事件
+    const val ROUTE_PIPELINE_YAML_ENABLE_EVENT = "r.pipeline.yaml.enable.event"
+    const val QUEUE_PIPELINE_YAML_ENABLE_EVENT = "q.pipeline.yaml.enable.event"
+    // pac触发事件
+    const val ROUTE_PIPELINE_YAML_TRIGGER_EVENT = "r.pipeline.yaml.trigger.event"
+    const val QUEUE_PIPELINE_YAML_TRIGGER_EVENT = "q.pipeline.yaml.trigger.event"
+    // pac关闭流水线事件
+    const val ROUTE_PIPELINE_YAML_DISABLE_EVENT = "r.pipeline.yaml.disable.event"
+    const val QUEUE_PIPELINE_YAML_DISABLE_EVENT = "q.pipeline.yaml.disable.event"
 }

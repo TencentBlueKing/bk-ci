@@ -43,6 +43,7 @@ import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
@@ -50,6 +51,9 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
     private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : ShardingRoutingRuleService {
+    companion object {
+        private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(14) // 分片规则在redis默认缓存时间
+    }
 
     /**
      * 添加分片路由规则
@@ -87,7 +91,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             redisOperation.set(
                 key = key,
                 value = shardingRoutingRule.routingRule,
-                expired = false
+                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
             )
             // 发送规则新增事件消息
             shardingRoutingRuleDispatcher.dispatch(
@@ -175,7 +179,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             redisOperation.set(
                 key = key,
                 value = shardingRoutingRule.routingRule,
-                expired = false
+                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
             )
             // 发送规则更新事件消息
             shardingRoutingRuleDispatcher.dispatch(
@@ -277,7 +281,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 redisOperation.set(
                     key = key,
                     value = record.routingRule,
-                    expired = false
+                    expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
                 )
                 ShardingRoutingRule(
                     clusterName = record.clusterName ?: "",

@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
+    <bk-sideslider class="bkci-property-panel" :class="{ 'with-variable-open': showVariable }" :z-index="2016" :width="640" :is-show.sync="visible" :quick-close="true">
         <header class="container-panel-header" slot="header">
             <div class="job-name-edit">
                 <input v-if="nameEditing" v-bk-focus="1" @blur="toggleEditName(false)" @keydown.enter="toggleEditName(false)" class="bk-form-input" name="name" maxlength="30" v-validate.initial="'required'" @keyup.enter="toggleEditName" @input="handleContainerChange" :placeholder="$t('nameInputTips')" :value="container.name" />
@@ -29,7 +29,8 @@
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
-            title: String
+            title: String,
+            pipeline: Object
         },
         data () {
             return {
@@ -38,6 +39,7 @@
         },
         computed: {
             ...mapState('atom', [
+                'showVariable',
                 'isPropertyPanelVisible'
             ]),
             ...mapGetters('atom', [

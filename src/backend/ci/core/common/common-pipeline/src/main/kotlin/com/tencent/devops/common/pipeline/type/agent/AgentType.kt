@@ -29,5 +29,10 @@ package com.tencent.devops.common.pipeline.type.agent
 
 enum class AgentType {
     ID, // This is only for old pipeline, new pipelines will use name
-    NAME
+    NAME,
+
+    // 是否复用其他job的Agent节点
+    REUSE_JOB_ID;
+
+    fun isReuse() = this == REUSE_JOB_ID
 }

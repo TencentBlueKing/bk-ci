@@ -27,8 +27,12 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_EDIT
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_ENABLE
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -43,7 +47,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -86,7 +90,7 @@ class UserProjectResourceImpl @Autowired constructor(
         projectId: String?,
         page: Int,
         pageSize: Int
-    ): Result<Pagination<ProjectWithPermission>> {
+    ): Result<Pagination<ProjectByConditionDTO>> {
         return Result(
             projectService.listProjectsForApply(
                 userId = userId,
@@ -132,6 +136,7 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(userId, projectId, accessToken))
     }
 
+    @AuditEntry(actionId = PROJECT_CREATE)
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
         projectService.create(
@@ -145,6 +150,7 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = PROJECT_EDIT)
     override fun update(
         userId: String,
         projectId: String,
@@ -162,6 +168,7 @@ class UserProjectResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = PROJECT_ENABLE)
     override fun enable(
         userId: String,
         projectId: String,
@@ -249,6 +256,21 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun getOperationalProducts(userId: String): Result<List<OperationalProductVO>> {
         return Result(
             projectService.getOperationalProducts()
+        )
+    }
+
+    override fun remindUserOfRelatedProduct(userId: String, englishName: String): Result<Boolean> {
+        return Result(
+            projectService.remindUserOfRelatedProduct(
+                userId = userId,
+                englishName = englishName
+            )
+        )
+    }
+
+    override fun getOperationalProductsByBgName(userId: String, bgName: String): Result<List<OperationalProductVO>> {
+        return Result(
+            projectService.getOperationalProductsByBgName(bgName)
         )
     }
 }

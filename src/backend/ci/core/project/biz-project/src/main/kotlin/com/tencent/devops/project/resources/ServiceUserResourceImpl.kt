@@ -51,4 +51,8 @@ class ServiceUserResourceImpl @Autowired constructor(
     override fun getProjectUserRoles(projectCode: String, roleId: BkAuthGroup): Result<List<String>> {
         return Result(bkAuthProjectApi.getProjectUsers(projectAuthServiceCode, projectCode, roleId))
     }
+
+    override fun listDetailFromCache(userIds: List<String>): Result<List<UserDeptDetail>> {
+        return Result(userCacheService.listDetailFromCache(userIds))
+    }
 }
