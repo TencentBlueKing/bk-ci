@@ -449,11 +449,12 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWorkspaceImageList(projectId: String?): Result<Map<String, Any>> {
         // 获取基础镜像
-        val baseImages = JsonUtil.toMap(imageManageService.getVmStandardImages())
+        val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
 
         // 获取项目特定镜像（如果有）
         val projectImageMap = if (!projectId.isNullOrBlank()) {
-            mapOf(projectId to JsonUtil.toMap(imageManageService.getProjectImageList(projectId)))
+            val projectImages = imageManageService.getProjectImageList(projectId).map { JsonUtil.toMap(it) }
+            mapOf(projectId to projectImages)
         } else {
             emptyMap()
         }
