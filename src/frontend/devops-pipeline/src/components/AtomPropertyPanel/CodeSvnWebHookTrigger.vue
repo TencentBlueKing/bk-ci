@@ -55,7 +55,7 @@
                 }
             },
             handleChooseCodelibType (name, value) {
-                if (!this.atomPropsModel?.branchSettings) {
+                if (!this.atomPropsModel?.pathSettings) {
                     if (value === 'ID') {
                         this.atomPropsModel.repositoryHashId.hidden = false
                         this.atomPropsModel.repositoryName.hidden = true
