@@ -52,9 +52,10 @@ class SecretClient @Autowired constructor(
 
     fun createSecret(
         userId: String,
+        namespace: String,
         secret: Secret
     ): KubernetesResult<String> {
-        val url = "/api/secrets"
+        val url = "/api/namespace/$namespace/secrets"
         val body = JsonUtil.toJson(secret)
         logger.info("Create secret request url: $url, body: $body")
         val request = clientCommon.microBaseRequest(url).post(
@@ -68,8 +69,12 @@ class SecretClient @Autowired constructor(
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
-    fun getSecretByName(userId: String, secretName: String): KubernetesResult<Service> {
-        val url = "/api/secrets/$secretName"
+    fun getSecretByName(
+        userId: String,
+        namespace: String,
+        secretName: String
+    ): KubernetesResult<Service> {
+        val url = "/api/namespace/$namespace/secrets/$secretName"
         val request = clientCommon.microBaseRequest(url).get().build()
         logger.info("Get secret: $secretName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
@@ -87,8 +92,12 @@ class SecretClient @Autowired constructor(
         }
     }
 
-    fun deleteSecretByName(userId: String, secretName: String): KubernetesResult<String> {
-        val url = "/api/secrets/$secretName"
+    fun deleteSecretByName(
+        userId: String,
+        namespace: String,
+        secretName: String
+    ): KubernetesResult<String> {
+        val url = "/api/namespace/$namespace/secrets/$secretName"
         val request = clientCommon.microBaseRequest(url).delete().build()
         logger.info("Delete secret: $secretName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->

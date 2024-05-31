@@ -52,9 +52,10 @@ class IngressClient @Autowired constructor(
 
     fun createIngress(
         userId: String,
+        namespace: String,
         ingress: Ingress
     ): KubernetesResult<String> {
-        val url = "/api/ingress"
+        val url = "/api/namespace/$namespace/ingress"
         val body = JsonUtil.toJson(ingress)
         logger.info("Create ingress request url: $url, body: $body")
         val request = clientCommon.microBaseRequest(url).post(
@@ -68,8 +69,12 @@ class IngressClient @Autowired constructor(
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
-    fun getIngressByName(userId: String, ingressName: String): KubernetesResult<Service> {
-        val url = "/api/ingress/$ingressName"
+    fun getIngressByName(
+        userId: String,
+        namespace: String,
+        ingressName: String
+    ): KubernetesResult<Service> {
+        val url = "/api/namespace/$namespace/ingress/$ingressName"
         val request = clientCommon.microBaseRequest(url).get().build()
         logger.info("Get ingress: $ingressName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
@@ -87,8 +92,12 @@ class IngressClient @Autowired constructor(
         }
     }
 
-    fun deleteIngressByName(userId: String, ingressName: String): KubernetesResult<String> {
-        val url = "/api/ingress/$ingressName"
+    fun deleteIngressByName(
+        userId: String,
+        namespace: String,
+        ingressName: String
+    ): KubernetesResult<String> {
+        val url = "/api/namespace/$namespace/ingress/$ingressName"
         val request = clientCommon.microBaseRequest(url).delete().build()
         logger.info("Delete ingress: $ingressName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
