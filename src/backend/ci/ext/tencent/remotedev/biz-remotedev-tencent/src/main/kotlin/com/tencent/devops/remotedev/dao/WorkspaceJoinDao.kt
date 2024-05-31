@@ -335,14 +335,13 @@ class WorkspaceJoinDao {
     // 获取正常状态的 workspace 的用户
     fun fetchProjectSharedUser(
         dslContext: DSLContext,
-        projectId: String,
-        onlyOwner: Boolean
+        projectIds: Set<String>
     ): Set<String> {
         val dsl = dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
             .from(TWorkspace.T_WORKSPACE)
             .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
             .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.`in`(projectIds))
             .and(
                 TWorkspace.T_WORKSPACE.STATUS.notIn(
                     WorkspaceStatus.PREPARING.ordinal,
@@ -350,9 +349,6 @@ class WorkspaceJoinDao {
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
             )
-        if (onlyOwner) {
-            dsl.and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-        }
         return dsl.fetch().distinct()
             .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] ?: "" }
             .filter { it.isNotBlank() }
