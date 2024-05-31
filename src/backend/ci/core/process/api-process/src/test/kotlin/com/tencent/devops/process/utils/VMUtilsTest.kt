@@ -37,7 +37,8 @@ class VMUtilsTest {
     fun testGetRandomJobId() {
         val jobIdSet = mutableSetOf<String>()
         for (i in 0 until 1000) {
-            jobIdSet.add(VMUtils.getContainerJobId(i))
+            val newId = VMUtils.getContainerJobId(i, jobIdSet)
+            jobIdSet.add(newId)
         }
         assertEquals(1000, jobIdSet.size)
     }

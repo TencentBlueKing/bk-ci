@@ -1277,13 +1277,15 @@ class PipelineRepositoryService constructor(
         // 1 返回时将别名name补全为id
         // 2 填充所有job没有的job id
         // 3 所有插件ENV配置合并历史值，并过滤掉默认值
-        var randomSeq = 1
+        var randomSeed = 1
+        val jobIdSet = mutableSetOf<String>()
         resource?.model?.stages?.forEachIndexed { index, s ->
             if (index == 0) (s.containers[0] as TriggerContainer).params.forEach { param ->
                 param.name = param.name ?: param.id
             } else {
                 s.containers.forEach { c ->
-                    if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeq++)
+                    if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed++, jobIdSet)
+                    c.jobId?.let { jobIdSet.add(it) }
                     c.elements.forEach { e ->
                         // 保存时将旧customEnv赋值给新的上一级customEnv
                         val oldCustomEnv = e.additionalOptions?.customEnv?.filter {
