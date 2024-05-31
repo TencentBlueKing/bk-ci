@@ -34,12 +34,16 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
@@ -193,12 +197,42 @@ class TemplateInstanceCronService @Autowired constructor(
                                 )
                             )
                             successPipelines.add(pipelineName)
+                        } catch (exception: ErrorCodeException) {
+                            logger.info(
+                                "Fail to update the pipeline|$projectId|${templateInstanceItem.pipelineId}|" +
+                                        "$userId|${exception.message}"
+                            )
+                            val message = I18nUtil.generateResponseDataObject(
+                                messageCode = exception.errorCode,
+                                params = exception.params,
+                                data = null,
+                                defaultMessage = exception.defaultMessage
+                            ).message ?: exception.defaultMessage ?: "unknown!"
+                            // ERROR_PIPELINE_ELEMENT_CHECK_FAILED输出的是一个json,需要格式化输出
+                            val reason = if (exception.errorCode == ERROR_PIPELINE_ELEMENT_CHECK_FAILED) {
+                                JsonUtil.to(message, PipelineCheckFailedErrors::class.java)
+                            } else {
+                                PipelineCheckFailedMsg(message)
+                            }
+                            templateService.updateInstanceErrorInfo(
+                                projectId = projectId,
+                                pipelineId = templateInstanceItem.pipelineId,
+                                errorInfo = JsonUtil.toJson(reason, false)
+                            )
+                            failurePipelines.add("【$pipelineName】reason：${reason.message}")
                         } catch (ignored: Throwable) {
                             logger.warn("Fail to update the pipeline|$pipelineName|$projectId|$userId|$ignored")
                             val message =
                                 if (!ignored.message.isNullOrBlank() && ignored.message!!.length > maxErrorReasonLength)
                                     ignored.message!!.substring(0, maxErrorReasonLength) + "......"
                                 else ignored.message
+                            message?.let {
+                                templateService.updateInstanceErrorInfo(
+                                    projectId = projectId,
+                                    pipelineId = templateInstanceItem.pipelineId,
+                                    errorInfo = JsonUtil.toJson(PipelineCheckFailedMsg(it), false)
+                                )
+                            }
                             failurePipelines.add("【$pipelineName】reason: $message")
                         }
                     }

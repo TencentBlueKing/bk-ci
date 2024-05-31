@@ -60,8 +60,8 @@ object StoreMessageCode {
     const val USER_ATOM_RELEASE_STEPS_ERROR = "2120008" // 研发商店：插件发布流程状态变更顺序不正确
     const val USER_ATOM_VERSION_IS_NOT_FINISH = "2120009" // 研发商店：插件{0}的{1}版本发布未结束，请稍后再试
     const val USER_ATOM_VERSION_IS_INVALID = "2120010" // 研发商店：插件升级的版本号{0}错误，应为{1}
-    const val USER_ATOM_LOGO_SIZE_IS_INVALID = "2120011" // 研发商店：插件logo的尺寸应为{0}x{1}
-    const val USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT = "2120012" // 研发商店：logo不支持{0}类型，可以上传{1}类型
+    const val USER_LOGO_SIZE_IS_INVALID = "2120011" // logo的尺寸应为{0}x{1}
+    const val USER_LOGO_TYPE_IS_NOT_SUPPORT = "2120012" // logo不支持{0}类型，可以上传{1}类型
     const val UPLOAD_LOGO_IS_TOO_LARGE = "2120013" // 研发商店：上传的logo文件不能超过{0}
     const val USER_ATOM_CONF_INVALID = "2120014" // 研发商店：插件配置文件{0}格式不正确，请检查
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 研发商店：你不在{0}插件的可见范围之内，请联系插件发布者
@@ -71,7 +71,7 @@ object StoreMessageCode {
     const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 研发商店：从[{0}]分支拉取插件配置文件[quality.json失败,请确认是否OAUTH授权、文件是否正确上传代码库等
     const val USER_ATOM_USED = "2120020" // 研发商店：插件{0}已被项目{1}下的流水线使用，不可以卸载
     const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 研发商店：插件卸载原因{0}已被使用，不能删除。建议禁用
-    const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：插件{0}已发布到商店，请先下架再删除
+    const val USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：组件{0}已发布到商店，请先下架再删除
     const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 研发商店：插件{0}已安装到其他项目下使用，请勿移除
     const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
     const val USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT = "2120025" // 你的项目[{0}]不允许使用插件[{1}]，请检查插件是否被正确安装
@@ -89,6 +89,8 @@ object StoreMessageCode {
     const val USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID = "2120037" // 研发商店：插件配置文件[error.json]errorCode格式不正确，请检查
     const val TASK_JSON_CONFIGURE_FORMAT_ERROR = "2120038" // 参数[{0}] 的{1} ,请检查task.json配置格式是否正确 \n
     const val GET_ATOM_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
+    // 研发商店：插件配置文件[task.json]config配置格式不正确,{0}
+    const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
@@ -153,16 +155,13 @@ object StoreMessageCode {
     const val USER_NOT_IS_STORE_MEMBER = "2120926" // 研发商店：用户{0}不是组件成员
     const val GET_BRANCH_COMMIT_INFO_ERROR = "2120927" // 获取分支提交信息异常
     const val STORE_BRANCH_NO_NEW_COMMIT = "2120928" // 代码未变更，分支测试版本生成失败
-
-    const val BK_OTHER = "bkOther" // 其他
-    const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job
-    const val BK_IMAGE_STORE_ONLINE = "bkImageStoreOnline" // 容器镜像商店上线，历史镜像数据自动生成
-    const val BK_OLD_VERSION_BUILD_IMAGE = "bkOldVersionBuildImage" // 旧版的构建镜像，通过拷贝为构建镜像入口生成
-    const val BK_AUTOMATICALLY_CONVERTED = "bkAutomaticallyConverted" // 已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
-    const val BK_COPY_FOR_BUILD_IMAGE = "bkCopyForBuildImage" // 旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
-    const val BK_AFTER_IMAGE_STORE_ONLINE = "bkAfterImageStoreOnline" // 容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
-    const val BK_PROJECT_MANAGER_CAN_OPERATION = "bkProjectManagerCanOperation" // 项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
-    const val BK_HISTORY_DATA_MIGRATE_PASS = "bkHistoryDataMigratePass" // historyData数据迁移自动通过
-    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
-    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
+    const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件[{0}]的[{1}]版本发布未结束，请稍后再试
+    const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
+    const val STORE_PROJECT_COMPONENT_NO_PERMISSION = "2120931" // 研发商店：项目[{0}]没有组件[{1}]的使用权限，请先安装组件
+    const val STORE_VERSION_IS_INVALID = "2120932" // 研发商店：组件升级的版本号{0}错误，应为{1}
+    const val STORE_INSTALL_VALIDATE_FAIL = "2120933" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
+    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120934" // 研发商店：组件仓库文件删除失败
+    // 当 queryProjectComponentFlag、installed 或 updateFlag 参数不为空时, projectCode 参数必须非空
+    const val STORE_QUERY_PARAM_CHECK_FAIL = "2120935"
+    const val STORE_COMPONENT_IS_NOT_ALLOW_OFFLINE = "2120936" // 研发商店：非发布状态的版本不允许下架
 }

@@ -150,7 +150,6 @@ class ProcessDataClearService @Autowired constructor(
                 processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, pipelineId, buildId)
             }
             processDataClearDao.deleteBuildWebhookParameter(context, projectId, buildId)
-            processDataClearDao.deleteBuildCommits(context, projectId, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,
@@ -167,7 +166,11 @@ class ProcessDataClearService @Autowired constructor(
             val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
             try {
                 pipelineVersionLock.lock()
-                processDataClearDao.deleteBuildHistoryByBuildId(context, projectId, buildId)
+                val deleteResult = processDataClearDao.deleteBuildHistoryByBuildId(context, projectId, buildId)
+                if (deleteResult == 0) {
+                    // 如果删除的记录数为0则无需执行后面的逻辑
+                    return@transaction
+                }
                 // 查询流水线版本记录
                 val pipelineVersionInfo = processDao.getPipelineVersionSimple(
                     dslContext = context,
@@ -176,7 +179,7 @@ class ProcessDataClearService @Autowired constructor(
                     version = version
                 )
                 var referCount = pipelineVersionInfo?.referCount
-                referCount = if (referCount == null) {
+                referCount = if (referCount == null || referCount < 0) {
                     // 兼容老数据缺少关联构建记录的情况，全量统计关联数据数量
                     processDao.countBuildNumByVersion(
                         dslContext = context,

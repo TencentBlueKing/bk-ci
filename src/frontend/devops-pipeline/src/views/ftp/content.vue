@@ -13,7 +13,7 @@
     import RemoteAtom from '../../components/AtomPropertyPanel/RemoteAtom.vue'
     import PipelineEdit from '../subpages/edit.vue'
     import PipelineExecDetail from '../subpages/ExecDetail.vue'
-    import PipelinesHistory from '../subpages/history.vue'
+    import PipelinesHistory from '../subpages/History.vue'
 
     const COMPONENTS = {
         ftpPipelinesEdit: PipelineEdit,

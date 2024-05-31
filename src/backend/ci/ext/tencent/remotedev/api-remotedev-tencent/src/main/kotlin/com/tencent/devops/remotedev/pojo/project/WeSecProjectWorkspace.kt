@@ -59,5 +59,23 @@ data class WeSecProjectWorkspace(
     val realOwner: String? = null,
     @get:Schema(title = "云桌面别名")
     @JsonProperty("display_name")
-    val displayName: String? = null
+    val displayName: String? = null,
+    @get:Schema(title = "拥有者所属组织信息")
+    val ownerDepartments: List<DepartmentsInfo>?,
+    @get:Schema(title = "当前登录人")
+    val currentLoginUsers: Set<String>?,
+    @get:Schema(title = "机型")
+    @JsonProperty("machine_type")
+    val machineType: String? = null,
+    @JsonProperty("mac_address")
+    @get:Schema(title = "mac地址")
+    val macAddress: String? = null
+)
+
+@Schema(title = "组织信息")
+data class DepartmentsInfo(
+    @get:Schema(title = "组织ID")
+    val deptId: String?,
+    @get:Schema(title = "组织名称")
+    val deptName: String?
 )

@@ -31,7 +31,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-db"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+    api(project(":core:common:common-auth:common-auth-provider"))
     api(project(":core:common:common-audit"))
 
     api(project(":core:process:api-process"))

@@ -270,7 +270,8 @@ object ExportJob {
                     displayName = agentId,
                     workspace = workspace,
                     agentType = AgentType.ID,
-                    dockerInfo = null
+                    dockerInfo = null,
+                    reusedInfo = null
                 )
             } else if (envId.isNotBlank()) {
                 ThirdPartyAgentEnvDispatchType(
@@ -278,7 +279,8 @@ object ExportJob {
                     envProjectId = null,
                     workspace = workspace,
                     agentType = AgentType.ID,
-                    dockerInfo = null
+                    dockerInfo = null,
+                    reusedInfo = null
                 )
             } // docker建机指定版本(旧)
             else {

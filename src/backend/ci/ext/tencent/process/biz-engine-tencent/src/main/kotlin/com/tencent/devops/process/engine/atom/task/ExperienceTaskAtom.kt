@@ -79,11 +79,15 @@ class ExperienceTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val containerId = task.containerHashId
         if (param.path.isBlank()) {
-            buildLogPrinter.addRedLine(buildId,
-                MessageUtil.getMessageByLocale(
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = MessageUtil.getMessageByLocale(
                     messageCode = BK_EXPERIENCE_PATH_EMPTY,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ), taskId, containerId, task.executeCount ?: 1)
+                ), tag = taskId, containerHashId = containerId, executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -96,11 +100,15 @@ class ExperienceTaskAtom @Autowired constructor(
         }
 
         if (param.notifyTypes.isEmpty()) {
-            buildLogPrinter.addRedLine(buildId,
-                MessageUtil.getMessageByLocale(
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = MessageUtil.getMessageByLocale(
                     messageCode = BK_INCORRECT_NOTIFICATION_METHOD,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ), taskId, containerId, task.executeCount ?: 1)
+                ), tag = taskId, containerHashId = containerId, executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -152,12 +160,16 @@ class ExperienceTaskAtom @Autowired constructor(
         val artifactoryType = if (customized) com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.CUSTOM_DIR
         else com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.PIPELINE
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, realPath).data!!) {
-            buildLogPrinter.addRedLine(buildId,
-                MessageUtil.getMessageByLocale(
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = MessageUtil.getMessageByLocale(
                     messageCode = FILE_NOT_EXIST,
                     language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(path)
-                ), taskId, containerId, task.executeCount ?: 1)
+                ), tag = taskId, containerHashId = containerId, executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -190,12 +202,16 @@ class ExperienceTaskAtom @Autowired constructor(
         )
         client.get(ServiceExperienceResource::class).create(userId, projectId, experience)
 
-        buildLogPrinter.addLine(buildId,
-            MessageUtil.getMessageByLocale(
+        buildLogPrinter.addLine(
+            buildId = buildId,
+            message = MessageUtil.getMessageByLocale(
                 messageCode = BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY,
                 language = I18nUtil.getDefaultLocaleLanguage(),
                 params = arrayOf(fileName)
-            ), taskId, containerId, task.executeCount ?: 1)
+            ), tag = taskId, containerHashId = containerId, executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
+        )
 
         return AtomResponse(BuildStatus.SUCCEED)
     }

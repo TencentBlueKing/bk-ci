@@ -217,14 +217,8 @@ class DockerHostClient @Autowired constructor(
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
-        val dockerHostUri = if (clusterType == DockerHostClusterType.AGENT_LESS) {
-            Constants.DOCKERHOST_AGENTLESS_STARTUP_URI
-        } else {
-            Constants.DOCKERHOST_STARTUP_URI
-        }
-
         val request = dockerHostProxyService.getDockerHostProxyRequest(
-            dockerHostUri = dockerHostUri,
+            dockerHostUri = Constants.DOCKERHOST_STARTUP_URI,
             dockerHostIp = dockerIp,
             dockerHostPort = dockerHostPort,
             clusterType = clusterType
@@ -342,8 +336,10 @@ class DockerHostClient @Autowired constructor(
                 buildId = dockerHostBuildInfo.buildId,
                 message = "Start build Docker VM in $dockerIp failed, retry startBuild.",
                 tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-                jobId = dockerHostBuildInfo.containerHashId,
-                executeCount = 1
+                containerHashId = dockerHostBuildInfo.containerHashId,
+                executeCount = 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString())
             )
 
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)

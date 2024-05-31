@@ -1,12 +1,13 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WhiteListDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WhiteList
 import com.tencent.devops.remotedev.pojo.WhiteListType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
@@ -18,8 +19,8 @@ import org.springframework.stereotype.Service
 class WhiteListService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cacheService: RedisCacheService,
-    private val client: Client,
-    private val whiteListDao: WhiteListDao
+    private val whiteListDao: WhiteListDao,
+    private val workspaceDao: WorkspaceDao
 ) {
 
     companion object {
@@ -71,6 +72,21 @@ class WhiteListService @Autowired constructor(
         return true
     }
 
+    fun updateAndGetWindowsLimit(userId: String, limit: Int): Int {
+        val get = whiteListDao.get(dslContext, userId, WhiteListType.WINDOWS_GPU)?.windowsGpuLimit ?: 0
+        if (limit != 0) {
+            whiteListDao.addOrUpdate(
+                dslContext,
+                WhiteList(
+                    name = userId,
+                    type = WhiteListType.WINDOWS_GPU,
+                    windowsGpuLimit = limit + get
+                )
+            )
+        }
+        return limit + get
+    }
+
     fun addGPUWhiteListUser(
         userId: String,
         whiteListUser: String,
@@ -104,7 +120,6 @@ class WhiteListService @Autowired constructor(
                 ) {
                     logger.info("whiteListUser($user) in the gpu whiteList has add.(not override)")
                 }
-                client.get(ServiceStartCloudResource::class).createStartCloudUser(user)
             }
         }
 
@@ -132,6 +147,19 @@ class WhiteListService @Autowired constructor(
         return cacheService.checkWindowsGpuLimit(user) > 0
     }
 
+    fun windowsGpuCheck(userId: String, count: Int) {
+        windowsNumberLimit(
+            userId = userId,
+            value = workspaceDao.countUserWorkspace(
+                dslContext = dslContext,
+                userId = userId,
+                unionShared = false,
+                status = WorkspaceStatus.Types.USING.status(),
+                systemType = WorkspaceSystemType.WINDOWS_GPU
+            ) + count
+        )
+    }
+
     /* 有关数量的限制:
         如果value大于指定key中id规定的数量，则抛出异常
         如果没有白名单，则抛出异常
@@ -140,7 +168,7 @@ class WhiteListService @Autowired constructor(
     fun windowsNumberLimit(userId: String, value: Long) {
         val limit = cacheService.checkWindowsGpuLimit(userId)
         logger.info("numberLimit|$value|$limit")
-        if (limit != null && value < limit) {
+        if (limit != null && value <= limit) {
             // 没有达到限制，直接return
             return
         }

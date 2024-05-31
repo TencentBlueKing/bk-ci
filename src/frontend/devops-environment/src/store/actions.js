@@ -91,16 +91,19 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}`).then(response => {
+    requestNodeList ({ commit }, {
+        projectId,
+        params
+    }) {
+        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}/listNew`, { params }).then(response => {
             return response
         })
     },
     /**
      * 环境的节点列表
      */
-    requestEnvNodeList ({ commit }, { projectId, envHashId }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`, { }).then(response => {
+    requestEnvNodeList ({ commit }, { projectId, envHashId, params }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/listNodesNew`, { params }).then(response => {
             return response
         })
     },
@@ -156,7 +159,7 @@ const actions = {
      * CMDB节点列表
      */
     requestCmdbNode ({ commit }, { params }) {
-        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesNew?page=${params.page}&pageSize=${params.pageSize}&bakOperator=${params.bakOperator}`, params.ipList).then(response => {
+        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesNew?projectId=${params.projectId}&page=${params.page}&pageSize=${params.pageSize}&bakOperator=${params.bakOperator}`, params.ipList).then(response => {
             return response
         })
     },
@@ -165,6 +168,14 @@ const actions = {
      */
     importCmdbNode ({ commit }, { projectId, params }) {
         return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addCmdbNodes`, params).then(response => {
+            return response
+        })
+    },
+    /**
+     * 重新导入CMDB节点
+     */
+    reImportCmdbNode ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/reImportCmdbNodes`, params).then(response => {
             return response
         })
     },
@@ -398,9 +409,55 @@ const actions = {
     removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
         return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
     },
-
     checkEnableDashboard (_, { projectId }) {
         return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/monitor/checkEnableDashboard?projectId=${projectId}`)
+    },
+    getJobInstanceStatus (_, {
+        projectId,
+        jobInstanceId
+    }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/query_job_instance_status?jobInstanceId=${jobInstanceId}&returnIpResult=false`)
+    },
+    getJobInstanceLogs (_, {
+        projectId,
+        jobInstanceId,
+        stepInstanceId,
+        hostIdList
+    }) {
+        //
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/query_job_instance_logs`, {
+            hostIdList,
+            jobInstanceId,
+            stepInstanceId
+        })
+    },
+    getStepInstanceStatus (_, { projectId, params }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_status`, {
+            params
+        })
+    },
+    getStepInstanceDetail (_, {
+        projectId, jobInstanceId, stepInstanceId
+    }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_detail?jobInstanceId=${jobInstanceId}&stepInstanceId=${stepInstanceId}`)
+    },
+
+    installAgent (_, { projectId, data, headers }) {
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/install_agent`, data, {
+            headers
+        })
+    },
+    // 安装通道列表
+    getChannelList (_, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/query_agent_install_channel?withHidden=true`)
+    },
+    // 查询agent任务状态的接口
+    getAgentTaskStatus (_, { projectId, jobId, params }) {
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_status`, params)
+    },
+    // 查询agent任务具体日志
+    getAgentTaskLog (_, { projectId, jobId, instanceId }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_log?instanceId=${instanceId}`)
     }
 }
 

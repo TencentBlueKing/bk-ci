@@ -35,7 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
@@ -83,14 +83,13 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         bkTicket: String,
         projectId: String,
-        workspace: ProjectWorkspaceCreate
+        workspace: WindowsWorkspaceCreate
     ): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
-        createControl.asyncCreateWorkspace(
+        createControl.projectCreateWorkspace(
             pmUserId = userId,
             projectId = projectId,
             cgsId = null,
-            autoAssign = false,
             workspaceCreate = workspace
         )
         return Result(true)
@@ -176,7 +175,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
-        return Result(startWorkspaceService.computerStatus(userId, projectId))
+        return Result(startWorkspaceService.computerStatus(projectId))
     }
 
     override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {

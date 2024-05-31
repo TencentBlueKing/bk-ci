@@ -44,13 +44,11 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import java.net.URLEncoder
@@ -67,9 +65,9 @@ class PermissionService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: RedisCacheService,
+    private val whiteListService: WhiteListService,
     private val checkTokenService: ClientTokenService
 ) {
     companion object {
@@ -111,7 +109,7 @@ class PermissionService @Autowired constructor(
 
     fun getWorkspaceOwner(workspaceName: String): List<String> = workspaceOwnerCache.get(workspaceName)
 
-    fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
+    fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String, ownerType: WorkspaceOwnerType) {
         if (!enablePermission) return
 
         if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
@@ -121,7 +119,7 @@ class PermissionService @Autowired constructor(
             )
         }
 
-        if (!checkUserVisitPermission(userId, projectId)) {
+        if (ownerType == WorkspaceOwnerType.PROJECT && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
@@ -130,7 +128,9 @@ class PermissionService @Autowired constructor(
     }
 
     fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
-        return kotlin.runCatching { checkOwnerPermission(userId, workspaceName, projectId) }.fold(
+        return kotlin.runCatching {
+            checkOwnerPermission(userId, workspaceName, projectId, WorkspaceOwnerType.PROJECT)
+        }.fold(
             { return true }, { return false }
         )
     }
@@ -231,33 +231,8 @@ class PermissionService @Autowired constructor(
         return true
     }
 
-    fun checkUserCreate(userId: String, runningOnly: Boolean = false): Boolean {
-        val setting = remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
-        val maxRunningCount = setting.maxRunningCount
-        if (!runningOnly) {
-            val maxHavingCount = setting.maxHavingCount
-            workspaceDao.countUserWorkspace(dslContext = dslContext, userId = userId, unionShared = false).let {
-                if (it >= maxHavingCount) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_MAX_HAVING.errorCode,
-                        params = arrayOf(it.toString(), maxHavingCount.toString())
-                    )
-                }
-            }
-        }
-        workspaceDao.countUserWorkspace(
-            dslContext = dslContext,
-            userId = userId,
-            unionShared = false,
-            status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING)
-        ).let {
-            if (it >= maxRunningCount) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_MAX_RUNNING.errorCode,
-                    params = arrayOf(it.toString(), maxRunningCount.toString())
-                )
-            }
-        }
+    fun checkUserCreate(userId: String): Boolean {
+        whiteListService.windowsGpuCheck(userId, 1)
         return true
     }
 

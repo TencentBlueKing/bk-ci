@@ -6,6 +6,7 @@ import com.tencent.devops.remotedev.api.op.OpCodeProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CallbackLinktgitData
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class OpCodeProxyResourceImpl @Autowired constructor(
@@ -23,8 +24,7 @@ class OpCodeProxyResourceImpl @Autowired constructor(
         )
     }
 
-    override fun migrateTGitData(projectId: String?): Result<Boolean> {
-        gitProxyTGitService.migrateTGitData(projectId)
-        return Result(true)
+    override fun refreshTGitAcl(projectId: String?, export: Boolean?): Response? {
+        return gitProxyTGitService.refreshTGitAcl(projectId, export)
     }
 }

@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.1
+**文档版本：** 1.0.2
 
 **文档描述：** devops_ci_repository 的数据库文档
 | 表名                  | 说明       |
@@ -40,6 +40,9 @@
 |  9   | UPDATED_TIME |   timestamp   | 19 |   0    |    N     |  N   |   2019-08-0100:00:00    | 修改时间  |
 |  10   | IS_DELETED |   bit   | 1 |   0    |    N     |  N   |       | 是否删除 0 可用 1 删除  |
 |  11   | UPDATED_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 代码库最近修改人  |
+|  12   | ATOM |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否为插件库(插件库不得修改和删除)  |
+|  13   | ENABLE_PAC |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否开启 pac  |
+|  14   | YAML_SYNC_STATUS |   varchar   | 10 |   0    |    Y     |  N   |       | pac 同步状态  |
 
 **表名：** <a>T_REPOSITORY_CODE_GIT</a>
 
@@ -224,6 +227,7 @@
 |  17   | TRIGGER_CONDITION_MD5 |   varchar   | 64 |   0    |    Y     |  N   |       | 触发条件 md5  |
 |  18   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  19   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  20   | CHANNEL |   varchar   | 32 |   0    |    Y     |  N   |   BS    | 流水线渠道  |
 
 **表名：** <a>T_REPOSITORY_TGIT_TOKEN</a>
 

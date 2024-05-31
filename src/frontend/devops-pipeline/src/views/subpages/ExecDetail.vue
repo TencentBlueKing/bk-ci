@@ -2,9 +2,8 @@
     <section
         class="pipeline-detail-wrapper"
         @scroll="handlerScroll"
-        v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
+        v-bkloading="{ isLoading: isLoading }"
     >
-        
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
@@ -25,6 +24,10 @@
                 <aside class="exec-detail-summary-header-title">
                     <bk-tag class="exec-status-tag" type="stroke" :theme="statusTagTheme">
                         <span class="exec-status-label">
+                            <i v-if="isRunning" :class="['devops-icon', {
+                                'icon-hourglass': execDetail.status === 'QUEUE',
+                                'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
+                            }]" />
                             {{ statusLabel }}
                             <span
                                 v-if="execDetail.status === 'CANCELED'"
@@ -58,7 +61,7 @@
                 :visible="summaryVisible"
                 :exec-detail="execDetail"
             ></Summary>
-            
+
             <p class="pipeline-exec-gap">
                 <span
                     @click="collapseSummary"
@@ -113,6 +116,7 @@
             <template v-else-if="showContainerPanel">
                 <job
                     :exec-detail="execDetail"
+                    :pipeline="pipelineModel"
                     :editing-element-pos="editingElementPos"
                     @close="hideSidePanel"
                 />
@@ -149,7 +153,6 @@
     import stageReviewPanel from '@/components/StageReviewPanel'
     import StartParams from '@/components/StartParams'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import {
         handlePipelineNoPermission,
         RESOURCE_ACTION
@@ -175,7 +178,7 @@
             AtomPropertyPanel,
             Summary
         },
-        mixins: [pipelineOperateMixin, pipelineConstMixin],
+        mixins: [pipelineOperateMixin],
 
         data () {
             return {
@@ -218,7 +221,6 @@
                 'isShowCompleteLog',
                 'showPanelType',
                 'fetchingAtomList',
-                'pipeline',
                 'showStageReviewPanel'
             ]),
             ...mapGetters('atom', {
@@ -227,6 +229,9 @@
             ...mapState(['fetchError']),
             execFormatStartTime () {
                 return convertTime(this.execDetail?.queueTime)
+            },
+            isRunning () {
+                return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
             panels () {
                 return [
@@ -238,7 +243,8 @@
                         bindData: {
                             execDetail: this.execDetail,
                             isLatestBuild: this.isLatestBuild,
-                            matchRules: this.curMatchRules
+                            matchRules: this.curMatchRules,
+                            isRunning: this.isRunning
                         }
                     },
                     {
@@ -362,12 +368,16 @@
             },
             isLatestBuild () {
                 return this.execDetail?.buildNum === this.execDetail?.latestBuildNum && this.execDetail?.curVersion === this.execDetail?.latestVersion
+            },
+            pipelineModel () {
+                return this.execDetail?.model || {}
             }
         },
 
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                
                 if (val) {
                     this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
@@ -427,7 +437,7 @@
 
         beforeDestroy () {
             this.setPipelineDetail(null)
-
+            this.isLoading = false
             webSocketMessage.unInstallWsMessage()
         },
 
@@ -557,6 +567,12 @@
         align-items: center;
         grid-auto-flow: column;
         grid-gap: 6px;
+        .devops-icon.icon-hourglass {
+            animation: hourglassSpin;
+            animation-delay: 0.5s, 0.5s;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+        }
       }
 
       .exec-detail-summary-header-build-msg {
@@ -609,7 +625,7 @@
         height: 12px;
         background: #EAEBF0;
 
-        border-radius: 2px 2px 0 0;
+        border-radius:  0 0 2px 2px;
         text-align: center;
         line-height: 12px;
         font-size: 12px;
@@ -705,6 +721,7 @@
   .bk-sideslider-wrapper {
     top: 0;
     padding-bottom: 0;
+    height: 100vh;
     .bk-sideslider-content {
       height: calc(100% - 60px);
     }
@@ -742,11 +759,6 @@
       }
       .item-label {
         color: #c4cdd6;
-      }
-      .icon-retry {
-        font-size: 20px;
-        color: $primaryColor;
-        cursor: pointer;
       }
       .icon-stop-shape {
         font-size: 15px;

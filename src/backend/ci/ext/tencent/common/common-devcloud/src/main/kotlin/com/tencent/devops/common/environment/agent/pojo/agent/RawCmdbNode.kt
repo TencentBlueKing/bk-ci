@@ -34,5 +34,7 @@ data class RawCmdbNode(
     var ip: String,
     val displayIp: String,
     val osName: String,
-    var agentStatus: Boolean
+    var agentStatus: Boolean,
+    val serverId: Long,
+    val deptId: Int
 )

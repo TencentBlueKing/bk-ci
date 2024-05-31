@@ -30,21 +30,21 @@ package com.tencent.devops.artifactory.service.permission
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class DefaultPipelineServiceImpl @Autowired constructor(
     private val client: Client,
-    private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val bkAuthPermissionApi: BSAuthPermissionApi,
-    private val authProjectApi: BSAuthProjectApi,
-    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val authPermissionApi: AuthPermissionApi,
+    private val authProjectApi: AuthProjectApi,
+    private val artifactoryAuthServiceCode: RepoAuthServiceCode
 ) : PipelineService(client) {
 
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
@@ -70,7 +70,7 @@ class DefaultPipelineServiceImpl @Autowired constructor(
         return if (pipelineId == null) {
             authProjectApi.checkProjectUser(userId, artifactoryAuthServiceCode, projectId)
         } else {
-            bkAuthPermissionApi.validateUserResourcePermission(
+            authPermissionApi.validateUserResourcePermission(
                 userId,
                 pipelineAuthServiceCode,
                 AuthResourceType.PIPELINE_DEFAULT,
@@ -84,7 +84,7 @@ class DefaultPipelineServiceImpl @Autowired constructor(
     override fun filterPipeline(user: String, projectId: String): List<String> {
         val startTimestamp = System.currentTimeMillis()
         try {
-            return bkAuthPermissionApi.getUserResourceByPermission(
+            return authPermissionApi.getUserResourceByPermission(
                 user,
                 pipelineAuthServiceCode,
                 resourceType,

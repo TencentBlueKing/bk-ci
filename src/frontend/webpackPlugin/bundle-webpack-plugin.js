@@ -24,6 +24,7 @@ module.exports = class BundleWebpackPlugin {
     constructor (props) {
         const dist = props.dist || '.'
         const bundleName = props.bundleName || 'assets_bundle'
+        this.isDev = props.isDev || false
         this.SERVICE_ASSETS_JSON_PATH = path.join(
             __dirname,
             '..',
@@ -37,8 +38,7 @@ module.exports = class BundleWebpackPlugin {
         compiler.hooks.done.tapAsync(
             'BundleWebpackPlugin',
             (compilation, callback) => {
-                console.log('This is an example plugin!')
-                const { SERVICE_ASSETS_JSON_PATH, SERVICE_ASSETS_DIR } = this
+                const { SERVICE_ASSETS_JSON_PATH, SERVICE_ASSETS_DIR, isDev } = this
                 const entryNames = Array.from(
                     compilation.compilation.entrypoints.keys()
                 )
@@ -62,7 +62,7 @@ module.exports = class BundleWebpackPlugin {
                                 .map(encodeURIComponent)
                                 .join('/')
                         )
-                        .map((entryPointPublicPath) => {
+                        .forEach((entryPointPublicPath) => {
                             const extMatch = extensionRegexp.exec(
                                 entryPointPublicPath
                             )
@@ -85,7 +85,7 @@ module.exports = class BundleWebpackPlugin {
                 }
 
                 let json = {}
-                if (fs.existsSync(SERVICE_ASSETS_JSON_PATH)) {
+                if (!isDev && fs.existsSync(SERVICE_ASSETS_JSON_PATH)) {
                     json = JSON.parse(
                         fs.readFileSync(SERVICE_ASSETS_JSON_PATH, 'utf-8').toString()
                     )
@@ -97,6 +97,7 @@ module.exports = class BundleWebpackPlugin {
                 if (!fs.existsSync(SERVICE_ASSETS_DIR)) {
                     fs.mkdirSync(SERVICE_ASSETS_DIR)
                 }
+                console.log('update json', JSON.stringify(json))
                 fs.writeFileSync(SERVICE_ASSETS_JSON_PATH, JSON.stringify(json))
 
                 callback()

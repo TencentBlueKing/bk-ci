@@ -62,7 +62,7 @@ import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -100,15 +100,15 @@ import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.label.Label
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfoRequest
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.extservice.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.extservice.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.extservice.ExtServiceFeatureCreateInfo
@@ -194,7 +194,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
-    lateinit var bsProjectServiceCodec: BSProjectServiceCodec
+    lateinit var projectServiceCodec: ProjectAuthServiceCode
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
@@ -1757,7 +1757,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val permissionCheck = permissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectCode,
-            serviceCode = bsProjectServiceCodec,
+            serviceCode = projectServiceCodec,
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             resourceCode = "*",
             permission = AuthPermission.CREATE

@@ -1,0 +1,129 @@
+parameters:
+  - name: ips
+    type: string
+  - name: tag
+    type: string
+    default: rbac
+  - name: env
+    type: string
+  - name: code-branch
+    type: string
+  - name: config-branch
+    type: string
+
+stages:
+  - name: "Build"
+    label:
+      - "Build"
+    jobs:
+      job_1:
+        name: "构建环境-LINUX"
+        runs-on:
+          container:
+            image: "mirrors.tencent.com/ci/tlinux3_ci:2.5.0"
+          needs:
+            nodejs: 18.20.2
+        steps:
+          - checkout: "http://git.woa.com/bkdevops/bk-ci.git"
+            name: Checkout
+            with:
+              refName: ${{ parameters.code-branch }}
+          - name: "拉取前端占位符"
+            checkout: "http://git.woa.com/bkdevops/devops-config.git"
+            with:
+              pullType: "BRANCH"
+              refName: "${{ parameters.config-branch }}"
+              localPath: "devops-config"
+          - uses: calculatehash@1.*
+            id: calculate
+            with:
+              file_path: src/frontend/package.json,src/frontend/*/package.json
+              calculate_func: md5
+          - uses: cache@3.*
+            id: cache
+            with:
+              cacheKey: "frontend_linux_${{ steps.calculate.outputs.hash_value }}"
+              cachePaths: |
+                src/frontend/node_modules
+                src/frontend/*/node_modules
+              skipSaveWhenCacheHit: true
+          - name: "Bash"
+            run: |
+              cd src/frontend
+
+              if [ ${cacheHit} == 'false' ]
+              then
+                echo "cache hit fail , run yarn now..."
+                yarn
+              else
+                echo "package.json has not changed, use cache"
+              fi
+              ls -l ./node_modules
+              chmod -R 777 ./
+              yarn public -e "${{ parameters.env }}" -t tencent -l v2
+
+              cd ./frontend/ || exit 1
+
+              cp -rf ${{ ci.workspace }}/devops-config/gateway_frontend/* ${{ ci.workspace }}/
+              rm -r ${{ ci.workspace }}/ci || echo "no ci director"
+              mkdir -p ${{ ci.workspace }}/ci/frontend
+
+              cp -r ./* ${{ ci.workspace }}/ci/frontend/
+              cp ./console/frontend#console#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no console module"
+              cp ./pipeline/frontend#pipeline#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no pipeline module"
+              cp ./manage/frontend#manage#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no manage module"
+              cp ./permission/frontend#permission#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no permission module"
+
+              cd ${{ ci.workspace }}/scripts/
+              cp -rf ci_env_${{ parameters.env }}.properties ci_env.properties
+
+              if [[ "${{ parameters.tag }}" == "devx" ]]; then
+                echo "PAAS_LOGIN_URL='login.devx.tencent.com/login/?c_url=%s'" >> ci_env.properties
+                echo "WOA_LOGIN_SERVICE_URL='//login.devx.tencent.com/login/?c_url=%s'" >> ci_env.properties
+                echo "BKCI_FQDN='${{ parameters.env }}.devx.tencet.com'" >> ci_env.properties
+                echo "BK_CI_PAAS_LOGIN_URL='//login.devx.tencent.com/login/?c_url=%s'" >> ci_env.properties
+              fi
+
+              echo "BK_CI_VERSION=\"$(date +%s)\"" >> ci_env.properties
+              sh ./render_ci -m ci ../support-files/templates/*
+
+              cd ${{ ci.workspace }}/ci/frontend/
+              if [[ "${{ parameters.tag }}" == "devx" && "${{ parameters.env }}" == "dev" ]]; then
+                sed -i "s/dev-static\.devops\.woa\.com/dev.devx.tencent.com/g" console/index.html
+              fi
+              zip -r frontend.zip ./* && cp frontend.zip ${{ ci.workspace }}
+          - name: "Upload"
+            uses: "UploadArtifactory@1.*"
+            with:
+              filePath: "frontend.zip"
+  - name: "Deploy"
+    label:
+      - "Deploy"
+    jobs:
+      job_2:
+        name: "无编译环境"
+        runs-on: agentless
+        steps:
+          - name: "分发"
+            uses: "jobFileTransferForOA@1.*"
+            with:
+              bizId: "100205"
+              srcType: "PIPELINE"
+              srcPath: "frontend.zip"
+              targetIpList: ${{ parameters.ips }}
+              targetAccount: "root"
+              targetPath: "/data/tmp-${{ parameters.tag }}"
+          - name: "发布"
+            uses: "jobExecuteScriptForOA@1.*"
+            with:
+              bizId: "100205"
+              scriptType: "1"
+              scriptContent: |
+                cd /data/tmp-${{ parameters.tag }}
+                rm -rf frontend
+                mkdir -p frontend
+                unzip -o frontend.zip -d frontend
+                mkdir -p /data/bkee/ci/frontend-${{ parameters.tag }}
+                cp -rf /data/tmp-${{ parameters.tag }}/frontend/* /data/bkee/ci/frontend-${{ parameters.tag }}/
+              account: "root"
+              targetIpList: ${{ parameters.ips }}

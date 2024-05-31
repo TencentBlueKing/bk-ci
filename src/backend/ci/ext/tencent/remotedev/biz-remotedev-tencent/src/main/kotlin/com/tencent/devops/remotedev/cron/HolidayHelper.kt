@@ -36,7 +36,7 @@ class HolidayHelper @Autowired constructor(
     fun getLastWorkingDays(days: Int): List<LocalDateTime> {
         var now = LocalDateTime.now()
         val result = mutableListOf<LocalDateTime>()
-        var max = 32
+        var max = 128
         while (max-- > 0 && result.size < days + 1) {
             if (isWorkingDay(now)) {
                 result.add(now)
@@ -51,8 +51,8 @@ class HolidayHelper @Autowired constructor(
     }
 
     fun isWorkingDay(now: LocalDateTime): Boolean {
-        val holidays = getOrInitHolidays(now.year)
-        val workingDays = getOrInitWorkingDays(now.year)
+        val holidays = getOrInitHolidays(now.year).plus(getOrInitHolidays(now.year - 1))
+        val workingDays = getOrInitWorkingDays(now.year).plus(getOrInitWorkingDays(now.year - 1))
         when (now.dayOfWeek) {
             DayOfWeek.SATURDAY, DayOfWeek.SUNDAY -> {
                 if (now.format(formatter) in workingDays) {

@@ -37,7 +37,6 @@ import com.tencent.devops.common.audit.ActionAuditContent.CGS_ASSIGN_USER_CONTEN
 import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -54,20 +53,22 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
+import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
+import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
 class DeliverControl @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -75,7 +76,9 @@ class DeliverControl @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val httpCallBackService: HttpCallBackService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
 
     companion object {
@@ -86,8 +89,7 @@ class DeliverControl @Autowired constructor(
     fun safeInitialization(
         projectId: String,
         userId: String,
-        workspaceName: String,
-        autoAssign: Boolean? = false
+        workspaceName: String
     ) {
         logger.info("$userId start workspace $workspaceName")
         RedisCallLimit(
@@ -122,8 +124,7 @@ class DeliverControl @Autowired constructor(
                         userId,
                         regionId = detail.regionId.toString(),
                         ip = detail.environmentIP,
-                        workspaceName = workspaceName,
-                        autoAssign = autoAssign
+                        workspaceName = workspaceName
                     )
                 }
 
@@ -171,7 +172,17 @@ class DeliverControl @Autowired constructor(
                     projectId = workspace.projectId,
                     operator = userId,
                     assigns = listOf(assign2Owner),
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    ownerType = workspace.ownerType
+                )
+                workspaceCommon.updateHostMonitor(
+                    workspaceName = workspaceName,
+                    props = workspaceCommon.genWorkspaceCCInfo(
+                        projectId,
+                        workspace.displayName.ifBlank { workspaceName },
+                        assign2Owner.userId
+                    ),
+                    type = workspace.workspaceSystemType
                 )
                 if (workspace.status.checkDistributing()) {
                     workspaceDao.updateWorkspaceStatus(
@@ -202,7 +213,17 @@ class DeliverControl @Autowired constructor(
                                 expiration = null
                             )
                         ),
-                        mountType = WorkspaceMountType.START
+                        mountType = WorkspaceMountType.START,
+                        ownerType = workspace.ownerType
+                    )
+                    workspaceCommon.updateHostMonitor(
+                        workspaceName = workspaceName,
+                        props = workspaceCommon.genWorkspaceCCInfo(
+                            projectId,
+                            workspace.displayName.ifBlank { workspaceName },
+                            assign2Owner.userId
+                        ),
+                        type = workspace.workspaceSystemType
                     )
                 }
             }
@@ -216,7 +237,8 @@ class DeliverControl @Autowired constructor(
                 projectId = workspace.projectId,
                 operator = userId,
                 assigns = add,
-                mountType = WorkspaceMountType.START
+                mountType = WorkspaceMountType.START,
+                ownerType = workspace.ownerType
             )
         }
 
@@ -230,6 +252,9 @@ class DeliverControl @Autowired constructor(
                 mountType = WorkspaceMountType.START
             )
         }
+
+        // 同步tgit proxy
+        gitProxyTGitService.refreshProjectTGitSpecUser(projectId)
     }
 
     fun softwareInstallationCompleteCallback(
@@ -237,12 +262,11 @@ class DeliverControl @Autowired constructor(
         workspaceName: String,
         projectId: String,
         userId: String,
-        autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
         logger.info(
             "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
-                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+                "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
         )
         // 添加软件安装历史
         softwareManageService.updateSoftwareInstalledRecords(
@@ -260,20 +284,8 @@ class DeliverControl @Autowired constructor(
                             newStatus = WorkspaceStatus.DISTRIBUTING,
                             action = WorkspaceAction.CREATE
                         )
-                        if (autoAssign == true) {
-                            assignUser2Workspace(
-                                userId = userId,
-                                projectId = projectId,
-                                workspaceName = workspaceName,
-                                assigns = listOf(
-                                    ProjectWorkspaceAssign(
-                                        userId = userId,
-                                        type = WorkspaceShared.AssignType.OWNER,
-                                        expiration = null
-                                    )
-                                )
-                            )
-                        }
+                        workspaceCommon.autoAssignOwner(workspace)
+
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
                             cc = mutableSetOf(workspace.createUserId),
@@ -315,6 +327,13 @@ class DeliverControl @Autowired constructor(
                             workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                             workspace.status.name,
                             WorkspaceStatus.RUNNING.name
+                        )
+                    )
+                    httpCallBackService.asyncTask(
+                        WindowsDevCouldCallback(
+                            workspaceName,
+                            WorkspaceStatus.RUNNING,
+                            WorkspaceAction.CREATE
                         )
                     )
                     notifyControl.dispatchWebsocketPushEvent(

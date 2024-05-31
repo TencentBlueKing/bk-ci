@@ -34,7 +34,6 @@
 
 <style lang="scss">
     .atom-checkbox-list-item {
-        width: 170px;
         padding: 0 20px 10px 0;
         overflow: hidden;
         text-overflow:ellipsis;

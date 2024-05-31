@@ -30,15 +30,12 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
-import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
-import com.tencent.devops.remotedev.service.BKGPTService
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
@@ -47,17 +44,14 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
-import javax.ws.rs.core.HttpHeaders
 
 @RestResource
 @Suppress("ALL")
 class UserRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
-    private val bkgptService: BKGPTService,
     private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
@@ -80,30 +74,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
         return Result(remoteDevSettingService.updateRemoteDevSettings(userId, remoteDevSettings))
-    }
-
-    override fun bkGPT(
-        userId: String,
-        bkTicket: String,
-        headers: HttpHeaders,
-        data: BKGPT
-    ): ChunkedOutput<String> {
-        /* http/2 streaming
-         *  由于jersey 设置了缓冲区ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER
-         *  所以不能使用 StreamingOutput
-         *  而改用 ChunkedOutput
-         * */
-        val output: ChunkedOutput<String> = ChunkedOutput<String>(String::class.java, SEPARATOR)
-        executor.execute {
-            try {
-                output.use { out ->
-                    bkgptService.streamCompletions(data, bkTicket, out)
-                }
-            } catch (ex: Exception) {
-                logger.warn("Chunked output error!!!!!!")
-            }
-        }
-        return output
     }
 
     override fun getWatermark(userId: String, watermark: Watermark): Result<Any> {
@@ -139,28 +109,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
-        if (searchCustom == true) {
-            val res = mutableMapOf<String, MutableMap<String, Int>>()
-            client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
-                ?.forEach { resource ->
-                    val key = resource.zoneId.replace(Regex("\\d+"), "")
-                    val map = res.getOrPut(key) { mutableMapOf() }
-                    resource.machineResources?.forEach { mas ->
-                        map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
-                    }
-                }
-            return Result(res)
-        }
-        val res = mutableMapOf<String, MutableMap<String, Int>>()
-        logger.info("allWindowsQuota|$userId")
-        workspaceCommon.syncStartCloudResourceList().forEach {
-            val key = it.zoneId.replace(Regex("\\d+"), "")
-            val map = res.getOrPut(key) { mutableMapOf() }
-            if (it.status == 11 && it.locked != true) {
-                map[it.machineType] = (map[it.machineType] ?: 0) + 1
-            }
-        }
-        return Result(res)
+        return Result(windowsResourceConfigService.allWindowsQuota(userId, searchCustom, QuotaType.OFFSHORE))
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {

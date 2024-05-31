@@ -53,7 +53,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
@@ -90,7 +90,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineAtomReplaceHistoryDao: PipelineAtomReplaceHistoryDao,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val templateFacadeService: TemplateFacadeService,
@@ -526,7 +526,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             userId = userId
         )
         // 查询需要替换插件的流水线集合
-        val pipelineModelList = pipelineResDao.listLatestModelResource(dslContext, pipelineIdSet)
+        val pipelineModelList = pipelineResourceDao.listLatestModelResource(dslContext, pipelineIdSet)
         pipelineModelList?.forEach nextPipelineModel@{ pipelineModelObj ->
             try {
                 if (replacePipelineModelAtom(

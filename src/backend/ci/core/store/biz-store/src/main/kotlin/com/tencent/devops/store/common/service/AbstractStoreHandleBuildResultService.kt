@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 
 @Suppress("ALL")
 abstract class AbstractStoreHandleBuildResultService {
@@ -37,6 +37,8 @@ abstract class AbstractStoreHandleBuildResultService {
      * 处理store组件发布时内置构建流水线结果
      */
     abstract fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean>
 }

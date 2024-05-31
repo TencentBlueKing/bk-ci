@@ -38,6 +38,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record3
@@ -46,8 +48,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions", "LongParameterList")
 @Repository
@@ -111,6 +111,7 @@ class PipelineBuildTaskDao {
         logger.info("save the buildTask=$buildTask, result=${count == 1}")
     }
 
+    @Suppress("LongMethod")
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildTask>) {
         with(T_PIPELINE_BUILD_TASK) {
             dslContext.insertInto(
@@ -222,12 +223,21 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun get(dslContext: DSLContext, projectId: String, buildId: String, taskId: String?): PipelineBuildTask? {
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String?,
+        stepId: String?
+    ): PipelineBuildTask? {
         return with(T_PIPELINE_BUILD_TASK) {
 
             val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (taskId != null) {
                 where.and(TASK_ID.eq(taskId))
+            }
+            if (stepId != null) {
+                where.and(STEP_ID.eq(stepId))
             }
             where.fetchAny(mapper)
         }
@@ -274,15 +284,6 @@ class PipelineBuildTaskDao {
                 where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
             where.orderBy(TASK_SEQ.asc()).fetch(mapper)
-        }
-    }
-
-    fun deletePipelineBuildTasks(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
-        return with(T_PIPELINE_BUILD_TASK) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute()
         }
     }
 
@@ -347,25 +348,6 @@ class PipelineBuildTaskDao {
             updateTaskInfo.platformCode?.let { baseStep.set(PLATFORM_CODE, it) }
             updateTaskInfo.platformErrorCode?.let { baseStep.set(PLATFORM_ERROR_CODE, it) }
             baseStep.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId)).execute()
-        }
-    }
-
-    fun setTaskErrorInfo(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        errorType: ErrorType,
-        errorCode: Int,
-        errorMsg: String
-    ) {
-        with(T_PIPELINE_BUILD_TASK) {
-            dslContext.update(this)
-                .set(ERROR_TYPE, errorType.num)
-                .set(ERROR_CODE, errorCode)
-                .set(ERROR_MSG, errorMsg.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
-                .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId))
-                .execute()
         }
     }
 

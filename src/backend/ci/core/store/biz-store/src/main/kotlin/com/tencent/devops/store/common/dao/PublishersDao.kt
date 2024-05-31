@@ -29,9 +29,9 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStorePublisherInfo
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
-import com.tencent.devops.store.pojo.common.PublisherDeptInfo
-import com.tencent.devops.store.pojo.common.PublisherInfo
-import com.tencent.devops.store.pojo.common.PublishersRequest
+import com.tencent.devops.store.pojo.common.publication.PublisherDeptInfo
+import com.tencent.devops.store.pojo.common.publication.PublisherInfo
+import com.tencent.devops.store.pojo.common.publication.PublishersRequest
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext

@@ -32,23 +32,23 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.StoreLogoDao
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.common.service.StoreLogoService
-import java.io.File
-import java.io.InputStream
-import java.nio.file.Files
-import javax.imageio.ImageIO
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.logo.Logo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoReq
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Service
+import java.io.File
+import java.io.InputStream
+import java.nio.file.Files
+import javax.imageio.ImageIO
 
 /**
  * store商店logo逻辑类
@@ -56,7 +56,6 @@ import org.springframework.stereotype.Service
  * since: 2019-02-15
  */
 @Suppress("ALL")
-@Service
 @RefreshScope
 abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService {
 
@@ -91,7 +90,8 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         contentLength: Long,
         sizeLimitFlag: Boolean?,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        storeType: StoreTypeEnum?
     ): Result<StoreLogoInfo?> {
         val fileName = disposition.fileName
         logger.info("uploadStoreLogo upload file fileName is:$fileName,contentLength is:$contentLength")
@@ -101,7 +101,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val allowUploadFileTypeList = allowUploadLogoTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType)) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT,
+                messageCode = StoreMessageCode.USER_LOGO_TYPE_IS_NOT_SUPPORT,
                 params = arrayOf(fileType, allowUploadLogoTypes),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -126,7 +126,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             if (sizeLimitFlag != false) {
                 if (width != height || width < allowUploadLogoWidth.toInt()) {
                     return I18nUtil.generateResponseDataObject(
-                        StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
+                        StoreMessageCode.USER_LOGO_SIZE_IS_INVALID,
                         arrayOf(allowUploadLogoWidth, allowUploadLogoHeight),
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -156,12 +156,17 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                 output.close()
             }
         }
-        val logoUrl = uploadStoreLogo(userId, file).data
+        val fileRepoPath = if (storeType != null) {
+            "file/${storeType.name.lowercase()}/$fileType/${file.name}"
+        } else {
+            null
+        }
+        val logoUrl = uploadStoreLogo(userId, file, fileRepoPath).data
         logger.info("uploadStoreLogo logoUrl is:$logoUrl")
         return Result(StoreLogoInfo(logoUrl))
     }
 
-    abstract fun uploadStoreLogo(userId: String, file: File): Result<String?>
+    abstract fun uploadStoreLogo(userId: String, file: File, fileRepoPath: String? = null): Result<String?>
 
     /**
      * 获取logo列表

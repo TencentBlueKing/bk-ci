@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.kubernetes.pojo.remotedev
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "devfile 定义处")
@@ -32,14 +33,14 @@ data class Devfile(
     val machineType: String? = null,
     @get:Schema(title = "指定云桌面Id")
     val cgsId: String? = null,
-    @get:Schema(title = "团队空间是否自动分配")
-    val autoAssign: Boolean? = false,
     @get:Schema(title = "start自定义镜像地址")
     val imageCosFile: String? = "",
     @get:Schema(title = "通过已有task uid进行创建")
     val uid: String? = null,
     @get:Schema(title = "通过已有task uid进行创建")
-    val environmentUid: String? = null
+    val environmentUid: String? = null,
+    @get:Schema(title = "离岸专区 or dev cloud 专区？")
+    val quotaType: QuotaType? = null
 ) {
 
     fun checkWorkspaceAutomaticCorrection() = uid != null && environmentUid != null

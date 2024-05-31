@@ -43,7 +43,20 @@ module.exports = (env, argv) => {
     config.plugins.pop()
     config.plugins = [
         ...config.plugins,
-        new MonacoWebpackPlugin(),
+        new MonacoWebpackPlugin({
+            publicPath: '/pipeline',
+            languages: ['yaml'],
+            customLanguages: [
+                {
+                    label: 'yaml',
+                    entry: 'monaco-yaml',
+                    worker: {
+                        id: 'monaco-yaml/yamlWorker',
+                        entry: 'monaco-yaml/yaml.worker'
+                    }
+                }
+            ]
+        }),
         new webpack.DefinePlugin(constConfig),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
@@ -54,7 +67,8 @@ module.exports = (env, argv) => {
                 removeComments: false
             },
             templateParameters: {
-                PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : ''
+                PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : '',
+                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : ''
             },
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),
@@ -62,7 +76,7 @@ module.exports = (env, argv) => {
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
-        
+
         new CopyWebpackPlugin({
             patterns: [{ from: path.join(__dirname, './dist'), to: dist }]
         })

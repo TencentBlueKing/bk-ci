@@ -95,8 +95,8 @@
                     })
                     this.reportList = innerReports
                     if (thirdReports.length) this.reportList.push({ name: this.$t('details.thirdReport'), thirdReports, type: 'THIRDPARTY' })
-                    if (this.reportList.length <= 0) {
-                        this.$emit('hidden')
+                    if (this.reportList.length > 0) {
+                        this.$emit('toggle', true)
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })

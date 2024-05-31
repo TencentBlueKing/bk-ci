@@ -10,6 +10,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Tag(name = "OP_CODE_PROY", description = "OP_CODE_PROY")
 @Path("/op/codeproxy")
@@ -24,11 +25,13 @@ interface OpCodeProxyResource {
         data: CallbackLinktgitData
     ): Result<Map<Long, Boolean>>
 
-    @Operation(summary = "迁移TGit旧表数据")
     @POST
-    @Path("/migrateTGitData")
-    fun migrateTGitData(
+    @Path("/refresh/tGitAcl")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun refreshTGitAcl(
         @QueryParam("projectId")
-        projectId: String?
-    ): Result<Boolean>
+        projectId: String?,
+        @QueryParam("export")
+        export: Boolean?
+    ): Response?
 }

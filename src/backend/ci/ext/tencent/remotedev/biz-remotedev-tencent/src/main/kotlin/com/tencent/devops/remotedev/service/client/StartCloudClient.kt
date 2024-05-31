@@ -1,59 +1,55 @@
 package com.tencent.devops.remotedev.service.client
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
+import java.io.IOException
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusReqBody
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusRespData
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudNoDataResp
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudResp
+import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterReq
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.IOException
 
 @Service
 class StartCloudClient @Autowired constructor(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val config: RemoteDevCommonConfig
 ) {
-    @Value("\${startCloud.appId}")
-    val appId: String = ""
-
-    @Value("\${startCloud.appKey}")
-    val appKey: String = ""
-
-    @Value("\${startCloud.apiUrl}")
-    val apiUrl: String = ""
-
-    @Value("\${startCloud.appName}")
-    val appName: String = "IEG_BKCI"
 
     fun computerStatus(
-        userId: String,
         cgsIds: Set<String>?
     ): List<StartCloudComputerStatusRespData>? {
-        val url = "$apiUrl/openapi/computer/status"
+        val url = "${config.apiUrl}/openapi/computer/status"
         val body = JsonUtil.toJson(
             StartCloudComputerStatusReqBody(
-                appName = appName,
+                appName = config.bkciAppName,
                 cgsIds = cgsIds
             ),
-                false
+            false
         )
-        logger.debug("User $userId request url: $url, body: $body")
+        logger.debug("computerStatus request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(genStartApiHeaders(body).toHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-        val resp = doRequest(request).resolveResponse<StartCloudComputerStatusResp>()
+        val resp = doRequest(request).resolveResponse<StartCloudResp<List<StartCloudComputerStatusRespData>>>()
         if (resp.code != 0) {
+            logger.warn("request /computer/status error ${resp.code}|${resp.message}")
             throw RemoteServiceException(
                 errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
                 errorCode = resp.code
@@ -63,14 +59,69 @@ class StartCloudClient @Autowired constructor(
         return resp.data
     }
 
-    fun genStartApiHeaders(
+    fun appCreate(
+        appName: String,
+        detail: String
+    ): Long? {
+        val url = "${config.apiUrl}/openapi/app/create"
+        val body = JsonUtil.toJson(
+            StartCloudAppCreateReq(
+                contentProviderName = config.contentProviderName,
+                appName = appName,
+                detail = detail
+            ),
+            false
+        )
+        logger.debug("$appName $detail request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(genStartApiHeaders(body).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = doRequest(request).resolveResponse<StartCloudResp<StartCloudAppCreateRespData>>()
+        if (resp.code != 0) {
+            logger.warn("request /app/create error ${resp.code}|${resp.message}")
+            throw RemoteServiceException(
+                errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
+                errorCode = resp.code
+            )
+        }
+
+        return resp.data?.appId
+    }
+
+    fun messageRegister(
+        req: StartMessageRegisterReq
+    ) {
+        val url = "${config.apiUrl}/openapi/push/message/register"
+        val body = JsonUtil.toJson(req, false)
+        logger.debug("messageRegister request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(genStartApiHeaders(body).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = doRequest(request).resolveResponse<StartCloudNoDataResp>()
+        if (resp.code != 0) {
+            logger.warn("request /message/register error ${resp.code}|${resp.message}")
+            throw RemoteServiceException(
+                errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
+                errorCode = resp.code
+            )
+        }
+    }
+
+    private fun genStartApiHeaders(
         body: String
     ): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
-        headerBuilder["x-start-appid"] = appId
+        headerBuilder["x-start-appid"] = config.appId
         val timestampMillis = System.currentTimeMillis().toString().take(10)
         headerBuilder["x-start-timestamp"] = timestampMillis
-        headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
+        headerBuilder["x-start-signature"] =
+            ShaUtils.sha256("${config.appId}${config.appKey}$timestampMillis$body").uppercase()
 
         return headerBuilder
     }
@@ -104,28 +155,3 @@ class StartCloudClient @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StartCloudClient::class.java)
     }
 }
-
-data class StartCloudComputerStatusReqBody(
-    val appName: String,
-    val cgsIds: Set<String>?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudComputerStatusResp(
-    val code: Int,
-    val data: List<StartCloudComputerStatusRespData>?,
-    val message: String?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudComputerStatusRespData(
-    val cgsId: String,
-    val state: Int,
-    val message: String?,
-    val userInfos: List<StartCloudComputerStatusUserInfo>?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartCloudComputerStatusUserInfo(
-    val account: String
-)

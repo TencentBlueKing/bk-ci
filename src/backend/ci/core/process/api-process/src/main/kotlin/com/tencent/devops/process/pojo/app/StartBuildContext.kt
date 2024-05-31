@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -40,7 +42,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
@@ -62,8 +63,12 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -83,6 +88,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.utils.PipelineVarUtil.CONTEXT_PREFIX
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -96,6 +102,8 @@ data class StartBuildContext(
     val pipelineId: String,
     val buildId: String,
     val resourceVersion: Int,
+    val versionName: String?,
+    val yamlVersion: String?,
     val actionType: ActionType,
     val executeCount: Int = 1,
     val stageRetry: Boolean,
@@ -126,7 +134,9 @@ data class StartBuildContext(
     // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
     var buildNoType: BuildNoType? = null,
     // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
-    var currentBuildNo: Int? = null
+    var currentBuildNo: Int? = null,
+    val debug: Boolean,
+    val debugModel: Model?
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -134,7 +144,7 @@ data class StartBuildContext(
      * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
      */
     fun needSkipWhenStageFailRetry(stage: Stage): Boolean {
-        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
+        return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
             false
         } else if (!stageRetry) { // 不是stage失败重试的动作也不会跳过
             false
@@ -145,7 +155,7 @@ data class StartBuildContext(
 
     fun needSkipContainerWhenFailRetry(stage: Stage, container: Container): Boolean {
         val containerStatus = BuildStatus.parse(container.status)
-        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
+        return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
             false
         } else if (!containerStatus.isFailure() && !containerStatus.isCancel()) { // 跳过失败和被取消的其他job
             false
@@ -209,12 +219,12 @@ data class StartBuildContext(
         return DependOnUtils.enableDependOn(container) && BuildStatus.parse(container.status) == BuildStatus.SKIP
     }
 
-    private fun needRerun(stage: Stage): Boolean {
+    fun needRerunStage(stage: Stage): Boolean {
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
     fun needRerunTask(stage: Stage, container: Container): Boolean {
-        return needRerun(stage) || isRetryDependOnContainer(container)
+        return needRerunStage(stage) || isRetryDependOnContainer(container)
     }
 
     companion object {
@@ -227,8 +237,11 @@ data class StartBuildContext(
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
+            versionName: String?,
+            yamlVersion: String?,
+            model: Model,
+            debug: Boolean,
             pipelineSetting: PipelineSetting? = null,
-            realStartParamKeys: List<String>,
             pipelineParamMap: MutableMap<String, BuildParameters>,
             webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
@@ -236,7 +249,8 @@ data class StartBuildContext(
         ): StartBuildContext {
 
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
-
+            // 解析出定义的流水线变量
+            val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]
 
             val (actionType, executeCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
@@ -256,6 +270,7 @@ data class StartBuildContext(
                 buildId = buildId,
                 variables = params,
                 resourceVersion = resourceVersion,
+                versionName = versionName,
                 actionType = actionType,
                 executeCount = executeCount,
                 firstTaskId = params[PIPELINE_START_TASK_ID] ?: "",
@@ -277,33 +292,48 @@ data class StartBuildContext(
                 webhookInfo = getWebhookInfo(params),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
                 buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
-                // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
-                concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
-                    ?.concurrencyGroup?.let {
-                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
-                        val tConcurrencyGroup = EnvUtils.parseEnv(
-                            it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
-                        )
-                        logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
-                        tConcurrencyGroup
-                    },
+                // 优化并发组逻辑，只在正式执行且GROUP_LOCK时才保存进history表
+                concurrencyGroup = if (!debug) {
+                    pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                        ?.concurrencyGroup?.let {
+                            val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                            val tConcurrencyGroup = EnvUtils.parseEnv(
+                                it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                            )
+                            logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
+                            tConcurrencyGroup
+                        }
+                } else null,
                 triggerReviewers = triggerReviewers,
                 startBuildStatus =
                 if (triggerReviewers.isNullOrEmpty()) BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
                 needUpdateStage = false,
                 pipelineSetting = pipelineSetting,
-                pipelineParamMap = pipelineParamMap
+                pipelineParamMap = pipelineParamMap,
+                debug = debug,
+                debugModel = model,
+                yamlVersion = yamlVersion
             )
         }
 
         private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
-            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name &&
-                params[PIPELINE_START_TYPE] != StartType.PIPELINE.name
-            ) {
+            // 支持webhookInfo的启动类型
+            val startTypes = listOf(
+                StartType.WEB_HOOK.name,
+                StartType.PIPELINE.name,
+                StartType.SERVICE.name,
+                StartType.REMOTE.name
+            )
+            val startType = params[PIPELINE_START_TYPE]
+            if (!startTypes.contains(startType)) {
                 return null
             }
             return WebhookInfo(
-                codeType = params[BK_REPO_WEBHOOK_REPO_TYPE],
+                codeType = if (supportCustomMaterials(startType)) {
+                    startType
+                } else {
+                    params[BK_REPO_WEBHOOK_REPO_TYPE]
+                },
                 nameWithNamespace = params[BK_REPO_WEBHOOK_REPO_NAME],
                 webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE],
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL],
@@ -333,9 +363,22 @@ data class StartBuildContext(
                 parentPipelineName = params[PIPELINE_START_PARENT_PIPELINE_NAME],
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
                 parentBuildNum = params[PIPELINE_START_PARENT_BUILD_NUM],
-                linkUrl = params[PIPELINE_GIT_EVENT_URL]
+                linkUrl = if (supportCustomMaterials(startType)) {
+                    // 自定义触发材料
+                    params[BK_CI_MATERIAL_URL]
+                } else {
+                    params[PIPELINE_GIT_EVENT_URL]
+                },
+                materialId = params[BK_CI_MATERIAL_ID],
+                materialName = params[BK_CI_MATERIAL_NAME]
             )
         }
+
+        /**
+         * 是否支持自定义触发材料
+         */
+        private fun supportCustomMaterials(startType: String?) = startType == StartType.REMOTE.name ||
+                startType == StartType.SERVICE.name
 
         /**
          * 简易只为实现推送PipelineBuildStartEvent事件所需要的参数，不是全部
@@ -346,17 +389,20 @@ data class StartBuildContext(
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
+            versionName: String?,
             actionType: ActionType,
             executeCount: Int,
             firstTaskId: String,
             startType: StartType,
-            startBuildStatus: BuildStatus
+            startBuildStatus: BuildStatus,
+            debug: Boolean
         ): StartBuildContext = StartBuildContext(
             now = LocalDateTime.now(),
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             resourceVersion = resourceVersion,
+            versionName = versionName,
             actionType = actionType,
             executeCount = executeCount,
             userId = userId,
@@ -379,11 +425,11 @@ data class StartBuildContext(
             pipelineParamMap = mutableMapOf(),
             buildParameters = mutableListOf(),
             concurrencyGroup = null,
-            pipelineSetting = null
-
+            pipelineSetting = null,
+            debug = debug,
+            debugModel = null,
+            yamlVersion = null
         )
-
-        private const val CONTEXT_PREFIX = "variables."
 
         /**
          * 根据[realStartParamKeys]启动参数Key列表读取[pipelineParamMap]参数值来生成流水线启动变量列表，不包含其他

@@ -47,6 +47,7 @@ import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
+import com.tencent.devops.sign.utils.IpaFileUtil
 import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
@@ -203,6 +204,8 @@ class SignServiceImpl
                         message = "Task exit with unknown error"
                     )
                 }
+                var ipaTmpDir = fileService.getIpaTmpDir(ipaSignInfo, resignId)
+                IpaFileUtil.deleteDir(ipaTmpDir)
             }
             return finished
         }
@@ -367,6 +370,7 @@ class SignServiceImpl
                 universalLinks = ipaSignInfo.universalLinks,
                 securityApplicationGroupList = ipaSignInfo.keychainAccessGroups,
                 replaceKeyList = ipaSignInfo.replaceKeyList,
+                removeKeyList = ipaSignInfo.removeKeyList,
                 codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
                 codesignExternalStr = ipaSignInfo.codesignExternalStr,
                 bundleId = ipaSignInfo.bundleId,
@@ -396,6 +400,7 @@ class SignServiceImpl
                 certId = ipaSignInfo.certId,
                 wildcardInfo = wildcardInfo,
                 replaceKeyList = ipaSignInfo.replaceKeyList,
+                removeKeyList = ipaSignInfo.removeKeyList,
                 codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
                 codesignExternalStr = ipaSignInfo.codesignExternalStr,
                 bundleId = ipaSignInfo.bundleId,

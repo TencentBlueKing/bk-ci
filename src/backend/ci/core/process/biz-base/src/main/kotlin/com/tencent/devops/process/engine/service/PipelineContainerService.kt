@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -244,7 +245,7 @@ class PipelineContainerService @Autowired constructor(
         )
     }
 
-    fun cleanContainersInMatrixGroup(
+    private fun cleanContainersInMatrixGroup(
         transactionContext: DSLContext?,
         projectId: String,
         pipelineId: String,
@@ -292,7 +293,8 @@ class PipelineContainerService @Autowired constructor(
         matrixGroupId: String,
         jobControlOption: JobControlOption,
         postParentIdMap: Map<String, String>,
-        mutexGroup: MutexGroup?
+        mutexGroup: MutexGroup?,
+        agentReuseMutex: AgentReuseMutex?
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
@@ -390,7 +392,8 @@ class PipelineContainerService @Autowired constructor(
                 jobControlOption = jobControlOption,
                 inFinallyStage = stage.finally,
                 mutexGroup = mutexGroup,
-                containPostTaskFlag = container.containPostTaskFlag
+                containPostTaskFlag = container.containPostTaskFlag,
+                agentReuseMutex = agentReuseMutex
             ),
             matrixGroupFlag = false,
             matrixGroupId = matrixGroupId
@@ -482,7 +485,7 @@ class PipelineContainerService @Autowired constructor(
                 }
                 needUpdateContainer = true
             } else {
-                // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
+                // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过（取消状态除外）
                 if (context.needSkipTaskWhenRetry(stage, container, atomElement.id)) {
                     val target = findLastTimeBuildTask(
                         lastTimeBuildTasks = lastTimeBuildTasks,
@@ -491,8 +494,9 @@ class PipelineContainerService @Autowired constructor(
                     )
                     // 插件任务在历史中找不到，则跳过当前插件
                     // 如果插件任务之前已经是完成状态，则跳过当前插件
+                    // 如果是取消状态的，则不能跳过，取消状态属于要重试再次执行的状态（比如重试的是checkout插件，其post-action如是取消)
                     try {
-                        if (target == null || target.status.isFinish()) {
+                        if (target == null || (target.status.isFinish() && !target.status.isCancel())) {
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
@@ -556,8 +560,20 @@ class PipelineContainerService @Autowired constructor(
             }
         }
         container.startVMTaskSeq = startVMTaskSeq
+
         // 构建矩阵没有对应的重试插件，单独增加重试记录
-        if (container.matrixGroupFlag == true) {
+        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
+            container.retryFreshMatrixOption()
+            cleanContainersInMatrixGroup(
+                transactionContext = dslContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                matrixGroupId = container.id!!
+            )
+            // 去掉要重试的矩阵内部数据
+            updateExistsTask.removeIf { it.containerId == container.id }
+            updateExistsContainer.removeIf { it.first.matrixGroupId == container.id }
             needUpdateContainer = true
         }
 
@@ -951,15 +967,17 @@ class PipelineContainerService @Autowired constructor(
                     if (context.currentBuildNo == null) { // 兼容buildNo为空的情况
 
                         context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(
-                            dslContext = dslContext, projectId = context.projectId, pipelineId = context.pipelineId
-                        )
-                            ?: let {
-                                if (needAddCurrentBuildNo) {
-                                    0
-                                } else {
-                                    buildNoObj.buildNo
-                                }
+                            dslContext = dslContext,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
+                            debug = context.debug
+                        ) ?: let {
+                            if (needAddCurrentBuildNo) {
+                                0
+                            } else {
+                                buildNoObj.buildNo
                             }
+                        }
                     }
 
                     if (needAddCurrentBuildNo) { // buildNo根据数据库的记录值每次新增1
@@ -971,7 +989,8 @@ class PipelineContainerService @Autowired constructor(
                             dslContext = dslContext,
                             projectId = context.projectId,
                             pipelineId = context.pipelineId,
-                            buildNo = context.currentBuildNo!!
+                            buildNo = context.currentBuildNo!!,
+                            debug = context.debug
                         )
                     }
                 }
@@ -1033,8 +1052,10 @@ class PipelineContainerService @Autowired constructor(
                     message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
                             " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
                     tag = context.firstTaskId,
-                    jobId = container.id,
-                    executeCount = context.executeCount
+                    containerHashId = container.id,
+                    executeCount = context.executeCount,
+                    jobId = container.jobId,
+                    stepId = atomElement.stepId
                 )
                 return
             }

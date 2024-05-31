@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -78,6 +79,15 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         }
 
         return Result(envService.createEnvironment(userId, projectId, environment))
+    }
+
+    @AuditEntry(actionId = ActionId.ENVIRONMENT_VIEW)
+    override fun get(userId: String, projectId: String, envHashId: String): Result<EnvWithPermission> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        return Result(envService.getEnvironment(userId, projectId, envHashId))
     }
 
     @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
@@ -138,6 +148,20 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
         return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
+    override fun listNodesByEnvIdsNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashIds: List<String>
+    ): Result<Page<NodeBaseInfo>> {
+        if (envHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
+        }
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
