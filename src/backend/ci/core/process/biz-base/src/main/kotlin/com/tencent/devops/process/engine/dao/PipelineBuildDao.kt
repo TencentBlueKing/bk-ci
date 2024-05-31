@@ -494,20 +494,27 @@ class PipelineBuildDao {
     }
 
     fun getOneQueueBuild(dslContext: DSLContext, projectId: String, pipelineId: String): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny(debugMapper)
+        }
+        return when {
+            release == null -> debug
+            debug == null -> release
+            release.queueTime > debug.queueTime -> debug
+            else -> release
         }
     }
 
