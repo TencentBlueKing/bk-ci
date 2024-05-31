@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	servicePrefix = "/services"
+	servicePrefix = "/namespace/:namespace/services"
 )
 
 func initServiceApis(r *gin.RouterGroup) {
@@ -30,13 +30,14 @@ func initServiceApis(r *gin.RouterGroup) {
 // @Success 200 {object} types.Result{data=appsv1.service} "service详情"
 // @Router /service/{serviceName} [get]
 func getService(c *gin.Context) {
+	namespace := c.Param("namespace")
 	serviceName := c.Param("serviceName")
 
 	if !checkServiceName(c, serviceName) {
 		return
 	}
 
-	service, err := kubeclient.GetService(serviceName)
+	service, err := kubeclient.GetService(namespace, serviceName)
 	if err != nil {
 		okFail(c, http.StatusInternalServerError, err)
 		return
@@ -54,6 +55,7 @@ func getService(c *gin.Context) {
 // @Success 200 {object} ""
 // @Router /service [post]
 func createService(c *gin.Context) {
+	namespace := c.Param("namespace")
 	service := &corev1.Service{}
 
 	if err := c.BindJSON(service); err != nil {
@@ -61,15 +63,15 @@ func createService(c *gin.Context) {
 		return
 	}
 
-	serviceInfo, _ := kubeclient.GetService(service.Name)
+	serviceInfo, _ := kubeclient.GetService(namespace, service.Name)
 	if serviceInfo != nil {
-		err := kubeclient.UpdateService(service)
+		err := kubeclient.UpdateService(namespace, service)
 		if err != nil {
 			fail(c, http.StatusInternalServerError, err)
 			return
 		}
 	} else {
-		err := kubeclient.CreateService(service)
+		err := kubeclient.CreateService(namespace, service)
 		if err != nil {
 			fail(c, http.StatusInternalServerError, err)
 			return
@@ -88,13 +90,14 @@ func createService(c *gin.Context) {
 // @Success 200 {object} types.Result{data=""} ""
 // @Router /service/{serviceName} [delete]
 func deleteService(c *gin.Context) {
+	namespace := c.Param("namespace")
 	serviceName := c.Param("serviceName")
 
 	if !checkServiceName(c, serviceName) {
 		return
 	}
 
-	err := kubeclient.DeleteService(serviceName)
+	err := kubeclient.DeleteService(namespace, serviceName)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return

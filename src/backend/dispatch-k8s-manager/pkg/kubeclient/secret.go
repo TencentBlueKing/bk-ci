@@ -44,9 +44,9 @@ func CreateDockerRegistry(dockerSecret *DockerSecret) (*corev1.Secret, error) {
 	return s, nil
 }
 
-func CreateNativeSecret(secret *corev1.Secret) error {
+func CreateNativeSecret(namespace string, secret *corev1.Secret) error {
 	_, err := kubeClient.CoreV1().
-		Secrets(config.Config.Kubernetes.NameSpace).
+		Secrets(namespace).
 		Create(context.TODO(), secret, metav1.CreateOptions{})
 	if err != nil {
 		return err
@@ -107,8 +107,8 @@ func ListSecret(workloadCoreLabel string) ([]corev1.Secret, error) {
 	return l.Items, nil
 }
 
-func GetSecret(secretName string) (*corev1.Secret, error) {
-	l, err := kubeClient.CoreV1().Secrets(config.Config.Kubernetes.NameSpace).Get(
+func GetNativeSecret(namespace string, secretName string) (*corev1.Secret, error) {
+	l, err := kubeClient.CoreV1().Secrets(namespace).Get(
 		context.TODO(),
 		secretName,
 		metav1.GetOptions{},
@@ -117,6 +117,16 @@ func GetSecret(secretName string) (*corev1.Secret, error) {
 		return nil, err
 	}
 	return l, nil
+}
+
+func DeleteNativeSecret(namespace string, secretName string) error {
+	if err := kubeClient.CoreV1().
+		Secrets(namespace).
+		Delete(context.TODO(), secretName, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func DeleteSecret(secretName string) error {

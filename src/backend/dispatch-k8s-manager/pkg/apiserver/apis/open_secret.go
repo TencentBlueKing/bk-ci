@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	secretPrefix = "/secrets"
+	secretPrefix = "/namespace/:namespace/secrets"
 )
 
 func initSecretApis(r *gin.RouterGroup) {
@@ -30,13 +30,14 @@ func initSecretApis(r *gin.RouterGroup) {
 // @Success 200 {object} types.Result{data=corev1.secret} "secret详情"
 // @Router /secret/{secretName} [get]
 func getSecret(c *gin.Context) {
+	namespace := c.Param("namespace")
 	secretName := c.Param("secretName")
 
 	if !checkSecretName(c, secretName) {
 		return
 	}
 
-	secret, err := kubeclient.GetSecret(secretName)
+	secret, err := kubeclient.GetNativeSecret(namespace, secretName)
 	if err != nil {
 		okFail(c, http.StatusInternalServerError, err)
 		return
@@ -54,6 +55,7 @@ func getSecret(c *gin.Context) {
 // @Success 200 {object} ""
 // @Router /secret [post]
 func createSecret(c *gin.Context) {
+	namespace := c.Param("namespace")
 	secret := &corev1.Secret{}
 
 	if err := c.BindJSON(secret); err != nil {
@@ -61,7 +63,7 @@ func createSecret(c *gin.Context) {
 		return
 	}
 
-	err := kubeclient.CreateNativeSecret(secret)
+	err := kubeclient.CreateNativeSecret(namespace, secret)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
@@ -79,13 +81,14 @@ func createSecret(c *gin.Context) {
 // @Success 200 {object} types.Result{data=""} ""
 // @Router /secret/{secretName} [delete]
 func deleteSecret(c *gin.Context) {
+	namespace := c.Param("namespace")
 	secretName := c.Param("secretName")
 
 	if !checkSecretName(c, secretName) {
 		return
 	}
 
-	err := kubeclient.DeleteSecret(secretName)
+	err := kubeclient.DeleteNativeSecret(namespace, secretName)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return

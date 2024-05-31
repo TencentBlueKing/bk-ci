@@ -2,13 +2,12 @@ package kubeclient
 
 import (
 	"context"
-	"disaptch-k8s-manager/pkg/config"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateService(service *corev1.Service) error {
-	_, err := kubeClient.CoreV1().Services(config.Config.Kubernetes.NameSpace).Create(
+func CreateService(namespace string, service *corev1.Service) error {
+	_, err := kubeClient.CoreV1().Services(namespace).Create(
 		context.TODO(),
 		service,
 		metav1.CreateOptions{},
@@ -20,8 +19,8 @@ func CreateService(service *corev1.Service) error {
 	return nil
 }
 
-func UpdateService(service *corev1.Service) error {
-	_, err := kubeClient.CoreV1().Services(config.Config.Kubernetes.NameSpace).Update(
+func UpdateService(namespace string, service *corev1.Service) error {
+	_, err := kubeClient.CoreV1().Services(namespace).Update(
 		context.TODO(),
 		service,
 		metav1.UpdateOptions{},
@@ -33,16 +32,16 @@ func UpdateService(service *corev1.Service) error {
 	return nil
 }
 
-func DeleteService(serviceName string) error {
-	return kubeClient.CoreV1().Services(config.Config.Kubernetes.NameSpace).Delete(
+func DeleteService(namespace string, serviceName string) error {
+	return kubeClient.CoreV1().Services(namespace).Delete(
 		context.TODO(),
 		serviceName,
 		metav1.DeleteOptions{},
 	)
 }
 
-func GetService(serviceName string) (*corev1.Service, error) {
-	service, err := kubeClient.CoreV1().Services(config.Config.Kubernetes.NameSpace).Get(
+func GetService(namespace string, serviceName string) (*corev1.Service, error) {
+	service, err := kubeClient.CoreV1().Services(namespace).Get(
 		context.TODO(),
 		serviceName,
 		metav1.GetOptions{},

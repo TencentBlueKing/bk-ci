@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	ingressPrefix = "/ingress"
+	ingressPrefix = "/namespace/:namespace/ingress"
 )
 
 func initIngressApis(r *gin.RouterGroup) {
@@ -30,13 +30,14 @@ func initIngressApis(r *gin.RouterGroup) {
 // @Success 200 {object} types.Result{data=networkv1.ingress} "ingress详情"
 // @Router /ingress/{ingressName} [get]
 func getIngress(c *gin.Context) {
+	namespace := c.Param("namespace")
 	ingressName := c.Param("ingressName")
 
 	if !checkIngressName(c, ingressName) {
 		return
 	}
 
-	ingress, err := kubeclient.GetIngress(ingressName)
+	ingress, err := kubeclient.GetIngress(namespace, ingressName)
 	if err != nil {
 		okFail(c, http.StatusInternalServerError, err)
 		return
@@ -54,6 +55,7 @@ func getIngress(c *gin.Context) {
 // @Success 200 {object} ""
 // @Router /ingress [post]
 func createIngress(c *gin.Context) {
+	namespace := c.Param("namespace")
 	ingress := &networkv1.Ingress{}
 
 	if err := c.BindJSON(ingress); err != nil {
@@ -61,15 +63,15 @@ func createIngress(c *gin.Context) {
 		return
 	}
 
-	ingressInfo, _ := kubeclient.GetIngress(ingress.Name)
+	ingressInfo, _ := kubeclient.GetIngress(namespace, ingress.Name)
 	if ingressInfo != nil {
-		err := kubeclient.UpdateIngress(ingress)
+		err := kubeclient.UpdateIngress(namespace, ingress)
 		if err != nil {
 			fail(c, http.StatusInternalServerError, err)
 			return
 		}
 	} else {
-		err := kubeclient.CreateIngress(ingress)
+		err := kubeclient.CreateIngress(namespace, ingress)
 		if err != nil {
 			fail(c, http.StatusInternalServerError, err)
 			return
@@ -88,13 +90,14 @@ func createIngress(c *gin.Context) {
 // @Success 200 {object} types.Result{data=""} ""
 // @Router /ingress/{ingressName} [delete]
 func deleteIngress(c *gin.Context) {
+	namespace := c.Param("namespace")
 	ingressName := c.Param("ingressName")
 
 	if !checkIngressName(c, ingressName) {
 		return
 	}
 
-	err := kubeclient.DeleteIngress(ingressName)
+	err := kubeclient.DeleteIngress(namespace, ingressName)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
