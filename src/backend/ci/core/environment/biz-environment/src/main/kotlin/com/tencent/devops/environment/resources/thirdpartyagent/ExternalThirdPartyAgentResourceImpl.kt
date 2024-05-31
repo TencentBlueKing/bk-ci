@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
-import com.tencent.devops.environment.service.thirdPartyAgent.BatchInstallAgentService
+import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import org.springframework.beans.factory.annotation.Autowired

@@ -77,12 +77,12 @@ class BluekingAgentUrlServiceImpl constructor(
         if (os == OS.WINDOWS) {
             return "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" }; " +
                     "\$response = Invoke-WebRequest " +
-                    "-Uri \"http://$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall\" " +
+                    "-Uri \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall\" " +
                     "-Headers \$headers; " +
                     "\$ps = [System.Text.Encoding]::UTF8.GetString(\$response.Content);Invoke-Expression -Command \$ps"
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
-                "http://$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+                "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
         if (!zoneName.isNullOrBlank()) {
             url += "?zoneName=$zoneName"
         }
