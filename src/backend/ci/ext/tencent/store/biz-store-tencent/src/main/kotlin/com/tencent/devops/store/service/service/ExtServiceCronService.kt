@@ -95,6 +95,7 @@ class ExtServiceCronService @Autowired constructor(
                 val serviceDeploymentMap =
                     client.get(ServiceKubernetesManagementResource::class).getDeploymentInfos(
                         userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                        namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
                         deploymentNames = serviceCodes
                     ).data
                 logger.info("serviceDeploymentMap:$serviceDeploymentMap")
