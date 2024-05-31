@@ -1,4 +1,4 @@
-package com.tencent.devops.environment.service.thirdPartyAgent
+package com.tencent.devops.environment.service.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
@@ -6,7 +6,7 @@ import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentBatchInstallTokenDao
-import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
