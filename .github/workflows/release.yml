@@ -21,7 +21,9 @@ jobs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-    - run: yarn install && yarn start && yarn public
+    - run: |
+        export NODE_OPTIONS=--openssl-legacy-provider
+        yarn install && yarn start && yarn public
       working-directory: src/frontend
     - uses: actions/upload-artifact@v1
       with:
@@ -187,10 +189,11 @@ jobs:
       - name: frontend
         id: codecc-frontend
         run: |
+          export NODE_OPTIONS=--openssl-legacy-provider
           cd src/frontend/devops-codecc
           rm -rf dist
           npm i
-          npm run build
+          npm i --force && npm run build
           if [ -f dist/index.html ]; then
             mv dist/index.html dist/frontend#index.html
           fi
