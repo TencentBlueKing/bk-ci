@@ -45,7 +45,7 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
     override fun checkTarget(target: String): Boolean {
         if (!target.startsWith("java")) {
             throw ErrorCodeException(
-                errorCode = StoreMessageCode.TASK_JSON_TARGET_IS_INVALID
+                errorCode = StoreMessageCode.JAVA_ATOM_TASK_JSON_TARGET_IS_INVALID
             )
         }
         return true
