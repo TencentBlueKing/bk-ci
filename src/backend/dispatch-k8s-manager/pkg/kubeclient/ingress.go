@@ -2,13 +2,12 @@ package kubeclient
 
 import (
 	"context"
-	"disaptch-k8s-manager/pkg/config"
 	networkv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateIngress(ingress *networkv1.Ingress) error {
-	_, err := kubeClient.NetworkingV1().Ingresses(config.Config.Kubernetes.NameSpace).Create(
+func CreateIngress(namespace string, ingress *networkv1.Ingress) error {
+	_, err := kubeClient.NetworkingV1().Ingresses(namespace).Create(
 		context.TODO(),
 		ingress,
 		metav1.CreateOptions{},
@@ -20,16 +19,29 @@ func CreateIngress(ingress *networkv1.Ingress) error {
 	return nil
 }
 
-func DeleteIngress(ingressName string) error {
-	return kubeClient.NetworkingV1().Ingresses(config.Config.Kubernetes.NameSpace).Delete(
+func UpdateIngress(namespace string, ingress *networkv1.Ingress) error {
+	_, err := kubeClient.NetworkingV1().Ingresses(namespace).Update(
+		context.TODO(),
+		ingress,
+		metav1.UpdateOptions{},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteIngress(namespace string, ingressName string) error {
+	return kubeClient.NetworkingV1().Ingresses(namespace).Delete(
 		context.TODO(),
 		ingressName,
 		metav1.DeleteOptions{},
 	)
 }
 
-func GetIngress(ingressName string) (*networkv1.Ingress, error) {
-	ingress, err := kubeClient.NetworkingV1().Ingresses(config.Config.Kubernetes.NameSpace).Get(
+func GetIngress(namespace string, ingressName string) (*networkv1.Ingress, error) {
+	ingress, err := kubeClient.NetworkingV1().Ingresses(namespace).Get(
 		context.TODO(),
 		ingressName,
 		metav1.GetOptions{},

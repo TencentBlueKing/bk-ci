@@ -96,11 +96,24 @@ func CreateDeployment(dep *Deployment) error {
 	return nil
 }
 
-func CreateNativeDeployment(deployment *appsv1.Deployment) error {
-	_, err := kubeClient.AppsV1().Deployments(config.Config.Kubernetes.NameSpace).Create(
+func CreateNativeDeployment(namespace string, deployment *appsv1.Deployment) error {
+	_, err := kubeClient.AppsV1().Deployments(namespace).Create(
 		context.TODO(),
 		deployment,
 		metav1.CreateOptions{},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateNativeDeployment(namespace string, deployment *appsv1.Deployment) error {
+	_, err := kubeClient.AppsV1().Deployments(namespace).Update(
+		context.TODO(),
+		deployment,
+		metav1.UpdateOptions{},
 	)
 
 	if err != nil {
@@ -155,12 +168,24 @@ func ListDeployment(workloadCoreLabel string) ([]*appsv1.Deployment, error) {
 	return list, nil
 }
 
-func GetDeployment(deploymentName string) (*appsv1.Deployment, error) {
-	deployment, err := infs.deployment.Deployments(config.Config.Kubernetes.NameSpace).Get(deploymentName)
+func GetNativeDeployment(namespace string, deploymentName string) (*appsv1.Deployment, error) {
+	deployment, err := kubeClient.AppsV1().Deployments(namespace).Get(
+		context.TODO(),
+		deploymentName,
+		metav1.GetOptions{},
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return deployment, nil
+}
+
+func DeleteNativeDeployment(namespace string, deploymentName string) error {
+	return kubeClient.AppsV1().Deployments(namespace).Delete(
+		context.TODO(),
+		deploymentName,
+		metav1.DeleteOptions{},
+	)
 }

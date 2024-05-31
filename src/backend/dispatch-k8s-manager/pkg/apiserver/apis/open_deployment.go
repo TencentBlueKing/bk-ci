@@ -2,6 +2,8 @@ package apis
 
 import (
 	"disaptch-k8s-manager/pkg/kubeclient"
+	"disaptch-k8s-manager/pkg/logs"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -9,7 +11,7 @@ import (
 )
 
 const (
-	deploymentPrefix = "/deployments"
+	deploymentPrefix = "/namespace/:namespace/deployments"
 )
 
 func initDeploymentApis(r *gin.RouterGroup) {
@@ -17,7 +19,7 @@ func initDeploymentApis(r *gin.RouterGroup) {
 	{
 		deployment.GET("/:deploymentName", getDeployment)
 		deployment.POST("", createDeployment)
-		deployment.DELETE("/:deploymentName", deleteBuilder)
+		deployment.DELETE("/:deploymentName", deleteDeployment)
 	}
 }
 
@@ -30,13 +32,14 @@ func initDeploymentApis(r *gin.RouterGroup) {
 // @Success 200 {object} types.Result{data=appsv1.Deployment} "deployment详情"
 // @Router /deployment/{deploymentName} [get]
 func getDeployment(c *gin.Context) {
+	namespace := c.Param("namespace")
 	deploymentName := c.Param("deploymentName")
 
-	if !checkDeploymentName(c, deploymentName) {
+	if !checkDeploymentParams(c, deploymentName) {
 		return
 	}
 
-	deployment, err := kubeclient.GetDeployment(deploymentName)
+	deployment, err := kubeclient.GetNativeDeployment(namespace, deploymentName)
 	if err != nil {
 		okFail(c, http.StatusInternalServerError, err)
 		return
@@ -54,6 +57,8 @@ func getDeployment(c *gin.Context) {
 // @Success 200 {object} ""
 // @Router /deployment [post]
 func createDeployment(c *gin.Context) {
+	namespace := c.Param("namespace")
+
 	deployment := &appsv1.Deployment{}
 
 	if err := c.BindJSON(deployment); err != nil {
@@ -61,10 +66,21 @@ func createDeployment(c *gin.Context) {
 		return
 	}
 
-	err := kubeclient.CreateNativeDeployment(deployment)
-	if err != nil {
-		fail(c, http.StatusInternalServerError, err)
-		return
+	deploymentInfo, _ := kubeclient.GetNativeDeployment(namespace, deployment.Name)
+	if deploymentInfo != nil {
+		logs.Info(fmt.Sprintf("Deployment: %s exist, update.", deployment.Name))
+		updateErr := kubeclient.UpdateNativeDeployment(namespace, deployment)
+		if updateErr != nil {
+			fail(c, http.StatusInternalServerError, updateErr)
+			return
+		}
+	} else {
+		logs.Info(fmt.Sprintf("Deployment: %s not exist, create.", deployment.Name))
+		createErr := kubeclient.CreateNativeDeployment(namespace, deployment)
+		if createErr != nil {
+			fail(c, http.StatusInternalServerError, createErr)
+			return
+		}
 	}
 
 	ok(c, "")
@@ -79,13 +95,14 @@ func createDeployment(c *gin.Context) {
 // @Success 200 {object} types.Result{data=""} ""
 // @Router /deployment/{deploymentName} [delete]
 func deleteDeployment(c *gin.Context) {
+	namespace := c.Param("namespace")
 	deploymentName := c.Param("deploymentName")
 
-	if !checkDeploymentName(c, deploymentName) {
+	if !checkDeploymentParams(c, deploymentName) {
 		return
 	}
 
-	err := kubeclient.DeleteDeployment(deploymentName)
+	err := kubeclient.DeleteNativeDeployment(namespace, deploymentName)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
@@ -94,7 +111,7 @@ func deleteDeployment(c *gin.Context) {
 	ok(c, "")
 }
 
-func checkDeploymentName(c *gin.Context, deploymentName string) bool {
+func checkDeploymentParams(c *gin.Context, deploymentName string) bool {
 	if deploymentName == "" {
 		fail(c, http.StatusBadRequest, errors.New("deployment名称不能为空"))
 		return false
