@@ -309,7 +309,16 @@ class ExtServiceBcsService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val deployment = client.get(ServiceKubernetesManagementResource::class).getDeploymentInfo(userId, serviceCode).data
+        val namespaceName = if (grayFlag == true) {
+            extServiceBcsNameSpaceConfig.grayNamespaceName
+        } else {
+            extServiceBcsNameSpaceConfig.namespaceName
+        }
+        val deployment = client.get(ServiceKubernetesManagementResource::class).getDeploymentInfo(
+            userId = userId,
+            namespaceName = namespaceName,
+            deploymentName = serviceCode
+        ).data
         logger.info("getExtServiceDeployStatus deployment is:$deployment")
         return Result(deployment?.status)
     }
