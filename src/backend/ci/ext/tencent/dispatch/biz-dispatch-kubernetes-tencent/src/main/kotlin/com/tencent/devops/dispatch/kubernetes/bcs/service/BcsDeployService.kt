@@ -138,7 +138,7 @@ class BcsDeployService @Autowired constructor(
             .endSelector()
             .endSpec()
             .build()
-        deploymentClient.createDeployment(userId, deployment)
+        deploymentClient.createDeployment(userId, namespaceName, deployment)
         logger.info("created deployment:$deployment")
         val servicePort = appService.servicePort
         val service = ServiceBuilder()
@@ -156,7 +156,7 @@ class BcsDeployService @Autowired constructor(
             .withType("NodePort")
             .endSpec()
             .build()
-        serviceClient.createService(userId, service)
+        serviceClient.createService(userId, namespaceName, service)
         logger.info("created service:$service")
         // 创建ingress
         // generate ingress backend
@@ -195,7 +195,7 @@ class BcsDeployService @Autowired constructor(
             )
             logger.info("created ingress:$ingress")
         } else {
-            var ingress = ingressClient.getIngressByName(userId, ingressName).data
+            var ingress = ingressClient.getIngressByName(userId, namespaceName, ingressName).data
             logger.info("deployApp ingress is: $ingress")
             if (ingress == null) {
                 ingress = createIngress(
@@ -212,7 +212,7 @@ class BcsDeployService @Autowired constructor(
                     ingress.spec.rules.contains(ingressRule) -> return Result(true)
                     else -> {
                         ingress.spec.rules.add(ingressRule)
-                        ingressClient.createIngress(userId, ingress)
+                        ingressClient.createIngress(userId, namespaceName, ingress)
                         logger.info("update ingress:$ingressName success")
                     }
                 }
@@ -251,7 +251,7 @@ class BcsDeployService @Autowired constructor(
             .withRules(ingressRule)
             .endSpec()
             .build()
-        val result = ingressClient.createIngress(userId, ingress)
+        val result = ingressClient.createIngress(userId, namespaceName, ingress)
         if (result.isOk()) {
             redisOperation.set(
                 key = ingressRedisKey,
@@ -325,12 +325,12 @@ class BcsDeployService @Autowired constructor(
         val grayNamespaceName = stopApp.grayNamespaceName
         var deployment: Deployment?
         if (grayNamespaceName.isNotEmpty()) {
-            deployment = deploymentClient.getDeploymentByName(userId, deploymentName).data
+            deployment = deploymentClient.getDeploymentByName(userId, grayNamespaceName, deploymentName).data
             if (deployment != null) {
                 // 删除deployment
-                deploymentClient.deleteDeploymentByName(userId, deploymentName)
+                deploymentClient.deleteDeploymentByName(userId, grayNamespaceName, deploymentName)
                 // 删除service
-                serviceClient.deleteServiceByName(userId, stopApp.serviceName)
+                serviceClient.deleteServiceByName(userId, grayNamespaceName, stopApp.serviceName)
                 // 更新ingress规则
                 deleteIngressRule(
                     userId = userId,
@@ -343,12 +343,12 @@ class BcsDeployService @Autowired constructor(
         // 停止正式命名空间的应用
         val namespaceName = stopApp.namespaceName
         if (namespaceName.isNotEmpty()) {
-            deployment = deploymentClient.getDeploymentByName(userId, deploymentName).data
+            deployment = deploymentClient.getDeploymentByName(userId, namespaceName, deploymentName).data
             if (deployment != null) {
                 // 删除deployment
-                deploymentClient.deleteDeploymentByName(userId, deploymentName)
+                deploymentClient.deleteDeploymentByName(userId, namespaceName, deploymentName)
                 // 删除service
-                serviceClient.deleteServiceByName(userId, stopApp.serviceName)
+                serviceClient.deleteServiceByName(userId, namespaceName, stopApp.serviceName)
                 // 更新ingress规则
                 deleteIngressRule(
                     userId = userId,
@@ -370,9 +370,9 @@ class BcsDeployService @Autowired constructor(
         val ingressRedisKey = "$ingressRedisPrefixKey:$namespaceName"
         val ingressName = redisOperation.get(ingressRedisKey)
         ingressName?.let { name ->
-            val ingress = ingressClient.getIngressByName(userId, name).data
+            val ingress = ingressClient.getIngressByName(userId, namespaceName, name).data
             ingress?.spec?.rules?.removeIf { rule -> rule.host == MessageFormat(host).format(arrayOf(deploymentName)) }
-            ingress?.let { it -> ingressClient.createIngress(userId, it) }
+            ingress?.let { it -> ingressClient.createIngress(userId, namespaceName, it) }
         }
     }
 
