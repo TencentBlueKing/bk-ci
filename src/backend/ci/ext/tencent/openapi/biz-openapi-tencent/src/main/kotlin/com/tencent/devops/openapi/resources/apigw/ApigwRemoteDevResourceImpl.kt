@@ -268,7 +268,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         appCode: String?,
         apigwType: String?,
         projectId: String?
-    ): Result<List<String>> {
+    ): Result<Map<String, Any>> {
         logger.info("queryWorkspaceImageList |$projectId|")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceImageList(
             projectId = projectId

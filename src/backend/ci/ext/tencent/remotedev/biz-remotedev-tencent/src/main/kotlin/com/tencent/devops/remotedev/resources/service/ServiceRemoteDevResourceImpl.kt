@@ -21,7 +21,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
-import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
@@ -448,12 +447,20 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun getWorkspaceImageList(projectId: String?): Result<List<String>> {
-        val imageList = if (projectId.isNullOrBlank()) {
-            imageManageService.getVmStandardImages().mapNotNull { it.cosFile }
+    override fun getWorkspaceImageList(projectId: String?): Result<Map<String, Any>> {
+        // 获取基础镜像
+        val baseImages = JsonUtil.toMap(imageManageService.getVmStandardImages())
+
+        // 获取项目特定镜像（如果有）
+        val projectImageMap = if (!projectId.isNullOrBlank()) {
+            mapOf(projectId to JsonUtil.toMap(imageManageService.getProjectImageList(projectId)))
         } else {
-            imageManageService.getProjectImageList(projectId).map { it.imageCosFile }
+            emptyMap()
         }
-        return Result(imageList.distinct())
+
+        // 合并基础镜像和项目镜像
+        val allImages = projectImageMap + mapOf("base" to baseImages)
+
+        return Result(allImages)
     }
 }

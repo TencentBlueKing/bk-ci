@@ -388,5 +388,5 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @QueryParam("projectId")
         projectId: String?
-    ): Result<List<String>>
+    ): Result<Map<String, Any>>
 }
