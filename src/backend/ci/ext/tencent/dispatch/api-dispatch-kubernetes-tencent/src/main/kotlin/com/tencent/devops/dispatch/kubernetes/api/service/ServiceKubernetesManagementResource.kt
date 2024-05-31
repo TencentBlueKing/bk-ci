@@ -106,24 +106,30 @@ interface ServiceKubernetesManagementResource {
     ): Result<Boolean>
 
     @Operation(summary = "获取deployment信息")
-    @Path("/deployments/{deploymentName}")
+    @Path("/namespaceNames/{namespaceName}/deployments/{deploymentName}")
     @GET
     fun getDeploymentInfo(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "namespaceName")
+        @PathParam("namespaceName")
+        namespaceName: String,
         @Parameter(description = "deployment名称")
         @PathParam("deploymentName")
         deploymentName: String
     ): Result<Deployment?>
 
     @Operation(summary = "获取deployment信息集合")
-    @Path("/deployments")
+    @Path("/namespaceNames/{namespaceName}/deployments")
     @GET
     fun getDeploymentInfos(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "namespaceName")
+        @PathParam("namespaceName")
+        namespaceName: String,
         @Parameter(description = "deployment名称")
         @QueryParam("deploymentNames")
         deploymentNames: String

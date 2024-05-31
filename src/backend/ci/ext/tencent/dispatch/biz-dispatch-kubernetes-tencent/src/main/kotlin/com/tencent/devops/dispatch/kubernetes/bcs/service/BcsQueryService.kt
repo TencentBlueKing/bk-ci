@@ -41,23 +41,25 @@ class BcsQueryService @Autowired constructor(private val deploymentClient: Deplo
 
     fun getBcsDeploymentInfo(
         userId: String,
+        namespaceName: String,
         deploymentName: String
     ): Result<Deployment?> {
         logger.info("getBcsDeploymentInfo userId is: $userId , deploymentName is: $deploymentName")
-        val deployment = deploymentClient.getDeploymentByName(userId, deploymentName).data
+        val deployment = deploymentClient.getDeploymentByName(userId, namespaceName, deploymentName).data
         logger.info("getBcsDeploymentInfo deployment is: $deployment")
         return Result(deployment)
     }
 
     fun getBcsDeploymentInfos(
         userId: String,
+        namespaceName: String,
         deploymentNames: String
     ): Result<Map<String, Deployment>> {
         logger.info("getBcsDeploymentInfo userId is: $userId,deploymentNames is: $deploymentNames")
         val deploymentNameList = deploymentNames.split(",")
         val deploymentMap = mutableMapOf<String, Deployment>()
         deploymentNameList.forEach { name ->
-            val deployment = deploymentClient.getDeploymentByName(userId, name).data
+            val deployment = deploymentClient.getDeploymentByName(userId, namespaceName, name).data
             deployment?.let { deploymentMap[name] = it }
         }
         return Result(deploymentMap)

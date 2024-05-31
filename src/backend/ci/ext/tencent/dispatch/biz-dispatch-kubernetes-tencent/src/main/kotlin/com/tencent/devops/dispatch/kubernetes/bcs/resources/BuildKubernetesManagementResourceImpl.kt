@@ -44,9 +44,10 @@ class BuildKubernetesManagementResourceImpl @Autowired constructor(
 
     override fun getBcsDeploymentInfo(
         userId: String,
+        namespaceName: String,
         deploymentName: String
     ): Result<Deployment?> {
-        return bcsQueryService.getBcsDeploymentInfo(userId, deploymentName)
+        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName)
     }
 
     override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {

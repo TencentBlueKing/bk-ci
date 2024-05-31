@@ -61,12 +61,15 @@ interface BuildKubernetesManagementResource {
     ): Result<Boolean>
 
     @Operation(summary = "获取deployment信息")
-    @Path("/deployments/{deploymentName}")
+    @Path("/namespaceNames/{namespaceName}/deployments/{deploymentName}")
     @GET
     fun getBcsDeploymentInfo(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "namespaceName")
+        @PathParam("namespaceName")
+        namespaceName: String,
         @Parameter(description = "deployment名称")
         @PathParam("deploymentName")
         deploymentName: String
