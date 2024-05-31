@@ -109,7 +109,7 @@ data class VMBuildContainer(
     @get:Schema(title = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
     @get:Schema(title = "用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null,
+    override var jobId: String? = null,
     @get:Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
     @get:Schema(title = "是否为构建矩阵", required = false, readOnly = true)
