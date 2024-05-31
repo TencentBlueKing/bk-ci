@@ -120,11 +120,9 @@ object PipelineUtils {
 
     fun transformUserIllegalReviewParams(reviewParams: List<ManualReviewParam>?) {
         reviewParams?.forEach { param ->
-            if (param.valueType == ManualReviewParamType.MULTIPLE) {
-                val value = param.value
-                if (value is String && value.isBlank()) {
-                    param.value = null
-                }
+            val value = param.value
+            if (param.valueType == ManualReviewParamType.MULTIPLE && value is String && value.isBlank()) {
+                param.value = null
             }
         }
     }
