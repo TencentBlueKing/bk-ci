@@ -61,7 +61,7 @@ function generatorSvgJs (type) {
 
 function getScopeStr (scope) {
     try {
-        if (!scope) return ''
+        if (!scope) return '-r'
         let scopeArray
         switch (true) {
             case typeof scope === 'string':
@@ -70,8 +70,7 @@ function getScopeStr (scope) {
             default:
                 scopeArray = scope
         }
-        const isMultiple = scopeArray.length > 1
-        return `--scope=devops-${isMultiple ? `{${scopeArray.join(',')}}` : scopeArray.join(',')}`
+        return `--filter=${scopeArray.map(item => `devops-${item}`).join(',')}`
     } catch (e) {
         console.error(e)
         return ''
@@ -95,7 +94,7 @@ task('build', series([cb => {
         return acc
     }, '')
     console.log(envQueryStr)
-    require('child_process').exec(`pnpm run public:${env} -r ${scopeStr} `, {
+    require('child_process').exec(`pnpm run ${scopeStr} public:${env}`, {
         maxBuffer: 5000 * 1024,
         env: {
             ...process.env,
