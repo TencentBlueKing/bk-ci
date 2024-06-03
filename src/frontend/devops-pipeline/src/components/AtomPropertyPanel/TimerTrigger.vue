@@ -3,7 +3,9 @@
         <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.baseRule') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" />
+                <i class="devops-icon icon-angle-down" style="display:block"></i>
+
+                <!-- <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" /> -->
             </header>
             <div slot="content">
                 <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
@@ -15,7 +17,8 @@
         <accordion show-checkbox :show-content="advance" :after-toggle="toggleAdvance">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.crontabTitle') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="advance" style="margin-left: auto;" />
+                <i class="devops-icon icon-angle-down" style="display:block"></i>
+                <!-- <input class="accordion-checkbox" type="checkbox" :checked="advance" style="margin-left: auto;" /> -->
             </header>
             <div slot="content" class="cron-build-tab">
                 <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has('advanceExpression')" :error-msg="errors.first('advanceExpression')">
@@ -27,7 +30,8 @@
         <accordion show-checkbox :show-content="isShowCodelibConfig" :after-toggle="toggleCodelibConfig">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.codelibConfigs') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" style="margin-left: auto;" />
+                <i class="devops-icon icon-angle-down" style="display:block"></i>
+                <!-- <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" style="margin-left: auto;" /> -->
             </header>
             <div slot="content" class="cron-build-tab">
                 <form-field class="cron-build-tab" :desc="$t('editPage.timerTriggerCodelibTips')" :required="false" :label="$t('editPage.codelib')">
@@ -62,10 +66,13 @@
                         </request-selector>
                         <vuex-input
                             v-else
+                            :value="element['repoName']"
                             :disabled="repositoryType === 'SELF'"
                             :key="repositoryType"
                             :placeholder="repositoryType === 'SELF' ? '将自动监听所属PAC代码库，无需设置' : '请输入代码库别名'"
                             class="input-selector"
+                            name="repoName"
+                            :handle-change="handleUpdateElement"
                         >
                         </vuex-input>
                     </div>
@@ -108,7 +115,7 @@
             return {
                 isShowBasicRule: this.notEmptyArray('newExpression'),
                 advance: this.notEmptyArray('advanceExpression'),
-                isShowCodelibConfig: this.element.repoHashId || this.element.noScm,
+                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branchs.length,
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
                 repositoryType: this.element.repositoryType || 'ID'
             }
