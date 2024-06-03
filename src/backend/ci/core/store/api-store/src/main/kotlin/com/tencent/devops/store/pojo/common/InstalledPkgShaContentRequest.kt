@@ -36,5 +36,5 @@ data class InstalledPkgShaContentRequest(
     @get:Schema(title = "操作系统名称", required = false)
     val osName: String? = null,
     @get:Schema(title = "操作系统CPU架构", required = false)
-    val osArch: String? = null,
+    val osArch: String? = null
 )
