@@ -60,4 +60,13 @@ interface PipelineScmService {
      * @return
      */
     fun getOauthUrl(userId: String, projectId: String, taskId: Long, toolName: String): String
+
+    fun getStreamFileContent(
+        projectId: String,
+        userId: String,
+        repoUrl: String,
+        filePath: String,
+        reversion: String?,
+        branch: String?
+    ): String?
 }
