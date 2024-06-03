@@ -349,7 +349,7 @@ class CreateControl @Autowired constructor(
         val workspaceNames = workspaceCreate.assignNames.ifEmpty {
             buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(projectId)) } }
         }
-        for (i in 0 until workspaceCreate.count) {
+        repeat(workspaceNames.size) { i ->
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = workspaceNames[i]
             val owner = workspaceCreate.assignOwners.getOrNull(i)
