@@ -80,26 +80,9 @@ class SensitiveApiPermissionAspect constructor(
         val apiName = method.getAnnotation(SensitiveApiPermission::class.java)?.value
         val referer = request.getHeader(REFERER)
         var verifyFlag = false
-        val storeCode: String?
+        var storeCode: String? = request.getHeader(AUTH_HEADER_DEVOPS_STORE_CODE)
         if (referer.contains(PROFILE_DEVX)) {
-            val installedPkgShaContent = request.getHeader(AUTH_HEADER_DEVOPS_SHA_CONTENT)
-            val osName = request.getHeader(AUTH_HEADER_DEVOPS_OS_NAME)
-            val osArch = request.getHeader(AUTH_HEADER_DEVOPS_OS_ARCH)
-            storeCode = request.getHeader(AUTH_HEADER_DEVOPS_STORE_CODE)
-            val storeType = request.getHeader(AUTH_HEADER_DEVOPS_STORE_TYPE)
-            val version = request.getHeader(AUTH_HEADER_DEVOPS_STORE_VERSION)
-            val checkParamFlag = !storeType.isNullOrBlank() && !storeCode.isNullOrBlank() && !version.isNullOrBlank()
-            if (checkParamFlag && !apiName.isNullOrBlank()) {
-                verifyFlag = verifyApi(
-                    storeType = storeType,
-                    storeCode = storeCode,
-                    apiName = apiName,
-                    version = version,
-                    installedPkgShaContent = installedPkgShaContent,
-                    osName = osName,
-                    osArch = osArch
-                )
-            }
+            verifyFlag = doShaValidateBus(request, storeCode, apiName)
         } else {
             val buildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
             val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
@@ -126,6 +109,31 @@ class SensitiveApiPermissionAspect constructor(
                 defaultMessage = "Unauthorized: sensitive api $apiName cannot be used by $storeCode"
             )
         }
+    }
+
+    private fun doShaValidateBus(
+        request: HttpServletRequest,
+        storeCode: String?,
+        apiName: String?
+    ): Boolean {
+        val storeType = request.getHeader(AUTH_HEADER_DEVOPS_STORE_TYPE)
+        val version = request.getHeader(AUTH_HEADER_DEVOPS_STORE_VERSION)
+        val checkParamFlag = !storeType.isNullOrBlank() && !version.isNullOrBlank()
+        if (checkParamFlag && !apiName.isNullOrBlank() && !storeCode.isNullOrBlank()) {
+            val installedPkgShaContent = request.getHeader(AUTH_HEADER_DEVOPS_SHA_CONTENT)
+            val osName = request.getHeader(AUTH_HEADER_DEVOPS_OS_NAME)
+            val osArch = request.getHeader(AUTH_HEADER_DEVOPS_OS_ARCH)
+            return verifyApi(
+                storeType = storeType,
+                storeCode = storeCode,
+                apiName = apiName,
+                version = version,
+                installedPkgShaContent = installedPkgShaContent,
+                osName = osName,
+                osArch = osArch
+            )
+        }
+        return false
     }
 
     @Suppress("LongParameterList")
