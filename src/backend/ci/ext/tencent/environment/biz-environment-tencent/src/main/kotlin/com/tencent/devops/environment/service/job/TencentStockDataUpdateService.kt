@@ -75,7 +75,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val cmdbNodeDao: CmdbNodeDao,
     private val jobDao: JobDao,
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
-    private val queryFromCCService: QueryFromCCService,
+    private val tencentQueryFromCCService: TencentQueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val redisOperation: RedisOperation,
     private val queryAgentStatusService: QueryAgentStatusService,
@@ -240,7 +240,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         val nodeServerIdList = nodeRecords.mapNotNull { it[T_NODE_SERVER_ID] as? Long }.toSet()
         // 通过serverId查询 CC信息
         val nodeCCInfoListFromServerId = if (nodeServerIdList.isNotEmpty()) {
-            queryFromCCService.queryCCListHostWithoutBizByInRules(
+            tencentQueryFromCCService.queryCCListHostWithoutBizByInRules(
                 listOf(FIELD_BK_HOST_INNERIP, FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_OS_TYPE, FIELD_BK_SVR_ID),
                 nodeServerIdList,
                 FIELD_BK_SVR_ID
@@ -268,7 +268,9 @@ class TencentStockDataUpdateService @Autowired constructor(
                 }
                 cmdbNodeDao.batchUpdateNodeInCCByServerId(dslContext, serverIdToNodeStatus)
                 // 4. CC中信息（host_id、云区域id、操作系统类型）改变 - 更新信息，不变 - 不操作
-                val nodeUpdateInfoList = nodeRecords.filterNot {
+                val nodeUpdateInfoList = nodeRecords.filter {
+                    null != it[T_NODE_SERVER_ID]
+                }.filterNot {
                     val ccInfo = serverIdToCCInfoMap[it[T_NODE_SERVER_ID] as Long]
                     it[T_NODE_HOST_ID] as? Long == ccInfo?.bkHostId &&
                         it[T_NODE_CLOUD_AREA_ID] as? Long == ccInfo?.bkCloudId?.toLong() &&
@@ -282,6 +284,10 @@ class TencentStockDataUpdateService @Autowired constructor(
                         osType = cmdbNodeService.getOsTypeByCCCode(ccInfo?.osType)
                     )
                 }
+                if (logger.isDebugEnabled)
+                    logger.debug(
+                        "[checkDeployNodesIsInCCByPage]nodeUpdateInfoList：${nodeUpdateInfoList?.joinToString()}"
+                    )
                 if (!nodeUpdateInfoList.isNullOrEmpty()) {
                     cmdbNodeDao.batchUpdateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)
                 }
@@ -412,7 +418,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             val (_, _, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(cmdbNodeServerIdSet.toList())
             // 不在CC中 - 通过节点svrId 添加到CC中，查出host_id和云区域id，写入db对应记录
             if (notInCCSvrIdList.isNotEmpty()) {
-                val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
+                val addToCCResp = tencentQueryFromCCService.addHostToCiBiz(notInCCSvrIdList)
                 val ccHostIdList = addToCCResp.data?.bkHostIds
                 val (notInCCSvrIdQueryCCRes, _, _) = cmdbNodeService.checkNodeInCCBySvrId(notInCCSvrIdList)
                 val svrIdQueryCCList = notInCCSvrIdQueryCCRes.data?.info // 所有刚添加到cc中的节点 cc信息

@@ -24,5 +24,8 @@ data class CmdbDataIns(
     @JsonProperty("SfwName")
     val svrOsName: String?,
     @get:Schema(title = "服务器ID")
-    val serverId: Long?
+    val serverId: Long?,
+    @get:Schema(title = "运维部门ID")
+    @JsonProperty("DeptId")
+    val deptId: Int?
 )

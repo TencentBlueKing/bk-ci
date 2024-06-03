@@ -29,7 +29,7 @@ package com.tencent.devops.environment.constant
 
 object Constants {
     /**
-     * 请求CMDB接口的请求参数
+     * 请求ESB-CMDB接口的请求参数
      */
     const val COLUMN_SVR_BAK_OPERATOR = "SvrBakOperator"
     const val COLUMN_SVR_OPERATOR = "SvrOperator"

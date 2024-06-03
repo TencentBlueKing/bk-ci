@@ -37,7 +37,7 @@ data class UpdateTNodeInfo(
     @get:Schema(title = "节点状态")
     val nodeStatus: String?,
     @get:Schema(title = "agent状态")
-    val agentStatus: Boolean?,
+    val agentStatus: Boolean? = null,
     @get:Schema(title = "agent版本")
     val agentVersion: String?,
     @get:Schema(title = "节点名称")
@@ -68,17 +68,20 @@ data class UpdateTNodeInfo(
 
     constructor(
         nodeId: Long,
-        displayName: String?,
+        nodeStatus: String?,
+        hostId: Long?,
+        cloudAreaId: Long?,
+        agentVersion: String?,
         lastModifyTime: LocalDateTime
     ) : this(
         nodeId = nodeId,
-        displayName = displayName,
+        nodeStatus = nodeStatus,
+        hostId = hostId,
+        cloudAreaId = cloudAreaId,
         lastModifyTime = lastModifyTime,
-        nodeStatus = null,
         agentStatus = null,
-        agentVersion = null,
-        hostId = null,
-        cloudAreaId = null
+        agentVersion = agentVersion,
+        displayName = null
     )
 
     constructor(

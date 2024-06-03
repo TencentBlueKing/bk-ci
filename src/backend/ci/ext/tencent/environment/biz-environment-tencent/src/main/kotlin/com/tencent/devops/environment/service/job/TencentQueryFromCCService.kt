@@ -53,7 +53,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class QueryFromCCService {
+class TencentQueryFromCCService {
     @Value("\${environment.apigw.bkAppCode:}")
     private val bkAppCode = ""
 
@@ -82,7 +82,7 @@ class QueryFromCCService {
     private val bkccDeleteHostFromCiBizPath = ""
 
     companion object {
-        private val logger = LoggerFactory.getLogger(QueryFromCCService::class.java)
+        private val logger = LoggerFactory.getLogger(TencentQueryFromCCService::class.java)
         private val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }

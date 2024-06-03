@@ -655,6 +655,23 @@ class CmdbNodeDao {
         }
     }
 
+    fun getNodeByProjectIdAndServerIdList(
+        dslContext: DSLContext,
+        projectId: String,
+        serverIdList: List<Long>
+    ): Result<Record3<Long, Long, String>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                SERVER_ID.`as`(T_NODE_SERVER_ID),
+                NODE_IP.`as`(T_NODE_NODE_IP)
+            ).from(this)
+                .where(SERVER_ID.`in`(serverIdList))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+        }
+    }
+
     fun listServerNodesByIps(dslContext: DSLContext, projectId: String, ips: List<String>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

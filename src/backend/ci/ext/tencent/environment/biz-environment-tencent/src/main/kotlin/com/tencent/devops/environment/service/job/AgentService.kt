@@ -93,7 +93,7 @@ data class AgentService @Autowired constructor(
     private val dslContext: DSLContext,
     private val cmdbNodeDao: CmdbNodeDao,
     private val redisOperation: RedisOperation,
-    private val queryFromCCService: QueryFromCCService,
+    private val tencentQueryFromCCService: TencentQueryFromCCService,
     private val queryAgentStatusService: QueryAgentStatusService,
     private val agentStatusUpdateThreadMetrics: AgentStatusUpdateThreadMetrics
 ) {
@@ -175,7 +175,7 @@ data class AgentService @Autowired constructor(
     ): AgentResult<InstallAgentResult> {
         NodeManApi.setNodemanOperationName("installAgent")
         val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentReqString)
-        val hostIdToqueryCCResDataMap = queryFromCCService.queryCCFindHostBizRelations(
+        val hostIdToqueryCCResDataMap = tencentQueryFromCCService.queryCCFindHostBizRelations(
             installAgentReq.hosts.mapNotNull { it.bkHostId?.toLong() }
         ).data?.associateBy { it.bkHostId }
         val installAgentRequest = AgentInstallAgentReq(

@@ -29,11 +29,9 @@ package com.tencent.devops.environment.pojo.job
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class ReImportCmdbNodeInfo(
-    @get:Schema(title = "节点ID", required = true)
-    val nodeId: Long,
-    @get:Schema(title = "节点IP")
-    val nodeIp: String? = null,
+data class ImportCmdbNodeInfo(
     @get:Schema(title = "节点serverId")
-    val serverId: Long? = null
+    val serverId: Long,
+    @get:Schema(title = "节点IP")
+    val nodeIp: String? = null
 )
