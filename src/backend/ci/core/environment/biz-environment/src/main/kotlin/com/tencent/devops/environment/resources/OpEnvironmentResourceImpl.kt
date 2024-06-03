@@ -41,4 +41,8 @@ class OpEnvironmentResourceImpl @Autowired constructor(
     override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
         return Result(nodeService.refreshGateway(oldToNewMap))
     }
+
+    override fun addHashId() {
+        nodeService.addHashId()
+    }
 }

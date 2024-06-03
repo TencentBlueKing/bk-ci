@@ -29,12 +29,13 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -42,12 +43,9 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -55,19 +53,20 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
-import com.tencent.devops.process.engine.utils.PauseRedisUtils
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
+import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -92,11 +91,13 @@ class PipelineTaskService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
     private val taskBuildDetailService: TaskBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelinePauseExtService: PipelinePauseExtService
 ) {
 
@@ -142,16 +143,16 @@ class PipelineTaskService @Autowired constructor(
                     taskName = taskName,
                     taskType = taskType,
                     taskAtom = taskAtom,
-                    status = BuildStatus.values()[status],
+                    status = status,
                     taskParams = JsonUtil.toMutableMap(taskParams),
-                    additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
+                    additionalOptions = additionalOptions,
                     executeCount = executeCount ?: 1,
                     starter = starter,
                     approver = approver,
                     subBuildId = subBuildId,
                     startTime = startTime?.timestampmilli() ?: 0L,
                     endTime = endTime?.timestampmilli() ?: 0L,
-                    errorType = if (errorType == null) null else ErrorType.values()[errorType],
+                    errorType = errorType,
                     errorCode = errorCode,
                     errorMsg = errorMsg
                 )
@@ -160,57 +161,44 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun getAllBuildTask(projectId: String, buildId: String): Collection<PipelineBuildTask> {
-        val list = pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
-        val result = mutableListOf<PipelineBuildTask>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildTaskDao.convert(it)!!)
-            }
-        }
-        return result
+        return pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
     }
 
     fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
-        val listByStatus = pipelineBuildTaskDao.listByStatus(
+        val listByStatus = pipelineBuildTaskDao.getTasksInCondition(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             containerId = null,
-            statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+            statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING, BuildStatus.PAUSE)
         )
         val list = mutableListOf<Map<String, Any>>()
-        val buildStatus = BuildStatus.values()
         listByStatus.forEach {
             list.add(
                 mapOf(
                     "taskId" to it.taskId,
                     "containerId" to it.containerId,
-                    "status" to buildStatus[it.status].name,
-                    "executeCount" to it.executeCount
+                    "status" to it.status,
+                    "executeCount" to (it.executeCount ?: 1),
+                    "stepId" to (it.stepId ?: "")
                 )
             )
         }
         return list
     }
 
-    fun listByBuildId(projectId: String, buildId: String): Collection<TPipelineBuildTaskRecord> {
+    fun listByBuildId(projectId: String, buildId: String): Collection<PipelineBuildTask> {
         return pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
     }
 
-    fun batchSave(transactionContext: DSLContext?, stageList: Collection<PipelineBuildTask>) {
-        return pipelineBuildTaskDao.batchSave(transactionContext ?: dslContext, stageList)
+    fun batchSave(transactionContext: DSLContext?, taskList: Collection<PipelineBuildTask>) {
+        return pipelineBuildTaskDao.batchSave(transactionContext ?: dslContext, taskList)
     }
 
-    fun batchUpdate(transactionContext: DSLContext?, stageList: List<TPipelineBuildTaskRecord>) {
-        return pipelineBuildTaskDao.batchUpdate(transactionContext ?: dslContext, stageList)
-    }
-
-    fun deletePipelineBuildTasks(transactionContext: DSLContext?, projectId: String, pipelineId: String) {
-        pipelineBuildTaskDao.deletePipelineBuildTasks(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
+    fun batchUpdate(transactionContext: DSLContext?, taskList: List<PipelineBuildTask>) {
+        return JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.batchUpdate(transactionContext ?: dslContext, taskList)
+        }
     }
 
     fun deleteTasksByContainerSeqId(
@@ -229,80 +217,91 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun getTaskRecord(
-        transactionContext: DSLContext?,
+    fun getByTaskId(
+        transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
-        taskId: String
-    ): TPipelineBuildTaskRecord? {
+        taskId: String?,
+        stepId: String? = null
+    ): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             buildId = buildId,
-            taskId = taskId
+            taskId = taskId,
+            stepId = stepId
         )
+    }
+
+    fun getTaskStatus(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        buildId: String,
+        taskId: String
+    ): BuildStatus? {
+        val statusOrdinal = pipelineBuildTaskDao.getTaskStatus(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId
+        ) ?: return null
+
+        return BuildStatus.values()[statusOrdinal.value1()]
     }
 
     fun updateTaskParamWithElement(projectId: String, buildId: String, taskId: String, newElement: Element) {
-        pipelineBuildTaskDao.updateTaskParam(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            taskParam = JsonUtil.toJson(newElement, false)
-        )
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateTaskParam(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                taskParam = JsonUtil.toJson(newElement, false)
+            )
+        }
     }
 
     fun updateTaskParam(
-        transactionContext: DSLContext?,
+        transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
         taskId: String,
         taskParam: String
     ): Int {
-        return pipelineBuildTaskDao.updateTaskParam(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            taskParam = taskParam
-        )
+        return JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateTaskParam(
+                dslContext = transactionContext ?: dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                taskParam = taskParam
+            )
+        }
     }
 
     fun listContainerBuildTasks(
         projectId: String,
         buildId: String,
-        containerSeqId: String,
+        containerSeqId: String?,
         buildStatusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildTask> {
-        val list = pipelineBuildTaskDao.listByStatus(
+        return pipelineBuildTaskDao.getTasksInCondition(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             containerId = containerSeqId,
             statusSet = buildStatusSet
         )
-        val result = mutableListOf<PipelineBuildTask>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildTaskDao.convert(it)!!)
-            }
-        }
-        return result
     }
 
-    fun getBuildTask(projectId: String, buildId: String, taskId: String): PipelineBuildTask? {
-        val t = pipelineBuildTaskDao.get(
+    fun getBuildTask(projectId: String, buildId: String, taskId: String?, stepId: String? = null): PipelineBuildTask? {
+        return pipelineBuildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            taskId = taskId
+            taskId = taskId,
+            stepId = stepId
         )
-        return if (t != null) {
-            pipelineBuildTaskDao.convert(t)
-        } else {
-            null
-        }
     }
 
     fun updateSubBuildId(
@@ -312,103 +311,63 @@ class PipelineTaskService @Autowired constructor(
         subBuildId: String,
         subProjectId: String
     ): Int {
-        return pipelineBuildTaskDao.updateSubBuildId(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            subBuildId = subBuildId,
-            subProjectId = subProjectId
-        )
-    }
-
-    fun setTaskErrorInfo(
-        transactionContext: DSLContext?,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        errorType: ErrorType,
-        errorCode: Int,
-        errorMsg: String
-    ) {
-        pipelineBuildTaskDao.setTaskErrorInfo(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            errorType = errorType,
-            errorCode = errorCode,
-            errorMsg = errorMsg
-        )
-    }
-
-    fun updateTaskStatusInfo(
-        transactionContext: DSLContext?,
-        userId: String? = null,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        taskStatus: BuildStatus
-    ) {
-        var starter: String? = null
-        var approver: String? = null
-        var startTime: LocalDateTime? = null
-        var endTime: LocalDateTime? = null
-        var totalTime: Long? = null
-        val taskRecord = pipelineBuildTaskDao.get(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId
-        )
-        val dbStartTime = taskRecord?.startTime
-        val additionalOptions = JsonUtil.toOrNull(taskRecord?.additionalOptions, ElementAdditionalOptions::class.java)
-        val executeCount = taskRecord?.executeCount
-        if (taskStatus.isFinish()) {
-            endTime = LocalDateTime.now()
-            totalTime = if (dbStartTime == null || endTime == null) {
-                0
-            } else {
-                Duration.between(dbStartTime, endTime).toMillis()
-            }
-            if (taskStatus.isReview() && !userId.isNullOrBlank()) {
-                approver = userId
-            }
-        }
-        if (taskStatus.isRunning() && TaskUtils.isRefreshTaskTime(
+        return JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateSubBuildId(
+                dslContext = dslContext,
+                projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
-                additionalOptions = additionalOptions,
-                executeCount = executeCount
+                subBuildId = subBuildId,
+                subProjectId = subProjectId
             )
-        ) {
-            // 如果是自动重试则不重置task的时间
-            startTime = LocalDateTime.now()
-            if (!userId.isNullOrBlank()) {
-                starter = userId
+        }
+    }
+
+    fun updateTaskStatusInfo(userId: String? = null, task: PipelineBuildTask?, updateTaskInfo: UpdateTaskInfo) {
+        val taskRecord by lazy {
+            task ?: pipelineBuildTaskDao.get(
+                dslContext = dslContext,
+                projectId = updateTaskInfo.projectId,
+                buildId = updateTaskInfo.buildId,
+                taskId = updateTaskInfo.taskId,
+                stepId = null
+            )
+        }
+        if (updateTaskInfo.taskStatus.isFinish()) {
+            val dbStartTime = taskRecord?.startTime
+            updateTaskInfo.endTime = LocalDateTime.now()
+            updateTaskInfo.totalTime = if (dbStartTime == null) {
+                0
+            } else {
+                Duration.between(dbStartTime, updateTaskInfo.endTime).toMillis()
+            }
+            if (updateTaskInfo.taskStatus.isReview() && !userId.isNullOrBlank()) {
+                updateTaskInfo.approver = userId
+            }
+        } else if (updateTaskInfo.taskStatus.isRunning()) {
+            if (TaskUtils.isRefreshTaskTime(
+                    buildId = updateTaskInfo.buildId,
+                    taskId = updateTaskInfo.taskId,
+                    additionalOptions = taskRecord?.additionalOptions,
+                    executeCount = taskRecord?.executeCount
+                )
+            ) {
+                // 如果是自动重试则不重置task的时间
+                updateTaskInfo.startTime = LocalDateTime.now()
+                if (!userId.isNullOrBlank()) {
+                    updateTaskInfo.starter = userId
+                }
             }
         }
-        val updateTaskInfo = UpdateTaskInfo(
-            taskStatus = taskStatus,
-            starter = starter,
-            approver = approver,
-            startTime = startTime,
-            endTime = endTime,
-            totalTime = totalTime
-        )
-        pipelineBuildTaskDao.updateTaskInfo(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            updateTaskInfo = updateTaskInfo
-        )
+
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateTaskInfo(dslContext = dslContext, updateTaskInfo = updateTaskInfo)
+        }
     }
 
     /**
      * 根据插件标识，获取使用插件的流水线详情
      */
-    @Suppress("UNCHECKED_CAST")
     fun listPipelinesByAtomCode(
         atomCode: String,
         projectCode: String?,
@@ -431,7 +390,7 @@ class PipelineTaskService @Autowired constructor(
         val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
         val pipelineIds = pipelineTasks?.map { it[KEY_PIPELINE_ID] as String }?.toSet()
         var pipelineNameMap: MutableMap<String, String>? = null
-        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
+        if (!pipelineIds.isNullOrEmpty()) {
             pipelineNameMap = mutableMapOf()
             val pipelineAtoms = pipelineModelTaskDao.listByAtomCodeAndPipelineIds(
                 dslContext = dslContext,
@@ -494,15 +453,48 @@ class PipelineTaskService @Autowired constructor(
                 buildId = buildId,
                 message = "[${taskRecord.taskName}] failed, and retry $nextCount",
                 tag = taskRecord.taskId,
-                jobId = taskRecord.containerId,
-                executeCount = 1
+                containerHashId = taskRecord.containerId,
+                executeCount = 1,
+                jobId = null,
+                stepId = taskRecord.stepId
             )
         }
         return isRry
     }
 
+    fun taskRetryRecordSet(
+        projectId: String,
+        taskId: String,
+        buildId: String,
+        pipelineId: String,
+        containerId: String,
+        executeCount: Int
+    ) {
+        val lastContainerRecord = containerBuildRecordService.getRecord(
+            transactionContext = null,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
+        )
+        if (lastContainerRecord != null) {
+            lastContainerRecord.containerVar[JOB_RETRY_TASK_ID] = taskId
+            pipelineBuildRecordService.batchSave(
+                transactionContext = null, model = null, stageList = null,
+                containerList = listOf(lastContainerRecord), taskList = null
+            )
+        }
+    }
+
     fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
-        val alreadyPause = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId = buildId, taskId = taskId))
+        val alreadyPause = taskBuildRecordService.taskAlreadyPause(
+            projectId = taskRecord.projectId,
+            pipelineId = taskRecord.pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = taskRecord.executeCount ?: 1
+        )
         return ControlUtils.pauseBeforeExec(taskRecord.additionalOptions, alreadyPause)
     }
 
@@ -511,8 +503,10 @@ class PipelineTaskService @Autowired constructor(
             buildId = buildId,
             message = "[${taskRecord.taskName}] pause, waiting ...",
             tag = taskRecord.taskId,
-            jobId = taskRecord.containerId,
-            executeCount = taskRecord.executeCount ?: 1
+            containerHashId = taskRecord.containerId,
+            executeCount = taskRecord.executeCount ?: 1,
+            jobId = null,
+            stepId = taskRecord.stepId
         )
 
         pauseBuild(task = taskRecord)
@@ -529,10 +523,21 @@ class PipelineTaskService @Autowired constructor(
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return
         val model = taskBuildDetailService.getBuildModel(projectId, buildId)
-        val failTask = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKS)
-        val failTaskNames = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKNAMES)
+        val failTask = pipelineVariableService.getVariable(
+            projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
+        )
+        val failTaskNames = pipelineVariableService.getVariable(
+            projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
+        )
         try {
             val errorElement = findElementMsg(model, taskRecord)
+
+            // 存在的不重复添加 fix：流水线设置的变量重试一次就会叠加一次变量值 #6058
+            if (inFailTasks(failTasks = failTask, failTask = errorElement.first)) {
+                logger.info("$projectId|$buildId|$taskId| skip_createFailTaskVar: ${errorElement.first}")
+                return
+            }
+
             val errorElements = if (failTask.isNullOrBlank()) {
                 errorElement.first
             } else {
@@ -560,15 +565,23 @@ class PipelineTaskService @Autowired constructor(
 
     fun removeFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val failTaskRecord = redisOperation.get(failTaskRedisKey(buildId = buildId, taskId = taskId))
+        if (failTaskRecord.isNullOrBlank()) {
+            return
+        }
         val failTaskNameRecord = redisOperation.get(failTaskNameRedisKey(buildId = buildId, taskId = taskId))
-        if (failTaskRecord.isNullOrBlank() || failTaskNameRecord.isNullOrBlank()) {
+        if (failTaskNameRecord.isNullOrBlank()) {
             return
         }
         try {
-            val failTask = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKS)
-            val failTaskNames = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKNAMES)
-            val newFailTask = failTask!!.replace(failTaskRecord, "")
-            val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord, "")
+            val failTask = pipelineVariableService.getVariable(
+                projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
+            ) ?: return
+            val newFailTask = delTaskString(strings = failTask, string = failTaskRecord, " \n")
+
+            val failTaskNames = pipelineVariableService.getVariable(
+                projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
+            ) ?: return
+            val newFailTaskNames = delTaskString(strings = failTaskNames, string = failTaskNameRecord, ",")
             if (newFailTask != failTask || newFailTaskNames != failTaskNames) {
                 val valueMap = mutableMapOf<String, Any>()
                 valueMap[BK_CI_BUILD_FAIL_TASKS] = newFailTask
@@ -583,6 +596,15 @@ class PipelineTaskService @Autowired constructor(
             logger.warn("$buildId|$taskId|removeFailVarWhenSuccess error, msg: $ignored")
         }
     }
+
+    private fun inFailTasks(failTasks: String?, failTask: String) =
+        failTasks?.split(" \n")?.contains(failTask.replace(" \n", "")) ?: false
+
+    private fun delTaskString(strings: String, string: String, delimiter: String) =
+        strings.split(delimiter).toMutableList().let {
+            it.remove(string.replace(delimiter, ""))
+            it.joinToString(separator = delimiter)
+        }
 
     private fun failTaskRedisKey(buildId: String, taskId: String): String {
         return "devops:failTask:redis:key:$buildId:$taskId"
@@ -620,19 +642,14 @@ class PipelineTaskService @Autowired constructor(
         // 修改任务状态位暂停
         updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
-        taskBuildDetailService.taskPause(
+        taskBuildRecordService.taskPause(
             projectId = task.projectId,
+            pipelineId = task.pipelineId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
             taskId = task.taskId,
-            buildStatus = BuildStatus.PAUSE
-        )
-
-        redisOperation.set(
-            key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
-            value = "true",
-            expiredInSecond = Timeout.transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
+            executeCount = task.executeCount ?: 1
         )
     }
 
@@ -642,46 +659,50 @@ class PipelineTaskService @Autowired constructor(
         buildStatus: BuildStatus,
         errorType: ErrorType? = null,
         errorCode: Int? = null,
-        errorMsg: String? = null
+        errorMsg: String? = null,
+        platformCode: String? = null,
+        platformErrorCode: Int? = null
     ) {
         val taskStatus = BuildStatusSwitcher.taskStatusMaker.switchByErrorCode(buildStatus, errorCode)
         val projectId = task.projectId
-        val pipelineId = task.pipelineId
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
-            updateTaskStatusInfo(
-                transactionContext = transactionContext,
-                taskStatus = taskStatus,
-                userId = userId,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId
-            )
-            if (errorType != null) setTaskErrorInfo(
-                transactionContext = transactionContext,
+        val executeCount = task.executeCount ?: 1
+        logger.info(
+            "${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode" +
+                "|opt_change=${task.additionalOptions?.change}"
+        )
+        updateTaskStatusInfo(
+            userId = userId,
+            task = task,
+            updateTaskInfo = UpdateTaskInfo(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
+                executeCount = executeCount,
+                taskStatus = taskStatus,
                 errorType = errorType,
-                errorCode = errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR,
-                errorMsg = errorMsg ?: ""
+                errorCode = errorCode,
+                errorMsg = errorMsg,
+                platformCode = platformCode,
+                platformErrorCode = platformErrorCode,
+                taskParams = task.taskParams.takeIf { task.additionalOptions?.change == true }, // opt有变需要一起变
+                additionalOptions = task.additionalOptions?.takeIf { task.additionalOptions!!.change }
             )
-        }
-        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
-        if (buildStatus.isRunning()) {
-            pipelineBuildSummaryDao.updateCurrentBuildTask(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                currentTaskId = taskId,
-                currentTaskName = taskName
-            )
-        }
+        )
+        // 卡片界面上 已经不再展示当前正在执行的插件任务名称,因此不需要更新,并减少热点流水线的该表锁竞争.
+//        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
+//        if (buildStatus.isRunning()) {
+//            pipelineBuildSummaryDao.updateCurrentBuildTask(
+//                dslContext = dslContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                currentTaskId = taskId,
+//                currentTaskName = taskName
+//            )
+//        }
     }
 
     /**

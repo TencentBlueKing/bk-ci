@@ -30,17 +30,18 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.redis.RedisLockByValue
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineStageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -49,8 +50,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val redisOperation: RedisOperation
 ) : StageCmd {
 
     companion object {
@@ -86,6 +87,7 @@ class StartContainerStageCmd(
                     sendStageStartCallback(commandContext)
                     stageStatus = BuildStatus.RUNNING // 要启动Stage
                 }
+
                 newActionType.isEnd() -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
                 newActionType == ActionType.SKIP -> stageStatus = BuildStatus.SKIP // 要跳过Stage
             }
@@ -93,6 +95,8 @@ class StartContainerStageCmd(
 
         if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
             commandContext.buildStatus = stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
+        } else if (commandContext.containers.isEmpty()) {
+            commandContext.buildStatus = BuildStatus.SUCCEED
         } else {
             stageStatus = pickJob(commandContext, actionType = newActionType, userId = event.userId)
 
@@ -133,49 +137,45 @@ class StartContainerStageCmd(
         var fail: BuildStatus? = null
         var cancel: BuildStatus? = null
 
-        // 查找最后一个结束状态的Stage (排除Finally）
         val stage = commandContext.stage
-        if (stage.controlOption?.finally == true) {
-            val previousStage = pipelineStageService.listStages(stage.projectId, stage.buildId)
-                .lastOrNull {
-                    it.stageId != commandContext.stage.stageId &&
-                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
-                }
-            // #5246 前序中如果有准入准出失败的stage则直接作为前序stage并把构建状态设为红线失败
-            commandContext.previousStageStatus = if (hasFailedCheck(previousStage)) {
-                BuildStatus.QUALITY_CHECK_FAIL
-            } else {
-                previousStage?.status
-            }
-        }
+
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
-            val jobCount = container.controlOption?.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
+            val jobCount = container.controlOption.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
             if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
             } else if (ControlUtils.checkContainerFailure(container)) {
                 commandContext.failureContainerNum++
-                fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status)
+                fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status, commandContext.fastKill)
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
             } else if (container.status.isRunning() && !actionType.isEnd()) {
                 commandContext.concurrency += jobCount
                 // 已经在运行中的, 只接受终止
                 running = BuildStatus.RUNNING
+                return@forEach
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING
                 commandContext.concurrency += jobCount
                 sendBuildContainerEvent(commandContext, container, actionType = actionType, userId = userId)
 
-                LOG.info("ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
-                    "j(${container.containerId})|status=${container.status}|newActonType=$actionType")
+                LOG.info(
+                    "ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
+                        "j(${container.containerId})|status=${container.status}|newActonType=$actionType"
+                )
+                return@forEach
             }
+
+            // 只要不是正在运行都做reuse逻辑处理
+            commandContext.minAndUnlockAgentReuseMutes(container)
         }
 
         if (commandContext.concurrency > commandContext.maxConcurrency) { // #5109 增加日志埋点监控，以免影响Redis性能
-            LOG.warn("ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
-                    "|concurrency=${commandContext.concurrency}")
+            LOG.warn(
+                "ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
+                    "|concurrency=${commandContext.concurrency}"
+            )
         }
 
         // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功
@@ -212,6 +212,7 @@ class StartContainerStageCmd(
                 containerId = container.containerId,
                 containerHashId = container.containerHashId,
                 actionType = actionType,
+                executeCount = container.executeCount,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,
                 reason = commandContext.latestSummary
@@ -219,8 +220,32 @@ class StartContainerStageCmd(
         )
     }
 
-    private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
-        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
-            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
+    // #10082 如果对应job的endJob都结束就可以解锁了
+    private fun StageContext.minAndUnlockAgentReuseMutes(container: PipelineBuildContainer) {
+        val reuseJobId = container.controlOption.agentReuseMutex?.reUseJobId
+        if (container.controlOption.agentReuseMutex?.endJob != true || reuseJobId.isNullOrBlank()) {
+            return
+        }
+        this.agentReuseMutexEndJob?.set(
+            reuseJobId, this.agentReuseMutexEndJob?.get(reuseJobId)?.minus(1) ?: return
+        ) ?: return
+        if ((this.agentReuseMutexEndJob?.get(reuseJobId) ?: return) <= 0) {
+            // 解锁
+            val agent = this.variables[AgentReuseMutex.genAgentContextKey(reuseJobId)] ?: run {
+                LOG.warn(
+                    "ENGINE|${stage.buildId}|AgentReuseMutex|" +
+                            "${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
+                            "|var ${AgentReuseMutex.genAgentContextKey(reuseJobId)} is null"
+                )
+                return
+            }
+            val lock = RedisLockByValue(
+                redisOperation,
+                AgentReuseMutex.genAgentReuseMutexLockKey(stage.projectId, agent),
+                stage.buildId,
+                AgentReuseMutex.AGENT_LOCK_TIMEOUT
+            )
+            lock.unlock()
+        }
     }
 }

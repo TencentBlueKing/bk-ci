@@ -29,8 +29,10 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCredentialResourceV3
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
@@ -41,6 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwCredentialResourceV3 {
+
+    @BkTimed(extraTags = ["operate", "get"])
     override fun list(
         appCode: String?,
         apigwType: String?,
@@ -51,14 +55,14 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         pageSize: Int?,
         keyword: String?
     ): Result<Page<CredentialWithPermission>> {
-        logger.info("get credential of project($projectId) by user($userId)")
+        logger.info("OPENAPI_CREDENTIAL_V3|$userId|list|$projectId|$credentialTypesString|$page|$pageSize|$keyword")
         return client.get(UserCredentialResource::class).list(
             userId = userId,
             projectId = projectId,
             credentialTypesString = credentialTypesString,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
-            keyword = null
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            keyword = keyword
         )
     }
 
@@ -77,6 +81,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
 //        )
 //    }
 
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -84,7 +89,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         projectId: String,
         credential: CredentialCreate
     ): Result<Boolean> {
-        logger.info("create credential of project($projectId)")
+        logger.info("OPENAPI_CREDENTIAL_V3|$userId|create|$projectId|$credential")
         return client.get(UserCredentialResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -92,6 +97,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(
         appCode: String?,
         apigwType: String?,
@@ -99,7 +105,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         projectId: String,
         credentialId: String
     ): Result<CredentialWithPermission> {
-        logger.info("get credential of project($projectId),credentialId($credentialId)")
+        logger.info("OPENAPI_CREDENTIAL_V3|$userId|get|$projectId|$credentialId")
         return client.get(UserCredentialResource::class).get(
             userId = userId,
             projectId = projectId,
@@ -115,7 +121,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         credentialId: String,
         credential: CredentialUpdate
     ): Result<Boolean> {
-        logger.info("edit credential of project($projectId),credentialId($credentialId)")
+        logger.info("OPENAPI_CREDENTIAL_V3|$userId|edit|$projectId|$credentialId|$credential")
         return client.get(UserCredentialResource::class).edit(
             userId = userId,
             projectId = projectId,
@@ -131,7 +137,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         projectId: String,
         credentialId: String
     ): Result<Boolean> {
-        logger.info("get credential of project($projectId),credentialId($credentialId)")
+        logger.info("OPENAPI_CREDENTIAL_V3|$userId|delete|$projectId|$credentialId")
         return client.get(UserCredentialResource::class).delete(
             userId = userId,
             projectId = projectId,

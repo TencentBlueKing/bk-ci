@@ -29,19 +29,18 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * deng
  * 2019-01-08
  */
-@ApiModel("")
+@Schema(title = "")
 data class TemplateInstanceCreate(
-    @ApiModelProperty("流水线名称", required = false)
+    @get:Schema(title = "流水线名称", required = false)
     val pipelineName: String,
-    @ApiModelProperty("构建号", required = false)
+    @get:Schema(title = "构建号（推荐版本号）", required = false)
     val buildNo: BuildNo?,
-    @ApiModelProperty("流水线变量列表", required = false)
+    @get:Schema(title = "流水线变量列表", required = false)
     val param: List<BuildFormProperty>? = null
 )

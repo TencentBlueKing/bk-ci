@@ -47,14 +47,15 @@ class NodeWebsocketService @Autowired constructor(
         userId: String
     ): NodeWebsocketPush {
         val page = NodePath().buildPage(
-                buildPageInfo = BuildPageInfo(
-                        buildId = null,
-                        pipelineId = null,
-                        projectId = projectId,
-                        atomId = null
-                )
+            buildPageInfo = BuildPageInfo(
+                buildId = null,
+                pipelineId = null,
+                projectId = projectId,
+                atomId = null,
+                executeCount = null
+            )
         )
-        logger.info("nodeList websocket: page[$page],project:[$projectId]")
+        logger.debug("nodeList websocket: page[$page],project:[$projectId]")
         return NodeWebsocketPush(
                 projectId = projectId,
                 userId = userId,

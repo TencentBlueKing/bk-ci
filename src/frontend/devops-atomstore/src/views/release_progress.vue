@@ -35,7 +35,7 @@
                                 <div class="retry-bth">
                                     <span class="test-btn"
                                         v-if="entry.code === 'test' && entry.status === 'doing'">
-                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
+                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}`"> {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>
                                 <bk-button :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"
@@ -106,6 +106,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="versionDetail.description"
                                 >
@@ -141,6 +142,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="versionDetail.versionContent"
                                 >
@@ -166,9 +168,9 @@
 </template>
 
 <script>
-    import cookie from 'js-cookie'
-    import webSocketMessage from '@/utils/webSocketMessage'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import cookie from 'js-cookie'
 
     const CSRFToken = cookie.get('backend_csrftoken')
 
@@ -185,7 +187,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -248,6 +250,9 @@
                     { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

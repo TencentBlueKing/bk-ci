@@ -37,9 +37,9 @@ import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -51,171 +51,171 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_CALLBACK_V4"], description = "OPENAPI-callback资源")
+@Tag(name = "OPENAPI_CALLBACK_V4", description = "OPENAPI-callback资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/callbacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwCallBackResourceV4 {
 
-    @ApiOperation("创建callback回调 #4319 支持Stage事件", tags = ["v4_app_callback_create", "v4_user_callback_create"])
+    @Operation(summary = "创建callback回调，调用需要项目管理员身份", tags = ["v4_app_callback_create", "v4_user_callback_create"])
     @POST
     @Path("/")
     fun create(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("url", required = true)
+        @Parameter(description = "url", required = true)
         @QueryParam("url")
         url: String,
-        @ApiParam("region", required = true)
+        @Parameter(description = "region", required = true)
         @QueryParam("region")
         region: CallBackNetWorkRegionType,
-        @ApiParam("event", required = true)
+        @Parameter(description = "event", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @ApiParam("secretToken", required = false)
+        @Parameter(description = "该参数将会在回调中X-DEVOPS-WEBHOOK-TOKEN返回", required = false)
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<Boolean>
 
-    @ApiOperation("批量创建callback回调", tags = ["v4_user_callback_batch_create", "v4_app_callback_batch_create"])
+    @Operation(summary = "批量创建callback回调", tags = ["v4_user_callback_batch_create", "v4_app_callback_batch_create"])
     @POST
     @Path("/batch")
     fun batchCreate(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("url", required = true)
+        @Parameter(description = "url", required = true)
         @QueryParam("url")
         url: String,
-        @ApiParam("region", required = true)
+        @Parameter(description = "region", required = true)
         @QueryParam("region")
         region: CallBackNetWorkRegionType,
-        @ApiParam("event", required = true)
+        @Parameter(description = "event", required = true)
         @QueryParam("event")
         event: String,
-        @ApiParam("secretToken", required = false)
+        @Parameter(description = "secretToken", required = false)
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<CreateCallBackResult>
 
-    @ApiOperation("callback回调列表", tags = ["v4_app_callback_list", "v4_user_callback_list"])
+    @Operation(summary = "callback回调列表", tags = ["v4_app_callback_list", "v4_user_callback_list"])
     @GET
     @Path("/callback_list")
     fun list(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>>
 
-    @ApiOperation("callback回调移除", tags = ["v4_app_callback_delete", "v4_user_callback_delete"])
+    @Operation(summary = "callback回调移除", tags = ["v4_app_callback_delete", "v4_user_callback_delete"])
     @DELETE
     @Path("/callback")
     fun remove(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("传入的是回调列表接口返回的id：v3_user/app_callback_list", required = true)
+        @Parameter(description = "传入的是回调列表接口返回的id：v3_user/app_callback_list", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
 
-    @ApiOperation("callback回调执行历史记录", tags = ["v4_user_callback_history_list", "v4_app_callback_history_list"])
+    @Operation(summary = "callback回调执行历史记录", tags = ["v4_user_callback_history_list", "v4_app_callback_history_list"])
     @GET
     @Path("/callback_history")
     fun listHistory(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("回调url", required = true)
+        @Parameter(description = "回调url", required = true)
         @QueryParam("url")
         url: String,
-        @ApiParam("事件类型", required = true)
+        @Parameter(description = "事件类型", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @ApiParam("开始时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
+        @Parameter(description = "开始时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("startTime")
         startTime: String?,
-        @ApiParam("结束时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
+        @Parameter(description = "结束时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("endTime")
         endTime: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>>
 
-    @ApiOperation("callback回调重试", tags = ["v4_user_callback_history_retry", "v4_app_callback_history_retry"])
+    @Operation(summary = "callback回调重试", tags = ["v4_user_callback_history_retry", "v4_app_callback_history_retry"])
     @POST
     @Path("/callback_retry")
     fun retry(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("id", required = true)
+        @Parameter(description = "id", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>

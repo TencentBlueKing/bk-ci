@@ -27,15 +27,15 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TDataSource
-import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import com.tencent.devops.model.project.tables.records.TDataSourceRecord
 import com.tencent.devops.project.pojo.DataSource
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.Record1
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -52,6 +52,7 @@ class DataSourceDao {
                 DATA_SOURCE_NAME,
                 FULL_FLAG,
                 DS_URL,
+                TAG,
                 CREATOR,
                 MODIFIER
             )
@@ -62,10 +63,14 @@ class DataSourceDao {
                     dataSource.dataSourceName,
                     dataSource.fullFlag,
                     dataSource.dsUrl,
+                    dataSource.dataTag,
                     userId,
                     userId
                 ).onDuplicateKeyUpdate()
                 .set(FULL_FLAG, dataSource.fullFlag)
+                .set(DS_URL, dataSource.dsUrl)
+                .set(TAG, dataSource.dataTag)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
@@ -98,20 +103,29 @@ class DataSourceDao {
         }
     }
 
+    @Suppress("LongParameterList")
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,
-        moduleCode: String,
-        fullFlag: Boolean? = false
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
+        fullFlag: Boolean? = false,
+        dataTag: String? = null
     ): Result<TDataSourceRecord>? {
         return with(TDataSource.T_DATA_SOURCE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(CLUSTER_NAME.eq(clusterName))
-            conditions.add(MODULE_CODE.eq(moduleCode))
+            conditions.add(MODULE_CODE.eq(moduleCode.name))
+            conditions.add(TYPE.eq(ruleType.name))
             if (fullFlag != null) {
                 conditions.add(FULL_FLAG.eq(fullFlag))
             }
-            dslContext.selectFrom(this).where(conditions).fetch()
+            if (dataTag != null) {
+                conditions.add(TAG.eq(dataTag))
+            } else {
+                conditions.add(TAG.isNull)
+            }
+            dslContext.selectFrom(this).where(conditions).orderBy(DATA_SOURCE_NAME.asc()).fetch()
         }
     }
 
@@ -123,30 +137,22 @@ class DataSourceDao {
                 .set(DATA_SOURCE_NAME, dataSource.dataSourceName)
                 .set(FULL_FLAG, dataSource.fullFlag)
                 .set(DS_URL, dataSource.dsUrl)
+                .set(TAG, dataSource.dataTag)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
         }
     }
 
-    fun getRoutingRule(dslContext: DSLContext, projectId: String): Record1<String>? {
-        val tr = TShardingRoutingRule.T_SHARDING_ROUTING_RULE
-        return dslContext
-            .select(tr.ROUTING_RULE)
-            .from(tr)
-            .where(tr.ROUTING_NAME.eq(projectId))
-            .fetchOne()
-    }
-
     fun getDataBasePiecewiseById(
         dslContext: DSLContext,
-        moduleCode: String,
+        moduleCode: SystemModuleEnum,
         clusterName: String,
         routingRule: String
     ): TDataSourceRecord? {
         with(TDataSource.T_DATA_SOURCE) {
             return dslContext.selectFrom(this)
-                .where(MODULE_CODE.eq(moduleCode))
+                .where(MODULE_CODE.eq(moduleCode.name))
                 .and(DATA_SOURCE_NAME.eq(routingRule))
                 .and(CLUSTER_NAME.eq(clusterName)).fetchOne()
         }

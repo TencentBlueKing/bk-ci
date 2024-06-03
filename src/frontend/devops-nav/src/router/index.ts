@@ -1,9 +1,9 @@
 import Vue from 'vue'
-import Router, { RouteMeta } from 'vue-router'
-import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
+import Router from 'vue-router'
+import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateRecentVisitServiceList, urlJoin } from '../utils/util'
 
-import compilePath from '../utils/pathExp'
 import cookie from 'js-cookie'
+import compilePath from '../utils/pathExp'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')
@@ -22,7 +22,6 @@ let mod: Route[] = []
 for (const key in window.Pages) {
     mod = mod.concat(window.Pages[key].routes)
 }
-
 const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
     path: urlJoin('/console', r.path, ':restPath*'),
     name: r.name,
@@ -90,7 +89,9 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-
+        if (to.name !== from.name) {
+            document.title = currentPage ? String(`${currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
+        }
         window.currentPage = currentPage
         store.dispatch('updateCurrentPage', currentPage) // update currentPage
         if (!currentPage) { // console 首页
@@ -129,17 +130,27 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         } else {
             goNext(to, next)
         }
+
+        const devopsApp = window.document.getElementsByClassName('devops-app')[0]
+        if (to.name === 'my-project') {
+            devopsApp && devopsApp.setAttribute('class', 'devops-app permission-model')
+        } else {
+            devopsApp && devopsApp.setAttribute('class', 'devops-app')
+        }
     })
 
     router.afterEach(route => {
         updateRecentVisitServiceList(route.path)
         
         store.dispatch('upadteHeaderConfig', updateHeaderConfig(route.meta))
+
+        const isShowNotice = ifShowNotice(store.state.currentNotice || {})
+        isShowNotice && store.dispatch('toggleNoticeDialog', isShowNotice)
     })
     return router
 }
 
-function updateHeaderConfig (routeMeta: RouteMeta) {
+function updateHeaderConfig (routeMeta: any) {
     return {
         showProjectList: routeMeta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
         showNav: routeMeta.showNav || (window.currentPage && window.currentPage.show_nav && typeof routeMeta.showNav === 'undefined')

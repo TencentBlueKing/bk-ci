@@ -70,6 +70,9 @@ class GitConfig {
     @Value("\${scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
 
+    @Value("\${scm.git.gitGrayHookUrl:}")
+    val gitGrayHookUrl: String = ""
+
     @Value("\${scm.git.callbackUrl:}")
     val callbackUrl: String = ""
 
@@ -83,11 +86,20 @@ class GitConfig {
     @Value("\${scm.external.github.clientId:}")
     val githubClientId: String = ""
 
+    @Value("\${scm.external.github.oauthAppClientId:}")
+    val oauthAppClientId: String = ""
+
     @Value("\${scm.external.github.clientSecret:}")
     val githubClientSecret: String = ""
 
+    @Value("\${scm.external.github.oauthAppClientSecret:}")
+    val oauthAppClientSecret: String = ""
+
     @Value("\${scm.external.github.webhookUrl:}")
     val githubWebhookUrl: String = ""
+
+    @Value("\${scm.external.github.callbackUrl:}")
+    val githubCallbackUrl: String = ""
 
     @Value("\${scm.external.github.redirectUrl:}")
     val githubRedirectUrl: String = ""
@@ -96,11 +108,20 @@ class GitConfig {
     val githubAppUrl: String = ""
 
     /* tGit config */
-    @Value("\${scm.git.tGitUrl:}")
+    @Value("\${scm.external.tGit.url:}")
     val tGitUrl: String = ""
 
     @Value("\${scm.external.tGit.apiUrl:}")
     val tGitApiUrl: String = ""
+
+    @Value("\${scm.external.tGit.clientId:}")
+    val tGitClientId: String = ""
+
+    @Value("\${scm.external.tGit.clientSecret:}")
+    val tGitClientSecret: String = ""
+
+    @Value("\${scm.external.tGit.webhookUrl:}")
+    val tGitWebhookUrl: String = ""
 
     @Value("\${scm.git.frontendSampleProjectUrl:}")
     val frontendSampleProjectUrl: String = ""

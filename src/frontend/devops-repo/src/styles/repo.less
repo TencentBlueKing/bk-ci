@@ -1,0 +1,344 @@
+
+.repo-content {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  flex-direction: column;
+}
+.repo-header {
+  display: flex;
+  height: 90px;
+  align-items: center;
+  background-color: white;
+  padding: 0 20px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  .repo-header-icon {
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: 0px 3px 5px 0px rgb(217 217 217 / 50%);
+  }
+  .repo-header-content {
+    margin-left: 20px;
+    flex: 1;
+    .repo-title {
+      font-size: 16px;
+      margin-bottom: 10px;
+      max-width: 500px;
+    }
+    .repo-description {
+      max-width: 600px;
+      display: block;
+    }
+  }
+}
+
+.generic-repo-content {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  background-color: @defaultBgColor;
+  .generic-repo-aside {
+    width: 300px;
+    display: flex;
+    background-color: white;
+    margin-right: 10px;
+    flex-direction: column;
+    .generic-repo-aside-search {
+      padding: 9px 10px;
+      border-bottom: 1px solid @borderColor;
+    }
+    .repo-constrct-tree-box {
+      flex: 1;
+      overflow: auto;
+    }
+  }
+  .generic-repo-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    overflow-x: hidden;
+    .repo-artifactories-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      height: 51px;
+      font-size: 12px;
+      .repo-search-input {
+        width: 280px;
+      }
+    }
+    .repo-dir-table {
+      flex: 1;
+      font-size: 12px;
+      overflow: hidden;
+      .artifact-file-name {
+        margin-left: 10px;
+        flex: 1;
+      }
+      .repo-table-empty-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        width: 100%;
+      }
+    }
+  }
+}
+
+.meta-data-tab {
+  font-size: 14px;
+  .metadata-loading {
+    margin-top: 50%;
+    width: 100%;
+    justify-content: center;
+  }
+  .meta-delete-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  .empty-meta-data-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .artifactory-token-tips {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+}
+
+.create-token-form {
+ .token-name-input {
+   width: 261px;
+ } 
+}
+
+.token-created-tip {
+  display: flex;
+  .token-status-icon {
+      width: 60px;
+      height: 60px;
+      background: @successColor;
+      border-radius: 50%;
+      color: white;
+  }
+  .token-info {
+    flex: 1;
+    margin-left: 20px;
+    .token-id-box {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      .token-id {
+        padding: 0 10px;
+      }
+    }
+  }
+}
+
+.add-meta-data-popup {
+  position: absolute;
+  right: 10px;
+  top: 210px;
+  width: 300px;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 3px 6px rgb(51 60 72 / 40%);
+  will-change: height;
+  transition: all .3s;
+  
+  .meta-data-form {
+    padding: 20px 20px 0 20px;
+  }
+  .meta-data-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    
+    > button:first-child {
+      margin-right: 10px;
+    }
+  }
+}
+
+.share-artifactory-form-field {
+  flex: 1;
+}
+
+.repo-tree {
+  font-size: 12px;
+  .repo-tree-icon {
+    margin: 0 5px;
+  }
+  .repo-tree-expand-icon {
+    display: flex;
+    align-items: center;
+  }
+  .repo-tree-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    flex: 1;
+    
+    .repo-tree-item-label {
+      flex: 1; 
+    }
+    .repo-tree-item-ext {
+      width: 30px;
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+  }
+}
+
+.bk-repo-confirm-dialog-main {
+  display: flex;
+  margin-left: 36px;
+  color: @dangerColor;
+  .bk-repo-confirm-dialog-content {
+    margin-left: 22px;
+    .bk-repo-confirm-desc {
+      color: @weightGray;
+      font-size: 12px;
+    } 
+  }
+}
+
+.repo-operation-dialog {
+  .repo-tree-dialog {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    .repo-tree-dialog-section {
+      flex: 1;
+      overflow: auto;
+    }
+  }
+  .repo-delete-confirm {
+    display: flex;
+    .delete-exclamation {
+      color: @dangerColor;
+    }
+    .delete-confirm-name {
+      word-break: break-all;
+    }
+    .delete-confirm-tip {
+      margin-left: 22px;
+      flex: 1;
+      overflow: hidden;
+      .bk-repo-delete-confirm-desc {
+        color: @weightGray;
+        font-size: 12px;
+      } 
+    }
+  }
+}
+  
+.bk-repo-uploader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  padding: 10px 20px;
+  border: 1px dashed;
+  border-radius: 10px;
+  > input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .bk-repo-uploader-placeholder {
+    margin-left: 10px;
+  }
+  .bk-repo-uploader-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .bk-repo-uploader-info {
+    flex: 1;
+    .bk-repo-file-info-item {
+      margin-bottom: 12px;
+    }
+  }
+  .bk-repo-upload-progress {
+    visibility: hidden;
+    &.visible {
+      visibility: visible;
+    }
+  }
+  .bk-repo-uploader-clear-icon {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    right: 0;
+    top: 0;
+    text-align: center;
+    line-height: 30px;
+    cursor: pointer;
+    &:hover {
+      color: @dangerColor;
+    }
+  }
+}
+
+
+.empty-guide-header {
+  .flex-center();
+  padding: 40px 0 80px;
+  > h2 {
+    color: @deepFontColor;
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+}
+.empty-guide-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 0 50px;
+  margin: 10px 60px 40px;
+  border: 1px dashed @borderColor;
+  border-radius: 4px;
+  counter-reset: step;
+  font-size: 12px;
+  > h3 {
+    margin-left: 80px;
+    padding: 40px 0 30px;
+    font-size: 18px;
+    color: @deepFontColor;
+  }
+  .empty-guide-item-title {
+    color: @deepFontColor;
+    font-size: 16px;
+  }
+  .empty-guide-subtitle {
+    margin: 15px 0 15px 20px;
+    font-size: 12px;
+  }
+  .token-subtitle {
+    padding: 0 6px;
+  }
+}

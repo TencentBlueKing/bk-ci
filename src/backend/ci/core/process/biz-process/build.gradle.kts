@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:process:plugin-load"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
@@ -35,23 +34,23 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-websocket"))
     api(project(":core:store:api-store"))
-    api(project(":core:store:api-store-image"))
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:project:api-project"))
     api(project(":core:repository:api-repository"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:process:api-process"))
-    api(project(":core:plugin:api-plugin"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:misc:api-plugin"))
     api(project(":core:notify:api-notify"))
     api(project(":core:process:biz-base"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:auth:api-auth"))
-
+    api(project(":core:common:common-pipeline-yaml"))
+    implementation("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
+    api("io.github.resilience4j:resilience4j-circuitbreaker")
     testImplementation(project(":core:common:common-test"))
 }

@@ -10,8 +10,8 @@ STOP -- PLEASE READ!
 
 GitHub is not the right place for support requests.
 
-If you're looking for help, check [Stack Overflow](https://stackoverflow.com/questions/tagged/bk-ci).
+If you're looking for help, check [BlueKing Q&A Community](https://bk.tencent.com/s-mart/community/question?selectTag=%25E8%2593%259D%25E7%259B%25BE&bestType=latest).
 
-You can also post your question on the [BK-CI Slack](http://bk-ci.slack.com).
+You can also post your question on the QQ Group: 495299374.
 
 -->

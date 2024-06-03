@@ -63,6 +63,17 @@ object PageUtil {
         return SQLLimit((oneOffsetPage - 1) * defaultPageSize, defaultPageSize)
     }
 
+    // 限制pageSize大小最大为100
+    fun convertPageSizeToSQLLimitMaxSize(page: Int, pageSize: Int): SQLLimit {
+        val oneOffsetPage = if (page <= 0) 1 else page
+        val defaultPageSize = when {
+            pageSize <= 0 -> 10
+            pageSize > 50 -> 50
+            else -> pageSize
+        }
+        return SQLLimit((oneOffsetPage - 1) * defaultPageSize, defaultPageSize)
+    }
+
     /**
      * 计算总页数
      * @param pageSize 分页数据大小

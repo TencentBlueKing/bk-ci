@@ -48,7 +48,8 @@ class ProjectPipelineCallbackDao {
         userId: String,
         callbackUrl: String,
         secretToken: String?,
-        id: Long? = null
+        id: Long? = null,
+        secretParam: String?
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             val now = LocalDateTime.now()
@@ -62,7 +63,8 @@ class ProjectPipelineCallbackDao {
                 UPDATOR,
                 CALLBACK_URL,
                 SECRET_TOKEN,
-                ID
+                ID,
+                SECRET_PARAM
             ).values(
                 projectId,
                 events,
@@ -72,7 +74,8 @@ class ProjectPipelineCallbackDao {
                 userId,
                 callbackUrl,
                 secretToken,
-                id
+                id,
+                secretParam
             ).onDuplicateKeyUpdate()
                 .set(UPDATED_TIME, now)
                 .set(UPDATOR, userId)
@@ -151,6 +154,98 @@ class ProjectPipelineCallbackDao {
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
+    fun disable(
+        dslContext: DSLContext,
+        projectId: String,
+        id: Long
+    ) {
+        val now = LocalDateTime.now()
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.update(this)
+                .set(ENABLE, false)
+                .set(UPDATED_TIME, now)
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun enable(
+        dslContext: DSLContext,
+        projectId: String,
+        id: Long
+    ) {
+        val now = LocalDateTime.now()
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.update(this)
+                .set(ENABLE, true)
+                .set(UPDATED_TIME, now)
+                .setNull(FAILURE_TIME)
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun getDisableCallbackList(
+        dslContext: DSLContext,
+        projectId: String?,
+        url: String?,
+        offset: Int,
+        limit: Int
+    ): Result<TProjectPipelineCallbackRecord> {
+        return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            val conditions = mutableListOf(
+                ENABLE.eq(false)
+            )
+            if (!projectId.isNullOrEmpty()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!url.isNullOrEmpty()) {
+                conditions.add(CALLBACK_URL.eq(url))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun enableByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        ids: List<Int>
+    ) {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            val conditions = mutableListOf(
+                ENABLE.eq(false),
+                ID.`in`(ids)
+            )
+            dslContext.update(this)
+                .set(ENABLE, true)
+                .where(conditions)
+                .execute()
+        }
+    }
+
+    fun updateFailureTime(
+        dslContext: DSLContext,
+        projectId: String,
+        id: Long,
+        failureTime: LocalDateTime?
+    ) {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.update(this).let {
+                if (failureTime == null) {
+                    it.setNull(FAILURE_TIME)
+                } else {
+                    it.set(FAILURE_TIME, failureTime)
+                }
+            }
+                .where(ID.eq(id))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 }

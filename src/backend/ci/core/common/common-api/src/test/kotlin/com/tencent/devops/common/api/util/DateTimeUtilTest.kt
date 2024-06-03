@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneOffset.UTC
@@ -41,14 +41,14 @@ class DateTimeUtilTest {
     fun minuteToSecondTest() {
         val minutes = 60
         val expected = 3600
-        Assert.assertEquals(expected, DateTimeUtil.minuteToSecond(minutes))
+        Assertions.assertEquals(expected, DateTimeUtil.minuteToSecond(minutes))
     }
 
     @Test
     fun secondToMinuteTest() {
         val minutes = 3600
         val expected = 60
-        Assert.assertEquals(expected, DateTimeUtil.secondToMinute(minutes))
+        Assertions.assertEquals(expected, DateTimeUtil.secondToMinute(minutes))
     }
 
     @Test
@@ -56,14 +56,14 @@ class DateTimeUtilTest {
         val date = Date.from(LocalDateTime.of(2020, 7, 6, 1, 59, 59).toInstant(UTC))
         val format = "yyyy-MM-dd HH:mm:ss"
         val simpleDateFormat = SimpleDateFormat(format)
-        Assert.assertEquals(simpleDateFormat.format(date), DateTimeUtil.formatDate(date, format))
+        Assertions.assertEquals(simpleDateFormat.format(date), DateTimeUtil.formatDate(date, format))
     }
 
     @Test
     fun convertLocalDateTimeToTimestampTest() {
         val date = LocalDateTime.of(2020, 7, 6, 1, 59, 59)
         val expected: Long = 1593971999
-        Assert.assertEquals(expected, DateTimeUtil.convertLocalDateTimeToTimestamp(date))
+        Assertions.assertEquals(expected, DateTimeUtil.convertLocalDateTimeToTimestamp(date))
     }
 
     @Test
@@ -71,44 +71,44 @@ class DateTimeUtilTest {
         val date = LocalDateTime.of(2020, 7, 6, 1, 59, 59)
         val format = "yyyy-MM-dd HH:mm:ss"
         val expected = "2020-07-06 01:59:59"
-        Assert.assertEquals(expected, DateTimeUtil.toDateTime(date, format))
+        Assertions.assertEquals(expected, DateTimeUtil.toDateTime(date, format))
     }
 
     @Test
     fun zoneDateToTimestampTest() {
         val date = "2019-09-02T08:58:46+0000"
         val expected: Long = 1567414726000
-        Assert.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date))
+        Assertions.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date))
         val date2 = "2019-09-02T08:58:46Z"
-        Assert.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date2))
+        Assertions.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date2))
     }
 
     @Test
     fun formatTimeTest() {
         val date = "1567414726000"
         val expected = "435392979时26分40秒"
-        Assert.assertEquals(expected, DateTimeUtil.formatTime(date))
+        Assertions.assertEquals(expected, DateTimeUtil.formatTime(date))
     }
 
     @Test
     fun formatMilliTimeTest() {
         val date = "1567414726000"
         val expected = "435392时58分46秒"
-        Assert.assertEquals(expected, DateTimeUtil.formatMilliTime(date))
+        Assertions.assertEquals(expected, DateTimeUtil.formatMilliTime(date))
     }
 
     @Test
     fun formatMilliTimeStringTest() {
         val date: Long = 1567414726000
         val expected = "435392时58分46秒"
-        Assert.assertEquals(expected, DateTimeUtil.formatMilliTime(date))
+        Assertions.assertEquals(expected, DateTimeUtil.formatMilliTime(date))
     }
 
     @Test
     fun formatMillSecondTest() {
         val date: Long = 1567414726000
         val expected = "18141天8时58分46秒"
-        Assert.assertEquals(expected, DateTimeUtil.formatMillSecond(date))
+        Assertions.assertEquals(expected, DateTimeUtil.formatMillSecond(date))
     }
 
     @Test
@@ -116,7 +116,7 @@ class DateTimeUtilTest {
         val date = "2020-07-06 01:59:59"
         val format = "yyyy-MM-dd HH:mm:ss"
         val expected = LocalDateTime.parse("2020-07-06 01:59:59", DateTimeFormatter.ofPattern(format))
-        Assert.assertEquals(expected, DateTimeUtil.stringToLocalDateTime(date, format))
+        Assertions.assertEquals(expected, DateTimeUtil.stringToLocalDateTime(date, format))
     }
 
     @Test
@@ -131,7 +131,7 @@ class DateTimeUtilTest {
         val year = 525600
         val lastTime = (DateTimeUtil.minuteToSecond(year) * 1000)
         val maxInt = Int.MAX_VALUE
-        Assert.assertFalse(lastTime - maxInt > 0)
+        Assertions.assertFalse(lastTime - maxInt > 0)
     }
 
     @Test
@@ -139,28 +139,28 @@ class DateTimeUtilTest {
         val year = 525600
         val lastTime = (DateTimeUtil.minuteToSecond(year).toLong() * 1000)
         val maxInt = Int.MAX_VALUE
-        Assert.assertTrue(lastTime - maxInt > 0)
+        Assertions.assertTrue(lastTime - maxInt > 0)
     }
 
     @Test
     fun stringToLocalDateTime() {
         var dateStr = "2021"
         var convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy")
-        Assert.assertEquals(convertDate.toString(), "2021-01-01T00:00")
+        Assertions.assertEquals(convertDate.toString(), "2021-01-01T00:00")
         dateStr = "2021-04"
         convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM")
-        Assert.assertEquals(convertDate.toString(), "2021-04-01T00:00")
+        Assertions.assertEquals(convertDate.toString(), "2021-04-01T00:00")
         dateStr = "2021-04-29"
         convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, DateTimeUtil.YYYY_MM_DD)
-        Assert.assertEquals(convertDate.toString(), "2021-04-29T00:00")
+        Assertions.assertEquals(convertDate.toString(), "2021-04-29T00:00")
         dateStr = "2021-04-29 15"
         convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH")
-        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:00")
+        Assertions.assertEquals(convertDate.toString(), "2021-04-29T15:00")
         dateStr = "2021-04-29 15:02"
         convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH:mm")
-        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:02")
+        Assertions.assertEquals(convertDate.toString(), "2021-04-29T15:02")
         dateStr = "2021-04-29 15:02:01"
         convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH:mm:ss")
-        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:02:01")
+        Assertions.assertEquals(convertDate.toString(), "2021-04-29T15:02:01")
     }
 }

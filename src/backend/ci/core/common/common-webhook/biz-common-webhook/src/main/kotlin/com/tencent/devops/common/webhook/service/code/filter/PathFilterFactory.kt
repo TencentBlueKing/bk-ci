@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 
 object PathFilterFactory {
 
@@ -40,14 +40,19 @@ object PathFilterFactory {
                         pipelineId = pipelineId,
                         triggerOnPath = triggerOnPath,
                         includedPaths = includedPaths,
-                        excludedPaths = excludedPaths
+                        excludedPaths = excludedPaths,
+                        includedFailedReason = includedFailedReason,
+                        excludedFailedReason = excludedFailedReason,
+                        caseSensitive = caseSensitive
                     )
                 else ->
                     PathPrefixFilter(
                         pipelineId = pipelineId,
                         triggerOnPath = triggerOnPath,
                         includedPaths = includedPaths,
-                        excludedPaths = excludedPaths
+                        excludedPaths = excludedPaths,
+                        includedFailedReason = includedFailedReason,
+                        excludedFailedReason = excludedFailedReason
                     )
             }
         }

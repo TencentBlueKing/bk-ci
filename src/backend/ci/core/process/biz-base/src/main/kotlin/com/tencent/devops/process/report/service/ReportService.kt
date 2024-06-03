@@ -28,6 +28,8 @@
 package com.tencent.devops.process.report.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.archive.pojo.ReportListDTO
+import com.tencent.devops.common.archive.pojo.TaskReport
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -38,8 +40,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.Report
-import com.tencent.devops.process.pojo.ReportListDTO
-import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.report.dao.ReportDao
@@ -72,6 +72,12 @@ class ReportService @Autowired constructor(
         reportType: ReportTypeEnum,
         reportEmail: ReportEmail? = null
     ) {
+        val taskInfo = reportDao.getAtomInfo(
+                dslContext = dslContext,
+                buildId = buildId,
+                taskId = taskId
+        )
+
         val indexFilePath = if (reportType == ReportTypeEnum.INTERNAL) {
             Paths.get(indexFile).normalize().toString()
         } else {
@@ -99,6 +105,8 @@ class ReportService @Autowired constructor(
                 indexFile = indexFilePath,
                 name = name,
                 type = reportType.name,
+                atomCode = taskInfo?.value1() ?: "",
+                taskName = taskInfo?.value2() ?: "",
                 id = client.get(ServiceAllocIdResource::class).generateSegmentId("REPORT").data
             )
 //        } else {
@@ -167,7 +175,8 @@ class ReportService @Autowired constructor(
                     type = it.type,
                     taskId = it.elementId,
                     atomCode = atomCode,
-                    atomName = atomName
+                    atomName = atomName,
+                    createTime = it.createTime
                 )
             } else {
                 TaskReport(
@@ -176,7 +185,8 @@ class ReportService @Autowired constructor(
                     type = it.type,
                     taskId = it.elementId,
                     atomCode = atomCode,
-                    atomName = atomName
+                    atomName = atomName,
+                    createTime = it.createTime
                 )
             }
         }
@@ -187,7 +197,6 @@ class ReportService @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
         return getRootUrl(
@@ -218,5 +227,25 @@ class ReportService @Autowired constructor(
         } else {
             Report(info.name, info.indexFile, info.type)
         }
+    }
+
+    fun listNoApiHost(userId: String, projectId: String, pipelineId: String, buildId: String): List<Report> {
+        val reportRecordList = reportDao.list(dslContext, projectId, pipelineId, buildId)
+
+        val reportList = mutableListOf<Report>()
+        reportRecordList.forEach {
+            if (it.type == ReportTypeEnum.INTERNAL.name) {
+                val indexFile = Paths.get(it.indexFile).normalize().toString()
+                val urlPrefix = getRootUrlNoApiHost(projectId, pipelineId, buildId, it.elementId)
+                reportList.add(Report(it.name, "$urlPrefix$indexFile", it.type))
+            } else {
+                reportList.add(Report(it.name, it.indexFile, it.type))
+            }
+        }
+        return reportList
+    }
+
+    private fun getRootUrlNoApiHost(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
+        return "/$projectId/report/$pipelineId/$buildId/$taskId/"
     }
 }

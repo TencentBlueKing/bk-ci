@@ -43,10 +43,11 @@ object ShellUtil {
     fun executeEnhance(
         script: String,
         runtimeVariables: Map<String, String> = mapOf(),
-        dir: File? = null
+        dir: File? = null,
+        print2Logger: Boolean = false
     ): String {
         val enhanceScript = CommandLineUtils.solveSpecialChar(noHistory(script))
-        return execute(enhanceScript, dir, runtimeVariables)
+        return execute(enhanceScript, dir, runtimeVariables, print2Logger)
     }
 
     private fun noHistory(script: String): String {
@@ -56,7 +57,8 @@ object ShellUtil {
     private fun execute(
         script: String,
         dir: File?,
-        runtimeVariables: Map<String, String>
+        runtimeVariables: Map<String, String>,
+        print2Logger: Boolean = false
     ): String {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -69,11 +71,11 @@ object ShellUtil {
 
         command.append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
-                .filter {
-                    !specialEnv(it.key, it.value)
-                }
+            .filter {
+                !specialEnv(it.key, it.value)
+            }
         if (commonEnv.isNotEmpty()) {
-            commonEnv.forEach { name, value ->
+            commonEnv.forEach { (name, value) ->
                 // 防止出现可执行的命令
                 val clean = value.replace("'", "\'").replace("`", "")
                 command.append("export $name='$clean'\n")
@@ -82,13 +84,13 @@ object ShellUtil {
         command.append("set -e\n")
         command.append(script)
         file.writeText(command.toString())
-        executeUnixCommand("chmod +x ${file.absolutePath}", dir)
-        return executeUnixCommand(file.absolutePath, dir)
+        executeUnixCommand("chmod +x ${file.absolutePath}", dir, print2Logger)
+        return executeUnixCommand(file.absolutePath, dir, print2Logger)
     }
 
-    private fun executeUnixCommand(command: String, sourceDir: File?): String {
+    private fun executeUnixCommand(command: String, sourceDir: File?, print2Logger: Boolean = false): String {
         try {
-            return CommandLineUtils.execute(command, sourceDir, true)
+            return CommandLineUtils.execute(command, sourceDir, print2Logger)
         } catch (e: Throwable) {
             logger.info("Fail to run the command because of error(${e.message})")
             throw TaskExecuteException(

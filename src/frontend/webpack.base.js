@@ -1,5 +1,8 @@
 const path = require('path')
+// const fs = require('fs')
+const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
@@ -29,32 +32,48 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             rules: [
                 {
                     test: /\.vue$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib')],
                     loader: 'vue-loader'
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib')],
                     use: [
                         { loader: 'babel-loader' }
                     ]
                 },
                 {
                     test: /\.css$/,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader']
+                    use: [{
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: (resourcePath, context) => {
+                                console.log(resourcePath, 111)
+                                return ''
+                            }
+                        }
+                    }, 'css-loader']
                 },
                 {
                     test: /\.scss$/,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
+                    use: [isDev
+                        ? 'style-loader'
+                        : {
+                            loader: MiniCssExtractPlugin.loader,
+                            options: {
+                                publicPath: (resourcePath, context) => ''
+                            }
+                        }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
                     loader: 'eslint-loader',
                     enforce: 'pre',
-                    include: [path.resolve('src')],
+                    include: [path.resolve('src'), path.resolve(__dirname, './common-lib')],
                     exclude: /node_modules/,
                     options: {
                         fix: true,
+                        emitWarning: false,
                         formatter: require('eslint-friendly-formatter')
                     }
                 },
@@ -71,17 +90,19 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                         }
                     },
                     generator: {
+                        // publicPath: 'auto',
                         filename: '[name].[contenthash].[ext]'
                     }
                 }
-                
             ]
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
+            new webpack.HotModuleReplacementPlugin(),
             new VueLoaderPlugin(),
             new BundleWebpackPlugin({
                 dist: envDist,
+                isDev,
                 bundleName: 'assets_bundle'
             }),
             new MiniCssExtractPlugin({
@@ -103,7 +124,37 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         optimization: {
             chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
-            minimize: !isDev
+            minimize: !isDev,
+            splitChunks: {
+                cacheGroups: {
+                    vendor: {
+                        test: /[\\/]node_modules[\\/](bk-magic-vue)[\\/]/, // 指定要单独打包的依赖
+                        name: 'vendors', // chunk 的名字
+                        chunks: 'all' // 可能的值 'async', 'initial', 'all'
+                    },
+                    default: {
+                        minChunks: 2,
+                        priority: -20,
+                        reuseExistingChunk: true
+                    }
+
+                }
+            },
+              
+            minimizer: [
+                new CssMinimizerPlugin({
+                    minimizerOptions: {
+                        preset: [
+                            'default',
+                            {
+                                discardComments: { removeAll: true },
+                                discardDuplicates: true,
+                                normalizeCharset: true
+                            }
+                        ]
+                    }
+                })
+            ]
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],
@@ -121,12 +172,19 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             vuex: 'Vuex'
         },
         devServer: {
-            static: path.join(__dirname, envDist),
+            static: {
+                directory: path.join(__dirname, envDist),
+                watch: false
+            },
             allowedHosts: 'all',
             historyApiFallback: true,
             client: {
-                webSocketURL: 'auto://127.0.0.1:' + port + '/ws'
+                webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
+            // https: {
+            //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
+            //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
+            // },
             hot: isDev,
             port
         }

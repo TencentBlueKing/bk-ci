@@ -1,0 +1,41 @@
+# .ci/templates/codeSecurity.yml 代码安全扫描插件模版
+parameters:
+- name: id
+  type: string
+  default: ""
+  # 代码路径, 必选
+- name: code_path
+  type: string
+  default: ""
+  # 代码语言, 必选
+- name: code_lang
+  type: string
+  default: ""
+  # 不想扫描的目录名，留空则都扫描，仅支持关键字匹配
+- name: no_scan_path
+  type: string
+  default: ""
+  # 关注人，企业微信英文ID
+- name: focuser
+  type: string
+  default: ""
+  # 企业微信群id
+- name: qywxg_id
+  type: string
+  default: ""
+  # 是否仅有漏洞时通知, 默认: 1, single, options: 1[是] | 0[否]
+- name: only_vul_notify
+  type: string
+  default: "1"
+
+steps:
+  - name: "代码安全扫描"
+    id: ${{ parameters.id }}
+    uses: "CodeSecurityScan@2.*"
+    with:
+      code_path: ${{ parameters.code_path }}
+      code_lang: ${{ parameters.code_lang }}
+      no_scan_path: ${{ parameters.code_lang }}
+      focuser: ${{ parameters.focuser }}
+      qywxg_id: ${{ parameters.qywxg_id }}
+      only_vul_notify: ${{ parameters.only_vul_notify }}

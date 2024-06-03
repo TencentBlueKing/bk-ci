@@ -3,7 +3,8 @@
         :class="{
             'stage-check-icon': true,
             'pointer': true,
-            [reviewStatausIcon]: true
+            [reviewStatausIcon]: true,
+            'is-readonly-check-icon': !isExecDetail && !editable
         }"
         v-bk-tooltips.top="reviewTooltip"
         @click.stop="handleStageCheckIn"
@@ -28,6 +29,7 @@
         },
         mixins: [localeMixins],
         props: {
+            editable: Boolean,
             stageCheck: Object,
             stageIndex: Number,
             userName: String,
@@ -85,6 +87,7 @@
                     if (stageCheck.isReviewError) return 'review-error'
                     switch (true) {
                         case stageCheck.status === STATUS_MAP.REVIEWING:
+                        case stageCheck.status === STATUS_MAP.QUALITY_CHECK_WAIT:
                             return 'reviewing'
                         case stageCheck.status === STATUS_MAP.QUEUE:
                             return 'review-pause'
@@ -96,7 +99,7 @@
                             return 'quality-check'
                         case this.stageStatus === STATUS_MAP.SKIP:
                         case !this.stageStatus && this.isExecDetail:
-                        case stageCheck.status === undefined && this.isExecDetail && !this.stageStatus:
+                        case stageCheck.status === undefined && this.isExecDetail && (!this.stageStatus || this.checkType === 'checkOut'):
                             return stageCheck.manualTrigger || this.hasRuleId ? 'review-pause' : 'review-auto-gray'
                         case !!this.stageStatus:
                             return 'review-auto-pass'
@@ -134,6 +137,10 @@
     z-index: 3;
     
     color: $fontWeightColor;
+
+    &.is-readonly-check-icon {
+        filter: grayscale(100%);
+    }
     &.reviewing {
         color: $primaryColor;
         border-color: $primaryColor;
@@ -143,7 +150,8 @@
       color: $successColor;
       border-color: $successColor;
     }
-    &.quality-check-error {
+    &.quality-check-error,
+    &.review-error {
       color: $failColor;
       border-color: $failColor;
     }

@@ -66,31 +66,31 @@ class AppBuildService @Autowired constructor(
             pipelineBuildFacadeService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
         val buildStatusWithVars =
             pipelineBuildFacadeService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
-        logger.info("查web端数据: ${System.currentTimeMillis() - beginTime} ms")
+        logger.info("Get web-side data ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 文件个数、版本
         val files = client.get(ServiceArtifactoryResource::class)
-            .search(null, projectId, null, null, listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)))
+            .search(userId, projectId, null, null, listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)))
             .data
         val packageVersion = StringBuilder()
         files?.records?.forEach {
             val singlePackageVersion =
                 client.get(ServiceArtifactoryResource::class).show(userId, projectId, it.artifactoryType, it.path)
-                    .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)
+                    .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)?.toString()
             if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
         }
-        logger.info("查文件个数、版本: ${System.currentTimeMillis() - beginTime} ms")
+        logger.info("Query the number and version of the file: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 查流水线信息
         val (name, version) = pipelineInfoFacadeService.getPipelineNameVersion(projectId, pipelineId)
-        logger.info("查流水线信息: ${System.currentTimeMillis() - beginTime} ms")
+        logger.info("Query the pipeline information ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 查询收藏的流水线
         val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-        logger.info("查询收藏的流水线: ${System.currentTimeMillis() - beginTime} ms")
+        logger.info("Query the collection pipeline ${System.currentTimeMillis() - beginTime} ms")
 
         return AppModelDetail(
             buildId = modelDetail.id,

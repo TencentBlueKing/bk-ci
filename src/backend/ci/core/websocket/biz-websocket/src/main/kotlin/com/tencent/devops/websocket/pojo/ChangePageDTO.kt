@@ -31,7 +31,7 @@ data class ChangePageDTO(
     val userId: String,
     val sessionId: String,
     val page: String,
-    val projectId: String,
+    val projectId: String?,
     val showProjectList: Boolean,
     val transferData: Map<String, Any>?
 )

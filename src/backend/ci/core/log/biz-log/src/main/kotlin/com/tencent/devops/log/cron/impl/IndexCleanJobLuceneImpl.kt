@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.cron.impl
 
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.lucene.LuceneClient
@@ -39,10 +38,11 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
+@Suppress("MagicNumber")
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "lucene")
 class IndexCleanJobLuceneImpl @Autowired constructor(
-    private val storageProperties: StorageProperties,
+    storageProperties: StorageProperties,
     private val luceneClient: LuceneClient
 ) : IndexCleanJob {
 
@@ -56,21 +56,10 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
         logger.info("Start to clean index")
         try {
             deleteLuceneIndexes()
-        } catch (t: Throwable) {
-            logger.warn("Fail to clean the index", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to clean the index", ignore)
         }
     }
-
-    override fun updateExpireIndexDay(expired: Int) {
-        logger.warn("Update the expire index day from $expired to ${this.deleteIndexInDay}")
-        if (expired <= 10) {
-            logger.warn("The expired is illegal")
-            throw OperationException("Expired is illegal")
-        }
-        this.deleteIndexInDay = expired
-    }
-
-    override fun getExpireIndexDay() = deleteIndexInDay
 
     private fun deleteLuceneIndexes() {
         val indexes = luceneClient.listIndices()

@@ -40,7 +40,8 @@ interface DeptService {
         name: String,
         accessToken: String?,
         userId: String,
-        type: ManagerScopesEnum
+        type: ManagerScopesEnum,
+        exactLookups: Boolean? = false
     ): List<UserAndDeptInfoVo?>
 
     fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
@@ -51,4 +52,7 @@ interface DeptService {
     fun getDeptByName(deptName: String, userId: String): DeptInfoVo?
 
     fun getUserDeptInfo(userId: String): Set<String>
+
+    // 获取单个用户信息
+    fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo?
 }

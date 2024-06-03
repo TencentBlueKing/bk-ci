@@ -2,7 +2,6 @@
     <div class="node-affirmance-wrapper">
         <h3>{{ $t('environment.nodeInfo.theApplyNodes') }}</h3>
         <div class="node-detail-container">
-            <!-- <img src="./../../images/no_data.png" class="node-logo" /> -->
             <icon name="linux" size="180" style="fill:#3b3b3b" class="option-logo" />
             <div class="node-details">
                 <div class="count-select-row">

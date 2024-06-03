@@ -28,16 +28,16 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.util.JsonUtil.toJson
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 @Suppress("ALL", "UNCHECKED_CAST")
 class ObjectReplaceEnvVarUtilTest {
 
     private val envMap: MutableMap<String, String> = HashMap()
 
-    @Before
+    @BeforeEach
     fun setup() {
         envMap["normalStrEnvVar"] = "123"
         envMap["specStrEnvVar"] = "D:\\tmp\\hha"
@@ -123,8 +123,10 @@ class ObjectReplaceEnvVarUtilTest {
                     member.forEach { sm ->
                         when {
                             sm.key.toString() == "testBean" -> {
-                                assertEquals("bean变量替换测试_${envMap["specStrEnvVar"]}",
-                                    (sm.value as TestBean).testBeanKey)
+                                assertEquals(
+                                    "bean变量替换测试_${envMap["specStrEnvVar"]}",
+                                    (sm.value as TestBean).testBeanKey
+                                )
                                 assertEquals(jsonExcept, (sm.value as TestBean).testBeanValue)
                             }
                             sm.key.toString() == "dataMapKey" -> {

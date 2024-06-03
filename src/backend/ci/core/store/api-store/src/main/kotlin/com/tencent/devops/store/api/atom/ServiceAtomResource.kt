@@ -27,78 +27,96 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PIPELINE_ATOM"], description = "流水线-插件")
+@Tag(name = "SERVICE_PIPELINE_ATOM", description = "流水线-插件")
 @Path("/service/pipeline/atom")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceAtomResource {
 
-    @ApiOperation("获取项目下已安装的插件列表")
+    @Operation(summary = "获取项目下已安装的插件列表")
     @GET
     @Path("/projectCodes/{projectCode}/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data[*].atomCode}", "{data[*].version}", "releaseInfo"]
+    )
     fun getInstalledAtoms(
-        @ApiParam("项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<InstalledAtom>>
 
-    @ApiOperation("判断插件是否为默认插件, 返回不是默认插件的插件名称")
-    @GET
-    @Path("/checkout/default")
-    fun findUnDefaultAtomName(
-        @ApiParam("插件列表", required = true)
-        @QueryParam("atomList")
-        atomList: List<String>
-    ): Result<List<String>>
-
-    @ApiOperation("根据插件代码和版本号获取插件详细信息")
+    @Operation(summary = "根据插件代码和版本号获取插件详细信息")
     @GET
     @Path("/codes/{atomCode}/versions/{version}")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
+    )
     fun getAtomVersionInfo(
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String
     ): Result<PipelineAtom?>
 
-    @ApiOperation("获取插件真实版本号")
+    @Operation(summary = "根据插件代码和版本号集合批量获取插件信息")
+    @POST
+    @Path("/list/atomInfos")
+    fun getAtomInfos(
+        @Parameter(description = "插件代码版本集合", required = true)
+        codeVersions: Set<AtomCodeVersionReqItem>
+    ): Result<List<AtomRunInfo>>
+
+    @Operation(summary = "获取插件真实版本号")
     @GET
     @Path("/projects/{projectCode}/codes/{atomCode}/versions/{version}/real")
     fun getAtomRealVersion(
-        @ApiParam("项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String
     ): Result<String?>
 
-    @ApiOperation("获取插件属性列表")
+    @Operation(summary = "获取插件属性列表")
     @POST
     @Path("/prop/list")
     fun getAtomProps(
-        @ApiParam("插件标识列表", required = true)
+        @Parameter(description = "插件标识列表", required = true)
         atomCodes: Set<String>
     ): Result<Map<String, AtomProp>?>
+
+    @Operation(summary = "获取插件分类信息")
+    @GET
+    @Path("/codes/{atomCode}/classify/info")
+    @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
+    fun getAtomClassifyInfo(
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<AtomClassifyInfo?>
 }

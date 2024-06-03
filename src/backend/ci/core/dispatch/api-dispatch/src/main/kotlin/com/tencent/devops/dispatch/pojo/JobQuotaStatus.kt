@@ -27,21 +27,20 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目的JOB状态")
+@Schema(title = "项目的JOB状态")
 data class JobQuotaStatus(
-    @ApiModelProperty("项目JOB数量配额", required = true)
+    @get:Schema(title = "项目JOB数量配额", required = true)
     val jobQuota: Int,
-    @ApiModelProperty("已运行JOB数量", required = true)
-    val runningJobCount: Long,
-    @ApiModelProperty("JOB告警阈值，百分比0-100", required = true)
+    @get:Schema(title = "已运行JOB数量", required = true)
+    val runningJobCount: Int,
+    @get:Schema(title = "JOB告警阈值，百分比0-100", required = true)
     val jobThreshold: Int,
-    @ApiModelProperty("项目job时间配额，单位：小时", required = true)
+    @get:Schema(title = "项目job时间配额，单位：小时", required = true)
     val timeQuota: Long,
-    @ApiModelProperty("当月已运行JOB时间, 单位：毫秒", required = true)
+    @get:Schema(title = "当月已运行JOB时间, 单位：毫秒", required = true)
     val runningJobTime: Long,
-    @ApiModelProperty("时间告警阈值，百分比0-100", required = true)
+    @get:Schema(title = "时间告警阈值，百分比0-100", required = true)
     val timeThreshold: Int
 )

@@ -104,9 +104,9 @@
                     if (!this.commonlyViews.filter(item => item.id === this.currentViewId).length) {
                         this.$store.commit('pipelines/updateCurrentViewId', ids[0])
                         this.$router.push({
-                            name: 'pipelinesList',
+                            name: 'PipelineManageList',
                             params: {
-                                type: this.currentViewId
+                                viewId: this.currentViewId
                             }
                         })
                     }

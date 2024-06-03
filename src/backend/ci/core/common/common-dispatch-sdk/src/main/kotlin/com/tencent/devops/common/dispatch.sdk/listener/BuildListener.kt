@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.dispatch.sdk.listener
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_START_BUILD_MACHINE
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -35,23 +36,26 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 
-@Component@Suppress("ALL")
+@Component
+@Suppress("ALL")
 interface BuildListener {
 
     fun getStartupQueue(): String
@@ -75,12 +79,108 @@ interface BuildListener {
     fun onShutdown(event: PipelineAgentShutdownEvent)
 
     @BkTimed
-    fun handleStartMessage(event: PipelineAgentStartupEvent) {
-        handleStartCommon(event) { doStartHandler() }
-    }
+    fun handleStartup(event: PipelineAgentStartupEvent) {
+        DispatcherContext.setEvent(event)
+        val dispatchService = getDispatchService()
 
-    fun handleStartDemoteMessage(event: PipelineAgentStartupEvent) {
-        handleStartCommon(event) { doStartDemoteHandler() }
+        var startTime = 0L
+        var errorCode = 0
+        var errorMessage = ""
+        var errorType: ErrorType? = null
+
+        try {
+            logger.info("Start to handle the startup message -(${DispatcherContext.getEvent()})")
+
+            startTime = System.currentTimeMillis()
+            DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
+
+            // 校验流水线是否在运行中，且处在构建机未启动状态
+            if (!dispatchService.checkRunning(event)) {
+                if (event.retryTime > 1) {
+                    // 重试的请求如果流水线已结束，主动把配额记录删除
+                    getJobQuotaService().removeRunningJob(
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        vmSeqId = event.vmSeqId,
+                        executeCount = event.executeCount
+                    )
+                }
+
+                return
+            }
+
+            // 校验构建资源配额是否超限，配额超限后会放进延迟队列
+            val jobQuotaService = getJobQuotaService()
+            if (!jobQuotaService.checkAndAddRunningJob(
+                    startupEvent = event,
+                    jobType = getVmType(),
+                    demoteQueueRouteKeySuffix = getStartupDemoteQueue()
+                )
+            ) {
+                return
+            }
+
+            onStartup(dispatchService.buildDispatchMessage(event))
+        } catch (e: BuildFailureException) {
+            dispatchService.logRed(
+                buildId = event.buildId,
+                containerHashId = event.containerHashId,
+                vmSeqId = event.vmSeqId,
+                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")}- ${e.message}",
+                executeCount = event.executeCount,
+                jobId = event.jobId
+            )
+
+            errorCode = e.errorCode
+            errorMessage = e.formatErrorMessage
+            errorType = e.errorType
+
+            onFailure(dispatchService, event, e)
+        } catch (t: Throwable) {
+            logger.warn("Fail to handle the start up message - DispatchService($event)", t)
+            dispatchService.logRed(
+                buildId = event.buildId,
+                containerHashId = event.containerHashId,
+                vmSeqId = event.vmSeqId,
+                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")} - ${t.message}",
+                executeCount = event.executeCount,
+                jobId = event.jobId
+            )
+
+            errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR
+            errorMessage = "Fail to handle the start up message"
+            errorType = ErrorType.SYSTEM
+
+            onFailure(
+                dispatchService = dispatchService,
+                event = event,
+                e = BuildFailureException(
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
+                    formatErrorMessage = "Fail to handle the start up message",
+                    errorMessage = "Fail to handle the start up message"
+                )
+            )
+        } finally {
+            DispatcherContext.removeEvent()
+
+            // 上报monitoring，做SLA统计
+            dispatchService.sendDispatchMonitoring(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                actionType = "start",
+                retryTime = event.retryTime,
+                routeKeySuffix = event.routeKeySuffix ?: "",
+                startTime = startTime,
+                stopTime = 0L,
+                errorCode = errorCode,
+                errorMessage = errorMessage,
+                errorType = errorType
+            )
+        }
     }
 
     fun handleShutdownMessage(event: PipelineAgentShutdownEvent) {
@@ -97,7 +197,7 @@ interface BuildListener {
                     vmSeqId = event.vmSeqId ?: "",
                     actionType = "stop",
                     retryTime = event.retryTime,
-                    routeKeySuffix = event.routeKeySuffix!!,
+                    routeKeySuffix = event.routeKeySuffix ?: "",
                     startTime = 0L,
                     stopTime = System.currentTimeMillis(),
                     errorCode = 0,
@@ -132,14 +232,17 @@ interface BuildListener {
         containerHashId: String?,
         vmSeqId: String,
         message: String,
-        executeCount: Int?
+        executeCount: Int?,
+        jobId: String?
     ) {
         buildLogPrinter.addLine(
             buildId = buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = containerHashId,
-            executeCount = executeCount ?: 1
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 
@@ -149,19 +252,27 @@ interface BuildListener {
         containerHashId: String?,
         vmSeqId: String,
         message: String,
-        executeCount: Int?
+        executeCount: Int?,
+        jobId: String?
     ) {
         buildLogPrinter.addRedLine(
             buildId = buildId,
             message = message,
             tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = containerHashId,
-            executeCount = executeCount ?: 1
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 
-    fun retry(sleepTimeInMS: Int = 30000, retryTimes: Int = 3): Boolean {
-        val event = DispatcherContext.getEvent()
+    fun retry(
+        sleepTimeInMS: Int = 30000,
+        retryTimes: Int = 3,
+        pipelineEvent: IPipelineEvent? = null,
+        errorMessage: String? = ""
+    ): Boolean {
+        val event = pipelineEvent ?: DispatcherContext.getEvent()
         if (event == null) {
             logger.warn("The event is empty")
             return false
@@ -169,20 +280,33 @@ interface BuildListener {
         logger.info("Retry the event($event) in $sleepTimeInMS ms")
         if (event.retryTime > retryTimes) {
             logger.warn("Fail to dispatch the agent start event with $retryTimes times - ($event)")
-            onFailure(errorType = ErrorType.SYSTEM,
+            onFailure(
+                errorType = ErrorType.SYSTEM,
                 errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
-                formatErrorMessage = "Fail to start up the job after $retryTimes times",
-                message = "Fail to start up the job after $retryTimes times")
+                formatErrorMessage = errorMessage ?: "Fail to start up the job after $retryTimes times",
+                message = errorMessage ?: "Fail to start up the job after $retryTimes times"
+            )
         }
-        val sleepTime = if (sleepTimeInMS <= 5000) {
+
+        // 重试PipelineAgentStartupEvent消息时将上一次的构建配额记录移除
+        if (event is PipelineAgentStartupEvent) {
+            getJobQuotaService().removeRunningJob(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount
+            )
+        }
+
+        event.retryTime += 1
+        event.delayMills = if (sleepTimeInMS <= 5000) {
             // 重试不能低于5秒
             logger.warn("The retry time is less than 5 seconds, use 5 as default")
             5000
         } else {
             sleepTimeInMS
         }
-        event.retryTime += 1
-        event.delayMills = sleepTime
         getDispatchService().redispatch(event)
         return true
     }
@@ -225,93 +349,6 @@ interface BuildListener {
         }
         matcher.appendTail(newValue)
         return newValue.toString()
-    }
-
-    private fun handleStartCommon(event: PipelineAgentStartupEvent, startup: () -> Unit) {
-        DispatcherContext.setEvent(event)
-        val dispatchService = getDispatchService()
-
-        var startTime = 0L
-        var errorCode = 0
-        var errorMessage = ""
-        var errorType: ErrorType? = null
-
-        try {
-            logger.info("Start to handle the startup message -(${DispatcherContext.getEvent()})")
-
-            startTime = System.currentTimeMillis()
-            DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
-            startup()
-        } catch (e: BuildFailureException) {
-            dispatchService.logRed(buildId = event.buildId,
-                containerHashId = event.containerHashId,
-                vmSeqId = event.vmSeqId,
-                message = "启动构建机失败 - ${e.message}",
-                executeCount = event.executeCount)
-
-            errorCode = e.errorCode
-            errorMessage = e.formatErrorMessage
-            errorType = e.errorType
-
-            onFailure(dispatchService, event, e)
-        } catch (t: Throwable) {
-            logger.warn("Fail to handle the start up message - DispatchService($event)", t)
-            dispatchService.logRed(buildId = event.buildId,
-                containerHashId = event.containerHashId,
-                vmSeqId = event.vmSeqId,
-                message = "启动构建机失败 - ${t.message}",
-                executeCount = event.executeCount)
-
-            errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR
-            errorMessage = "Fail to handle the start up message"
-            errorType = ErrorType.SYSTEM
-
-            onFailure(dispatchService = dispatchService,
-                event = event,
-                e = BuildFailureException(errorType = ErrorType.SYSTEM,
-                    errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
-                    formatErrorMessage = "Fail to handle the start up message",
-                    errorMessage = "Fail to handle the start up message"))
-        } finally {
-            DispatcherContext.removeEvent()
-
-            // 上报monitoring，做SLA统计
-            dispatchService.sendDispatchMonitoring(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
-                vmSeqId = event.vmSeqId,
-                actionType = "start",
-                retryTime = event.retryTime,
-                routeKeySuffix = event.routeKeySuffix!!,
-                startTime = startTime,
-                stopTime = 0L,
-                errorCode = errorCode,
-                errorMessage = errorMessage,
-                errorType = errorType
-            )
-        }
-    }
-
-    private fun doStartHandler() {
-        val dispatchService = getDispatchService()
-        val jobQuotaService = getJobQuotaService()
-        val event = DispatcherContext.getEvent()!!
-
-        // 校验流水线是否还在运行中
-        dispatchService.checkRunning(event)
-        // 校验构建资源配额是否超限，配额超限后会放进延迟队列
-        if (!jobQuotaService.checkAndAddRunningJob(event, getVmType(), getStartupDemoteQueue())) {
-            return
-        }
-
-        val dispatchMessage = dispatchService.buildDispatchMessage(event)
-        onStartup(dispatchMessage)
-    }
-
-    private fun doStartDemoteHandler() {
-        val dispatchMessage = getDispatchService().buildDispatchMessage(DispatcherContext.getEvent()!!)
-        onStartupDemote(dispatchMessage)
     }
 
     private fun getDispatchService(): DispatchService {

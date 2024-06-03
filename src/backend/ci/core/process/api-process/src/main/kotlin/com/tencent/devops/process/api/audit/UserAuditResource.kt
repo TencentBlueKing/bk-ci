@@ -30,9 +30,9 @@ package com.tencent.devops.process.api.audit
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.audit.AuditInfo
 import com.tencent.devops.process.pojo.audit.AuditPage
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -41,41 +41,44 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_AUDIT"], description = "用户-审计")
+@Tag(name = "USER_AUDIT", description = "用户-审计")
 @Path("/user/pipelines/audit/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserAuditResource {
 
-    @ApiOperation("审计列表")
+    @Operation(summary = "审计列表")
     @GET
     @Path("/{projectId}/{resourceType}/")
     fun list(
-        @ApiParam(value = "用户ID", required = false)
+        @Parameter(description = "用户ID", required = false)
         @QueryParam("userId")
         userId: String?,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("资源类型", required = true)
+        @Parameter(description = "资源类型", required = true)
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("状态", required = false)
+        @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: String?,
-        @ApiParam("按流水线名称过滤", required = false)
+        @Parameter(description = "按流水线ID过滤（精确)", required = false)
+        @QueryParam("resourceId")
+        resourceId: String?,
+        @Parameter(description = "按流水线名称过滤", required = false)
         @QueryParam("resourceName")
         resourceName: String?,
-        @ApiParam("开始时间", required = false)
+        @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: String?,
-        @ApiParam("结束时间", required = false)
+        @Parameter(description = "结束时间", required = false)
         @QueryParam("endTime")
         endTime: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<AuditPage<AuditInfo>>

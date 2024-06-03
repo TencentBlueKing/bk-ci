@@ -50,5 +50,7 @@ data class PipelineBuildStartEvent(
     val status: BuildStatus? = null,
     override var actionType: ActionType,
     override var delayMills: Int = 0,
-    val buildNoType: BuildNoType? = null
+    val buildNoType: BuildNoType? = null,
+    val executeCount: Int? = 1,
+    val debug: Boolean? = false
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

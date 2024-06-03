@@ -33,5 +33,6 @@ enum class RuleInterceptResult {
     WAIT,
     INTERCEPT,
     INTERCEPT_PASS,
+    INTERCEPT_TIMEOUT,
     UNCHECK
 }

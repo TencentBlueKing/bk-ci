@@ -28,12 +28,11 @@
 package com.tencent.devops.project.config
 
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.OpProjectService
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.impl.DefaultOpProjectServiceImpl
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,8 +40,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@Suppress("ALL")
 @Configuration
+@Suppress("LongParameterList")
 class OpConfig {
 
     @Bean
@@ -53,15 +52,13 @@ class OpConfig {
         @Autowired projectLabelRelDao: ProjectLabelRelDao,
         @Autowired projectDispatcher: ProjectDispatcher,
         @Autowired redisOperation: RedisOperation,
-        @Autowired gray: Gray,
-        @Autowired macosGray: MacOSGray
+        @Autowired projectService: ProjectService
     ) = DefaultOpProjectServiceImpl(
         dslContext = dslContext,
         projectDao = projectDao,
         projectLabelRelDao = projectLabelRelDao,
         projectDispatcher = projectDispatcher,
         redisOperation = redisOperation,
-        gray = gray,
-        macosGray = macosGray
+        projectService = projectService
     )
 }

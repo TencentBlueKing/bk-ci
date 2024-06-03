@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageEl
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -51,8 +50,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class EnvControlTaskTypeTest {
 
@@ -68,7 +67,6 @@ class EnvControlTaskTypeTest {
         assertEquals(EnvControlTaskType.parse(""), actualNull)
         assertEquals(EnvControlTaskType.parse("nullActual"), actualNull)
         assertEquals(EnvControlTaskType.parse("Other"), actualNull)
-        assertEquals(EnvControlTaskType.parse(CodeGitGenericWebHookTriggerElement.classType), actualNull)
         assertEquals(EnvControlTaskType.parse(CodeP4WebHookTriggerElement.classType), actualNull)
         assertEquals(EnvControlTaskType.parse(MatrixStatusElement.classType), actualNull)
         assertEquals(EnvControlTaskType.parse(CodeGitWebHookTriggerElement.classType), actualNull)

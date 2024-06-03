@@ -1,0 +1,423 @@
+@import './conf.less';
+@import './repo.less';
+@import './search.less';
+@import './token.less';
+@import './steps.less';
+@import './user.less';
+@import './login.less';
+@import './repo-common.less';
+@import './package.less';
+
+.block-enum-select {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  justify-items: flex-start;
+  grid-auto-flow: column dense;
+  column-gap: 20px;
+  .block-enum-option {
+    transition: 0.3s;
+    position: relative;
+    &:hover {
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+      border-color: @primaryColor;
+    }
+    
+    &.active {
+      
+      &.corn-check {
+        &:before {
+          position: absolute;
+          content: '';
+          top: 0;
+          right: 0;
+          border: 16px solid transparent;
+          border-top-color: @primaryColor;
+          border-right-color: @primaryColor;
+        }
+        .corn-check-icon {
+          position: absolute;
+          color: white;
+          top: 0;
+          right: 0;
+        }
+      }
+      .auth-item {
+        border: 1px solid @primaryColor;
+        .auth-item-header {
+          color: @primaryColor;
+        }
+        
+        .auth-item-name {
+          color: black;
+        }
+      }
+
+      .repo-type-item {
+        background: #e1ecff;
+        color: #3a84ff;
+        border-color: @primaryColor;
+      }
+    }
+    .block-enum-option-text {
+      line-height: 30px;
+    }
+
+    
+  }
+
+  .repo-type-item {
+    display: flex;
+    flex-direction: column;
+    width: 80px;
+    height: 80px;
+    padding-top: 10px;
+    align-items: center;
+    border: 1px solid @gray;
+    border-radius: 4px;
+    justify-content: space-around;
+  }
+  
+  .auth-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    height: 80px;
+    background-color: #e1ecff;
+    border: 1px solid transparent;
+    
+    .auth-item-header {
+      font-size: 14px;
+      color: black;
+    }
+    .auth-item-name {
+      font-size: 12px;
+      color: #7f96bc;
+    }
+  }
+}
+
+.bk-repo-entry {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .bk-repo-top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    flex-shrink: 0;
+    background-color: #182132;
+    padding: 0 22px;
+    .bk-repo-top-header-left {
+      display: flex;
+      .bk-repo-logo {
+        display: flex;
+        align-items: center;
+        color: #96a2b9;
+        width: 238px;
+        .bk-repo-title {
+          margin-left: 22px;
+          font-weight: bold;
+        }
+      }
+      .bk-repo-project-selector {
+        width: 250px;
+      }
+    }
+    .bk-repo-user-info {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      color: white;
+      .bk-repo-user-avatar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 16px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 0 5px 5px rgb(0 0 0 / 10%);
+        
+        @bgs: primary, success, danger, warning;
+        each(@bgs, {
+          @bgColor: '@{value}Color';
+          &.avatar-bg-@{value} {
+            background: @@bgColor;
+          }
+        })
+      }
+      .bk-repo-username {
+        font-size: 12px;
+        padding: 0 6px;
+        
+      }
+    }
+  }
+  .bk-repo-content {
+    flex: 1;
+    overflow: hidden;
+    flex-shrink: 0;
+    min-height: 0;
+  }
+}
+
+.repo-root-bread-crumb-header {
+  width: 100%;
+}
+
+.bk-repo-bread-crumb {
+  .bread-crumb-back-icon {
+    display: flex;
+  }
+  .repo-bread-crumb-item {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.repo-content-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.repo-list-main {
+  background-color: white;
+  .repo-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 0 20px;
+    height: 50px;
+    .repo-list-create-button {
+      display: flex;
+      align-items: center;
+    }
+    .repo-name-search-input {
+      width: 250px;
+      margin-right: 12px;
+    }
+    > aside {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .repo-type-option-item {
+        display: flex;
+        align-items: center;
+        .repo-type-option-item-name {
+          margin-left: 10px;
+        }
+      }
+    }
+  }
+  .repo-list-table {
+    flex: 1;
+    font-size: 12px;
+    margin-top: 12px;
+    overflow: hidden;
+    .repo-table-name-cell {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      .name-cell-text {
+        margin: 0 10px;
+        &:hover {
+          color: @primaryColor;
+        }
+      }
+    }
+    .repo-quota-progress-cell {
+      display: flex;
+      align-items: center;
+      height: 100%;;
+      .quota-progress {
+        width: 26px;
+        height: 26px;
+      }
+    }
+  }
+  .repo-list-pagination {
+    margin: 10px;
+  }
+}
+
+
+.repo-form {
+  font-size: 12px;
+  .repo-name-item {
+    display: flex;
+    align-items: center;
+    > span {
+      margin-left: 10px;
+    }
+  }  
+  .repo-meta-input {
+    width: 250px;
+    margin-right: 10px;
+  }
+}
+.create-repo-dialog-cancel-btn {
+  margin-left: 12px;
+}
+
+.repo-config-tab {
+  flex: 1;
+  font-size: 12px;
+  background-color: white;
+}
+
+.code-box {
+  background: @lightBlue;
+  padding: 0 20px;
+  position: relative;
+  &:hover {
+    .code-copy-btn {
+      display: block;
+    }
+  }
+  .code-copy-btn {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  > pre {
+    margin: 0;
+    font-family: Helvetica Neue,Arial,PingFang SC,Hiragino Sans GB,Microsoft Yahei,WenQuanYi Micro Hei,sans-serif;
+    white-space: pre-wrap;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: @deepFontColor;
+  }
+}
+
+.repo-section-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 14px;
+  color: @deepFontColor;
+  &:before {
+    width: 3px;
+    height: 12px;
+    background-color: @primaryColor;
+    content: '';
+    left: 0;
+    position: absolute;
+  }
+}
+
+.bk-repo-block {
+  background: @lightBlue;
+  padding: 0 20px;
+  .bk-repo-block-info-row {
+    font-size: 12px;
+    padding: 10px 0;
+    display: flex;
+    color: @deepFontColor;
+    > label {
+      width: 88px;
+    }
+    > p {
+      font-size: 12px;
+      color: @deepFontColor;
+      flex: 1;
+    }
+  }
+}
+
+.infinite-scroll-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding-right: 10px;
+  .infinite-scroll-load-more-indicate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    margin: 10px 0;
+    color: @weightGray;
+    .load-more-label {
+      padding: 0 10px;
+    }
+  }
+}
+
+.bk-repo-search-header {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  background-color: white;
+  .search-input {
+    width: 250px;
+  }
+  .bk-repo-filter-area {
+    display: flex;
+    > :first-child {
+      margin-right: 10px;
+    }
+  }
+}
+.operation-menu {
+  .operation-item-btn {
+    width: 100%;
+    height: 100%;
+    align-self: stretch;
+    text-align: center;
+  }
+}
+
+.bk-repo-package-item {
+  display: flex;
+  height: 100px;
+  padding: 16px 20px;
+  border-radius: 5px;
+  background-color: @bgColor;
+  cursor: pointer;
+  margin-bottom: 10px;
+
+  &:hover {
+    background-color: @lightBlue;
+    .package-item-operation {
+      visibility: visible;
+    }
+  }
+  .package-item-type-icon {
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid @borderColor;
+    border-radius: 4px;
+    margin-right: 20px;
+  }
+  .package-item-info-area {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-around;
+    font-size: 12px;
+    .package-item-name {
+      color: @deepFontColor;
+    }
+    .package-item-detail-info {
+      display: grid;
+      grid-template: auto/repeat(4, 1fr);
+      color: @weightGray;
+    }
+  }
+  .package-item-operation {
+    width: 66px;
+    display: flex;
+    visibility: hidden;
+    align-items: center;
+    justify-content: space-around;
+    .package-item-delete-btn:hover,
+    :hover {
+      color: @primaryColor;
+    }
+  }
+}

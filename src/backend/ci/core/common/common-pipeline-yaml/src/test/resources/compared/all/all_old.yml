@@ -1,0 +1,157 @@
+version: v2.0
+name: ""
+label: []
+on:
+  push:
+    branches:
+    - '*'
+  tag:
+    tags:
+    - '*'
+  mr:
+    target-branches:
+    - '*'
+    action:
+    - open
+    - reopen
+    - push-update
+stages:
+- name: stage-1
+  label: []
+  fast-kill: false
+  jobs:
+  - id: job_1
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - with:
+        sourceMirrorTicketPair:
+        - host: 11
+          username: 111
+      run: |
+        echo "hello 1"
+      runAdditionalOptions: {}
+    - name: 腾讯代码分析(官方-代码分析工作组)
+      id: check
+      if: true == true
+      uses: CodeccCheckAtomDebug@4.*
+      with:
+        beAutoLang: false
+        checkerSetType: normal
+        toolScanType: "1"
+        languages:
+        - C_CPP
+        tools: "${{ parameters.tools }}"
+        languageRuleSetMap:
+          C_CPP_RULE:
+          - standard_cpp
+          - codecc_fast_cpp
+          - pecker_cpp
+          - codecc_default_coverity_cpp
+          JAVA_RULE: []
+          C_SHARP_RULE: []
+          JS_RULE: []
+          OC_RULE: []
+          OTHERS_RULE: []
+          PYTHON_RULE: []
+          PHP_RULE: []
+          RUBY_RULE: []
+          GOLANG_RULE: []
+          SWIFT_RULE: []
+          TYPESCRIPT_RULE: []
+          KOTLIN_RULE: []
+          LUA_RULE: []
+          DART_RULE: []
+          SOLIDITY_RULE: []
+        pyVersion: py3
+        goPath: ""
+        scriptType: SHELL
+        script: |-
+          cd src
+          mkdir build
+          cd build
+          cmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..
+          make -j`nproc`
+        newDefectJudgeFromDate: 2021-11-01
+        rtxReceiverType: 4
+        rtxReceiverList: []
+        instantReportStatus: 1
+        emailReceiverType: 4
+        emailReceiverList: []
+        emailCCReceiverList: []
+      runAdditionalOptions: {}
+  - id: all-job-1
+    name: all-job-1
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - run: "123"
+      runAdditionalOptions: {}
+    env:
+      output_content: "all-job-1 [基本语法] 执行完成"
+  - id: all-job-1-2
+    name: 互斥组放弃测试
+    mutex:
+      label: mutex-1
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - run: |
+        echo 123
+      runAdditionalOptions: {}
+    continue-on-error: true
+  - id: all-job-1-3
+    name: 互斥组等待测试
+    mutex:
+      label: mutex-2
+      queue-length: 3
+      timeout-minutes: 10
+    runs-on:
+      self-hosted: false
+      pool-name: docker
+    services: []
+    steps:
+    - run: |
+        echo 123
+      runAdditionalOptions: {}
+    continue-on-error: true
+  check-in:
+    reviews:
+      flows:
+      - name: 审批组1
+        reviewers:
+        - "${{ci.actor}}"
+      - name: 审批组2
+        reviewers:
+        - "${{ci.actor}}"
+      variables:
+        var_1:
+          label: 中文
+          type: SELECTOR
+          default: 1
+          values:
+          - 1
+          - 2
+          - 3
+          - 4
+      description: |
+        说明下如何审核
+        参数var_1如何取值
+    gates:
+    - name: gate-1
+      rule:
+      - CodeccCheckAtomDebug.coverity_serious_defect <= 3
+      - CodeccCheckAtomDebug.sensitive_defect < 2
+      notify-on-fail:
+      - type: wework-message
+        receivers:
+        - ruotiantang
+        - "${{ci.actor}}"
+    timeout-hours: 10
+finally: []

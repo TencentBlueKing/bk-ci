@@ -37,6 +37,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwArtifactoryFileTaskResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,6 +53,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         buildId: String,
         createFileTaskReq: CreateFileTaskReq
     ): Result<String> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|create file task|$projectId|$pipelineId|$buildId")
         return client.get(ServiceArtifactoryFileTaskResource::class).createFileTask(
             userId = userId,
             projectId = projectId,
@@ -65,14 +68,24 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        taskId: String
+        taskId: String?,
+        stepId: String?
     ): Result<FileTaskInfo?> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|get status|$projectId|$pipelineId|$buildId|$taskId")
+        val realTaskId = if (stepId != null) {
+            client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
+                projectId, buildId, taskId, stepId
+            ).data?.taskId
+        } else taskId
+        if (realTaskId == null) {
+            throw ParamBlankException("Invalid taskId&stepId")
+        }
         return client.get(ServiceArtifactoryFileTaskResource::class).getStatus(
             userId = userId,
             projectId = projectId,
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
-            taskId = taskId
+            taskId = realTaskId
         )
     }
 
@@ -83,25 +96,44 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        taskId: String
+        taskId: String?,
+        stepId: String?
     ): Result<Boolean> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|clear file task|$projectId|$pipelineId|$buildId|$taskId")
+        val realTaskId = if (stepId != null) {
+            client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
+                projectId, buildId, taskId, stepId
+            ).data?.taskId
+        } else taskId
+        if (realTaskId == null) {
+            throw ParamBlankException("Invalid taskId&stepId")
+        }
         return client.get(ServiceArtifactoryFileTaskResource::class).clearFileTask(
             userId = userId,
             projectId = projectId,
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
-            taskId = taskId
+            taskId = realTaskId
         )
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
-            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-                ?: throw ParamBlankException("Invalid buildId")
+            kotlin.runCatching {
+                client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+            }.getOrElse {
+                throw ParamBlankException(
+                    it.message ?: "Invalid buildId, please check if projectId & buildId are related"
+                )
+            } ?: throw ParamBlankException("Invalid buildId")
         }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")
         }
         return pipelineIdFormDB
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwArtifactoryFileTaskResourceV4Impl::class.java)
     }
 }

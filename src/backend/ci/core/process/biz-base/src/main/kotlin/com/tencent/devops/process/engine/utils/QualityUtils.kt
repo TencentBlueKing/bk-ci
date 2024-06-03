@@ -31,6 +31,10 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUALITY_IN
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUALITY_OUT
+import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -57,12 +61,36 @@ object QualityUtils {
         return if (gatewayIds.isEmpty() || gatewayIds.any { element.name.toLowerCase().contains(it.toLowerCase()) }) {
             val id = "T-${UUIDUtil.generate()}"
             if (isBefore) {
-                QualityGateInElement("质量红线(准入)", id, null, element.getAtomCode(), element.name)
+                QualityGateInElement(
+                    I18nUtil.getCodeLanMessage(BK_QUALITY_IN), id, null, element.getAtomCode(), element.name
+                )
             } else {
-                QualityGateOutElement("质量红线(准出)", id, null, element.getAtomCode(), element.name)
+                QualityGateOutElement(
+                    I18nUtil.getCodeLanMessage(BK_QUALITY_OUT), id, null, element.getAtomCode(), element.name
+                )
             }
         } else {
             null
         }
+    }
+
+    fun generateQualityRuleElement(
+        ruleMatchList: List<QualityRuleMatchTask>
+    ): Triple<List<String>?, List<String>?, Map<String, List<Map<String, Any>>>?> {
+        val ruleMatchTaskList = ruleMatchList.map { ruleMatch ->
+            val gatewayIds =
+                ruleMatch.ruleList.filter { rule -> !rule.gatewayId.isNullOrBlank() }.map { it.gatewayId!! }
+            mapOf(
+                "position" to ruleMatch.controlStage.name,
+                "taskId" to ruleMatch.taskId,
+                "gatewayIds" to gatewayIds
+            )
+        }
+        val beforeElementSet =
+            ruleMatchTaskList.filter { it["position"] as String == "BEFORE" }.map { it["taskId"] as String }
+        val afterElementSet =
+            ruleMatchTaskList.filter { it["position"] as String == "AFTER" }.map { it["taskId"] as String }
+        val elementRuleMap = ruleMatchTaskList.groupBy { it["taskId"] as String }.toMap()
+        return Triple(beforeElementSet, afterElementSet, elementRuleMap)
     }
 }

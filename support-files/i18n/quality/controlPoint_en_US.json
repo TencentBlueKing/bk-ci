@@ -1,0 +1,49 @@
+[ {
+  "id" : 1,
+  "elementType" : "CodeccCheckAtomDebug",
+  "name" : "Tencent code analysis",
+  "stage" : "Development",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "BEFORE",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-02-28T15:58:26",
+  "updateTime" : "2019-02-28T15:58:26"
+}, {
+  "id" : 3,
+  "elementType" : "jobDevOpsFastPushFile",
+  "name" : "Job platform-component Distribution",
+  "stage" : "Deploy the test environment",
+  "availablePosition" : "BEFORE",
+  "defaultPosition" : "BEFORE",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-26T17:11:44"
+}, {
+  "id" : 12,
+  "elementType" : "linuxScript",
+  "name" : "Scripting tasks (linux and macOS environments)",
+  "stage" : "Development",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "AFTER",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-25T16:56:26"
+}, {
+  "id" : 13,
+  "elementType" : "windowsScript",
+  "name" : "Scripting tasks (windows environment)",
+  "stage" : "Development",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "AFTER",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-25T16:56:28"
+} ]

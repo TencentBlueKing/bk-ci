@@ -1,0 +1,15 @@
+# 测试不使用远程模板时resource的获取情况
+
+version: v2.0
+
+resources:
+  repositories:
+    - repository: lawrenzhang_testgroup/int/test_ci_temp
+      name: test_ci_temp
+  pools:
+    - from: lawrenzhang_testgroup/int/test_ci_temp@rezbuild
+      name: rezbuild
+
+steps:
+  - run: 123
+  - template: specials/templates/resource/tmp.yml

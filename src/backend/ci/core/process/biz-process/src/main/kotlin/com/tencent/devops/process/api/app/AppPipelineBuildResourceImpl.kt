@@ -27,14 +27,17 @@
 
 package com.tencent.devops.process.api.app
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -62,7 +65,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        request: QualityReviewRequest?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -79,7 +83,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             action = action,
-            channelCode = channelCode
+            channelCode = channelCode,
+            ruleIds = request?.ruleIds
         )
         return Result(true)
     }
@@ -108,9 +113,35 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             elementId = elementId,
             params = params,
             channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            stepId = null
         )
         return Result(true)
+    }
+
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean,
+        channelCode: ChannelCode
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.buildTriggerReview(
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
     }
 
     override fun manualStartStage(
@@ -166,7 +197,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        debugVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -193,7 +225,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             remark = remark,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            debugVersion = debugVersion
         )
         return Result(result)
     }
@@ -227,7 +260,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
     override fun manualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        version: Int?
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
 
@@ -238,16 +272,19 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 channelCode = channelCode
             )
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun manualStartup(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>
+        values: Map<String, String>,
+        version: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
 
@@ -256,16 +293,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         val buildNo = values["buildNo"]?.let { NumberUtils.toInt(it) }
 
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = StartType.MANUAL,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values.filter { it.key != "buildNo" },
-                    channelCode = channelCode,
-                    buildNo = buildNo
-                )
+            pipelineBuildFacadeService.buildManualStartup(
+                userId = userId,
+                startType = StartType.MANUAL,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                values = values.filter { it.key != "buildNo" },
+                channelCode = channelCode,
+                buildNo = buildNo
             )
         )
     }
@@ -294,6 +330,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun retry(
         userId: String,
         projectId: String,
@@ -311,17 +348,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
 
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.retry(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask,
-                    channelCode = channelCode
-                )
+            pipelineBuildFacadeService.retry(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask,
+                channelCode = channelCode
             )
         )
     }

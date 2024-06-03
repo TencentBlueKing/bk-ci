@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
+import com.tencent.devops.process.engine.service.RepoPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,40 +52,52 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
-    pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineWebhookService: PipelineWebhookService
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val repoPipelineRefService: RepoPipelineRefService,
+    pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
-        try {
-            if (event.buildNo != null) {
-                watcher.start("updateBuildNo")
-                pipelineRuntimeService.updateBuildNo(event.projectId, event.pipelineId, event.buildNo!!.buildNo)
-                watcher.stop()
+
+        if (event.buildNo != null) {
+            watcher.safeAround("updateBuildNo") {
+                pipelineRuntimeService.updateBuildNo(
+                    projectId = event.projectId, pipelineId = event.pipelineId,
+                    buildNo = event.buildNo!!.buildNo, debug = false
+                )
             }
-            watcher.start("callback")
+        }
+
+        watcher.safeAround("callback") {
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-            watcher.stop()
-            watcher.start("updateAgentPipelineRef")
+        }
+
+        watcher.safeAround("updateAgentPipelineRef") {
             with(event) {
                 agentPipelineRefService.updateAgentPipelineRef(userId, "update_pipeline", projectId, pipelineId)
             }
-            watcher.stop()
-            watcher.start("updateAtomPipelineNum")
+        }
+
+        watcher.safeAround("updateAtomPipelineNum") {
             pipelineAtomStatisticsService.updateAtomPipelineNum(event.projectId, event.pipelineId, event.version)
-            watcher.stop()
-            watcher.start("addWebhook")
+        }
+
+        watcher.safeAround("addWebhook") {
             pipelineWebhookService.addWebhook(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 version = event.version,
                 userId = event.userId
             )
-            watcher.stop()
-        } finally {
-            watcher.stop()
-            LogUtils.printCostTimeWE(watcher)
         }
+
+        watcher.safeAround("updateAgentPipelineRef") {
+            with(event) {
+                repoPipelineRefService.updateRepoPipelineRef(userId, "update_pipeline", projectId, pipelineId)
+            }
+        }
+
+        LogUtils.printCostTimeWE(watcher)
     }
 }

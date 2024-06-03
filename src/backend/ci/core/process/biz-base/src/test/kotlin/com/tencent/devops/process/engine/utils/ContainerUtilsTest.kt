@@ -32,10 +32,10 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class ContainerUtilsTest {
 
@@ -86,5 +86,5 @@ class ContainerUtilsTest {
     }
 
     private fun option(enable: Boolean) =
-        JobControlOption(enable = enable, timeout = 600, runCondition = JobRunCondition.STAGE_RUNNING)
+        JobControlOption(enable = enable, runCondition = JobRunCondition.STAGE_RUNNING)
 }

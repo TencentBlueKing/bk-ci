@@ -18,6 +18,8 @@
  */
 
 export const FETCH_ERROR = 'FETCH_ERROR'
+export const UPDATE_PIPELINE_MODE = 'UPDATE_PIPELINE_MODE'
+export const BKUI_LS_PIPELINE_MODE = '__BKUI_LS_PIPELINE_MODE__'
 
 export const PROJECT_API_URL_PREFIX = 'project/api'
 export const BACKEND_API_URL_PREFIX = 'backend'
@@ -31,3 +33,19 @@ export const PLUGIN_API_URL_PREFIX = 'plugin/api'
 export const LOG_API_URL_PREFIX = 'log/api'
 export const MACOS_API_URL_PREFIX = 'dispatch-macos/api'
 export const AUTH_URL_PREFIX = 'auth/api'
+export const VERSION_URL_PREFIX = 'version/api'
+
+export const ALL_PIPELINE_VIEW_ID = 'allPipeline'
+export const MY_PIPELINE_VIEW_ID = 'myPipeline'
+export const COLLECT_VIEW_ID_NAME = 'myCollect'
+export const COLLECT_VIEW_ID = 'collect'
+export const DELETED_VIEW_ID = 'recycleBin'
+export const UNCLASSIFIED_PIPELINE_VIEW_ID = 'unclassified'
+export const RECENT_USED_VIEW_ID = 'recentUse'
+
+export const CACHE_PIPELINE_GROUP_NAV_STATUS = 'cache_pipeline_group_nav_status'
+export const CACHE_PIPELINE_TABLE_WIDTH_MAP = 'cache_pipeline_table_width_map'
+export const PIPELINE_TABLE_COLUMN_CACHE = 'pipeline_table_column_cache'
+export const PIPELINE_TABLE_LIMIT_CACHE = 'pipeline_table_limit_cache'
+export const PIPELINE_ASIDE_PANEL_TOGGLE = 'pipeline_aside_panel_toggle'
+export const PIPELINE_GROUP_ASIDE_WIDTH_CACHE = 'pipeline_group_aside_width_cache'

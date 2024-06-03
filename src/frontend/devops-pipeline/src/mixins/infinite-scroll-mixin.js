@@ -137,9 +137,9 @@ export default {
                         message: err.message || err,
                         theme: 'error'
                     })
-                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
+                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'PipelineManageList') {
                         this.$router.push({
-                            name: 'pipelinesList'
+                            name: 'PipelineManageList'
                         })
                     }
                 }
@@ -157,10 +157,12 @@ export default {
                     pageSize: pageLen
                 })
 
-                this.buildList = page === 1 ? res.records : [
-                    ...this.buildList,
-                    ...res.records
-                ]
+                this.buildList = page === 1
+                    ? res.records
+                    : [
+                        ...this.buildList,
+                        ...res.records
+                    ]
                 const currentPage = Math.ceil(this.buildList.length / defaultPageSize)
                 this.setHistoryPageStatus({
                     currentPage,
@@ -175,9 +177,9 @@ export default {
                         message: err.message || err,
                         theme: 'error'
                     })
-                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
+                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'PipelineManageList') {
                         this.$router.push({
-                            name: 'pipelinesList'
+                            name: 'PipelineManageList'
                         })
                     }
                 }

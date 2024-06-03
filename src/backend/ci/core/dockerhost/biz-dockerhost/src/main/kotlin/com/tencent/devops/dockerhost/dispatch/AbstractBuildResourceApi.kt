@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -81,44 +81,44 @@ abstract class AbstractBuildResourceApi constructor(
 
     fun buildGet(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).get().build()
     }
 
     fun buildHeader(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).head().build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).head().build()
     }
 
     fun buildPost(path: String, headers: Map<String, String> = emptyMap()): Request {
-        val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
+        val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
         return buildPost(path, requestBody, headers)
     }
 
     fun buildPost(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).post(requestBody).build()
     }
 
     fun buildPut(path: String, headers: Map<String, String> = emptyMap()): Request {
-        val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
+        val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
         return buildPut(path, requestBody, headers)
     }
 
     fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).put(requestBody).build()
     }
 
     @Suppress("UNUSED")
     fun buildDelete(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).delete().build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).delete().build()
     }
 
     @Suppress("UNUSED")
     fun getJsonRequest(data: Any): RequestBody {
         return RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(data)
         )
     }

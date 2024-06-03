@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.control.lock.PipelineBuildVarLock
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -44,21 +44,22 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("TooManyFunctions")
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
+    private val pipelineAsCodeService: PipelineAsCodeService,
     private val redisOperation: RedisOperation
 ) {
-
-    companion object {
-        private const val PIPELINE_BUILD_VAR_KEY = "pipelineBuildVar"
-    }
 
     /**
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
      */
-    fun getBuildExecuteCount(projectId: String, buildId: String): Int {
-        val retryCount = getVariable(projectId = projectId, buildId = buildId, varName = PIPELINE_RETRY_COUNT)
+    fun getBuildExecuteCount(projectId: String, pipelineId: String, buildId: String): Int {
+        val retryCount = getVariable(
+            projectId = projectId, pipelineId = pipelineId,
+            buildId = buildId, varName = PIPELINE_RETRY_COUNT
+        )
         return try {
             if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
         } catch (ignored: Exception) {
@@ -71,7 +72,9 @@ class BuildVariableService @Autowired constructor(
      */
     fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
         return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
-            val word = PipelineVarUtil.oldVarToNewVar(templateWord) ?: templateWord
+            val word = PipelineVarUtil.oldVarToNewVar(templateWord)
+                ?: PipelineVarUtil.fetchVarName(templateWord)
+                ?: templateWord
             val templateValByType = pipelineBuildVarDao.getVarsWithType(
                 dslContext = commonDslContext,
                 projectId = projectId,
@@ -82,20 +85,43 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
-    fun getVariable(projectId: String, buildId: String, varName: String): String? {
-        val vars = getAllVariable(projectId, buildId)
+    fun getVariable(projectId: String, pipelineId: String, buildId: String, varName: String): String? {
+        val vars = getAllVariable(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
         return if (vars.isNotEmpty()) vars[varName] else null
     }
 
-    fun getAllVariable(projectId: String, buildId: String): Map<String, String> {
-        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
+    fun getAllVariable(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        keys: Set<String>? = null
+    ): Map<String, String> {
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = keys
+        )
+        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, null) == true) {
+            dataMap
+        } else {
+            PipelineVarUtil.mixOldVarAndNewVar(dataMap)
+        }
     }
 
     fun getAllVariableWithType(projectId: String, buildId: String): List<BuildParameters> {
         return pipelineBuildVarDao.getVarsWithType(commonDslContext, projectId, buildId)
     }
 
-    fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
+    fun setVariable(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        varValue: Any,
+        readOnly: Boolean? = null,
+        rewriteReadOnly: Boolean? = null
+    ) {
         val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
         saveVariable(
             dslContext = commonDslContext,
@@ -103,20 +129,47 @@ class BuildVariableService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             name = realVarName,
-            value = varValue
+            value = varValue,
+            readOnly = readOnly,
+            rewriteReadOnly = rewriteReadOnly
         )
     }
 
     fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
         commonDslContext.transaction { t ->
             val context = DSL.using(t)
-            batchSetVariable(dslContext = context,
+            batchSetVariable(
+                dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                variables = variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
+                variables = variables.map { va ->
+                    va.key to BuildParameters(key = va.key, value = va.value, valueType = BuildFormPropertyType.STRING)
+                }.toMap()
             )
         }
+    }
+
+    /**
+     * will delete the [buildId] 's all writable vars
+     */
+    fun deleteWritableVars(dslContext: DSLContext, projectId: String, buildId: String) {
+        pipelineBuildVarDao.deleteBuildVar(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            varName = null,
+            readOnly = false
+        )
+    }
+
+    fun deleteBuildVars(projectId: String, pipelineId: String, buildId: String) {
+        pipelineBuildVarDao.deleteBuildVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
     }
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
@@ -135,12 +188,14 @@ class BuildVariableService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         name: String,
-        value: Any
+        value: Any,
+        readOnly: Boolean? = null,
+        rewriteReadOnly: Boolean? = null
     ) {
-        val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId:$name", 10)
+        val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
-            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, name)
+            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, setOf(name))
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
                     dslContext = dslContext,
@@ -148,7 +203,8 @@ class BuildVariableService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     name = name,
-                    value = value
+                    value = value,
+                    readOnly = readOnly
                 )
             } else {
                 pipelineBuildVarDao.update(
@@ -156,7 +212,8 @@ class BuildVariableService @Autowired constructor(
                     projectId = projectId,
                     buildId = buildId,
                     name = name,
-                    value = value
+                    value = value,
+                    rewriteReadOnly = rewriteReadOnly
                 )
             }
         } finally {
@@ -164,31 +221,57 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
+    /**
+     * 注意：该方法没做并发保护，仅用于在刚启动构建时使用，其他并发场景请使用[batchSetVariable]
+     */
+    fun startBuildBatchSaveWithoutThreadSafety(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, BuildParameters>
+    ) {
+        pipelineBuildVarDao.batchSave(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variables = variables.map { it.value }
+        )
+    }
+
     fun batchSetVariable(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        variables: List<BuildParameters>
+        variables: Map<String, BuildParameters>
     ) {
         val watch = Watcher(id = "batchSetVariable| $pipelineId| $buildId")
         watch.start("replaceOldByNewVar")
-        val varMaps = variables.associate {
-            it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
-        }.toMutableMap()
-        PipelineVarUtil.replaceOldByNewVar(varMaps)
 
-        val pipelineBuildParameters = mutableListOf<BuildParameters>()
+        val varMaps = variables.map {
+            it.key to Pair(it.value.value.toString(), it.value.valueType ?: BuildFormPropertyType.STRING)
+        }.toMap().toMutableMap()
+        // tip： 移除掉旧变量，旧变量不入库
+        PipelineVarUtil.replaceOldByNewVar(varMaps) // varMaps <= variables
+
+        val pipelineBuildParameters = ArrayList<BuildParameters>(varMaps.size)
         varMaps.forEach { (key, valueAndType) ->
-            pipelineBuildParameters.add(BuildParameters(
-                key = key,
-                value = valueAndType.first,
-                valueType = valueAndType.second,
-                readOnly = getReadOnly(key, variables)
-            ))
+            // 不持久化的类型不保存
+            if (valueAndType.second != BuildFormPropertyType.TEMPORARY) {
+                pipelineBuildParameters.add(
+                    BuildParameters(
+                        key = key,
+                        value = valueAndType.first,
+                        valueType = valueAndType.second,
+                        readOnly = variables[key]?.readOnly ?: false
+                    )
+                )
+            }
         }
 
-        val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId", 60)
+        val redisLock = PipelineBuildVarLock(redisOperation, buildId)
         try {
             watch.start("getLock")
             // 加锁防止数据被重复插入
@@ -225,12 +308,18 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
-    private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {
-        variables.forEach {
-            if (key == it.key) {
-                return it.readOnly
-            }
-        }
-        return false
+    // #10082 查询Agent复用互斥使用的AgentId
+    fun fetchAgentReuseMutexVar(
+        projectId: String,
+        buildId: String,
+        likeStr: String
+    ): Set<String> {
+        return pipelineBuildVarDao.fetchVarByLikeKey(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            readOnly = true,
+            likeStr = likeStr
+        )
     }
 }

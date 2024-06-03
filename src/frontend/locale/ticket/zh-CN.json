@@ -10,7 +10,7 @@
     "createCert": "新增证书",
     "editCert": "编辑证书",
     "id": "名称",
-    "name": "别名",
+    "alias": "别名",
     "type": "类型",
     "remark": "描述",
     "operation": "操作",
@@ -25,7 +25,7 @@
     "switchProject": "切换项目",
     "applyPermission": "申请权限",
     "noData": "暂无数据",
-    "noresultsFound":"未搜索到任何的结果",
+    "noresultsFound": "未搜索到任何的结果",
     "credential": {
         "nameTips": "在流水线中通过变量引用凭证时，仅支持通过名称引用",
         "emptyCredential": "暂无凭据",
@@ -66,14 +66,18 @@
         "tokenPlaceholder": "请输入token",
         "tokenRequired": "token不能为空",
         "passwordDesc": "用于蓝盾平台中需要加密保存的信息，如证书密码、脚本中需要加密字段等，",
-        "accessTokenDesc": "一个访问令牌包含了此登陆会话的安全信息，用于关联Gitlab类型代码库，",
-        "appIdDesc": "用来设置key value的键值对类型，例如bugly原子要填的用户帐号密码、api调用等，",
+        "accessTokenDesc": "一个访问令牌包含了此登录会话的安全信息，用于关联Gitlab类型代码库，",
+        "appIdDesc": "用来设置key value的键值对类型，例如bugly原子要填的用户账号密码、api调用等，",
         "sshKeyDesc": "SSH包含公钥和私钥,用于关联SVN类型代码库，SSH配置说明请参考蓝盾文档中心，",
         "sshKeyTokenDesc": "用于使用ssh方式关联Git类型代码库，",
         "passwordTokenDesc": "用于使用http方式关联Git类型代码库，",
         "usernamePassword": "用户名+密码",
         "sshKeyToken": "SSH私钥+私有Token",
-        "passwordToken": "用户名密码+私有token"
+        "passwordToken": "用户名密码+私有token",
+        "oauthTokenRequired": "Oauth Token 不能为空",
+        "OauthToken": "OauthToken",
+        "oauthTokenDesc": "Oauth Token 一般用于上层平台调用 Stream 的场景。用户对上层平台进行了Oauth授权，上层平台使用 Stream 服务时使用用户授权进行操作",
+        "oauthTokenPlaceholder": "OauthToken用于上层平台调用 Stream服务时传递用户授权信息"
     },
     "cert": {
         "certName": "证书名称",
@@ -82,7 +86,7 @@
         "expireDate": "过期时间",
         "emptyCert": "暂无证书",
         "namePlaceholer": "请输入证书名称",
-        "validateName": "证书名称不能为空，只支持英文大小写、数字、下划线和英文句号",
+        "validateName": "请输入证书名称，只支持英文大小写、数字、下划线和英文句号，不超过32个字符",
         "emptyCertTips": "您可以在新增证书中新增一个iOS或Android证书",
         "iosCorporatesignCert": "iOS企业签名证书",
         "getCertError": "获取证书列表错误",
@@ -119,5 +123,6 @@
         "keyFileRule": "请上传.key文件",
         "userCertFile": "服务端证书文件",
         "userKeyFile": "服务端密钥文件"
-    }
+    },
+    "validateFailed": "凭证非法"
 }

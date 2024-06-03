@@ -37,4 +37,7 @@ object MQ {
 
     // 流水线超时广播队列-红线
     const val QUEUE_PIPELINE_BUILD_TIMEOUT_QUALITY = "q.engine.pipeline.build.timeout.quality"
+
+    // 流水线红线人工审核队列
+    const val QUEUE_PIPELINE_BUILD_QUALITY_REVIEW = "q.engine.pipeline.build.review.quality"
 }

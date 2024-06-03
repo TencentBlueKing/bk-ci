@@ -59,10 +59,10 @@ class ContainerAgentUpHandler(
             if (exitCode != 0L && DockerExitCodeEnum.getValue(exitCode) != null) {
                 val errorCodeEnum = DockerExitCodeEnum.getValue(exitCode)!!.errorCodeEnum
                 logger.error("$buildId|$vmSeqId waitAgentUp failed. " +
-                        "${errorCodeEnum.formatErrorMessage}. containerId: $containerId")
+                        "${errorCodeEnum.getErrorMessage()}. containerId: $containerId")
                 throw ContainerException(
                     errorCodeEnum = errorCodeEnum,
-                    message = "Failed to wait agent up. ${errorCodeEnum.formatErrorMessage}"
+                    message = "Failed to wait agent up. ${errorCodeEnum.getErrorMessage()}"
                 )
             }
         }

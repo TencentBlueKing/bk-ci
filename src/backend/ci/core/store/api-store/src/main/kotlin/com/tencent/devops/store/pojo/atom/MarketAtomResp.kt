@@ -27,18 +27,19 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.store.pojo.common.MarketItem
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件市场搜索插件返回报文")
+@Schema(title = "插件市场搜索插件返回报文")
 data class MarketAtomResp(
-    @ApiModelProperty("总记录数")
+    @get:Schema(title = "总记录数")
     val count: Int,
-    @ApiModelProperty("当前页码值")
+    @get:Schema(title = "当前页码值")
     val page: Int?,
-    @ApiModelProperty("每页记录大小")
+    @get:Schema(title = "每页记录大小")
     val pageSize: Int?,
-    @ApiModelProperty("数据集合")
+    @get:Schema(title = "数据集合")
+    @BkFieldI18n
     val records: List<MarketItem?>
 )

@@ -29,7 +29,7 @@ package com.tencent.devops.websocket.handler
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.servcie.WebsocketService
 import com.tencent.devops.websocket.utils.HostUtils
 import org.slf4j.LoggerFactory
@@ -56,10 +56,10 @@ class SessionHandler @Autowired constructor(
             logger.warn("connection closed can not find sessionId, $uri| ${session.remoteAddress}")
             super.afterConnectionClosed(session, closeStatus)
         }
-        val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId!!)
-        val userId = RedisUtlis.getUserBySession(redisOperation, sessionId)
+        val page = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId!!)
+        val userId = WsRedisUtils.getUserBySession(redisOperation, sessionId)
         if (userId.isNullOrEmpty()) {
-            logger.warn("connection closed can not find userId, $uri| ${session?.remoteAddress}| $sessionId")
+            logger.warn("connection closed can not find userId, $uri| ${session.remoteAddress}| $sessionId")
             super.afterConnectionClosed(session, closeStatus)
         } else {
             logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
@@ -72,7 +72,8 @@ class SessionHandler @Autowired constructor(
     override fun afterConnectionEstablished(session: WebSocketSession) {
         val uri = session.uri
         val remoteId = session.remoteAddress
-        val sessionId = uri?.query?.substringAfter("sessionId=")
+        val sessionId = uri?.query?.split("&")
+            ?.firstOrNull { it.contains("sessionId") }?.substringAfter("sessionId=")
         val webUser = session.handshakeHeaders[AUTH_HEADER_DEVOPS_USER_ID]
         websocketService.addCacheSession(sessionId!!)
         logger.info("connection success: |$sessionId| $uri | $remoteId | $webUser ")

@@ -3,7 +3,7 @@
         <content-header class="env-header">
             <div slot="left" class="title">
                 <i class="devops-icon icon-arrows-left" @click="toEnvList"></i>
-                <span class="header-text">{{ `${$t('environment.new')}${$t('environment.environment')}` }}</span>
+                <span class="header-text">{{ `${$t('environment.createEnvTitle')}` }}</span>
             </div>
         </content-header>
 
@@ -41,21 +41,24 @@
                         v-model="createEnvForm.desc">
                     </bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
+                <!-- <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
                     <bk-radio-group v-model="createEnvForm.envType">
                         <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
                     </bk-radio-group>
-                </bk-form-item>
+                </bk-form-item> -->
                 <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
                     <div class="env-source-content">
-                        <div class="source-type-radio">
+                        <!-- <div class="source-type-radio">
                             <bk-radio-group v-model="createEnvForm.source">
                                 <bk-radio :value="'EXISTING'">{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
                             </bk-radio-group>
                             <span class="preview-node-btn"
                                 v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
-                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}</span>
-                        </div>
+                                @click="toShowNodeList"
+                            >
+                                {{ $t('environment.nodeInfo.selectNode') }}
+                            </span>
+                        </div> -->
                         <div class="empty-node-selected" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length === 0">
                             <p class="empty-prompt">{{ $t('environment.nodeInfo.notyetNode') }}，
                                 <span class="show-node-dialog" @click="toShowNodeList">{{ $t('environment.nodeInfo.clickSelectNode') }}</span>
@@ -66,7 +69,7 @@
                             <div class="node-table-message">
                                 <div class="table-node-head">
                                     <div class="table-node-item node-item-ip">IP</div>
-                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
+                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
                                     <div class="table-node-item node-item-type">{{ $t('environment.nodeInfo.nodeType') }}</div>
                                     <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.nodeStatus') }}</div>
                                 </div>
@@ -111,13 +114,14 @@
 </template>
 
 <script>
-    import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import emptyTips from '@/components/devops/emptyTips'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '../utils/permission'
 
+    import nodeSelect from '@/components/devops/environment/node-select-dialog'
     export default {
         components: {
-            'empty-tips': emptyTips,
-            nodeSelect
+            nodeSelect,
+            'empty-tips': emptyTips
         },
         data () {
             return {
@@ -198,7 +202,7 @@
                         {
                             type: 'success',
                             size: 'normal',
-                            handler: this.goToApplyPerm,
+                            handler: this.applyPermission,
                             text: this.$t('environment.applyPermission')
                         }
                     ]
@@ -264,13 +268,13 @@
             changeProject () {
                 this.iframeUtil.toggleProjectMenu(true)
             },
-            goToApplyPerm () {
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.environment, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
-                // const url = `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
-                // window.open(url, '_blank')
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: ENV_RESOURCE_ACTION.CREATE
+                })
             },
             /**
              * 弹窗全选联动
@@ -677,7 +681,8 @@
         .source-type-radio {
             display: flex;
             justify-content: space-between;
-            padding-left: 14px;
+            align-items: center;
+            padding: 0 20px 0 14px;
             height: 42px;
             line-height: 38px;
             border-bottom: 1px solid $borderWeightColor;
@@ -742,10 +747,7 @@
         }
 
         .preview-node-btn {
-            float: right;
-            padding-right: 20px;
-            line-height: 42px;
-            width: 82px;
+            flex-shrink: 0;
             cursor: pointer;
             color: $primaryColor;
             font-size: 14px;

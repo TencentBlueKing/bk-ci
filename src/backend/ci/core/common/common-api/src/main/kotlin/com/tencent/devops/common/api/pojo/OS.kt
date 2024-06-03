@@ -30,5 +30,14 @@ package com.tencent.devops.common.api.pojo
 enum class OS {
     MACOS,
     WINDOWS,
-    LINUX
+    LINUX;
+
+    companion object {
+        fun parse(os: String?): OS? = when (os) {
+            MACOS.name -> MACOS
+            WINDOWS.name -> WINDOWS
+            LINUX.name -> LINUX
+            else -> null
+        }
+    }
 }

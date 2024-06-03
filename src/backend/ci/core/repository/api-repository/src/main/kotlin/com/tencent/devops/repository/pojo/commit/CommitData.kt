@@ -38,5 +38,7 @@ data class CommitData(
     val repoId: String?,
     val repoName: String?,
     val elementId: String,
-    var url: String? = null
+    var url: String? = null,
+    // 代码库链接地址
+    var repoUrl: String? = null
 )

@@ -28,14 +28,13 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.control.lock.PipelineNextQueueLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineRuntimeExtService @Autowired constructor(
@@ -43,8 +42,6 @@ class PipelineRuntimeExtService @Autowired constructor(
     val pipelineBuildDao: PipelineBuildDao,
     val dslContext: DSLContext
 ) {
-    private val nextBuildKey = "pipelineNextQueueInfo:concurrency"
-    private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(1)
 
     fun popNextQueueBuildInfo(
         projectId: String,
@@ -52,15 +49,11 @@ class PipelineRuntimeExtService @Autowired constructor(
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
     ): BuildInfo? {
 
-        val redisLock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "$nextBuildKey:$pipelineId",
-            expiredTimeInSeconds = expiredTimeInSeconds
-        )
+        val redisLock = PipelineNextQueueLock(redisOperation, pipelineId)
         try {
             redisLock.lock()
-            val buildInfo = pipelineBuildDao.convert(
-                pipelineBuildDao.getOneQueueBuild(dslContext, projectId = projectId, pipelineId = pipelineId)
+            val buildInfo = pipelineBuildDao.getOneQueueBuild(
+                dslContext, projectId = projectId, pipelineId = pipelineId
             )
             if (buildInfo != null) {
                 pipelineBuildDao.updateStatus(
@@ -78,7 +71,7 @@ class PipelineRuntimeExtService @Autowired constructor(
     }
 
     fun queueCanPend2Start(projectId: String, pipelineId: String, buildId: String): Boolean {
-        val redisLock = RedisLock(redisOperation, "$nextBuildKey:$pipelineId", expiredTimeInSeconds)
+        val redisLock = PipelineNextQueueLock(redisOperation, pipelineId)
         try {
             redisLock.lock()
             val buildRecord = pipelineBuildDao.getOneQueueBuild(
@@ -103,8 +96,38 @@ class PipelineRuntimeExtService @Autowired constructor(
         }
     }
 
+    /**
+     *  获取同一个并发组内首个排队的BuildInfo
+     */
+    fun popNextConcurrencyGroupQueueCanPend2Start(
+        projectId: String,
+        concurrencyGroup: String,
+        pipelineId: String? = null,
+        buildId: String? = null,
+        buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
+    ): BuildInfo? {
+        val buildInfo = pipelineBuildDao.getOneConcurrencyQueueBuild(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            pipelineId = pipelineId
+        )
+        val updateBuildId = buildId ?: buildInfo?.buildId
+        if (buildInfo != null && updateBuildId == buildInfo.buildId) {
+            pipelineBuildDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildInfo.buildId,
+                oldBuildStatus = buildInfo.status,
+                newBuildStatus = buildStatus
+            )
+            return buildInfo
+        }
+        return null
+    }
+
     fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {
-        val redisLock = RedisLock(redisOperation, "$nextBuildKey:$pipelineId:$buildId", expiredTimeInSeconds)
+        val redisLock = PipelineNextQueueLock(redisOperation, pipelineId, buildId)
         try {
             redisLock.lock()
             return pipelineBuildDao.updateStatus(

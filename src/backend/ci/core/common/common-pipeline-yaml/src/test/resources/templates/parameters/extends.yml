@@ -1,0 +1,23 @@
+version: v2.0
+
+parameters:
+  - name: VAR2
+    type: string
+    default: 213
+  - template: parameters/local.yml
+
+variables:
+  VAR1: 123
+  VAR2: ${{ parameters.VAR2 }}
+  VAR3: ${{ parameters.VAR3 }}
+
+stages:
+  - name: stage-1
+    jobs:
+      job-1:
+        steps:
+          - run: echo 123
+          - template: parameters/step.yml
+            parameters:
+              STEP1: input-STEP1
+              STEP4: input-STEP4

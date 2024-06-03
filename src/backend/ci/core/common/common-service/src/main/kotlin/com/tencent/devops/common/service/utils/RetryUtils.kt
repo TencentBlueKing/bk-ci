@@ -27,11 +27,16 @@
 
 package com.tencent.devops.common.service.utils
 
+import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import org.slf4j.LoggerFactory
+
 /**
  *
  * @version 1.0
  */
 object RetryUtils {
+    private val logger = LoggerFactory.getLogger(RetryUtils::class.java)
 
     fun <T> execute(action: Action<T>, retryTime: Int = 1, retryPeriodMills: Long = 500): T {
         try {
@@ -42,6 +47,45 @@ object RetryUtils {
             }
             Thread.sleep(retryPeriodMills)
             return execute(action, retryTime - 1)
+        }
+    }
+
+    @Throws(ClientException::class)
+    fun <T> clientRetry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
+        return try {
+            action()
+        } catch (re: ClientException) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            clientRetry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        } catch (e: RemoteServiceException) {
+            // 对限流重试
+            if (e.httpStatus != 429) throw e
+            if (retryTime - 1 < 0) {
+                throw e
+            }
+            logger.info("Remote service return 429 and message:${e.message}")
+            // 固定延迟1s
+            Thread.sleep(1000)
+            clientRetry(action = action, retryTime = retryTime - 1)
+        }
+    }
+
+    fun <T> retryAnyException(retryTime: Int = 3, retryPeriodMills: Long = 50, action: (retryTime: Int) -> T): T {
+        return try {
+            action(retryTime)
+        } catch (re: Throwable) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            retryAnyException(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
         }
     }
 

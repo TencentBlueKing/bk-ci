@@ -7,30 +7,24 @@
                 isLoading: loading.isLoading,
                 title: loading.title
             }">
-            <div class="bk-form machine-params-form" v-if="hasPermission">
-                <div class="bk-form-item is-required">
-                    <label class="bk-label env-item-label">{{ $t('environment.nodeInfo.model') }}：</label>
-                    <div class="bk-form-content" style="margin-top:4px;">
+            <div class="machine-params-form" v-if="hasPermission">
+                <bk-form label-width="80">
+                    <bk-form-item
+                        required
+                        :label="$t('environment.nodeInfo.model')"
+                    >
                         <bk-radio-group v-model="constructImportForm.model">
                             <bk-radio :value="'LINUX'" :disabled="isAgent">Linux</bk-radio>
                             <bk-radio :value="'MACOS'" :disabled="isAgent">macOS</bk-radio>
                             <bk-radio :value="'WINDOWS'" :disabled="isAgent">Windows</bk-radio>
                         </bk-radio-group>
-                    </div>
-                </div>
-                <div class="bk-form-item is-required" v-if="gatewayList.length">
-                    <label class="bk-label env-item-label">
-                        <!-- 地点： -->
-                        <bk-popover placement="right">
-                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.model') }}</span>：
-                            <template slot="content">
-                                <p style="width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
-                                    {{ $t('environment.nodeInfo.buildMachineLocationTips') }}
-                                </p>
-                            </template>
-                        </bk-popover>
-                    </label>
-                    <div class="bk-form-content" style="margin-top:4px;">
+                    </bk-form-item>
+                    <bk-form-item
+                        v-if="gatewayList.length"
+                        required
+                        :label="$t('environment.nodeInfo.location')"
+                        :desc="$t('environment.nodeInfo.buildMachineLocationTips')"
+                    >
                         <bk-radio-group v-model="constructImportForm.location">
                             <bk-radio v-for="(model, index) in gatewayList"
                                 :key="index"
@@ -38,24 +32,27 @@
                                 :disabled="isAgent"
                             >{{ model.showName }}</bk-radio>
                         </bk-radio-group>
-                    </div>
-                </div>
+                    </bk-form-item>
+                </bk-form>
                 <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt')}}:</p>
                 <div class="construct-card-item command-tool-card" v-if="constructImportForm.model !== 'WINDOWS'">
                     <div class="command-line">
-                        {{ constructImportForm.link }}
+                        {{ constructImportForm.link || $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
-                    <div class="copy-button">
+                    <div class="copy-button" v-if="constructImportForm.link">
                         <a class="text-link copy-command"
                             @click="copyCommand">
                             {{ $t('environment.clickToCopy') }}</a>
                     </div>
                 </div>
                 <div class="construct-card-item command-tool-card windows-node-card" v-if="constructImportForm.model === 'WINDOWS'">
-                    <div class="command-line">
+                    <div class="command-line" v-if="constructImportForm.link">
                         1.<a class="refresh-detail" :href="constructImportForm.link">{{ $t('environment.click') }}</a>{{ $t('environment.download') }}Agent
                         <br>
                         2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
+                    </div>
+                    <div class="command-line" v-else>
+                        {{ $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
                 </div>
                 <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
@@ -125,7 +122,7 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: `${DOCS_URL_PREFIX}/Services/Resource/bkci-hosted-windows-agent.md`
+                installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE
             }
         },
         methods: {
@@ -145,28 +142,10 @@
     @import './../../../scss/conf';
 
     .machine-params-form {
-        .bk-label {
-            padding-right: 0;
-            width: 44px;
-            font-weight: normal;
-
-            &:after {
-                display: none;
-            }
-        }
-
-        .bk-form-content {
-            margin-left: 52px;
-        }
 
         .bk-form-radio {
             margin-right: 20px;
         }
-
-        .bk-radio-text {
-            color: $fontWeightColor;
-        }
-
         .handler-prompt {
             margin-top: 24px;
             text-align: left;
@@ -185,8 +164,8 @@
         }
 
         .command-line {
+            flex: 1;
             padding-right: 24px;
-            width: 490px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -207,7 +186,7 @@
 
         .windows-node-card {
             display: inline-block;
-            height: 85px;
+            height: 100%;
             .command-line {
                 line-height: 40px
             }

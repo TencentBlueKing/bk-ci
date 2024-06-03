@@ -27,25 +27,11 @@
 
 package com.tencent.devops.process.engine.service.measure
 
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 
 @Suppress("ALL")
 interface MeasureService {
-
-    fun postPipelineData(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        startTime: Long,
-        startType: String,
-        username: String,
-        buildStatus: BuildStatus,
-        buildNum: Int,
-        model: Model?,
-        errorInfoList: String? = null
-    )
 
     fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String)
 

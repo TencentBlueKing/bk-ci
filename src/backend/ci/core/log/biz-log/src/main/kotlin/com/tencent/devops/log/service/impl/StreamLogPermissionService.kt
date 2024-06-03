@@ -34,26 +34,43 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.log.service.LogPermissionService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
-class StreamLogPermissionService @Autowired constructor(
+class StreamLogPermissionService(
     val client: Client,
     private val tokenCheckService: ClientTokenService
 ) : LogPermissionService {
+
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
+    ): Boolean {
+        logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(),
+            action = permission?.value ?: AuthPermission.VIEW.value,
+            projectCode = projectCode,
+            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
+        ).data ?: false
+    }
+
     override fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
         val action = permission?.value ?: AuthPermission.VIEW.value
         logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken(),
             action = action,
             projectCode = projectCode,
-            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
     }
 

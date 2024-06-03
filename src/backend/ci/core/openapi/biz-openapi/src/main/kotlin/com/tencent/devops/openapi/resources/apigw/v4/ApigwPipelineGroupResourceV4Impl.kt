@@ -45,7 +45,7 @@ class ApigwPipelineGroupResourceV4Impl @Autowired constructor(private val client
     ApigwPipelineGroupResourceV4 {
 
     override fun getGroups(userId: String, projectId: String): Result<List<PipelineGroup>> {
-        logger.info("Get pipeline groups at project:$projectId, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_GROUP_V4|$userId|get groups|$projectId")
         return client.get(ServicePipelineGroupResource::class).getGroups(
             userId = userId,
             projectId = projectId
@@ -53,7 +53,7 @@ class ApigwPipelineGroupResourceV4Impl @Autowired constructor(private val client
     }
 
     override fun addGroup(userId: String, pipelineGroup: PipelineGroupCreate): Result<Boolean> {
-        logger.info("Add pipeline groups at pipelineGroup:$pipelineGroup, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_GROUP_V4|$userId|add group|$pipelineGroup")
         return client.get(ServicePipelineGroupResource::class).addGroup(
             userId = userId,
             pipelineGroup = pipelineGroup
@@ -61,7 +61,7 @@ class ApigwPipelineGroupResourceV4Impl @Autowired constructor(private val client
     }
 
     override fun updateGroup(userId: String, pipelineGroup: PipelineGroupUpdate): Result<Boolean> {
-        logger.info("Update pipeline groups at pipelineGroup:$pipelineGroup, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_GROUP_V4|$userId|update group|$pipelineGroup")
         return client.get(ServicePipelineGroupResource::class).updateGroup(
             userId = userId,
             pipelineGroup = pipelineGroup
@@ -69,7 +69,7 @@ class ApigwPipelineGroupResourceV4Impl @Autowired constructor(private val client
     }
 
     override fun deleteGroup(userId: String, projectId: String, groupId: String): Result<Boolean> {
-        logger.info("Get pipeline groups at groupId:$groupId, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_GROUP_V4|$userId|delete group|$projectId|$groupId")
         return client.get(ServicePipelineGroupResource::class).deleteGroup(
             userId = userId,
             projectId = projectId,
@@ -78,7 +78,7 @@ class ApigwPipelineGroupResourceV4Impl @Autowired constructor(private val client
     }
 
     override fun addLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelCreate): Result<Boolean> {
-        logger.info("Add pipeline label at pipelineLabel:$pipelineLabel, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_GROUP_V4|$userId|add label|$projectId|$pipelineLabel")
         return client.get(ServicePipelineGroupResource::class).addLabel(
             userId = userId,
             projectId = projectId,
@@ -87,7 +87,7 @@ class ApigwPipelineGroupResourceV4Impl @Autowired constructor(private val client
     }
 
     override fun deleteLabel(userId: String, projectId: String, labelId: String): Result<Boolean> {
-        logger.info("Get pipeline groups at labelId:$labelId, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_GROUP_V4|$userId|delete label|$projectId|$labelId")
         return client.get(ServicePipelineGroupResource::class).deleteLabel(
             userId = userId,
             projectId = projectId,
@@ -96,7 +96,7 @@ class ApigwPipelineGroupResourceV4Impl @Autowired constructor(private val client
     }
 
     override fun updateLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
-        logger.info("Get pipeline groups at pipelineLabel:$pipelineLabel, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_GROUP_V4|$userId|update label|$projectId|$pipelineLabel")
         return client.get(ServicePipelineGroupResource::class).updateLabel(
             userId = userId,
             projectId = projectId,

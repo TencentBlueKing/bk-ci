@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTemplateInstanceResourceV4
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
@@ -42,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val client: Client) :
     ApigwTemplateInstanceResourceV4 {
+
     override fun createTemplateInstances(
         appCode: String?,
         apigwType: String?,
@@ -52,7 +54,10 @@ class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        logger.info("createTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
+        logger.info(
+            "OPENAPI_TEMPLATE_INSTANCE_V4|$userId|create template instances|$projectId|$templateId|$version" +
+                "|$useTemplateSettings|$instances"
+        )
         return client.get(ServiceTemplateInstanceResource::class).createTemplateInstances(
             userId = userId,
             projectId = projectId,
@@ -73,12 +78,39 @@ class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        logger.info("updateTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
+        logger.info(
+            "OPENAPI_TEMPLATE_INSTANCE_V4|$userId|update template instances by version|$projectId|$templateId" +
+                "|$version|$useTemplateSettings|$instances"
+        )
         return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = version,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
+        )
+    }
+
+    override fun updateTemplateInstances(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet {
+        logger.info(
+            "OPENAPI_TEMPLATE_INSTANCE_V4|$userId|update template instances by versionName|$projectId|$templateId" +
+                "|$versionName|$useTemplateSettings|$instances"
+        )
+        return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName,
             useTemplateSettings = useTemplateSettings,
             instances = instances
         )
@@ -96,14 +128,16 @@ class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val cli
         sortType: TemplateSortTypeEnum?,
         desc: Boolean?
     ): Result<TemplateInstancePage> {
-        logger.info("listTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|" +
-            "page=$page|pageSize=$pageSize|searchKey=$searchKey")
+        logger.info(
+            "OPENAPI_TEMPLATE_INSTANCE_V4|$userId|list template instances|$projectId|$templateId|$page" +
+                "|$pageSize|$searchKey|$sortType|$desc"
+        )
         return client.get(ServiceTemplateInstanceResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
             page = page ?: 1,
-            pageSize = pageSize ?: 30,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             searchKey = searchKey,
             sortType = sortType,
             desc = desc

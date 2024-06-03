@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -49,7 +51,10 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATE_TIME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
@@ -57,22 +62,36 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_YAML_PATH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_STATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_DESCRIPTION
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_IID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_OWNER
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_STATE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
@@ -85,8 +104,28 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import java.util.regex.Pattern
 
+@Suppress("TooManyFunctions")
 object PipelineVarUtil {
+
+    private val tPattern = Pattern.compile("\\$[{]{2}(?<double>[^$^{}]+)[}]{2}")
+    const val CONTEXT_PREFIX = "variables."
+
+    /**
+     * 检查[keyword]字符串是不是一个变量语法， ${{ varName }}， 如果不是则返回false
+     * 注意：已不再支持 ${ var } 旧的语法定义变量，只支持全新 ${{ var }} 的语法
+     */
+    fun isVar(keyword: String?): Boolean {
+        return !keyword.isNullOrBlank() && tPattern.matcher(keyword).matches()
+    }
+
+    /**
+     * 检查[keyword]串中有没有变量，比如  "abc_${{ varName }} is true" 将识别出存在 varName变量，会返回true
+     */
+    fun haveVar(keyword: String): Boolean {
+        return tPattern.matcher(keyword).find()
+    }
 
     /**
      * 前置拼接
@@ -97,7 +136,9 @@ object PipelineVarUtil {
         "pipeline.material.aliasName" to PIPELINE_MATERIAL_ALIASNAME,
         "pipeline.material.new.commit.id" to PIPELINE_MATERIAL_NEW_COMMIT_ID,
         "pipeline.material.new.commit.times" to PIPELINE_MATERIAL_NEW_COMMIT_TIMES,
-        "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
+        "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT,
+        "BK_REPO_GIT_WEBHOOK_REVIEW" to "BK_CI_REPO_GIT_WEBHOOK_REVIEW",
+        "BK_REPO_P4" to "BK_CI_REPO_P4"
     )
 
     private val newPrefixMappingOld = oldPrefixMappingNew.map { kv -> kv.value to kv.key }.toMap()
@@ -155,17 +196,21 @@ object PipelineVarUtil {
         "pipeline.job.id" to PIPELINE_VMSEQ_ID,
         "pipeline.task.id" to PIPELINE_ELEMENT_ID,
         "turbo.task.id" to PIPELINE_TURBO_TASK_ID,
-        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL
+        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL,
+        "BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM" to "BK_CI_REPO_GIT_WEBHOOK_TAG_CREATE_FROM",
+        "BK_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH" to "BK_CI_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH"
     )
 
     /**
      * CI预置上下文转换映射关系
      */
     private val contextVarMappingBuildVar = mapOf(
+        "ci.project_name" to PROJECT_NAME_CHINESE,
+        "ci.build_msg" to PIPELINE_BUILD_MSG,
         "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
         "ci.pipeline_name" to PIPELINE_NAME,
-        "ci.actor" to PIPELINE_START_USER_ID,
+        "ci.actor" to PIPELINE_START_USER_NAME,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
         "ci.pipeline_start_time" to PIPELINE_TIME_START,
@@ -174,6 +219,7 @@ object PipelineVarUtil {
         "ci.head_ref" to PIPELINE_GIT_HEAD_REF,
         "ci.base_ref" to PIPELINE_GIT_BASE_REF,
         "ci.repo" to PIPELINE_GIT_REPO,
+        "ci.repo_id" to PIPELINE_GIT_REPO_ID,
         "ci.repo_name" to PIPELINE_GIT_REPO_NAME,
         "ci.repo_group" to PIPELINE_GIT_REPO_GROUP,
         "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
@@ -198,13 +244,13 @@ object PipelineVarUtil {
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
-        "ci.issue_title" to PIPELINE_WEBHOOK_ISSUE_TITLE,
-        "ci.issue_id" to PIPELINE_WEBHOOK_ISSUE_ID,
-        "ci.issue_iid" to PIPELINE_WEBHOOK_ISSUE_IID,
-        "ci.issue_description" to PIPELINE_WEBHOOK_ISSUE_DESCRIPTION,
-        "ci.issue_state" to PIPELINE_WEBHOOK_ISSUE_STATE,
-        "ci.issue_owner" to PIPELINE_WEBHOOK_ISSUE_OWNER,
-        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID,
+        "ci.issue_title" to BK_REPO_GIT_WEBHOOK_ISSUE_TITLE,
+        "ci.issue_id" to BK_REPO_GIT_WEBHOOK_ISSUE_ID,
+        "ci.issue_iid" to BK_REPO_GIT_WEBHOOK_ISSUE_IID,
+        "ci.issue_description" to BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION,
+        "ci.issue_state" to BK_REPO_GIT_WEBHOOK_ISSUE_STATE,
+        "ci.issue_owner" to BK_REPO_GIT_WEBHOOK_ISSUE_OWNER,
+        "ci.issue_milestone_id" to BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID,
         "ci.review_id" to BK_REPO_GIT_WEBHOOK_REVIEW_ID,
         "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
         "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,
@@ -212,7 +258,36 @@ object PipelineVarUtil {
         "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS,
         "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
         "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
-        "ci.action" to PIPELINE_GIT_ACTION
+        "ci.action" to PIPELINE_GIT_ACTION,
+        "ci.build_url" to PIPELINE_BUILD_URL,
+        "ci.mr_reviewers" to BK_REPO_GIT_WEBHOOK_MR_REVIEWERS,
+        "ci.pipeline_path" to PIPELINE_GIT_YAML_PATH,
+        "ci.repo_create_time" to PIPELINE_GIT_REPO_CREATE_TIME,
+        "ci.repo_creator" to PIPELINE_GIT_REPO_CREATOR,
+        "ci.remark" to PIPELINE_BUILD_REMARK,
+        "ci.repo_alias_name" to BK_REPO_WEBHOOK_REPO_ALIAS_NAME,
+        "ci.build_msg" to PIPELINE_BUILD_MSG,
+        "ci.event" to PIPELINE_WEBHOOK_EVENT_TYPE,
+        "ci.milestone_name" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE,
+        "ci.milestone_id" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID,
+        "ci.note_type" to BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE,
+        "ci.note_author" to BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID,
+        "ci.create_time" to BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT,
+        "ci.modify_time" to BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT,
+        "ci.review_type" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE,
+        "ci.build-no" to BUILD_NO,
+        "ci.pipeline_creator" to PIPELINE_CREATE_USER,
+        "ci.pipeline_modifier" to PIPELINE_UPDATE_USER,
+        "ci.pipeline_version" to PIPELINE_VERSION,
+        "ci.project_id" to PROJECT_NAME,
+        "ci.project_name" to PROJECT_NAME_CHINESE,
+        "ci.build_start_type" to PIPELINE_START_TYPE,
+        "ci.repo_type" to BK_REPO_WEBHOOK_REPO_TYPE,
+        "ci.branch" to BK_REPO_GIT_WEBHOOK_BRANCH,
+        "ci.create_ref" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME,
+        "ci.create_type" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE,
+        "ci.failed_tasks" to BK_CI_BUILD_FAIL_TASKS,
+        "ci.failed_tasknames" to BK_CI_BUILD_FAIL_TASKNAMES
     )
 
     /**
@@ -285,6 +360,20 @@ object PipelineVarUtil {
     }
 
     /**
+     * 填充variable变量
+     */
+    fun fillVariableMap(pipelineParamMap: Map<String, String>): Map<String, String> {
+        val allVars = mutableMapOf<String, String>()
+        pipelineParamMap.forEach { (name, value) ->
+            allVars[name] = value
+            if (!name.startsWith(CONTEXT_PREFIX)) {
+                allVars[CONTEXT_PREFIX + name] = value
+            }
+        }
+        return allVars
+    }
+
+    /**
      * 从新变量前缀的变量中查出并增加旧变量，会做去重
      * @param vars 变量Map
      * @return 包含新旧变量的Map
@@ -308,7 +397,7 @@ object PipelineVarUtil {
                     allVars[newVarName] = it.value
                 }
                 // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
-                if (!allVars.containsKey(it.key)) {
+                if (!allVars.containsKey(it.key) || it.key == "BuildNo") {
                     allVars[it.key] = it.value
                 }
             }
@@ -317,13 +406,17 @@ object PipelineVarUtil {
     }
 
     /**
-     * 旧变量转新变量
+     * 将[varMaps]找到旧变量并替换成新变量，并删除掉旧变量
      */
     fun replaceOldByNewVar(varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>) {
         turningWithType(oldVarMappingNewVar, varMaps, true)
         prefixTurningWithType(oldPrefixMappingNew, varMaps, true)
     }
 
+    /**
+     *  遍历[varMaps]中的fullKey，与[mapping]中的key做完成匹配，匹配成功后从[mapping]取出value作newKey
+     *  并写入到[varMaps],最后根据[replace]值为true决定要删除[varMaps]中的fullKey
+     */
     private fun turningWithType(
         mapping: Map<String, String>,
         varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
@@ -333,7 +426,7 @@ object PipelineVarUtil {
             // 如果新旧key同时存在，则保留原value
             if (varMaps[it.key] != null && varMaps[it.value] == null) {
                 varMaps[it.value] = varMaps[it.key]!!
-                if (replace) {
+                if (replace && it.key != "BuildNo") {
                     varMaps.remove(it.key)
                 }
             }
@@ -352,7 +445,11 @@ object PipelineVarUtil {
         }
     }
 
-    @Suppress("ALL")
+    @Suppress("NestedBlockDepth")
+    /**
+     *  遍历[vars]中的fullKey，与[mapping]中的key做前缀匹配，匹配成功后从[mapping]取出value,替换掉fullKey的前缀key，组成newKey
+     *  并写入到[vars],最后根据[replace]值为true决定要删除[vars]中的fullKey
+     */
     private fun prefixTurning(
         mapping: Map<String, String>,
         vars: MutableMap<String, String>,
@@ -372,7 +469,11 @@ object PipelineVarUtil {
         }
     }
 
-    @Suppress("ALL")
+    @Suppress("NestedBlockDepth")
+    /**
+     *  遍历[varMaps]中的fullKey，与[mapping]中的key做前缀匹配，匹配成功后从[mapping]取出value,替换掉fullKey的前缀key，组成newKey
+     *  并写入到[varMaps],最后根据[replace]值为true决定要删除[varMaps]中的fullKey
+     */
     private fun prefixTurningWithType(
         mapping: Map<String, String>,
         varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
@@ -395,4 +496,41 @@ object PipelineVarUtil {
     fun oldVarToNewVar(oldVarName: String): String? = oldVarMappingNewVar[oldVarName]
 
     fun newVarToOldVar(newVarName: String): String? = newVarMappingOldVar[newVarName]
+
+    fun contextVarMap() = contextVarMappingBuildVar
+
+    const val MAX_VERSION_LEN = 64
+
+    /**
+     * 从流水线启动参数[buildParameters]中找出推荐版本号,由[MAJORVERSION].[MINORVERSION].[FIXVERSION].[BUILD_NO]组成
+     * 需要注意的是，旧的参数命名继续兼容有效，由{MarjorVersion}.{MinorVersion}.{FixVersion}.{BuildNo} 组成，所以启动参数切记
+     * 不要与此命名相同造成了冲突
+     */
+    fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
+        val recommendVersionPrefix = getRecommendVersionPrefix(buildParameters) ?: return null
+
+        val buildNo = buildParameters.firstOrNull { it.key == BUILD_NO || it.key == "BuildNo" }?.value?.toString()
+            ?: return null
+
+        return "$recommendVersionPrefix.$buildNo".coerceAtMaxLength(MAX_VERSION_LEN)
+    }
+
+    /**
+     * 从流水线启动参数[buildParameters]中找出版本号前缀，由[MAJORVERSION].[MINORVERSION].[FIXVERSION] 组成，
+     * 如果[buildParameters]中不存在上述3类参数，则返回空
+     * 需要注意的是，旧的参数命名继续兼容有效，由{MarjorVersion}.{MinorVersion}.{FixVersion} 组成，所以启动参数切记
+     * 不要与此命名相同造成了冲突
+     */
+    fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
+        val majorVersion = buildParameters.firstOrNull { it.key == MAJORVERSION || it.key == "MajorVersion" }
+            ?.value?.toString() ?: return null
+
+        val minorVersion = buildParameters.firstOrNull { it.key == MINORVERSION || it.key == "MinorVersion" }
+            ?.value?.toString() ?: return null
+
+        val fixVersion = buildParameters.firstOrNull { it.key == FIXVERSION || it.key == "FixVersion" }
+            ?.value?.toString() ?: return null
+
+        return "$majorVersion.$minorVersion.$fixVersion"
+    }
 }

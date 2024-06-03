@@ -18,10 +18,78 @@
 _M = {}
 -- 获取目标ip:port
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
+    local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+    local gateway_project = ngx.var.project
+
+    -- 不走容器化的服务
+    local no_container = false
+    for index, value in ipairs(no_container_svr) do
+        if value == service_name then
+            no_container = true
+        end
+    end
+    if no_container and string.find(devops_tag, '^kubernetes-') then
+        devops_tag = string.sub(devops_tag, 12)
+    end
+
+    -- 转发到容器环境里
+    if not in_container and string.find(devops_tag, '^kubernetes-') then
+        if config.gw_token ~= nil and ngx.var.devops_token == '' then
+            ngx.var.devops_token = config.gw_token
+        end
+        local kubernetes_domain = nil
+
+        if gateway_project == 'codecc' then
+            kubernetes_domain = config.kubernetes.codecc.domain
+        else
+            kubernetes_domain = config.kubernetes.domain
+        end
+
+        -- 特殊处理的域名,优先级最高
+        local special_key = gateway_project .. ":" .. devops_tag
+        if config.kubernetes.special_domain[special_key] ~= nil then
+            kubernetes_domain = config.kubernetes.special_domain[special_key]
+        end
+        return kubernetes_domain .. "/ms/" .. service_name
+    end
+
+    -- 容器环境
+    if in_container then
+        if ngx.var.multi_cluster == 'true' then -- 多集群场景
+            local dns = resolver:new {
+                nameservers = resolvUtil.nameservers,
+                retrans = 5,
+                timeout = 2000 -- 2 sec
+            }
+            -- 先查询当前ns下的服务
+            if string.find(devops_tag, '^kubernetes-') then
+                devops_tag = string.sub(devops_tag, 12) -- 去掉 "kubernetes-" 头部
+            end
+            local prefix = nil
+            if gateway_project == 'codecc' then
+                prefix = 'bk-codecc-' .. service_name
+                devops_tag = 'ieg-codeccsvr-codecc-' .. devops_tag
+            else
+                prefix = service_name .. '-' .. ngx.var.chart_name .. '-' .. service_name
+            end
+            local domain = prefix .. '.' .. devops_tag .. '.svc.cluster.local'
+            local records = dns:query(domain, { qtype = dns.TYPE_A })
+            -- 兜底策略
+            if ngx.var.default_namespace ~= '' and ngx.var.default_namespace ~= nil and not records then
+                domain = prefix .. ngx.var.default_namespace .. '.svc.cluster.local'
+            end
+            return domain
+        else -- 单一集群场景
+            return
+                ngx.var.release_name .. '-' .. ngx.var.chart_name .. '-' .. service_name .. '.' .. ngx.var.namespace ..
+                '.svc.cluster.local'
+        end
+    end
+
     -- 获取consul查询域名
     local query_subdomain = devops_tag .. "." .. service_name .. ns_config.suffix .. ".service." .. ns_config.domain
 
-    local ips = {} -- address
+    local ips = {}   -- address
     local port = nil -- port
 
     local router_srv_key = query_subdomain .. cache_tail
@@ -33,14 +101,14 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         local dnsIps = {}
         if type(ns_config.ip) == 'table' then
             for i, v in ipairs(ns_config.ip) do
-                table.insert(dnsIps, {v, ns_config.port})
+                table.insert(dnsIps, { v, ns_config.port })
             end
         else
-            table.insert(dnsIps, {ns_config.ip, ns_config.port})
+            table.insert(dnsIps, { ns_config.ip, ns_config.port })
         end
 
         -- 连接consul dns
-        local dns, err = resolver:new{nameservers = dnsIps, retrans = 5, timeout = 2000}
+        local dns, err = resolver:new { nameservers = dnsIps, retrans = 5, timeout = 2000 }
 
         if not dns then
             ngx.log(ngx.ERR, "failed to instantiate the resolver: ", err)
@@ -48,7 +116,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         end
 
         -- 查询dns
-        local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section = true})
+        local records, err = dns:query(query_subdomain, { qtype = dns.TYPE_SRV, additional_section = true })
 
         if not records then
             ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
@@ -57,10 +125,11 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
         if records.errcode then
             if records.errcode == 3 then
-                ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr)
+                ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr, " , query_subdomain : ",
+                    query_subdomain)
                 return nil
             else
-                ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err)
+                ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err, " , query_subdomain : ", query_subdomain)
                 return nil
             end
         end
@@ -84,7 +153,6 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
         -- set cache
         router_srv_cache:set(router_srv_key, table.concat(ips, ",") .. ":" .. port, 1)
-
     else
         local func_itor = string.gmatch(router_srv_value, "([^:]+)")
         local ips_str = func_itor()
@@ -93,7 +161,6 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         for ip in string.gmatch(ips_str, "([^,]+)") do
             table.insert(ips, ip)
         end
-
     end
 
     return ips[math.random(#ips)] .. ":" .. port

@@ -29,14 +29,31 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULTS_APPROVE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULTS_REJECT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_DESCRIPTION
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FINAL_APPROVAL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PARAMS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PENDING_APPROVAL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REVIEWER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REVIEWERS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REVIEW_COMMENTS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -45,13 +62,21 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 人工审核插件
@@ -61,13 +86,19 @@ import java.util.Date
 class ManualReviewTaskAtom(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineVariableService: BuildVariableService
+    private val taskBuildRecordService: TaskBuildRecordService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val pipelineVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }
 
+    @Suppress("ComplexMethod")
     override fun execute(
         task: PipelineBuildTask,
         param: ManualReviewUserTaskElement,
@@ -78,35 +109,70 @@ class ManualReviewTaskAtom(
         val taskId = task.taskId
         val projectCode = task.projectId
         val pipelineId = task.pipelineId
-
-        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
-        val reviewDesc = parseVariable(param.desc, runVariables)
-        val notifyTitle = parseVariable(param.notifyTitle, runVariables)
+        val variables = runVariables.toMutableMap()
+        val contextMap = variables.plus(
+            pipelineContextService.buildContext(
+                projectId = task.projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = task.stageId, containerId = task.containerId, taskId = task.taskId,
+                variables = variables, model = null, executeCount = task.executeCount
+            )
+        )
+        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), contextMap)
+        val reviewDesc = parseVariable(param.desc, contextMap)
+        val notifyTitle = parseVariable(param.notifyTitle, contextMap)
+        val notifyGroup = parseVariable(param.notifyGroup, contextMap)
 
         if (reviewUsers.isBlank()) {
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
             return AtomResponse(BuildStatus.FAILED)
         }
+        val reviewUsersList = reviewUsers.split(",")
+
+        taskBuildRecordService.updateTaskRecord(
+            projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
+            taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
+            taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsersList),
+            operation = "manualReviewTaskStart#${task.taskId}",
+            timestamps = mapOf(
+                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+            )
+        )
+        // #7983 兜底只有一个审核插件的job未刷新执行状态
+        containerBuildRecordService.updateContainerRecord(
+            projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
+            containerId = task.containerId, executeCount = task.executeCount ?: 1,
+            buildStatus = BuildStatus.RUNNING, containerVar = mapOf(), timestamps = mapOf()
+        )
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤等待审核============",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            buildId = task.buildId,
+            message = "============${getI18nByLocal(BK_PENDING_APPROVAL)}============",
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "待审核人：$reviewUsers",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWERS)}：$reviewUsers",
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核说明：$reviewDesc",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "${getI18nByLocal(BK_DESCRIPTION)}：$reviewDesc",
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
-            buildId = buildId, message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            buildId = buildId,
+            message = getI18nByLocal(BK_PARAMS) +
+                "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
 
-        val pipelineName = runVariables[PIPELINE_NAME].toString()
+        val pipelineName = runVariables[PIPELINE_NAME] ?: pipelineId
+        val projectName = runVariables[PROJECT_NAME_CHINESE] ?: projectCode
+        val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "ManualReviewTaskAtom",
@@ -120,22 +186,57 @@ class ManualReviewTaskAtom(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
                 userId = task.starter, buildId = buildId,
-                receivers = reviewUsers.split(","),
-                notifyType = checkNotifyType(param.notifyType),
+                receivers = reviewUsersList,
+                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
                     "content" to notifyTitle
                 ),
                 bodyParams = mutableMapOf(
-                    "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1"),
-                    "projectName" to "need to add in notifyListener",
+                    "buildNum" to buildNum,
+                    "projectName" to projectName,
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                    "reviewDesc" to reviewDesc
+                    "reviewDesc" to reviewDesc,
+                    "manualReviewParam" to JsonUtil.toJson(param.params),
+                    "checkParams" to param.params.isNotEmpty().toString(),
+                    // 企业微信组
+                    NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
                 ),
                 position = null,
-                stageId = null
+                stageId = null,
+                callbackData = mapOf(
+                    "projectId" to projectCode,
+                    "pipelineId" to pipelineId,
+                    "buildId" to buildId,
+                    "elementId" to (param.id ?: ""),
+                    "reviewUsers" to reviewUsers,
+                    "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
+                ),
+                markdownContent = param.markdownContent
             )
         )
+
+        if (param.reminderTime != null && param.reminderTime!! > 0) {
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildReviewReminderEvent(
+                    source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
+                    userId = task.starter, delayMills = TimeUnit.HOURS.toMillis(param.reminderTime!!.toLong()).toInt(),
+                    reviewUsers = reviewUsersList.toSet(),
+                    notifyTitle = notifyTitle.ifBlank {
+                        MessageUtil.getMessageByLocale(
+                            ProcessMessageCode.BK_BUILD_IN_REVIEW_STATUS,
+                            I18nUtil.getDefaultLocaleLanguage(),
+                            arrayOf(projectName, pipelineName, buildNum)
+                        )
+                    },
+                    notifyBody = reviewDesc,
+                    weworkGroup = notifyGroup.toSet(),
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = task.executeCount ?: 1
+                )
+            )
+        }
 
         return AtomResponse(BuildStatus.REVIEWING)
     }
@@ -165,11 +266,15 @@ class ManualReviewTaskAtom(
 
         val response = when (ManualReviewAction.valueOf(manualAction)) {
             ManualReviewAction.PROCESS -> {
-                buildLogPrinter.addLine(buildId = buildId, message = "审核结果：继续",
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                buildLogPrinter.addLine(
+                    buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_APPROVE),
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null, stepId = task.stepId
                 )
-                buildLogPrinter.addLine(buildId = buildId, message = "审核参数：${getParamList(taskParam)}",
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                buildLogPrinter.addLine(
+                    buildId = buildId, message = "${getI18nByLocal(BK_PARAMS)}：${getParamList(taskParam)}",
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null, stepId = task.stepId
                 )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildReviewBroadCastEvent(
@@ -183,8 +288,11 @@ class ManualReviewTaskAtom(
                 AtomResponse(BuildStatus.SUCCEED)
             }
             ManualReviewAction.ABORT -> {
-                buildLogPrinter.addRedLine(buildId = buildId, message = "审核结果：驳回",
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                buildLogPrinter.addRedLine(
+                    buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_REJECT),
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildReviewBroadCastEvent(
@@ -198,7 +306,25 @@ class ManualReviewTaskAtom(
                 AtomResponse(BuildStatus.REVIEW_ABORT)
             }
         }
-
+        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
+        pipelineEventDispatcher.dispatch(
+            // 发送审批取消通知
+            PipelineBuildNotifyEvent(
+                notifyCompleteCheck = true,
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
+                source = "ManualReviewTaskAtomFinish", projectId = task.projectId, pipelineId = task.pipelineId,
+                userId = task.starter, buildId = buildId,
+                receivers = reviewUsers.split(","),
+                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
+                titleParams = mutableMapOf(),
+                bodyParams = mutableMapOf(),
+                position = null,
+                stageId = null,
+                callbackData = mapOf(
+                    "signature" to ShaUtils.sha256(task.projectId + buildId + (param.id ?: "") + appSecret)
+                )
+            )
+        )
         postPrint(param = param, task = task, suggestContent = suggestContent)
         return response
     }
@@ -242,16 +368,26 @@ class ManualReviewTaskAtom(
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $reviewResultParamKey=$manualAction",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $reviewerParamKey=$manualActionUserId",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $suggestParamKey=$suggestContent",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
+    }
+
+    private fun parseVariable(value: List<String>?, runVariables: Map<String, String>): List<String> {
+        if (value.isNullOrEmpty()) {
+            return emptyList()
+        }
+        return value.map { EnvUtils.parseEnv(it, runVariables) }
     }
 
     private fun beforePrint(
@@ -261,27 +397,29 @@ class ManualReviewTaskAtom(
     ): Any? {
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤审核结束============",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "============${getI18nByLocal(BK_FINAL_APPROVAL)}============",
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核人：$manualActionUserId",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWER)}：$manualActionUserId",
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核意见：$suggestContent",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEW_COMMENTS)}：$suggestContent",
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         return suggestContent
     }
 
-    private fun checkNotifyType(notifyType: MutableList<String>?): MutableSet<String>? {
-        if (notifyType != null) {
-            val allTypeSet = NotifyType.values().map { it.name }.toMutableSet()
-            allTypeSet.remove(NotifyType.SMS.name)
-            return (notifyType.toSet() intersect allTypeSet).toMutableSet()
-        }
-        return notifyType
+    private fun getI18nByLocal(messageCode: String, params: Array<String>? = null): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = messageCode,
+            language = I18nUtil.getDefaultLocaleLanguage(),
+            params = params
+        )
     }
 
     companion object {

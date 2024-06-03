@@ -1,9 +1,10 @@
 <template>
     <div>
         <section
-            class="params-item"
+            class="check-params-item"
             v-for="(param, paramIndex) in params" :key="paramIndex"
-            :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
+            :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)"
+        >
             <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
                 <vuex-input
                     :data-vv-scope="`param-${paramIndex}`"
@@ -74,7 +75,7 @@
 </script>
 
 <style lang="scss">
-    .params-item {
+    .check-params-item {
         display: flex;
         margin-bottom: 10px;
         .form-field {

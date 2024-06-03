@@ -1,0 +1,112 @@
+[ {
+  "id" : 2,
+  "name" : "Daily Building",
+  "type" : "TEMPLATE",
+  "desc" : "Number of Alerts for Daily BuildControl",
+  "stage" : "Development",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T10:56:57",
+  "updateTime" : "2019-04-10T11:03:51",
+  "enable" : true
+}, {
+  "id" : 3,
+  "name" : "Version Testing and Migration",
+  "type" : "TEMPLATE",
+  "desc" : "Quality Control for Version Testing and Migration",
+  "stage" : "Deployment of Testing Environment",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T10:58:12",
+  "updateTime" : "2019-04-10T11:03:52",
+  "enable" : true
+}, {
+  "id" : 4,
+  "name" : "Release and Deployment",
+  "type" : "TEMPLATE",
+  "desc" : "Quality Control for Release and Deployment of Versions",
+  "stage" : "Deployment of Production Environment",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 5,
+  "name" : "Security Related",
+  "type" : "INDICATOR_SET",
+  "desc" : "Includes Coverity Security Rule Set and Sensitive Information Alerts",
+  "stage" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:42:27",
+  "updateTime" : "2019-04-10T11:42:33",
+  "enable" : false
+}, {
+  "id" : 6,
+  "name" : "Java Tool Specification",
+  "type" : "INDICATOR_SET",
+  "desc" : "CheckStyle Tool Specification",
+  "stage" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+},{
+  "id" : 7,
+  "name" : "C++ Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 8,
+  "name" : "Java Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 9,
+  "name" : "Go Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 10,
+  "name" : "Python Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 11,
+  "name" : "JS Recommend",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+} ]

@@ -1,26 +1,51 @@
 <template>
     <div class="bk-form bk-form-vertical">
-        <form-field v-for="(obj, key) in atomPropsModel" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-            <component
-                :is="obj.component"
-                v-bind="obj"
-                v-model="element[key]"
-                :disabled="disabled"
-                :handle-change="handleUpdateElement"
-                :show-content="disabled"
-                :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
-        </form-field>
+        <template v-for="(obj, key) in atomPropsModel">
+            <form-field v-if="!isHidden(obj, element)" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                <component
+                    :is="obj.component"
+                    v-bind="obj"
+                    :value="element[key]"
+                    :disabled="disabled"
+                    :handle-change="handleChange"
+                    :show-content="disabled"
+                    :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
+            </form-field>
+        </template>
+        <accordion v-if="reminderTimeCom" show-checkbox>
+            <header class="var-header" slot="header">
+                <span>{{ reminderTimeCom.label }}</span>
+                <i class="devops-icon icon-angle-down" style="display: block" />
+            </header>
+            <div slot="content">
+                <form-field class="review-remind" :label="reminderTimeCom.label" :desc="reminderTimeCom.desc" :is-error="errors.has('reminderTime')" :error-msg="errors.first('reminderTime')">
+                    <div>
+                        {{ $t('editPage.every') }}
+                        <vuex-input
+                            :value="element.reminderTime"
+                            class="remind-number-input"
+                            v-validate.initial="{ reminderTimeRule: true }"
+                            name="reminderTime"
+                            :placeholder="' '"
+                            :disabled="disabled"
+                            :handle-change="handleUpdateElement"
+                        />
+                        {{ $t('editPage.remindTime') }}
+                    </div>
+                </form-field>
+            </div>
+        </accordion>
         <accordion show-content show-checkbox>
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.atomOutput') }}</span>
                 <i class="devops-icon icon-angle-down" style="display: block" />
             </header>
             <div slot="content">
-                <form-field class="output-namespace" :desc="$t('editPage.namespaceTips')" :label="$t('editPage.outputNamespace')" :is-error="errors.has('namespace')" :error-msg="errors.first('namespace')">
+                <form-field class="output-namespace" :desc="$t('outputNameSpaceDescTips')" :label="$t('editPage.outputNamespace')" :is-error="errors.has('namespace')" :error-msg="errors.first('namespace')">
                     <vuex-input name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateElement" :value="namespace" placeholder="" />
                 </form-field>
                 <div class="atom-output-var-list">
-                    <h4>{{ $t('editPage.outputItemList') }}：</h4>
+                    <h4>{{ $t('editPage.outputItemList') }}</h4>
                     <p v-for="(output, key) in outputProps" :key="key">
                         {{ namespace ? `${namespace}_` : '' }}{{ key }}
                         <bk-popover placement="right">
@@ -38,9 +63,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import copyIcon from '@/components/copyIcon'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'manual-review-user-task',
@@ -59,7 +84,44 @@
         computed: {
             namespace () {
                 return this.element.namespace
+            },
+            reminderTimeCom () {
+                return this.atomPropsModel.reminderTime
+            }
+        },
+        watch: {
+            'element.notifyType' (val) {
+                if (val.includes('WEWORK_GROUP')) {
+                    this.atomPropsModel.notifyGroup.hidden = false
+                } else {
+                    this.atomPropsModel.notifyGroup.hidden = true
+                    this.handleUpdateElement('notifyGroup', [])
+                }
+            }
+        },
+        created () {
+            if (this.element && this.element.notifyType.includes('WEWORK_GROUP')) {
+                this.atomPropsModel.notifyGroup.hidden = false
+            }
+        },
+        methods: {
+            handleChange (name, value) {
+                if (name === 'notifyGroup') {
+                    const notifyGroup = value.split(',')
+                    this.handleUpdateElement(name, notifyGroup)
+                } else {
+                    this.handleUpdateElement(name, value)
+                }
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .remind-number-input {
+        width: 60px;
+        .input-number-option {
+            display: none;
+        }
+    }
+</style>

@@ -2,6 +2,14 @@
     <div class="p20 pipeline-audit-list" v-bkloading="{ isLoading }">
         <div class="audit-list-header">
             <bk-form form-type="inline">
+                <bk-form-item :label="$t('pipelineId')">
+                    <bk-input
+                        v-model="parameters.resourceId"
+                        class="w220"
+                        @enter="handlepPaginationChange"
+                        :placeholder="$t('audit.enterPlaceholder')">
+                    </bk-input>
+                </bk-form-item>
                 <bk-form-item :label="$t('pipelineName')">
                     <bk-input
                         v-model="parameters.resourceName"
@@ -31,15 +39,15 @@
                         :placeholder="$t('audit.operateTimePlaceholder')">
                     </bk-date-picker>
                 </bk-form-item>
-                <bk-form-item :label="$t('status')">
+                <!-- <bk-form-item :label="$t('status')">
                     <bk-select
                         v-model="parameters.status"
                         class="w220"
                         @change="handlepPaginationChange">
                         <bk-option :id="1" :name="$t('success')"></bk-option>
-                        <!-- <bk-option :id="0" :name="$t('fail')"></bk-option> -->
+                        <bk-option :id="0" :name="$t('fail')"></bk-option>
                     </bk-select>
-                </bk-form-item>
+                </bk-form-item> -->
             </bk-form>
         </div>
         <bk-table
@@ -49,6 +57,7 @@
             :pagination="pagination"
             @page-change="current => handlepPaginationChange({ current })"
             @page-limit-change="limit => handlepPaginationChange({ limit })">
+            <bk-table-column :label="$t('pipelineId')" prop="resourceId"></bk-table-column>
             <bk-table-column :label="$t('pipelineName')" prop="resourceName"></bk-table-column>
             <bk-table-column :label="$t('operate')" prop="actionContent"></bk-table-column>
             <bk-table-column :label="$t('audit.operator')" prop="userId"></bk-table-column>
@@ -73,6 +82,7 @@
                 exportLoading: false,
                 parameters: {
                     userId: '',
+                    resourceId: query.resourceId || '',
                     resourceName: query.resourceName || '',
                     status: '',
                     date: [query.startTime || '', query.endTime || '']
@@ -124,6 +134,7 @@
                     projectId: this.$route.params.projectId,
                     userId: this.parameters.userId,
                     resourceName: this.parameters.resourceName,
+                    resourceId: this.parameters.resourceId,
                     startTime: this.parameters.date[0] && this.convertTime(this.parameters.date[0]),
                     endTime: this.parameters.date[1] && this.convertTime(this.parameters.date[1]),
                     status: this.parameters.status,

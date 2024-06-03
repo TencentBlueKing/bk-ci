@@ -27,11 +27,12 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件插件市场-插件插件特性信息更新报文体")
+@Schema(title = "插件插件市场-插件插件特性信息更新报文体")
 data class AtomFeatureUpdateRequest(
-    @ApiModelProperty("插件插件代码库地址", required = false)
-    val repositoryUrl: String?
+    @get:Schema(title = "插件插件代码库地址", required = false)
+    val repositoryUrl: String? = null,
+    @get:Schema(title = "默认插件", required = false)
+    val defaultFlag: Boolean? = null
 )

@@ -32,7 +32,8 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,17 +47,15 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         userId: String
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode
         ).data ?: false
     }
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        authProjectCreateInfo: AuthProjectCreateInfo
     ): String {
         return ""
     }
@@ -65,12 +64,14 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         return
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         return
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        return emptyList()
+        return listOf("demo")
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
@@ -87,13 +88,27 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
             return client.get(ServiceProjectAuthResource::class).checkProjectManager(
                 userId = userId,
                 projectCode = projectCode,
-                token = tokenService.getSystemToken(null)!!
+                token = tokenService.getSystemToken()!!
             ).data ?: false
         }
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode
         ).data ?: false
     }
+
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun needApproval(needApproval: Boolean?) = false
+
+    override fun isShowUserManageIcon(): Boolean = false
+
+    override fun filterProjects(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? = null
 }

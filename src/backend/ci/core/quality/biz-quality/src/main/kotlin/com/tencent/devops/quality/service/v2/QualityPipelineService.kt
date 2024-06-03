@@ -166,7 +166,7 @@ class QualityPipelineService @Autowired constructor(
 
                         val data = t.taskParams["data"] as? Map<String, Any>
                         val input = data?.get("input") as? Map<String, Any>
-                        val newAsync = input?.get("asynchronous") as? Boolean
+                        val newAsync = input?.get("asyncTask") as? Boolean
                         asynchronous == true || newAsync == true
                     }
                     RangeExistElement(

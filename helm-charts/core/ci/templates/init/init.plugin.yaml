@@ -1,0 +1,57 @@
+# 初始化商店插件
+{{ if .Values.init.plugin.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-init-plugin
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: init-plugin
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: init-plugin
+    spec:
+      containers:
+        - name: init-plugin
+          image: {{ include "bkci-backend.image" . }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          workingDir: /data/workspace/
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              services="store artifactory"
+              for service in $services
+              do
+                until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
+                do 
+                  echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
+                  sleep 2;
+                done
+                echo "{{ include "bkci.names.fullname" . }}-$service is available";
+              done 
+
+              {{ range .Values.init.plugin.atoms }}
+              atom_code={{ .code }}
+              check_atom_url=http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/service/pipeline/atom/codes/$atom_code/versions/1.0.0
+              check_atom_response=$(curl -s $check_atom_url)
+              if [ -z $(echo $check_atom_response | grep -o "atomCode") ]; then
+                atom_url={{ .url }}
+                atom_file=${atom_code}.zip
+                curl -s $atom_url -o $atom_file -L
+                if [ $? -eq 0 ]; then
+                  curl "http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/op/pipeline/atom/deploy" -H "X-DEVOPS-UID: admin" -F atomCode=$atom_code -F file=@$atom_file
+                fi
+              else
+                  echo "atomCode exists"
+              fi
+              curl -XPOST "http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/op/pipeline/atom/default/atomCodes/$atom_code" -H "X-DEVOPS-UID: admin"
+              {{ end }}
+      restartPolicy: OnFailure
+{{- end -}}

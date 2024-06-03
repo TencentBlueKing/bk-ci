@@ -24,29 +24,17 @@
 
 import Vue from 'vue'
 import Router from 'vue-router'
-import pipelines from './pipelines'
+import pipelines from './router'
 
 Vue.use(Router)
 
-const createRouter = (store) => {
+const createRouter = (store, isInIframe) => {
     const router = new Router({
         mode: 'history',
         routes: pipelines
     })
-
     router.beforeEach((to, from, next) => {
         next()
-    })
-
-    router.afterEach(route => {
-        const { header = '', icon = '', to } = route.meta
-        store.commit('devops/updateHeaderHook', {
-            icon,
-            text: header,
-            routeInfo: {
-                name: to
-            }
-        })
     })
     return router
 }

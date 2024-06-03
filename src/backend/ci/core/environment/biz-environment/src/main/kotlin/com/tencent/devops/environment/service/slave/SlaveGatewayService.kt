@@ -27,23 +27,25 @@
 
 package com.tencent.devops.environment.service.slave
 
-import com.tencent.devops.common.environment.agent.AgentGrayUtils
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class SlaveGatewayService @Autowired constructor(
     private val dslContext: DSLContext,
     private val slaveGatewayDao: SlaveGatewayDao,
     private val commonConfig: CommonConfig,
-    private val agentGrayUtils: AgentGrayUtils,
+    private val agentPropsScope: AgentPropsScope,
     private val agentUrlService: AgentUrlService
 ) {
 
@@ -61,36 +63,42 @@ class SlaveGatewayService @Autowired constructor(
                 return it.showName
             }
         }
-        return "深圳"
+        return Zone.SHENZHEN.getI18n(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
     }
 
     fun getFileGateway(zoneName: String?): String? {
-        if (agentGrayUtils.useDefaultFileGateway()) {
-            val defaultFileGateway = agentGrayUtils.getDefaultFileGateway()
-            if (!defaultFileGateway.isNullOrBlank()) return defaultFileGateway!!
+        if (agentPropsScope.useDefaultFileGateway()) {
+            val defaultFileGateway = agentPropsScope.getDefaultFileGateway()
+            if (defaultFileGateway.isNotBlank()) return defaultFileGateway
         }
-        return getConfigGateway(zoneName)
+        val (gateway, fileGateWay) = getConfigGateway(zoneName)
+        return fileGateWay ?: gateway
     }
 
     fun getGateway(zoneName: String?): String? {
-        if (agentGrayUtils.useDefaultGateway()) {
-            val defaultGateway = agentGrayUtils.getDefaultGateway()
-            if (!defaultGateway.isNullOrBlank()) return defaultGateway!!
+        if (agentPropsScope.useDefaultGateway()) {
+            val defaultGateway = agentPropsScope.getDefaultGateway()
+            if (defaultGateway.isNotBlank()) return defaultGateway
         }
-        return getConfigGateway(zoneName)
+        val (gateway, _) = getConfigGateway(zoneName)
+        return gateway
     }
 
-    private fun getConfigGateway(zoneName: String?): String? {
+    // @return gateway,filegateway
+    private fun getConfigGateway(zoneName: String?): Pair<String, String?> {
         if (zoneName.isNullOrBlank()) {
-            return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+            return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
         }
         val gateways = getGateway()
         gateways.forEach {
             if (it.zoneName == zoneName) {
-                return agentUrlService.fixGateway(it.gateway)
+                return Pair(
+                    agentUrlService.fixGateway(it.gateway),
+                    agentUrlService.fixGateway(it.fileGateway ?: it.gateway)
+                )
             }
         }
-        return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+        return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
     }
 
     fun getGateway(): List<SlaveGateway> {
@@ -98,22 +106,64 @@ class SlaveGatewayService @Autowired constructor(
             synchronized(this) {
                 if (need2Refresh()) {
                     try {
-                        logger.info("Refresh the gateway")
+                        logger.debug("Refresh the gateway")
                         cache.clear()
                         val records = slaveGatewayDao.list(dslContext)
                         if (records.isNotEmpty()) {
                             records.forEach {
-                                cache.add(SlaveGateway(it.name, it.showName, it.gateway))
+                                cache.add(
+                                    SlaveGateway(
+                                        zoneName = it.name,
+                                        showName = it.showName,
+                                        gateway = it.gateway,
+                                        fileGateway = it.fileGateway,
+                                        visibility = it.visibility ?: false
+                                    )
+                                )
                             }
                         }
                     } finally {
                         lastUpdate = System.currentTimeMillis()
                     }
-                    logger.info("Get the gateway $cache")
+                    logger.debug("Get the gateway $cache")
                 }
             }
         }
         return cache
+    }
+
+    // 不走缓存的接口，给op接口使用
+    fun getGatewayNoCache(): List<SlaveGateway> {
+        val result = ArrayList<SlaveGateway>()
+
+        val records = slaveGatewayDao.list(dslContext)
+        if (records.isNotEmpty()) {
+            records.forEach {
+                result.add(
+                    SlaveGateway(
+                        zoneName = it.name,
+                        showName = it.showName,
+                        gateway = it.gateway,
+                        fileGateway = it.fileGateway,
+                        visibility = it.visibility ?: false
+                    )
+                )
+            }
+        }
+
+        return result
+    }
+
+    fun addGateway(gateway: SlaveGateway): Boolean {
+        return slaveGatewayDao.add(dslContext, gateway)
+    }
+
+    fun updateGateway(gateway: SlaveGateway): Boolean {
+        return slaveGatewayDao.update(dslContext, gateway)
+    }
+
+    fun deleteGateway(zoneName: String): Boolean {
+        return slaveGatewayDao.delete(dslContext, zoneName)
     }
 
     private fun need2Refresh() =

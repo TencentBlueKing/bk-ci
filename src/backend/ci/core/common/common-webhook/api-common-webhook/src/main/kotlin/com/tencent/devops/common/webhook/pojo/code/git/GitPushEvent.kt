@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 
@@ -45,10 +46,16 @@ data class GitPushEvent(
     val total_commits_count: Int,
     val operation_kind: String?,
     val action_kind: String?,
-    val push_options: Map<String, String>?
+    val push_options: Map<String, String>?,
+    @JsonProperty("push_timestamp")
+    val pushTimestamp: String?,
+    val create_and_update: Boolean?,
+    @JsonProperty("diff_files")
+    val diffFiles: List<GitDiffFile>?
 ) : GitEvent() {
     companion object {
         const val classType = "push"
+        const val SHORT_COMMIT_ID_LENGTH = 8
     }
 }
 
@@ -61,21 +68,6 @@ fun GitPushEvent.isDeleteBranch(): Boolean {
     if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
         operation_kind == TGitPushOperationKind.DELETE.value &&
         after.filter { it != '0' }.isBlank()
-    ) {
-        return true
-    }
-    return false
-}
-
-fun GitPushEvent.isCreateBranch(): Boolean {
-    // 工蜂web端创建分支
-    if (action_kind == TGitPushActionKind.CREATE_BRANCH.value) {
-        return true
-    }
-    // 发送到工蜂的客户端创建
-    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
-        operation_kind == TGitPushOperationKind.CREAT.value &&
-        before.filter { it != '0' }.isBlank()
     ) {
         return true
     }

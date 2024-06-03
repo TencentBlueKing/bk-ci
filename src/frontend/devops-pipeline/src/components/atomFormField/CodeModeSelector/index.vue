@@ -180,9 +180,11 @@
             async freshList (url) {
                 try {
                     const query = this.$route.params
-                    const changeUrl = this.urlParse(url, Object.assign(query, {
-                        repositoryHashId: this.repositoryHashId
-                    }))
+                    const changeUrl = this.urlParse(url, {
+                        bkPoolType: this?.container?.dispatchType?.buildType,
+                        repositoryHashId: this.repositoryHashId,
+                        ...query
+                    })
                     this.isLoading = true
                     const res = await this.$ajax.get(changeUrl)
 

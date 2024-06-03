@@ -28,60 +28,26 @@
 package com.tencent.devops.log.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 /**
  *
  * Powered By Tencent
  */
-@Api(tags = ["OP_LOG"], description = "管理-日志资源")
-@Path("/op/logs")
+@Tag(name = "OP_LOG", description = "管理-日志资源")
+@Path("/op")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpLogResource {
 
-    @ApiParam("设置构建清理过期时长")
+    @Parameter(description = "执行搬冷任务")
     @PUT
-    @Path("/v2/build/clean/expire")
-    fun setBuildExpire(
-        @ApiParam("时间, 单位(天)", required = true)
-        @QueryParam("expire")
-        expire: Int
-    ): Result<Boolean>
-
-    @ApiParam("获取构建清理过期时长")
-    @GET
-    @Path("/v2/build/clean/expire")
-    fun getBuildExpire(): Result<Int>
-
-    @ApiParam("设置ES索引过期时长")
-    @PUT
-    @Path("/v2/es/index/expire")
-    fun setESExpire(
-        @ApiParam("时间, 单位(天)", required = true)
-        @QueryParam("expire")
-        expire: Int
-    ): Result<Boolean>
-
-    @ApiParam("获取ES索引过期时长")
-    @GET
-    @Path("/v2/es/index/expire")
-    fun getESExpire(): Result<Int>
-
-    @ApiParam("重新打开索引")
-    @PUT
-    @Path("/v2/es/index/reopen")
-    fun reopenIndex(
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String
-    ): Result<Boolean>
+    @Path("/es/index/cold")
+    fun makeIndexCold(): Result<Boolean>
 }

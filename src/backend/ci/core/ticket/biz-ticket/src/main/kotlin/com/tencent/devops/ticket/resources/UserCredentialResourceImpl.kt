@@ -27,11 +27,14 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
@@ -55,6 +58,8 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(credentialPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_CREATE)
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -77,6 +82,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_DELETE)
     override fun delete(userId: String, projectId: String, credentialId: String): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -91,6 +97,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun list(
         userId: String,
         projectId: String,
@@ -122,6 +129,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -200,6 +208,8 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(result.records)
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
+    @BkTimed(extraTags = ["operate", "get"])
     override fun show(userId: String, projectId: String, credentialId: String): Result<CredentialWithPermission> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -213,6 +223,8 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.userShow(userId, projectId, credentialId))
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(userId: String, projectId: String, credentialId: String): Result<CredentialWithPermission> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -226,6 +238,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.userGet(userId, projectId, credentialId))
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_EDIT)
     override fun edit(
         userId: String,
         projectId: String,
@@ -248,6 +261,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_EDIT)
     override fun editSetting(
         userId: String,
         projectId: String,

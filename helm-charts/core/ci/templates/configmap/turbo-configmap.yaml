@@ -1,0 +1,83 @@
+#turbo configmap
+{{ if .Values.configmap.enabled -}}
+{{if .Values.turbo.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-turbo
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: turbo
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    server:
+      undertow:
+        threads:
+          worker: 200
+      servlet:
+        context-path: /api
+    spring:
+      application:
+        name: turbo
+        desc: Turbo Service
+        version: 4.0.0
+      redis:
+        host: {{ include "bkci.redisHost" . }}
+        password: {{ include "bkci.redisPassword" . }}
+        port: {{ include "bkci.redisPort" . }}
+      data:
+        mongodb:
+          uri: {{ include "bkci.mongodb.turbo.turboUri" . }}
+      rabbitmq:
+        virtual-host: {{ include "bkci.rabbitmqVhost" . }}
+        username: {{ include "bkci.rabbitmqUser" . }}
+        password: {{ include "bkci.rabbitmqPassword" . }}
+        addresses: {{ include "bkci.rabbitmqAddr" . }}
+        listener:
+          simple:
+            concurrency: 2
+            acknowledge-mode: auto
+      cloud:
+        kubernetes:
+          discovery:
+            enabled: true
+      metrics:
+        servo:
+          enabled: false
+    management: 
+      endpoints:
+        web:
+          base-path: /management
+          exposure:
+            include: prometheus,health
+        metrics:
+          distribution:
+            sla:
+              http:
+                server:
+                  requests: 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s,5s
+      security:
+        enabled: false
+      server:
+        port: 18080
+    {{- if keys $.Values.turbo.config }}
+      {{- toYaml .Values.turbo.config | lower | nindent 4 }}
+    {{- end}}
+  quartz.properties: |-
+    org.quartz.jobStore.isClustered=true
+    org.quartz.scheduler.instanceId=AUTO
+    org.quartz.scheduler.instanceIdGenerator.class=com.tencent.devops.common.quartz.simpl.TurboInstanceIdGenerator
+    org.quartz.scheduler.instanceName=turboCluster
+    org.quartz.jobStore.class=com.novemberain.quartz.mongodb.MongoDBJobStore
+    org.quartz.jobStore.mongoUri={{ include "bkci.mongodb.turbo.quartzUri" . }}
+    org.quartz.jobStore.collectionPrefix=turbo
+    org.quartz.jobStore.checkInErrorHandler=com.novemberain.quartz.mongodb.cluster.NoOpErrorHandler
+    org.quartz.threadPool.threadCount=50
+    org.quartz.jobStore.misfireThreshold=20000
+{{- end }}
+{{- end -}}

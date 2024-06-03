@@ -44,7 +44,7 @@ tasks {
 
     named<ShadowJar>("shadowJar") {
         mergeServiceFiles()
-        destinationDirectory.set(File("${rootDir}/release"))
+        destinationDirectory.set(File("$rootDir/release"))
         archiveClassifier.set("")
         archiveVersion.set("")
         isZip64 = true

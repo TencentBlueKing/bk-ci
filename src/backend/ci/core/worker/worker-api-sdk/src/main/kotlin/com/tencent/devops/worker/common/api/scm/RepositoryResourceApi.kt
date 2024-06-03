@@ -30,8 +30,11 @@ package com.tencent.devops.worker.common.api.scm
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_CODE_BASE_FAIL
+import com.tencent.devops.worker.common.env.AgentEnv
 
 class RepositoryResourceApi : AbstractBuildResourceApi(), RepositorySDKApi {
 
@@ -40,7 +43,10 @@ class RepositoryResourceApi : AbstractBuildResourceApi(), RepositorySDKApi {
         val name = repositoryConfig.repositoryType.name
         val path = "/ms/repository/api/build/repositories?repositoryId=$repositoryId&repositoryType=$name"
         val request = buildGet(path)
-        val responseContent = request(request, "获取代码库失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_CODE_BASE_FAIL, AgentEnv.getLocaleLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.vm
 
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
@@ -41,18 +42,19 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
-import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
@@ -72,6 +74,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
@@ -92,16 +95,20 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = param.jobId,
+                stepId = task.stepId
             )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Build container init failed: ${e.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Build container init failed", e)
             atomResponse = AtomResponse(
@@ -115,8 +122,10 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 buildId = task.buildId,
                 message = "Build container init failed: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Build container init failed", ignored)
             atomResponse = AtomResponse(
@@ -142,7 +151,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         Preconditions.checkNotNull(pipelineInfo, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-            errorMsg = "流水线不存在",
+            errorMsg =
+            I18nUtil.getCodeLanMessage(messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)),
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId
@@ -152,14 +162,22 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-            errorMsg = "流水线的模型中指定构建Job不存在",
+            errorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(vmSeqId)
+            ),
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId
         ))
 
-        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
-
+        containerBuildRecordService.containerPreparing(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = vmSeqId,
+            executeCount = task.executeCount ?: 1
+        )
         dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!, param)
 
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
@@ -197,7 +215,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount,
-                customBuildEnv = param.matrixContext
+                customBuildEnv = param.matrixContext,
+                queueTimeoutMinutes = param.jobControlOption?.prepareTimeout
             )
         )
     }

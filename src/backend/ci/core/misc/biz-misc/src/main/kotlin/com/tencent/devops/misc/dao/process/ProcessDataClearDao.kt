@@ -27,9 +27,16 @@
 
 package com.tencent.devops.misc.dao.process
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.TPipelineBuildSummary
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
@@ -44,9 +51,12 @@ import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.TPipelineTimer
+import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineWebhook
+import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TReport
 import com.tencent.devops.model.process.tables.TTemplatePipeline
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -114,8 +124,73 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteBuildHistoryByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+    fun deleteBuildHistoryByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Int {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordPipelineByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordStageByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordContainerByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordTaskByBuildId(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        skipTaskDeleteFlag: Boolean? = null
+    ) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(BUILD_ID.eq(buildId))
+            if (skipTaskDeleteFlag == true) {
+                // 为了构建详情页组装数据方便，skip状态的post和质量红线相关task记录不删除
+                conditions.add(STATUS.eq(BuildStatus.SKIP.name))
+                conditions.add(POST_INFO.isNull)
+                conditions.add(
+                    CLASS_TYPE.notIn(
+                        listOf(
+                            QualityGateInElement.classType,
+                            QualityGateOutElement.classType
+                        )
+                    )
+                )
+            }
+            dslContext.deleteFrom(this)
+                .where(conditions)
+                .execute()
+        }
+    }
+
+    fun deleteBuildWebhookParameter(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineWebhookBuildParameter.T_PIPELINE_WEBHOOK_BUILD_PARAMETER) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))
@@ -236,14 +311,31 @@ class ProcessDataClearDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
-    fun deletePipelineBuildTemplateAcrossInfo(dslContext: DSLContext, projectId: String, buildId: String) {
+    fun deletePipelineBuildTemplateAcrossInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
         with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deletePipelineViewGroup(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 }

@@ -27,70 +27,89 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
-import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
 class PathRegexFilter(
     private val pipelineId: String,
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
-    private val excludedPaths: List<String>
-) : WebhookFilter {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PathRegexFilter::class.java)
-    }
+    private val excludedPaths: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String = "",
+    // 排除过滤失败原因
+    private val excludedFailedReason: String = "",
+    private val caseSensitive: Boolean
+) : BasePathFilter(
+    pipelineId = pipelineId,
+    triggerOnPath = triggerOnPath,
+    includedPaths = includedPaths,
+    excludedPaths = excludedPaths,
+    includedFailedReason = includedFailedReason,
+    excludedFailedReason = excludedFailedReason,
+    caseSensitive = caseSensitive
+) {
     private val matcher = AntPathMatcher()
 
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
-                "|excludedPaths:$excludedPaths|path regex filter"
-        )
-        return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
+    override fun isPathMatch(eventPath: String, userPath: String): Boolean {
+        matcher.setCaseSensitive(caseSensitive)
+        return matcher.match(userPath, eventPath)
     }
 
-    private fun hasNoPathSpecs(): Boolean {
-        return includedPaths.isEmpty() && excludedPaths.isEmpty()
-    }
-
-    /**
-     * 路径过滤:触发的路径需要满足所有配置的路径
-     */
-    @Suppress("ReturnCount")
-    private fun isPathNotExcluded(): Boolean {
-        triggerOnPath.forEach eventPath@{ eventPath ->
-            excludedPaths.forEach userPath@{ userPath ->
-                if (matcher.match(userPath, eventPath)) {
-                    return@eventPath
+    @SuppressWarnings("CyclomaticComplexMethod")
+    override fun extractMatchUserPath(
+        eventPath: String,
+        userPath: String
+    ): String {
+        val patternParts = userPath.split("/")
+        // 无视规则，直接返回空
+        if (isInvalidPattern(userPath) || isInvalidPattern(patternParts)) {
+            return ""
+        }
+        val pathParts = eventPath.split("/")
+        val pathList = mutableListOf<String>()
+        var pathIndex = 0
+        var segment = 0
+        while (segment < patternParts.size && pathIndex < pathParts.size) {
+            val patternPart = patternParts[segment]
+            // 无效字符
+            if (isInvalidPattern(patternPart)) {
+                // 以*或**结尾的规则，直接结束
+                if (segment == patternParts.size - 1) {
+                    break
                 }
+                val nextPatternPart = patternParts[segment + 1]
+                // 后续不存在有效字符继续找
+                if (isInvalidPattern(nextPatternPart)) {
+                    segment++
+                    continue
+                }
+                while (pathIndex < pathParts.size && !matcher.match(nextPatternPart, pathParts[pathIndex])) {
+                    val pathItem = pathParts[pathIndex++]
+                    pathList.add(pathItem)
+                }
+                // 追加上匹配上的真实目录[nextPatternPart可能为dir_**]
+                if (matcher.match(nextPatternPart, pathParts[pathIndex])) {
+                    pathList.add(pathParts[pathIndex])
+                }
+                segment++
+            } else {
+                val pathItem = pathParts[pathIndex]
+                pathList.add(pathItem)
             }
-            return true
+            pathIndex++
+            segment++
         }
-        return false
+        return pathList.joinToString("/")
     }
 
-    /**
-     * 路径包含: 触发的路径只要有一个满足配置的路径
-     */
-    private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
-        if (includedPaths.isEmpty()) {
-            return true
-        }
-        val matchPaths = mutableSetOf<String>()
-        triggerOnPath.forEach eventPath@{ eventPath ->
-            includedPaths.forEach userPath@{ userPath ->
-                if (matcher.match(userPath, eventPath)) {
-                    matchPaths.add(userPath)
-                }
+    private fun isInvalidPattern(pattern: String) = (pattern == "*" || pattern == "**")
+
+    private fun isInvalidPattern(patterns: List<String>): Boolean {
+        patterns.toSet().forEach {
+            if (!isInvalidPattern(it)) {
+                return false
             }
         }
-        return if (matchPaths.isNotEmpty()) {
-            response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
-            true
-        } else {
-            false
-        }
+        return true
     }
 }

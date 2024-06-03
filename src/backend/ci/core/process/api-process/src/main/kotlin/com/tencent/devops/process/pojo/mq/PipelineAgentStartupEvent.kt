@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.pojo.mq
 
-import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
@@ -47,19 +46,18 @@ data class PipelineAgentStartupEvent(
     val taskName: String,
     val os: String,
     val vmNames: String,
-    val startTime: Long,
     val channelCode: String,
     val dispatchType: DispatchType,
-    val zone: Zone?,
-    val stageId: String,
     val containerId: String,
     val containerHashId: String?,
     val queueTimeoutMinutes: Int? = null,
-    val containerType: String,
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
+    val executeCount: Int?,
+    val customBuildEnv: Map<String, String>? = null,
+    val dockerRoutingType: String? = "VM",
+    val jobId: String? = null,
+    val ignoreEnvAgentIds: Set<String>? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
-    val executeCount: Int?,
-    override var routeKeySuffix: String? = null,
-    val customBuildEnv: Map<String, String>? = null
+    override var routeKeySuffix: String? = null
 ) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)

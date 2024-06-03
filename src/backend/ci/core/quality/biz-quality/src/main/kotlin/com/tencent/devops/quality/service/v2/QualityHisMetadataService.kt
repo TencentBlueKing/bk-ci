@@ -29,6 +29,8 @@ package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
@@ -46,7 +48,8 @@ class QualityHisMetadataService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val hisMetadataDao: QualityHisMetadataDao,
-    private val metadataService: QualityMetadataService
+    private val metadataService: QualityMetadataService,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -55,43 +58,45 @@ class QualityHisMetadataService @Autowired constructor(
 
     fun saveHisMetadata(projectId: String, pipelineId: String, buildId: String, callback: MetadataCallback): String {
         logger.info("save history metadata for build: $buildId")
-        logger.info("save history metadata data:\n$callback")
+        logger.info("save history metadata data:\n${callback.elementType}|${callback.taskId}|${callback.taskName}")
 
         val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(
             buildIds = setOf(buildId),
             projectId = projectId
         ).data?.get(buildId) ?: "0"
-        // todo performance can be removed
-        hisMetadataDao.saveHisOriginMetadata(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            buildNo = buildNo,
-            callbackStr = objectMapper.writeValueAsString(callback)
-        )
-        hisMetadataDao.batchSaveHisDetailMetadata(dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            buildNo = buildNo,
-            elementType = callback.elementType,
-            qualityMetadataList = callback.data.map {
-                QualityHisMetadata(
-                    enName = it.enName,
-                    cnName = it.cnName,
-                    detail = it.detail,
-                    type = it.type,
-                    elementType = callback.elementType,
-                    taskId = callback.taskId,
-                    taskName = callback.taskName,
-                    msg = it.msg,
-                    value = it.value,
-                    extra = it.extra
-                )
+        val lockKey = "QUALITY_SAVE_HIS_METADATA_$buildId"
+        val redisLock = RedisLock(redisOperation, lockKey, 10)
+        try {
+            if (!redisLock.tryLock()) {
+                logger.info("get lock failed, skip: $lockKey")
+                return "save metadata locked for $buildId"
             }
-        )
-        return "success save metadata for $buildId"
+
+            hisMetadataDao.batchSaveHisDetailMetadata(dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                buildNo = buildNo,
+                elementType = callback.elementType,
+                qualityMetadataList = callback.data.map {
+                    QualityHisMetadata(
+                        enName = it.enName,
+                        cnName = it.cnName,
+                        detail = it.detail,
+                        type = it.type,
+                        elementType = callback.elementType,
+                        taskId = callback.taskId ?: "",
+                        taskName = callback.taskName ?: "",
+                        msg = it.msg,
+                        value = it.value,
+                        extra = it.extra
+                    )
+                }
+            )
+            return "success save metadata for $buildId"
+        } finally {
+            redisLock.unlock()
+        }
     }
 
     fun saveHisMetadata(

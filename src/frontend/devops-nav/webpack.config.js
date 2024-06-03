@@ -46,12 +46,12 @@ const webpack = require('webpack')
 module.exports = (env = {}, argv) => {
     const isDev = argv.mode === 'development'
     const envDist = env && env.dist ? env.dist : 'frontend'
-    const lsVersion = env && env.lsVersion ? env.lsVersion : 'dev' // 最后一个命令行参数为localStorage版本
+    const lsVersion = env && env.lsVersion ? env.lsVersion : 'v2' // 最后一个命令行参数为localStorage版本
     const dist = path.join(__dirname, `../${envDist}/console`)
     const config = webpackBaseConfig({
         env,
         argv,
-        entry: './src/index',
+        entry: './src/entry',
         publicPath: '/console/',
         dist: '/console',
         port: 8080
@@ -89,6 +89,10 @@ module.exports = (env = {}, argv) => {
                 ? 'index.html'
                 : `${dist}/frontend#console#index.html`,
             inject: false,
+            publicPath: `${isDev ? '' : '__BK_CI_PUBLIC_PATH__'}/console/`,
+            templateParameters: {
+                PUBLIC_PATH_PREFIX: isDev ? '' : '__BK_CI_PUBLIC_PATH__'
+            },
             minify: {
                 removeComments: false
             },
@@ -101,7 +105,7 @@ module.exports = (env = {}, argv) => {
         new AddAssetHtmlPlugin([
             {
                 filepath: require.resolve('./src/assets/static/main.dll.js'),
-                publicPath: path.posix.join('/console/', 'static/'),
+                publicPath: path.posix.join((isDev ? '' : '__BK_CI_PUBLIC_PATH__'), '/console/', 'static/'),
                 hash: true,
                 includeSourcemap: false
             }
@@ -122,6 +126,5 @@ module.exports = (env = {}, argv) => {
     config.devServer.historyApiFallback = {
         rewrites: [{ from: /^\/console/, to: '/console/index.html' }]
     }
-    config.output.publicPath = '/console/'
     return config
 }

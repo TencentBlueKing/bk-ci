@@ -56,7 +56,8 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
                 Bind(getGolangPath(), Volume(dockerHostConfig.volumeGolangCache)),
                 Bind(getSbtPath(), Volume(dockerHostConfig.volumeSbtCache)),
                 Bind(getSbt2Path(), Volume(dockerHostConfig.volumeSbt2Cache)),
-                Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache))
+                Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache)),
+                Bind(dockerHostConfig.hostPathCommonEnv, Volume(dockerHostConfig.volumeCommonEnv), AccessMode.rw)
             )
 
             if (qpcUniquePath.isNullOrBlank()) {

@@ -27,7 +27,9 @@
                     <h3 class="choose-upload">
                         <input type="file" name="file" class="input-file" id="inputfile" accept="image/png, image/jpeg" @change="fileChange">
                         <bk-button theme="primary"> {{ $t('store.自定义') }} </bk-button>
-                        <p class="upload-info"> {{ $t('store.只允许上传png、jpg，尺寸为大于200*200的正方形，大小不超过2M') }} </p>
+                        <p class="upload-info" v-bk-tooltips="$t('store.只允许上传png、jpg，尺寸为大于200*200的正方形，大小不超过2M')">
+                            {{ $t('store.只允许上传png、jpg，尺寸为大于200*200的正方形，大小不超过2M') }}
+                        </p>
                     </h3>
                     <h3 class="sys-title"> {{ $t('store.系统自带') }} </h3>
                     <hgroup class="choose-sys">
@@ -201,6 +203,7 @@
 
 <style lang="scss" scoped>
     @import '../../../assets/scss/conf';
+    @import '../../../assets/scss/mixins/ellipsis';
 
     .select-logo {
         position: absolute;
@@ -299,6 +302,8 @@
                     font-size: 12px;
                     color: $fontWeightColor;
                     text-align: left;
+                    width: 100%;
+                    @include ellipsis();
                 }
             }
             .sys-title {

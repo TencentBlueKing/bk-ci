@@ -1,8 +1,8 @@
 <template>
     <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
         <bk-option
-            v-for="item in listData"
-            :key="item[settingKey]"
+            v-for="(item, index) in listData"
+            :key="index"
             :id="item[settingKey]"
             :name="item[displayKey]"
             :disabled="item.disabled"
@@ -29,6 +29,10 @@
             clearable: {
                 type: Boolean,
                 default: true
+            },
+            zIndex: {
+                type: Number,
+                default: 2500
             },
             isLoading: {
                 type: Boolean,
@@ -58,6 +62,10 @@
             settingKey: {
                 type: String,
                 default: 'id'
+            },
+            showSelectAll: {
+                type: Boolean,
+                default: false
             },
             searchUrl: String,
             replaceKey: String,
@@ -90,12 +98,14 @@
                     multiple: this.multiSelect,
                     clearable: this.clearable,
                     placeholder: this.placeholder,
+                    zIndex: this.zIndex,
                     'search-key': this.displayKey,
                     'popover-options': this.popoverOptions,
                     'enable-virtual-scroll': this.list.length > 3000,
                     list: this.listData,
                     'id-key': this.settingKey,
-                    'display-key': this.displayKey
+                    'display-key': this.displayKey,
+                    'show-select-all': this.showSelectAll
                 }
                 if (this.searchUrl) props['remote-method'] = this.remoteMethod
                 return props

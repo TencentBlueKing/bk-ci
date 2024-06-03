@@ -50,7 +50,7 @@ class CheckMutexContainerCmd(
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.controlOption.mutexGroup?.enable == true &&
             commandContext.container.matrixGroupFlag != true // 矩阵组不做互斥判断
     }
 
@@ -64,28 +64,66 @@ class CheckMutexContainerCmd(
     private fun mutexCheck(commandContext: ContainerContext) {
         val event = commandContext.event
         val container = commandContext.container
-        val mutexResult = mutexControl.acquireMutex(mutexGroup = commandContext.mutexGroup, container = container)
-        with(event) {
-            when (mutexResult) {
-                ContainerMutexStatus.CANCELED -> {
-                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_CANCEL|$stageId|j($containerId)")
-                    // job互斥失败处理
-                    commandContext.buildStatus = BuildStatus.FAILED
-                    commandContext.latestSummary = "mutex_cancel"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY
-                }
-                ContainerMutexStatus.WAITING -> {
-                    commandContext.latestSummary = "mutex_delay"
-                    commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
-                }
-                ContainerMutexStatus.FIRST_LOG -> { // #5454 增加可视化的互斥状态打印
-                    commandContext.latestSummary = "mutex_print"
-                    commandContext.cmdFlowState = CmdFlowState.LOOP
-                }
-                else -> { // 正常运行
-                    commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
+        // 到了真正进入互斥环节时，修正互斥组中引用的变量或排队耗时
+        if (container.controlOption.mutexGroup?.runtimeMutexGroup.isNullOrBlank()) { // 未初始化
+            val mg = mutexControl.decorateMutexGroup(container.controlOption.mutexGroup, commandContext.variables)
+            if (mg?.runtimeMutexGroup != container.controlOption.mutexGroup?.runtimeMutexGroup) {
+                // 对于互斥组Job的锁定优化，防止重复锁定以及锁名称因变量的变化带来的锁变化，造成前锁无法被清理等，做变化替换
+                container.controlOption.mutexGroup = mg
+                if (commandContext.needUpdateControlOption == null) {
+                    commandContext.needUpdateControlOption = container.controlOption
                 }
             }
+        }
+
+        if (commandContext.buildStatus.isReadyToRun()) { // 锁定之后进入RUNNING态，不再检查锁
+
+            val mutexResult = mutexControl.acquireMutex(container.controlOption.mutexGroup, container = container)
+            with(event) {
+                when (mutexResult) {
+                    ContainerMutexStatus.CANCELED -> {
+                        LOG.info("ENGINE|$buildId|${event.source}|MUTEX_CANCEL|$stageId|j($containerId)")
+                        // job互斥失败处理
+                        commandContext.buildStatus = BuildStatus.FAILED
+                        commandContext.latestSummary = "mutex_cancel"
+                        commandContext.cmdFlowState = CmdFlowState.FINALLY
+                    }
+
+                    ContainerMutexStatus.WAITING -> {
+                        commandContext.latestSummary = "mutex_delay"
+                        commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
+                    }
+
+                    ContainerMutexStatus.FIRST_LOG -> { // #5454 增加可视化的互斥状态打印
+                        commandContext.latestSummary = "mutex_print"
+                        commandContext.cmdFlowState = CmdFlowState.LOOP
+                    }
+
+                    else -> { // 正常运行
+                        commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
+                    }
+                }
+            }
+        } else if (container.status.isFinish()) { // 对于存在重放的结束消息做闭环
+            // 原在ContainerControl 处的逻辑移到这里来：当状态是结束的时候，直接返回
+            commandContext.container.controlOption.mutexGroup?.let { mutexGroup ->
+
+                LOG.info(
+                    "ENGINE|${event.buildId}|${event.source}|${event.stageId}" +
+                        "|j(${event.containerId})|status=${container.status}|concurrent_container_event"
+                )
+
+                mutexControl.releaseContainerMutex(
+                    projectId = commandContext.event.projectId,
+                    pipelineId = commandContext.event.pipelineId,
+                    buildId = commandContext.event.buildId,
+                    stageId = commandContext.event.stageId,
+                    containerId = commandContext.event.containerId,
+                    mutexGroup = mutexGroup,
+                    executeCount = commandContext.container.executeCount
+                )
+            }
+            commandContext.cmdFlowState = CmdFlowState.BREAK // 原在ContainerControl 处的逻辑移到这
         }
     }
 }

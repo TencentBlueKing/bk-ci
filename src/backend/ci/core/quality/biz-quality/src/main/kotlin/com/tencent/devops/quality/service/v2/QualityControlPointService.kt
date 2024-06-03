@@ -27,27 +27,78 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
-import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointData
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_NAME_KEY
+import com.tencent.devops.quality.constant.QUALITY_CONTROL_POINT_STAGE_KEY
+import com.tencent.devops.quality.dao.v2.QualityControlPointDao
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
+import com.tencent.devops.quality.pojo.po.ControlPointPO
 import com.tencent.devops.quality.util.ElementUtils
+import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val controlPointDao: QualityControlPointDao
+    private val controlPointDao: QualityControlPointDao,
+    private val qualityRuleDao: QualityRuleDao,
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
+    private val redisOperation: RedisOperation,
+    private val commonConfig: CommonConfig
 ) {
 
+    @PostConstruct
+    fun init() {
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_CONTROL_POINT_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
+        )
+        Executors.newFixedThreadPool(1).submit {
+            if (redisLock.tryLock()) {
+                try {
+                    logger.info("start init quality control point")
+                    val classPathResource = ClassPathResource(
+                        "i18n${File.separator}controlPoint_${commonConfig.devopsDefaultLocaleLanguage}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val controlPointPOs = JsonUtil.to(json, object : TypeReference<List<ControlPointPO>>() {})
+                    controlPointDao.batchCrateControlPoint(dslContext, controlPointPOs)
+                    logger.info("init quality control point end")
+                } catch (ignored: Throwable) {
+                    logger.warn("init quality control point fail! error:${ignored.message}")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
+    }
     fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         return serviceGetByType(projectId, elementType)
     }
@@ -62,13 +113,11 @@ class QualityControlPointService @Autowired constructor(
     ): List<TQualityControlPointRecord>? {
         val filterResult = mutableListOf<TQualityControlPointRecord>()
         // 获取生产跑的，或者测试项目对应的
-        controlPointRecords.groupBy { it.elementType }.forEach { elementType, list ->
-            val testControlPoint = list.firstOrNull { it.testProject == projectId }
-            val prodControlPoint = list.firstOrNull { it.testProject.isNullOrBlank() }
-            if (testControlPoint != null) {
-                filterResult.add(testControlPoint)
+        controlPointRecords.forEach {
+            if (it.testProject == projectId) {
+                filterResult.add(it)
             } else {
-                if (prodControlPoint != null) filterResult.add(prodControlPoint)
+                if (it.testProject.isNullOrBlank()) filterResult.add(it)
             }
         }
         return filterResult
@@ -88,14 +137,20 @@ class QualityControlPointService @Autowired constructor(
         return QualityControlPoint(
             hashId = HashUtil.encodeLongId(record.id ?: 0L),
             type = record.elementType ?: "",
-            name = record.name ?: "",
-            stage = record.stage ?: "",
+            name = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(record.elementType),
+                defaultMessage = record.name ?: ""
+            ),
+            stage = I18nUtil.getCodeLanMessage(
+                messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(record.elementType),
+                defaultMessage = record.stage ?: ""
+            ),
             availablePos = if (record.availablePosition.isNullOrBlank()) {
                 listOf()
             } else {
-                record.availablePosition.split(",").map { name -> ControlPointPosition(name) }
+                record.availablePosition.split(",").map { name -> ControlPointPosition.create(name) }
             },
-            defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
+            defaultPos = ControlPointPosition.create(record.defaultPosition ?: ""),
             enable = record.enable ?: true,
             atomVersion = record.atomVersion
         )
@@ -110,18 +165,25 @@ class QualityControlPointService @Autowired constructor(
         val recordList = controlPointDao.list(dslContext, elements)
         val controlPointList = serviceListFilter(recordList, projectId) ?: return listOf()
         return controlPointList.filter { it.elementType in elements }
-                .map {
-            QualityControlPoint(
-                hashId = HashUtil.encodeLongId(it.id),
-                type = it.elementType,
-                name = it.name,
-                stage = it.stage,
-                availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                defaultPos = ControlPointPosition(it.defaultPosition),
-                enable = it.enable,
-                atomVersion = it.atomVersion
-            )
-        }
+            .map {
+                QualityControlPoint(
+                    hashId = HashUtil.encodeLongId(it.id),
+                    type = it.elementType,
+                    name = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_NAME_KEY.format(it.elementType),
+                        defaultMessage = it.name
+                    ),
+                    stage = I18nUtil.getCodeLanMessage(
+                        messageCode = QUALITY_CONTROL_POINT_STAGE_KEY.format(it.elementType),
+                        defaultMessage = it.stage
+                    ),
+                    availablePos = it.availablePosition.split(",")
+                        .map { name -> ControlPointPosition.create(name) },
+                    defaultPos = ControlPointPosition.create(it.defaultPosition),
+                    enable = it.enable,
+                    atomVersion = it.atomVersion
+                )
+            }
     }
 
     fun listAllControlPoint(): List<TQualityControlPointRecord> {
@@ -145,7 +207,10 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun opUpdate(userId: String, id: Long, controlPointUpdate: ControlPointUpdate): Boolean {
-        logger.info("user($userId) update control point($id): $controlPointUpdate")
+        logger.info(
+            "user($userId) update control point($id): ${controlPointUpdate.elementType}, " +
+                "stage: ${controlPointUpdate.stage}"
+        )
         if (controlPointDao.update(userId, id, controlPointUpdate, dslContext) > 0) {
             return true
         }
@@ -168,9 +233,14 @@ class QualityControlPointService @Autowired constructor(
         return controlPoint != null && controlPoint.atomVersion <= atomVersion
     }
 
-    fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Int {
-        logger.info("QUALITY|setTestControlPoint userId: $userId, controlPoint: ${controlPoint.type}")
-        return controlPointDao.setTestControlPoint(dslContext, userId, controlPoint)
+    fun setTestControlPoint(userId: String, tag: String, controlPoint: QualityControlPoint): Long {
+        logger.info("QUALITY|setTestControlPoint userId: $userId, controlPoint: ${controlPoint.type} | tag:$tag")
+        return controlPointDao.setTestControlPoint(
+            dslContext = dslContext,
+            userId = userId,
+            controlPoint = controlPoint,
+            tag = tag
+        )
     }
 
     fun refreshControlPoint(elementType: String): Int {
@@ -178,13 +248,75 @@ class QualityControlPointService @Autowired constructor(
         return controlPointDao.refreshControlPoint(dslContext, elementType)
     }
 
-    fun deleteTestControlPoint(elementType: String): Int {
-        logger.info("QUALITY|deleteTestControlPoint controlPoint: $elementType")
-        return controlPointDao.deleteTestControlPoint(dslContext, elementType)
+    fun deleteTestControlPoint(elementType: String, tag: String): Int {
+        logger.info("QUALITY|deleteTestControlPoint controlPoint: $elementType | tag:$tag")
+        return controlPointDao.deleteTestControlPoint(dslContext, elementType, tag)
     }
 
     fun deleteControlPoint(id: Long): Int {
         return controlPointDao.deleteControlPoint(dslContext, id)
+    }
+
+    fun addHashId() {
+        val startTime = System.currentTimeMillis()
+        logger.info("QualityControlPointService:begin addHashId-----------")
+        val threadPoolExecutor = ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            TimeUnit.SECONDS,
+            LinkedBlockingQueue(1),
+            Executors.defaultThreadFactory(),
+            ThreadPoolExecutor.AbortPolicy()
+        )
+        threadPoolExecutor.submit {
+            logger.info("QualityControlPointService:begin addHashId threadPoolExecutor-----------")
+            var offset = 0
+            val limit = 1000
+            try {
+                do {
+                    val controlPointRecords = controlPointDao.getAllControlPoint(dslContext, limit, offset)
+                    val controlPointSize = controlPointRecords?.size
+                    logger.info("controlPointSize:$controlPointSize")
+                    controlPointRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        controlPointDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (controlPointSize == 1000)
+                offset = 0
+                do {
+                    val ruleRecords = qualityRuleDao.getAllRule(dslContext, limit, offset)
+                    val ruleSize = ruleRecords?.size
+                    logger.info("ruleSize:$ruleSize")
+                    ruleRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        qualityRuleDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (ruleSize == 1000)
+                offset = 0
+                do {
+                    val ruleBuildHisRecords = qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext, limit, offset)
+                    val ruleBuildHisSize = ruleBuildHisRecords?.size
+                    logger.info("ruleBuildHisSize:$ruleBuildHisSize")
+                    ruleBuildHisRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (ruleBuildHisSize == 1000)
+            } catch (e: Exception) {
+                logger.warn("QualityControlPointService：addHashId failed | $e ")
+            } finally {
+                threadPoolExecutor.shutdown()
+            }
+        }
+        logger.info("QualityControlPointService:finish addHashId-----------")
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     companion object {

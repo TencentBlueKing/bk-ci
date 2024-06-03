@@ -27,14 +27,14 @@
 
 package com.tencent.devops.openapi.resources.apigw.v4
 
-import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwPipelineWebhookResourceV4
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,36 +51,18 @@ class ApigwPipelineWebhookResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<PipelineWebhook>> {
+        logger.info("OPENAPI_PIPELINE_WEBHOOK_V4|$userId|list scm web hook|$projectId|$pipelineId|$page|$pageSize")
         return client.get(ServiceScmWebhookResource::class)
             .listScmWebhook(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize
+                page = page ?: 1,
+                pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
             )
     }
 
-    override fun listPipelineWebhookBuildLog(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        repoName: String?,
-        commitId: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?> {
-        return client.get(ServiceScmWebhookResource::class)
-            .listPipelineWebhookBuildLog(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                repoName = repoName,
-                commitId = commitId,
-                page = page,
-                pageSize = pageSize
-            )
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwPipelineWebhookResourceV4Impl::class.java)
     }
 }

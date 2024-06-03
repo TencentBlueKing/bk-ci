@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -42,40 +41,42 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import kotlin.LazyThreadSafetyMode.NONE
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val stageTagService: StageTagService,
+    private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
     redisOperation: RedisOperation,
+    stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {
@@ -104,12 +105,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId
-            )
+        val buildInfo = pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
         ) ?: return null
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
@@ -150,13 +149,23 @@ class PipelineBuildDetailService @Autowired constructor(
                 container.containerId = container.id
             }
         }
-
+        val triggerReviewers = pipelineTriggerReviewDao.getTriggerReviewers(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineInfo.pipelineId,
+            buildId = buildId
+        )
         return ModelDetail(
             id = record.buildId,
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
             userId = record.startUser ?: "",
-            trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
+            triggerUser = buildInfo.triggerUser,
+            trigger = StartType.toReadableString(
+                buildInfo.trigger,
+                buildInfo.channelCode,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
             status = record.status ?: "",
@@ -168,7 +177,9 @@ class PipelineBuildDetailService @Autowired constructor(
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
-            executeTime = buildInfo.executeTime
+            executeTime = buildInfo.executeTime,
+            triggerReviewers = triggerReviewers,
+            debug = buildInfo.debug
         )
     }
 
@@ -177,71 +188,153 @@ class PipelineBuildDetailService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            model = JsonUtil.getObjectMapper().writeValueAsString(model),
+            model = JsonUtil.toJson(model, formatted = false),
             buildStatus = BuildStatus.RUNNING
         )
-        pipelineDetailChangeEvent(projectId, buildId)
+//        pipelineDetailChangeEvent(projectId, buildId)
     }
 
-    fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus) {
-        logger.info("Cancel the build $buildId")
-        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
+    fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus, cancelUser: String) {
+        logger.info("Cancel the build $buildId by $cancelUser")
+        update(
+            projectId = projectId, buildId = buildId,
+            modelInterface = object : ModelInterface {
 
-            var update = false
+                var update = false
 
-            override fun onFindStage(stage: Stage, model: Model): Traverse {
-                if (BuildStatus.parse(stage.status).isRunning()) {
-                    stage.status = buildStatus.name
-                    if (stage.startEpoch == null) {
-                        stage.elapsed = 0
-                    } else {
-                        stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
-                    }
-                    update = true
-                }
-                return Traverse.CONTINUE
-            }
-
-            override fun onFindContainer(container: Container, stage: Stage): Traverse {
-                val status = BuildStatus.parse(container.status)
-                if (status == BuildStatus.PREPARE_ENV) {
-                    if (container.startEpoch == null) {
-                        container.systemElapsed = 0
-                    } else {
-                        container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
-                    }
-
-                    update = true
-                }
-                // #3138 状态实时刷新
-                val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true
-                if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
-                    ContainerUtils.clearQueueContainerName(container)
-                    container.status = buildStatus.name
-                }
-                return Traverse.CONTINUE
-            }
-
-            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-                if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
-                    val status = if (e.status == BuildStatus.RUNNING.name) {
-                        val runCondition = e.additionalOptions?.runCondition
-                        // 当task的runCondition为PRE_TASK_FAILED_EVEN_CANCEL，点击取消还需要运行
-                        if (runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
-                            BuildStatus.RUNNING.name
+                override fun onFindStage(stage: Stage, model: Model): Traverse {
+                    if (BuildStatus.parse(stage.status).isRunning()) {
+                        stage.status = buildStatus.name
+                        if (stage.startEpoch == null) {
+                            stage.elapsed = 0
                         } else {
-                            BuildStatus.CANCELED.name
+                            stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                         }
-                    } else buildStatus.name
-                    e.status = status
-                    if (c.containPostTaskFlag != true) {
-                        c.status = status
+                        update = true
                     }
-                    if (BuildStatus.parse(status).isFinish()) {
+                    return Traverse.CONTINUE
+                }
+
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val status = BuildStatus.parse(container.status)
+                    if (status == BuildStatus.PREPARE_ENV) {
+                        if (container.startEpoch == null) {
+                            container.systemElapsed = 0
+                        } else {
+                            container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
+                        }
+                        update = true
+                    }
+                    // #3138 状态实时刷新
+                    val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
+                        container.containPostTaskFlag != true
+                    if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
+                        container.name = ContainerUtils.getClearedQueueContainerName(container.name)
+                        container.status = buildStatus.name
+                    }
+                    return Traverse.CONTINUE
+                }
+
+                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
+                    if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
+                        val status = if (e.status == BuildStatus.RUNNING.name) {
+                            val runCondition = e.additionalOptions?.runCondition
+                            // 当task的runCondition为PRE_TASK_FAILED_EVEN_CANCEL，点击取消还需要运行
+                            if (runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                                BuildStatus.RUNNING.name
+                            } else {
+                                BuildStatus.CANCELED.name
+                            }
+                        } else buildStatus.name
+                        e.status = status
+                        if (c.containPostTaskFlag != true) {
+                            c.status = status
+                        }
+                        if (BuildStatus.parse(status).isFinish()) {
+                            if (e.startEpoch != null) {
+                                e.elapsed = System.currentTimeMillis() - e.startEpoch!!
+                            }
+                            var elementElapsed = 0L
+                            run lit@{
+                                c.elements.forEach {
+                                    elementElapsed += it.elapsed ?: 0
+                                    if (it == e) {
+                                        return@lit
+                                    }
+                                }
+                            }
+
+                            c.elementElapsed = elementElapsed
+                        }
+
+                        update = true
+                    }
+                    return Traverse.CONTINUE
+                }
+
+                override fun needUpdate(): Boolean {
+                    return update
+                }
+            },
+            buildStatus = BuildStatus.RUNNING, cancelUser = cancelUser, operation = "buildCancel"
+        )
+    }
+
+    fun buildEnd(
+        projectId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        errorMsg: String?
+    ): Pair<Model, List<BuildStageStatus>> {
+        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
+        var allStageStatus: List<BuildStageStatus> = emptyList()
+        val model = update(
+            projectId = projectId, buildId = buildId,
+            modelInterface = object : ModelInterface {
+                var update = false
+
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    if (BuildStatus.parse(container.status).isRunning()) {
+                        container.status = buildStatus.name
+                        update = true
+                        if (container.startEpoch == null) {
+                            container.elementElapsed = 0
+                        } else {
+                            container.elementElapsed = System.currentTimeMillis() - container.startEpoch!!
+                        }
+                        container.name = ContainerUtils.getClearedQueueContainerName(container.name)
+                    }
+                    return Traverse.CONTINUE
+                }
+
+                override fun onFindStage(stage: Stage, model: Model): Traverse {
+                    if (allStageStatus.isEmpty()) {
+                        allStageStatus = fetchHistoryStageStatus(
+                            model = model,
+                            buildStatus = buildStatus,
+                            errorMsg = errorMsg
+                        )
+                    }
+                    if (BuildStatus.parse(stage.status).isRunning()) {
+                        stage.status = buildStatus.name
+                        update = true
+                        if (stage.startEpoch == null) {
+                            stage.elapsed = 0
+                        } else {
+                            stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
+                        }
+                    }
+                    return Traverse.CONTINUE
+                }
+
+                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
+                    if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
+                        e.status = buildStatus.name
+                        update = true
                         if (e.startEpoch != null) {
                             e.elapsed = System.currentTimeMillis() - e.startEpoch!!
                         }
+
                         var elementElapsed = 0L
                         run lit@{
                             c.elements.forEach {
@@ -251,90 +344,19 @@ class PipelineBuildDetailService @Autowired constructor(
                                 }
                             }
                         }
-
                         c.elementElapsed = elementElapsed
                     }
 
-                    update = true
-                }
-                return Traverse.CONTINUE
-            }
-
-            override fun needUpdate(): Boolean {
-                return update
-            }
-        }, buildStatus = BuildStatus.RUNNING, operation = "buildCancel")
-    }
-
-    fun buildEnd(
-        projectId: String,
-        buildId: String,
-        buildStatus: BuildStatus,
-        cancelUser: String? = null
-    ): List<BuildStageStatus> {
-        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|cancelUser=$cancelUser")
-        var allStageStatus: List<BuildStageStatus> = emptyList()
-        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
-            var update = false
-
-            override fun onFindContainer(container: Container, stage: Stage): Traverse {
-                if (BuildStatus.parse(container.status).isRunning()) {
-                    container.status = buildStatus.name
-                    update = true
-                    if (container.startEpoch == null) {
-                        container.elementElapsed = 0
-                    } else {
-                        container.elementElapsed = System.currentTimeMillis() - container.startEpoch!!
-                    }
-                    ContainerUtils.clearQueueContainerName(container)
-                }
-                return Traverse.CONTINUE
-            }
-
-            override fun onFindStage(stage: Stage, model: Model): Traverse {
-                if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model)
-                }
-                if (BuildStatus.parse(stage.status).isRunning()) {
-                    stage.status = buildStatus.name
-                    update = true
-                    if (stage.startEpoch == null) {
-                        stage.elapsed = 0
-                    } else {
-                        stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
-                    }
-                }
-                return Traverse.CONTINUE
-            }
-
-            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-                if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
-                    e.status = buildStatus.name
-                    update = true
-                    if (e.startEpoch != null) {
-                        e.elapsed = System.currentTimeMillis() - e.startEpoch!!
-                    }
-
-                    var elementElapsed = 0L
-                    run lit@{
-                        c.elements.forEach {
-                            elementElapsed += it.elapsed ?: 0
-                            if (it == e) {
-                                return@lit
-                            }
-                        }
-                    }
-                    c.elementElapsed = elementElapsed
+                    return Traverse.CONTINUE
                 }
 
-                return Traverse.CONTINUE
-            }
-
-            override fun needUpdate(): Boolean {
-                return update
-            }
-        }, buildStatus = buildStatus, operation = "buildEnd")
-        return allStageStatus
+                override fun needUpdate(): Boolean {
+                    return update
+                }
+            },
+            buildStatus = buildStatus, operation = "buildEnd"
+        )
+        return model to allStageStatus
     }
 
     fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
@@ -343,52 +365,6 @@ class PipelineBuildDetailService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             cancelUser = cancelUserId
-        )
-    }
-
-    private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy(NONE) { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
-        // 更新Stage状态至BuildHistory
-        return model.stages.map {
-            BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                status = it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                }
-            )
-        }
-    }
-
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
-        update(
-            projectId = projectId,
-            buildId = buildId,
-            modelInterface = object : ModelInterface {
-                var update = false
-
-                override fun onFindContainer(container: Container, stage: Stage): Traverse {
-                    val targetContainer = container.getContainerById(containerId)
-                    if (targetContainer != null) {
-                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
-                            targetContainer.name = vmInfo.name
-                        }
-                        update = true
-                        return Traverse.BREAK
-                    }
-                    return Traverse.CONTINUE
-                }
-
-                override fun needUpdate(): Boolean {
-                    return update
-                }
-            },
-            buildStatus = BuildStatus.RUNNING,
-            operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
     }
 

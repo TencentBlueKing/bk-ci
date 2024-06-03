@@ -27,9 +27,12 @@
 
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_SCRIPT_TASK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.process.pojo.BuildTask
@@ -37,14 +40,16 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.SCRIPT_EXECUTION_FAIL
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -53,7 +58,7 @@ import java.net.URLDecoder
 /**
  * 构建脚本任务
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "ComplexMethod")
 open class ScriptTask : ITask() {
 
     private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
@@ -78,22 +83,23 @@ open class ScriptTask : ITask() {
                     errorMsg = "Empty build script content",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
-                ), "UTF-8"
+                ),
+            "UTF-8"
         ).replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
-        val runtimeVariables = buildVariables.variables
+        val runtimeVariables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).let { vars ->
+            if (buildVariables.pipelineAsCodeSettings?.enable == true) {
+                vars.map {
+                    it.key to it.value.parseCredentialValue(buildTask.buildVariable)
+                }.toMap()
+            } else vars
+        }
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
         ScriptEnvUtils.cleanContext(buildId, workspace)
-
-        val variables = if (buildTask.buildVariable == null) {
-            runtimeVariables
-        } else {
-            runtimeVariables.plus(buildTask.buildVariable!!)
-        }
 
         try {
             command.execute(
@@ -102,19 +108,28 @@ open class ScriptTask : ITask() {
                 stepId = buildTask.stepId,
                 script = script,
                 taskParam = taskParams,
-                runtimeVariables = variables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
+                runtimeVariables = runtimeVariables.plus(
+                    TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
+                ),
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
                 charsetType = charsetType,
-                taskId = buildTask.taskId
+                taskId = buildTask.taskId,
+                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
-                LoggerService.addErrorLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
+                LoggerService.addErrorLine(
+                    MessageUtil.getMessageByLocale(
+                        SCRIPT_EXECUTION_FAIL,
+                        AgentEnv.getLocaleLanguage(),
+                        arrayOf(archiveFileIfExecFail)
+                    )
+                )
                 val token = RepoServiceFactory.getInstance().getRepoToken(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
@@ -130,15 +145,21 @@ open class ScriptTask : ITask() {
                     token = token
                 )
                 if (count == 0) {
-                    LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
+                    LoggerService.addErrorLine(
+                        MessageUtil.getMessageByLocale(BK_NO_FILES_TO_ARCHIVE, AgentEnv.getLocaleLanguage())
+                    )
                 }
             }
-            val errorMsg = "脚本执行失败" +
-                "\n======问题排查指引======\n" +
-                "当脚本退出码非0时，执行失败。可以从以下路径进行分析：\n" +
-                "1. 根据错误日志排查\n" +
-                "2. 在本地手动执行脚本。如果本地执行也失败，很可能是脚本逻辑问题；" +
-                "如果本地OK，排查构建环境（比如环境依赖、或者代码变更等）"
+            val errorMsg = (
+                if (ignore is TaskExecuteException) {
+                    ignore.errorMsg
+                } else ""
+                ) + MessageUtil.getMessageByLocale(
+                messageCode = "$USER_SCRIPT_TASK_FAIL",
+                language = AgentEnv.getLocaleLanguage(),
+                checkUrlDecoder = true
+            )
+
             throw TaskExecuteException(
                 errorMsg = errorMsg,
                 errorType = ErrorType.USER,

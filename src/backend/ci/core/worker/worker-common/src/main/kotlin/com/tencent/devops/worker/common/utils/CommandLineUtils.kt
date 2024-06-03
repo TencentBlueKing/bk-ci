@@ -32,17 +32,19 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
+import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.nio.charset.Charset
+import java.util.regex.Pattern
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.nio.charset.Charset
-import java.util.regex.Pattern
 
 @Suppress("LongParameterList")
 object CommandLineUtils {
@@ -60,10 +62,12 @@ object CommandLineUtils {
         buildId: String? = null,
         jobId: String? = null,
         stepId: String? = null,
-        charsetType: String? = null
+        charsetType: String? = null,
+        taskId: String? = null
     ): String {
 
         val result = StringBuilder()
+        val errorResult = StringBuilder()
 
         val cmdLine = CommandLine.parse(command)
         val executor = CommandLineExecutor()
@@ -98,6 +102,10 @@ object CommandLineUtils {
                 lineParser.forEach {
                     tmpLine = it.onParseLine(tmpLine)
                 }
+                reportProgressRate(
+                    taskId = taskId,
+                    tmpLine = tmpLine
+                )
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
                     appendGateToFile(tmpLine, executor.workingDirectory, ScriptEnvUtils.getQualityGatewayEnvFile())
@@ -109,6 +117,15 @@ object CommandLineUtils {
         }
 
         val errorStream = object : LogOutputStream() {
+
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString(charset))
+                buffer.reset()
+            }
+
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {
                     return
@@ -125,6 +142,7 @@ object CommandLineUtils {
                 } else {
                     result.append(tmpLine).append("\n")
                 }
+                errorResult.append(tmpLine).append("\n")
             }
         }
         executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
@@ -134,7 +152,9 @@ object CommandLineUtils {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
-                    errorMsg = "$prefix Script command execution failed with exit code($exitCode)"
+                    errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
+                        "Error message tracking:\n" +
+                        errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
         } catch (ignored: Throwable) {
@@ -152,6 +172,24 @@ object CommandLineUtils {
         return result.toString()
     }
 
+    private fun reportProgressRate(
+        taskId: String?,
+        tmpLine: String
+    ) {
+        val pattern = Pattern.compile("::set-progress-rate\\s*(.*)")
+        val matcher = pattern.matcher(tmpLine)
+        if (matcher.find()) {
+            val progressRate = matcher.group(1)
+            if (taskId != null) {
+                Heartbeat.recordTaskProgressRate(
+                    taskId = taskId,
+                    progressRate = progressRate.toDouble()
+                )
+            }
+            logger.info("report progress rate:$tmpLine|$taskId|$progressRate")
+        }
+    }
+
     private fun appendResultToFile(
         workspace: File?,
         resultLogFile: String?,
@@ -164,6 +202,7 @@ object CommandLineUtils {
             return
         }
         appendVariableToFile(tmpLine, workspace, resultLogFile)
+        appendRemarkToFile(tmpLine, workspace, resultLogFile)
         // 上下文返回给全局时追加jobs前缀
         if (jobId.isNullOrBlank() || stepId.isNullOrBlank()) {
             return
@@ -176,16 +215,31 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String
     ) {
-        val pattenVar = "::set-variable\\sname=.*"
+        val pattenVar = "[\"]?::set-variable\\sname=.*"
         val prefixVar = "::set-variable name="
         if (Pattern.matches(pattenVar, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixVar)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
                     "variables.${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
                 )
             }
+        }
+    }
+
+    private fun appendRemarkToFile(
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String
+    ) {
+        val pattenVar = "[\"]?::set-remark\\s.*"
+        val prefixVar = "::set-remark "
+        if (Pattern.matches(pattenVar, tmpLine)) {
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
+            File(workspace, resultLogFile).appendText(
+                "BK_CI_BUILD_REMARK=$value\n"
+            )
         }
     }
 
@@ -196,10 +250,10 @@ object CommandLineUtils {
         jobId: String,
         stepId: String
     ) {
-        val pattenOutput = "::set-output\\sname=.*"
+        val pattenOutput = "[\"]?::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
             val keyValue = value.split("::")
             val keyPrefix = "jobs.$jobId.steps.$stepId.outputs."
             if (keyValue.size >= 2) {
@@ -215,10 +269,10 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String
     ) {
-        val pattenOutput = "::set-gate-value\\sname=.*"
+        val pattenOutput = "[\"]?::set-gate-value\\sname=.*"
         val prefixOutput = "::set-gate-value name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(

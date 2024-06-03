@@ -15,15 +15,11 @@
 </template>
 
 <script>
+    import optionConfigMixin from '@/store/modules/common/optionConfigMixin'
     import Vue from 'vue'
     import { mapActions, mapState } from 'vuex'
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
-    import optionConfigMixin from '@/store/modules/common/optionConfigMixin'
-    // import {
-    //     getAtomOptionDefault,
-    //     ATOM_OPTION
-    // } from '@/store/modules/common/optionConfig'
+    import atomMixin from './atomMixin'
     export default {
         name: 'atom-config',
         mixins: [atomMixin, validMixins, optionConfigMixin],
@@ -39,6 +35,9 @@
             },
             atomVersion () {
                 return this.element.version
+            },
+            atomOptionConfig () {
+                return this.atomPropsModel.config || {}
             },
             optionModel () {
                 const model = { ...this.ATOM_OPTION }
@@ -87,12 +86,23 @@
                 'setPipelineEditing'
             ]),
             getBindObj (obj) {
-                const { isHidden, extCls, ...rest } = obj
+                const { isHidden, extCls, desc, ...rest } = obj
                 return rest
             },
             handleUpdateElementOption (name, value) {
                 if (this.element.additionalOptions && this.element.additionalOptions[name] === undefined) {
                     Vue.set(this.element.additionalOptions, name, value)
+                }
+                let clearFields = {}
+                if (
+                    value === this.ATOM_OPTION[name]?.clearValue
+                    && Array.isArray(this.ATOM_OPTION[name]?.clearFields)
+                ) {
+                    // 重置关联的值，可配置相关的联动值
+                    clearFields = this.ATOM_OPTION[name].clearFields.reduce((acc, key) => {
+                        acc[key] = this.getFieldDefault(key, this.ATOM_OPTION)
+                        return acc
+                    }, {})
                 }
 
                 const currentfailControl = [...new Set(name === 'failControl' ? value : this.atomOption.failControl)] // 去重
@@ -103,21 +113,20 @@
                 const retryable = currentfailControl.includes('retryWhenFailed')
                 const manualRetry = !isAutoSkip && includeManualRetry
 
-                console.log(currentfailControl, isAutoSkip, this.atomOption.failControl, value)
                 const failControl = isAutoSkip ? currentfailControl.filter(item => item !== 'MANUAL_RETRY') : [...currentfailControl]
-                this.setPipelineEditing(true)
 
                 this.handleUpdateElement('additionalOptions', {
                     ...this.atomOption,
                     manualRetry,
                     [name]: value,
+                    ...clearFields,
                     continueWhenFailed: continueable,
                     retryWhenFailed: retryable,
                     failControl
                 })
             },
-            initOptionConfig () {
-                this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption))
+            initOptionConfig (isInit = false) {
+                this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption), isInit)
             }
         }
     }
@@ -131,8 +140,13 @@
         position: relative;
         .atom-checkbox-list-item {
             display: block;
-            margin: 12px 0;
+            margin: 12px 0 12px 10px;
         }
+        .pause-conf-options .bk-form-checkbox,
+        .pause-conf-user {
+            margin-left: 10px;
+        }
+
         .form-field.bk-form-item {
             &.manual-skip-options,
             &.retry-count-input {

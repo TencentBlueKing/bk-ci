@@ -14,13 +14,27 @@
                     isLoading: instanceMessageConfig.loading
                 }">
                 <i class="devops-icon icon-close" @click="cancel()"></i>
-                <div class="message-title">{{ message }}</div>
+                <div v-if="showTitle" class="message-title">{{ message }}</div>
                 <div class="fail-pipeline-content">
                     <span>{{ $t('template.instantiationFailMsg') }}：</span>
                     <ul class="fail-list">
-                        <li class="item-row" v-for="(row, index) in failList" :key="index">
-                            <div class="pipeline-item">{{ row }}：
-                                <span class="error-message">{{ failMessage[row] }}</span>
+                        <li class="item-row" v-for="(item) in failListInfo" :key="item.key">
+                            <div class="pipeline-item">
+                                <div class="name" v-bk-overflow-tips>
+                                    {{ item.key }} {{ item.message }}
+                                </div>
+                                <ul v-if="item.errors?.length" class="error-details">
+                                    <li v-for="err in item.errors" :key="err.errorTitle">
+                                        <span>{{ err.errorTitle }}</span>
+                                        <ul
+                                            class="error-details-item-list"
+                                            v-for="errItem in err.errorDetails"
+                                            :key="errItem"
+                                        >
+                                            <li v-html="errItem"></li>
+                                        </ul>
+                                    </li>
+                                </ul>
                             </div>
                         </li>
                     </ul>
@@ -31,11 +45,19 @@
 </template>
 
 <script>
+    import { parseErrorMsg } from '@/utils/util'
     export default {
         props: {
             showInstanceMessage: Boolean,
+            showTitle: {
+                type: Boolean,
+                default: true
+            },
             failList: Array,
-            successList: Array,
+            successList: {
+                type: Array,
+                default: []
+            },
             failMessage: Object
         },
         data () {
@@ -58,6 +80,15 @@
                     msg = this.$t('template.instantiationFailTips', [this.failList.length])
                 }
                 return msg
+            },
+            failListInfo () {
+                return this.failList.map(key => {
+                    const msg = parseErrorMsg(this.failMessage[key])
+                    return {
+                        key,
+                        ...msg
+                    }
+                })
             }
         },
         methods: {
@@ -80,6 +111,47 @@
         .create-pipeline-content {
             padding: 30px 20px;
             min-height: 360px;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+            .fail-pipeline-content {
+                flex: 1;
+                overflow:auto;
+            }
+        }
+        .pipeline-item {
+            display: flex;
+            flex-direction: column;
+            .name {
+                text-wrap: nowrap;
+                max-width: 300px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .error-details {
+                font-size: 12px;
+                margin-top: 8px;
+                > li {
+                    display: flex;
+                    grid-gap: 8px;
+                    flex-direction: column;
+                    padding-left: 20px;
+                    > span {
+                        font-weight: 700;
+                    }
+                    > .error-details-item-list {
+                        padding-left: 20px;
+                        > li {
+                            list-style: circle;
+                            > a {
+                                padding-left: 8px;
+                                color: $primaryColor;
+                            }
+                        }
+                    }
+                    
+                }
+            }
         }
         .icon-close {
             position: absolute;
@@ -96,6 +168,7 @@
         }
         .fail-list {
             padding-left: 20px;
+            margin-top: 10px;
         }
         .item-row {
             list-style: outside;

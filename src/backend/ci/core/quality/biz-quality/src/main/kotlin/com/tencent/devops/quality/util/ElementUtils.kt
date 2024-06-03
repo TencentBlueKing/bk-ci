@@ -34,6 +34,8 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 
 object ElementUtils {
 
+    val QUALITY_CODECC_METATYPE = setOf("CodeccCheckAtom", "linuxCodeCCScript", "linuxPaasCodeCCScript")
+
     fun getElementCnName(classType: String, projectId: String): String {
         val map = getProjectElement(projectId)
 

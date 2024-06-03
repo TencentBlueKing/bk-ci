@@ -48,7 +48,8 @@ const val SLAVE_BUILD_TYPE = "build.type"
 const val WORKSPACE_ENV = "WORKSPACE"
 
 const val ENV_KEY_DISTCC = "DISTCC_HOSTS"
-const val ENV_KEY_PROJECT_ID = "devops_project_id"
+const val ENV_KEY_BK_TAG = "devops_bk_tag"
+const val ENV_KEY_BUILD_ID = "devops_build_id"
 const val ENV_KEY_AGENT_ID = "devops_agent_id"
 const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
 const val ENV_KEY_GATEWAY = "devops_gateway"
@@ -66,5 +67,16 @@ const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
 
 const val ENV_BK_CI_DOCKER_HOST_IP = "BK_CI_DOCKER_HOST_IP" // docker母机IP
 const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // docker母机工作空间地址
+const val ENV_DEFAULT_LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE"
 
 const val ENTRY_POINT_CMD = "/data/init.sh"
+
+/**
+ * bkrepo网关配置
+ */
+const val ENV_DEVOPS_FILE_GATEWAY = "DEVOPS_FILE_GATEWAY"
+
+/**
+ * 蓝盾网关配置
+ */
+const val ENV_DEVOPS_GATEWAY = "DEVOPS_GATEWAY"

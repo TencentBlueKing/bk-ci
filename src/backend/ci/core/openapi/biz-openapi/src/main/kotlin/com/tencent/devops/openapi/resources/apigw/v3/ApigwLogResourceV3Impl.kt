@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwLogResourceV3
@@ -60,12 +62,15 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         buildId: String,
         debug: Boolean?,
         elementId: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
-            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] " +
-                "elementId[$elementId] jobId[$jobId] executeCount[$executeCount] debug[$debug] jobId[$jobId]"
+            "OPENAPI_LOG_V3|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$containerHashId" +
+                "|$executeCount"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -73,9 +78,12 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = elementId,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
-            debug = debug
+            debug = debug,
+            jobId = jobId,
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -92,12 +100,15 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
-            "getMoreLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] num[$num] jobId[$jobId] " +
-                "executeCount[$executeCount]fromStart[$fromStart]start[$start]end[$end]tag[$tag]jobId[$jobId]"
+            "OPENAPI_LOG_V3|$userId|get more logs|$projectId|$pipelineId|$buildId|$debug|$num|$fromStart" +
+                "|$start|$end|$tag|$containerHashId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
             userId = userId,
@@ -110,8 +121,11 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             start = start,
             end = end,
             tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -125,13 +139,15 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         start: Long,
         debug: Boolean?,
         tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
-            "getAfterLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] debug[$debug] " +
-                "debug[$debug]jobId[$jobId]executeCount[$executeCount]" +
-                "start[$start]tag[$tag]jobId[$jobId]"
+            "OPENAPI_LOG_V3|$userId|get after logs|$projectId|$pipelineId|$buildId|$start|$debug|$tag" +
+                "|$containerHashId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
@@ -141,8 +157,11 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             start = start,
             debug = debug,
             tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -154,26 +173,37 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Response {
-        logger.info(
-            "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
-                "jobId[$jobId] executeCount[$executeCount] tag[$tag] jobId[$jobId]"
-        )
+        logger.info("OPENAPI_LOG_V3|$userId|download logs|$projectId|$pipelineId|$buildId|" +
+            "$tag|$containerHashId|$executeCount")
         val path = StringBuilder("$gatewayUrl/log/api/service/logs/")
         path.append(projectId)
         path.append("/$pipelineId/$buildId/download?executeCount=${executeCount ?: 1}")
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
+        if (!containerHashId.isNullOrBlank()) path.append("&containerHashId=$containerHashId")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
+        if (!stepId.isNullOrBlank()) path.append("&stepId=$stepId")
+        if (archiveFlag != null) path.append("&archiveFlag=$archiveFlag")
+
+        val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
+
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        if (devopsToken != null) {
+            headers["X-DEVOPS-TOKEN"] = devopsToken
+        }
 
         val response = OkhttpUtils.doLongGet(
             url = path.toString(),
-            headers = mapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
+            headers = headers
         )
         return Response
-            .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .ok(response.body!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
             .header("Cache-Control", "no-cache")
             .build()
@@ -186,20 +216,38 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        tag: String,
-        executeCount: Int?
+        executeCount: Int?,
+        tag: String?,
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogStatus> {
-        logger.info(
-            "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
-                "executeCount[$executeCount] tag[$tag]"
-        )
+        logger.info("OPENAPI_LOG_V3|$userId|get log mode|$projectId|$pipelineId|$buildId|$tag|$executeCount")
         return client.get(ServiceLogResource::class).getLogMode(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            stepId = stepId,
+            archiveFlag = archiveFlag
+        )
+    }
+
+    override fun getLogLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        archiveFlag: Boolean?
+    ): Result<QueryLogLineNum> {
+        logger.info("OPENAPI_LOG_V3|$userId|get log last line num|$projectId|$pipelineId|$buildId")
+        return client.get(ServiceLogResource::class).getLogLastLineNum(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            archiveFlag = archiveFlag
         )
     }
 

@@ -27,42 +27,44 @@
 
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本仓库-文件详细信息-APP")
+@Schema(title = "版本仓库-文件详细信息-APP")
 data class FileDetailForApp(
-    @ApiModelProperty("文件名", required = true)
+    @get:Schema(title = "文件名", required = true)
     val name: String,
-    @ApiModelProperty("平台", required = true)
+    @get:Schema(title = "平台", required = true)
     val platform: String,
-    @ApiModelProperty("文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @ApiModelProperty("创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createdTime: Long,
-    @ApiModelProperty("项目", required = true)
+    @get:Schema(title = "项目", required = true)
     val projectName: String,
-    @ApiModelProperty("流水线", required = true)
+    @get:Schema(title = "流水线", required = true)
     val pipelineName: String,
-    @ApiModelProperty("构件创建人", required = true)
+    @get:Schema(title = "构件创建人", required = true)
     val creator: String,
-    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @ApiModelProperty("logo链接", required = false)
+    @get:Schema(title = "logo链接", required = false)
     val logoUrl: String,
-    @ApiModelProperty("文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val path: String,
-    @ApiModelProperty("文件全名", required = true)
+    @get:Schema(title = "文件全名", required = true)
     val fullName: String,
-    @ApiModelProperty("文件全路径", required = true)
+    @get:Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @ApiModelProperty("仓库类型", required = true)
+    @get:Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @ApiModelProperty("修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val modifiedTime: Long,
-    @ApiModelProperty("md5", required = true)
+    @get:Schema(title = "md5", required = true)
     val md5: String,
-    @ApiModelProperty("构建号", required = true)
-    val buildNum: Int
+    @get:Schema(title = "构建号", required = true)
+    val buildNum: Int,
+    @get:Schema(title = "nodeMetadata数据", required = true)
+    val nodeMetadata: List<MetadataModel> = emptyList()
 )

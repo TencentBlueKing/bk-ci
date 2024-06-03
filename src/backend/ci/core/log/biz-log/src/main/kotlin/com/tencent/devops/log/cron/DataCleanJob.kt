@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.LogStatusDao
 import com.tencent.devops.log.dao.LogTagDao
@@ -45,16 +46,18 @@ import java.util.concurrent.TimeUnit
 /**
  * 清理`T_LOG_INDICES` `T_LOG_STATUS`三个月前的构建
  */
+@Suppress("ReturnCount")
 @Component
 class DataCleanJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
+    private val storageProperties: StorageProperties,
     private val indexDao: IndexDao,
     private val logStatusDao: LogStatusDao,
     private val logTagDao: LogTagDao
 ) {
 
-    private var expireBuildInDay = 30 * 3 // 三个月
+    private var expireBuildInDay = storageProperties.deleteInDay ?: Int.MAX_VALUE
 
     @Scheduled(cron = "0 0 3 * * ?")
     fun cleanBuilds() {
@@ -68,8 +71,8 @@ class DataCleanJob @Autowired constructor(
             }
             clean()
             logger.info("[cleanBuilds] Finish cleaning the builds")
-        } catch (t: Throwable) {
-            logger.warn("[cleanBuilds] Fail to clean builds", t)
+        } catch (ignore: Throwable) {
+            logger.warn("[cleanBuilds] Fail to clean builds", ignore)
         } finally {
             redisLock.unlock()
         }

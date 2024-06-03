@@ -35,9 +35,9 @@
                             </bk-popover>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="80" class-name="primary-color">
+                    <bk-table-column width="120" class-name="primary-color">
                         <template slot-scope="props">
-                            <bk-button :title="!props.row.hasPermission ? $t('atomManage.installedAtom') : ''" :disabled="!props.row.hasPermission" class="cursor-pointer" theme="primary" text @click="showDeletaDialog(props.row)" v-if="!props.row.default">{{ $t('atomManage.uninstall') }}</bk-button>
+                            <bk-button :title="!props.row.hasPermission ? uninstallTipsMap(props.row.installType) : ''" :disabled="!props.row.hasPermission" class="cursor-pointer" theme="primary" text @click="showDeletaDialog(props.row)" v-if="!props.row.default">{{ $t('atomManage.uninstall') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -78,7 +78,7 @@
                 </hgroup>
 
                 <h5 class="related-pipeline">{{ $t('atomManage.relatedPipeline') }}（{{detailObj.list && detailObj.list.length}}）</h5>
-                <bk-table :data="detailObj.list" empty-text="暂无关联流水线">
+                <bk-table :data="detailObj.list" :empty-text="$t('noReleatedPipeline')">
                     <bk-table-column :label="$t('pipelineName')" prop="pipelineName" width="235">
                         <template slot-scope="props">
                             <h3 class="slide-link">
@@ -103,12 +103,14 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
+    import { mapActions } from 'vuex'
+
     export default {
         components: {
             Logo
         },
+
         data () {
             return {
                 panels: [],
@@ -134,10 +136,12 @@
                 }
             }
         },
+
         computed: {
             projectId () {
                 return this.$route.params.projectId
             },
+
             showOtherReason () {
                 const lastReason = this.deleteReasons.slice(-1)[0] || {}
                 const otherId = lastReason.id
@@ -145,11 +149,14 @@
                 return selectIds.includes(otherId)
             }
         },
+
         created () {
             this.initData()
         },
+
         methods: {
             ...mapActions('atom', ['getInstallAtomList', 'getInstallAtomDetail', 'unInstallAtom', 'getDeleteReasons', 'getAtomClassify']),
+
             async initData () {
                 this.isLoading = true
                 await this.fetchAtomList()
@@ -166,6 +173,23 @@
                         this.isLoading = false
                     })
             },
+
+            uninstallTipsMap (installType) {
+                let tips = ''
+                switch (installType) {
+                    case 'INIT':
+                        tips = this.$t('atomManage.initAtomTips')
+                        break
+                    case 'TEST':
+                        tips = this.$t('atomManage.testAtomTips')
+                        break
+                    case 'COMMON':
+                        tips = this.$t('atomManage.commonAtomTips')
+                        break
+                }
+                return tips
+            },
+
             fetchAtomList () {
                 const classifyCode = this.active === 'all' ? '' : this.active
                 return this.getInstallAtomList({
@@ -179,10 +203,12 @@
                     this.defaultPaging.count = data.count || 0
                 })
             },
+
             tabChange () {
                 this.defaultPaging.current = 1
                 this.fetchAtomList()
             },
+
             showDetail (row) {
                 this.isLoading = true
                 this.detailObj.detail = row
@@ -196,10 +222,12 @@
                     this.detailObj.showSlide = true
                 })
             },
+
             showDeletaDialog (row) {
                 this.deleteObj.detail = row
                 this.deleteObj.showDialog = true
             },
+
             deleteAtom () {
                 this.isLoading = true
                 const lastReason = this.deleteReasons.slice(-1)[0] || {}
@@ -219,31 +247,39 @@
                     this.clearReason()
                 })
             },
+
             pageChange (page) {
                 if (page) this.defaultPaging.current = page
                 this.fetchAtomList()
             },
+
             limitChange (limit) {
                 if (limit === this.defaultPaging.limit) return
+
                 this.defaultPaging.limit = limit
                 this.defaultPaging.current = 1
                 this.fetchAtomList()
             },
+
             clearReason () {
                 this.deleteObj.reasonList = []
                 this.deleteObj.otherStr = ''
             },
+
             getInstallInfo (row) {
                 let des = this.$t('atomManage.installedAt')
                 if (row.default) des = this.$t('atomManage.createdAt')
                 return `${row.installer} ${des} ${row.installTime}`
             },
+
             goToStoreDetail (atomCode) {
                 window.open(`${WEB_URL_PREFIX}/store/atomStore/detail/atom/${atomCode}`, '_blank')
             },
+
             goToPipeline (pipelineId) {
                 window.open(`${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/edit`, '_blank')
             },
+
             goToStore () {
                 window.open(`${WEB_URL_PREFIX}/store/market/home?pipeType=atom`, '_blank')
             }
@@ -253,6 +289,7 @@
 
 <style lang="scss" scoped>
     @import './../../scss/conf';
+
     .atom-manage-home {
         min-height: calc(100% - 60px);
         background: #fff;
@@ -358,7 +395,7 @@
                     line-height: 19px;
                     span:nth-child(1) {
                         display: inline-block;
-                        width: 70px;
+                        width: 90px;
                         text-align: right;
                         margin-right: 14px;
                         color: $fontWeightColor;
@@ -398,6 +435,7 @@
             }
         }
     }
+
     .delete-reasons {
         display: block;
         padding: 6px 0;
@@ -405,10 +443,12 @@
             font-size: 12px;
         }
     }
+
     .other-reason {
         font-size: 12px;
         line-height: 32px;
     }
+
     .reason-text {
         width: 498px;
         height: 36px;
@@ -419,6 +459,7 @@
         border: 1px solid $fontLighterColor;
         resize: none;
     }
+
     .choose-reason-title {
         display: inline-block;
         margin-bottom: 5px;

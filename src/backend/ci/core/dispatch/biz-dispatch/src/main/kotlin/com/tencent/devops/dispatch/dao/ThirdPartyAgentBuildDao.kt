@@ -27,15 +27,20 @@
 
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
+@Repository
+@Suppress("ALL")
 class ThirdPartyAgentBuildDao {
 
     fun get(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
@@ -65,10 +70,22 @@ class ThirdPartyAgentBuildDao {
         thirdPartyAgentWorkspace: String,
         pipelineName: String,
         buildNum: Int,
-        taskName: String
+        taskName: String,
+        agentIp: String,
+        nodeId: Long,
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
+        executeCount: Int?,
+        containerHashId: String?,
+        envId: Long?,
+        ignoreEnvAgentIds: Set<String>?
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
+            val ignoreEnvAgentIdsJson = if (ignoreEnvAgentIds.isNullOrEmpty()) {
+                null
+            } else {
+                JSON.json(JsonUtil.toJson(ignoreEnvAgentIds, false))
+            }
             val preRecord =
                 dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
@@ -81,6 +98,20 @@ class ThirdPartyAgentBuildDao {
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
                     .set(UPDATED_TIME, now)
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
+                    .set(AGENT_IP, agentIp)
+                    .set(NODE_ID, nodeId)
+                    .set(
+                        DOCKER_INFO,
+                        if (dockerInfo == null) {
+                            null
+                        } else {
+                            JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
+                        }
+                    )
+                    .set(EXECUTE_COUNT, executeCount)
+                    .set(CONTAINER_HASH_ID, containerHashId)
+                    .set(ENV_ID, envId)
+                    .set(IGNORE_ENV_AGENT_IDS, ignoreEnvAgentIdsJson)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -96,7 +127,14 @@ class ThirdPartyAgentBuildDao {
                 WORKSPACE,
                 PIPELINE_NAME,
                 BUILD_NUM,
-                TASK_NAME
+                TASK_NAME,
+                AGENT_IP,
+                NODE_ID,
+                DOCKER_INFO,
+                EXECUTE_COUNT,
+                CONTAINER_HASH_ID,
+                ENV_ID,
+                IGNORE_ENV_AGENT_IDS
             ).values(
                 projectId,
                 agentId,
@@ -109,7 +147,18 @@ class ThirdPartyAgentBuildDao {
                 thirdPartyAgentWorkspace,
                 pipelineName,
                 buildNum,
-                taskName
+                taskName,
+                agentIp,
+                nodeId,
+                if (dockerInfo == null) {
+                    null
+                } else {
+                    JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
+                },
+                executeCount,
+                containerHashId,
+                envId,
+                ignoreEnvAgentIdsJson
             ).execute()
         }
     }
@@ -141,21 +190,23 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun getPreBuildAgent(
+    fun getPreBuildAgentIds(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        vmSeqId: String
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        vmSeqId: String,
+        size: Int
+    ): List<String> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME"))
+            return dslContext.selectDistinct(AGENT_ID) // 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
+                .from(this.forceIndex("IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME"))
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(STATUS.eq(PipelineTaskStatus.DONE.status))
                 .orderBy(CREATED_TIME.desc())
-                .limit(10)
-                .fetch()
+                .limit(size)
+                .fetch(AGENT_ID, String::class.java)
         }
     }
 
@@ -169,11 +220,21 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun fetchOneQueueBuild(dslContext: DSLContext, agentId: String): TDispatchThirdpartyAgentBuildRecord? {
+    fun fetchOneQueueBuild(
+        dslContext: DSLContext,
+        agentId: String,
+        buildType: BuildJobType
+    ): TDispatchThirdpartyAgentBuildRecord? {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+            val select = dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+            if (buildType == BuildJobType.DOCKER) {
+                select.and(DOCKER_INFO.isNotNull)
+            } else if (buildType == BuildJobType.BINARY) {
+                select.and(DOCKER_INFO.isNull)
+            }
+            return select
                 .orderBy(UPDATED_TIME.asc())
                 .limit(1)
                 .fetchAny()
@@ -187,6 +248,20 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
+                .and(DOCKER_INFO.isNull)
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .fetch()
+        }
+    }
+
+    fun getDockerRunningAndQueueBuilds(
+        dslContext: DSLContext,
+        agentId: String
+    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+                .where(AGENT_ID.eq(agentId))
+                .and(DOCKER_INFO.isNotNull)
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .fetch()
         }
@@ -195,23 +270,69 @@ class ThirdPartyAgentBuildDao {
     fun listAgentBuilds(
         dslContext: DSLContext,
         agentId: String,
+        status: String?,
+        pipelineId: String?,
         offset: Int,
         limit: Int
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(AGENT_ID.eq(agentId))
+                .let {
+                    if (status != null) it.and(STATUS.eq(PipelineTaskStatus.parse(status).status)) else it
+                }
+                .let {
+                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
+                }
                 .orderBy(CREATED_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
         }
     }
 
-    fun countAgentBuilds(dslContext: DSLContext, agentId: String): Long {
+    fun countAgentBuilds(
+        dslContext: DSLContext,
+        agentId: String,
+        status: String?,
+        pipelineId: String?
+    ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectCount().from(this)
                 .where(AGENT_ID.eq(agentId))
+                .let {
+                    if (status != null) it.and(STATUS.eq(PipelineTaskStatus.parse(status).status)) else it
+                }
+                .let {
+                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
+                }
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getLastDockerBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ): TDispatchThirdpartyAgentBuildRecord? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(DOCKER_INFO.isNotNull)
+                .orderBy(CREATED_TIME.desc())
+                .fetchAny()
+        }
+    }
+
+    fun getDockerBuild(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(DOCKER_INFO.isNotNull)
+                .fetchAny()
         }
     }
 }

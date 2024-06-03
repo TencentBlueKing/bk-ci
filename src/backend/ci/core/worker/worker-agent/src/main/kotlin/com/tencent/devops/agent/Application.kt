@@ -29,13 +29,12 @@ package com.tencent.devops.agent
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.worker.WorkRunner
+import com.tencent.devops.agent.service.BuildLessStarter
 import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
-import com.tencent.devops.worker.common.AGENT_ID
-import com.tencent.devops.worker.common.AGENT_SECRET_KEY
+import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
@@ -61,10 +60,10 @@ fun main(args: Array<String>) {
         BuildType.DOCKER.name -> {
             val jobPoolType = DockerEnv.getJobPool()
             // 无编译构建，轮询等待任务
-            if (jobPoolType != null &&
-                jobPoolType == "BUILD_LESS"
-            ) {
+            if (jobPoolType != null && jobPoolType == "BUILD_LESS") {
                 waitBuildLessJobStart()
+            } else if (jobPoolType != null && jobPoolType == "K8S_BUILD_LESS") {
+                BuildLessStarter.waitK8sBuildLessJobStart()
             }
 
             Runner.run(object : WorkspaceInterface {
@@ -72,15 +71,10 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspace = System.getProperty("devops_workspace")
-
-                    val workspaceDir = if (workspace.isNullOrBlank()) {
-                        File("/data/devops/workspace")
-                    } else {
-                        File(workspace)
-                    }
-                    workspaceDir.mkdirs()
-
+                    val workspaceDir = WorkspaceUtils.getWorkspaceDir(
+                        buildType = BuildType.DOCKER,
+                        workspace = "/data/devops/workspace"
+                    )
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
@@ -149,20 +143,21 @@ private fun waitBuildLessJobStart() {
 private fun doResponse(
     resp: Response
 ): Boolean {
-    val responseBody = resp.body()?.string() ?: ""
+    val responseBody = resp.body?.string() ?: ""
     println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
-        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue<Map<String, String>>(responseBody)
         buildLessTask.forEach { (t, u) ->
             when (t) {
-                "agentId" -> System.setProperty(AGENT_ID, u)
-                "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
-                "projectId" -> System.setProperty("devops_project_id", u)
+                "agentId" -> DockerEnv.setAgentId(u)
+                "secretKey" -> DockerEnv.setAgentSecretKey(u)
+                "projectId" -> DockerEnv.setProjectId(u)
+                "buildId" -> DockerEnv.setBuildId(u)
             }
         }
         true
     } else {
-        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body} continue loop...")
         false
     }
 }

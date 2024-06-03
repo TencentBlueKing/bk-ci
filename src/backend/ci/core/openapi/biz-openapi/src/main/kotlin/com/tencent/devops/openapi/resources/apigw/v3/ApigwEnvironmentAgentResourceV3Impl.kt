@@ -32,11 +32,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.openapi.api.apigw.v3.environment.ApigwEnvironmentAgentResourceV3
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,7 +51,7 @@ class ApigwEnvironmentAgentResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String
     ): Result<List<NodeBaseInfo>> {
-        logger.info("thirdPartAgentList userId $userId, project $projectId")
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V3|$userId|third part agent list|$projectId")
         return client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
     }
 
@@ -62,7 +62,7 @@ class ApigwEnvironmentAgentResourceV3Impl @Autowired constructor(
         projectId: String,
         nodeHashId: String
     ): Result<NodeWithPermission?> {
-        logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V3|$userId|get node status|$projectId|$nodeHashId")
         val nodeList = client.get(ServiceNodeResource::class).listByHashIds(
             userId = userId,
             projectId = projectId,
@@ -72,7 +72,7 @@ class ApigwEnvironmentAgentResourceV3Impl @Autowired constructor(
             return Result(nodeList[0])
         }
         throw ErrorCodeException(
-            errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+            errorCode = OpenAPIMessageCode.ERROR_NODE_NOT_EXISTS,
             params = arrayOf(nodeHashId)
         )
     }

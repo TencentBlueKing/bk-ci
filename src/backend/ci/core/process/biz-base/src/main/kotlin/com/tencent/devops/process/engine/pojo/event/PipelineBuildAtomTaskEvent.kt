@@ -61,5 +61,6 @@ data class PipelineBuildAtomTaskEvent(
     /**
      * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
      */
-    var errorTypeName: String? = null
+    var errorTypeName: String? = null,
+    val executeCount: Int = 1
 ) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)

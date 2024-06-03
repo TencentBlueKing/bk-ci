@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { VM_CONTAINER_TYPE, TRIGGER_CONTAINER_TYPE, NORMAL_CONTAINER_TYPE, SET_PIPELINE_EDITING, ADD_STAGE, UPDATE_ATOM_OUTPUT_NAMESPACE } from './constants'
+import { ADD_STAGE, NORMAL_CONTAINER_TYPE, SET_PIPELINE_EDITING, TRIGGER_CONTAINER_TYPE, UPDATE_ATOM_OUTPUT_NAMESPACE, VM_CONTAINER_TYPE, SET_ATOM_EDITING } from './constants'
 
 /**
  * 获取原子模型unique Key
@@ -86,22 +86,22 @@ export function actionCreator (mutation) {
  */
 export function PipelineEditActionCreator (mutation) {
     return ({ state, commit }, payload = {}) => {
-        if (!state.pipeline) return
-        if (state.pipeline?.editing) {
+        if (!state.pipeline) {
             commit(mutation, payload)
             return
         }
-        
         if (payload.container && payload.newParam) {
             if (compareParam(payload.newParam, payload.container)) {
                 commit(SET_PIPELINE_EDITING, true)
             }
         } else if (payload.element && payload.newParam) {
             if (compareParam(payload.newParam, payload.element)) {
+                commit(SET_ATOM_EDITING, true)
                 commit(SET_PIPELINE_EDITING, true)
             }
         } else if (payload.atom && payload.newParam) {
             if (compareParam(payload.newParam, payload.atom)) {
+                commit(SET_ATOM_EDITING, true)
                 commit(SET_PIPELINE_EDITING, true)
             }
         } else if (payload.stage && payload.newParam) {
@@ -122,7 +122,7 @@ export function PipelineEditActionCreator (mutation) {
  */
 export function compareParam (param, originElement) {
     return Object.keys(param).some(key => {
-        return param[key] !== originElement[key] && key !== 'isError'
+        return (param[key] !== originElement[key] || typeof param[key] === 'object') && key !== 'isError'
     })
 }
 

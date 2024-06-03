@@ -36,14 +36,14 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("MagicNumber")
@@ -67,7 +67,7 @@ class ApiAccessTokenService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = PARAMETER_EXPIRED_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                defaultMessage = "Access token expired in: ${tokenInfo.expirationTime}",
+                defaultMessage = "Access token expired  in: ${tokenInfo.expirationTime}",
                 params = arrayOf("token", "Access token expired in: ${tokenInfo.expirationTime}")
             )
         }
@@ -75,17 +75,21 @@ class ApiAccessTokenService @Autowired constructor(
     }
 
     fun generateUserToken(userDetails: String): TokenInfo {
-        logger.info("AUTH|generateUserToken| userId=$userDetails")
+        logger.info("AUTH | generateUserToken | userId = $userDetails")
         if (secret.isNullOrBlank()) {
-            logger.error("AUTH| generateUserToken failed, " +
-                "because config[auth.accessToken.secret] is not found")
+            logger.error(
+                "AUTH | generateUserToken failed, " +
+                    "because config[auth.accessToken.secret] is not found"
+            )
             throw ErrorCodeException(
                 errorCode = PARAMETER_SECRET_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "AUTH| generateUserToken failed, " +
                     "because config[auth.accessToken.secret] is not found",
-                params = arrayOf("config", "AUTH| generateUserToken failed, " +
-                    "because config[auth.accessToken.secret] is not found")
+                params = arrayOf(
+                    "config", "AUTH| generateUserToken failed, " +
+                    "because config[auth.accessToken.secret] is not found"
+                )
             )
         }
         val tokenInfo = TokenInfo(
@@ -94,12 +98,14 @@ class ApiAccessTokenService @Autowired constructor(
             accessToken = null
         )
         tokenInfo.accessToken = try {
-            URLEncoder.encode(AESUtil.encrypt(
-                secret,
-                JsonUtil.toJson(tokenInfo, formatted = false)
-            ), "UTF-8")
+            URLEncoder.encode(
+                AESUtil.encrypt(
+                    secret,
+                    JsonUtil.toJson(tokenInfo, formatted = false)
+                ), "UTF-8"
+            )
         } catch (ignore: Throwable) {
-            logger.error("AUTH| generateUserToken failed because $ignore ")
+            logger.error("AUTH | generateUserToken failed because $ignore ")
             throw ErrorCodeException(
                 errorCode = PARAMETER_SECRET_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
@@ -117,7 +123,7 @@ class ApiAccessTokenService @Autowired constructor(
         val result = try {
             AESUtil.decrypt(secret!!, token)
         } catch (ignore: Throwable) {
-            logger.error("AUTH|getTokenInfo Access token illegal,secret=$secret,token=$token,error=$ignore")
+            logger.error("AUTH|getTokenInfo Access token illegal : token = $token | error=$ignore")
             throw ErrorCodeException(
                 errorCode = PARAMETER_ILLEGAL_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,

@@ -72,9 +72,29 @@ enum class PipelineNotifyTemplateEnum(val templateCode: String) {
     PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL("PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"),
 
     /**
+     * 流水线设置-触发审核的通知触发人模板代码
+     */
+    PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE("PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"),
+
+    /**
      * 流水线设置-人工审核插件的通知模板代码
      */
     PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE("MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"),
+
+    /**
+     * 流水线设置-人工审核插件的通知模板代码
+     */
+    PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE("MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE"),
+
+    /**
+     * 流水线设置-stage阶段审核的通知触发人模板代码
+     */
+    PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE("MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"),
+
+    /**
+     * 流水线设置-stage阶段审核驳回时通知触发人模板代码
+     */
+    PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE("MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"),
 
     /**
      * 流水线设置-stage阶段审核的通知模板代码
@@ -90,6 +110,12 @@ enum class PipelineNotifyTemplateEnum(val templateCode: String) {
      * 流水线webhook注册失败的通知模板代码
      */
     PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE("PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"),
+
+    /**
+     * 流水线CallBack接口熔断通知模板代码
+     *
+     */
+    PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE("PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"),
 
     /**
      * 未知模板代码

@@ -7,12 +7,14 @@ export default {
         paramEnum: Object,
         paramKey: String,
         disabled: Boolean,
-        paramValue: {
+        dataType: String,
+        paramUrl: String,
+        defaultValue: [String, Array, Object],
+        paramProps: {
             type: Object,
             default: () => ({})
         },
-        defaultValue: [String, Array, Object],
-        paramProps: {
+        paramValue: {
             type: Object,
             default: () => ({})
         }
@@ -38,6 +40,7 @@ export default {
         },
 
         changeParamValue (val) {
+            window.changeFlag = true
             this.$emit('value-change', this.paramKey, val)
         }
     }

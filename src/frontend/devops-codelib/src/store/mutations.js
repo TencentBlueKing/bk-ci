@@ -25,7 +25,8 @@ import {
     TOGGLE_CODE_LIB_DIALOG,
     DIALOG_LOADING_MUTATION,
     SET_OAUTH_MUTATION,
-    SET_T_GIT_OAUTH_MUTATION
+    SET_T_GIT_OAUTH_MUTATION,
+    SET_TEMPLATE_CODELIB
 } from './constants'
 const mutations = {
     [SET_CODELIBS_MUTATION]: (state, {
@@ -66,6 +67,9 @@ const mutations = {
         oAuth
     }) => {
         Vue.set(state, 'tGitOAuth', oAuth)
+    },
+    [SET_TEMPLATE_CODELIB] (state, codelib) {
+        Vue.set(state, 'templateCodeLib', codelib)
     }
 }
 

@@ -30,15 +30,16 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-util"))
     api(project(":core:quality:api-quality"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:common:common-archive"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:store:api-store"))
     api(project(":core:auth:api-auth"))
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
-    api(project(":core:sign:api-sign"))
+    api(project(":core:metrics:api-metrics"))
     api("com.tencent.devops:devops-boot-starter-api")
-    api("com.tencent.bk.devops.turbo:api-turbo:0.0.2-RELEASE") {
+    api("com.tencent.bk.devops.turbo:api-turbo:0.0.6-RELEASE") {
         isTransitive = false
     }
+    api(project(":core:dispatch:api-dispatch-docker"))
 }

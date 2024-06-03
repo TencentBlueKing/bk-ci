@@ -27,11 +27,9 @@
 
 package com.tencent.devops.process.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
-import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,23 +49,25 @@ class PipelineBuildMaterialService @Autowired constructor(
     ): Int {
         var newPipelineBuildMaterials = pipelineBuildMaterials
         val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
-        if (pipelineBuildHistoryRecord != null && pipelineBuildHistoryRecord.isRetry != true) {
-            val material = pipelineBuildHistoryRecord.material
-            if (StringUtils.isNoneBlank(material)) {
-                val originPipelineBuildMaterials =
-                    JsonUtil.to(material, object : TypeReference<List<PipelineBuildMaterial>>() {})
-                newPipelineBuildMaterials = newPipelineBuildMaterials.plus(originPipelineBuildMaterials)
-            }
-
-            val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
-            logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
-            pipelineBuildDao.updateBuildMaterial(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                material = materials
-            )
+        // 如果找不到构建历史或重试时，不做原材料写入
+        if (pipelineBuildHistoryRecord == null ||
+            pipelineBuildHistoryRecord.executeCount?.let { it > 1 } == true
+        ) {
+            return 0
         }
+        val material = pipelineBuildHistoryRecord.material
+        if (!material.isNullOrEmpty()) {
+            newPipelineBuildMaterials = newPipelineBuildMaterials.plus(material)
+        }
+
+        val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
+        logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
+        pipelineBuildDao.updateBuildMaterial(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            material = materials
+        )
         return pipelineBuildMaterials.size
     }
 }

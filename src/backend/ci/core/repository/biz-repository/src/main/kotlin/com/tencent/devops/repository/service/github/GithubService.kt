@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
@@ -39,23 +40,35 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_ADD_CHECK_RUNS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_BRANCH
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_REPOS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_TAG
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_BRANCHS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_TAGS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_UPDATE_CHECK_RUNS
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
+import com.tencent.devops.repository.pojo.github.GithubRepoBranch
+import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -65,10 +78,11 @@ import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
-@ConditionalOnMissingClass
 class GithubService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
     private val githubOAuthService: GithubOAuthService,
+    private val githubRepositoryService: GithubRepositoryService,
+    private val githubUserService: GithubUserService,
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
     private val client: Client
@@ -106,8 +120,8 @@ class GithubService @Autowired constructor(
 
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPost(token, "repos/$projectName/check-runs", body)
-
-        return callMethod(OPERATION_ADD_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        val operation = getMessageByLocale(OPERATION_ADD_CHECK_RUNS)
+        return callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
     override fun updateCheckRuns(
@@ -126,8 +140,8 @@ class GithubService @Autowired constructor(
 
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
-
-        callMethod(OPERATION_UPDATE_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        val operation = getMessageByLocale(OPERATION_UPDATE_CHECK_RUNS)
+        callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
     override fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult {
@@ -162,11 +176,12 @@ class GithubService @Autowired constructor(
     fun getRepositories(token: String): List<GithubRepo> {
         val githubRepos = mutableListOf<GithubRepo>()
         var page = 0
+        val operation = getMessageByLocale(OPERATION_GET_REPOS)
         run outside@{
             while (page < PAGE_SIZE) {
                 page++
                 val request = buildGet(token, "user/repos?page=$page&per_page=$PAGE_SIZE")
-                val body = getBody(OPERATION_GET_REPOS, request)
+                val body = getBody(operation, request)
                 val repos = objectMapper.readValue<List<GithubRepo>>(body)
                 githubRepos.addAll(repos)
 
@@ -183,63 +198,128 @@ class GithubService @Autowired constructor(
     override fun getBranch(token: String, projectName: String, branch: String?): GithubBranch? {
         logger.info("getBranch| $projectName - $branch")
 
-        return RetryUtils.execute(object : RetryUtils.Action<GithubBranch?> {
-            override fun fail(e: Throwable): GithubBranch? {
-                logger.error("getBranch fail| e=${e.message}", e)
-                throw e
-            }
+        return RetryUtils.execute(
+            object : RetryUtils.Action<GithubBranch?> {
+                override fun fail(e: Throwable): GithubBranch? {
+                    logger.warn("BKSystemMonitor|getBranch fail| e=${e.message}", e)
+                    throw e
+                }
 
-            override fun execute(): GithubBranch? {
-                val sBranch = branch ?: "master"
-                val path = "repos/$projectName/branches/$sBranch"
-                val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_BRANCH, request)
-                return objectMapper.readValue(body)
-            }
-        }, 1, SLEEP_MILLS_FOR_RETRY_500)
+                override fun execute(): GithubBranch? {
+                    val sBranch = branch ?: "master"
+                    val path = "repos/$projectName/branches/$sBranch"
+                    val request = buildGet(token, path)
+                    val operation = getMessageByLocale(OPERATION_GET_BRANCH)
+                    val body = getBody(operation, request)
+                    return objectMapper.readValue(body)
+                }
+            },
+            1, SLEEP_MILLS_FOR_RETRY_500
+        )
     }
 
     override fun getTag(token: String, projectName: String, tag: String): GithubTag? {
         logger.info("getTag| $projectName - $tag")
-        return RetryUtils.execute(object : RetryUtils.Action<GithubTag?> {
-            override fun fail(e: Throwable): GithubTag? {
-                logger.error("getTag fail| e=${e.message}", e)
-                throw e
-            }
+        return RetryUtils.execute(
+            object : RetryUtils.Action<GithubTag?> {
+                override fun fail(e: Throwable): GithubTag? {
+                    logger.warn("BKSystemMonitor|getTag fail| e=${e.message}", e)
+                    throw e
+                }
 
-            override fun execute(): GithubTag? {
-                val path = "repos/$projectName/git/refs/tags/$tag"
-                val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_TAG, request)
-                return objectMapper.readValue(body)
-            }
-        }, 1, SLEEP_MILLS_FOR_RETRY_500)
+                override fun execute(): GithubTag? {
+                    val path = "repos/$projectName/git/refs/tags/$tag"
+                    val request = buildGet(token, path)
+                    val operation = getMessageByLocale(OPERATION_GET_TAG)
+                    val body = getBody(operation, request)
+                    return objectMapper.readValue(body)
+                }
+            },
+            1, SLEEP_MILLS_FOR_RETRY_500
+        )
     }
 
-    // TODO:脱敏
-    override fun getFileContent(projectName: String, ref: String, filePath: String): String {
-        val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
-        OkhttpUtils.doGet(url).use {
-            logger.info("github content url: $url")
-            if (!it.isSuccessful) {
-                throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = it.body()!!.toString()
-                )
+    override fun getFileContent(
+        projectName: String,
+        ref: String,
+        filePath: String,
+        token: String
+    ): String {
+        return if (token.isBlank()) {
+            val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
+            OkhttpUtils.doGet(url).use {
+                logger.info("github content url: $url")
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = it.body!!.toString()
+                    )
+                }
+                return it.body!!.string()
             }
-            return it.body()!!.string()
+        } else {
+            githubRepositoryService.getRepositoryContent(
+                request = GetRepositoryContentRequest(
+                    repoName = projectName,
+                    ref = ref,
+                    path = filePath
+                ),
+                token = token
+            )?.getDecodedContentAsString() ?: ""
         }
+    }
+
+    override fun listBranches(token: String, projectName: String): List<String> {
+        logger.info("listBranches| $projectName")
+        return RetryUtils.execute(
+            object : RetryUtils.Action<List<String>> {
+                override fun fail(e: Throwable): List<String> {
+                    logger.warn("BKSystemMonitor|listBranches fail| e=${e.message}", e)
+                    throw e
+                }
+
+                override fun execute(): List<String> {
+                    val path = "repos/$projectName/branches?page=1&per_page=100"
+                    val request = buildGet(token, path)
+                    val operation = getMessageByLocale(OPERATION_LIST_BRANCHS)
+                    val body = getBody(operation, request)
+                    return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
+                }
+            },
+            3, SLEEP_MILLS_FOR_RETRY_500
+        )
+    }
+
+    override fun listTags(token: String, projectName: String): List<String> {
+        logger.info("listTags| $projectName")
+        return RetryUtils.execute(
+            object : RetryUtils.Action<List<String>> {
+                override fun fail(e: Throwable): List<String> {
+                    logger.warn("BKSystemMonitor|listTags fail| e=${e.message}", e)
+                    throw e
+                }
+
+                override fun execute(): List<String> {
+                    val path = "repos/$projectName/tags?page=1&per_page=100"
+                    val request = buildGet(token, path)
+                    val operation = getMessageByLocale(OPERATION_LIST_TAGS)
+                    val body = getBody(operation, request)
+                    return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
+                }
+            },
+            3, SLEEP_MILLS_FOR_RETRY_500
+        )
     }
 
     private fun buildPost(token: String, path: String, body: String): Request {
         return request(token, path)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
     }
 
     private fun buildPatch(token: String, path: String, body: String): Request {
         return request(token, path)
-            .patch(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .patch(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
     }
 
@@ -258,11 +338,12 @@ class GithubService @Autowired constructor(
 
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
-            val code = response.code()
-            val message = response.message()
-            val body = response.body()?.string() ?: ""
-
-            logger.info("getBody operation($operation). response code($code) message($message) body($body)")
+            val code = response.code
+            val message = response.message
+            val body = response.body?.string() ?: ""
+            if (logger.isDebugEnabled) {
+                logger.debug("getBody operation($operation). response code($code) message($message) body($body)")
+            }
             if (!response.isSuccessful) {
                 handException(operation, code)
             }
@@ -272,11 +353,12 @@ class GithubService @Autowired constructor(
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
         OkhttpUtils.doHttp(request).use { response ->
-            val code = response.code()
-            val message = response.message()
-            val body = response.body()?.string() ?: ""
-
-            logger.info("callMethod operation($operation). response code($code) message($message) body($body)")
+            val code = response.code
+            val message = response.message
+            val body = response.body?.string() ?: ""
+            if (logger.isDebugEnabled) {
+                logger.debug("callMethod operation($operation). response code($code) message($message) body($body)")
+            }
             if (!response.isSuccessful) {
                 handException(operation, code)
             }
@@ -286,25 +368,72 @@ class GithubService @Autowired constructor(
 
     private fun handException(operation: String, code: Int) {
         val msg = when (code) {
-            HTTP_400 -> "参数错误"
-            HTTP_401 -> "GitHub认证失败"
-            HTTP_403 -> "账户没有${operation}的权限"
-            HTTP_404 -> "GitHub仓库不存在或者是账户没有该项目${operation}的权限"
-            else -> "GitHub平台${operation}失败"
+            HTTP_400 -> getMessageByLocale(CommonMessageCode.PARAM_ERROR)
+            HTTP_401 -> getMessageByLocale(CommonMessageCode.AUTH_FAIL, arrayOf("GitHub token"))
+            HTTP_403 -> getMessageByLocale(CommonMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
+            HTTP_404 -> getMessageByLocale(
+                CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION,
+                arrayOf("GitHub", operation)
+            )
+            else -> "GitHub platform $operation fail"
         }
-        throw GithubApiException(code, msg)
+        throw GithubApiException(
+            code = code,
+            message = msg
+        )
     }
 
-    // TODO:脱敏
+    private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = messageCode,
+            params = params
+        )
+    }
+
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        resetType: String?
+    ): AuthorizeResult {
+        logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
+        val accessToken = if (refreshToken == true) {
+            null
+        } else {
+            githubTokenService.getAccessToken(userId)
+        } ?: return AuthorizeResult(
+            status = HTTP_403,
+            url = githubOAuthService.getGithubOauth(
+                projectId = projectId,
+                userId = userId,
+                repoHashId = null,
+                popupTag = "",
+                resetType = resetType
+            ).redirectUrl
+        )
+        // 校验token是否有效
+        try {
+            githubUserService.getUser(accessToken.accessToken)
+        } catch (e: Exception) {
+            return AuthorizeResult(
+                status = HTTP_403,
+                url = githubOAuthService.getGithubOauth(
+                    projectId = projectId,
+                    userId = userId,
+                    repoHashId = null,
+                    popupTag = "",
+                    resetType = resetType
+                ).redirectUrl
+            )
+        }
+        logger.info("github isOAuth accessToken is: $accessToken")
+        return AuthorizeResult(200, "")
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(GithubService::class.java)
         private const val PAGE_SIZE = 100
         private const val SLEEP_MILLS_FOR_RETRY_500: Long = 500
         private const val GITHUB_API_URL = "https://api.github.com"
-        private const val OPERATION_ADD_CHECK_RUNS = "添加检测任务"
-        private const val OPERATION_UPDATE_CHECK_RUNS = "更新检测任务"
-        private const val OPERATION_GET_REPOS = "获取仓库列表"
-        private const val OPERATION_GET_BRANCH = "获取指定分支"
-        private const val OPERATION_GET_TAG = "获取指定Tag"
     }
 }

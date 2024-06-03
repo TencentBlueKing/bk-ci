@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.PUT
@@ -43,87 +43,90 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_ATOM"], description = "插件市场-插件")
+@Tag(name = "SERVICE_MARKET_ATOM", description = "插件市场-插件")
 @Path("/service/market/atom/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ServiceMarketAtomArchiveResource {
 
-    @ApiOperation("校验用户上传的插件包是否合法")
+    @Operation(summary = "校验用户上传的插件包是否合法")
     @GET
-    @Path("/users/{userId}/projects/{projectCode}/atoms/{atomCode}/versions/{version}/package/verify")
+    @Path("/users/{userId}/atoms/{atomCode}/versions/{version}/package/verify")
     fun verifyAtomPackageByUserId(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @ApiParam("发布类型", required = false)
+        @Parameter(description = "项目代码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "发布类型", required = false)
         @QueryParam("releaseType")
         releaseType: ReleaseTypeEnum?,
-        @ApiParam("支持的操作系统", required = false)
+        @Parameter(description = "支持的操作系统", required = false)
         @QueryParam("os")
         os: String?
     ): Result<Boolean>
 
-    @ApiOperation("校验用户上传的插件包中的taskJson是否正确")
+    @Operation(summary = "校验用户上传的插件包中的taskJson是否正确")
     @GET
-    @Path("/users/{userId}/projects/{projectCode}/atoms/{atomCode}/versions/{version}/json/verify")
+    @Path("/users/{userId}/atoms/{atomCode}/versions/{version}/json/verify")
     fun verifyAtomTaskJson(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("版本号", required = true)
-        @PathParam("version")
-        version: String
-    ): Result<GetAtomConfigResult?>
-
-    @ApiOperation("校验插件发布类型是否合法")
-    @GET
-    @Path("/users/{userId}/projects/{projectCode}/atoms/{atomCode}/versions/{version}/releaseType/verify")
-    fun validateReleaseType(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @ApiParam("插件字段校验确认标识", required = false)
+        @Parameter(description = "项目代码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String
+    ): Result<GetAtomConfigResult?>
+
+    @Operation(summary = "校验插件发布类型是否合法")
+    @GET
+    @Path("/users/{userId}/atoms/{atomCode}/versions/{version}/releaseType/verify")
+    fun validateReleaseType(
+        @Parameter(description = "用户ID", required = true)
+        @PathParam("userId")
+        userId: String,
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "项目代码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "插件字段校验确认标识", required = false)
         @QueryParam("fieldCheckConfirmFlag")
         fieldCheckConfirmFlag: Boolean?
     ): Result<Boolean>
 
-    @ApiOperation("更新插件执行包相关信息")
+    @Operation(summary = "更新插件执行包相关信息")
     @PUT
     @Path("/users/{userId}/atoms/{atomId}/pkg/info/update")
     fun updateAtomPkgInfo(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @ApiParam("插件执行包相关信息修改请求报文体", required = true)
+        @Parameter(description = "项目代码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "插件执行包相关信息修改请求报文体", required = true)
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
 }

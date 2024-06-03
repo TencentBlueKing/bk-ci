@@ -29,62 +29,29 @@ package com.tencent.devops.scm.code.svn.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
-import okhttp3.MediaType
+import com.tencent.devops.scm.pojo.LoginSession
+import com.tencent.devops.scm.pojo.SvnTreeInfo
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
 
 @Suppress("ALL")
-object SVNApi {
+open class SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)
-
-    fun getWebhooks(svnConfig: SVNConfig, url: String): List<String> {
-        val request = request(svnConfig, composeGetUrl(svnConfig, toHttpUrl(url))).get().build()
-        val body = getBody(request)
-        logger.info("Get the webhook($body) of url - $url")
-        val webhooks: SVNWebHook = JsonUtil.getObjectMapper().readValue(body)
-        if (webhooks.webhooks.isEmpty()) {
-            return emptyList()
-        }
-
-        val hooks = mutableListOf<String>()
-        val path = getPath(url)
-        logger.info("Get the path($path) of the svn url($url)")
-        webhooks.webhooks.forEach {
-            if (it.path == path) {
-                val hookUrl = it.callBack
-                if (hookUrl.isNotBlank()) {
-                    hooks.addAll(hookUrl.split(","))
-                }
-            } else {
-                logger.info("The path(${it.path}) is not match the expect one($path)")
-            }
-        }
-        return hooks
-    }
-
-    fun addWebhooks(svnConfig: SVNConfig, username: String, url: String, hookUrl: String) {
-        val request = request(svnConfig, composePostUrl(svnConfig, toHttpUrl(url), hookUrl, username))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
-            .build()
-        val body = getBody(request)
-        logger.info("Get the add hook response $body")
-
-        val hookResponse: HookResponse = JsonUtil.getObjectMapper().readValue(body)
-        if (hookResponse.status != "200") {
-            logger.info("Fail to add the hook. ${hookResponse.message}")
-            throw ScmException("添加Svn Webhook失败，原因：${hookResponse.message}", ScmType.CODE_SVN.name)
-        }
-    }
+    private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
 
     fun lock(repname: String, applicant: String, subpath: String, svnConfig: SVNConfig) {
         val url = composeSvnLockPostUrl(svnConfig)
@@ -99,7 +66,7 @@ object SVNApi {
         val request = Request.Builder()
             .url(url)
             .addHeader("ApiKey", svnConfig.apiKey).addHeader("Content-type", "application/json")
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         val body = getBody(request)
         logger.info("lock the svn repo response $body")
@@ -126,7 +93,7 @@ object SVNApi {
         val request = Request.Builder()
             .url(url)
             .addHeader("ApiKey", svnConfig.apiKey).addHeader("Content-type", "application/json")
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         val body = getBody(request)
         logger.info("unlock the svn repo response $body")
@@ -144,12 +111,21 @@ object SVNApi {
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 when {
-                    response.code() == 401 -> throw ScmException("工程仓库访问未授权", ScmType.CODE_SVN.name)
-                    response.code() == 404 -> throw ScmException("工程仓库不存在", ScmType.CODE_SVN.name)
-                    else -> throw ScmException("工程仓库访问异常", ScmType.CODE_SVN.name)
+                    response.code == 401 -> throw ScmException(
+                        I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_UNAUTHORIZED),
+                        ScmType.CODE_SVN.name
+                    )
+                    response.code == 404 -> throw ScmException(
+                        I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST),
+                        ScmType.CODE_SVN.name
+                    )
+                    else -> throw ScmException(
+                        I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_CALL_ERROR),
+                        ScmType.CODE_SVN.name
+                    )
                 }
             }
-            return response.body()!!.string()
+            return response.body!!.string()
         }
     }
 
@@ -198,16 +174,123 @@ object SVNApi {
         }
     }
 
-    private fun composeGetUrl(svnConfig: SVNConfig, url: String) =
-        "${svnConfig.webhookApiUrl}?event=1&apiKey=${svnConfig.apiKey}&svnUrl=$url"
-
-    private fun composePostUrl(svnConfig: SVNConfig, url: String, hookUrl: String, userName: String) =
-        "${svnConfig.webhookApiUrl}?event=1&apiKey=${svnConfig.apiKey}&svnUrl=$url&url=$hookUrl&userName=$userName"
-
     private fun composeSvnLockPostUrl(svnConfig: SVNConfig) = "${svnConfig.apiUrl}/svn/lock"
 
     private fun composeSvnUnLockPostUrl(svnConfig: SVNConfig) = "${svnConfig.apiUrl}/svn/unlock"
 
     private fun request(svnConfig: SVNConfig, url: String) =
         Request.Builder().url(url).header("apiKey", svnConfig.apiKey)
+
+    open fun request(
+        host: String,
+        token: String,
+        url: String,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Request.Builder {
+        return if (page != null && pageSize != null) Request.Builder()
+            .url("$host/$url?page=$page&per_page=$pageSize")
+            .header("PRIVATE-TOKEN", token)
+        else Request.Builder()
+            .url("$host/$url")
+            .header("PRIVATE-TOKEN", token)
+    }
+
+    fun post(host: String, token: String, url: String, body: String) =
+        request(host, token, url).post(RequestBody.create(mediaType, body)).build()
+
+    fun getWebhooks(
+        host: String,
+        projectName: String,
+        token: String
+    ): List<SvnHook> {
+        val fullName = URLEncoder.encode(projectName, "UTF-8")
+        val request = request(
+            host = host,
+            url = "svn/projects/$fullName/hooks",
+            token = token,
+            page = 1,
+            pageSize = MAX_PAGE_SIZE
+        ).get().build()
+        val body = getBody(request)
+        logger.info("Get the webhook($body)")
+        return JsonUtil.getObjectMapper().readValue<List<SvnHook>>(body)
+    }
+
+    fun addWebhooks(
+        host: String,
+        projectName: String,
+        hookUrl: String,
+        token: String,
+        eventType: SvnHookEventType,
+        path: String
+    ): SvnHook {
+        val fullName = URLEncoder.encode(projectName, "UTF-8")
+        val param = mutableMapOf<String, Any>(
+            "path" to path,
+            "url" to hookUrl
+        ).let {
+            it[eventType.value] = true
+            it
+        }
+        val request = request(
+            host = host,
+            url = "svn/projects/$fullName/hooks",
+            token = token
+        )
+            .post(
+                RequestBody.create(
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(param, false)
+                )
+            )
+            .build()
+        val body = getBody(request)
+        logger.info("Get the add hook response $body")
+        return JsonUtil.getObjectMapper().readValue(body)
+    }
+
+    fun getFileList(
+        host: String,
+        projectName: String,
+        token: String,
+        revision: String,
+        path: String
+    ): SvnTreeInfo {
+        val fullName = URLEncoder.encode(projectName, "UTF-8")
+        val queryParam = "path=$path&revision=$revision"
+        val request = request(
+            host = host,
+            url = "svn/projects/$fullName/tree?$queryParam",
+            token = token
+        ).get().build()
+        val body = getBody(request)
+        logger.info("Get the svn file list($body)")
+        return JsonUtil.getObjectMapper().readValue<SvnTreeInfo>(body)
+    }
+
+    fun getSession(
+        host: String,
+        username: String,
+        password: String
+    ): LoginSession? {
+        val body = JsonUtil.toJson(
+            mapOf(
+                "login" to username,
+                "password" to password
+            ),
+            false
+        )
+        val request = post(host, "", "session", body)
+        val responseBody = getBody(request).ifBlank {
+            logger.warn("get session is blank, please check the username and password")
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(responseBody)
+    }
+
+    companion object {
+        // 接口分页最大行数
+        const val MAX_PAGE_SIZE = 500
+    }
 }

@@ -34,14 +34,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -52,161 +53,179 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["ENGINE_BUILD_JOB"], description = "引擎-构建机请求|此接口不接受服务间Feign，只接受构建机处请求")
+@Tag(name = "ENGINE_BUILD_JOB", description = "引擎-构建机请求|此接口不接受服务间Feign，只接受构建机处请求")
 @Path("/build/worker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildJobResource {
-    @ApiOperation("构建机器启动成功")
+    @Operation(summary = "构建机器启动成功")
     @PUT
     @Path("/started")
     fun jobStarted(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @ApiParam(value = "网络问题导致的重试次数", required = false)
+        @Parameter(description = "网络问题导致的重试次数", required = false)
         @QueryParam("retryCount")
         retryCount: String
     ): Result<BuildVariables>
 
-    @ApiOperation("构建机请求获取任务")
+    @Operation(summary = "构建机请求获取任务")
     @GET
     @Path("/claim")
     fun claimTask(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
     ): Result<BuildTask>
 
-    @ApiOperation("构建机Job完成任务")
+    @Operation(summary = "构建机Job完成任务")
     @POST
     @Path("/complete")
     fun completeTask(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @ApiParam(value = "执行结果", required = true)
+        @Parameter(description = "执行结果", required = true)
         result: BuildTaskResult
     ): Result<Boolean>
 
-    @ApiOperation("结束构建机Job")
+    @Operation(summary = "结束构建机Job")
     @POST
     @Path("/end")
     fun jobEnd(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
     ): Result<Boolean>
 
-    @ApiOperation("Job超时触发")
+    @Operation(summary = "Job超时触发")
     @POST
     @Path("/timeout")
     fun jobTimeout(
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String
     ): Result<Boolean>
 
-    @ApiOperation("Job心跳请求")
+    @Operation(summary = "Job心跳请求")
     @POST
     @Path("/heartbeat")
     fun jobHeartbeat(
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
     ): Result<Boolean>
 
-    @ApiOperation("Job心跳请求V1版")
+    @Operation(summary = "Job心跳请求V1版")
     @POST
     @Path("/heartbeat/v1")
+    @Suppress("LongParameterList")
     fun jobHeartbeatV1(
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @ApiParam(value = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int? = null
+        executeCount: Int? = null,
+        @Parameter(description = "心跳请求报文体", required = false)
+        jobHeartbeatRequest: JobHeartbeatRequest? = null
     ): Result<HeartBeatInfo>
 
-    @ApiOperation("job异常上报并停止构建") // #5046 增加启动时异常上报，并停止构建，如果网络通的话
+    @Operation(summary = "job异常上报并停止构建") // #5046 增加启动时异常上报，并停止构建，如果网络通的话
     @POST
     @Path("/submit_error")
     fun submitError(
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         @BkField(required = true)
         buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         @BkField(required = true)
         vmSeqId: String,
-        @ApiParam(value = "执行结果", required = true)
+        @Parameter(description = "执行结果", required = true)
         errorInfo: ErrorInfo
     ): Result<Boolean>
+
+    @Operation(summary = "获取当前构建的构建详情页")
+    @GET
+    @Path("/detail_url")
+    fun getBuildDetailUrl(
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "pipelineId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String
+    ): Result<String>
 }

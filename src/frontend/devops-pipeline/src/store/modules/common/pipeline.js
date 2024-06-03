@@ -18,28 +18,27 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import request from '@/utils/request'
 import {
+    ARTIFACTORY_API_URL_PREFIX,
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
     QUALITY_API_URL_PREFIX,
-    ARTIFACTORY_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
+import request from '@/utils/request'
 
 import {
-    REPOSITORY_MUTATION,
-    TEMPLATE_CATEGORY_MUTATION,
-    PIPELINE_TEMPLATE_MUTATION,
-    STORE_TEMPLATE_MUTATION,
-    TEMPLATE_MUTATION,
-    UPDATE_PIPELINE_SETTING_MUNTATION,
-    RESET_PIPELINE_SETTING_MUNTATION,
-    REFRESH_QUALITY_LOADING_MUNTATION,
-    QUALITY_ATOM_MUTATION,
     INTERCEPT_ATOM_MUTATION,
-    INTERCEPT_TEMPLATE_MUTATION
+    INTERCEPT_TEMPLATE_MUTATION,
+    PIPELINE_TEMPLATE_MUTATION,
+    QUALITY_ATOM_MUTATION,
+    REFRESH_QUALITY_LOADING_MUNTATION,
+    REPOSITORY_MUTATION,
+    SET_PAC_SUPPORT_SCM_TYPE_LIST,
+    STORE_TEMPLATE_MUTATION,
+    TEMPLATE_CATEGORY_MUTATION,
+    TEMPLATE_MUTATION
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -49,15 +48,15 @@ function rootCommit (commit, ACTION_CONST, payload) {
 export const state = {
     templateCategory: null,
     refreshLoading: false,
-    pipelineTemplate: null,
+    pipelineTemplateMap: null,
     storeTemplate: null,
     template: null,
     reposList: null,
     appNodes: {},
-    pipelineSetting: {},
     ruleList: [],
     templateRuleList: [],
-    qualityAtom: []
+    qualityAtom: [],
+    pacSupportScmTypeList: []
 }
 
 export const mutations = {
@@ -74,9 +73,9 @@ export const mutations = {
             templateCategory: [customCategory, ...categoryList, storeCategory]
         })
     },
-    [PIPELINE_TEMPLATE_MUTATION]: (state, { pipelineTemplate }) => {
+    [PIPELINE_TEMPLATE_MUTATION]: (state, { pipelineTemplateMap }) => {
         return Object.assign(state, {
-            pipelineTemplate
+            pipelineTemplateMap
         })
     },
     [STORE_TEMPLATE_MUTATION]: (state, { storeTemplate }) => {
@@ -120,26 +119,22 @@ export const mutations = {
         })
         return state
     },
-    [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { container, param }) => {
-        Object.assign(container, param)
-        return state
-    },
-    [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
-        return Object.assign(state, {
-            pipelineSetting: {}
-        })
-    },
     [REFRESH_QUALITY_LOADING_MUNTATION]: (state, status) => {
         const refreshLoading = status
         Object.assign(state, {
             refreshLoading
         })
         return state
+    },
+    [SET_PAC_SUPPORT_SCM_TYPE_LIST]: (state, pacSupportScmTypeList) => {
+        Object.assign(state, {
+            pacSupportScmTypeList
+        })
     }
 }
 
 export const actions = {
-    
+
     // 获取模板的所有范畴
     requestCategory: async ({ commit }) => {
         try {
@@ -155,8 +150,12 @@ export const actions = {
     requestPipelineTemplate: async ({ commit }, { projectId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
+            for (const key in (response?.data?.templates ?? {})) {
+                const item = response.data.templates[key]
+                item.isStore = item.templateType === 'CONSTRAINT'
+            }
             commit(PIPELINE_TEMPLATE_MUTATION, {
-                pipelineTemplate: (response.data || {}).templates
+                pipelineTemplateMap: (response.data || {}).templates
             })
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -181,10 +180,7 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestInterceptAtom: async ({ commit }, { projectId, pipelineId }) => {
-        const params = {
-            pipelineId: pipelineId
-        }
+    requestInterceptAtom: async ({ commit }, { projectId, ...params }) => {
         try {
             const response = await request.get(`/${QUALITY_API_URL_PREFIX}/user/rules/v2/${projectId}/matchRuleList`, { params })
 
@@ -222,13 +218,38 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    startDebugDocker: async ({ commit }, data) => {
+        return request.post('dispatch-docker/api/user/docker/debug/start/', data).then(response => {
+            return response.data
+        })
+    },
+    stopDebugDocker: async ({ commit }, { projectId, pipelineId, vmSeqId, dispatchType }) => {
+        return request.post(`dispatch-docker/api/user/docker/debug/stop/projects/${projectId}/pipelines/${pipelineId}/vmseqs/${vmSeqId}?dispatchType=${dispatchType}`).then(response => {
+            return response.data
+        })
+    },
+    resizeTerm: async ({ commit }, { resizeUrl, params }) => {
+        return request.post(`dispatch-docker/api/user/${resizeUrl}`, params).then(response => {
+            return response && response.Id
+        })
+    },
     requestPartFile: async ({ commit }, { projectId, params }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/search`, params).then(response => {
             return response.data
         })
     },
-    requestExternalUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
-        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {
+    requestOutputs: async ({ commit }, { projectId, pipelineId, buildId, ...params }) => {
+        const hasBuildId = !!buildId
+        const { data } = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${hasBuildId ? `${buildId}/` : ''}search`, params)
+        return {
+            page: 1,
+            pageSize: data.pageSize ?? data.length,
+            count: data.count ?? data.length,
+            records: data.records ?? data
+        }
+    },
+    requestExternalUrl: async ({ commit }, { projectId, type, path }) => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${type}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
         })
     },
@@ -238,8 +259,19 @@ export const actions = {
             return response.data
         })
     },
-    requestCopyArtifactory: async ({ commit }, { projectId, pipelineId, buildId, params }) => {
-        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${pipelineId}/${buildId}/copyToCustom`, params).then(response => {
+    requestCustomFolder: async (_, { projectId, params }) => {
+        const res = await request.get(`${ARTIFACTORY_API_URL_PREFIX}/user/custom-repo/${projectId}/dir/tree`, {
+            params
+        })
+        return res.data
+    },
+    requestCopyArtifactory: async ({ commit }, { projectId, pipelineId, buildNo, params }) => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${pipelineId}/${buildNo}/copyToCustom`, params).then(response => {
+            return response.data
+        })
+    },
+    requestCopyArtifactories: async ({ commit }, params) => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/file/copy`, params).then(response => {
             return response.data
         })
     },
@@ -278,8 +310,38 @@ export const actions = {
             return response.data
         })
     },
-    
+
     updateRefreshQualityLoading: ({ commit }, status) => {
         commit(REFRESH_QUALITY_LOADING_MUNTATION, status)
+    },
+    getSupportPacScmTypeList: async ({ commit, state }) => {
+        try {
+            if (state.pacSupportScmTypeList.length) {
+                return
+            }
+            const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/supportScmType`)
+            commit(SET_PAC_SUPPORT_SCM_TYPE_LIST, data)
+        } catch (e) {
+            console.log(e)
+        }
+    },
+    isPACOAuth: async (_, { projectId, ...query }) => {
+        const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/isOauth`, {
+            params: query
+        })
+        return data
+    },
+    getPACRepoList: async (_, { projectId, ...params }) => {
+        try {
+            const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/hasPermissionList`, {
+                params
+            })
+            return data
+        } catch (e) {
+            console.log(e)
+        }
+    },
+    getPACRepoCiDirList: (_, { projectId, repoHashId }) => {
+        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
     }
 }

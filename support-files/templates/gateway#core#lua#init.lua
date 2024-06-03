@@ -23,41 +23,35 @@ config = {
     docs_dir = "__BK_CI_HOME__/docs",
     static_dir_codecc = "__BK_CODECC_HOME__/frontend",
     static_dir_codecc_gray = "__BK_CODECC_HOME__/frontend-gray",
-    http_schema = "__BK_HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
-    paas_host = "__BK_PAAS_FQDN__", -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
+    http_schema = "__BK_HTTP_SCHEMA__",        -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
+    paas_host = "__BK_PAAS_FQDN__",            -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
     paas_http_port = "__BK_PAAS_HTTPS_PORT__", -- 蓝鲸PaaS平台域名的端口, 如果有对接才配置修改，开源默认没对接
-    login_url = "__BK_CI_PAAS_LOGIN_URL__", -- 蓝鲸PaaS平台登录URL, 如果有对接才配置修改，开源默认没对接
-    service_name = "", -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
-    allow_hosts = {"__BK_CI_GATEWAY_CORS_ALLOW_LIST__"},
-    allow_headers = "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN",
+    login_url = "__BK_CI_PAAS_LOGIN_URL__",    -- 蓝鲸PaaS平台登录URL, 如果有对接才配置修改，开源默认没对接
+    service_name = "",                         -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
+    allow_hosts = { "__BK_CI_GATEWAY_CORS_ALLOW_LIST__" },
+    allow_headers =
+    "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN",
     ns = {
-        ip = {"__BK_CI_CONSUL_IP__"},
+        ip = { "__BK_CI_CONSUL_IP__" },
         port = __BK_CI_CONSUL_DNS_PORT__,
         http_port = __BK_CI_CONSUL_HTTP_PORT__,
         domain = "__BK_CI_CONSUL_DOMAIN__",
         tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
-        suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
-        nodes_url = "/v1/catalog/nodes"
-    },
-    ns_devnet = {
-        ip = {"__BK_CI_CONSUL_DEVNET_IP__"},
-        port = __BK_CI_CONSUL_DNS_PORT__,
-        http_port = __BK_CI_CONSUL_PORT__,
-        domain = "__BK_CI_CONSUL_DOMAIN__",
-        tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
+        codecc_tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
         suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
         nodes_url = "/v1/catalog/nodes"
     },
     paasCIDomain = "__BK_CI_PAASCI_FQDN__",
-    job = {domain = "__BK_CI_JOB_FQDN__"},
+    job = { domain = "__BK_CI_JOB_FQDN__" },
     redis = {
         host = "__BK_CI_REDIS_HOST__",
         port = __BK_CI_REDIS_PORT__,
         pass = "__BK_CI_REDIS_PASSWORD__", -- redis 密码，没有密码的话，把这行注释掉
-        database = __BK_CI_REDIS_DB__, -- 默认选择db0
-        max_idle_time = 600000, -- 保留在连接池的时间
-        pool_size = 10, -- 连接池的大小
-        backlog = 10 -- 池外连接最大值
+        database = __BK_CI_REDIS_DB__,     -- 默认选择db0
+        max_idle_time = 600000,            -- 保留在连接池的时间
+        pool_size = 5,                     -- 连接池的大小
+        backlog = 100,                     -- 连接等待队列
+        ssl = __BK_CI_REDIS_SSL__
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__BK_SSM_HOST__",
@@ -67,6 +61,11 @@ config = {
         url = "__BK_CI_GATEWAY_SSM_TOKEN_URL__", -- 接口路径
         app_code = "__BK_CI_APP_CODE__",
         app_secret = "__BK_CI_APP_TOKEN__"
+    },
+    esb = {
+        enabled = __BK_ESB_ENABLED__,
+        host = "__BK_ESB_HOST__",
+        path = "/api/c/compapi/v2/bk_login/is_login"
     },
     artifactory = {
         port = "__BK_CI_JFROG_HTTP_PORT__",
@@ -84,9 +83,25 @@ config = {
         user = "__BK_CI_INFLUXDB_USER__",
         password = "__BK_CI_INFLUXDB_PASSWORD__"
     },
-    bkrepo = {domain = "__BK_REPO_HOST__", authorization = "__BK_CI_BKREPO_AUTHORIZATION__"}
+    bkrepo = {
+        domain = "__BK_REPO_FQDN__",
+        authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
+    },
+    bkci = { host = "__BK_CI_FQDN__", port = 80 },
+    kubernetes = {
+        domain = "kubernetes.demo.com",
+        switchAll = false,
+        codecc = { domain = "kubernetes.demo.com" },
+        useForceHeader = false,
+        tags = {},
+        codeccTags = {},
+        api = {
+            url = "https://127.0.0.1/api/v1/nodes",
+            token = ""
+        },
+        special_domain = {}
+    }
 }
 
 require("init_common")
 require("ip_whitelist")
-

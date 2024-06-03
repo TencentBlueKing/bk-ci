@@ -36,8 +36,12 @@ class StorageProperties {
     val enable: String? = null
     @Value("\${log.storage.type}")
     val type: String = "lucene"
-    @Value("\${log.storage.closeInDay:#{null}}")
-    val closeInDay: Int? = null
+    @Value("\${log.storage.coldInDay:#{null}}")
+    val coldInDay: Int? = null
     @Value("\${log.storage.deleteInDay:#{null}}")
     val deleteInDay: Int? = null
+    @Value("\${log.storage.makeColdKey:#{null}}")
+    val makeColdKey: String? = null
+    @Value("\${log.storage.makeColdValue:#{null}}")
+    val makeColdValue: String? = null
 }

@@ -28,8 +28,7 @@
 package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /*
 * {
@@ -84,80 +83,86 @@ import io.swagger.annotations.ApiModelProperty
 }
 * */
 
-@ApiModel("git mr信息")
+@Schema(title = "git mr信息")
 data class GitMrInfo(
     val title: String = "",
     @JsonProperty("target_project_id")
-    @ApiModelProperty(name = "target_project_id")
+    @get:Schema(title = "target_project_id")
     val targetProjectId: String = "",
     @JsonProperty("target_branch")
-    @ApiModelProperty(name = "target_branch")
+    @get:Schema(title = "target_branch")
     val targetBranch: String? = "",
     @JsonProperty("source_project_id")
-    @ApiModelProperty(name = "source_project_id")
+    @get:Schema(title = "source_project_id")
     val sourceProjectId: String? = "",
     @JsonProperty("source_branch")
-    @ApiModelProperty(name = "source_branch")
+    @get:Schema(title = "source_branch")
     val sourceBranch: String? = "",
     @JsonProperty("created_at")
-    @ApiModelProperty(name = "created_at")
+    @get:Schema(title = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
-    @ApiModelProperty(name = "updated_at")
+    @get:Schema(title = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
-    @ApiModelProperty(name = "iid")
+    @get:Schema(title = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
-    @ApiModelProperty(name = "id")
+    @get:Schema(title = "id")
     val mrId: String = "",
     val labels: List<String>,
     val description: String? = "",
     val assignee: GitMrInfoAssignee? = null,
     val milestone: GitMrInfoMilestone? = null,
-    val author: GitMrInfoAuthor = GitMrInfoAuthor()
+    val author: GitMrInfoAuthor = GitMrInfoAuthor(),
+    @JsonProperty("merge_status")
+    @get:Schema(title = "merge_status")
+    val mergeStatus: String = "",
+    @JsonProperty("base_commit")
+    @get:Schema(title = "base_commit")
+    val baseCommit: String?
 ) {
     data class GitMrInfoAssignee(
         @JsonProperty("id")
-        @ApiModelProperty(name = "id")
+        @get:Schema(title = "id")
         val id: Int = 0,
         val username: String = "",
         @JsonProperty("web_url")
-        @ApiModelProperty(name = "web_url")
+        @get:Schema(title = "web_url")
         val webUrl: String = "",
         @JsonProperty("avatar_url")
-        @ApiModelProperty(name = "avatar_url")
+        @get:Schema(title = "avatar_url")
         val avatarUrl: String = ""
     )
 
     data class GitMrInfoMilestone(
         @JsonProperty("id")
-        @ApiModelProperty(name = "id")
+        @get:Schema(title = "id")
         val id: Int = 0,
         @JsonProperty("title")
-        @ApiModelProperty(name = "title")
+        @get:Schema(title = "title")
         val title: String = "",
         @JsonProperty("due_date")
-        @ApiModelProperty(name = "due_date")
+        @get:Schema(title = "due_date")
         val dueDate: String = "",
         val description: String? = ""
     )
 
     data class GitMrInfoAuthor(
         @JsonProperty("id")
-        @ApiModelProperty(name = "id")
+        @get:Schema(title = "id")
         val id: Int = 0,
         @JsonProperty("username")
-        @ApiModelProperty(name = "username")
+        @get:Schema(title = "username")
         val username: String = "",
         @JsonProperty("web_url")
-        @ApiModelProperty(name = "web_url")
+        @get:Schema(title = "web_url")
         val webUrl: String = "",
         @JsonProperty("title")
-        @ApiModelProperty(name = "title")
+        @get:Schema(title = "title")
         val title: String = "",
         @JsonProperty("avatar_url")
-        @ApiModelProperty(name = "avatar_url")
+        @get:Schema(title = "avatar_url")
         val avatarUrl: String = ""
     )
 }

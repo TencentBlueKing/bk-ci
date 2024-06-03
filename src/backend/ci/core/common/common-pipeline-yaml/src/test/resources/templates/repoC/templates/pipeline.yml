@@ -1,0 +1,227 @@
+version: v2.0
+
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: receiversMessage
+    type: array
+    default:
+      - "${{ci.actor}}"
+  - name: receiversChat
+    type: array
+  - name: receiversEmail
+    type: array
+    default: [ "${{ci.actor}}" ]
+  - name: username1
+    type: string
+
+variables:
+  DEPLOY_TYPE:
+    value: dev
+  APPROVE:
+    value: ${{ sss }}_${{ approve22 }}
+  GIT_USERNAME:
+    value: user1
+    readonly: true
+  template:
+    #    - name: variables.yml
+    #      parameters:
+    #        username: VARIABLES
+    - name: variable1.yml@repoA
+      parameters:
+        username: RES_VARIABLE
+
+stages:
+  - name: "root_stage_id_1"
+    id: root_stage_id_1
+    if:  ${{parameters.username}} == world
+    check-in:
+      reviews:
+        flows:
+          - name: 审批组1
+            reviewers: [ "${{ci.actor}}" ]
+          - name: 审批组2
+            reviewers: ${{ci.actor}}
+      gates:
+        - template: epc_checks.yml
+          parameters:
+            receivers:
+              - ruotiantang
+    jobs:
+      root_job_id_1:
+        name: root_job_id_1
+        runs-on:
+          - docker-on-vm
+        container:
+          image: tlinux:2.2
+          credentials:
+            username: user1
+            password: password
+        services:
+          mysql1:
+            image: mysql:8.0
+            with:
+              password: 123456
+        if:  ${{ parameters.username }} == world
+        steps:
+          - name: "root_step_1"
+            id: root_step_1
+            if: parameters.username == world
+            uses: UploadArtifactory@1.*
+            with:
+              path: test.txt
+            timeout-minutes: 480
+            continue-on-error: false
+            retry-times: 0
+#            env:
+          #          - template: steps.yml
+          #            parameters:
+          #              username: STEP
+          - run: |
+              echo "root_step_1"
+            if:  steps.${{ parameters.username1 }}.xxx.outputs == world
+        timeout-minutes: 480
+        env:
+        continue-on-error: false
+        strategy:
+          matrix:
+          fast-kill: true
+          max-parallel: 10
+        depend-on:
+          - job1
+          - job2
+      root_job_id_2:
+        name: root_job_id_2
+        steps:
+          - run: |
+              echo "root_stage_id_1, root_job_id_2"
+            if: ${{steps.${{parameters.username1}}.outputs.xxx}} == world
+        depend-on:
+          - job_id_1
+      template:
+        #        - name: jobs.yml
+        #          parameters:
+        #            username: JOB
+        - name: job1.yml@repoA
+          parameters:
+            username: RES_JOB
+  #  - template: stages.yml
+  #    parameters:
+  #      username: STAGE
+  - template: stage1.yml@repoA
+    parameters:
+      username: RES_STAGE
+#
+#on-fail:
+#  job1:
+#    name: test1
+#  job2:
+#    name: test2
+#  steps:
+#    - run: |
+#        echo "do something when the upstream fails"
+#
+
+#finally:
+#  root_job_id_1:
+#    name: root_job_id_1
+#    runs-on:
+#      - docker-on-vm
+#    container:
+#      image: tlinux:2.2
+#      credentials:
+#        username: user1
+#        password: password
+#    services:
+#      mysql1:
+#        image: mysql:8.0
+#        with:
+#          password: 123456
+#    if:
+#      - variables.DEPLOY_TYPE == 'dev' || cancelled()
+#    steps:
+#      - name: "root_step_1"
+#        id: root_step_1
+#        if: xxx
+#        uses: UploadArtifactory@1.*
+#        with:
+#          path: test.txt
+#        timeout-minutes: 480
+#        continue-on-error: false
+#        retry-times: 0
+#        env:
+#      #          - template: steps.yml
+#      #            parameters:
+#      #              username: STEP
+#      - run: |
+#          echo "root_step_1"
+#    timeout-minutes: 480
+#    env:
+#    continue-on-error: false
+#    strategy:
+#      matrix:
+#      fast-kill: true
+#      max-parallel: 10
+#    depend-on:
+#      - job1
+#      - job2
+#  root_job_id_2:
+#    name: root_job_id_2
+#    steps:
+#      - run: |
+#          echo "root_stage_id_1, root_job_id_2"
+#    depend-on:
+#      - job_id_1
+#  template:
+#    #        - name: jobs.yml
+#    #          parameters:
+#    #            username: JOB
+#    - name: job1.yml@repoA
+#      parameters:
+#        username: RES_JOB
+
+resources:
+  repositories:
+    - repository: repoA
+      name: repoA
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+
+notices:
+  - type: email
+    title: this is a email notice
+    content: this is a email notice,content is hello.
+    receivers:
+      - user1
+      - user2
+    ccs:
+      - user3
+    if: SUCCESS
+  - type: wework-message
+    title: this is a wework-message notice
+    content: this is a wework-message notice,content is hello.
+    receivers:
+      - user1
+      - user2
+  - type: wework-chat
+    chat-id:
+      - xxxxxxxx
+    content: this is a wework-chat notice,content is hello.
+  - type: email
+    title: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    content: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    receivers: ${{parameters.receiversEmail}}
+    ccs: ${{parameters.receiversEmail}}
+    if: FAILURE
+  - type: wework-message
+    content: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    receivers: ${{parameters.receiversMessage}}
+    if: FAILURE
+  - type: wework-chat
+    chat-id: ${{parameters.receiversChat}}
+      # - ww230072302
+    content: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    if: FAILURE
+

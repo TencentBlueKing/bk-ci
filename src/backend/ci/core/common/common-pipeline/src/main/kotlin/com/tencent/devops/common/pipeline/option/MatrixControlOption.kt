@@ -30,35 +30,36 @@ package com.tencent.devops.common.pipeline.option
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 /**
  *  构建矩阵配置项
  */
-@ApiModel("构建矩阵配置项模型")
+@Schema(title = "构建矩阵配置项模型")
+@Suppress("ReturnCount")
 data class MatrixControlOption(
-    @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
+    @get:Schema(title = "分裂策略（支持变量、Json、参数映射表）", required = true)
     val strategyStr: String? = null, // Map<String, List<String>>
-    @ApiModelProperty("额外的参数组合（变量名到特殊值映射的数组）", required = false)
+    @get:Schema(title = "额外的参数组合（变量名到特殊值映射的数组）", required = false)
     val includeCaseStr: String? = null, // List<Map<String, String>>
-    @ApiModelProperty("排除的参数组合（变量名到特殊值映射的数组）", required = false)
+    @get:Schema(title = "排除的参数组合（变量名到特殊值映射的数组）", required = false)
     val excludeCaseStr: String? = null, // List<Map<String, String>>
-    @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
+    @get:Schema(title = "是否启用容器失败快速终止整个矩阵", required = false)
     val fastKill: Boolean? = false,
-    @ApiModelProperty("Job运行的最大并发量", required = false)
+    @get:Schema(title = "Job运行的最大并发量", required = false)
     var maxConcurrency: Int? = 5,
-    @ApiModelProperty("自定义调度类型（用于生成DispatchType的任意对象）", required = false)
+    @get:Schema(title = "自定义调度类型（用于生成DispatchType的任意对象）", required = false)
     var customDispatchInfo: DispatchInfo? = null, // DispatchTypeParser的传入和解析保持一致即可
-    @ApiModelProperty("矩阵组的总数量", required = false)
+    @get:Schema(title = "矩阵组的总数量", required = false)
     var totalCount: Int? = null,
-    @ApiModelProperty("完成执行的数量", required = false)
+    @get:Schema(title = "完成执行的数量", required = false)
     var finishCount: Int? = null
 ) {
 
@@ -71,7 +72,7 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到的矩阵配置
      */
-    fun convertMatrixConfig(buildContext: Map<String, String>): MatrixConfig {
+    fun convertMatrixConfig(buildContext: Map<String, String>, asCodeEnabled: Boolean? = false): MatrixConfig {
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
             convertStrategyYaml(buildContext)
@@ -109,7 +110,7 @@ data class MatrixControlOption(
             try {
                 this.addAll(convertCase(excludeCaseStr))
                 if (this.size > 0) {
-                    result["include"] = this
+                    result["exclude"] = this
                 }
             } catch (e: Exception) {
                 logger.warn("this because of formJSON:${e.message}")
@@ -130,8 +131,10 @@ data class MatrixControlOption(
         }
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
         return MatrixConfig(
-            strategy = JsonUtil.anyTo(YamlUtil.to<Map<String, List<String>>>(contextStr),
-                object : TypeReference<Map<String, List<String>>?>() {}),
+            strategy = JsonUtil.anyTo(
+                YamlUtil.to<Map<String, List<String>>>(contextStr),
+                object : TypeReference<Map<String, List<String>>?>() {}
+            ),
             include = mutableListOf(), exclude = mutableListOf()
         )
     }
@@ -139,7 +142,8 @@ data class MatrixControlOption(
     private fun replaceJsonPattern(command: String, buildContext: Map<String, String>): String {
         return ReplacementUtils.replace(
             command = command,
-            replacement = object : ReplacementUtils.KeyReplacement {
+            replacement = object : KeyReplacement {
+                // 内外源不一致，此处多传一个doubleCurlyBraces只为实现内部版接口
                 override fun getReplacement(key: String): String? {
                     // 匹配fromJSON()
                     val matcher = MATRIX_JSON_KEY_PATTERN.matcher(key)
@@ -170,12 +174,18 @@ data class MatrixControlOption(
             // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
             val matrixMap = JsonUtil.to<Map<String, List<Any>?>>(contextStr)
             return MatrixConfig(
-                strategy = JsonUtil.anyTo(matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
-                    object : TypeReference<Map<String, List<String>>?>() {}),
-                include = JsonUtil.anyTo(matrixMap["include"],
-                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
-                exclude = JsonUtil.anyTo(matrixMap["exclude"],
-                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
+                strategy = JsonUtil.anyTo(
+                    matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
+                    object : TypeReference<Map<String, List<String>>?>() {}
+                ),
+                include = JsonUtil.anyTo(
+                    matrixMap["include"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}
+                ) ?: mutableListOf(),
+                exclude = JsonUtil.anyTo(
+                    matrixMap["exclude"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}
+                ) ?: mutableListOf()
             )
         } catch (ignore: Exception) {
             // 适用于不包含key的list类型JSON,这种情况只会是strategy

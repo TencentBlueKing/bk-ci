@@ -33,8 +33,9 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
-import org.junit.Assert
-import org.junit.Test
+import com.tencent.devops.process.utils.DependOnUtils
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class DependOnUtilTest {
 
@@ -47,7 +48,6 @@ class DependOnUtilTest {
             jobId = "job_bash1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -58,38 +58,6 @@ class DependOnUtilTest {
             jobId = "job_bash2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
-                enable = true
-            )
-        )
-        val stage = Stage(
-            id = "1",
-            containers = listOf(container1, container2)
-        )
-        DependOnUtils.checkRepeatedJobId(stage)
-    }
-
-    @Test(expected = ErrorCodeException::class)
-    fun `check repeated job`() {
-        val container1 = NormalContainer(
-            id = "1",
-            enableSkip = false,
-            conditions = null,
-            jobId = "job_bash1",
-            jobControlOption = JobControlOption(
-                runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
-                enable = true
-            )
-        )
-        val container2 = NormalContainer(
-            id = "2",
-            enableSkip = false,
-            conditions = null,
-            jobId = "job_bash1",
-            jobControlOption = JobControlOption(
-                runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -101,6 +69,35 @@ class DependOnUtilTest {
     }
 
     @Test
+    fun `check repeated job`() {
+        val container1 = NormalContainer(
+            id = "1",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_bash1",
+            jobControlOption = JobControlOption(
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                enable = true
+            )
+        )
+        val container2 = NormalContainer(
+            id = "2",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_bash1",
+            jobControlOption = JobControlOption(
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                enable = true
+            )
+        )
+        val stage = Stage(
+            id = "1",
+            containers = listOf(container1, container2)
+        )
+        Assertions.assertThrows(ErrorCodeException::class.java) { DependOnUtils.checkRepeatedJobId(stage) }
+    }
+
+    @Test
     fun `check empty job`() {
         val container1 = NormalContainer(
             id = "1",
@@ -108,7 +105,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -118,7 +114,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -138,7 +133,6 @@ class DependOnUtilTest {
             jobId = "job_bash1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -148,7 +142,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job_bash1", "job_bash2")
@@ -164,7 +157,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job_bash1")
@@ -175,7 +167,7 @@ class DependOnUtilTest {
             containers = listOf(container1, expectedContainer2)
         )
         DependOnUtils.checkRepeatedJobId(stage)
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -186,7 +178,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -196,7 +187,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -210,7 +200,7 @@ class DependOnUtilTest {
         )
         val params = mapOf<String, String>()
         DependOnUtils.initDependOn(stage, params)
-        Assert.assertEquals(stage, expectedStage)
+        Assertions.assertEquals(stage, expectedStage)
     }
 
     @Test
@@ -222,7 +212,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -232,7 +221,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1")
@@ -248,7 +236,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1"),
@@ -261,10 +248,10 @@ class DependOnUtilTest {
         )
         val params = mapOf<String, String>()
         DependOnUtils.initDependOn(stage, params)
-        Assert.assertEquals(stage, expectedStage)
+        Assertions.assertEquals(stage, expectedStage)
     }
 
-    @Test(expected = ErrorCodeException::class)
+    @Test
     fun `check init dependon for cycle dependon`() {
         val container1 = NormalContainer(
             id = "1",
@@ -273,7 +260,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job2")
@@ -286,7 +272,6 @@ class DependOnUtilTest {
             jobId = "job2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1")
@@ -297,7 +282,7 @@ class DependOnUtilTest {
             containers = listOf(container1, container2)
         )
         val params = mapOf<String, String>()
-        DependOnUtils.initDependOn(stage, params)
+        Assertions.assertThrows(ErrorCodeException::class.java) { DependOnUtils.initDependOn(stage, params) }
     }
 
     @Test
@@ -309,7 +294,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -320,7 +304,6 @@ class DependOnUtilTest {
             jobId = "job2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1", "job3")
@@ -340,7 +323,6 @@ class DependOnUtilTest {
             jobId = "job2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1", "job3"),
@@ -351,7 +333,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -363,7 +345,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -373,7 +354,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "job1"
@@ -392,7 +372,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "job1",
@@ -403,7 +382,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -415,7 +394,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -425,7 +403,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}"
@@ -444,7 +421,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}"
@@ -454,7 +430,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -466,7 +442,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -476,7 +451,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}"
@@ -495,7 +469,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}",
@@ -506,6 +479,6 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 }

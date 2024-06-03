@@ -37,7 +37,8 @@ dependencies {
     api(project(":core:repository:model-repository"))
     api(project(":core:common:common-db"))
     api(project(":core:auth:api-auth"))
-
+    api(project(":core:project:api-project"))
+    api(project(":core:common:common-auth:common-auth-provider"))
     api("com.google.code.gson:gson")
     api("org.eclipse.jgit:org.eclipse.jgit")
 }

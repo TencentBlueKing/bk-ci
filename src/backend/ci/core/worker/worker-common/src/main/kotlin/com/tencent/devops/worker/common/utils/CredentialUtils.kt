@@ -33,15 +33,25 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.KeyReplacement
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
+import com.tencent.devops.common.expression.context.RuntimeNamedValue
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import org.slf4j.LoggerFactory
 import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 /**
  * This util is to get the credential from core
@@ -51,9 +61,9 @@ import javax.ws.rs.NotFoundException
 object CredentialUtils {
 
     private val sdkApi = ApiFactory.create(CredentialSDKApi::class)
+    var signToken = ""
 
     fun getCredential(
-        buildId: String,
         credentialId: String,
         showErrorLog: Boolean = true,
         acrossProjectId: String? = null
@@ -81,9 +91,56 @@ object CredentialUtils {
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
-                LoggerService.addErrorLine("获取凭证（$credentialId）失败， 原因：${ignored.message}")
+                LoggerService.addErrorLine("Fail to get the credential($credentialId)， cause：${ignored.message}")
             }
             throw ignored
+        }
+    }
+
+    fun String.parseCredentialValue(
+        context: Map<String, String>? = null,
+        acrossProjectId: String? = null
+    ) = ReplacementUtils.replace(
+        this,
+        object : KeyReplacement {
+            override fun getReplacement(key: String): String? {
+                // 支持嵌套的二次替换
+                context?.get(key)?.let { return it }
+                // 如果不是凭据上下文则直接返回原value值
+                return if (key == CI_TOKEN_CONTEXT) {
+                    CIKeywordsService.getOrRequestToken()
+                } else {
+                    getCredentialContextValue(key, acrossProjectId)
+                }
+            }
+        },
+        context
+    )
+
+    class CredentialRuntimeNamedValue(
+        override val key: String = "settings",
+        private val targetProjectId: String? = null
+    ) : RuntimeNamedValue {
+        override fun getValue(key: String): PipelineContextData? {
+            return DictionaryContextData().apply {
+                try {
+                    val pair = DHUtil.initKey()
+                    val credentialInfo = requestCredential(key, pair, targetProjectId).data!!
+                    val credentialList = getDecodedCredentialList(credentialInfo, pair)
+                    val keyMap = CredentialType.Companion.getKeyMap(credentialInfo.credentialType.name)
+                    logger.info(
+                        "[$key]|CredentialRuntimeNamedValue|credentialInfo=$credentialInfo|" +
+                            "credentialList=$credentialList|keyMap=$keyMap"
+                    )
+                    credentialList.forEachIndexed { index, credential ->
+                        val token = keyMap["v${index + 1}"] ?: return@forEachIndexed
+                        add(token, StringContextData(credential))
+                    }
+                } catch (ignore: Throwable) {
+                    logger.warn("[$key]|Expression get credential value: ", ignore)
+                    return null
+                }
+            }
         }
     }
 
@@ -95,24 +152,43 @@ object CredentialUtils {
         val encoder = Base64.getEncoder()
         logger.info("Start to get the credential($credentialId|$acrossProjectId)")
 
-        val result = sdkApi.get(credentialId, encoder.encodeToString(pair.publicKey))
+        val result = sdkApi.get(
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            signToken = signToken
+        )
         if (result.isOk() && result.data != null) {
             return result
         }
         // 当前项目取不到查看是否有跨项目凭证
         if (!acrossProjectId.isNullOrBlank()) {
             val acrossResult =
-                sdkApi.getAcrossProject(acrossProjectId, credentialId, encoder.encodeToString(pair.publicKey))
+                sdkApi.getAcrossProject(
+                    targetProjectId = acrossProjectId,
+                    credentialId = credentialId,
+                    publicKey = encoder.encodeToString(pair.publicKey),
+                    signToken = signToken
+                )
             if (acrossResult.isNotOk() || acrossResult.data == null) {
-                logger.error("Fail to get the across project($acrossProjectId) " +
-                    "credential($credentialId) because of ${result.message}")
-                throw NotFoundException(result.message!!)
+                logger.error(
+                    "Fail to get the across project($acrossProjectId) " +
+                        "credential($credentialId) because of ${result.message}"
+                )
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = result.message!!
+                )
             }
             return acrossResult
         }
 
         logger.error("Fail to get the credential($credentialId) because of ${result.message}")
-        throw NotFoundException(result.message!!)
+        throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = result.message!!
+        )
     }
 
     fun getCredentialContextValue(key: String, acrossProjectId: String? = null): String? {
@@ -127,7 +203,14 @@ object CredentialUtils {
             logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId")
             value
         } catch (ignore: Exception) {
-            logger.warn("凭证ID变量($ticketId)不存在", ignore.message)
+            logger.warn(
+                MessageUtil.getMessageByLocale(
+                    WorkerMessageCode.CREDENTIAL_ID_NOT_EXIST,
+                    AgentEnv.getLocaleLanguage(),
+                    arrayOf(ticketId)
+                ),
+                ignore.message
+            )
             null
         }
     }
@@ -135,18 +218,19 @@ object CredentialUtils {
     private fun getCredentialKey(key: String): String {
         // 参考CredentialType
         return if (key.startsWith("settings.") && (
-                key.endsWith(".password") ||
-                    key.endsWith(".access_token") ||
-                    key.endsWith(".username") ||
-                    key.endsWith(".secretKey") ||
-                    key.endsWith(".appId") ||
-                    key.endsWith(".privateKey") ||
-                    key.endsWith(".passphrase") ||
-                    key.endsWith(".token") ||
-                    key.endsWith(".cosappId") ||
-                    key.endsWith(".secretId") ||
-                    key.endsWith(".region")
-                )) {
+            key.endsWith(".password") ||
+                key.endsWith(".access_token") ||
+                key.endsWith(".username") ||
+                key.endsWith(".secretKey") ||
+                key.endsWith(".appId") ||
+                key.endsWith(".privateKey") ||
+                key.endsWith(".passphrase") ||
+                key.endsWith(".token") ||
+                key.endsWith(".cosappId") ||
+                key.endsWith(".secretId") ||
+                key.endsWith(".region")
+            )
+        ) {
             key.substringAfter("settings.").substringBeforeLast(".")
         } else {
             key

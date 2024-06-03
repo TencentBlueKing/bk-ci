@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS `T_COMMON_NOTIFY_MESSAGE_TEMPLATE`
     `SENDER`             varchar(128) NOT NULL DEFAULT 'DevOps' COMMENT '邮件发送者',
     `TITLE`              varchar(256)         DEFAULT NULL COMMENT '邮件标题',
     `BODY`               mediumtext  NOT NULL COMMENT '邮件内容',
+	`BODY_MD` 			 mediumtext      NULL COMMENT 'markdown格式内容',
     `CREATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`ID`),
@@ -167,12 +168,28 @@ CREATE TABLE IF NOT EXISTS `T_COMMON_NOTIFY_MESSAGE_TEMPLATE`
     `BODY`               mediumtext  NOT NULL COMMENT '邮件内容',
     `BODY_FORMAT`        tinyint(4)  NOT NULL COMMENT '邮件格式（0:文本 1:html网页）',
     `EMAIL_TYPE`         tinyint(4)  NOT NULL COMMENT '邮件类型（0:外部邮件 1:内部邮件）',
+    `TENCENT_CLOUD_TEMPLATE_ID`           int(11)     NULL     COMMENT '腾讯云邮件模板id',
     `CREATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`ID`),
     KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT='email模板表';
+
+CREATE TABLE IF NOT EXISTS `T_VOICE_NOTIFY_MESSAGE_TEMPLATE`
+(
+    `ID`                 varchar(32) NOT NULL COMMENT '主键ID',
+    `COMMON_TEMPLATE_ID` varchar(32) NOT NULL COMMENT '模板ID',
+    `CREATOR`            varchar(50) NOT NULL COMMENT '创建者',
+    `MODIFIOR`           varchar(50) NOT NULL COMMENT '修改者',
+    `TASK_NAME`          varchar(256) DEFAULT NULL COMMENT '任务名称',
+    `CONTENT`            text  NOT NULL COMMENT '语音内容',
+    `CREATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT='语音模板表';
 
 -- ----------------------------
 -- Table structure for T_NOTIFY_WEWORK
@@ -205,5 +222,36 @@ CREATE TABLE IF NOT EXISTS `T_WEWORK_NOTIFY_MESSAGE_TEMPLATE`
     KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT='wework模板表';
+
+CREATE TABLE IF NOT EXISTS `T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE`
+(
+    `ID`                 varchar(32) NOT NULL COMMENT '主键ID',
+    `COMMON_TEMPLATE_ID` varchar(32) NOT NULL COMMENT '模板ID',
+    `CREATOR`            varchar(50) NOT NULL COMMENT '创建者',
+    `MODIFIOR`           varchar(50) NOT NULL COMMENT '修改者',
+    `TITLE`              varchar(256)         DEFAULT NULL COMMENT '邮件标题',
+    `BODY`               mediumtext  NOT NULL COMMENT '内容',
+    `CREATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT='企业微信群模板表';
+
+CREATE TABLE IF NOT EXISTS `T_NOTIFY_VOICE` (
+  `ID` varchar(32) NOT NULL DEFAULT '' COMMENT '主键ID',
+  `SUCCESS` bit(1) NOT NULL COMMENT '是否成功',
+  `RECEIVERS` text NOT NULL COMMENT '语音接收者',
+  `TASK_NAME` varchar(255) NOT NULL COMMENT '任务名称',
+  `CONTENT` text NOT NULL COMMENT '呼叫内容',
+  `TRANSFER_RECEIVER` varchar(50) NOT NULL COMMENT '转接责任人',
+  `RETRY_COUNT` int(11) NOT NULL COMMENT '重试次数',
+  `LAST_ERROR` text COMMENT '最后错误内容',
+  `CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+  `TOF_SYS_id` varchar(20) DEFAULT NULL COMMENT 'tof系统id',
+  `FROM_SYS_ID` varchar(20) DEFAULT NULL COMMENT '发送消息的系统id',
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='语音流水表';
 
 SET FOREIGN_KEY_CHECKS = 1;

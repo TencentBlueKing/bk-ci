@@ -46,15 +46,14 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.annotation.SkipLogField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.HashSet
+import java.time.format.DateTimeFormatter.ISO_DATE
+import java.time.format.DateTimeFormatter.ISO_DATE_TIME
+import java.time.format.DateTimeFormatter.ISO_TIME
 
 /**
  *
@@ -75,7 +74,7 @@ object JsonUtil {
     </T> */
     fun <T : Any> skipLogFields(bean: T): String? {
         return try {
-            beanMapperCache.get(bean.javaClass).writeValueAsString(bean)
+            beanMapperCache.get(bean.javaClass)!!.writeValueAsString(bean)
         } catch (ignored: Throwable) {
             loadMapper(bean.javaClass).writeValueAsString(bean)
         }
@@ -83,12 +82,8 @@ object JsonUtil {
 
     // 如果出现50000+以上的不同的数据类（不是对象）时。。。
     // 系统性能一定会下降，永久代区可能会OOM了，但不会是在这里引起的。所以这里限制了一个几乎不可能达到的值
-    private val beanMapperCache: LoadingCache<Class<Any>, ObjectMapper> =
-        CacheBuilder.newBuilder().maximumSize(MAX_CLAZZ).build(object : CacheLoader<Class<Any>, ObjectMapper>() {
-            override fun load(clazz: Class<Any>): ObjectMapper {
-                return loadMapper(clazz)
-            }
-        })
+    private val beanMapperCache = Caffeine.newBuilder().maximumSize(MAX_CLAZZ)
+        .build<Class<Any>, ObjectMapper> { clazz -> loadMapper(clazz) }
 
     private fun loadMapper(clazz: Class<Any>): ObjectMapper {
         val nonEmptyMapper = objectMapper()
@@ -157,18 +152,12 @@ object JsonUtil {
     private fun javaTimeModule(): JavaTimeModule {
         val javaTimeModule = JavaTimeModule()
 
-        javaTimeModule.addSerializer(LocalTime::class.java, LocalTimeSerializer(DateTimeFormatter.ISO_TIME))
-        javaTimeModule.addSerializer(LocalDate::class.java, LocalDateSerializer(DateTimeFormatter.ISO_DATE))
-        javaTimeModule.addSerializer(
-            LocalDateTime::class.java,
-            LocalDateTimeSerializer(DateTimeFormatter.ISO_DATE_TIME)
-        )
-        javaTimeModule.addDeserializer(LocalTime::class.java, LocalTimeDeserializer(DateTimeFormatter.ISO_TIME))
-        javaTimeModule.addDeserializer(LocalDate::class.java, LocalDateDeserializer(DateTimeFormatter.ISO_DATE))
-        javaTimeModule.addDeserializer(
-            LocalDateTime::class.java,
-            LocalDateTimeDeserializer(DateTimeFormatter.ISO_DATE_TIME)
-        )
+        javaTimeModule.addSerializer(LocalTime::class.java, LocalTimeSerializer(ISO_TIME))
+        javaTimeModule.addSerializer(LocalDate::class.java, LocalDateSerializer(ISO_DATE))
+        javaTimeModule.addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer(ISO_DATE_TIME))
+        javaTimeModule.addDeserializer(LocalTime::class.java, LocalTimeDeserializer(ISO_TIME))
+        javaTimeModule.addDeserializer(LocalDate::class.java, LocalDateDeserializer(ISO_DATE))
+        javaTimeModule.addDeserializer(LocalDateTime::class.java, LocalDateTimeDeserializer(ISO_DATE_TIME))
         return javaTimeModule
     }
 
@@ -235,11 +224,11 @@ object JsonUtil {
      * 将对象转不可修改的Map
      * 注意：会忽略掉值为null的属性, 不会忽略空串和空数组/列表对象
      */
-    fun toMutableMap(bean: Any): MutableMap<String, Any> {
+    fun toMutableMap(bean: Any, skipEmpty: Boolean = false): MutableMap<String, Any> {
         return when {
             ReflectUtil.isNativeType(bean) -> mutableMapOf()
             bean is String -> to(bean)
-            else -> to(getObjectMapper().writeValueAsString(bean))
+            else -> to((if (skipEmpty) skipEmptyObjectMapper else getObjectMapper()).writeValueAsString(bean))
         }
     }
 
@@ -292,4 +281,9 @@ object JsonUtil {
     fun <T> anyTo(any: Any?, typeReference: TypeReference<T>): T = getObjectMapper().readValue(
         getObjectMapper().writeValueAsString(any), typeReference
     )
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> Any.deepCopy(): T {
+        return getObjectMapper().readValue(getObjectMapper().writeValueAsString(this), this.javaClass) as T
+    }
 }

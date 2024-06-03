@@ -39,7 +39,9 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -49,15 +51,17 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -73,7 +77,8 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val containerBuildDetailService: ContainerBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val buildLogPrinter: BuildLogPrinter,
     @Autowired(required = false)
@@ -85,6 +90,7 @@ class BuildCancelControl @Autowired constructor(
         private val LOG = LoggerFactory.getLogger(BuildCancelControl::class.java)
     }
 
+    @BkTimed
     fun handle(event: PipelineBuildCancelEvent) {
         val watcher = Watcher(id = "ENGINE|BuildCancel|${event.traceId}|${event.buildId}|${event.status}")
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
@@ -119,16 +125,37 @@ class BuildCancelControl @Autowired constructor(
                 setBuildCancelActionRedisFlag(buildId)
             }
             cancelAllPendingTask(event = event, model = model)
-            // 修改detail model
-            pipelineBuildDetailService.buildCancel(
-                projectId = event.projectId,
-                buildId = event.buildId,
-                buildStatus = event.status
-            )
+            if (event.actionType == ActionType.TERMINATE) {
+                // 修改detail model
+                pipelineBuildRecordService.buildCancel(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    buildStatus = event.status,
+                    cancelUser = event.userId,
+                    executeCount = buildInfo.executeCount ?: 1
+                )
+            }
 
-            val pendingStage = pipelineStageService.getPendingStage(event.projectId, buildId)
+            // 排队的则不再获取Pending Stage，防止Final Stage被执行
+            val pendingStage: PipelineBuildStage? =
+                if (buildInfo.status.isReadyToRun() || buildInfo.status.isNeverRun()) {
+                    null
+                } else {
+                    pipelineStageService.getPendingStage(event.projectId, buildId)
+                }
+
             if (pendingStage != null) {
-                pendingStage.dispatchEvent(event)
+                if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
+                    pipelineStageService.cancelStageBySystem(
+                        userId = event.userId,
+                        buildInfo = buildInfo,
+                        buildStage = pendingStage,
+                        timeout = false
+                    )
+                } else {
+                    pendingStage.dispatchEvent(event)
+                }
             } else {
                 sendBuildFinishEvent(event)
             }
@@ -155,7 +182,7 @@ class BuildCancelControl @Autowired constructor(
     private fun sendBuildFinishEvent(event: PipelineBuildCancelEvent) {
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildFinishEvent(
-                source = "cancel_build",
+                source = BS_CANCEL_BUILD_SOURCE,
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 userId = event.userId,
@@ -169,7 +196,7 @@ class BuildCancelControl @Autowired constructor(
         // #3138 buildCancel支持finallyStage
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildStageEvent(
-                source = "cancel_build",
+                source = BS_CANCEL_BUILD_SOURCE,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = event.userId,
@@ -183,11 +210,22 @@ class BuildCancelControl @Autowired constructor(
     @Suppress("ALL")
     private fun cancelAllPendingTask(event: PipelineBuildCancelEvent, model: Model) {
         val projectId = event.projectId
+        val pipelineId = event.pipelineId
         val buildId = event.buildId
-        val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
-        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, buildId) }
+        val variables: Map<String, String> by lazy {
+            buildVariableService.getAllVariable(
+                projectId,
+                pipelineId,
+                buildId
+            )
+        }
+        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId) }
         val stages = model.stages
-        stages.forEachIndexed forEach@{ index, stage ->
+        stages.forEachIndexed nextStage@{ index, stage ->
+            if (stage.status == null || index == 0) { // Trigger 和 未启动的忽略
+                return@nextStage
+            }
+
             if (event.actionType != ActionType.TERMINATE && stage.finally && index > 1) {
                 // 当前stage为finallyStage且它前一个stage也已经运行过了或者还未运行业务逻辑，则finallyStage也能取消
                 val preStageStatus = BuildStatus.parse(stages[index - 1].status)
@@ -196,10 +234,14 @@ class BuildCancelControl @Autowired constructor(
                 if (getStageExecuteBusFlag(stages[0]) &&
                     (preStageNoExecuteBusFlag || !getStageExecuteBusFlag(stages[1]))
                 ) {
-                    return@forEach
+                    return@nextStage
                 }
             }
-            stage.containers.forEach C@{ container ->
+
+            stage.containers.forEach nextC@{ container ->
+                if (container.status == null || BuildStatus.parse(container.status).isFinish()) { // 未启动的和已完成的忽略
+                    return@nextC
+                }
                 val stageId = stage.id ?: ""
                 cancelContainerPendingTask(
                     stageId = stageId,
@@ -208,7 +250,10 @@ class BuildCancelControl @Autowired constructor(
                     container = container,
                     executeCount = executeCount
                 )
-                container.fetchGroupContainers()?.forEach { c ->
+                container.fetchGroupContainers()?.forEach matrix@{ c ->
+                    if (c.status == null || BuildStatus.parse(c.status).isFinish()) { // 未启动的和已完成的忽略
+                        return@matrix
+                    }
                     cancelContainerPendingTask(
                         event = event,
                         stageId = stageId,
@@ -229,29 +274,32 @@ class BuildCancelControl @Autowired constructor(
         executeCount: Int
     ) {
         val projectId = event.projectId
+        val pipelineId = event.pipelineId
         val buildId = event.buildId
-        val containerId = container.id ?: ""
-        val pipelineContainer = pipelineContainerService.getContainer(
-            projectId = projectId,
-            buildId = event.buildId,
-            stageId = stageId,
-            containerId = containerId
-        ) ?: run {
-            LOG.warn("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|bad container")
-            return
-        }
+        val containerId = container.id ?: return
         val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
         try {
             containerIdLock.lock()
+            val pipelineContainer = pipelineContainerService.getContainer(
+                projectId = projectId,
+                buildId = event.buildId,
+                stageId = stageId,
+                containerId = containerId
+            ) ?: run {
+                LOG.warn("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|bad container")
+                return
+            }
             // 调整Container状态位
             val containerBuildStatus = BuildStatus.parse(container.status)
             // 取消构建,如果actionType不为TERMINATE那么当前运行的stage及当前stage下的job不能马上置为取消状态
-            if (
-                event.actionType == ActionType.TERMINATE ||
-                (!containerBuildStatus.isFinish() && containerBuildStatus != BuildStatus.RUNNING) ||
-                containerBuildStatus == BuildStatus.PREPARE_ENV ||
-                dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
+            if (event.actionType == ActionType.TERMINATE ||
+                containerBuildStatus != BuildStatus.RUNNING || // 运行中的返回Stage流程进行闭环处理
+                dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED // 非运行中的判断是否有依赖
             ) {
+                // 删除redis中取消构建操作标识
+                redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
+                redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
+                // 更新job状态
                 val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
                 pipelineContainerService.updateContainerStatus(
                     projectId = projectId,
@@ -262,15 +310,18 @@ class BuildCancelControl @Autowired constructor(
                     endTime = LocalDateTime.now(),
                     buildStatus = switchedStatus
                 )
-                containerBuildDetailService.updateContainerStatus(
+                containerBuildRecordService.updateContainerStatus(
                     projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     containerId = containerId,
                     buildStatus = switchedStatus,
-                    executeCount = executeCount
+                    executeCount = executeCount,
+                    operation = "cancelContainerPendingTask#${container.containerId}"
                 )
                 // 释放互斥锁
-                unlockMutexGroup(variables = variables, container = container,
+                unlockMutexGroup(
+                    variables = variables, container = container, pipelineId = event.pipelineId,
                     buildId = event.buildId, projectId = event.projectId, stageId = stageId
                 )
                 // 构建机关机
@@ -283,14 +334,17 @@ class BuildCancelControl @Autowired constructor(
                     buildId = buildId,
                     message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
                     tag = VMUtils.genStartVMTaskId(container.id!!),
-                    jobId = container.containerHashId,
-                    executeCount = executeCount
+                    containerHashId = container.containerHashId,
+                    executeCount = executeCount,
+                    jobId = container.jobId,
+                    stepId = VMUtils.genStartVMTaskId(container.id!!)
                 )
                 buildLogPrinter.stopLog(
                     buildId = buildId,
                     tag = VMUtils.genStartVMTaskId(container.id!!),
-                    jobId = container.containerHashId,
-                    executeCount = executeCount
+                    containerHashId = container.containerHashId,
+                    executeCount = executeCount,
+                    jobId = container.jobId
                 )
             }
         } finally {
@@ -347,6 +401,7 @@ class BuildCancelControl @Autowired constructor(
     private fun unlockMutexGroup(
         container: Container,
         buildId: String,
+        pipelineId: String,
         projectId: String,
         stageId: String,
         variables: Map<String, String>
@@ -361,6 +416,7 @@ class BuildCancelControl @Autowired constructor(
         if (mutexGroup?.enable == true && !mutexGroup.mutexGroupName.isNullOrBlank()) {
             mutexControl.releaseContainerMutex(
                 projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,

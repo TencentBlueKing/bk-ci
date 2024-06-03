@@ -60,17 +60,16 @@ class ExternalScmResourceImpl @Autowired constructor(
         secret: String?,
         traceId: String,
         body: String
-    ) =
-        Result(
-            CodeWebhookEventDispatcher.dispatchEvent(
-                rabbitTemplate = rabbitTemplate,
-                event = GitWebhookEvent(
-                    requestContent = body,
-                    event = event,
-                    secret = secret
-                )
+    ): Result<Boolean> = Result(
+        CodeWebhookEventDispatcher.dispatchEvent(
+            rabbitTemplate = rabbitTemplate,
+            event = GitWebhookEvent(
+                requestContent = body,
+                event = event,
+                secret = secret
             )
         )
+    )
 
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))

@@ -36,8 +36,23 @@ data class QualityHisMetadata(
     val type: QualityDataType,
     val elementType: String,
     val taskId: String,
-    val taskName: String,
+    var taskName: String,
     val msg: String,
     val value: String,
     val extra: String?
-)
+) {
+    fun clone(): QualityHisMetadata {
+        return QualityHisMetadata(
+            enName = this.enName,
+            cnName = this.cnName,
+            detail = this.detail,
+            type = this.type,
+            elementType = this.elementType,
+            taskId = this.taskId,
+            taskName = this.taskName,
+            msg = this.msg,
+            value = this.value,
+            extra = this.extra
+        )
+    }
+}

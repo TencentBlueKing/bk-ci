@@ -30,51 +30,61 @@ package com.tencent.devops.common.pipeline.container
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-构建触发容器")
+@Schema(title = "流水线模型-构建触发容器")
 data class TriggerContainer(
-    @ApiModelProperty("构建容器序号id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
-    @ApiModelProperty("容器名称", required = true)
+    @get:Schema(title = "容器名称", required = true)
     override var name: String = "",
-    @ApiModelProperty("任务集合", required = true)
+    @get:Schema(title = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @ApiModelProperty("状态", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "状态", required = true, readOnly = true)
     override var status: String? = null,
-    @ApiModelProperty("系统运行时间", required = false)
+    @get:Schema(title = "系统运行时间", required = false)
+    @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "系统耗时（开机时间）", required = false, readOnly = true)
+    @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "插件执行耗时", required = false, readOnly = true)
+    @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @ApiModelProperty("参数化构建", required = false)
+    @get:Schema(title = "参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
-    @ApiModelProperty("模板参数构建", required = false)
+    @get:Schema(title = "模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null,
-    @ApiModelProperty("构建版本号", required = false)
-    val buildNo: BuildNo? = null,
-    @ApiModelProperty(
+    @get:Schema(title = "构建版本号", required = false)
+    var buildNo: BuildNo? = null,
+    @get:Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
-        accessMode = ApiModelProperty.AccessMode.READ_ONLY
+        readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @ApiModelProperty("容器唯一ID", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
-    @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var executeCount: Int? = 0,
-    @ApiModelProperty("用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null,
-    @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器运行次数", required = false, readOnly = true)
+    override var executeCount: Int? = null,
+    @get:Schema(title = "用户自定义ID", required = false, hidden = false)
+    override var jobId: String? = null,
+    @get:Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var matrixGroupFlag: Boolean? = false
+    @get:Schema(title = "是否为构建矩阵", required = false, readOnly = true)
+    override var matrixGroupFlag: Boolean? = false,
+    @get:Schema(title = "各项耗时", required = true)
+    override var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "开机任务序号", required = false, readOnly = true)
+    override var startVMTaskSeq: Int? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "trigger"
@@ -91,4 +101,12 @@ data class TriggerContainer(
     override fun fetchGroupContainers(): List<Container>? = null
 
     override fun fetchMatrixContext(): Map<String, String>? = null
+
+    override fun isContainerEnable(): Boolean {
+        return true
+    }
+
+    override fun transformCompatibility() {
+        super.transformCompatibility()
+    }
 }

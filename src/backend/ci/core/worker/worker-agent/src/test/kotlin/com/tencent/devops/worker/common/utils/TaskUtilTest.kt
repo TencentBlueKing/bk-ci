@@ -35,8 +35,8 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.pojo.BuildTask
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
 class TaskUtilTest {
@@ -45,16 +45,16 @@ class TaskUtilTest {
     fun isContinueWhenFailed() {
         val elementAdditionalOptions = elementAdditionalOptions()
         val task = genTask(elementAdditionalOptions = elementAdditionalOptions)
-        Assert.assertFalse(TaskUtil.isContinueWhenFailed(task))
+        Assertions.assertFalse(TaskUtil.isContinueWhenFailed(task))
 
         val manualSkipTask = genTask(elementAdditionalOptions.copy(manualSkip = true, continueWhenFailed = true))
-        Assert.assertFalse(TaskUtil.isContinueWhenFailed(manualSkipTask))
+        Assertions.assertFalse(TaskUtil.isContinueWhenFailed(manualSkipTask))
 
         val autoSkipTask = genTask(elementAdditionalOptions.copy(manualSkip = false, continueWhenFailed = true))
-        Assert.assertTrue(TaskUtil.isContinueWhenFailed(autoSkipTask))
+        Assertions.assertTrue(TaskUtil.isContinueWhenFailed(autoSkipTask))
 
         val defaultOldTask = genTask(elementAdditionalOptions.copy(manualSkip = null, continueWhenFailed = true))
-        Assert.assertTrue(TaskUtil.isContinueWhenFailed(defaultOldTask))
+        Assertions.assertTrue(TaskUtil.isContinueWhenFailed(defaultOldTask))
     }
 
     @Test
@@ -62,23 +62,23 @@ class TaskUtilTest {
         var expect = 1L
         val elementAdditionalOptions = elementAdditionalOptions(timeout = expect)
         val task = genTask(elementAdditionalOptions = elementAdditionalOptions)
-        Assert.assertEquals(expect, TaskUtil.getTimeOut(task))
+        Assertions.assertEquals(expect, TaskUtil.getTimeOut(task))
 
         expect = TimeUnit.DAYS.toMinutes(Timeout.MAX_JOB_RUN_DAYS)
         val nullElementAdditionalOptionsTask = genTask(elementAdditionalOptions = null)
-        Assert.assertEquals(expect, TaskUtil.getTimeOut(nullElementAdditionalOptionsTask))
+        Assertions.assertEquals(expect, TaskUtil.getTimeOut(nullElementAdditionalOptionsTask))
     }
 
     @Test
     fun funTest() {
         val taskId = "t-123"
         TaskUtil.setTaskId(taskId)
-        Assert.assertEquals(taskId, TaskUtil.getTaskId())
+        Assertions.assertEquals(taskId, TaskUtil.getTaskId())
         TaskUtil.removeTaskId()
-        Assert.assertEquals("", TaskUtil.getTaskId())
+        Assertions.assertEquals("", TaskUtil.getTaskId())
 
-        Assert.assertFalse(TaskUtil.isVmBuildEnv(NormalContainer.classType))
-        Assert.assertTrue(TaskUtil.isVmBuildEnv(VMBuildContainer.classType))
+        Assertions.assertFalse(TaskUtil.isVmBuildEnv(NormalContainer.classType))
+        Assertions.assertTrue(TaskUtil.isVmBuildEnv(VMBuildContainer.classType))
     }
 
     private fun elementAdditionalOptions(timeout: Long = 0): ElementAdditionalOptions {
@@ -112,7 +112,8 @@ class TaskUtilTest {
                 mapOf()
             },
             buildVariable = mapOf(),
-            containerType = "normal"
+            containerType = "normal",
+            executeCount = 1
         )
     }
 }

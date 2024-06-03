@@ -48,11 +48,11 @@ class QualityHisMetadataJob @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(QualityHisMetadataJob::class.java)
 
-    @Value("\${quality.metadata.clean.timeGap:12}")
-    var cleanTimeGapHour: Long = 12
+    @Value("\${quality.metadata.clean.timeGap:31}")
+    var cleanTimeGapDay: Long = 31
 
-    @Value("\${quality.metadata.clean.round:100}")
-    var cleanRound: Long = 100
+    @Value("\${quality.metadata.clean.round:400}")
+    var cleanRound: Long = 400
 
     @Value("\${quality.metadata.clean.roundSize:10000}")
     var roundSize: Long = 10000
@@ -60,8 +60,15 @@ class QualityHisMetadataJob @Autowired constructor(
     @Value("\${quality.metadata.clean.roundGap:5}")
     var roundGap: Long = 5
 
+    @Value("\${quality.metadata.clean.enable:#{false}}")
+    val cleanEnable: Boolean = false
+
     @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
+        if (!cleanEnable) {
+            logger.info("quality metadata daily clean disabled.")
+            return
+        }
         val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName
         val lock = RedisLock(redisOperation, key, 3600L)
         try {
@@ -70,16 +77,16 @@ class QualityHisMetadataJob @Autowired constructor(
                 return
             }
 
-            val deleteTime = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(cleanTimeGapHour)
+            val deleteTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(cleanTimeGapDay)
 
             logger.info("start to delete quality his meta data: " +
-                "$deleteTime, $cleanTimeGapHour, $cleanRound， $roundSize, $roundGap")
+                "$deleteTime, $cleanTimeGapDay, $cleanRound, $roundSize, $roundGap")
 
             // 执行cleanRound轮清理详情数据操作
             for (i in 1..cleanRound) {
                 // 分页读取12个小时前的数据和创建时间为null的历史数据
                 val result =
-                    qualityHisMetadataDao.getHisMetadataByCreateTime(dslContext, deleteTime, (i - 1) * roundSize)
+                    qualityHisMetadataDao.getHisMetadataByCreateTime(dslContext, deleteTime, roundSize.toInt())
 
                 // 分成两批，nullResultIds是待更新的ID，resultIds是待删除的ID
                 val nullResultIds = mutableSetOf<Long>()

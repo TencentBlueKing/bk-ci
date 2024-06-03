@@ -1,0 +1,14 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: jobname
+    type: string
+    default: JOBNAME
+
+jobs:
+  cyc_job_id_4:
+    name: cyc_job_id_4
+    steps:
+      - run: |
+          echo "cyc_job_id_4"

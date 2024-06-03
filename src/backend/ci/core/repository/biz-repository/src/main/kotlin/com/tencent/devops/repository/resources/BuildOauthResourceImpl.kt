@@ -31,17 +31,24 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.repository.api.BuildOauthResource
+import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
+    private val gitOauthService: IGitOauthService,
+    private val githubTokenService: GithubTokenService
 ) : BuildOauthResource {
 
     @SensitiveApiPermission("get_oauth_token")
     override fun gitGet(projectId: String, buildId: String, userId: String): Result<GitToken?> {
         return Result(gitOauthService.checkAndGetAccessToken(projectId, buildId, userId))
+    }
+
+    override fun githubGet(projectId: String, buildId: String, userId: String): Result<GithubToken?> {
+        return Result(githubTokenService.checkAndGetAccessToken(projectId, buildId, userId))
     }
 }

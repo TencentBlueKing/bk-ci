@@ -32,9 +32,15 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
 import com.tencent.devops.plugin.worker.task.scm.util.GitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
@@ -45,17 +51,21 @@ import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.code.git.api.GitCredentialSetter
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.github.GithubUtils
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.CommitSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_WRONG_GIT_SPECIFIES_THE_PULL_METHOD
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_GIT_HOST_INFO_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.PULL_THE_REPOSITORY_IN_FULL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.URL_INCORRECT
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
+import java.io.Writer
+import java.net.URL
+import java.nio.file.Files
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
@@ -72,10 +82,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.submodule.SubmoduleWalk
 import org.eclipse.jgit.transport.URIish
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.Writer
-import java.net.URL
-import java.nio.file.Files
 
 @Suppress("ALL")
 open class GitUpdateTask constructor(
@@ -265,7 +271,8 @@ open class GitUpdateTask constructor(
                 branchName = modeValue,
                 newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
-                commitTimes = commitMaterial.commitTimes
+                commitTimes = commitMaterial.commitTimes,
+                scmType = gitType.name
             )
         ))
         return env
@@ -416,7 +423,11 @@ open class GitUpdateTask constructor(
                     throw TaskExecuteException(
                         errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                         errorType = ErrorType.USER,
-                        errorMsg = "错误的GIT指定拉取方式（$modeType）"
+                        errorMsg = MessageUtil.getMessageByLocale(
+                            messageCode = BK_WRONG_GIT_SPECIFIES_THE_PULL_METHOD,
+                            params = arrayOf(modeType.toString()),
+                            language = AgentEnv.getLocaleLanguage()
+                        )
                     )
                 }
             }
@@ -576,7 +587,7 @@ open class GitUpdateTask constructor(
         if (matchRef.size == 1) {
             return matchRef[0]
         }
-        return matchRef.minWith(Comparator { o1, o2 ->
+        return matchRef.minWithOrNull(Comparator { o1, o2 ->
             o1.split("/").size - o2.split("/").size
         })
     }
@@ -666,7 +677,13 @@ open class GitUpdateTask constructor(
                                     )
                                 )
                             } catch (e: Exception) {
-                                LoggerService.addErrorLine("外链($url)不是一个正确的URL地址")
+                                LoggerService.addErrorLine(
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = URL_INCORRECT,
+                                        language = AgentEnv.getLocaleLanguage(),
+                                        params = arrayOf(url)
+                                    )
+                                )
                                 throw e
                             }
                         } else {
@@ -692,7 +709,13 @@ open class GitUpdateTask constructor(
                                     )
                                 )
                             } catch (e: Exception) {
-                                LoggerService.addErrorLine("外链($url)不是一个正确的URL地址")
+                                LoggerService.addErrorLine(
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = URL_INCORRECT,
+                                        language = AgentEnv.getLocaleLanguage(),
+                                        params = arrayOf(url)
+                                    )
+                                )
                                 throw e
                             }
                         } else {
@@ -724,7 +747,11 @@ open class GitUpdateTask constructor(
             throw TaskExecuteException(
                 errorType = ErrorType.THIRD_PARTY,
                 errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
-                errorMsg = "获取git代码库主机信息失败: $url"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = GET_GIT_HOST_INFO_FAIL,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = arrayOf(url)
+                )
             )
         }
     }
@@ -779,7 +806,13 @@ open class GitUpdateTask constructor(
 
         val remoteUrl = credentialSetter.getCredentialUrl(url)
         if (localUrl != remoteUrl && localDecodedUrl != remoteUrl) {
-            LoggerService.addWarnLine("Git repo url 从($localUrl)变为($url), 全量拉取代码仓库")
+            LoggerService.addWarnLine(
+                "Git repo url " + MessageUtil.getMessageByLocale(
+                    messageCode = PULL_THE_REPOSITORY_IN_FULL,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = arrayOf(localUrl, url)
+                )
+            )
             cleanupWorkspace()
         }
     }

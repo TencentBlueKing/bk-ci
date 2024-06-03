@@ -38,5 +38,7 @@ data class CompleteTask(
     val buildStatus: BuildStatus, // 构建任务结束状态
     val errorType: ErrorType? = null,
     val errorCode: Int? = null,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val platformCode: String? = null, // 对接平台代码
+    val platformErrorCode: Int? = null // 对接平台错误码
 )

@@ -28,9 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
@@ -42,12 +39,23 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INC
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.MATCH_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitWebHookStartParam : ScmWebhookStartParams<CodeGitWebHookTriggerElement> {
+class GitWebHookStartParam @Autowired constructor(
+    private val eventCacheService: EventCacheService
+) : ScmWebhookStartParams<CodeGitWebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeGitWebHookTriggerElement> {
         return CodeGitWebHookTriggerElement::class.java
@@ -60,7 +68,7 @@ class GitWebHookStartParam : ScmWebhookStartParams<CodeGitWebHookTriggerElement>
         matcher: ScmWebhookMatcher,
         variables: Map<String, String>,
         params: WebHookParams,
-        matchResult: ScmWebhookMatcher.MatchResult
+        matchResult: WebhookMatchResult
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
@@ -75,6 +83,12 @@ class GitWebHookStartParam : ScmWebhookStartParams<CodeGitWebHookTriggerElement>
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
         startParams[BK_REPO_GIT_MANUAL_UNLOCK] = matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] ?: false
         startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = element.enableCheck ?: true
+        startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
+            if (repo is CodeGitRepository && repo.authType == RepoAuthType.OAUTH) {
+                repo.userName
+            } else {
+                eventCacheService.getRepoAuthUser(projectId = projectId, repo = repo)
+            }
         startParams.putAll(
             matcher.retrieveParams(
                 projectId = projectId,

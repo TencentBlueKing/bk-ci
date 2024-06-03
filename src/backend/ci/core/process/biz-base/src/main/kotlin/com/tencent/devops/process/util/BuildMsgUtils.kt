@@ -27,10 +27,17 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
+import com.tencent.devops.common.pipeline.enums.StartType.MANUAL
+import com.tencent.devops.common.pipeline.enums.StartType.PIPELINE
+import com.tencent.devops.common.pipeline.enums.StartType.REMOTE
+import com.tencent.devops.common.pipeline.enums.StartType.SERVICE
+import com.tencent.devops.common.pipeline.enums.StartType.TIME_TRIGGER
+import com.tencent.devops.common.pipeline.enums.StartType.WEB_HOOK
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_PIPELINE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_REMOTE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_SERVICE
@@ -39,28 +46,27 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_WEBHOOK
 
 object BuildMsgUtils {
 
-    fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
+    private fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
         return when (startType) {
-            StartType.MANUAL ->
-                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_MANUAL, defaultMessage = "手动触发")
-            StartType.TIME_TRIGGER ->
-                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_TIME, defaultMessage = "定时触发")
-            StartType.WEB_HOOK ->
-                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_WEBHOOK, defaultMessage = "webhook触发")
-            StartType.REMOTE ->
-                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_REMOTE, defaultMessage = "远程触发")
-            StartType.SERVICE ->
+            MANUAL ->
+                I18nUtil.getCodeLanMessage(messageCode = BK_MANUAL_TRIGGER)
+            TIME_TRIGGER ->
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_TIME)
+            REMOTE ->
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_REMOTE)
+            SERVICE ->
                 if (channelCode != null) {
+                    val trigger = I18nUtil.getCodeLanMessage(BK_TRIGGER)
                     if (channelCode == ChannelCode.BS) {
-                        "OpenAPI触发"
+                        "OpenAPI $trigger"
                     } else {
-                        channelCode.name + "触发"
+                        channelCode.name + trigger
                     }
                 } else {
-                    MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE, defaultMessage = "服务触发")
+                    I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE)
                 }
-            StartType.PIPELINE ->
-                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE, defaultMessage = "流水线调用触发")
+            PIPELINE -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE)
+            WEB_HOOK -> I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_WEBHOOK)
         }
     }
 
@@ -68,7 +74,7 @@ object BuildMsgUtils {
         return if (buildMsg.isNullOrBlank()) {
             getDefaultValue(startType = startType, channelCode = channelCode)
         } else {
-            buildMsg!!
+            buildMsg
         }
     }
 }

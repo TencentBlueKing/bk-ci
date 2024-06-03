@@ -27,11 +27,10 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -40,26 +39,31 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import io.mockk.every
+import io.mockk.mockk
 import org.jooq.DSLContext
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class BuildVariableServiceTest {
 
-    private val dslContext: DSLContext = mock()
-    private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
-    private val redisOperation: RedisOperation = RedisOperation(mock())
+    private val dslContext: DSLContext = mockk()
+    private val pipelineBuildVarDao: PipelineBuildVarDao = mockk()
+    private val redisOperation: RedisOperation = RedisOperation(mockk(), mockk(), mockk())
+    private val pipelineAsCodeService: PipelineAsCodeService = mockk(relaxed = true)
 
     private val buildVariableService = BuildVariableService(
         commonDslContext = dslContext,
         pipelineBuildVarDao = pipelineBuildVarDao,
-        redisOperation = redisOperation
+        redisOperation = redisOperation,
+        pipelineAsCodeService = pipelineAsCodeService
     )
 
     @Test
     fun getAllVariable() {
         val projectId = "devops"
         val buildId = "b-1234567890"
+        val pipelineId = "p-1234567890"
 
         val mockVars = mutableMapOf(
             "pipeline.start.channel" to "BS",
@@ -72,34 +76,34 @@ class BuildVariableServiceTest {
             "pipeline.version" to "34"
         )
 
-        whenever(pipelineBuildVarDao.getVars(dslContext, projectId, buildId)).thenReturn(mockVars)
-        val allVariable = buildVariableService.getAllVariable(projectId, buildId)
+        every { pipelineBuildVarDao.getVars(dslContext, projectId, buildId) } returns (mockVars)
+        val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 
-        Assert.assertEquals(mockVars["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
-        Assert.assertEquals(allVariable["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
+        Assertions.assertEquals(mockVars["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
+        Assertions.assertEquals(allVariable["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
 
-        Assert.assertEquals(mockVars["pipeline.start.isMobile"], allVariable[PIPELINE_START_MOBILE])
-        Assert.assertEquals(allVariable["pipeline.start.isMobile"], allVariable[PIPELINE_START_MOBILE])
+        Assertions.assertEquals(mockVars["pipeline.start.isMobile"], allVariable[PIPELINE_START_MOBILE])
+        Assertions.assertEquals(allVariable["pipeline.start.isMobile"], allVariable[PIPELINE_START_MOBILE])
 
-        Assert.assertEquals(mockVars["pipeline.name"], allVariable[PIPELINE_NAME])
-        Assert.assertEquals(allVariable["pipeline.name"], allVariable[PIPELINE_NAME])
+        Assertions.assertEquals(mockVars["pipeline.name"], allVariable[PIPELINE_NAME])
+        Assertions.assertEquals(allVariable["pipeline.name"], allVariable[PIPELINE_NAME])
 
-        Assert.assertEquals(mockVars["pipeline.build.num"], allVariable[PIPELINE_BUILD_NUM])
-        Assert.assertEquals(allVariable["pipeline.build.num"], allVariable[PIPELINE_BUILD_NUM])
+        Assertions.assertEquals(mockVars["pipeline.build.num"], allVariable[PIPELINE_BUILD_NUM])
+        Assertions.assertEquals(allVariable["pipeline.build.num"], allVariable[PIPELINE_BUILD_NUM])
 
-        Assert.assertEquals(mockVars["pipeline.name"], allVariable[PIPELINE_NAME])
-        Assert.assertEquals(allVariable["pipeline.name"], allVariable[PIPELINE_NAME])
+        Assertions.assertEquals(mockVars["pipeline.name"], allVariable[PIPELINE_NAME])
+        Assertions.assertEquals(allVariable["pipeline.name"], allVariable[PIPELINE_NAME])
 
-        Assert.assertEquals(mockVars["pipeline.start.type"], allVariable[PIPELINE_START_TYPE])
-        Assert.assertEquals(allVariable["pipeline.start.type"], allVariable[PIPELINE_START_TYPE])
+        Assertions.assertEquals(mockVars["pipeline.start.type"], allVariable[PIPELINE_START_TYPE])
+        Assertions.assertEquals(allVariable["pipeline.start.type"], allVariable[PIPELINE_START_TYPE])
 
-        Assert.assertEquals(mockVars["pipeline.start.user.id"], allVariable[PIPELINE_START_USER_ID])
-        Assert.assertEquals(allVariable["pipeline.start.user.id"], allVariable[PIPELINE_START_USER_ID])
+        Assertions.assertEquals(mockVars["pipeline.start.user.id"], allVariable[PIPELINE_START_USER_ID])
+        Assertions.assertEquals(allVariable["pipeline.start.user.id"], allVariable[PIPELINE_START_USER_ID])
 
-        Assert.assertEquals(mockVars["pipeline.start.user.name"], allVariable[PIPELINE_START_USER_NAME])
-        Assert.assertEquals(allVariable["pipeline.start.user.name"], allVariable[PIPELINE_START_USER_NAME])
+        Assertions.assertEquals(mockVars["pipeline.start.user.name"], allVariable[PIPELINE_START_USER_NAME])
+        Assertions.assertEquals(allVariable["pipeline.start.user.name"], allVariable[PIPELINE_START_USER_NAME])
 
-        Assert.assertEquals(mockVars["pipeline.version"], allVariable[PIPELINE_VERSION])
-        Assert.assertEquals(allVariable["pipeline.version"], allVariable[PIPELINE_VERSION])
+        Assertions.assertEquals(mockVars["pipeline.version"], allVariable[PIPELINE_VERSION])
+        Assertions.assertEquals(allVariable["pipeline.version"], allVariable[PIPELINE_VERSION])
     }
 }

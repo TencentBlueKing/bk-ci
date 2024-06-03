@@ -30,14 +30,14 @@ package com.tencent.devops.common.web.handler
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_CLIENT_REST_ERROR
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.ClientErrorException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class ClientErrorMapper : ExceptionMapper<ClientErrorException> {
@@ -49,9 +49,14 @@ class ClientErrorMapper : ExceptionMapper<ClientErrorException> {
         logger.error("client exception", exception)
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
-                ?: MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_CLIENT_REST_ERROR).message
+                ?: I18nUtil.generateResponseDataObject<Any>(
+                    messageCode = ERROR_CLIENT_REST_ERROR
+                ).message
         } else {
-            MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_CLIENT_REST_ERROR).message
+            I18nUtil.generateResponseDataObject<Any>(
+                messageCode = ERROR_CLIENT_REST_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ).message
         }
         return Response.status(exception.response.status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = exception.response.status, message = message, data = exception.message)).build()

@@ -51,6 +51,9 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeWorkspace:/data/devops/workspace}")
     var volumeWorkspace: String? = null
 
+    @Value("\${dockerCli.volumeCommonEnv:/data/devops/common_env}")
+    var volumeCommonEnv: String? = null
+
     @Value("\${dockerCli.volumeProjectShare:/data/devops/share}")
     var volumeProjectShare: String? = null
 
@@ -101,6 +104,9 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.hostPathWorkspace:#{null}}")
     var hostPathWorkspace: String? = null
+
+    @Value("\${dockerCli.hostPathCommonEnv:#{null}}")
+    var hostPathCommonEnv: String? = null
 
     @Value("\${dockerCli.hostPathProjectShare:#{null}}")
     var hostPathProjectShare: String? = null

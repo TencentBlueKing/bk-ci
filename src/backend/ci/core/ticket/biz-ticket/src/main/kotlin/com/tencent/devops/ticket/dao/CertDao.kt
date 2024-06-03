@@ -27,13 +27,15 @@
 
 package com.tencent.devops.ticket.dao
 
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.ticket.tables.TCert
 import com.tencent.devops.model.ticket.tables.records.TCertRecord
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_NOT_FOUND
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Repository
@@ -52,7 +54,12 @@ class CertDao {
             return dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(CERT_ID.eq(certId))
-                    .fetchOne() ?: throw NotFoundException("证书($certId)不存在")
+                    .fetchOne() ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CERT_NOT_FOUND,
+                    params = arrayOf(certId)
+                )
+            )
         }
     }
 
@@ -270,15 +277,17 @@ class CertDao {
 
     fun listByIds(
         dslContext: DSLContext,
+        projectId: String?,
         certIds: Set<String>
     ): Result<TCertRecord> {
         with(TCert.T_CERT) {
             return dslContext.selectFrom(this)
-                            .where(CERT_ID.`in`(certIds))
-                            .orderBy(CERT_CREATE_TIME.desc())
-                            .fetch()
-            }
+                .where(CERT_ID.`in`(certIds))
+                .let { if (projectId == null) it else it.and(PROJECT_ID.eq(projectId)) }
+                .orderBy(CERT_CREATE_TIME.desc())
+                .fetch()
         }
+    }
 
     fun delete(dslContext: DSLContext, projectId: String, certId: String) {
         with(TCert.T_CERT) {

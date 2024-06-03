@@ -28,15 +28,20 @@
 package com.tencent.devops.openapi.resources.apigw.v4.environment
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentAgentResourceV4
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,6 +56,7 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String
     ): Result<List<NodeBaseInfo>> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|third part agent list|$projectId")
         logger.info("thirdPartAgentList userId $userId, project $projectId")
         return client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
     }
@@ -62,6 +68,7 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         projectId: String,
         nodeHashId: String
     ): Result<NodeWithPermission?> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node status|$projectId|$nodeHashId")
         logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
         val nodeList = client.get(ServiceNodeResource::class).listByHashIds(
             userId = userId,
@@ -72,8 +79,58 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
             return Result(nodeList[0])
         }
         throw ErrorCodeException(
-            errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+            errorCode = OpenAPIMessageCode.ERROR_NODE_NOT_EXISTS,
             params = arrayOf(nodeHashId)
+        )
+    }
+
+    override fun getNodeDetail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?
+    ): Result<ThirdPartyAgentDetail?> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node detail|$projectId|$nodeHashId|$agentHashId")
+        if (!agentHashId.isNullOrBlank()) {
+            return client.get(ServiceThirdPartyAgentResource::class).getAgentDetail(
+                userId = userId, projectId = projectId, agentHashId = agentHashId
+            )
+        }
+        return client.get(ServiceThirdPartyAgentResource::class).getNodeDetail(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            nodeName = nodeName
+        )
+    }
+
+    override fun listAgentBuilds(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?,
+        status: String?,
+        pipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get listAgentBuilds|$projectId|$nodeHashId|$agentHashId")
+        return client.get(ServiceThirdPartyAgentResource::class).listAgentBuilds(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            nodeName = nodeName,
+            agentHashId = agentHashId,
+            status = status,
+            pipelineId = pipelineId,
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

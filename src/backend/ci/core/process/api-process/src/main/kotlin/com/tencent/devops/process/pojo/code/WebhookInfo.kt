@@ -27,25 +27,65 @@
 
 package com.tencent.devops.process.pojo.code
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebhookInfo(
-    @ApiModelProperty("仓库url链接", required = false)
+    @get:Schema(title = "代码库类型", required = true)
+    val codeType: String?, // CodeType.name
+    @get:Schema(title = "代码库完整名称", required = true)
+    val nameWithNamespace: String?,
+    @get:Schema(title = "仓库url链接", required = false)
     val webhookRepoUrl: String?,
-    @ApiModelProperty("分支名", required = false)
+    @get:Schema(title = "分支名（目标分支）", required = false)
     val webhookBranch: String?,
-    @ApiModelProperty("webhook类型", required = false)
+    @get:Schema(title = "别名", required = false)
+    val webhookAliasName: String?,
+    @get:Schema(title = "webhook类型", required = false)
     val webhookType: String?,
-    @ApiModelProperty("事件类型", required = false)
+    @get:Schema(title = "事件类型", required = false)
     val webhookEventType: String?,
-    @ApiModelProperty("提交信息", required = false)
+    @get:Schema(title = "提交信息", required = false)
     val webhookMessage: String?,
-    @ApiModelProperty("提交信息id", required = false)
+    @get:Schema(title = "提交信息id", required = false)
     val webhookCommitId: String?,
-    @ApiModelProperty("合并后commitId", required = false)
+    @get:Schema(title = "参考信息(commit_id,mr_id,tag,issue_id,review_id,note_id等)", required = true)
+    val refId: String?,
+    @get:Schema(title = "合并后commitId", required = false)
     // 合并后commitId
     val webhookMergeCommitSha: String?,
-    @ApiModelProperty("源分支", required = false)
+    @get:Schema(title = "源分支", required = false)
     // 源分支
-    val webhookSourceBranch: String?
+    val webhookSourceBranch: String?,
+    // mr id
+    val mrId: String?,
+    // mr iid
+    val mrIid: String?,
+    // mr url
+    val mrUrl: String?,
+    // webhook仓库授权用户
+    val repoAuthUser: String?,
+    // tag 名称
+    val tagName: String?,
+    // issue iid,
+    val issueIid: String?,
+    // note id
+    val noteId: String?,
+    // review id
+    val reviewId: String?,
+    // 父流水线项目ID
+    val parentProjectId: String?,
+    // 父流水线流水线ID
+    val parentPipelineId: String?,
+    // 父流水线名称
+    val parentPipelineName: String?,
+    // 父流水线buildId
+    val parentBuildId: String?,
+    // 父流水线构建号
+    val parentBuildNum: String?,
+    // 触发材料url
+    val linkUrl: String?,
+    // 自定义触发材料ID
+    val materialId: String?,
+    // 自定义触发材料名
+    val materialName: String?
 )

@@ -1,0 +1,27 @@
+resources:
+  repositories:
+    - repository: repoA
+      name: repoA
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: stagename
+    type: string
+    default: STAGENAME
+
+stages:
+  - name: "res_repoB_stage_id_1"
+    jobs:
+      res_repoB_stage_id_1_job_id_1:
+        name: res_repoB_stage_id_1_job_id_1
+        steps:
+          - run: |
+              echo "res_repoB_stage_id_1_job_id_1 username ${{ parameters.username }}"
+  - template: stage3.yml
+    parameters:
+      username: RES_PEPOB_STAGE2

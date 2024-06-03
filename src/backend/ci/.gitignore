@@ -15,3 +15,5 @@ support-files/etc
 build.yml
 .temp
 .codecc
+*.log.gz
+i18n/

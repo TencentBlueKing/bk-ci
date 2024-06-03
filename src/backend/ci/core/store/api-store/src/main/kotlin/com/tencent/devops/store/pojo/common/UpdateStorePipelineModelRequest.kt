@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("更新研发商店流水线模型请求报文")
+@Schema(title = "更新研发商店流水线模型请求报文")
 data class UpdateStorePipelineModelRequest(
-    @ApiModelProperty("适用范围(ALL:全部|GRAY:灰度|NO_GRAY:非灰度|SPEC:特别指定)", required = true)
+    @get:Schema(title = "适用范围(ALL:全部|GRAY:灰度|NO_GRAY:非灰度|SPEC:特别指定)", required = true)
     val scopeType: String,
-    @ApiModelProperty("组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val storeType: String,
-    @ApiModelProperty("组件代码集合(scopeType为SPEC才需要传)", required = false)
+    @get:Schema(title = "组件代码集合(scopeType为SPEC才需要传)", required = false)
     val storeCodeList: List<String>? = null,
-    @ApiModelProperty("流水线模型", required = false)
+    @get:Schema(title = "流水线模型", required = false)
     val pipelineModel: String? = null
 )

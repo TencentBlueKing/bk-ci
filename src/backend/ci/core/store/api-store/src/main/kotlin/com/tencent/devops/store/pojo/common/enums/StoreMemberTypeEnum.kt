@@ -28,7 +28,7 @@
 package com.tencent.devops.store.pojo.common.enums
 
 enum class StoreMemberTypeEnum(val type: Int) {
-    ADMIN(0),     // 管理员
+    ADMIN(0), // 管理员
     DEVELOPER(1); // 开发人员
 
     companion object {

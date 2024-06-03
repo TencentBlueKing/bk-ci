@@ -2,17 +2,20 @@
     <section class="image-empty-tips">
         <img v-if="imgType !== 'noCollect'" :src="noDataSrc" alt="" class="no-data-pic">
         <img v-if="imgType === 'noCollect'" src="./../../../images/box.png" alt="" class="no-collect-pic">
-        <p class="title">{{ title }}</p>
-        <p class="desc">{{ desc }}</p>
+        <p class="title">{{title}}</p>
+        <p class="desc">{{desc}}</p>
         <p class="btns-row">
             <slot name="btns">
                 <template v-if="btns.length">
                     <button class="bk-button"
+                        v-perm="{
+                            permissionData: btn.permissionData ? btn.permissionData : {}
+                        }"
                         v-for="(btn, index) in btns"
                         :key="index"
                         :class="[`bk-${btn.type}`, `bk-button-${btn.size}`]"
                         @click="btn.handler">
-                        {{ btn.text }}
+                        {{btn.text}}
                     </button>
                 </template>
             </slot>

@@ -1,39 +1,39 @@
 # 单服务的配置文件模板，整合了所有微服务模块
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
     process:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     project:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     repository:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_repository?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_repository?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     dispatch:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     plugin:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_plugin?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_plugin?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     quality:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_quality?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_quality?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     artifactory:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     environment:
-      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     misc:
@@ -41,7 +41,12 @@ spring:
     # 数据源配置（勿随便变更配置项的顺序）
     dataSourceConfigs:
       - index: 0
-        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
+    archiveDataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_archive_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
         username: __BK_CI_MYSQL_USER__
         password: __BK_CI_MYSQL_PASSWORD__
 
@@ -83,11 +88,6 @@ dispatch:
   jobQuota:
     systemAlertReceiver:
     enable: false
-
-codecc:
-  path: __BK_CODECC_DATA_DIR__/tools
-  covFile: build_dev.py
-  toolFile: build_tool_dev.py
 
 #### environment
 
@@ -187,7 +187,7 @@ image:
 log:
   storage:
     type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
-    closeInDay: __BK_CI_LOG_CLOSE_DAY__             # 索引自动关闭时间，留空则为永不关闭
+    closeInDay: __BK_CI_LOG_COLD_DAY__             # 索引自动关闭时间，留空则为永不关闭
     deleteInDay: __BK_CI_LOG_DELETE_DAY__           # 索引自动删除时间，留空则为永不删除
   # 通过本地文件系统进行存储的必要配置
   lucene:
@@ -322,6 +322,13 @@ store:
   imageExecuteNullNotifyTplCode: IMAGE_EXECUTE_NULL_NOTIFY_TPL
   templateApproveSwitch: close
   imageApproveSwitch: close
+  defaultStaticFileFormat: jpg,png,svg,gif,jpeg
+  atom:
+    maxTimeout: 10080   # 最大插件超时时间
+    defaultTimeout: 900  # 默认插件超时时间
+    minTimeout: 1  # 最小插件超时时间
+    maxRetryNum: 5  # 最大插件自动重试次数
+    minRetryNum: 1
 
 logo:
   allowUploadLogoTypes: jpg,png,svg
@@ -354,11 +361,6 @@ thread:
   min: 8
 
 #### process
-
-# 流水线加密参数密钥
-parameter:
-  password:
-    pswKey: __BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD__
 
 # 流水线引擎并发配置
 queueConcurrency:
@@ -409,12 +411,6 @@ pipeline:
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
     spec_channel_max_keep_num: 2
 
-#### sign
-# 签名服务临时解压缩目录
-bkci:
-  sign:
-    tmpDir: "/tmp/enterprise_sign_tmp/"
-
 notify:
   weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
 
@@ -428,13 +424,13 @@ wework:
   enableDuplicateCheck: # 表示是否开启重复消息检查，0表示否，1表示是，默认0
   duplicateCheckInterval: # 表示是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
   enableIdTrans: # 表示是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
-  
+
 # 分布式ID配置
 leaf:
   segment:
     allocStrategyDaoBeanName: jooqIDAllocDaoImpl
     enable: true
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
   name: leaf
@@ -442,10 +438,11 @@ leaf:
 sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
-  projectStrategy:
-    tableConfig: "T_AUDIT_RESOURCE,T_BUILD_STARTUP_PARAM,T_METADATA,T_PIPELINE_BUILD_CONTAINER,T_PIPELINE_BUILD_DETAIL,T_PIPELINE_BUILD_HIS_DATA_CLEAR,T_PIPELINE_BUILD_HISTORY,T_PIPELINE_BUILD_STAGE,T_PIPELINE_BUILD_SUMMARY,T_PIPELINE_BUILD_TASK,T_PIPELINE_BUILD_VAR,T_PIPELINE_DATA_CLEAR,T_PIPELINE_FAILURE_NOTIFY_USER,T_PIPELINE_FAVOR,T_PIPELINE_GROUP,T_PIPELINE_INFO,T_PIPELINE_JOB_MUTEX_GROUP,T_PIPELINE_LABEL,T_PIPELINE_LABEL_PIPELINE,T_PIPELINE_MODEL_TASK,T_PIPELINE_PAUSE_VALUE,T_PIPELINE_RESOURCE,T_PIPELINE_RESOURCE_VERSION,T_PIPELINE_SETTING,T_PIPELINE_SETTING_VERSION,T_PIPELINE_VIEW,T_PIPELINE_VIEW_PROJECT,T_PIPELINE_VIEW_USER_LAST_VIEW,T_PIPELINE_VIEW_USER_SETTINGS,T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL,T_PIPELINE_WEBHOOK_QUEUE,T_PROJECT_PIPELINE_CALLBACK,T_PROJECT_PIPELINE_CALLBACK_HISTORY,T_REPORT,T_TEMPLATE,T_TEMPLATE_PIPELINE"
-  broadcastStrategy:
-    tableConfig: "T_PIPELINE_RULE,T_PIPELINE_STAGE_TAG,T_PIPELINE_TIMER,T_PIPELINE_REMOTE_AUTH,T_PIPELINE_WEBHOOK,T_TEMPLATE_INSTANCE_BASE,T_TEMPLATE_INSTANCE_ITEM"
-  specifyDataSourceStrategy:
-    tableConfig: "T_PIPELINE_ATOM_REPLACE_BASE,T_PIPELINE_ATOM_REPLACE_ITEM,T_PIPELINE_ATOM_REPLACE_HISTORY"
+  tableShardingStrategy:
+    archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveTableShardingAlgorithm"
+    defaultShardingNum: 1
+    shardingField: PROJECT_ID
+  archiveFlag: Y
+  defaultFlag: N

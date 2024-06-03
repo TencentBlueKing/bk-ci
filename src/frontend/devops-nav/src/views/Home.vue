@@ -17,7 +17,6 @@
                                     v-for="service in recentVisitService"
                                     :key="service.key"
                                     :to="addConsole(service.link_new)"
-                                    @click.native="getDocumentTitle(service.link_new)"
                                 >
                                     <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
                                     <Logo
@@ -65,10 +64,12 @@
                         v-for="(item, index) in funcArray"
                         :key="index"
                         :style="{ left: item.left }"
-                    >{{ item.label }}</span>
+                    >
+                        {{ item.label }}
+                    </span>
                     <div class="bkdevops-button">
                         <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             target="_blank"
                         >
                             <bk-button
@@ -81,7 +82,7 @@
                     </div>
                 </div>
 
-                <div class="devops-news">
+                <div class="devops-news" v-if="news.length > 0">
                     <header>
                         <p class="title">
                             {{ $t("latestNews") }}
@@ -115,24 +116,13 @@
                     <p>
                         {{ $t("bkdevopsDesc") }}
                         <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             class="more"
                             target="_blank"
                         >{{ $t("learnMore") }}</a>
                     </p>
                 </article>
-                <article>
-                    <h2>{{ $t("bkdevopsTarget") }}</h2>
-                    <p>
-                        {{ $t("bkdevopsWay") }}
-                        <!-- <a
-                            :href="DOCS_URL_PREFIX"
-                            target="_blank"
-                            class="more"
-                        >{{ $t("learnMore") }}</a> -->
-                    </p>
-                </article>
-                <article>
+                <article v-if="related.length > 0">
                     <h2>{{ $t("relatedLink") }}</h2>
                     <div>
                         <a
@@ -153,20 +143,20 @@
                 <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
                 <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
             </div>
-            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved v{{ BK_CI_VERSION.trim() }}</p>
+            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
         </section>
     </div>
 </template>
 
 <script lang="ts">
+    import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action } from 'vuex-class'
-    import NavBox from '../components/NavBox/index.vue'
-    import Logo from '../components/Logo/index.vue'
+    import { Action, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
-    
-    import { urlJoin, isAbsoluteUrl } from '../utils/util'
+    import Logo from '../components/Logo/index.vue'
+    import NavBox from '../components/NavBox/index.vue'
+
     @Component({
         components: {
             NavBox,
@@ -181,9 +171,9 @@
         @State related
         @Action fetchLinks
         isAllServiceListShow: boolean = false
-        DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
+
         get funcArray (): object[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
             return funcArray.map((item, index) => ({
@@ -205,10 +195,13 @@
         }
 
         get serviceCount (): number {
-            return this.services.reduce((sum, service) => {
-                sum += service.children.length
+            // 减去1是因为项目管理服务是隐藏的
+            const count = this.services.reduce((sum, service) => {
+                sum += (service.children.length - 1)
                 return sum
             }, 0)
+            // 我的项目服务不展示，所以减去1
+            return count - 1
         }
 
         updateShowAllService (show: boolean): void {
@@ -217,35 +210,6 @@
 
         addConsole (link: string): string {
             return urlJoin('/console/', link)
-        }
-        
-        getDocumentTitle (linkNew) {
-            const title = linkNew.split('/')[1]
-            const titlesMap = {
-                pipeline: this.$t('documentTitlePipeline'),
-                codelib: this.$t('documentTitleCodelib'),
-                artifactory: this.$t('documentTitleArtifactory'),
-                codecc: this.$t('documentTitleCodecc'),
-                experience: this.$t('documentTitleExperience'),
-                turbo: this.$t('documentTitleTurbo'),
-                repo: this.$t('documentTitleRepo'),
-                preci: this.$t('documentTitlePreci'),
-                stream: this.$t('documentTitleStream'),
-                wetest: this.$t('documentTitleWetest'),
-                quality: this.$t('documentTitleQuality'),
-                xinghai: this.$t('documentTitleXinghai'),
-                bcs: this.$t('documentTitleBcs'),
-                job: this.$t('documentTitleJob'),
-                environment: this.$t('documentTitleEnvironment'),
-                vs: this.$t('documentTitleVs'),
-                apk: this.$t('documentTitleApk'),
-                monitor: this.$t('documentTitleMonitor'),
-                perm: this.$t('documentTitlePerm'),
-                ticket: this.$t('documentTitleTicket'),
-                store: this.$t('documentTitleStore'),
-                metrics: this.$t('documentTitleMetrics')
-            }
-            document.title = titlesMap[title]
         }
 
         serviceName (name = ''): string {
@@ -270,7 +234,11 @@
 <style lang="scss">
     @import '../assets/scss/conf';
     .devops-home-page {
-        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: auto;
+        width: 100%;
     }
     .devops-home-content {
         display: flex;
@@ -278,7 +246,7 @@
         justify-content: center;
         width: 1280px;
         padding: 30px 0 100px 0;
-        overflow: auto;
+
         > section {
             width: 800px;
             margin-right: 40px;
@@ -304,20 +272,24 @@
                     display: flex;
                     align-items: center;
                     cursor: pointer;
+
                     > svg,
                     .recent-logo-icon {
                         margin-right: 6px;
                     }
+
                     .recent-logo-icon {
                         width: 16px;
                         height: 16px;
                     }
                 }
             }
+
             .home-accordion-header,
             .all-service-header {
                 font-size: 14px;
             }
+
             .all-service-header {
                 flex: 1;
                 display: flex;
@@ -328,6 +300,7 @@
                     font-size: 14px;
                 }
             }
+
             .all-service-list {
                 padding: 0 0 14px 30px;
                 .menu-column {
@@ -340,6 +313,7 @@
                                 opacity: 1;
                             }
                         }
+
                         .menu-item {
                             padding-left: 0;
                             padding-right: 0;
@@ -353,6 +327,7 @@
                     }
                 }
             }
+
             .bkdevops-box {
                 position: relative;
                 height: 280px;
@@ -372,6 +347,7 @@
                     top: 30px;
                     left: 0;
                 }
+
                 > span {
                     position: absolute;
                     font-size: 16px;
@@ -391,6 +367,7 @@
                     }
                 }
             }
+
             .devops-news {
                 > header {
                     display: flex;
@@ -401,11 +378,13 @@
                     > p {
                         font-size: 16px;
                     }
+
                     > a {
                         font-size: 12px;
                         color: $primaryColor;
                     }
                 }
+
                 &-content {
                     .news-item {
                         display: flex;
@@ -420,6 +399,7 @@
                 }
             }
         }
+
         > aside {
             width: 360px;
             align-self: flex-start;

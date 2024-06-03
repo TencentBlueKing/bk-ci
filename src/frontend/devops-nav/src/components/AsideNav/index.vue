@@ -23,10 +23,9 @@
         <div slot="menu">
             <bk-navigation-menu
                 ref="menu"
-                :default-active="$route.name"
+                :default-active="$route.meta.activeName || $route.name"
                 v-bind="navTheme"
                 :toggle-active="nav.toggle"
-                @select="() => {}"
             >
                 <bk-navigation-menu-item
                     v-for="item in nav.menu"
@@ -64,7 +63,9 @@
                 itemActiveBgColor: '#ebf4ff',
                 itemHoverBgColor: '#ebf4ff',
                 itemHoverColor: '#3c96ff',
+                itemHoverIconColor: '#3c96ff',
                 itemActiveColor: '#3c96ff',
+                itemActiveIconColor: '#3c96ff',
                 itemDefaultColor: '#7b7d8a'
             }
         }

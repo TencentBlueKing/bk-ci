@@ -28,12 +28,15 @@
 package com.tencent.devops.process.engine.dao.template
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -41,8 +44,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Repository
@@ -60,7 +61,8 @@ class TemplateDao {
         userId: String,
         template: String,
         storeFlag: Boolean,
-        version: Long? = null
+        version: Long? = null,
+        desc: String?
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             val currentTime = LocalDateTime.now()
@@ -75,7 +77,8 @@ class TemplateDao {
                 UPDATE_TIME,
                 TEMPLATE,
                 STORE_FLAG,
-                VERSION
+                VERSION,
+                DESC
             )
                 .values(
                     projectId,
@@ -87,7 +90,8 @@ class TemplateDao {
                     currentTime,
                     template,
                     storeFlag,
-                    version
+                    version,
+                    desc
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version
@@ -108,7 +112,8 @@ class TemplateDao {
         srcTemplateId: String?,
         storeFlag: Boolean,
         weight: Int,
-        version: Long? = null
+        version: Long? = null,
+        desc: String?
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             val currentTime = LocalDateTime.now()
@@ -128,7 +133,8 @@ class TemplateDao {
                 SRC_TEMPLATE_ID,
                 STORE_FLAG,
                 WEIGHT,
-                VERSION
+                VERSION,
+                DESC
             )
                 .values(
                     projectId,
@@ -145,7 +151,8 @@ class TemplateDao {
                     srcTemplateId,
                     storeFlag,
                     weight,
-                    version
+                    version,
+                    desc
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version
@@ -182,9 +189,18 @@ class TemplateDao {
         }
     }
 
-    fun updateStoreFlag(dslContext: DSLContext, userId: String, templateId: String, storeFlag: Boolean): Int {
+    fun updateStoreFlag(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        templateId: String,
+        storeFlag: Boolean
+    ): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.update(this).set(STORE_FLAG, storeFlag).where(ID.eq(templateId)).execute()
+            return dslContext.update(this)
+                .set(STORE_FLAG, storeFlag)
+                .where(ID.eq(templateId).and(PROJECT_ID.eq(projectId)))
+                .execute()
         }
     }
 
@@ -287,7 +303,7 @@ class TemplateDao {
         dslContext: DSLContext,
         projectId: String? = null,
         version: Long
-    ): TTemplateRecord {
+    ): TTemplateRecord? {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(VERSION.eq(version))
@@ -297,10 +313,42 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)
-                .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
-                defaultMessage = "模板不存在"
-            )
+                .fetchOne()
+        }
+    }
+
+    fun getTemplate(
+        dslContext: DSLContext,
+        templateId: String,
+        versionName: String? = null,
+        version: Long? = null
+    ): TTemplateRecord? {
+        with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ID.eq(templateId))
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            }
+            if (!versionName.isNullOrBlank()) {
+                conditions.add(VERSION_NAME.eq(versionName))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getPublicTemplate(
+        dslContext: DSLContext
+    ): List<String> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.select(ID).from(this)
+                .where(PROJECT_ID.eq(""))
+                .and(TYPE.eq(TemplateType.PUBLIC.name))
+                .orderBy(CREATED_TIME.asc())
+                .fetch(0, String::class.java)
         }
     }
 
@@ -359,12 +407,14 @@ class TemplateDao {
     ): Int {
         with(TTemplate.T_TEMPLATE) {
             val normalConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
-            normalConditions.add(PROJECT_ID.eq(projectId))
+            if (!projectId.isNullOrBlank()) {
+                normalConditions.add(PROJECT_ID.eq(projectId))
+            }
             var count = dslContext.select(DSL.countDistinct(ID))
                 .from(this)
                 .where(normalConditions)
                 .fetchOne(0, Int::class.java)!!
-            if (includePublicFlag != null && includePublicFlag) {
+            if (true == includePublicFlag) {
                 val publicConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
                 publicConditions.add((TYPE.eq(TemplateType.PUBLIC.name)))
                 count += dslContext.select(DSL.countDistinct(ID))
@@ -401,17 +451,23 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
+        offset: Int?,
+        limit: Int?,
         queryModelFlag: Boolean = true
     ): Result<out Record>? {
+        if (projectId == null && templateIdList == null && limit == null)
+            throw ErrorCodeException(
+                defaultMessage = "list pipeline templates params error",
+                errorCode = FAIL_TO_LIST_TEMPLATE_PARAMS
+            )
         val tTemplate = TTemplate.T_TEMPLATE
 
         val conditions = mutableListOf<Condition>()
         if (projectId != null) {
             if (includePublicFlag != null && includePublicFlag) {
                 conditions.add(
-                    tTemplate.PROJECT_ID.eq(projectId).or(tTemplate.PROJECT_ID.eq("").and(tTemplate.TYPE.eq(TemplateType.PUBLIC.name)))
+                    tTemplate.PROJECT_ID.eq(projectId)
+                        .or(tTemplate.PROJECT_ID.eq("").and(tTemplate.TYPE.eq(TemplateType.PUBLIC.name)))
                 )
             } else {
                 conditions.add(tTemplate.PROJECT_ID.eq(projectId))
@@ -423,8 +479,8 @@ class TemplateDao {
             templateType = templateType,
             templateIdList = templateIdList,
             storeFlag = storeFlag,
-            page = page,
-            pageSize = pageSize,
+            offset = offset,
+            limit = limit,
             tTemplate = tTemplate,
             conditions = conditions,
             queryModelFlag = queryModelFlag
@@ -436,8 +492,8 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
+        offset: Int?,
+        limit: Int?,
         tTemplate: TTemplate,
         conditions: MutableList<Condition>,
         queryModelFlag: Boolean = true
@@ -445,7 +501,7 @@ class TemplateDao {
         if (templateType != null) {
             conditions.add(tTemplate.TYPE.eq(templateType.name))
         }
-        if (templateIdList != null && templateIdList.isNotEmpty()) {
+        if (!templateIdList.isNullOrEmpty()) {
             conditions.add(tTemplate.ID.`in`(templateIdList))
         }
         if (storeFlag != null) {
@@ -491,10 +547,10 @@ class TemplateDao {
             .where(conditions)
             .orderBy(tTemplate.WEIGHT.desc(), tTemplate.CREATED_TIME.desc(), tTemplate.VERSION.desc())
 
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        return if (null != offset && null != limit) {
+            baseStep.limit(offset, limit).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
@@ -509,7 +565,9 @@ class TemplateDao {
                 .and(ID.eq(templateId))
                 .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
-                .fetchOne() ?: throw NotFoundException("流水线模板不存在")
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+            )
         }
     }
 
@@ -522,7 +580,9 @@ class TemplateDao {
                 .where(ID.eq(templateId))
                 .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
-                .fetchOne() ?: throw NotFoundException("流水线模板不存在")
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+            )
         }
     }
 
@@ -565,6 +625,23 @@ class TemplateDao {
                 .and(SRC_TEMPLATE_ID.eq(templateId))
                 .and(PROJECT_ID.`in`(projectIds))
                 .fetch()
+        }
+    }
+
+    fun updateNameAndDescById(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        name: String?,
+        desc: String?
+    ): Int {
+        with(TTemplate.T_TEMPLATE) {
+            val dsl = dslContext.update(this)
+                .set(DESC, desc)
+            if (!name.isNullOrBlank()) {
+                dsl.set(TEMPLATE_NAME, name)
+            }
+            return dsl.where(PROJECT_ID.eq(projectId)).and(ID.eq(templateId)).execute()
         }
     }
 }

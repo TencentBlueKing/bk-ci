@@ -27,7 +27,7 @@ const store = {
         codelibs: null,
         tickets: null,
         showCodelibDialog: false,
-        fetchingCodelibDetail: false,
+        fetchingCodelibDetail: true,
         codelib: {
             aliasName: '',
             credentialId: '',
@@ -40,9 +40,10 @@ const store = {
         githubOAuth: {
             project: []
         },
-        tGitOAuth: {
+        tgitOAuth: {
             project: []
-        }
+        },
+        templateCodeLib: null
     },
     getters: {}
 }

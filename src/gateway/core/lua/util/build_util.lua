@@ -420,7 +420,7 @@ function _M:auth_macos(checkVersion)
                     ngx.exit(401)
                     return
                 else
-                    auth_cache:set(cache_key, redRes, 60)
+                    auth_cache:set(cache_key, redRes, 30)
                     cache_value = redRes
                 end
             end

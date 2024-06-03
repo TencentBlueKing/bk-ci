@@ -49,7 +49,7 @@ class AuthCertService @Autowired constructor(
         val certInfos = certService.list(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (certInfos?.records == null) {
-            logger.info("$projectId 项目下无凭证")
+            logger.info("$projectId no credential")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -63,16 +63,24 @@ class AuthCertService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, certInfos.count)
     }
 
-    fun getCertInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    fun getCertInfo(
+        projectId: String?,
+        ids: List<Any>?,
+        token: String
+    ): FetchInstanceInfoResponseDTO? {
+        logger.info("fetch instance info:$projectId|$ids")
         authTokenApi.checkToken(token)
-        val certInfos = certService.getCertByIds(ids!!.toSet() as Set<String>)
+        val certInfos = certService.getCertByIds(
+            projectId = projectId,
+            certIds = ids!!.toSet() as Set<String>
+        )
         val result = FetchInstanceInfo()
         if (certInfos == null || certInfos.isEmpty()) {
-            logger.info("$ids 无凭证")
+            logger.info("$ids no credential")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
-        certInfos?.map {
+        certInfos.map {
             val entity = InstanceInfoDTO()
             entity.id = it.certId
             entity.displayName = it.certId
@@ -95,10 +103,11 @@ class AuthCertService @Autowired constructor(
             projectId = projectId,
             offset = offset,
             limit = limit,
-            certId = keyword)
+            certId = keyword
+        )
         val result = SearchInstanceInfo()
         if (certInfos?.records == null) {
-            logger.info("$projectId 项目下无证书")
+            logger.info("$projectId no cert")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

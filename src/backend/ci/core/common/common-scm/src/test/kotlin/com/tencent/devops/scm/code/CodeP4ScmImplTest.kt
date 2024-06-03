@@ -28,10 +28,10 @@
 package com.tencent.devops.scm.code
 
 import com.perforce.p4java.admin.ITriggerEntry
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
-@Ignore
+@Disabled
 class CodeP4ScmImplTest {
 
     private val p4ScmImpl = CodeP4ScmImpl(

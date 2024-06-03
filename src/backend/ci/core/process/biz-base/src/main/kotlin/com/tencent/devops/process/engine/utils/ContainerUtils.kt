@@ -30,6 +30,11 @@ package com.tencent.devops.process.engine.utils
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MUTEX_WAITING
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PENDING
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUING
 
 object ContainerUtils {
 
@@ -57,35 +62,43 @@ object ContainerUtils {
         return container.jobControlOption == null || container.jobControlOption!!.enable
     }
 
-    private const val mutexPrefix = "互斥中(Mutex waiting)"
+    private fun getMutexPrefix() = I18nUtil.getCodeLanMessage(BK_MUTEX_WAITING)
 
-    fun clearMutexContainerName(container: Container) {
-        if (container.name.startsWith(mutexPrefix)) {
-            container.name = container.name.substring(mutexPrefix.length)
+    fun getMutexFixedContainerName(containerName: String) =
+        if (containerName.startsWith(getMutexPrefix())) {
+            containerName.substring(getMutexPrefix().length)
+        } else containerName
+
+    fun getMutexWaitName(containerName: String) =
+        if (containerName.startsWith(getMutexPrefix())) {
+            containerName
+        } else {
+            "${getMutexPrefix()}$containerName"
+        }
+
+    private fun getQueuePrefix() = I18nUtil.getCodeLanMessage(BK_QUEUING)
+    private fun getReviewPrefix() = I18nUtil.getCodeLanMessage(BK_PENDING)
+
+    fun getClearedQueueContainerName(containerName: String): String {
+        return if (containerName.startsWith(getQueuePrefix())) {
+            containerName.substring(getQueuePrefix().length)
+        } else if (containerName.startsWith(getReviewPrefix())) {
+            containerName.substring(getReviewPrefix().length)
+        } else containerName
+    }
+
+    fun getQueuingWaitName(containerName: String, startBuildStatus: BuildStatus): String {
+        if (containerName.startsWith(getQueuePrefix()) || containerName.startsWith(getReviewPrefix())) {
+            return containerName
+        }
+        return if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
+            "${getReviewPrefix()}$containerName"
+        } else {
+            "${getQueuePrefix()}$containerName"
         }
     }
 
-    fun setMutexWaitName(container: Container) {
-        if (container.name.startsWith(mutexPrefix)) {
-            return
-        }
-
-        container.name = "$mutexPrefix${container.name}"
-    }
-
-    private const val queuePrefix = "排队中(Queuing)"
-
-    fun clearQueueContainerName(container: Container) {
-        if (container.name.startsWith(queuePrefix)) {
-            container.name = container.name.substring(queuePrefix.length)
-        }
-    }
-
-    fun setQueuingWaitName(container: Container) {
-        if (container.name.startsWith(queuePrefix)) {
-            return
-        }
-
-        container.name = "$queuePrefix${container.name}"
+    fun isOriginMatrixContainer(container: Container): Boolean {
+        return container.fetchGroupContainers() != null
     }
 }

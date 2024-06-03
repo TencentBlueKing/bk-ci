@@ -27,13 +27,15 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线名称与Id")
+@Schema(title = "流水线名称与Id")
 data class PipelineIdAndName(
-    @ApiModelProperty("流水线Id")
+    @get:Schema(title = "流水线Id")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
-    val pipelineName: String
+    @get:Schema(title = "流水线名称")
+    val pipelineName: String,
+    @get:Schema(title = "流水线的来源渠道")
+    val channelCode: ChannelCode? = null
 )

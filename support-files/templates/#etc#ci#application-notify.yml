@@ -1,7 +1,7 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_notify?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_notify?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
 
@@ -10,7 +10,12 @@ server:
   port: __BK_CI_NOTIFY_API_PORT__
 
 notify:
-  weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
+  weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  # 发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
+  emailChannel: __BK_CI_NOTIFY_EMAIL_SEND_CHANNEL__ # 发送邮件的通道：blueking 蓝鲸消息通道，tencentCloud 腾讯云邮件服务
+  tencentCloud:
+    secretId: __BK_CI_NOTIFY_TENCENT_CLOUD_SECRET_ID__ # 腾讯云SECRET_ID
+    secretKey: __BK_CI_NOTIFY_TENCENT_CLOUD_SECRET_KEY__ # 腾讯云SECRET_KEY
+    emailRegion: __BK_CI_NOTIFY_TENCENT_CLOUD_EMAIL_REGION__ # 腾讯云邮件服务Region地区
 
 wework:
   corpId:

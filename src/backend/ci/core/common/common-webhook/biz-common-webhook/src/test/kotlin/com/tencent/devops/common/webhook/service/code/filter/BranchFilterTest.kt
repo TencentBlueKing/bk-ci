@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class BranchFilterTest {
 
@@ -42,7 +42,7 @@ class BranchFilterTest {
             includedBranches = emptyList(),
             excludedBranches = emptyList()
         )
-        Assert.assertTrue(branchFilter.doFilter(response))
+        Assertions.assertTrue(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -50,7 +50,7 @@ class BranchFilterTest {
             includedBranches = listOf("master"),
             excludedBranches = emptyList()
         )
-        Assert.assertTrue(branchFilter.doFilter(response))
+        Assertions.assertTrue(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -58,7 +58,7 @@ class BranchFilterTest {
             includedBranches = listOf("master", "develop"),
             excludedBranches = emptyList()
         )
-        Assert.assertTrue(branchFilter.doFilter(response))
+        Assertions.assertTrue(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -66,7 +66,7 @@ class BranchFilterTest {
             includedBranches = listOf("master", "develop"),
             excludedBranches = emptyList()
         )
-        Assert.assertFalse(branchFilter.doFilter(response))
+        Assertions.assertFalse(branchFilter.doFilter(response))
     }
 
     @Test
@@ -77,7 +77,7 @@ class BranchFilterTest {
             includedBranches = emptyList(),
             excludedBranches = emptyList()
         )
-        Assert.assertTrue(branchFilter.doFilter(response))
+        Assertions.assertTrue(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -85,7 +85,7 @@ class BranchFilterTest {
             includedBranches = emptyList(),
             excludedBranches = listOf("master")
         )
-        Assert.assertFalse(branchFilter.doFilter(response))
+        Assertions.assertFalse(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -93,7 +93,7 @@ class BranchFilterTest {
             includedBranches = emptyList(),
             excludedBranches = listOf("master", "develop")
         )
-        Assert.assertFalse(branchFilter.doFilter(response))
+        Assertions.assertFalse(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -101,7 +101,7 @@ class BranchFilterTest {
             includedBranches = emptyList(),
             excludedBranches = listOf("master", "develop")
         )
-        Assert.assertTrue(branchFilter.doFilter(response))
+        Assertions.assertTrue(branchFilter.doFilter(response))
     }
 
     @Test
@@ -112,7 +112,7 @@ class BranchFilterTest {
             includedBranches = listOf("master"),
             excludedBranches = listOf("develop")
         )
-        Assert.assertTrue(branchFilter.doFilter(response))
+        Assertions.assertTrue(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -120,7 +120,7 @@ class BranchFilterTest {
             includedBranches = listOf("master"),
             excludedBranches = listOf("develop")
         )
-        Assert.assertFalse(branchFilter.doFilter(response))
+        Assertions.assertFalse(branchFilter.doFilter(response))
 
         branchFilter = BranchFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -128,6 +128,6 @@ class BranchFilterTest {
             includedBranches = listOf("master"),
             excludedBranches = listOf("develop")
         )
-        Assert.assertFalse(branchFilter.doFilter(response))
+        Assertions.assertFalse(branchFilter.doFilter(response))
     }
 }

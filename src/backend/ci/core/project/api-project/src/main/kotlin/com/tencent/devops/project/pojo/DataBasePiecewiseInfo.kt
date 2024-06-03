@@ -27,19 +27,21 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("数据库分片信息")
+@Schema(title = "数据库分片信息")
 data class DataBasePiecewiseInfo(
-    @ApiModelProperty("项目ID/项目CODE")
+    @get:Schema(title = "项目ID/项目CODE")
     val projectId: String,
-    @ApiModelProperty("集群名称")
+    @get:Schema(title = "集群名称")
     val clusterName: String,
-    @ApiModelProperty("微服务模块名称")
-    val moduleCode: String,
-    @ApiModelProperty("数据源名称")
+    @get:Schema(title = "微服务模块名称")
+    val moduleCode: SystemModuleEnum,
+    @get:Schema(title = "数据源名称")
     val dataSourceName: String,
-    @ApiModelProperty("数据源URL")
-    val dsUrl: String?
+    @get:Schema(title = "路由规则")
+    val routingRule: String,
+    @get:Schema(title = "数据源URL")
+    val dsUrl: String? = null
 )

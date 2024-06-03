@@ -28,15 +28,14 @@
 package com.tencent.devops.common.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
-import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.exception.ClientException
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Contract
 import feign.Feign
@@ -50,22 +49,20 @@ import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
 import feign.spring.SpringContract
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
-import org.springframework.context.annotation.DependsOn
-import org.springframework.core.annotation.AnnotationUtils
-import org.springframework.stereotype.Component
 import java.lang.reflect.Method
 import java.security.cert.CertificateException
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import kotlin.reflect.KClass
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
+import org.springframework.context.annotation.DependsOn
+import org.springframework.stereotype.Component
 
 /**
  *
@@ -75,9 +72,10 @@ import kotlin.reflect.KClass
 @Component
 @DependsOn("springContextUtil")
 class Client @Autowired constructor(
-    private val consulClient: ConsulDiscoveryClient?,
+    private val compositeDiscoveryClient: CompositeDiscoveryClient?,
     private val clientErrorDecoder: ClientErrorDecoder,
     private val commonConfig: CommonConfig,
+    private val bkTag: BkTag,
     objectMapper: ObjectMapper
 ) {
 
@@ -85,19 +83,14 @@ class Client @Autowired constructor(
         private val logger = LoggerFactory.getLogger(Client::class.java)
         private const val readWriteTimeoutSeconds = 15L
         private const val connectTimeoutSeconds = 5L
+        private const val CACHE_SIZE = 1000L
+        private val longTimeOptions = Request.Options(10L, TimeUnit.SECONDS, 30L, TimeUnit.MINUTES, true)
     }
 
-    private val beanCaches: LoadingCache<KClass<*>, *> = CacheBuilder.newBuilder()
-        .maximumSize(1000).build(object : CacheLoader<KClass<*>, Any>() {
-            override fun load(p0: KClass<*>): Any {
-                return getImpl(p0)
-            }
-        })
+    private val beanCaches: LoadingCache<KClass<*>, *> = Caffeine.newBuilder()
+        .maximumSize(CACHE_SIZE).build { key -> getImpl(key) }
 
-    private val interfaces = ConcurrentHashMap<KClass<*>, String>()
-
-    private val trustAllCerts: Array<TrustManager> = arrayOf(object :
-        X509TrustManager {
+    private val trustAllCerts: Array<TrustManager> = arrayOf(object : X509TrustManager {
         @Throws(CertificateException::class)
         override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
@@ -114,8 +107,8 @@ class Client @Autowired constructor(
             val sslContext = SSLContext.getInstance("SSL")
             sslContext.init(null, trustAllCerts, java.security.SecureRandom())
             return sslContext.socketFactory
-        } catch (ingored: Exception) {
-            throw RemoteServiceException(ingored.message!!)
+        } catch (ignored: Exception) {
+            throw RemoteServiceException(ignored.message!!)
         }
     }
 
@@ -142,12 +135,6 @@ class Client @Autowired constructor(
     private val springContract = SpringContract()
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
-
-    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
-    private val tag: String? = null
-
-    @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
-    private val assemblyServiceName: String? = null
 
     @Value("\${service-suffix:#{null}}")
     private val serviceSuffix: String? = null
@@ -187,21 +174,21 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(clientContract)
             .requestInterceptor(requestInterceptor)
-            .options(Request.Options(10 * 1000, 30 * 60 * 1000))
-            .retryer(object : Retryer {
-                override fun clone(): Retryer {
-                    return this
-                }
-
-                override fun continueOrPropagate(e: RetryableException) {
-                    throw e
-                }
-            })
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
+            .options(longTimeOptions) // 可复用常量对象不重复创建
+            .retryer(WithoutRetry()) // 优化重复创建的匿名类
+            .target(
+                MicroServiceTarget(
+                    serviceName = BkServiceUtil.findServiceName(clz = clz),
+                    type = clz.java,
+                    compositeDiscoveryClient = compositeDiscoveryClient!!,
+                    bkTag = bkTag
+                )
+            )
     }
 
     fun <T : Any> getExternalServiceWithoutRetry(serviceName: String, clz: KClass<T>): T {
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
+
         return Feign.builder()
             .client(longRunClient)
             .errorDecoder(clientErrorDecoder)
@@ -209,17 +196,16 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(clientContract)
             .requestInterceptor(requestInterceptor)
-            .options(Request.Options(10 * 1000, 30 * 60 * 1000))
-            .retryer(object : Retryer {
-                override fun clone(): Retryer {
-                    return this
-                }
-
-                override fun continueOrPropagate(e: RetryableException) {
-                    throw e
-                }
-            })
-            .target(MicroServiceTarget(serviceName, clz.java, consulClient!!, tag))
+            .options(longTimeOptions) // 可复用常量对象不重复创建
+            .retryer(WithoutRetry()) // 优化重复创建的匿名类
+            .target(
+                MicroServiceTarget(
+                    serviceName = serviceName,
+                    type = clz.java,
+                    compositeDiscoveryClient = compositeDiscoveryClient!!,
+                    bkTag = bkTag
+                )
+            )
     }
 
     /**
@@ -228,7 +214,7 @@ class Client @Autowired constructor(
      */
     fun <T : Any> getGateway(clz: KClass<T>, gatewayType: GatewayType = GatewayType.IDC): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz = clz).removeSuffix(serviceSuffix ?: "")
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()
             .client(feignClient)
@@ -243,7 +229,7 @@ class Client @Autowired constructor(
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz = clz).removeSuffix(serviceSuffix ?: "")
         // 获取为feign定义的拦截器
         val requestInterceptor = SpringContextUtil.getBeansWithClass(RequestInterceptor::class.java)
         return Feign.builder()
@@ -273,35 +259,30 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(contract)
             .requestInterceptor(requestInterceptor)
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
+            .retryer(HttpGetRetry()) // 优化重复创建的匿名类
+            .target(
+                MicroServiceTarget(
+                    serviceName = BkServiceUtil.findServiceName(clz = clz),
+                    type = clz.java,
+                    compositeDiscoveryClient = compositeDiscoveryClient!!,
+                    bkTag = bkTag
+                )
+            )
+    }
+
+    // devnet区域的，只能直接通过ip访问
+    fun <T : Any> getScmUrl(clz: KClass<T>): String {
+        val serviceName = BkServiceUtil.findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        return buildGatewayUrl(path = "/$serviceName/api", gatewayType = GatewayType.IDC_PROXY)
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
-        return MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag).url()
-    }
-
-    private fun findServiceName(clz: KClass<*>): String {
-        // 单体结构，不分微服务的方式
-        if (!assemblyServiceName.isNullOrBlank()) {
-            return assemblyServiceName!!
-        }
-        val serviceName = interfaces.getOrPut(clz) {
-            val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
-            if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
-                serviceInterface.value
-            } else {
-                val packageName = clz.qualifiedName.toString()
-                val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
-                val matches = regex.find(packageName) ?: throw ClientException("无法根据接口\"$packageName\"分析所属的服务")
-                matches.groupValues[1]
-            }
-        }
-
-        return if (serviceSuffix.isNullOrBlank()) {
-            serviceName
-        } else {
-            "$serviceName$serviceSuffix"
-        }
+        return MicroServiceTarget(
+            serviceName = BkServiceUtil.findServiceName(clz = clz),
+            type = clz.java,
+            compositeDiscoveryClient = compositeDiscoveryClient!!,
+            bkTag = bkTag
+        ).url()
     }
 
     private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
@@ -317,12 +298,29 @@ class Client @Autowired constructor(
                 GatewayType.IDC_PROXY -> commonConfig.devopsIdcProxyGateway!!
                 GatewayType.OSS -> commonConfig.devopsOssGateway!!
                 GatewayType.OSS_PROXY -> commonConfig.devopsOssProxyGateway!!
-                else -> commonConfig.devopsIdcGateway!!
             }
             if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
                 "$gateway/${path.removePrefix("/")}"
             } else {
                 "http://$gateway/${path.removePrefix("/")}"
+            }
+        }
+    }
+
+    private class WithoutRetry : Retryer.Default() {
+        override fun clone(): Retryer = this
+
+        override fun continueOrPropagate(e: RetryableException): Unit = throw e
+    }
+
+    private class HttpGetRetry : Retryer.Default() {
+        override fun clone(): Retryer = this
+
+        override fun continueOrPropagate(e: RetryableException) {
+            if (e.method() != Request.HttpMethod.GET) {
+                throw e
+            } else {
+                super.continueOrPropagate(e)
             }
         }
     }

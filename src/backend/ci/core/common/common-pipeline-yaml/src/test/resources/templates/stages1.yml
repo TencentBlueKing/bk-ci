@@ -1,0 +1,26 @@
+# .ci/templates/stages.yml
+
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: stagename
+    type: string
+    default: STAGENAME
+
+stages:
+  - name: "template_stage_id_1"
+    jobs:
+      template_stage_id_1_job_id_1:
+        name: template_stage_id_1_job_id_1
+        steps:
+          - run: |
+              echo "template_stage_id_1_job_id_1 username ${{ parameters.username }}"
+      template_stage_id_1_job_id_2:
+        name: template_stage_id_1_job_id_1
+        steps:
+          - run: |
+              echo "template_stage_id_1_job_id_2 stagename ${{ parameters.stagename }}"
+  - template: cyclic/stage/templates/stage1.yml
+    parameters:
+      username: CYC_STAGE1

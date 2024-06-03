@@ -31,30 +31,38 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("定时触发")
+@Schema(title = "定时触发")
 data class TimerTriggerElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "定时触发",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
     // express是老的接口数据， 后面要废弃掉
-    @ApiModelProperty("定时表达式", required = false)
+    @get:Schema(title = "定时表达式", required = false)
     @Deprecated(message = "@see advanceExpression")
     val expression: String? = null,
-    @ApiModelProperty("改进后的表达式", required = false)
+    @get:Schema(title = "改进后的表达式", required = false)
     val newExpression: List<String>? = null,
-    @ApiModelProperty("高级定时表达式", required = false)
+    @get:Schema(title = "高级定时表达式", required = false)
     val advanceExpression: List<String>? = null,
-    @ApiModelProperty("源代码未更新则不触发构建", required = false)
-    val noScm: Boolean? = false
+    @get:Schema(title = "源代码未更新则不触发构建", required = false)
+    val noScm: Boolean? = false,
+    @get:Schema(title = "指定代码库分支", required = false)
+    val branches: List<String>? = null,
+    @get:Schema(title = "代码库类型", required = false)
+    val repositoryType: RepositoryType? = null,
+    @get:Schema(title = "代码库HashId", required = false)
+    val repoHashId: String? = null,
+    @get:Schema(title = "指定代码库别名", required = false)
+    val repoName: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"
@@ -79,6 +87,7 @@ data class TimerTriggerElement(
         }
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     fun convertExpressions(params: Map<String, String>): Set<String> {
         return if (isOldExpress()) {
             if (expression != null) {
@@ -95,7 +104,11 @@ data class TimerTriggerElement(
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
                 advanceExpression.forEach { expression ->
-                    expressions.add(convertExpression(EnvUtils.parseEnv(command = expression, data = params)))
+                    EnvUtils.parseEnv(command = expression, data = params)
+                        .split("\n")
+                        .forEach { expr ->
+                            expressions.add(convertExpression(expr))
+                        }
                 }
             }
             expressions

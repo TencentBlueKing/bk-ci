@@ -35,6 +35,7 @@ import com.tencent.devops.process.api.audit.UserAuditResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.pojo.audit.AuditInfo
 import com.tencent.devops.process.pojo.audit.AuditPage
+import com.tencent.devops.process.pojo.audit.QueryAudit
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,6 +52,7 @@ class UserAuditResourceImpl @Autowired constructor(
         projectId: String,
         resourceType: String,
         status: String?,
+        resourceId: String?,
         resourceName: String?,
         startTime: String?,
         endTime: String?,
@@ -63,22 +65,22 @@ class UserAuditResourceImpl @Autowired constructor(
 
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageSize
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = auditService.userList(
-            userId = userId,
+
+        val queryAudit = QueryAudit(
             projectId = projectId,
             resourceType = resourceType,
-            status = status,
+            resourceId = resourceId,
             resourceName = resourceName,
+            userId = userId,
             startTime = startTime,
-            endTime = endTime,
-            offset = limit.offset,
-            limit = limit.limit
+            endTime = endTime
         )
+        val pg = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val result = auditService.userList(queryAudit = queryAudit, offset = pg.offset, limit = pg.limit)
         return Result(
             AuditPage(
                 page = pageNotNull,
-                pageSize = pageSizeNotNull,
+                pageSize = pg.limit,
                 count = result.first.count,
                 records = result.first.records,
                 hasCreatePermission = result.second

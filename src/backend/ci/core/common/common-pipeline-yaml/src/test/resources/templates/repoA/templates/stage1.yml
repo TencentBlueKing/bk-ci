@@ -1,0 +1,44 @@
+resources:
+  repositories:
+    - repository: repoB
+      name: repoB
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: stagename
+    type: string
+    default: STAGENAME
+
+stages:
+  - name: "res_stage_id_1"
+    check-in:
+      gates:
+        - template: epc_checks.yml
+#          parameters:
+#            receivers:
+#              - ruotiantang
+    jobs:
+      res_repoA_stage_id_1_job_id_1:
+        name: res_repoA_stage_id_1_job_id_1
+        steps:
+          - run: |
+              echo "res_repoA_stage_id_1_job_id_1 username ${{ parameters.username }}"
+      res_repoA_stage_id_1_job_id_2:
+        name: res_repoA_stage_id_1_job_id_2
+        steps:
+          - run: |
+              echo "res_repoA_stage_id_1_job_id_2 stagename ${{ parameters.stagename }}"
+          - template: step4.yml
+            parameters:
+              username: RES_REPOA_STAGE1_JOB2_STEP3
+  - template: stage2.yml
+    parameters:
+      username: RES_PEPOA_STAGE1
+  - template: stage2.yml@repoB
+    parameters:
+      username: RES_PEPOA_STAGE1

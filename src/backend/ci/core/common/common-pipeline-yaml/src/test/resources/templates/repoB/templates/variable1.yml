@@ -1,0 +1,12 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+
+variables:
+  RES_REPOB_VAR1_USERNAME:
+    value: ${{ parameters.username }}
+#  template:
+#    - name: variable2.yml
+#      parameters:
+#        username: RES_REPOB_VARIABLES

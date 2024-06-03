@@ -1,0 +1,40 @@
+{{ if .Values.kubernetesManager.enabled -}}
+{{ if .Values.dockerInit.useDockerInit -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dispatch-kubernetes-builder
+  {{- if .Values.kubernetesManager.builderNamespace }}
+  namespace: {{ .Values.kubernetesManager.builderNamespace }}
+  {{- else }}
+  namespace: {{ .Release.Namespace }}
+  {{- end }}
+data:
+  initsh.properties: |
+    {{- .Files.Get "dockerInit.sh" | indent 4 }}
+  sleepsh.properties: |
+    #!/bin/sh
+
+    unset_proxy() {
+      unset http_proxy
+      unset https_proxy
+      unset ftp_proxy
+      unset no_proxy
+      unset all_proxy
+      unset HTTP_PROXY
+      unset HTTPS_PROXY
+      unset FTP_PROXY
+      unset NO_PROXY
+      unset ALL_PROXY
+    }
+
+    echo  "unset proxy"
+    unset_proxy
+
+    while true
+    do
+    sleep 5m
+    done
+
+{{- end -}}
+{{- end -}}

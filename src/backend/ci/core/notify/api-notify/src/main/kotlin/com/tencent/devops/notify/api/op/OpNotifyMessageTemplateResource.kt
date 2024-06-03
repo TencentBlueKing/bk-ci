@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -47,87 +47,102 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_NOTIFY_MESSAGE_TEMPLATE"], description = "通知模板")
+@Tag(name = "OP_NOTIFY_MESSAGE_TEMPLATE", description = "通知模板")
 @Path("/op/notify/message/template")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpNotifyMessageTemplateResource {
 
-    @ApiOperation("查找消息通知模板主体消息")
+    @Operation(summary = "查找消息通知模板主体消息")
     @GET
     @Path("/list/common")
     fun getCommonNotifyMessageTemplates(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模板代码", required = false)
+        @Parameter(description = "模板代码", required = false)
         @QueryParam("templateCode")
         templateCode: String?,
-        @ApiParam("模板名称", required = false)
+        @Parameter(description = "模板名称", required = false)
         @QueryParam("templateName")
         templateName: String?,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<NotifyMessageCommonTemplate>>
 
-    @ApiOperation("查找消息通知模板列表")
+    @Operation(summary = "查找消息通知模板列表")
     @GET
     @Path("/list/sub")
     fun getNotifyMessageTemplates(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模板ID", required = false)
+        @Parameter(description = "模板ID", required = false)
         @QueryParam("templateId")
         templateId: String
     ): Result<Page<SubNotifyMessageTemplate>>
 
-    @ApiOperation("添加消息通知模板")
+    @Operation(summary = "添加消息通知模板")
     @POST
     @Path("/")
     fun addNotifyMessageTemplate(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("消息通知新增请求报文体", required = true)
+        @Parameter(description = "消息通知新增请求报文体", required = true)
         notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean>
 
-    @ApiOperation("更新消息通知模板")
+    @Operation(summary = "更新消息通知模板")
     @PUT
     @Path("/ids/{templateId}")
     fun updateNotifyMessageTemplate(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("消息通知更新请求报文体", required = true)
+        @Parameter(description = "消息通知更新请求报文体", required = true)
         notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean>
 
-    @ApiOperation("删除消息通知模板")
+    @Operation(summary = "匹配腾讯云ses模板id要邮件模板库")
+    @PUT
+    @Path("/tencent_cloud_ses_template_id")
+    fun updateTXSESTemplateId(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "公共模板ID", required = true)
+        @QueryParam("commonTemplateId")
+        templateId: String,
+        @Parameter(description = "腾讯云ses 模板id", required = true)
+        @QueryParam("sesTemplateId")
+        sesTemplateId: Int?
+    ): Result<Boolean>
+
+    @Operation(summary = "删除消息通知模板")
     @DELETE
     @Path("/ids/sub/{templateId}/{notifyType}")
     fun deleteNotifyMessageTemplate(
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("模板通知类型", required = true)
+        @Parameter(description = "模板通知类型", required = true)
         @PathParam("notifyType")
         notifyType: String
     ): Result<Boolean>
 
-    @ApiOperation("删除公共消息通知模板")
+    @Operation(summary = "删除公共消息通知模板")
     @DELETE
     @Path("/commons/ids/{templateId}")
     fun deleteCommonNotifyMessageTemplate(
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>

@@ -27,15 +27,26 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
@@ -43,6 +54,7 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.ticket.constant.TicketMessageCode
+import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
@@ -74,27 +86,23 @@ class CredentialServiceImpl @Autowired constructor(
         if (!credentialDao.has(dslContext, projectId, credentialId)) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_NOT_FOUND,
-                params = arrayOf(credentialId),
-                defaultMessage = "凭证$credentialId 不存在"
+                params = arrayOf(credentialId)
             )
         }
         if (!credentialHelper.isValid(credential)) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
-                defaultMessage = "凭证格式不正确"
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID
             )
         }
         if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > CREDENTIAL_NAME_MAX_SIZE) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
-                    defaultMessage = "凭证别名不能超过$CREDENTIAL_NAME_MAX_SIZE 位"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG
                 )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
-                    defaultMessage = "凭证别名必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL
                 )
             }
         }
@@ -118,61 +126,74 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceIds = "#credential?.credentialId",
+            instanceNames = "#credential?.credentialName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_CREATE_CONTENT
+    )
     override fun userCreate(
         userId: String,
         projectId: String,
         credential: CredentialCreate,
         authGroupList: List<BkAuthGroup>?
     ) {
+        val create = AuthPermission.CREATE
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
-            authPermission = AuthPermission.CREATE,
-            message = "用户($userId)在工程($projectId)下没有凭据创建权限"
+            authPermission = create,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
         if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_EXIST,
-                params = arrayOf(credential.credentialId),
-                defaultMessage = "凭证名称${credential.credentialId}已存在"
+                params = arrayOf(credential.credentialId)
             )
         }
         if (!credentialHelper.isValid(credential)) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
-                defaultMessage = "凭证格式不正确"
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID
             )
         }
         if (credential.credentialId.length > CREDENTIAL_ID_MAX_SIZE) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_ID_TOO_LONG,
-                defaultMessage = "凭证名称不能超过$CREDENTIAL_ID_MAX_SIZE 位"
+                errorCode = TicketMessageCode.CREDENTIAL_ID_TOO_LONG
             )
         }
         if (!CREDENTIAL_ID_REGEX.matches(credential.credentialId)) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_ID_ILLEGAL,
-                defaultMessage = "凭证名称必须是英文字母、数字或下划线(_)"
+                errorCode = TicketMessageCode.CREDENTIAL_ID_ILLEGAL
             )
         }
         if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > CREDENTIAL_NAME_MAX_SIZE) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
-                    defaultMessage = "凭证别名不能超过$CREDENTIAL_NAME_MAX_SIZE 位"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG
                 )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
-                    defaultMessage = "凭证别名必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL
                 )
             }
         }
 
         logger.info("$userId create credential ${credential.credentialId}")
-        credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
         credentialDao.create(
             dslContext = dslContext,
             projectId = projectId,
@@ -190,17 +211,45 @@ class CredentialServiceImpl @Autowired constructor(
             credentialV4 = credentialHelper.encryptCredential(credential.v4),
             credentialRemark = credential.credentialRemark
         )
+        credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
     }
 
-    override fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate) {
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_EDIT_CONTENT
+    )
+    override fun userEdit(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        credential: CredentialUpdate
+    ) {
+        val edit = AuthPermission.EDIT
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
+        ActionAuditContext.current()
+            .setInstanceId(credentialId)
+            .setInstanceName(credential.credentialName)
+            .setInstance(credential)
         serviceEdit(
             userId = userId,
             projectId = projectId,
@@ -209,20 +258,45 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceIds = "#credentialId",
+            instanceNames = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_EDIT_SETTING_CONTENT
+    )
     override fun userSettingEdit(
         userId: String,
         projectId: String,
         credentialId: String,
         credentialSetting: CredentialSettingUpdate
     ): Boolean {
+        val edit = AuthPermission.EDIT
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
 
+        ActionAuditContext.current()
+            .setInstanceId(credentialId)
+            .setInstanceName(credentialId)
+            .setInstance(credentialSetting)
         return credentialDao.updateSetting(
             dslContext = dslContext,
             projectId = projectId,
@@ -231,15 +305,35 @@ class CredentialServiceImpl @Autowired constructor(
         ) > 0
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceIds = "#credentialId",
+            instanceNames = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_DELETE_CONTENT
+    )
     override fun userDelete(userId: String, projectId: String, credentialId: String) {
+        val delete = AuthPermission.DELETE
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.DELETE,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的删除权限"
+            authPermission = delete,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    delete.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
         logger.info("$userId delete credential $credentialId")
         credentialPermissionService.deleteResource(projectId, credentialId)
         credentialDao.delete(dslContext, projectId, credentialId)
@@ -260,7 +354,8 @@ class CredentialServiceImpl @Autowired constructor(
                 AuthPermission.LIST,
                 AuthPermission.DELETE,
                 AuthPermission.VIEW,
-                AuthPermission.EDIT
+                AuthPermission.EDIT,
+                AuthPermission.USE
             )
         )
         if (permissionToListMap.isNullOrEmpty()) {
@@ -270,6 +365,7 @@ class CredentialServiceImpl @Autowired constructor(
         val hasDeletePermissionCredentialIdList = permissionToListMap[AuthPermission.DELETE]!!
         val hasViewPermissionCredentialIdList = permissionToListMap[AuthPermission.VIEW]!!
         val hasEditPermissionCredentialIdList = permissionToListMap[AuthPermission.EDIT]!!
+        val hasUsePermissionCredentialIdList = permissionToListMap[AuthPermission.USE]!!
 
         val count = credentialDao.countByProject(
             dslContext,
@@ -290,6 +386,7 @@ class CredentialServiceImpl @Autowired constructor(
             val hasDeletePermission = hasDeletePermissionCredentialIdList.contains(it.credentialId)
             val hasViewPermission = hasViewPermissionCredentialIdList.contains(it.credentialId)
             val hasEditPermission = hasEditPermissionCredentialIdList.contains(it.credentialId)
+            val hasUsePermission = hasUsePermissionCredentialIdList.contains(it.credentialId)
             CredentialWithPermission(
                 credentialId = it.credentialId,
                 credentialName = it.credentialName ?: it.credentialId,
@@ -301,9 +398,10 @@ class CredentialServiceImpl @Autowired constructor(
                 v3 = credentialHelper.credentialMixer,
                 v4 = credentialHelper.credentialMixer,
                 permissions = CredentialPermissions(
-                    hasDeletePermission,
-                    hasViewPermission,
-                    hasEditPermission
+                    delete = hasDeletePermission,
+                    view = hasViewPermission,
+                    edit = hasEditPermission,
+                    use = hasUsePermission
                 ),
                 updateUser = it.updateUser,
                 allowAcrossProject = it.allowAcrossProject
@@ -378,15 +476,33 @@ class CredentialServiceImpl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun userShow(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
+        val view = AuthPermission.VIEW
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.VIEW,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的查看权限"
+            authPermission = view,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    view.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
         val hasViewPermission = true
         val hasDeletePermission =
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
@@ -395,6 +511,9 @@ class CredentialServiceImpl @Autowired constructor(
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
 
+        ActionAuditContext.current()
+            .setInstanceName(credentialRecord.credentialName)
+            .setInstanceId(credentialRecord.credentialId)
         return CredentialWithPermission(
             credentialId = credentialId,
             credentialName = credentialRecord.credentialName ?: credentialId,
@@ -414,15 +533,33 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun userGet(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
+        val view = AuthPermission.VIEW
         credentialPermissionService.validatePermission(
             userId,
             projectId,
             credentialId,
-            AuthPermission.VIEW,
-            "用户($userId)在工程($projectId)下没有凭据($credentialId)的查看权限"
+            view,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    view.getI18n(I18nUtil.getLanguage(userId))
+                )
+            )
         )
-
         val hasViewPermission = true
         val hasDeletePermission =
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
@@ -430,6 +567,10 @@ class CredentialServiceImpl @Autowired constructor(
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.EDIT)
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
+
+        ActionAuditContext.current()
+            .setInstanceId(credentialRecord.credentialId)
+            .setInstanceName(credentialRecord.credentialName)
         return CredentialWithPermission(
             credentialId = credentialId,
             credentialName = credentialRecord.credentialName ?: credentialId,
@@ -450,6 +591,17 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun buildGet(
         projectId: String,
         buildId: String,
@@ -522,12 +674,34 @@ class CredentialServiceImpl @Autowired constructor(
         return ret
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
         val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
         return credentialInfo(publicKey, credentialRecord)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#targetProjectId")],
+        scopeId = "#targetProjectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun serviceGetAcrossProject(
         targetProjectId: String,
         credentialId: String,
@@ -583,6 +757,17 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun serviceGet(projectId: String, credentialId: String): Credential {
         val record = credentialDao.get(dslContext, projectId, credentialId)
 
@@ -621,6 +806,16 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
         val records = credentialDao.listByProject(
             dslContext = dslContext,
@@ -632,6 +827,12 @@ class CredentialServiceImpl @Autowired constructor(
             keyword = null
         )
         return records.map {
+            ActionAuditContext.current().addInstanceInfo(
+                it.credentialId,
+                it.credentialName,
+                null,
+                null
+            )
             Credential(
                 credentialId = it.credentialId,
                 credentialName = it.credentialName ?: it.credentialId,
@@ -689,6 +890,7 @@ class CredentialServiceImpl @Autowired constructor(
         }
         val templateId = client.get(ServiceVarResource::class).getBuildVar(
             projectId = projectId,
+            pipelineId = null,
             buildId = buildId,
             varName = TEMPLATE_ACROSS_INFO_ID
         ).data?.get(TEMPLATE_ACROSS_INFO_ID)
@@ -713,6 +915,5 @@ class CredentialServiceImpl @Autowired constructor(
         private const val CREDENTIAL_NAME_MAX_SIZE = 64
         private val CREDENTIAL_ID_REGEX = Regex("^[0-9a-zA-Z_]+$")
         private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-.]+$")
-        private const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"
     }
 }

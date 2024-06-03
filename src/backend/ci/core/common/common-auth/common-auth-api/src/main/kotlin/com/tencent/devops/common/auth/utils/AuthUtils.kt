@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 object AuthUtils {
 
     fun getProjects(content: ExpressionDTO): List<String> {
+        // todo 得考虑新增contain表达有无影响
         if (content.field != "project.id") {
             if (content.operator != ExpressionOperationEnum.ANY &&
                 content.operator != ExpressionOperationEnum.OR) {
@@ -245,6 +246,10 @@ object AuthUtils {
         }
 
         return instanceList
+    }
+
+    fun isExpired(expirationTimestamp: Long): Boolean {
+        return System.currentTimeMillis() / 1000 > expirationTimestamp
     }
 
     private fun checkProject(projectId: String, expression: ExpressionDTO): Pair<Boolean, Set<String>> {

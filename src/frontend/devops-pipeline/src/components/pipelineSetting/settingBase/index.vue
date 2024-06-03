@@ -1,8 +1,8 @@
 <template>
     <section class="bk-form pipeline-setting base" v-if="!isLoading">
         <div class="setting-container">
-            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
-                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
+            <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
+                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="templateSetting.pipelineName" name="name" v-validate.initial="'required|max:40'" />
             </form-field>
 
             <form-field :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
@@ -11,7 +11,9 @@
                         v-for="(filter, index) in tagGroupList"
                         :key="index">
                         <label class="group-title">{{filter.name}}</label>
-                        <bk-select :value="labelValues[index]"
+                        <bk-select
+                            ext-cls="setting-select"
+                            :value="labelValues[index]"
                             @selected="handleLabelSelect(index, arguments)"
                             @clear="handleLabelSelect(index, [[]])"
                             multiple
@@ -23,105 +25,44 @@
                 </div>
             </form-field>
 
-            <form-field :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
-                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="&quot;max:100&quot;"></textarea>
+            <form-field :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
+                <textarea name="desc" v-model="templateSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="'max:100'"></textarea>
             </form-field>
 
             <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
-                <bk-radio-group v-model="pipelineSetting.runLockType">
-                    <bk-radio v-for="(entry, key) in runTypeList" :key="key" :value="entry.value" class="view-radio">{{ entry.label }}</bk-radio>
-                </bk-radio-group>
+                <running-lock
+                    :pipeline-setting="templateSetting"
+                    :handle-running-lock-change="handleRunningLockChange"
+                />
             </form-field>
-            <div class="bk-form-item opera-lock" v-if="pipelineSetting.runLockType === 'SINGLE'">
-                <div class="bk-form-content">
-                    <div class="opera-lock-item">
-                        <label class="opera-lock-label">{{ $t('settings.largestNum') }}：</label>
-                        <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="maxQueueSize" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" v-model.number="pipelineSetting.maxQueueSize">
-                            <div class="group-box group-append">
-                                <div class="group-text">{{ $t('settings.item') }}</div>
-                            </div>
-                            <p v-if="errors.has('maxQueueSize')" class="is-danger">{{errors.first("maxQueueSize")}}</p>
-                        </div>
-                    </div>
-                    <div class="opera-lock-item">
-                        <label class="opera-lock-label">{{ $t('settings.lagestTime') }}：</label>
-                        <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="waitQueueTimeMinute" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" v-model.number="pipelineSetting.waitQueueTimeMinute">
-                            <div class="group-box group-append">
-                                <div class="group-text">{{ $t('settings.minutes') }}</div>
-                            </div>
-                            <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
             <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
-                <bk-tab :active="curNavTab.name" type="unborder-card" @tab-change="changeCurTab">
-                    <bk-tab-panel
-                        v-for="(entry, index) in subscriptionList"
-                        :key="index"
-                        v-bind="entry"
-                    >
-                        <div class="notice-tab">
-                            <div class="bk-form-item item-notice">
-                                <label class="bk-label">{{ $t('settings.noticeType') }}：</label>
-                                <div class="bk-form-content">
-                                    <bk-checkbox-group :value="pipelineSubscription.types" @change="handleCheckNoticeType">
-                                        <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value">
-                                            {{ item.name }}
-                                        </bk-checkbox>
-                                    </bk-checkbox-group>
-                                </div>
-                            </div>
-                            <form-field :label="$t('settings.additionUser')">
-                                <user-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></user-input>
-                            </form-field>
-
-                            <form-field :label="$t('settings.noticeContent')" :is-error="errors.has(&quot;content&quot;)" :error-msg="errors.first(&quot;content&quot;)">
-                                <textarea name="desc" v-model="pipelineSubscription.content" class="bk-form-textarea"></textarea>
-                            </form-field>
-
-                            <form-field style="margin-bottom: 10px;">
-                                <atom-checkbox style="width: auto"
-                                    :handle-change="toggleEnable"
-                                    name="detailFlag"
-                                    :text="$t('settings.pipelineLink')"
-                                    :desc="$t('settings.pipelineLinkDesc')"
-                                    :value="pipelineSubscription.detailFlag">
-                                </atom-checkbox>
-                            </form-field>
-                            <form-field style="margin-bottom: 10px;">
-                                <atom-checkbox style="width: auto"
-                                    :handle-change="toggleEnable"
-                                    name="wechatGroupFlag"
-                                    :text="$t('settings.enableGroup')"
-                                    :desc="groupIdDesc"
-                                    :value="pipelineSubscription.wechatGroupFlag">
-                                </atom-checkbox>
-                            </form-field>
-                            <group-id-selector class="item-groupid" v-if="pipelineSubscription.wechatGroupFlag"
-                                :handle-change="groupIdChange"
-                                :value="pipelineSubscription.wechatGroup"
-                                :placeholder="$t('settings.groupIdTips')"
-                                icon-class="icon-question-circle"
-                                desc-direction="top">
-                            </group-id-selector>
-                            <atom-checkbox
-                                v-if="pipelineSubscription.wechatGroupFlag"
-                                style="width: auto;margin-top: -45px;margin-left: 155px;"
-                                name="wechatGroupMarkdownFlag"
-                                :text="$t('settings.wechatGroupMarkdownFlag')"
-                                :handle-change="toggleEnable"
-                                :value="pipelineSubscription.wechatGroupMarkdownFlag">
-                            </atom-checkbox>
-                        </div>
-                    </bk-tab-panel>
-                </bk-tab>
+                <notify-tab
+                    :editable="!isDisabled && !noPermission"
+                    :success-subscription-list="templateSetting.successSubscriptionList"
+                    :fail-subscription-list="templateSetting.failSubscriptionList"
+                    :update-subscription="handleUpdateNotify"
+                />
             </form-field>
 
             <div class="handle-btn" style="margin-left: 146px;">
-                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
+                <bk-button
+                    v-if="isEnabledPermission"
+                    @click="saveTemplateSetting()"
+                    theme="primary"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline_template',
+                            resourceCode: templateId,
+                            action: TEMPLATE_RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                    key="saveBtn"
+                >
+                    {{ $t('save') }}
+                </bk-button>
+                <bk-button v-else @click="saveTemplateSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
                 <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
@@ -129,75 +70,41 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
+    import { NotifyTab } from '@/components/PipelineEditTabs/'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import {
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
     export default {
         components: {
+            NotifyTab,
             FormField,
-            UserInput,
-            GroupIdSelector,
-            AtomCheckbox
+            RunningLock
         },
         props: {
             isDisabled: {
                 type: Boolean,
                 default: false
-            }
+            },
+            isEnabledPermission: Boolean
         },
         data () {
             return {
                 noPermission: false,
                 isEditing: false,
                 isLoading: true,
-                resetFlag: false,
-                runTypeList: [
-                    {
-                        label: this.$t('settings.runningOption.multiple'),
-                        value: 'MULTIPLE'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.lock'),
-                        value: 'LOCK'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.single'),
-                        value: 'SINGLE'
-                    }
-                ],
-                subscriptionList: [
-                    { label: this.$t('settings.buildFail'), name: 'fail' },
-                    { label: this.$t('settings.buildSuc'), name: 'success' }
-                ],
-                curNavTab: { label: this.$t('settings.buildFail'), name: 'fail' },
-                noticeList: [
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' }
-                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
-                    // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
-                    // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
-                ],
-                pipelineSubscription: {
-                    groups: [],
-                    types: [],
-                    users: '',
-                    content: ''
-                },
-                groupIdDesc: this.$t('settings.groupIdDesc'),
-                groupIdStorage: []
+                resetFlag: false
             }
         },
         computed: {
             ...mapState('pipelines', [
-                'pipelineSetting'
+                'templateSetting'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
             }),
-            pipelineSettingUser () {
-                return this.pipelineSubscription.users ? this.pipelineSubscription.users.split(',') : []
-            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -212,7 +119,7 @@
                 return classObj
             },
             labelValues () {
-                const labels = this.pipelineSetting.labels
+                const labels = this.templateSetting.labels
                 return this.tagGroupList.map((tag) => {
                     const currentLables = tag.labels || []
                     const value = []
@@ -222,19 +129,66 @@
                     })
                     return value
                 })
+            },
+            runTypeMap () {
+                return {
+                    MULTIPLE: 'MULTIPLE',
+                    SINGLE: 'SINGLE',
+                    GROUP: 'GROUP_LOCK',
+                    LOCK: 'LOCK'
+                }
+            },
+            isSingleLock () {
+                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.templateSetting.runLockType)
+            },
+            formRule () {
+                const requiredRule = {
+                    required: this.isSingleLock,
+                    message: this.$t('editPage.checkParamTip'),
+                    trigger: 'blur'
+                }
+                return {
+                    concurrencyGroup: [
+                        requiredRule
+                    ],
+                    maxQueueSize: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 20 && intVal >= 0)
+                            },
+                            message: `${this.$t('settings.largestNum')}${this.$t('numberRange', [0, 20])}`,
+                            trigger: 'change'
+                        }
+                    ],
+                    waitQueueTimeMinute: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 1440 && intVal >= 1)
+                            },
+                            message: `${this.$t('settings.lagestTime')}${this.$t('numberRange', [1, 1440])}`,
+                            trigger: 'change'
+                        }
+                    ]
+                }
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
             }
         },
         watch: {
-            pipelineSetting: {
+            templateSetting: {
                 deep: true,
                 handler: function (newVal, oldVal) {
                     // 无权限灰掉保存按钮
-                    if (this.pipelineSetting.hasPermission !== undefined && this.pipelineSetting.hasPermission === false) {
+                    if (this.templateSetting.hasPermission !== undefined && this.templateSetting.hasPermission === false) {
                         this.noPermission = true
                     } else {
                         this.noPermission = false
                     }
-                    this.curNavTab.name === 'success' ? this.pipelineSubscription = this.pipelineSetting.successSubscription : this.pipelineSubscription = this.pipelineSetting.failSubscription
                     this.isLoading = false
                     if (!this.isEditing && JSON.stringify(oldVal) !== '{}' && newVal !== null && !this.resetFlag) {
                         this.isEditing = true
@@ -248,16 +202,12 @@
             this.requestTemplateSetting(this.$route.params)
             this.requestGrouptLists()
         },
-        mounted () {
-            this.list = this.groupIdStorage = localStorage.getItem('groupIdStr') ? localStorage.getItem('groupIdStr').split(';').filter(item => item) : []
-        },
-        destroyed () {
-            this.wechatGroupCompletion()
-            this.setGroupidStorage(this.pipelineSubscription)
-        },
         methods: {
             ...mapActions('pipelines', [
                 'requestTemplateSetting',
+                'updateTemplateSetting'
+            ]),
+            ...mapActions('atom', [
                 'updatePipelineSetting'
             ]),
             handleLabelSelect (index, arg) {
@@ -266,7 +216,7 @@
                     if (valueIndex === index) labels = labels.concat(arg[0])
                     else labels = labels.concat(value)
                 })
-                this.pipelineSetting.labels = labels
+                this.templateSetting.labels = labels
             },
             isStateChange () {
                 this.$emit('setState', {
@@ -275,55 +225,7 @@
                 })
             },
             handleChangeRunType (name, value) {
-                Object.assign(this.pipelineSetting, { [name]: value })
-            },
-            handleCheckNoticeType (value) {
-                this.pipelineSubscription.types = value
-            },
-            handleSwitch (value) {
-                this.pipelineSubscription.groups = value
-            },
-            changeCurTab (name) {
-                const tab = this.subscriptionList.find(item => item.name === name)
-                this.setGroupidStorage(this.pipelineSubscription)
-                this.curNavTab = tab
-                this.pipelineSubscription = name === 'success' ? this.pipelineSetting.successSubscription : this.pipelineSetting.failSubscription
-            },
-            toggleEnable (name, value) {
-                this.pipelineSubscription[name] = value
-                this.updatePipelineSetting({
-                    container: this.pipelineSubscription,
-                    param: {
-                        name: value
-                    }
-                })
-            },
-            groupIdChange (name, value) {
-                this.pipelineSubscription.wechatGroup = value
-                this.updatePipelineSetting({
-                    container: this.pipelineSubscription,
-                    param: {
-                        wechatGroup: this.pipelineSubscription.wechatGroup
-                    }
-                })
-            },
-            // 补全末尾分号
-            wechatGroupCompletion () {
-                const wechatGroup = this.pipelineSubscription.wechatGroup
-                if (wechatGroup && wechatGroup.charAt(wechatGroup.length - 1) !== ';') {
-                    this.pipelineSubscription.wechatGroup += ';'
-                }
-            },
-            setGroupidStorage (data) {
-                if (!data.wechatGroup) {
-                    return false
-                }
-                data.wechatGroup.split(';').filter(item => item).forEach(item => {
-                    if (!this.groupIdStorage.includes(item)) {
-                        this.groupIdStorage.push(item)
-                    }
-                })
-                localStorage.setItem('groupIdStr', this.groupIdStorage.sort().join(';'))
+                Object.assign(this.templateSetting, { [name]: value })
             },
             exit () {
                 this.$emit('cancel')
@@ -335,7 +237,7 @@
                 const { $store } = this
                 let res
                 try {
-                    res = await $store.dispatch('pipelines/requestGetGroupLists', {
+                    res = await $store.dispatch('pipelines/requestTagList', {
                         projectId: this.projectId
                     })
                     $store.commit('pipelines/updateGroupLists', res)
@@ -347,20 +249,19 @@
                     })
                 }
             },
-            async savePipelineSetting () {
+            async saveTemplateSetting () {
                 if (this.errors.any()) return
-                this.wechatGroupCompletion()
                 this.isDisabled = true
                 let result
                 let resData
                 try {
-                    const { pipelineSetting } = this
-                    Object.assign(pipelineSetting, { projectId: this.projectId })
-                    resData = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}/settings`, pipelineSetting)
+                    const { templateSetting } = this
+                    Object.assign(templateSetting, { projectId: this.projectId })
+                    resData = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}/settings`, templateSetting)
 
                     if (resData && resData.data) {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
+                            message: `${templateSetting.pipelineName}  ${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.isEditing = false
@@ -368,7 +269,7 @@
                         result = true
                     } else {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}${this.$t('updateFail')}`,
+                            message: `${templateSetting.pipelineName}${this.$t('updateFail')}`,
                             theme: 'error'
                         })
                     }
@@ -381,6 +282,17 @@
                 }
                 this.isDisabled = false
                 return result
+            },
+            handleRunningLockChange (param) {
+                Object.assign(this.templateSetting, param)
+                // console.log(param, 5522)
+                // this.updatePipelineSetting({
+                //     container: this.templateSetting,
+                //     param
+                // })
+            },
+            handleUpdateNotify (name, value) {
+                Object.assign(this.templateSetting, { [name]: value })
             }
         }
     }
@@ -398,30 +310,13 @@
             min-width: 880px;
         }
          .bk-form-item{
-             margin-bottom: 30px;
+             /* margin-bottom: 30px; */
              & .bk-form-content .bk-form-radio{
                 display: block;
              }
-        }
-        .notice-tab {
-            padding: 10px 0px 0px;
-            margin-left: -70px;
-            .bk-form-content {
-                margin-left: 155px;
-            }
-            .item-groupid .bk-tooltip {
-                float: left;
-                margin-left: -15px;
-                line-height: 30px;
-            }
-            .bk-form-item label{
-                display: inline-block;
-                width: 145px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                padding-right: 10px;
-            }
+             .bk-form-control {
+                line-height: inherit;
+             }
         }
         .form-group-inline {
             font-size: 0;
@@ -431,6 +326,9 @@
                 height: 0;
                 width: 0;
                 clear: both;
+            }
+            .setting-select {
+                background: #fff;
             }
             .group-inline  {
                 float: left;
@@ -540,5 +438,10 @@
         white-space: normal;
         word-wrap: break-word;
         font-weight: 400;
+    }
+    .checkbox-group {
+        .bk-form-checkbox {
+            width: 250px !important;
+        }
     }
 </style>

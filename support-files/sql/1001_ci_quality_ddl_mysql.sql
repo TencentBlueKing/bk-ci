@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE`
     `INTERCEPT_TIMES`         int(11)               DEFAULT '0' COMMENT '拦截次数',
     `EXECUTE_COUNT`           int(11)               DEFAULT '0' COMMENT '生效流水线执行数',
     `PIPELINE_TEMPLATE_RANGE` text COMMENT '流水线模板生效范围',
+    `QUALITY_RULE_HASH_ID`    varchar(64) DEFAULT NULL COMMENT '质量规则哈希ID',
     `GATEWAY_ID`              varchar(128) NOT NULL DEFAULT '' COMMENT '红线匹配的id',
     PRIMARY KEY (`ID`)
 ) ENGINE = InnoDB
@@ -157,6 +158,7 @@ CREATE TABLE IF NOT EXISTS `T_HISTORY` (
   `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   `PROJECT_NUM` bigint(20) NOT NULL DEFAULT '0' COMMENT '项目数量',
+  `CHECK_TIMES` INT DEFAULT 1 COMMENT '第几次检查',
   PRIMARY KEY (`ID`),
   KEY `RULE_ID` (`RULE_ID`) USING BTREE,
   KEY `PROJECT_ID_RULE_ID` (`PROJECT_ID`,`RULE_ID`) USING BTREE,
@@ -181,8 +183,9 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_CONTROL_POINT`
     `UPDATE_USER`        varchar(64)        DEFAULT NULL COMMENT '更新用户',
     `CREATE_TIME`        datetime                              DEFAULT NULL COMMENT '创建时间',
     `UPDATE_TIME`        datetime                              DEFAULT NULL COMMENT '更新时间',
-    `ATOM_VERSION`       varchar(16)        DEFAULT '1.0.0' COMMENT '插件版本',
+    `ATOM_VERSION`       varchar(30)        DEFAULT '1.0.0' COMMENT '插件版本',
     `TEST_PROJECT`       varchar(64) NOT NULL DEFAULT '' COMMENT '测试的项目',
+    `CONTROL_POINT_HASH_ID` varchar(64) DEFAULT NULL COMMENT '哈希ID',
     `TAG` VARCHAR(64) NULL,
     PRIMARY KEY (`ID`)
 ) ENGINE = InnoDB
@@ -208,7 +211,9 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_HIS_DETAIL_METADATA` (
   `BUILD_NO` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '构建号',
   `CREATE_TIME` bigint(20) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '创建时间',
   `EXTRA` text COLLATE utf8mb4_bin COMMENT '额外信息',
-  UNIQUE KEY `BUILD_ID_DATA_ID_INDEX` (`BUILD_ID`, `DATA_ID`),
+  `TASK_ID` varchar(34) DEFAULT NULL COMMENT '任务节点id',
+  `TASK_NAME` varchar(128) COMMENT '任务节点名',
+  UNIQUE KEY BUILD_ID_DATA_ID_TASK_ID_INDEX (`BUILD_ID`, `DATA_ID`, `TASK_ID`),
   KEY `CREATE_TIME_INX` (`CREATE_TIME`),
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='执行结果详细基础数据表';
@@ -256,7 +261,7 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_INDICATOR`
     `UPDATE_USER`         varchar(64)            DEFAULT NULL COMMENT '更新用户',
     `CREATE_TIME`         datetime               DEFAULT NULL COMMENT '创建时间',
     `UPDATE_TIME`         datetime               DEFAULT NULL COMMENT '更新时间',
-    `ATOM_VERSION`        varchar(16)   NOT NULL DEFAULT '1.0.0' COMMENT '插件版本号',
+    `ATOM_VERSION`        varchar(30)   NOT NULL DEFAULT '1.0.0' COMMENT '插件版本号',
     `LOG_PROMPT`          varchar(1024) NOT NULL DEFAULT '' COMMENT '日志提示',
     PRIMARY KEY (`ID`)
 ) ENGINE = InnoDB
@@ -436,11 +441,17 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE_BUILD_HIS` (
    `INDICATOR_OPERATIONS` TEXT COLLATE utf8_bin DEFAULT NULL COMMENT '指标操作',
    `INDICATOR_THRESHOLDS` TEXT COLLATE utf8_bin DEFAULT NULL COMMENT '指标阈值',
    `OPERATION_LIST` TEXT COLLATE utf8_bin COMMENT '操作清单',
+   `QUALITY_RULE_HIS_HASH_ID` varchar(64) DEFAULT NULL COMMENT '质量规则构建历史哈希ID',
    `CREATE_TIME` DATETIME COMMENT '创建时间',
    `CREATE_USER` VARCHAR(32) COMMENT '创建人',
+   `STAGE_ID` varchar(40) COMMENT 'stage_id' NOT NULL DEFAULT '1',
+   `STATUS` varchar(20) COMMENT '红线状态',
+   `GATE_KEEPERS` varchar(1024) COMMENT '红线把关人',
+   `TASK_STEPS` text COMMENT '红线指定的任务节点',
    PRIMARY KEY (`ID`),
    KEY project_id_pipeline_id_idx (`PROJECT_ID`,`PIPELINE_ID`),
-   KEY create_time_idx (`CREATE_TIME`)
+   KEY create_time_idx (`CREATE_TIME`),
+   KEY `IDX_STAGE_ID` (`STAGE_ID`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8 COMMENT='';
 
 -- ----------------------------
@@ -456,3 +467,21 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE_BUILD_HIS_OPERATION`(
   PRIMARY KEY (`ID`),
   KEY `rule_id_idx` (`RULE_ID`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for T_QUALITY_RULE_REVIEWER
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE_REVIEWER` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `RULE_ID` bigint(20) NOT NULL COMMENT '规则ID',
+  `PIPELINE_ID` varchar(64) NOT NULL COMMENT '流水线ID',
+  `BUILD_ID` varchar(64) NOT NULL COMMENT '构建ID',
+  `REVIEWER` varchar(32) NOT NULL COMMENT '实际审核人',
+  `REVIEW_TIME` datetime DEFAULT NULL COMMENT '审核时间',
+  PRIMARY KEY (`ID`),
+  KEY `PROJECT_ID_PIPELINE_ID_BUILD_ID` (`PROJECT_ID`, `PIPELINE_ID`, `BUILD_ID`) USING BTREE,
+  KEY `RULE_ID` (`RULE_ID`) USING BTREE,
+  KEY `REVIEW_TIME` (`REVIEW_TIME`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='红线审核人';

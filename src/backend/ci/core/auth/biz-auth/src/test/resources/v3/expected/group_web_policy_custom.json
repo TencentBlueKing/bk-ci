@@ -1,0 +1,61 @@
+[ {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "project_view"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "project",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "rule_enable"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "rule",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "pipeline_view"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "pipeline",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "repertory_view"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "repertory",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+} ]

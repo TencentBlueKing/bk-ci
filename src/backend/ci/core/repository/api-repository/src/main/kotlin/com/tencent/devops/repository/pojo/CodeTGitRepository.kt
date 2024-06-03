@@ -27,28 +27,34 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-Code平台TGit")
+@Schema(title = "代码库模型-Code平台TGit")
 data class CodeTGitRepository(
-    @ApiModelProperty("代码库别名", required = true)
+    @get:Schema(title = "代码库别名", required = true)
     override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @get:Schema(title = "URL", required = true)
     override val url: String,
-    @ApiModelProperty("凭据id", required = true)
+    @get:Schema(title = "凭据id", required = true)
     override val credentialId: String,
-    @ApiModelProperty("tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
-    override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
+    @get:Schema(title = "tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
+    override var projectName: String,
+    @get:Schema(title = "用户名", required = true)
     override var userName: String,
-    @ApiModelProperty("仓库认证类型", required = false)
+    @get:Schema(title = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
-    @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
-    override val repoHashId: String?
+    @get:Schema(title = "项目id", required = true)
+    override var projectId: String?,
+    override val repoHashId: String?,
+    @get:Schema(title = "TGit仓库ID", required = false)
+    val gitProjectId: Long?,
+    @get:Schema(title = "仓库是否开启pac", required = false)
+    override val enablePac: Boolean? = false,
+    @get:Schema(title = "yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
     companion object {
         const val classType = "codeTGit"
@@ -73,4 +79,8 @@ data class CodeTGitRepository(
                 GitUtils.isLegalSshUrl(url)
         }
     }
+
+    override fun getScmType() = ScmType.CODE_TGIT
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

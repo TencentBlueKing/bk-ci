@@ -1,0 +1,290 @@
+{
+  "additionalProperties" : false,
+  "required" : [ "steps" ],
+  "properties" : {
+    "parameters" : {
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name", "type" ],
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "type" : {
+              "enum" : [ "string", "number", "boolean", "array" ]
+            },
+            "default" : {
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "number"
+              }, {
+                "type" : "boolean"
+              }, {
+                "type" : "array",
+                "items" : {
+                  "anyOf" : [ {
+                    "type" : "string"
+                  }, {
+                    "type" : "number"
+                  }, {
+                    "type" : "boolean"
+                  } ]
+                }
+              } ]
+            },
+            "values" : {
+              "type" : "array",
+              "items" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                }, {
+                  "type" : "boolean"
+                } ]
+              }
+            }
+          }
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "template" ],
+          "properties" : {
+            "template" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      }
+    },
+    "version" : {
+      "type" : "string",
+      "const" : "v2.0"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "steps" : {
+      "$ref" : "#/definitions/steps"
+    },
+    "resources" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "repositories" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "repository", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "repository" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              },
+              "ref" : {
+                "type" : "string"
+              },
+              "credentials" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "required" : [ "personal-access-token" ],
+                "properties" : {
+                  "personal-access-token" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pools" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "from", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "from" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "steps" : {
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "uses" : {
+              "type" : "string",
+              "pattern" : "^.*@.*$"
+            },
+            "name" : {
+              "type" : "string"
+            },
+            "id" : {
+              "type" : "string",
+              "maxLength" : 64
+            },
+            "if" : {
+              "type" : "string"
+            },
+            "with" : {
+              "type" : "object"
+            },
+            "timeout-minutes" : {
+              "type" : "integer",
+              "minimum" : 1,
+              "maximum" : 480
+            },
+            "continue-on-error" : {
+              "type" : "boolean"
+            },
+            "retry-times" : {
+              "type" : "integer",
+              "minimum" : 0,
+              "maximum" : 180
+            },
+            "env" : {
+              "$ref" : "#/definitions/env"
+            },
+            "run" : {
+              "type" : "string"
+            },
+            "checkout" : {
+              "type" : "string"
+            },
+            "if-modify" : {
+              "$ref" : "#/definitions/ifModify"
+            },
+            "shell" : {
+              "type" : "string"
+            }
+          },
+          "allOf" : [ {
+            "if" : {
+              "required" : [ "uses" ]
+            },
+            "then" : {
+              "allOf" : [ {
+                "not" : {
+                  "required" : [ "run" ]
+                }
+              }, {
+                "not" : {
+                  "required" : [ "check" ]
+                }
+              } ]
+            }
+          }, {
+            "if" : {
+              "required" : [ "run" ]
+            },
+            "then" : {
+              "allOf" : [ {
+                "not" : {
+                  "required" : [ "uses" ]
+                }
+              }, {
+                "not" : {
+                  "required" : [ "check" ]
+                }
+              } ]
+            }
+          }, {
+            "if" : {
+              "required" : [ "checkout" ]
+            },
+            "then" : {
+              "allOf" : [ {
+                "not" : {
+                  "required" : [ "run" ]
+                }
+              }, {
+                "not" : {
+                  "required" : [ "uses" ]
+                }
+              } ]
+            }
+          } ]
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "template" ],
+          "properties" : {
+            "template" : {
+              "type" : "string"
+            },
+            "parameters" : {
+              "$ref" : "#/definitions/parameters"
+            }
+          }
+        } ]
+      }
+    },
+    "env" : {
+      "type" : "object",
+      "maxProperties" : 100
+    },
+    "template" : {
+      "anyOf" : [ {
+        "type" : "array",
+        "items" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name" ],
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "parameters" : {
+              "$ref" : "#/definitions/parameters"
+            }
+          }
+        }
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "parameters" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        } ]
+      }
+    },
+    "ifModify" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-07/schema"
+}

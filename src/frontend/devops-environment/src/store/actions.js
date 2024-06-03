@@ -91,7 +91,7 @@ const actions = {
      * 环境的节点列表
      */
     requestEnvNodeList ({ commit }, { projectId, envHashId }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`, { }).then(response => {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`).then(response => {
             return response
         })
     },
@@ -267,8 +267,10 @@ const actions = {
         })
     },
 
-    requestShareEnvProjectList (_, { projectId, envHashId, offset, limit }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list?offset=${offset}&limit=${limit}`)
+    requestShareEnvProjectList (_, { projectId, envHashId, ...query }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, {
+            params: query
+        })
     },
 
     requestProjects (_, { projectId, envHashId, page, pageSize, search }) {

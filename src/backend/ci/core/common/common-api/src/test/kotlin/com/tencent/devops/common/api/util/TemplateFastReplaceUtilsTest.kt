@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 @Suppress("ALL")
 class TemplateFastReplaceUtilsTest {
@@ -50,40 +50,40 @@ class TemplateFastReplaceUtilsTest {
             map[templateWord]
         }
         println("expect=$replaceTemplate")
-        Assert.assertEquals(expect, replaceTemplate)
+        Assertions.assertEquals(expect, replaceTemplate)
 
         val dataSource = mapOf("variables.abc" to "v1", "variables.hello" to "v2", "ci.workspace" to "/data")
         val replacer: (String) -> String? = { dataSource[it] }
 
         val command1 = "hello \${{variables.abc}} world \${{ci.workspace}}" to "hello v1 world /data"
-        Assert.assertEquals(command1.second, TemplateFastReplaceUtils.replaceTemplate(command1.first, replacer))
+        Assertions.assertEquals(command1.second, TemplateFastReplaceUtils.replaceTemplate(command1.first, replacer))
 
         val command2 = "\${{variables.abc}}world" to "${dataSource["variables.abc"]}world"
-        Assert.assertEquals(command2.second, TemplateFastReplaceUtils.replaceTemplate(command2.first, replacer))
+        Assertions.assertEquals(command2.second, TemplateFastReplaceUtils.replaceTemplate(command2.first, replacer))
 
         val command3 = "hello\${{variables.abc}}" to "hello${dataSource["variables.abc"]}"
-        Assert.assertEquals(command3.second, TemplateFastReplaceUtils.replaceTemplate(command3.first, replacer))
+        Assertions.assertEquals(command3.second, TemplateFastReplaceUtils.replaceTemplate(command3.first, replacer))
 
         val command4 = "hello\${{variables.abc" to "hello\${{variables.abc"
-        Assert.assertEquals(command4.second, TemplateFastReplaceUtils.replaceTemplate(command4.first, replacer))
+        Assertions.assertEquals(command4.second, TemplateFastReplaceUtils.replaceTemplate(command4.first, replacer))
 
         val command5 = "hello\${{variables.abc}" to "hello\${{variables.abc}"
-        Assert.assertEquals(command5.second, TemplateFastReplaceUtils.replaceTemplate(command5.first, replacer))
+        Assertions.assertEquals(command5.second, TemplateFastReplaceUtils.replaceTemplate(command5.first, replacer))
 
         val command6 = "hello\${variables.abc}}" to "hello${dataSource["variables.abc"]}}"
-        Assert.assertEquals(command6.second, TemplateFastReplaceUtils.replaceTemplate(command6.first, replacer))
+        Assertions.assertEquals(command6.second, TemplateFastReplaceUtils.replaceTemplate(command6.first, replacer))
 
         val command7 = "hello\$variables.abc}}" to "hello\$variables.abc}}"
-        Assert.assertEquals(command7.second, TemplateFastReplaceUtils.replaceTemplate(command7.first, replacer))
+        Assertions.assertEquals(command7.second, TemplateFastReplaceUtils.replaceTemplate(command7.first, replacer))
 
         val command8 = "echo \${{ variables.hello }}" to "echo ${dataSource["variables.hello"]}"
-        Assert.assertEquals(command8.second, TemplateFastReplaceUtils.replaceTemplate(command8.first, replacer))
+        Assertions.assertEquals(command8.second, TemplateFastReplaceUtils.replaceTemplate(command8.first, replacer))
 
         val command9 = "echo \${{\${{ci.workspace }} \${\${variables.abc}\"" to
             "echo \${{${dataSource["ci.workspace"]} \${${dataSource["variables.abc"]}\""
-        Assert.assertEquals(command9.second, TemplateFastReplaceUtils.replaceTemplate(command9.first, replacer))
+        Assertions.assertEquals(command9.second, TemplateFastReplaceUtils.replaceTemplate(command9.first, replacer))
 
         val command10 = null to ""
-        Assert.assertEquals(command10.second, TemplateFastReplaceUtils.replaceTemplate(command10.first, replacer))
+        Assertions.assertEquals(command10.second, TemplateFastReplaceUtils.replaceTemplate(command10.first, replacer))
     }
 }

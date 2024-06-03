@@ -29,27 +29,56 @@ package com.tencent.devops.worker.common.api.ticket
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_CREDENTIAL_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
 
 class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
 
-    override fun get(credentialId: String, publicKey: String): Result<CredentialInfo> {
+    override fun get(credentialId: String, publicKey: String, signToken: String): Result<CredentialInfo> {
         val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
-        val request = buildGet(path)
-        val responseContent = request(request, "获取凭据失败")
+        val signHeaders = if (signToken.isNotBlank()) {
+            ApiSignUtil.generateSignHeader(
+                method = "GET",
+                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                token = signToken
+            )
+        } else {
+            emptyMap()
+        }
+        val request = buildGet(path, signHeaders)
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_FAILED, AgentEnv.getLocaleLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 
     override fun getAcrossProject(
         targetProjectId: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        signToken: String
     ): Result<CredentialInfo> {
         val path = "/ms/ticket/api/build/credentials/$credentialId/across" +
             "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId"
-        val request = buildGet(path)
-        val responseContent = request(request, "获取凭据失败")
+        val signHeaders = if (signToken.isNotBlank()) {
+            ApiSignUtil.generateSignHeader(
+                method = "GET",
+                url = path.removePrefix("/ms/ticket"),
+                token = signToken
+            )
+        } else {
+            emptyMap()
+        }
+        val request = buildGet(path, signHeaders)
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_FAILED, AgentEnv.getLocaleLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 }

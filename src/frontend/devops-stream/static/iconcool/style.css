@@ -1,0 +1,292 @@
+@font-face {
+	font-family: "stream";
+	src: url("fonts/iconcool.svg#iconcool") format("svg"),
+url("fonts/iconcool.ttf") format("truetype"),
+url("fonts/iconcool.woff") format("woff"),
+url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+.stream-icon {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'stream' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  text-align: center;
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.stream-issue:before {
+	content: "\e15b";
+}
+.stream-docker:before {
+	content: "\e16f";
+}
+.stream-user:before {
+	content: "\e162";
+}
+.stream-file:before {
+	content: "\e170";
+}
+.stream-folder-open-shape:before {
+	content: "\e160";
+}
+.stream-folder-shape:before {
+	content: "\e15f";
+}
+.stream-right-shape:before {
+	content: "\e15e";
+}
+.stream-github-logo:before {
+	content: "\e169";
+}
+.stream-notify:before {
+	content: "\e168";
+}
+.stream-open-api:before {
+	content: "\e163";
+}
+.stream-1:before {
+	content: "\e101";
+}
+.stream-2:before {
+	content: "\e102";
+}
+.stream-4:before {
+	content: "\e103";
+}
+.stream-3:before {
+	content: "\e104";
+}
+.stream-add-small:before {
+	content: "\e105";
+}
+.stream-all:before {
+	content: "\e107";
+}
+.stream-5:before {
+	content: "\e106";
+}
+.stream-angle-down-line:before {
+	content: "\e108";
+}
+.stream-angle-up-line:before {
+	content: "\e109";
+}
+.stream-build-canceled:before {
+	content: "\e10a";
+}
+.stream-build-failed:before {
+	content: "\e10b";
+}
+.stream-build-hooks:before {
+	content: "\e10c";
+}
+.stream-bookmark-o:before {
+	content: "\e10d";
+}
+.stream-build-sucess:before {
+	content: "\e10e";
+}
+.stream-build-waiting:before {
+	content: "\e10f";
+}
+.stream-build-warning:before {
+	content: "\e110";
+}
+.stream-cc-cabinet:before {
+	content: "\e111";
+}
+.stream-cc-jump-link:before {
+	content: "\e112";
+}
+.stream-cc-plus:before {
+	content: "\e113";
+}
+.stream-check-circle:before {
+	content: "\e114";
+}
+.stream-check-small:before {
+	content: "\e115";
+}
+.stream-clock:before {
+	content: "\e116";
+}
+.stream-close-circle:before {
+	content: "\e117";
+}
+.stream-close-small:before {
+	content: "\e118";
+}
+.stream-commit:before {
+	content: "\e119";
+}
+.stream-date:before {
+	content: "\e11a";
+}
+.stream-edit:before {
+	content: "\e11b";
+}
+.stream-devops:before {
+	content: "\e11c";
+}
+.stream-export-ci:before {
+	content: "\e11d";
+}
+.stream-flag:before {
+	content: "\e11e";
+}
+.stream-git:before {
+	content: "\e11f";
+}
+.stream-helper:before {
+	content: "\e120";
+}
+.stream-loading:before {
+	content: "\e121";
+}
+.stream-lock:before {
+	content: "\e122";
+}
+.stream-manual:before {
+	content: "\e123";
+}
+.stream-merge:before {
+	content: "\e124";
+}
+.stream-message:before {
+	content: "\e125";
+}
+.stream-notify:before {
+	content: "\e126";
+}
+.stream-pipeline:before {
+	content: "\e127";
+}
+.stream-quality-check-fail:before {
+	content: "\e128";
+}
+.stream-pr:before {
+	content: "\e129";
+}
+.stream-return-small:before {
+	content: "\e12a";
+}
+.stream-review-abort:before {
+	content: "\e12b";
+}
+.stream-review-auto:before {
+	content: "\e12c";
+}
+.stream-review-auto-gray:before {
+	content: "\e12d";
+}
+.stream-review-auto-pass:before {
+	content: "\e12e";
+}
+.stream-reviewed:before {
+	content: "\e12f";
+}
+.stream-review-enable:before {
+	content: "\e131";
+}
+.stream-review-error:before {
+	content: "\e130";
+}
+.stream-search:before {
+	content: "\e132";
+}
+.stream-review-waiting:before {
+	content: "\e134";
+}
+.stream-setting:before {
+	content: "\e135";
+}
+.stream-source-branch:before {
+	content: "\e136";
+}
+.stream-tag:before {
+	content: "\e137";
+}
+.stream-user:before {
+	content: "\e138";
+}
+.stream-user-o:before {
+	content: "\e139";
+}
+.stream-warning-circle:before {
+	content: "\e13a";
+}
+.stream-well:before {
+	content: "\e13b";
+}
+.stream-clock_fill:before {
+	content: "\e13c";
+}
+.stream-current-status:before {
+	content: "\e13e";
+}
+.stream-not-start:before {
+	content: "\e13d";
+}
+.stream-quality-check-wait:before {
+	content: "\e13f";
+}
+.stream-review-auto-4:before {
+	content: "\e14a";
+}
+.stream-review-abort-2:before {
+	content: "\e14e";
+}
+.stream-review-enable-2:before {
+	content: "\e150";
+}
+.stream-reviewed-2:before {
+	content: "\e14f";
+}
+.stream-reviewing-2:before {
+	content: "\e151";
+}
+.stream-check-fill:before {
+	content: "\e157";
+}
+.stream-error-fill:before {
+	content: "\e158";
+}
+.stream-waiting-fill:before {
+	content: "\e156";
+}
+.stream-reviewing:before {
+	content: "\e159";
+}
+.stream-comment:before {
+	content: "\e15c";
+}
+.stream-code-review:before {
+	content: "\e15d";
+}
+.stream-hourglass:before {
+	content: "\e161";
+}
+.stream-metric-link:before {
+	content: "\e166";
+}
+.stream-setting-link:before {
+	content: "\e164";
+}
+.stream-pipeline-link:before {
+	content: "\e165";
+}
+.stream-locale:before {
+	content: "\e167";
+}
+.stream-login-bottom:before {
+	content: "\e16e";
+}

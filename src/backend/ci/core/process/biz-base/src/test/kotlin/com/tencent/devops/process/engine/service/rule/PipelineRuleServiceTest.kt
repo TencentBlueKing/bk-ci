@@ -27,19 +27,19 @@
 
 package com.tencent.devops.process.engine.service.rule
 
-import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineRuleDao
+import io.mockk.mockk
 import org.jooq.DSLContext
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class PipelineRuleServiceTest {
 
-    private val dslContext: DSLContext = mock()
-    private val pipelineRuleDao: PipelineRuleDao = mock()
-    private val redisOperation: RedisOperation = RedisOperation(mock())
+    private val dslContext: DSLContext = mockk()
+    private val pipelineRuleDao: PipelineRuleDao = mockk()
+    private val redisOperation: RedisOperation = RedisOperation(mockk(), mockk(), mockk())
 
     private val pipelineRuleService = PipelineRuleService(
         dslContext = dslContext,
@@ -55,13 +55,16 @@ class PipelineRuleServiceTest {
         validRuleValueMap["DAY_OF_MONTH"] = "28"
         validRuleValueMap["FORMAT_DATE:\"yyyy-MM-dd HH:mm:ss\""] = "2021-04-28 15:28:00"
         val replaceRuleStr = pipelineRuleService.generateReplaceRuleStr(ruleStr, validRuleValueMap)
-        Assert.assertEquals(replaceRuleStr, "2020_28-2021-04-28 15:28:00")
+        Assertions.assertEquals(replaceRuleStr, "2020_28-2021-04-28 15:28:00")
     }
 
     @Test
     fun getRuleNameList() {
         val ruleStr = "\${{YEAR}}_\${{DAY_OF_MONTH}}-\${{FORMAT_DATE:\"yyyy-MM-dd HH:mm:ss\"}}}"
         val ruleValue = JsonUtil.toJson(pipelineRuleService.getRuleNameList(ruleStr))
-        Assert.assertEquals(ruleValue, "[ \"YEAR\", \"DAY_OF_MONTH\", \"FORMAT_DATE:\\\"yyyy-MM-dd HH:mm:ss\\\"\" ]")
+        Assertions.assertEquals(
+            ruleValue,
+            "[ \"YEAR\", \"DAY_OF_MONTH\", \"FORMAT_DATE:\\\"yyyy-MM-dd HH:mm:ss\\\"\" ]"
+        )
     }
 }

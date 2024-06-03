@@ -1,7 +1,7 @@
 <template>
     <nav
         v-clickoutside="hideNavMenu"
-        :class="{ &quot;devops-header-nav&quot;: true, &quot;active&quot;: show }"
+        :class="{ 'devops-header-nav': true, 'active': show }"
     >
         <p
             class="nav-entry"
@@ -67,7 +67,6 @@
                             :services="services"
                             :current-page="currentPage"
                             :toggle-collect="toggleCollect"
-                            :get-document-title="getDocumentTitle"
                         />
                     </div>
                 </div>
@@ -79,12 +78,12 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Getter, Action } from 'vuex-class'
-    import { getServiceLogoByPath, urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
+    import { Action, Getter, State } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
+    import eventBus from '../../utils/eventBus'
+    import { getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
     import Logo from '../Logo/index.vue'
     import NavBox from '../NavBox/index.vue'
-    import eventBus from '../../utils/eventBus'
 
     @Component({
         name: 'nav-menu',
@@ -163,36 +162,7 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
-        getDocumentTitle (linkNew) {
-            const title = linkNew.split('/')[1]
-            const titlesMap = {
-                pipeline: this.$t('documentTitlePipeline'),
-                codelib: this.$t('documentTitleCodelib'),
-                artifactory: this.$t('documentTitleArtifactory'),
-                codecc: this.$t('documentTitleCodecc'),
-                experience: this.$t('documentTitleExperience'),
-                turbo: this.$t('documentTitleTurbo'),
-                repo: this.$t('documentTitleRepo'),
-                preci: this.$t('documentTitlePreci'),
-                stream: this.$t('documentTitleStream'),
-                wetest: this.$t('documentTitleWetest'),
-                quality: this.$t('documentTitleQuality'),
-                xinghai: this.$t('documentTitleXinghai'),
-                bcs: this.$t('documentTitleBcs'),
-                job: this.$t('documentTitleJob'),
-                environment: this.$t('documentTitleEnvironment'),
-                vs: this.$t('documentTitleVs'),
-                apk: this.$t('documentTitleApk'),
-                monitor: this.$t('documentTitleMonitor'),
-                perm: this.$t('documentTitlePerm'),
-                ticket: this.$t('documentTitleTicket'),
-                store: this.$t('documentTitleStore'),
-                metrics: this.$t('documentTitleMetrics')
-            }
-            return titlesMap[title]
-        }
-
-        gotoPage ({ link_new: linkNew }) {
+        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
             const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
             const destUrl = this.addConsole(linkNew)
@@ -201,8 +171,8 @@
                 eventBus.$emit('goHome')
                 return
             }
-            this.$router.push(destUrl)
-            document.title = this.getDocumentTitle(linkNew)
+            
+            (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
         }
 
         created () {

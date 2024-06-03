@@ -28,17 +28,23 @@
 package com.tencent.devops.log.api.print
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -47,119 +53,206 @@ import javax.ws.rs.core.MediaType
  *
  * Powered By Tencent
  */
-@Api(tags = ["BUILD_LOG_PRINT"], description = "构建-日志资源")
+@Tag(name = "BUILD_LOG_PRINT", description = "构建-日志资源")
 @Path("/build/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Suppress("ALL")
+@Suppress("LongParameterList")
 interface BuildLogPrintResource {
 
-    @ApiOperation("写入一条日志")
+    @Operation(summary = "写入一条日志")
     @POST
     @Path("/")
     fun addLogLine(
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("一条日志", required = true)
+        @Parameter(description = "一条日志", required = true)
         logMessage: LogMessage
     ): Result<Boolean>
 
-    @ApiOperation("写入一条红色高亮日志")
+    @Operation(summary = "写入一条红色高亮日志")
     @POST
     @Path("/red")
     fun addRedLogLine(
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("一条日志", required = true)
+        @Parameter(description = "一条日志", required = true)
         logMessage: LogMessage
     ): Result<Boolean>
 
-    @ApiOperation("写入一条黄色高亮日志")
+    @Operation(summary = "写入一条黄色高亮日志")
     @POST
     @Path("/yellow")
     fun addYellowLogLine(
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("一条日志", required = true)
+        @Parameter(description = "一条日志", required = true)
         logMessage: LogMessage
     ): Result<Boolean>
 
-    @ApiOperation("写入多条日志")
+    @Operation(summary = "写入多条日志")
     @POST
     @Path("/multi")
     fun addLogMultiLine(
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("多条日志列表", required = true)
+        @Parameter(description = "多条日志列表", required = true)
         logMessages: List<LogMessage>
     ): Result<Boolean>
 
-    @ApiOperation("写入日志状态")
+    @Operation(summary = "写入日志状态")
     @POST
     @Path("/status")
     fun addLogStatus(
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
+        @Parameter(description = "分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("插件内的分类的子tag，默认为空", required = false)
+        @Parameter(description = "插件内的分类的子tag，默认为空", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @ApiParam("job id或者container的34位id", required = false)
+        @Parameter(description = "container的34位id", required = false)
         @QueryParam("jobId")
-        jobId: String?,
-        @ApiParam("执行次数", required = false)
+        containerHashId: String?,
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @ApiParam("日志存储模式", required = false)
+        @Parameter(description = "日志存储模式", required = false)
         @QueryParam("logMode")
-        logMode: String?
+        logMode: String?,
+        @Parameter(description = "job id", required = false)
+        @QueryParam("userJobId")
+        jobId: String?,
+        @Parameter(description = "step id", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
-    @ApiOperation("更新日志状态")
+    @Operation(summary = "更新日志状态")
     @PUT
     @Path("/status")
     fun updateLogStatus(
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("是否已构建完成", required = true)
+        @Parameter(description = "是否已构建完成", required = true)
         @QueryParam("finished")
         finished: Boolean,
-        @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
+        @Parameter(description = "分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("插件内的分类的子tag，默认为空", required = false)
+        @Parameter(description = "插件内的分类的子tag，默认为空", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @ApiParam("job id或者container的34位id", required = false)
+        @Parameter(description = "container的34位id", required = false)
         @QueryParam("jobId")
-        jobId: String?,
-        @ApiParam("执行次数", required = false)
+        containerHashId: String?,
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @ApiParam("日志存储模式", required = false)
+        @Parameter(description = "日志存储模式", required = false)
         @QueryParam("logMode")
-        logMode: String?
+        logMode: String?,
+        @Parameter(description = "job id", required = false)
+        @QueryParam("userJobId")
+        jobId: String?,
+        @Parameter(description = "step id", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
-    @ApiOperation("更新日志存储模式的流转状态")
+    @Operation(summary = "更新日志存储模式的流转状态")
     @POST
     @Path("/mode")
     fun updateLogStorageMode(
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int,
-        @ApiParam("所有插件的日志存储结果", required = true)
+        @Parameter(description = "所有插件的日志存储结果", required = true)
         propertyList: List<TaskBuildLogProperty>
     ): Result<Boolean>
+
+    @Operation(summary = "根据构建ID获取初始化所有日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/")
+    fun getInitLogs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "是否包含调试日志", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
+        @Parameter(description = "对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<QueryLogs>
+
+    @Operation(summary = "获取某行后的日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/after")
+    fun getAfterLogs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "起始行号", required = true)
+        @QueryParam("start")
+        start: Long,
+        @Parameter(description = "是否包含调试日志", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
+        @Parameter(description = "对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @Parameter(description = "对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<QueryLogs>
 }

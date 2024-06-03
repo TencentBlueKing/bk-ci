@@ -21,7 +21,7 @@
             <ul>
                 <template v-if="hasGroup">
                     <li v-for="(item, index) in filteredList"
-                        :key="item.id"
+                        :key="item.id + index"
                         :disabled="item.disabled">
                         <div class="option-group-name">{{ item.name }}</div>
                         <div class="option-group-item"
@@ -41,7 +41,7 @@
                 <template v-else>
                     <li
                         v-for="(item, index) in filteredList"
-                        :key="item.id"
+                        :key="item.id + index"
                         :class="{
                             'option-item': true,
                             active: item.active,
@@ -258,7 +258,7 @@
                     } else if (this.isEnvVar(this.value)) {
                         this.displayName = this.value
                     } else {
-                        this.displayName = this.getDisplayName(this.value || this.displayName)
+                        this.displayName = this.getDisplayName(this.value ?? this.displayName)
                     }
                 }
             },

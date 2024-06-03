@@ -1,0 +1,954 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "kubernetes-manager api文档",
+        "contact": {},
+        "version": "0.0.1"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/builders": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "builder"
+                ],
+                "summary": "创建构建机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "构建机信息",
+                        "name": "builder",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.Builder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/builders/{builderName}": {
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "builder"
+                ],
+                "summary": "删除构建机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "构建机名称",
+                        "name": "builderName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/builders/{builderName}/start": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "builder"
+                ],
+                "summary": "启动构建机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "构建机名称",
+                        "name": "builderName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "构建机启动信息",
+                        "name": "builder",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.BuilderStart"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/builders/{builderName}/status": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "builder"
+                ],
+                "summary": "获取构建机状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "构建机名称",
+                        "name": "builderName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "构建机状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.BuilderStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/builders/{builderName}/stop": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "builder"
+                ],
+                "summary": "停止构建机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "构建机名称",
+                        "name": "builderName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/builders/{builderName}/terminal": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "builder"
+                ],
+                "summary": "获取远程登录链接",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "构建机名称",
+                        "name": "builderName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "远程登录链接",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/jobs": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "job"
+                ],
+                "summary": "创建JOB",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "JOB信息",
+                        "name": "builder",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.Job"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/jobs/buildAndPushImage": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "job"
+                ],
+                "summary": "构建并推送镜像",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "构建并推送镜像信息",
+                        "name": "builder",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.BuildAndPushImageInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/jobs/{jobName}": {
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "job"
+                ],
+                "summary": "删除JOB",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JOB名称",
+                        "name": "jobName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务ID",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskId"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/jobs/{jobName}/log": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "job"
+                ],
+                "summary": "获取JOB日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JOB名称",
+                        "name": "jobName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "开始时间",
+                        "name": "sinceTime",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JOB日志",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/jobs/{jobName}/status": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "job"
+                ],
+                "summary": "获取JOB状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JOB名称",
+                        "name": "jobName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JOB状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.JobStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{taskId}/status": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "获取任务状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "凭证信息",
+                        "name": "Devops-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "taskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "任务状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/types.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.TaskStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "service.BuildAndPushImageInfo": {
+            "type": "object",
+            "required": [
+                "info",
+                "name",
+                "podNameSelector",
+                "resource"
+            ],
+            "properties": {
+                "activeDeadlineSeconds": {
+                    "description": "Job存活时间",
+                    "type": "integer"
+                },
+                "info": {
+                    "description": "构建并推送镜像的具体信息",
+                    "$ref": "#/definitions/service.buildImageInfo"
+                },
+                "name": {
+                    "description": "唯一名称",
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "podNameSelector": {
+                    "description": "Pod名称调度",
+                    "$ref": "#/definitions/service.PodNameSelector"
+                },
+                "resource": {
+                    "description": "工作负载资源",
+                    "$ref": "#/definitions/service.CommonWorkLoadResource"
+                }
+            }
+        },
+        "service.Builder": {
+            "type": "object",
+            "required": [
+                "image",
+                "name",
+                "resource"
+            ],
+            "properties": {
+                "command": {
+                    "description": "启动命令",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "env": {
+                    "description": "环境变量",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "image": {
+                    "description": "镜像",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "唯一名称",
+                    "type": "string",
+                    "maxLength": 36
+                },
+                "nfs": {
+                    "description": "nfs配置",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.NFS"
+                    }
+                },
+                "privateBuilder": {
+                    "description": "私有构建机配置",
+                    "$ref": "#/definitions/service.DedicatedBuilder"
+                },
+                "registry": {
+                    "description": "镜像凭证",
+                    "$ref": "#/definitions/types.Registry"
+                },
+                "resource": {
+                    "description": "工作负载资源",
+                    "$ref": "#/definitions/service.CommonWorkLoadResource"
+                },
+                "specialBuilder": {
+                    "description": "特殊构建机配置",
+                    "$ref": "#/definitions/service.DedicatedBuilder"
+                }
+            }
+        },
+        "service.BuilderStart": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "env": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "service.BuilderStatus": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.CommonWorkLoadResource": {
+            "type": "object",
+            "required": [
+                "limitCpu",
+                "limitDisk",
+                "limitDiskIO",
+                "limitMem",
+                "requestCPU",
+                "requestDisk",
+                "requestDiskIO",
+                "requestMem"
+            ],
+            "properties": {
+                "limitCpu": {
+                    "description": "最大CPU",
+                    "type": "string"
+                },
+                "limitDisk": {
+                    "description": "最大磁盘容量",
+                    "type": "string"
+                },
+                "limitDiskIO": {
+                    "description": "最大磁盘容量",
+                    "type": "string"
+                },
+                "limitMem": {
+                    "description": "最大内存",
+                    "type": "string"
+                },
+                "requestCPU": {
+                    "description": "最小CPU",
+                    "type": "string"
+                },
+                "requestDisk": {
+                    "description": "最小磁盘容量",
+                    "type": "string"
+                },
+                "requestDiskIO": {
+                    "description": "最小磁盘IO",
+                    "type": "string"
+                },
+                "requestMem": {
+                    "description": "最小内存",
+                    "type": "string"
+                }
+            }
+        },
+        "service.DedicatedBuilder": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.Job": {
+            "type": "object",
+            "required": [
+                "image",
+                "name",
+                "resource"
+            ],
+            "properties": {
+                "activeDeadlineSeconds": {
+                    "description": "Job存活时间",
+                    "type": "integer"
+                },
+                "command": {
+                    "description": "启动命令",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "env": {
+                    "description": "环境变量",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "image": {
+                    "description": "镜像",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "唯一名称",
+                    "type": "string",
+                    "maxLength": 36
+                },
+                "nfs": {
+                    "description": "nfs配置",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.NFS"
+                    }
+                },
+                "podNameSelector": {
+                    "description": "Pod名称调度选项",
+                    "$ref": "#/definitions/service.PodNameSelector"
+                },
+                "registry": {
+                    "description": "镜像凭证",
+                    "$ref": "#/definitions/types.Registry"
+                },
+                "resource": {
+                    "description": "工作负载资源",
+                    "$ref": "#/definitions/service.CommonWorkLoadResource"
+                }
+            }
+        },
+        "service.JobStatus": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "podIp": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.PodNameSelector": {
+            "type": "object",
+            "required": [
+                "selector"
+            ],
+            "properties": {
+                "selector": {
+                    "description": "Pod名称，调度到指定pod",
+                    "type": "string"
+                },
+                "usePodData": {
+                    "description": "使用和podNameSelector相同的data目录，当挂载目录使用hostPath时依赖PodNameSelector",
+                    "type": "boolean"
+                }
+            }
+        },
+        "service.TaskId": {
+            "type": "object",
+            "properties": {
+                "taskId": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.TaskStatus": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.buildImageInfo": {
+            "type": "object",
+            "required": [
+                "contextPath",
+                "destinations",
+                "dockerFilePath",
+                "registries"
+            ],
+            "properties": {
+                "buildArgs": {
+                    "description": "构建参数",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "contextPath": {
+                    "description": "构建代码上下文路径",
+                    "type": "string"
+                },
+                "destinations": {
+                    "description": "推送镜像完整目标包含仓库地址和tag，例如 xxxx/xxx-hub:v1",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "dockerFilePath": {
+                    "description": "dockerfile路径",
+                    "type": "string"
+                },
+                "registries": {
+                    "description": "推送镜像需要的凭据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Registry"
+                    }
+                }
+            }
+        },
+        "types.NFS": {
+            "type": "object",
+            "properties": {
+                "mountPath": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "server": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.Registry": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "server": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.Result": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

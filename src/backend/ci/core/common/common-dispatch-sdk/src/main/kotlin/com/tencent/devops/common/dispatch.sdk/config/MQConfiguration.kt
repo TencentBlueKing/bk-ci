@@ -46,17 +46,27 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 
 @Suppress("ALL")
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MQConfiguration @Autowired constructor() {
 
+    @Value("\${dispatch.demoteQueue.concurrency:2}")
+    private val demoteQueueConcurrency: Int = 2
+
+    @Value("\${dispatch.demoteQueue.maxConcurrency:2}")
+    private val demoteQueueMaxConcurrency: Int = 2
+
+    @Value("\${dispatch.agentStartQueue.concurrency:60}")
+    private val agentStartQueueConcurrency: Int = 60
+
+    @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
+    private val agentStartQueueMaxConcurrency: Int = 100
+
     @Bean
+    @ConditionalOnMissingBean(RabbitAdmin::class)
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
@@ -107,41 +117,11 @@ class MQConfiguration @Autowired constructor() {
     }
 
     /**
-     * 构建审核步骤广播交换机
-     */
-    @Bean
-    fun pipelineBuildReviewFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
-     * 构建红线检查步骤广播交换机
-     */
-    @Bean
-    fun pipelineBuildQualityCheckFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
      * 构建结束广播交换机
      */
     @Bean
     fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
-     * 构建流水线取消广播交换机
-     */
-    @Bean
-    fun pipelineCancelFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
@@ -215,7 +195,7 @@ class MQConfiguration @Autowired constructor() {
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartMessage.name)
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartup.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
@@ -223,8 +203,8 @@ class MQConfiguration @Autowired constructor() {
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
-            concurrency = 60,
-            maxConcurrency = 100,
+            concurrency = agentStartQueueConcurrency,
+            maxConcurrency = agentStartQueueMaxConcurrency,
             adapter = adapter,
             prefetchCount = 1
         )
@@ -254,7 +234,7 @@ class MQConfiguration @Autowired constructor() {
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartDemoteMessage.name)
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartup.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
@@ -262,8 +242,8 @@ class MQConfiguration @Autowired constructor() {
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20,
+            concurrency = demoteQueueConcurrency,
+            maxConcurrency = demoteQueueMaxConcurrency,
             adapter = adapter,
             prefetchCount = 1
         )

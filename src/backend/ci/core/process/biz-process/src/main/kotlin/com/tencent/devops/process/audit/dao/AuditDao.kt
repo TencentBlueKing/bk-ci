@@ -29,6 +29,8 @@ package com.tencent.devops.process.audit.dao
 
 import com.tencent.devops.model.process.tables.TAuditResource
 import com.tencent.devops.model.process.tables.records.TAuditResourceRecord
+import com.tencent.devops.process.pojo.audit.QueryAudit
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -82,70 +84,53 @@ class AuditDao {
 
     fun listByResourceTye(
         dslContext: DSLContext,
-        resourceType: String,
-        userId: String?,
-        projectId: String,
-        resourceName: String?,
-        status: String?,
-        startTime: String?,
-        endTime: String?,
+        queryAudit: QueryAudit,
         offset: Int,
         limit: Int
     ): Result<TAuditResourceRecord> {
         return with(TAuditResource.T_AUDIT_RESOURCE) {
-            val query = dslContext.selectFrom(this)
-                .where(RESOURCE_TYPE.eq(resourceType))
-                .and(PROJECT_ID.eq(projectId))
-            if (userId != null && userId.isNotBlank()) {
-                query.and(USER_ID.like("%$userId%"))
-            }
-            if (status != null && status.isNotBlank()) {
-                query.and(STATUS.eq(status))
-            }
-            if (resourceName != null && resourceName.isNotBlank()) {
-                query.and(RESOURCE_NAME.like("%$resourceName%"))
-            }
-            if (startTime != null && endTime != null && startTime.isNotBlank() and endTime.isNotBlank()) {
-                val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                val startTimeDateTime = LocalDateTime.parse(startTime, df)
-                val endTimeDateTime = LocalDateTime.parse(endTime, df)
-                query.and(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
-            }
-            query.orderBy(ID.desc()).offset(offset).limit(limit).fetch()
+            dslContext.selectFrom(this)
+                .where(generateFilterCondition(queryAudit))
+                .orderBy(ID.desc()).offset(offset).limit(limit).fetch()
         }
     }
 
-    fun countByResourceTye(
-        dslContext: DSLContext,
-        userId: String?,
-        projectId: String,
-        resourceType: String,
-        resourceName: String?,
-        status: String?,
-        startTime: String?,
-        endTime: String?
-    ): Long {
+    fun countByResourceTye(dslContext: DSLContext, queryAudit: QueryAudit): Long {
         return with(TAuditResource.T_AUDIT_RESOURCE) {
-            val query = dslContext.selectCount()
+            dslContext.selectCount()
                 .from(this)
-                .where(RESOURCE_TYPE.eq(resourceType))
-                .and(PROJECT_ID.eq(projectId))
-            if (userId != null && userId.isNotBlank()) {
-                query.and(USER_ID.like("%$userId%"))
-            }
-            if (status != null && status.isNotBlank()) {
-                query.and(STATUS.eq(status))
-            }
-            if (resourceName != null && resourceName.isNotBlank()) {
-                query.and(RESOURCE_NAME.like("%$resourceName%"))
-            }
-            if (startTime != null && endTime != null && startTime.isNotBlank() and endTime.isNotBlank()) {
-                val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                val startTimeDateTime = LocalDateTime.parse(startTime, df)
-                val endTimeDateTime = LocalDateTime.parse(endTime, df)
-                query.and(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
-            }
-            query.fetchOne(0, Long::class.java)!!
+                .where(generateFilterCondition(queryAudit))
+                .fetchOne(0, Long::class.java)!!
         }
+    }
+
+    private fun generateFilterCondition(queryAudit: QueryAudit): MutableList<Condition> {
+        val query = mutableListOf<Condition>()
+        with(TAuditResource.T_AUDIT_RESOURCE) {
+            query.add(RESOURCE_TYPE.eq(queryAudit.resourceType))
+            query.add(PROJECT_ID.eq(queryAudit.projectId))
+
+            if (!queryAudit.resourceId.isNullOrBlank()) {
+                query.add(RESOURCE_ID.eq(queryAudit.resourceId))
+            }
+
+            if (!queryAudit.userId.isNullOrBlank()) {
+                query.add(USER_ID.eq(queryAudit.userId))
+            }
+            if (!queryAudit.resourceName.isNullOrBlank()) {
+                query.add(
+                    RESOURCE_NAME.like("%${queryAudit.resourceName}%")
+                        .or(ACTION_CONTENT.like("%${queryAudit.resourceName}%")) // 针对改名的场景检索
+                )
+            }
+
+            if (!queryAudit.startTime.isNullOrBlank() && !queryAudit.endTime.isNullOrBlank()) {
+                val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                val startTimeDateTime = LocalDateTime.parse(queryAudit.startTime, df)
+                val endTimeDateTime = LocalDateTime.parse(queryAudit.endTime, df)
+                query.add(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
+            }
+        }
+        return query
     }
 }

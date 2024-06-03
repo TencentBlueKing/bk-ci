@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.tables.TDispatchRunningJobs
 import com.tencent.devops.model.dispatch.tables.records.TDispatchRunningJobsRecord
@@ -61,40 +62,55 @@ class RunningJobsDao {
     fun getProjectRunningJobs(
         dslContext: DSLContext,
         projectId: String,
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String = ChannelCode.BS.name
     ): Result<TDispatchRunningJobsRecord?> {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VM_TYPE.eq(jobQuotaVmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
                 .fetch()
         }
     }
 
-    fun getProjectRunningJobCount(dslContext: DSLContext, projectId: String, jobQuotaVmType: JobQuotaVmType): Int {
+    fun getProjectRunningJobCount(
+        dslContext: DSLContext,
+        projectId: String,
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String = ChannelCode.BS.name
+    ): Int {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VM_TYPE.eq(jobQuotaVmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
     fun getSystemRunningJobs(
         dslContext: DSLContext,
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String
     ): Result<TDispatchRunningJobsRecord?> {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectFrom(this)
                 .where(VM_TYPE.eq(jobQuotaVmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
                 .fetch()
         }
     }
 
-    fun getSystemRunningJobCount(dslContext: DSLContext, jobQuotaVmType: JobQuotaVmType): Int {
+    fun getSystemRunningJobCount(
+        dslContext: DSLContext,
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String
+    ): Int {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectCount().from(this)
                 .where(VM_TYPE.eq(jobQuotaVmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -105,27 +121,46 @@ class RunningJobsDao {
         jobQuotaVmType: JobQuotaVmType,
         buildId: String,
         vmSeqId: String,
-        executeCount: Int
+        executeCount: Int,
+        channelCode: String
     ) {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             val now = LocalDateTime.now()
-            dslContext.insertInto(this,
-                PROJECT_ID,
-                VM_TYPE,
-                BUILD_ID,
-                VM_SEQ_ID,
-                EXECUTE_COUNT,
-                CREATED_TIME
-            )
-                .values(
-                    projectId,
-                    jobQuotaVmType.name,
-                    buildId,
-                    vmSeqId,
-                    executeCount,
-                    now
+
+            val preRecord = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .fetchOne()
+
+            if (preRecord != null) {
+                dslContext.update(this)
+                    .set(CREATED_TIME, now)
+                    .where(ID.eq(preRecord.id))
+                    .execute()
+                return
+            } else {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    VM_TYPE,
+                    BUILD_ID,
+                    VM_SEQ_ID,
+                    EXECUTE_COUNT,
+                    CHANNEL_CODE,
+                    CREATED_TIME
                 )
-                .execute()
+                    .values(
+                        projectId,
+                        jobQuotaVmType.name,
+                        buildId,
+                        vmSeqId,
+                        executeCount,
+                        channelCode,
+                        now
+                    )
+                    .execute()
+            }
         }
     }
 
@@ -176,6 +211,23 @@ class RunningJobsDao {
         }
     }
 
+    fun clearRunningJobs(
+        dslContext: DSLContext,
+        projectId: String,
+        vmType: JobQuotaVmType,
+        channelCode: String,
+        createTime: LocalDateTime
+    ) {
+        with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VM_TYPE.eq(vmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
+                .and(CREATED_TIME.lessOrEqual(createTime))
+                .execute()
+        }
+    }
+
     fun getProject(dslContext: DSLContext): Result<Record1<String>>? {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectDistinct(PROJECT_ID).from(this).fetch()
@@ -192,68 +244,3 @@ class RunningJobsDao {
             Int::class.java, DSL.keyword(part.toSQL()), t1)
     }
 }
-
-/**
-drop table T_DISPATCH_QUOTA_SYSTEM;
-drop table T_DISPATCH_QUOTA_PROJECT;
-drop table T_DISPATCH_RUNNING_JOBS;
-
-CREATE TABLE `T_DISPATCH_QUOTA_SYSTEM` (
-`VM_TYPE` varchar(128) NOT NULL,
-`RUNNING_JOBS_MAX_SYSTEM` int(10) NOT NULL,
-`RUNNING_JOBS_MAX_PROJECT` int(10) NOT NULL,
-`RUNNING_TIME_JOB_MAX` int(10) NOT NULL,
-`RUNNING_TIME_JOB_MAX_PROJECT` int(10) NOT NULL,
-`RUNNING_JOBS_MAX_GITCI_SYSTEM` int(10) NOT NULL,
-`RUNNING_JOBS_MAX_GITCI_PROJECT` int(10) NOT NULL,
-`RUNNING_TIME_JOB_MAX_GITCI` int(10) NOT NULL,
-`RUNNING_TIME_JOB_MAX_PROJECT_GITCI` int(10) NOT NULL,
-`PROJECT_RUNNING_JOB_THRESHOLD` int(10) NOT NULL,
-`PROJECT_RUNNING_TIME_THRESHOLD` int(10) NOT NULL,
-`SYSTEM_RUNNING_JOB_THRESHOLD` int(10) NOT NULL,
-`CREATED_TIME` datetime NOT NULL,
-`UPDATED_TIME` datetime NOT NULL,
-`OPERATOR` varchar(128) NOT NULL,
-PRIMARY KEY (`VM_TYPE`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-
-CREATE TABLE `T_DISPATCH_QUOTA_PROJECT` (
-`PROJECT_ID` varchar(128) NOT NULL,
-`VM_TYPE` varchar(128) NOT NULL,
-`RUNNING_JOBS_MAX` int(10) NOT NULL,
-`RUNNING_TIME_JOB_MAX` int(10) NOT NULL,
-`RUNNING_TIME_PROJECT_MAX` int(10) NOT NULL,
-`CREATED_TIME` datetime NOT NULL,
-`UPDATED_TIME` datetime NOT NULL,
-`OPERATOR` varchar(128) NOT NULL,
-PRIMARY KEY (`PROJECT_ID`, `VM_TYPE`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-
-CREATE TABLE `T_DISPATCH_RUNNING_JOBS` (
-`ID` int(20) NOT NULL AUTO_INCREMENT,
-`PROJECT_ID` varchar(128) NOT NULL,
-`VM_TYPE` varchar(128) NOT NULL,
-`BUILD_ID` varchar(128) NOT NULL,
-`VM_SEQ_ID` varchar(128) NOT NULL,
-`CREATED_TIME` datetime NOT NULL,
-`AGENT_START_TIME` datetime NULL,
-PRIMARY KEY (`ID`),
-KEY `inx_project_id` (`PROJECT_ID`),
-KEY `inx_vm_type` (`VM_TYPE`),
-KEY `inx_build_id` (`BUILD_ID`),
-KEY `inx_vm_seq_id` (`VM_SEQ_ID`),
-KEY `inx_create_time` (`CREATED_TIME`),
-KEY `inx_agent_start_time` (`AGENT_START_TIME`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-
-CREATE TABLE `T_DISPATCH_PROJECT_RUN_TIME` (
-`PROJECT_ID` varchar(128) NOT NULL,
-`VM_TYPE` varchar(128) NOT NULL,
-`RUN_TIME` BIGINT NOT NULL,
-`UPDATE_TIME` datetime NOT NULL,
-PRIMARY KEY (`PROJECT_ID`, `VM_TYPE`),
-KEY `inx_project_id` (`PROJECT_ID`),
-KEY `inx_vm_type` (`VM_TYPE`),
-KEY `inx_create_time` (`UPDATE_TIME`)
-) ENGINE=InnoDB AUTO_INCREMENT=10616272 DEFAULT CHARSET=utf8mb4
-*/

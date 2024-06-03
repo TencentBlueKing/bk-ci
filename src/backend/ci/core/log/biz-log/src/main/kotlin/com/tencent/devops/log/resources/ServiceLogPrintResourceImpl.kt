@@ -28,35 +28,37 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.log.api.print.ServiceLogPrintResource
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.log.api.print.ServiceLogPrintResource
+import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.IndexService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceLogPrintResourceImpl @Autowired constructor(
+    private val indexService: IndexService,
     private val buildLogPrintService: BuildLogPrintService
 ) : ServiceLogPrintResource {
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
+        return buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
     }
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
+        buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, logMessages))
         return Result(true)
     }
 
@@ -64,21 +66,28 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(
+        // #7168 通过一次获取创建记录以及缓存
+        val index = indexService.getIndexName(buildId)
+        logger.info("Start to print log to index[$index]")
+        buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
                 finished = false,
-                tag = tag ?: "",
+                tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
-                executeCount = executeCount
+                jobId = containerHashId,
+                executeCount = executeCount,
+                userJobId = jobId,
+                stepId = stepId
             )
         )
         return Result(true)
@@ -89,23 +98,29 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         finished: Boolean,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        logStorageMode: LogStorageMode?
+        logStorageMode: LogStorageMode?,
+        jobId: String?,
+        stepId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogStatusEvent(
-            buildId = buildId,
-            finished = finished,
-            tag = tag ?: "",
-            subTag = subTag,
-            jobId = jobId ?: "",
-            executeCount = executeCount,
-            logStorageMode = logStorageMode
-        ))
+        buildLogPrintService.asyncDispatchEvent(
+            LogStatusEvent(
+                buildId = buildId,
+                finished = finished,
+                tag = tag,
+                subTag = subTag,
+                jobId = containerHashId,
+                executeCount = executeCount,
+                logStorageMode = logStorageMode,
+                userJobId = jobId,
+                stepId = stepId
+            )
+        )
         return Result(true)
     }
 

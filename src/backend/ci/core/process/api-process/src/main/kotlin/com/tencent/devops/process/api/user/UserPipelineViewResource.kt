@@ -30,15 +30,24 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.classify.PipelineNewView
-import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
-import com.tencent.devops.process.pojo.classify.PipelineNewViewUpdate
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
+import com.tencent.devops.process.pojo.classify.PipelineViewDict
+import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
+import com.tencent.devops.process.pojo.classify.PipelineViewMatchDynamic
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
+import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -48,111 +57,268 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_VIEW"], description = "用户-流水线视图")
+@Tag(name = "USER_PIPELINE_VIEW", description = "用户-流水线视图")
 @Path("/user/pipelineViews")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineViewResource {
-    @ApiOperation("获取视图设置")
+    @Operation(summary = "获取视图设置")
     @GET
     @Path("/projects/{projectId}/settings")
-    // @Path("/{projectId}/settings")
     fun getViewSettings(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<PipelineViewSettings>
 
-    @ApiOperation("更新视图设置")
+    @Operation(summary = "更新视图设置")
     @POST
     @Path("/projects/{projectId}/settings")
-    // @Path("/{projectId}/settings")
     fun updateViewSettings(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         viewIdList: List<String>
     ): Result<Boolean>
 
-    @ApiOperation("获取所有视图")
+    @Operation(summary = "获取所有视图")
     @GET
     @Path("/projects/{projectId}/")
-    // @Path("/{projectId}/")
     fun getViews(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<PipelineNewViewSummary>>
 
-    @ApiOperation("添加视图")
+    @Operation(summary = "获取视图列表")
+    @GET
+    @Path("/projects/{projectId}/list")
+    fun listView(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("projected")
+        @Parameter(description = "是否为项目流水线组 , 为空时不区分", required = false)
+        projected: Boolean? = null,
+        @QueryParam("viewType")
+        @Parameter(description = "流水线组类型 , 1--动态, 2--静态 , 为空时不区分", required = false)
+        viewType: Int? = null
+    ): Result<List<PipelineNewViewSummary>>
+
+    @Operation(summary = "添加视图")
     @POST
     @Path("/projects/{projectId}/")
-    // @Path("/{projectId}/")
     fun addView(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        pipelineView: PipelineNewViewCreate
+        pipelineView: PipelineViewForm
     ): Result<PipelineViewId>
 
-    @ApiOperation("获取视图")
+    @Operation(summary = "获取视图")
     @GET
     @Path("/projects/{projectId}/views/{viewId}")
-    // @Path("/{projectId}/{viewId}")
     fun getView(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String
     ): Result<PipelineNewView>
 
-    @ApiOperation("删除视图")
+    @Operation(summary = "删除视图")
     @DELETE
     @Path("/projects/{projectId}/views/{viewId}")
-    // Path("/{projectId}/{viewId}")
     fun deleteView(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String
     ): Result<Boolean>
 
-    @ApiOperation("更改视图")
+    @Operation(summary = "更改视图")
     @PUT
     @Path("/projects/{projectId}/views/{viewId}")
-    // @Path("/{projectId}/{viewId}")
     fun updateView(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String,
-        pipelineView: PipelineNewViewUpdate
+        pipelineView: PipelineViewForm
     ): Result<Boolean>
+
+    @Operation(summary = "置顶视图")
+    @POST
+    @Path("/projects/{projectId}/views/{viewId}/top")
+    fun topView(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "标签ID", required = true)
+        @PathParam("viewId")
+        viewId: String,
+        pipelineViewTopForm: PipelineViewTopForm
+    ): Result<Boolean>
+
+    @Operation(summary = "预览视图")
+    @POST
+    @Path("/projects/{projectId}/preview")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    fun preview(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        pipelineView: PipelineViewForm
+    ): Result<PipelineViewPreview>
+
+    @Operation(summary = "获取流水线组与流水线的对应关系")
+    @GET
+    @Path("/projects/{projectId}/dict")
+    fun dict(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineViewDict>
+
+    @Operation(summary = "流水线组过滤条件")
+    @GET
+    @Path("/projects/{projectId}/getHitFilters")
+    fun getHitFilters(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("viewId")
+        viewId: String
+    ): Result<PipelineViewHitFilters>
+
+    @Operation(summary = "命中动态组情况")
+    @POST
+    @Path("/projects/{projectId}/matchDynamicView")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    fun matchDynamicView(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        pipelineViewMatchDynamic: PipelineViewMatchDynamic
+    ): Result<List<String>>
+
+    @Operation(summary = "批量添加")
+    @POST
+    @Path("/projects/{projectId}/bulkAdd")
+    fun bulkAdd(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        bulkAdd: PipelineViewBulkAdd
+    ): Result<Boolean>
+
+    @Operation(summary = "批量移除")
+    @POST
+    @Path("/projects/{projectId}/bulkRemove")
+    fun bulkRemove(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        bulkRemove: PipelineViewBulkRemove
+    ): Result<Boolean>
+
+    @Operation(summary = "根据流水线ID获取视图(流水线组)")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listViews")
+    fun listViewByPipelineId(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<List<PipelineNewViewSummary>>
+
+    @Operation(summary = "根据视图ID获取当前流水线的具体数目")
+    @GET
+    @Path("/projects/{projectId}/views/{viewId}/pipelineCount")
+    fun pipelineCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "标签ID", required = true)
+        @PathParam("viewId")
+        viewId: String
+    ): Result<PipelineViewPipelineCount>
+
+    @Operation(summary = "根据流水线ID获取视图ID(流水线组ID)")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listViewIds")
+    fun listViewIdsByPipelineId(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Set<Long>>
+
+    @Operation(summary = "用户有权限添加的静态流水线组")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listPermissionStaticViews")
+    fun listPermissionStaticViews(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<List<PipelineNewViewSummary>>
 }

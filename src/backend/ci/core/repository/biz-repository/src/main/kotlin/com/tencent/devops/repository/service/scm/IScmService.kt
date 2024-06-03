@@ -28,15 +28,19 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.LoginSession
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 
 @Suppress("ALL")
 interface IScmService {
@@ -61,7 +65,9 @@ interface IScmService {
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
     ): List<String>
 
     fun deleteBranch(
@@ -118,6 +124,27 @@ interface IScmService {
         userName: String,
         event: String? = null,
         hookUrl: String? = null
+    )
+
+    fun getWebHooks(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): List<GitHook>
+
+    fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
     )
 
     fun addCommitCheck(
@@ -213,4 +240,35 @@ interface IScmService {
         page: Int,
         size: Int
     ): List<GitCommit>
+
+    /**
+     * 获取代码库详情
+     */
+    fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): GitProjectInfo?
+
+    /**
+     * 获取日常评审信息
+     */
+    fun getCommitReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): GitCommitReviewInfo?
+
+    /**
+     * 读取会话信息
+     */
+    fun getLoginSession(
+        type: ScmType,
+        username: String,
+        password: String,
+        url: String
+    ): LoginSession?
 }

@@ -31,5 +31,6 @@ dependencies {
     api(project(":core:repository:api-repository"))
     api(project(":core:ticket:api-ticket"))
     api(project(":core:process:api-process"))
+    api("io.github.resilience4j:resilience4j-circuitbreaker")
     testImplementation(project(":core:common:common-test"))
 }

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.buildless.service
 
-import com.google.common.collect.Interners
 import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.client.DispatchClient
 import com.tencent.devops.buildless.pojo.BuildLessTask
@@ -50,11 +49,9 @@ class BuildLessTaskService(
     private val containerPoolExecutor: ContainerPoolExecutor
 ) {
 
-    private val stringPool = Interners.newWeakInterner<String>()
-
     @Async
     fun claimBuildLessTask(containerId: String): Future<BuildLessTask?> {
-        synchronized(stringPool.intern(containerId)) {
+        synchronized(containerId.intern()) {
             var loopCount = 0
             while (loopCount < 100) {
                 // 校验当前容器状态是否正常
@@ -65,16 +62,25 @@ class BuildLessTaskService(
 
                 val buildLessTask = redisUtils.popBuildLessReadyTask()
                 if (buildLessTask != null) {
-                    logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
-                    dispatchClient.updateContainerId(
-                        buildLessTask = buildLessTask,
-                        containerId = containerId
-                    )
+                    try {
+                        logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
+                        dispatchClient.updateContainerId(
+                            buildLessTask = buildLessTask,
+                            containerId = containerId
+                        )
 
-                    logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
-                    redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
+                        logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
+                        redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
 
-                    return AsyncResult(buildLessTask)
+                        return AsyncResult(buildLessTask)
+                    } catch (e: Exception) {
+                        // 异常时任务重新回队列
+                        logger.info("****> container: $containerId claim buildLessTask: $buildLessTask get error, " +
+                                        "retry.", e)
+                        redisUtils.leftPushBuildLessReadyTask(buildLessTask)
+
+                        continue
+                    }
                 }
 
                 loopCount++
@@ -89,7 +95,7 @@ class BuildLessTaskService(
         containerId: String,
         deferredResult: DeferredResult<BuildLessTask?>
     ) {
-        synchronized(stringPool.intern(containerId)) {
+        synchronized(containerId.intern()) {
             var loopCount = 0
             while (loopCount < 100) {
                 // 校验当前容器状态是否正常

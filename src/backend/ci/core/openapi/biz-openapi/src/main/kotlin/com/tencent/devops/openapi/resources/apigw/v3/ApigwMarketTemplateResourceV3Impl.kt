@@ -49,6 +49,7 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean> {
         // 可见与可安装鉴权在store服务marketTemplateService中已实现
+        logger.info("OPENAPI_MARKET_TEMPLATE_V3|$userId|install template from store|$installTemplateReq")
         return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
     }
 
@@ -58,6 +59,7 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
         userId: String,
         installTemplateReq: InstallTemplateReq
     ): Result<List<PipelineTemplateInfo>> {
+        logger.info("OPENAPI_MARKET_TEMPLATE_V3|$userId|install template from store new|$installTemplateReq")
         val install = client.get(ServiceTemplateResource::class)
             .installTemplate(userId, installTemplateReq).data ?: false
         return if (install) {

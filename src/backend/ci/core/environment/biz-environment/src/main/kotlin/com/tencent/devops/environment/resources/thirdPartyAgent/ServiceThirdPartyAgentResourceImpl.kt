@@ -25,25 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
-import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
+import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentPipelineService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentPipelineService
+import com.tencent.devops.environment.service.thirdpartyagent.UpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,10 +66,18 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
-    private val agentPipelineService: AgentPipelineService
+    private val agentPipelineService: AgentPipelineService,
+    private val slaveGatewayService: SlaveGatewayService,
+    private val permissionService: EnvironmentPermissionService,
+    private val nodeService: NodeService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
+    }
+
+    @Deprecated("getAgentById")
+    override fun getAgentByIdGlobal(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
+        return thirdPartyAgentService.getAgentGlobal(projectId, agentId)
     }
 
     override fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
@@ -64,8 +87,10 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvId(projectId: String, envId: String) =
         Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
 
-    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> =
-        Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
+    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> {
+        val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName)
+        return Result(res)
+    }
 
     override fun upgrade(projectId: String, agentId: String, secretKey: String, tag: String) =
         thirdPartyAgentService.checkIfCanUpgrade(projectId, agentId, secretKey, tag)
@@ -77,6 +102,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         version: String?,
         masterVersion: String?
     ) = upgradeService.checkUpgrade(projectId, agentId, secretKey, version, masterVersion)
+
+    override fun upgradeByVersionNew(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        info: ThirdPartyAgentUpgradeByVersionInfo
+    ) = upgradeService.checkUpgradeNew(projectId, agentId, secretKey, info)
 
     override fun scheduleAgentPipeline(
         userId: String,
@@ -128,11 +160,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
             } else {
                 list.sortedBy { it.pipelineName }
             }
+
             "lastBuildTime" -> if (sortDirection == "DESC") {
                 list.sortedByDescending { it.lastBuildTime }
             } else {
                 list.sortedBy { it.lastBuildTime }
             }
+
             else -> list
         }
     }
@@ -152,5 +186,94 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         agentHashId: String
     ): Result<ThirdPartyAgentDetail?> {
         return Result(thirdPartyAgentService.getAgentDetailById(userId, projectId, agentHashId = agentHashId))
+    }
+
+    override fun getGateways(): Result<List<SlaveGateway>> {
+        return Result(slaveGatewayService.getGateway())
+    }
+
+    @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
+    override fun getNodeDetail(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?
+    ): Result<ThirdPartyAgentDetail?> {
+        val hashId = when {
+            nodeHashId != null -> nodeHashId
+            nodeName != null -> nodeService.getByDisplayName(
+                userId,
+                projectId,
+                nodeName,
+                listOf(NodeType.THIRDPARTY.name)
+            ).firstOrNull()?.nodeHashId
+
+            else -> null
+        } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
+        return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
+    }
+
+    override fun listAgentBuilds(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?,
+        status: String?,
+        pipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        val hashId = when {
+            nodeHashId != null -> nodeHashId
+            nodeName != null -> nodeService.getByDisplayName(
+                userId,
+                projectId,
+                nodeName,
+                listOf(NodeType.THIRDPARTY.name)
+            ).firstOrNull()?.nodeHashId
+
+            agentHashId != null -> thirdPartyAgentService.getAgent(
+                projectId = projectId,
+                agentHashId
+            ).data?.nodeId
+
+            else -> null
+        } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
+        return Result(
+            thirdPartyAgentService.listAgentBuilds(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = hashId,
+                status = status,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun newHeartbeat(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        heartbeatInfo: NewHeartbeatInfo
+    ): Result<AskHeartbeatResponse> {
+        return Result(
+            AskHeartbeatResponse(
+                thirdPartyAgentService.newHeartbeat(projectId, agentId, secretKey, heartbeatInfo)
+            )
+        )
+    }
+
+    override fun getPipelines(projectId: String, agentId: String, secretKey: String): Result<ThirdPartyAgentPipeline?> {
+        return Result(thirdPartyAgentPipelineService.getPipelines(projectId, agentId, secretKey))
+    }
+
+    override fun getAgentsByEnvNameWithId(
+        projectId: String,
+        envName: String
+    ): Result<Pair<Long?, List<ThirdPartyAgent>>> {
+        return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
     }
 }

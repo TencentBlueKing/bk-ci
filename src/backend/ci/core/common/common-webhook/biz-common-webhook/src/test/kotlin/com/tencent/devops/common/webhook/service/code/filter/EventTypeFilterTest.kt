@@ -28,8 +28,8 @@
 package com.tencent.devops.common.webhook.service.code.filter
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class EventTypeFilterTest {
     private val response = WebhookFilterResponse()
@@ -41,21 +41,21 @@ class EventTypeFilterTest {
             triggerOnEventType = CodeEventType.PUSH,
             eventType = null
         )
-        Assert.assertTrue(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.PUSH,
             eventType = CodeEventType.PUSH
         )
-        Assert.assertTrue(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.PUSH,
             eventType = CodeEventType.PULL_REQUEST
         )
-        Assert.assertFalse(eventTypeFilter.doFilter(response))
+        Assertions.assertFalse(eventTypeFilter.doFilter(response))
     }
 
     @Test
@@ -65,38 +65,34 @@ class EventTypeFilterTest {
             triggerOnEventType = CodeEventType.PUSH,
             eventType = CodeEventType.MERGE_REQUEST
         )
-        Assert.assertFalse(eventTypeFilter.doFilter(response))
+        Assertions.assertFalse(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST,
-            action = "merge"
+            eventType = CodeEventType.MERGE_REQUEST
         )
-        Assert.assertFalse(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST,
-            action = "open"
+            eventType = CodeEventType.MERGE_REQUEST
         )
-        Assert.assertTrue(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST_ACCEPT,
-            action = "open"
+            eventType = CodeEventType.MERGE_REQUEST_ACCEPT
         )
-        Assert.assertFalse(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
-            eventType = CodeEventType.MERGE_REQUEST_ACCEPT,
-            action = "merge"
+            eventType = CodeEventType.MERGE_REQUEST
         )
-        Assert.assertTrue(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
     }
 }

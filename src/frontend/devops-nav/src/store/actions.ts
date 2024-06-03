@@ -22,6 +22,7 @@ import {
     UPDATE_CURRENT_PAGE,
     SET_SERVICES,
     TOGGLE_PERMISSION_DIALOG,
+    TOGGLE_NOTICE_DIALOG,
     SET_CURRENT_NOTICE,
     AUTH_API_URL_PREFIX
 } from './constants'
@@ -66,8 +67,8 @@ const actions: ActionTree<RootState, any> = {
         console.log(services)
         commit(SET_SERVICES, { services })
     },
-    async getProjects ({ dispatch }: ActionContext<RootState, any>, includeDisable = false) {
-        const res: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/?includeDisable=${includeDisable}`)
+    async getProjects ({ dispatch }: ActionContext<RootState, any>) {
+        const res: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/`)
         const projectList: Project[] = res
         if (Array.isArray(projectList)) {
             dispatch('setProjectList', projectList)
@@ -75,13 +76,21 @@ const actions: ActionTree<RootState, any> = {
         }
     },
     ajaxUpdatePM (_, { projectCode, data }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`, data)
+        return Request.put(
+            `${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`,
+            data,
+            { headers: { 'X-DEVOPS-PROJECT-ID': projectCode, 'Content-Type': 'application/json' } }
+        )
     },
     ajaxAddPM (_, data) {
         return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/`, data)
     },
     toggleProjectEnable (_, { projectCode, enabled }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`)
+        return Request.put(
+            `${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`,
+            null,
+            { headers: { 'X-DEVOPS-PROJECT-ID': projectCode, 'Content-Type': 'application/json' } }
+        )
     },
     selectDemoProject ({ commit }, { project }) {
         commit(SET_DEMO_PROJECT, {
@@ -118,6 +127,9 @@ const actions: ActionTree<RootState, any> = {
     closePreviewTips ({ commit }: ActionContext<RootState, RootState>) {
         commit(CLOSE_PREVIEW_TIPS)
     },
+    toggleNoticeDialog ({ commit }, payload) {
+        commit(TOGGLE_NOTICE_DIALOG, payload)
+    },
     getAnnouncement () {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/notice/valid`)
     },
@@ -129,6 +141,30 @@ const actions: ActionTree<RootState, any> = {
     },
     hasCreateProjectPermission () {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/hasCreatePermission`)
+    },
+    /**
+     * 项目列表 (项目管理界面)
+     */
+    fetchProjectList (_, payload = {
+        sortType: '',
+        collation: ''
+    }) {
+        const { sortType, collation } = payload
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects?unApproved=true&sortType=${sortType}&collation=${collation}`)
+    },
+    /**
+     * 申请加入项目
+     */
+    applyToJoinProject (_, payload) {
+        const { englishName, ApplicationInfo } = payload
+        return Request.post(`${PROJECT_API_URL_PREFIX}/user/auth/apply/${englishName}/applyToJoinProject/`, ApplicationInfo)
+    },
+    /**
+     * 项目列表 (申请加入项目弹窗，分页加载)
+     */
+    fetchWithoutPermissionsProjects (_, payload) {
+        const { pageSize, page, projectName } = payload
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/listProjectsWithoutPermissions?page=${page}&pageSize=${pageSize}&projectName=${projectName}`)
     }
 }
 

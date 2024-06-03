@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
@@ -35,6 +36,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("LongParameterList")
 @Service
 class LogStatusService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -45,21 +47,28 @@ class LogStatusService @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         logStorageMode: LogStorageMode?,
-        finish: Boolean
+        finish: Boolean,
+        jobId: String?,
+        stepId: String?
     ) {
-        logStatusDao.finish(
-            dslContext = dslContext,
-            buildId = buildId,
-            tag = tag,
-            subTags = subTag,
-            jobId = jobId,
-            executeCount = executeCount,
-            logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
-            finish = finish
-        )
+        JooqUtils.retryWhenDeadLock {
+            logStatusDao.finish(
+                dslContext = dslContext,
+                buildId = buildId,
+                // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+                tag = tag ?: "",
+                subTags = subTag ?: "",
+                containerHashId = containerHashId ?: "",
+                executeCount = executeCount ?: 1,
+                logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
+                finish = finish,
+                jobId = jobId,
+                stepId = stepId
+            )
+        }
     }
 
     fun updateStorageMode(
@@ -67,27 +76,28 @@ class LogStatusService @Autowired constructor(
         executeCount: Int,
         propertyList: List<TaskBuildLogProperty>
     ) {
-        val modeList = propertyList.map {
-            it.elementId to it.logStorageMode
-        }.toMap()
         logStatusDao.updateStorageMode(
             dslContext = dslContext,
             buildId = buildId,
             executeCount = executeCount,
-            modeList = modeList
+            modeMap = propertyList.associate {
+                it.elementId to it.logStorageMode
+            }
         )
     }
 
     fun getStorageMode(
         buildId: String,
-        tag: String,
-        executeCount: Int
+        tag: String?,
+        executeCount: Int,
+        stepId: String?
     ): QueryLogStatus {
         val record = logStatusDao.getStorageMode(
             dslContext = dslContext,
             buildId = buildId,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            stepId = stepId
         )
         return if (record != null) {
             QueryLogStatus(buildId, record.finished, LogStorageMode.parse(record.mode))
@@ -100,14 +110,19 @@ class LogStatusService @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
-    ): Boolean {
-        return if (jobId.isNullOrBlank()) {
-            logStatusDao.isFinish(dslContext, buildId, tag, subTag, executeCount)
-        } else {
-            val logStatusList = logStatusDao.listFinish(dslContext, buildId, executeCount)
-            logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
-        }
-    }
+        stepId: String?
+    ) = logStatusDao.isFinish(
+        dslContext = dslContext,
+        buildId = buildId,
+        // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+        containerHashId = containerHashId,
+        tag = tag ?: "",
+        subTags = subTag ?: "",
+        executeCount = executeCount ?: 1,
+        jobId = jobId,
+        stepId = stepId
+    )
 }

@@ -35,6 +35,15 @@ const customeRules = {
             return repeatNum <= 1
         }
     },
+    notInList: {
+        validate: function (value, args) {
+            if (args.indexOf(value) === -1) {
+                return true
+            } else {
+                return false
+            }
+        }
+    },
     // 不同时为空
     atlestNotEmpty: {
         validate: function (value, args) {
@@ -61,6 +70,11 @@ const customeRules = {
     varRule: {
         validate: function (value, args) {
             return /^[a-z_][a-z_\d]*$/gi.test(value)
+        }
+    },
+    constVarRule: {
+        validate: function (value, args) {
+            return /^[A-Z][A-Z_\d]*$/g.test(value)
         }
     },
     excludeEmptyCapital: {
@@ -91,6 +105,16 @@ const customeRules = {
     buildNumRule: {
         validate: function (value, args) {
             return /^[\w-{}() +?.:$"]{1,256}$/.test(value)
+        }
+    },
+    timeoutsRule: {
+        validate: function (value, args) {
+            return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
+        }
+    },
+    reminderTimeRule: {
+        validate: function (value, args) {
+            return /^(?:[1-9]|[1-9]\d|1[0-5][0-9]|168)$/.test(value)
         }
     }
 }

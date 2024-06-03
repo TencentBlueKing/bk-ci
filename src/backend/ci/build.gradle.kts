@@ -1,25 +1,34 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.6"
+    id("com.tencent.devops.boot") version "0.0.7"
     detektCheck
+    `task-license-report` // 检查License合规
 }
 
 apply(plugin = "org.owasp.dependencycheck")
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
-
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.8.0") +
-            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+    version = (System.getProperty("ci_version") ?: "1.9.0") +
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
+
+    // 加载boot的插件
+    if (name.startsWith("boot-")) {
+        pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
+        pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
+        pluginManager.apply("task-i18n-load") // i18n插件
+        if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
+            pluginManager.apply("task-docker-build") // Docker镜像构建
+        }
+    }
 
     // 版本管理
     dependencyManagement {
         setApplyMavenExclusions(false)
         dependencies {
-            dependency("org.mockito:mockito-all:${Versions.Mockito}")
-            dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
+            dependency("org.json:json:${Versions.orgJson}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
             dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
@@ -35,7 +44,6 @@ allprojects {
             dependency("com.cronutils:cron-utils:${Versions.CronUtils}")
             dependency("org.apache.commons:commons-collections4:${Versions.CommonCollections4}")
             dependency("net.coobird:thumbnailator:${Versions.Thumbnailator}")
-            dependency("com.vmware:vijava:${Versions.Vmware}")
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
             dependency("net.dongliu:apk-parser:${Versions.ApkParser}")
@@ -49,28 +57,32 @@ allprojects {
             dependency("org.elasticsearch:elasticsearch:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
+            dependency("org.apache.pulsar:pulsar-client:${Versions.Pulsar}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
+            dependency("com.github.xingePush:xinge:${Versions.Xinge}")
+            dependency("org.reflections:reflections:${Versions.reflections}")
             dependency("org.dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.commons:commons-compress:${Versions.Compress}")
             dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("commons-io:commons-io:${Versions.CommonIo}")
-            dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}"){
+            dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
+            dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
             }
-            dependencySet("org.glassfish.jersey.core:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.core:${Versions.Jersey}") {
                 entry("jersey-server")
                 entry("jersey-common")
                 entry("jersey-client")
             }
-            dependencySet("org.glassfish.jersey.ext:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.ext:${Versions.Jersey}") {
                 entry("jersey-bean-validation")
                 entry("jersey-entity-filtering")
                 entry("jersey-spring5")
             }
-            dependencySet("org.glassfish.jersey.media:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.media:${Versions.Jersey}") {
                 entry("jersey-media-multipart")
                 entry("jersey-media-json-jackson")
             }
@@ -84,26 +96,54 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-            dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
+            dependencySet("com.tencent.bk.repo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
                 entry("api-repository")
+                entry("api-webhook")
             }
             dependencySet("org.apache.poi:${Versions.Poi}") {
                 entry("poi")
                 entry("poi-ooxml")
             }
-            dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
-                entry("pinyin-plus")
-            }
             dependency("com.perforce:p4java:${Versions.p4}")
-            dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
+            dependency("io.mockk:mockk:${Versions.mockk}")
+            dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
+                entry("resilience4j-circuitbreaker")
+            }
+            // TODO 修复IPv6单栈环境报错问题, 等后面Okhttp3版本升级上来就可以去掉
+            dependencySet("com.squareup.okhttp3:${Versions.Okhttp}") {
+                entry("logging-interceptor")
+                entry("mockwebserver")
+                entry("okcurl")
+                entry("okhttp")
+                entry("okhttp-dnsoverhttps")
+                entry("okhttp-sse")
+                entry("okhttp-testing-support")
+                entry("okhttp-tls")
+                entry("okhttp-urlconnection")
+            }
+            dependencySet("org.eclipse.jgit:${Versions.jgit}") {
+                entry("org.eclipse.jgit")
+                entry("org.eclipse.jgit.ssh.jsch")
+            }
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
+            dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
+            dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
+            // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
+            dependencySet("io.swagger.core.v3:${Versions.swagger}") {
+                entry("swagger-annotations")
+                entry("swagger-jaxrs2")
+                entry("swagger-core")
+                entry("swagger-models")
+            }
+            // worker需要依赖
+            dependency("org.jvnet.winp:winp:${Versions.Winp}")
+            dependency("net.java.dev.jna:jna:${Versions.Jna}")
+            dependency("org.jenkins-ci:version-number:${Versions.JenkinsVersionNumber}")
         }
     }
 
-    // 兼容Junit4
-    dependencies {
-        testImplementation("org.junit.vintage:junit-vintage-engine")
-    }
     // 兼容 Log4j
     configurations.forEach {
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
@@ -114,9 +154,13 @@ allprojects {
         it.exclude("javax.ws.rs", "jsr311-api")
         it.exclude("dom4j", "dom4j")
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
+        it.exclude("com.zaxxer", "HikariCP-java7")
+        it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
+        it.exclude("org.bouncycastle", "bcutil-jdk15on")
+        it.exclude("io.swagger") // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
     }
-    // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
     dependencies {
+        // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
         components {
             withModule("org.dom4j:dom4j") {
                 allVariants { withDependencies { clear() } }

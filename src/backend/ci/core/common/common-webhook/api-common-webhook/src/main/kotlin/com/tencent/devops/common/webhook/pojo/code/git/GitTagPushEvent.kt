@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
 
@@ -45,7 +46,10 @@ data class GitTagPushEvent(
     val commits: List<GitCommit>?,
     val total_commits_count: Int,
     val operation_kind: String?,
-    val create_from: String? = null
+    val create_from: String? = null,
+    @JsonProperty("push_timestamp")
+    val pushTimestamp: String?,
+    val message: String?
 ) : GitEvent() {
     companion object {
         const val classType = "tag_push"
@@ -62,6 +66,10 @@ fun GitTagPushEvent.isDeleteTag(): Boolean {
         operation_kind == TGitTagPushOperationKind.DELETE.value &&
         after.filter { it != '0' }.isBlank()
     ) {
+        return true
+    }
+    // 非工蜂代码库Tag删除
+    if (action_kind == null && after.filter { it != '0' }.isBlank()) {
         return true
     }
     return false

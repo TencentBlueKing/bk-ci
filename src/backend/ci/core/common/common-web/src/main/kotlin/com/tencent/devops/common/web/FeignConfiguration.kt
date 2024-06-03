@@ -28,16 +28,26 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
-import com.tencent.devops.common.client.consul.ConsulConstants
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.REFERER
+import com.tencent.devops.common.api.constant.API_PERMISSION
+import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
+import com.tencent.devops.common.api.constant.REQUEST_IP
+import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.security.util.EnvironmentUtil
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.BkApiUtil
 import feign.RequestInterceptor
+import feign.RequestTemplate
+import feign.Target.HardCodedTarget
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -45,11 +55,9 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
 @Configuration
-class FeignConfiguration {
-
-    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
-    private val tag: String? = null
-
+class FeignConfiguration @Autowired constructor(
+    private val bkTag: BkTag
+) {
     private val logger = LoggerFactory.getLogger(FeignConfiguration::class.java)
 
     /**
@@ -57,16 +65,16 @@ class FeignConfiguration {
      */
     @Bean
     @Primary
+    @Suppress("ComplexMethod")
     fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
             requestTemplate.decodeSlash(false)
-            val attributes =
-                RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
-            val request = attributes.request
-            val languageHeaderName = "Accept-Language"
-            val languageHeaderValue = request.getHeader(languageHeaderName)
-            if (!languageHeaderValue.isNullOrBlank()) {
-                requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
+
+            if (!requestTemplate.headers().containsKey(AUTH_HEADER_PROJECT_ID)) {
+                // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
+                val tag = bkTag.getFinalTag()
+                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
+                logger.debug("gateway tag is : $tag")
             }
 
             // 设置traceId
@@ -74,14 +82,7 @@ class FeignConfiguration {
                 TraceTag.X_DEVOPS_RID,
                 MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() } ?: TraceTag.buildBiz()
             )
-            val cookies = request.cookies
-            if (cookies != null && cookies.isNotEmpty()) {
-                val cookieBuilder = StringBuilder()
-                cookies.forEach {
-                    cookieBuilder.append(it.name).append("=").append(it.value).append(";")
-                }
-                requestTemplate.header("Cookie", cookieBuilder.toString()) // 设置cookie信息
-            }
+
             // 增加X-DEVOPS-JWT验证头部
             if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT_TOKEN)) {
                 // 只有jwt验证发送启动的时候才设置头部
@@ -90,21 +91,85 @@ class FeignConfiguration {
                 }
             }
 
-            // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
-            if (!ConsulContent.getConsulContent().isNullOrEmpty()) {
-                requestTemplate.header(ConsulConstants.HEAD_CONSUL_TAG, ConsulContent.getConsulContent())
+            // 新增devopsToken给网关校验
+            val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+            if (devopsToken != null) {
+                requestTemplate.header("X-DEVOPS-TOKEN", devopsToken)
+            }
+
+            // 设置接口访问权限标识
+            val permissionFlag = BkApiUtil.getPermissionFlag()
+            if (permissionFlag != null) {
+                requestTemplate.header(API_PERMISSION, permissionFlag.toString())
+                BkApiUtil.removePermissionFlag()
+            }
+
+            // 设置服务名称
+            setServiceName(requestTemplate)
+
+            val attributes =
+                RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
+            val request = attributes.request
+            val languageHeaderName = "Accept-Language"
+            val languageHeaderValue = request.getHeader(languageHeaderName)
+            if (!languageHeaderValue.isNullOrBlank()) {
+                requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
+            }
+            // 设置用户ID
+            val userId = request.getHeader(AUTH_HEADER_USER_ID)
+            if (!userId.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_USER_ID, userId)
+            }
+            // 设置项目ID
+            val projectId = request.getHeader(AUTH_HEADER_PROJECT_ID)
+            if (!projectId.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_PROJECT_ID, projectId)
+            }
+            // 设置请求渠道信息
+            val requestChannel =
+                (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
+            if (!requestChannel.isNullOrBlank()) {
+                requestTemplate.header(REQUEST_CHANNEL, requestChannel)
+            }
+            // 设置客户端的原始IP地址
+            val requestIp = request.getHeader(REQUEST_IP)
+            if (!requestIp.isNullOrBlank()) {
+                requestTemplate.header(REQUEST_IP, requestIp)
+            }
+            // 设置请求来源
+            val referer = request.getHeader(REFERER)
+            if (!referer.isNullOrBlank()) {
+                requestTemplate.header(REFERER, referer)
+            }
+            val cookies = request.cookies
+            if (cookies != null && cookies.isNotEmpty()) {
+                val cookieBuilder = StringBuilder()
+                cookies.forEach {
+                    cookieBuilder.append(it.name).append("=").append(it.value).append(";")
+                }
+                requestTemplate.header("Cookie", cookieBuilder.toString()) // 设置cookie信息
             }
         }
     }
 
-    @Bean
-    fun gatewayTagRequestInterceptor(): RequestInterceptor {
-        return RequestInterceptor { requestTemplate ->
-            requestTemplate.decodeSlash(false)
-            logger.debug("add X-GATEWAY-TAG $tag")
-            if (!requestTemplate.headers().containsKey(AUTH_HEADER_GATEWAY_TAG)) {
-                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
+    private fun setServiceName(requestTemplate: RequestTemplate) {
+        val serviceName = when (val target = requestTemplate.feignTarget()) {
+            is MicroServiceTarget -> {
+                target.name()
             }
+
+            is HardCodedTarget -> {
+                val nameRegex = Regex("/([a-z]+)/api")
+                val nameMatchResult = nameRegex.find(target.name())
+                nameMatchResult?.groupValues?.get(1) ?: target.name()
+            }
+
+            else -> {
+                target.name()
+            }
+        }
+        if (!serviceName.isNullOrBlank()) {
+            requestTemplate.header(AUTH_HEADER_DEVOPS_SERVICE_NAME, serviceName)
         }
     }
 }

@@ -34,9 +34,11 @@ import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.websocket.page.DetailPageBuild
 import com.tencent.devops.process.websocket.page.HistoryPageBuild
+import com.tencent.devops.process.websocket.page.RecordPageBuild
 import com.tencent.devops.process.websocket.page.StatusPageBuild
 import com.tencent.devops.process.websocket.push.DetailWebsocketPush
 import com.tencent.devops.process.websocket.push.HistoryWebsocketPush
+import com.tencent.devops.process.websocket.push.RecordWebsocketPush
 import com.tencent.devops.process.websocket.push.StatusWebsocketPush
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +49,8 @@ class PipelineWebsocketService @Autowired constructor(
     val redisOperation: RedisOperation,
     val historyPageBuild: HistoryPageBuild,
     val detailPageBuild: DetailPageBuild,
-    val statusPageBuild: StatusPageBuild
+    val statusPageBuild: StatusPageBuild,
+    val recordPageBuild: RecordPageBuild
 ) {
     fun buildDetailMessage(
         buildId: String,
@@ -60,7 +63,8 @@ class PipelineWebsocketService @Autowired constructor(
                 buildId = buildId,
                 pipelineId = pipelineId,
                 projectId = projectId,
-                atomId = null
+                atomId = null,
+                executeCount = null
             )
         )
         logger.debug("detail websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
@@ -95,7 +99,8 @@ class PipelineWebsocketService @Autowired constructor(
                 buildId = buildId,
                 pipelineId = pipelineId,
                 projectId = projectId,
-                atomId = null
+                atomId = null,
+                executeCount = null
             )
         )
         logger.debug("history websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
@@ -130,7 +135,8 @@ class PipelineWebsocketService @Autowired constructor(
                 buildId = buildId,
                 pipelineId = pipelineId,
                 projectId = projectId,
-                atomId = null
+                atomId = null,
+                executeCount = null
             )
         )
         logger.debug("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
@@ -149,6 +155,44 @@ class PipelineWebsocketService @Autowired constructor(
                 dealUrl = null,
                 code = 200,
                 webSocketType = WebSocketType.changWebType(WebSocketType.STATUS),
+                page = page
+            )
+        )
+    }
+
+    fun buildRecordMessage(
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        executeCount: Int?
+    ): RecordWebsocketPush {
+        val page = recordPageBuild.buildPage(
+            buildPageInfo = BuildPageInfo(
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                atomId = null,
+                executeCount = executeCount
+            )
+        )
+        logger.debug("record websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        return RecordWebsocketPush(
+            buildId = buildId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            executeCount = executeCount,
+            redisOperation = redisOperation,
+            page = page,
+            pushType = WebSocketType.RECORD,
+            notifyPost = NotifyPost(
+                module = "process",
+                level = NotityLevel.LOW_LEVEL.getLevel(),
+                message = "",
+                dealUrl = null,
+                code = 200,
+                webSocketType = WebSocketType.changWebType(WebSocketType.RECORD),
                 page = page
             )
         )

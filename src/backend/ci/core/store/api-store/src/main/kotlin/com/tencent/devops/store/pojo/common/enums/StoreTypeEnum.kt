@@ -32,29 +32,24 @@ enum class StoreTypeEnum(val type: Int) {
     TEMPLATE(1), // 模板
     IMAGE(2), // 镜像
     IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+    SERVICE(4), // 微扩展
+    DEVX(5); // 云开发
 
     companion object {
         fun getStoreType(type: Int): String {
             return when (type) {
-                0 -> StoreTypeEnum.ATOM.name
-                1 -> StoreTypeEnum.TEMPLATE.name
-                2 -> StoreTypeEnum.IMAGE.name
-                3 -> StoreTypeEnum.IDE_ATOM.name
-                4 -> StoreTypeEnum.SERVICE.name
-                else -> StoreTypeEnum.ATOM.name
+                0 -> ATOM.name
+                1 -> TEMPLATE.name
+                2 -> IMAGE.name
+                3 -> IDE_ATOM.name
+                4 -> SERVICE.name
+                5 -> DEVX.name
+                else -> ATOM.name
             }
         }
 
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
+        fun getStoreTypeObj(type: Int): StoreTypeEnum {
+            return StoreTypeEnum.valueOf(getStoreType(type))
         }
     }
 }

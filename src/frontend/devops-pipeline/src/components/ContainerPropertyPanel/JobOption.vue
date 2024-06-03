@@ -6,7 +6,7 @@
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" v-if="!isHidden(obj, jobOption)" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                <form-field :key="key" v-if="!isHidden(obj, container)" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                     <component :is="obj.component" :set-parent-validate="setKeyValueValidate" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateJobOption" :value="jobOption[key]" :disabled="disabled" v-bind="obj"></component>
                 </form-field>
             </template>
@@ -15,11 +15,10 @@
 </template>
 
 <script>
-    import Vue from 'vue'
-    import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
+    import { mapActions } from 'vuex'
     export default {
         name: 'job-config',
         mixins: [atomMixin, validMixins, jobOptionConfigMixin],
@@ -46,6 +45,9 @@
         computed: {
             optionModel () {
                 return this.JOB_OPTION || {}
+            },
+            container () {
+                return this.stage.containers[this.containerIndex] || {}
             }
         },
         created () {
@@ -59,19 +61,32 @@
             ]),
             handleUpdateJobOption (name, value) {
                 this.setPipelineEditing(true)
-                this.updateContainerParams('jobControlOption',
-                                           Object.assign(this.jobOption || {}, { [name]: value })
+                let clearFields = {}
+                
+                if (
+                    value === this.JOB_OPTION[name]?.clearValue
+                    && Array.isArray(this.JOB_OPTION[name]?.clearFields)
+                ) {
+                    // 重置关联的值，可配置相关的联动值
+                    clearFields = this.JOB_OPTION[name].clearFields.reduce((acc, key) => {
+                        acc[key] = this.getFieldDefault(key, this.JOB_OPTION)
+                        return acc
+                    }, {})
+                }
+                
+                this.updateContainerParams(
+                    'jobControlOption',
+                    Object.assign(
+                        (this.jobOption || {}),
+                        {
+                            [name]: value,
+                            ...clearFields
+                        }
+                    )
                 )
             },
             initOptionConfig () {
-                if (this.jobOption === undefined || JSON.stringify(this.jobOption) === '{}') {
-                    this.updateContainerParams('jobControlOption', this.getJobOptionDefault())
-                } else {
-                    if (this.jobOption && this.jobOption.dependOnType === undefined) {
-                        Vue.set(this.jobOption, 'dependOnType', 'ID')
-                        this.handleUpdateJobOption('dependOnId', [])
-                    }
-                }
+                this.updateContainerParams('jobControlOption', this.getJobOptionDefault(this.JOB_OPTION, this.jobOption))
             },
             setKeyValueValidate (addErrors, removeErrors) {
                 this.$emit('setKeyValueValidate', addErrors, removeErrors)

@@ -25,12 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ExternalThirdPartyAgentResource
-import com.tencent.devops.environment.service.thirdPartyAgent.DownloadAgentInstallService
-import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
+import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
+import com.tencent.devops.common.api.pojo.agent.AgentArchType
+import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
+import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -42,11 +43,24 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     override fun downloadAgentInstallScript(agentId: String) =
         downloadAgentInstallService.downloadInstallScript(agentId)
 
-    override fun downloadAgent(agentId: String, eTag: String?) =
-        downloadAgentInstallService.downloadAgent(agentId)
+    override fun downloadAgent(agentId: String, eTag: String?, arch: String?) =
+        downloadAgentInstallService.downloadAgent(
+            agentId = agentId,
+            arch = when (arch) {
+                "arm64" -> AgentArchType.ARM64
+                "mips64" -> AgentArchType.MIPS64
+                else -> null
+            }
+        )
 
-    override fun downloadJRE(agentId: String, eTag: String?) =
-        downloadAgentInstallService.downloadJre(agentId, eTag)
+    override fun downloadJRE(agentId: String, eTag: String?, arch: String?) =
+        downloadAgentInstallService.downloadJre(
+            agentId, eTag, arch = when (arch) {
+                "arm64" -> AgentArchType.ARM64
+                "mips64" -> AgentArchType.MIPS64
+                else -> null
+            }
+        )
 
     override fun downloadNewInstallAgentBatchFile(agentHashId: String): Response {
         val newAgentId = importService.generateAgentByOtherAgentId(agentHashId)

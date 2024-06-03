@@ -29,16 +29,21 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
+import com.tencent.devops.process.engine.pojo.ContainerStartInfo
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.pojo.PipelineProjectRel
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.pojo.PipelineProjectRel
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineTaskResourceImpl @Autowired constructor(
-    val pipelineTaskService: PipelineTaskService
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService
 ) : ServicePipelineTaskResource {
 
     override fun list(
@@ -54,15 +59,79 @@ class ServicePipelineTaskResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<PipelineProjectRel>> {
-        return Result(pipelineTaskService.listPipelinesByAtomCode(
-            atomCode = atomCode,
-            projectCode = projectCode,
-            page = page,
-            pageSize = pageSize
-        ))
+        return Result(
+            pipelineTaskService.listPipelinesByAtomCode(
+                atomCode = atomCode,
+                projectCode = projectCode,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun listPipelineNumByAtomCodes(projectId: String?, atomCodes: List<String>): Result<Map<String, Int>> {
         return Result(pipelineTaskService.listPipelineNumByAtomCodes(projectId, atomCodes))
+    }
+
+    override fun getTaskStatus(projectId: String, buildId: String, taskId: String): Result<BuildStatus?> {
+        return Result(
+            pipelineTaskService.getTaskStatus(
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId
+            )
+        )
+    }
+
+    override fun getTaskBuildDetail(
+        projectId: String,
+        buildId: String,
+        taskId: String?,
+        stepId: String?
+    ): Result<PipelineBuildTask?> {
+        if (taskId != null) {
+            return Result(
+                pipelineTaskService.getByTaskId(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = taskId
+                )
+            )
+        }
+
+        if (stepId != null) {
+            return Result(
+                pipelineTaskService.getByTaskId(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = null,
+                    stepId = stepId
+                )
+            )
+        }
+        return Result(null)
+    }
+
+    override fun getContainerStartupInfo(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        taskId: String
+    ): Result<ContainerStartInfo?> {
+        return Result(
+            ContainerStartInfo(
+                pipelineContainerService.getContainer(
+                    projectId = projectId,
+                    buildId = buildId,
+                    stageId = null,
+                    containerId = containerId
+                ),
+                pipelineTaskService.getByTaskId(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = taskId
+                )
+            )
+        )
     }
 }

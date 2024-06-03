@@ -28,49 +28,81 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.process.pojo.SetContextVarData
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_VARIABLE"], description = "服务-构建参数")
+@Tag(name = "SERVICE_VARIABLE", description = "服务-构建参数")
 @Path("/service/variable")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceVarResource {
 
-    @ApiOperation("获取指定构建或指定流水线下的构建变量")
+    @Operation(summary = "获取指定构建或指定流水线下的构建变量")
     @Path("/get_build_variable")
     @GET
     fun getBuildVar(
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam(value = "变量名称", required = false)
+        @Parameter(description = "变量名称", required = false)
         @QueryParam("varName")
-        varName: String?
+        varName: String?,
+        @Parameter(description = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<Map<String, String>>
 
-    @ApiOperation("获取指定构建或指定构建下的上下文变量")
+    @Operation(summary = "获取指定构建或指定构建下的上下文变量")
     @Path("/get_build_context")
     @GET
     fun getContextVar(
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam(value = "变量名称", required = false)
+        @Parameter(description = "变量名称", required = false)
         @QueryParam("contextName")
         contextName: String?
+    ): Result<Map<String, String>>
+
+    @Operation(summary = "针对构建写入上下文变量")
+    @Path("/set_build_context")
+    @POST
+    fun setContextVar(
+        data: SetContextVarData
+    )
+
+    @Operation(summary = "获取指定构建或指定流水线下的构建变量")
+    @Path("/var/data/get")
+    @POST
+    fun getBuildVars(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "字段key集合", required = false)
+        keys: Set<String>? = null
     ): Result<Map<String, String>>
 }

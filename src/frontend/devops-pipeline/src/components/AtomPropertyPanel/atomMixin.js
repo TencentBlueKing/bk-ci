@@ -17,37 +17,45 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapGetters, mapState } from 'vuex'
-import Accordion from '@/components/atomFormField/Accordion'
-import EnumInput from '@/components/atomFormField/EnumInput'
-import VuexInput from '@/components/atomFormField/VuexInput'
-import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-import Selector from '@/components/atomFormField/Selector'
-import SelectInput from '@/components/AtomFormComponent/SelectInput'
+import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
+import SelectInput from '@/components/AtomFormComponent/SelectInput'
+import NotifyType from '@/components/AtomFormComponent/notifyType'
+import Accordion from '@/components/atomFormField/Accordion'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
-import CronTimer from '@/components/atomFormField/CronTimer/week'
-import UserInput from '@/components/atomFormField/UserInput'
-import RequestSelector from '@/components/atomFormField/RequestSelector'
 import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
 import AtomCheckboxList from '@/components/atomFormField/AtomCheckboxList'
 import AtomDatePicker from '@/components/atomFormField/AtomDatePicker'
-import CodeModeSelector from '@/components/atomFormField/CodeModeSelector'
+import AtomMarkdown from '@/components/atomFormField/AtomMarkdown'
+import AutoComplete from '@/components/atomFormField/AutoComplete'
 import CodeModeInput from '@/components/atomFormField/CodeModeInput'
-import ParamsView from '@/components/atomFormField/ParamsView'
-import SvnpathInput from '@/components/atomFormField/SvnpathInput'
+import CodeModeSelector from '@/components/atomFormField/CodeModeSelector'
+import CronTimer from '@/components/atomFormField/CronTimer/week'
+import EnumInput from '@/components/atomFormField/EnumInput'
 import KeyValue from '@/components/atomFormField/KeyValue'
-import DefineParam from '@/components/AtomFormComponent/DefineParam'
-import NotifyType from '@/components/AtomFormComponent/notifyType'
 import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
-import RouteTips from '@/components/atomFormField/RouteTips'
+import ParamsView from '@/components/atomFormField/ParamsView'
 import QualitygateTips from '@/components/atomFormField/QualitygateTips'
-import FormField from './FormField'
-import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
-import AutoComplete from '@/components/atomFormField/AutoComplete'
-import { urlJoin, rely, bkVarWrapper } from '../../utils/util'
+import RequestSelector from '@/components/atomFormField/RequestSelector'
+import RouteTips from '@/components/atomFormField/RouteTips'
+import Selector from '@/components/atomFormField/Selector'
+import SvnpathInput from '@/components/atomFormField/SvnpathInput'
+import UserInput from '@/components/atomFormField/UserInput'
+import VuexInput from '@/components/atomFormField/VuexInput'
+import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+import { mapActions, mapGetters, mapState } from 'vuex'
+import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
+import FormField from './FormField'
+import FormFieldGroup from './FormFieldGroup'
+import StaffInput from '@/components/atomFormField/StaffInput'
+import CompositeInput from '@/components/atomFormField/CompositeInput'
+import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
+import EnumButton from '@/components/atomFormField/EnumButton'
+import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
+import Tips from '@/components/AtomFormComponent/Tips'
 
 const atomMixin = {
     props: {
@@ -91,7 +99,15 @@ const atomMixin = {
         GroupIdSelector,
         QualitygateTips,
         AutoComplete,
-        DevopsSelect
+        DevopsSelect,
+        AtomMarkdown,
+        StaffInput,
+        FormFieldGroup,
+        CompositeInput,
+        ConditionalInputSelector,
+        EnumButton,
+        TipsSimple,
+        Tips
     },
     computed: {
         ...mapGetters('atom', [
@@ -116,7 +132,6 @@ const atomMixin = {
         ...mapActions('atom', [
             'updateAtomInput',
             'updateWholeAtomInput',
-            'updateAtomOutput',
             'updateAtomOutputNameSpace',
             'updateAtom',
             'deleteAtomProps'
@@ -128,9 +143,10 @@ const atomMixin = {
                 propKey
             })
         },
-        handleUpdateElement (name, value) {
+        handleUpdateElement (name, value, changeEditStatus = true) {
             this.updateAtom({
                 element: this.element,
+                changeEditStatus,
                 newParam: {
                     [name]: value
                 }
@@ -148,14 +164,6 @@ const atomMixin = {
             this.updateWholeAtomInput({
                 atom: this.element,
                 newInput
-            })
-        },
-        handleUpdateAtomOutput (name, value) {
-            this.updateAtomOutput({
-                atom: this.element,
-                newParam: {
-                    [name]: value
-                }
             })
         },
         handleUpdateAtomOutputNameSpace (name, value) {
@@ -183,7 +191,7 @@ const atomMixin = {
                     return obj.isHidden(element)
                 }
                 const isHidden = eval(`(${obj.isHidden})`) // eslint-disable-line
-            
+
                 if (typeof isHidden === 'function') {
                     return isHidden(element)
                 }
@@ -213,7 +221,7 @@ const atomMixin = {
         },
         getComponentTips (obj, element) {
             const tips = typeof obj.tips === 'string' ? eval(`(${obj.tips})`) : obj.tips // eslint-disable-line
-            
+
             if (typeof tips === 'function') {
                 return tips(element, urlJoin, this.handlePath)
             }

@@ -1,4 +1,4 @@
-
+import { showLoginModal } from '@blueking/login-modal'
 export function firstUpperCase (str: string): string {
     try {
         return str[0].toUpperCase() + str.slice(1)
@@ -125,7 +125,7 @@ export function importScript (src, oHead) {
     return new Promise(resolve => {
         const oScript = document.createElement('script')
         oScript.type = 'text\/javascript'
-        oScript.setAttribute('src', src)
+        oScript.setAttribute('src', window.PUBLIC_URL_PREFIX + src)
         oHead.appendChild(oScript)
 
         oScript.onload = resolve
@@ -138,7 +138,7 @@ export function importStyle (href, oHead) {
         const oStyle = document.createElement('link')
         oStyle.setAttribute('rel', 'stylesheet')
         oStyle.setAttribute('type', 'text/css')
-        oStyle.setAttribute('href', href)
+        oStyle.setAttribute('href', window.PUBLIC_URL_PREFIX + href)
         oHead.appendChild(oStyle)
 
         oStyle.onload = resolve
@@ -161,4 +161,40 @@ export class HttpError extends Error {
         super(message)
         this.code = code
     }
+}
+
+// 判断是否显示公告
+export function ifShowNotice (currentNotice) {
+    const announcementHistory = localStorage.getItem('announcementHistory') ? JSON.parse(localStorage.getItem('announcementHistory')) : []
+    // 判断当前公告是否生效中，并且未展示过
+    if (currentNotice && currentNotice.id && currentNotice.noticeType === 0 && announcementHistory.indexOf(currentNotice.id) === -1) {
+        // 判断当前公共是否只在特定服务展示
+        const noticeService = currentNotice.noticeService || []
+        if (!(noticeService.length > 0 && noticeService.indexOf(window.currentPage && window.currentPage.link_new) === -1)) {
+            announcementHistory.push(currentNotice.id)
+            localStorage.setItem('announcementHistory', JSON.stringify(announcementHistory))
+            return true
+        }
+    }
+    return false
+}
+
+export function showLoginPopup () {
+    const successUrl = `${window.location.origin}/console/static/login_done.html`
+
+    // 系统的登录页地址
+    const siteLoginUrl = window.getLoginUrl()
+    if (!siteLoginUrl) {
+        console.error('Login URL not configured!')
+        return
+    }
+
+    // 处理登录地址为登录小窗需要的格式，主要是设置c_url参数
+    const loginURL = new URL(siteLoginUrl)
+    loginURL.searchParams.set('c_url', successUrl)
+    const pathname = loginURL.pathname.endsWith('/') ? loginURL.pathname : `${loginURL.pathname}/`
+    const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`
+
+    // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
+    showLoginModal({ loginUrl })
 }

@@ -29,7 +29,9 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -38,10 +40,13 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.SubPipeline
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.api.container.ServiceContainerResource
 import org.slf4j.LoggerFactory
@@ -89,24 +94,69 @@ class ParamFacadeService @Autowired constructor(
         return filterParams
     }
 
-    private fun addGitRefs(projectId: String, formProperty: BuildFormProperty): BuildFormProperty {
+    fun filterOptions(
+        userId: String?,
+        projectId: String,
+        pipelineId: String?,
+        search: String? = null,
+        property: BuildFormProperty
+    ): List<BuildFormValue> {
+        val filterParams =
+            if (property.type == BuildFormPropertyType.SVN_TAG && (!property.repoHashId.isNullOrBlank())) {
+                addSvnTagDirectories(projectId, property)
+            } else if (property.type == BuildFormPropertyType.GIT_REF && (!property.repoHashId.isNullOrBlank())) {
+                addGitRefs(projectId, property, search)
+            } else if (property.type == BuildFormPropertyType.CODE_LIB && property.scmType != null) {
+                addCodelibProperties(userId, projectId, property, search)
+            } else if (property.type == BuildFormPropertyType.CONTAINER_TYPE && property.containerType != null) {
+                addContainerTypeProperties(userId, projectId, property)
+            } else if (property.type == BuildFormPropertyType.ARTIFACTORY) {
+                addArtifactoryProperties(userId, projectId, property)
+            } else if (property.type == BuildFormPropertyType.SUB_PIPELINE) {
+                addSubPipelineProperties(userId, projectId, pipelineId, property)
+            } else {
+                property
+            }
+
+        return filterParams.options ?: emptyList()
+    }
+
+    private fun addGitRefs(
+        projectId: String,
+        formProperty: BuildFormProperty,
+        search: String? = null
+    ): BuildFormProperty {
         val refs = try {
-            codeService.getGitRefs(projectId, formProperty.repoHashId)
+            codeService.getGitRefs(projectId, formProperty.repoHashId, search)
         } catch (e: Exception) {
-            logger.error("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
-            listOf<String>()
+            logger.warn("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
+            listOf()
         }
         val options = refs.map {
             BuildFormValue(it, it)
         }
-        val searchUrl = "/ms/process/api/user/scm/$projectId/${formProperty.repoHashId}/refs?search={words}"
+        val searchUrl = "/process/api/user/buildParam/$projectId/${formProperty.repoHashId}/gitRefs?search={words}"
         val replaceKey = "{words}"
         return copyFormProperty(
             property = formProperty,
-            options = options,
+            options = fixDefaultOptions(options = options, defaultValue = formProperty.defaultValue.toString()),
             searchUrl = searchUrl,
             replaceKey = replaceKey
         )
+    }
+
+    /**
+     * 修复默认值不展示问题
+     *
+     * 当默认值不在options列表时,流水线执行时不会展示默认值
+     */
+    private fun fixDefaultOptions(options: List<BuildFormValue>, defaultValue: String): List<BuildFormValue> {
+        if (defaultValue.isBlank() || options.map { it.key }.contains(defaultValue)) {
+            return options
+        }
+        val newOptions = options.toMutableList()
+        newOptions.add(BuildFormValue(defaultValue, defaultValue))
+        return newOptions
     }
 
     /**
@@ -120,7 +170,7 @@ class ParamFacadeService @Autowired constructor(
                 relativePath = svnTagBuildFormProperty.relativePath
             )
         } catch (e: Exception) {
-            logger.error("projectId:$projectId,repoHashId:${svnTagBuildFormProperty.repoHashId} add svn tag error", e)
+            logger.warn("projectId:$projectId,repoHashId:${svnTagBuildFormProperty.repoHashId} add svn tag error", e)
             listOf<String>()
         }
         val options = directories.map {
@@ -135,20 +185,31 @@ class ParamFacadeService @Autowired constructor(
     private fun addCodelibProperties(
         userId: String?,
         projectId: String,
-        codelibFormProperty: BuildFormProperty
+        codelibFormProperty: BuildFormProperty,
+        aliasName: String? = null
     ): BuildFormProperty {
-        val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
 
-        val aliasNames = if ((!userId.isNullOrBlank()) && codeAliasName.isNotEmpty()) {
+        val options = if ((!userId.isNullOrBlank())) {
             // 检查代码库的权限， 只返回用户有权限代码库
-            val hasPermissionCodelibs = getPermissionCodelibList(userId!!, projectId)
+            val hasPermissionCodelibs =
+                getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!, aliasName)
             logger.info("[$userId|$projectId] Get the permission code lib list ($hasPermissionCodelibs)")
-            codeAliasName.filter { hasPermissionCodelibs.contains(it.repositoryHashId) }
-                .map { BuildFormValue(it.aliasName, it.aliasName) }
+            hasPermissionCodelibs.map { BuildFormValue(it.aliasName, it.aliasName) }
         } else {
+            // 该接口没有搜索字段
+            val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
-        return copyFormProperty(codelibFormProperty, aliasNames)
+        val searchUrl = "/process/api/user/buildParam/repository/$projectId/aliasName?" +
+                "repositoryType=${codelibFormProperty.scmType!!}&permission=${Permission.LIST.name}" +
+                "&aliasName={words}&page=1&pageSize=100"
+        val replaceKey = "{words}"
+        return copyFormProperty(
+            property = codelibFormProperty,
+            options = fixDefaultOptions(options = options, defaultValue = codelibFormProperty.defaultValue.toString()),
+            searchUrl = searchUrl,
+            replaceKey = replaceKey
+        )
     }
 
     private fun addContainerTypeProperties(
@@ -163,7 +224,7 @@ class ParamFacadeService @Autowired constructor(
             }
             val containerType = property.containerType!!
             val containers = client.get(ServiceContainerResource::class)
-                .getContainers(userId!!, projectId, containerType.buildType, containerType.os)
+                .getContainers(userId, projectId, containerType.buildType, containerType.os)
             if (containers.data == null || containers.data!!.resources == null) {
                 logger.warn("[$userId|$projectId|$property] Fail to get the container properties")
                 return property
@@ -227,13 +288,28 @@ class ParamFacadeService @Autowired constructor(
     ): BuildFormProperty {
         try {
             val hasPermissionPipelines = getHasPermissionPipelineList(userId, projectId)
-            val aliasName = hasPermissionPipelines
+            val options = hasPermissionPipelines
                 .filter { pipelineId == null || !it.pipelineId.contains(pipelineId) }
                 .map { BuildFormValue(it.pipelineName, it.pipelineName) }
-            return copyFormProperty(subPipelineFormProperty, aliasName)
+            val excludePipelineId = pipelineId ?: ""
+            val searchUrl = "/process/api/user/buildParam/$projectId/subPipeline?" +
+                    "permission=${AuthPermission.EXECUTE.name}&excludePipelineId=$excludePipelineId" +
+                    "&pipelineName={words}&page=1&pageSize=100"
+            val replaceKey = "{words}"
+            return copyFormProperty(
+                property = subPipelineFormProperty,
+                options = fixDefaultOptions(
+                    options = options,
+                    defaultValue = subPipelineFormProperty.defaultValue.toString()
+                ),
+                searchUrl = searchUrl,
+                replaceKey = replaceKey
+            )
         } catch (t: Throwable) {
             logger.warn("[$userId|$projectId] Fail to filter the properties of subpipelines", t)
-            throw OperationException("子流水线参数过滤失败")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED, I18nUtil.getLanguage(userId))
+            )
         }
     }
 
@@ -248,6 +324,7 @@ class ParamFacadeService @Autowired constructor(
             required = property.required,
             type = property.type,
             defaultValue = property.defaultValue,
+            value = property.value,
             options = options,
             desc = property.desc,
             repoHashId = property.repoHashId,
@@ -261,27 +338,30 @@ class ParamFacadeService @Autowired constructor(
         )
     }
 
-    private fun getPermissionCodelibList(userId: String, projectId: String): List<String> {
-        val watcher = Watcher("getPermissionCodelibList_${userId}_$projectId")
-        val hashIdList = mutableListOf<String>()
-        try {
+    private fun getPermissionCodelibList(
+        userId: String,
+        projectId: String,
+        scmType: ScmType?,
+        aliasName: String? = null
+    ): List<RepositoryInfo> {
+        val watcher = Watcher("getPermissionCodelibList_${userId}_${projectId}_${scmType?.name}")
+        return try {
             client.get(ServiceRepositoryResource::class).hasPermissionList(
                 userId = userId,
                 projectId = projectId,
                 permission = Permission.LIST,
-                repositoryType = null
-            ).data?.records?.forEach { repo ->
-                if (!repo.repositoryHashId.isNullOrBlank()) {
-                    hashIdList.add(repo.repositoryHashId.toString())
-                }
-            }
+                repositoryType = scmType?.name,
+                page = 1,
+                pageSize = 100,
+                aliasName = aliasName
+            ).data?.records ?: emptyList()
         } catch (e: RuntimeException) {
             logger.warn("[$userId|$projectId] Fail to get the permission code lib list", e)
+            emptyList()
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher, errorThreshold = 4000)
         }
-        return hashIdList
     }
 
     private fun getHasPermissionPipelineList(userId: String?, projectId: String): List<SubPipeline> {
@@ -304,7 +384,13 @@ class ParamFacadeService @Autowired constructor(
             // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
             watcher.start("s_r_summary")
             val buildPipelineRecords =
-                pipelineRuntimeService.getBuildPipelineRecords(projectId, ChannelCode.BS, hasPermissionList)
+                pipelineRuntimeService.getBuildPipelineRecords(
+                    projectId = projectId,
+                    channelCode = ChannelCode.BS,
+                    pipelineIds = hasPermissionList,
+                    page = 1,
+                    pageSize = 100
+                )
             watcher.stop()
 
             return buildPipelineRecords.map {

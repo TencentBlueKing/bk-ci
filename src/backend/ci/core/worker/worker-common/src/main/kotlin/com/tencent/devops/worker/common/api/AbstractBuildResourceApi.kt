@@ -33,27 +33,24 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.ErrorMsgLogUtil
 import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.AGENT_DNS_ERROR
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.AGENT_NETWORK_CONNECT_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.AGENT_NETWORK_TIMEOUT
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.AGENT_NETWORK_UNKNOWN
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
-import io.undertow.util.StatusCodes
-import okhttp3.Headers
-import okhttp3.MediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import org.slf4j.LoggerFactory
-import org.springframework.http.HttpMethod
 import java.io.File
 import java.net.ConnectException
 import java.net.HttpRetryException
@@ -69,6 +66,13 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
@@ -93,9 +97,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val httpClient = builder.build()
         val retryFlag = try {
             val response = httpClient.newCall(request).execute()
-            logger.info("Request($request) with code ${response.code()}")
+            logger.info("Request($request) with code ${response.code}")
 
-            if (retryCodes.contains(response.code())) { // 网关502,503，可重试
+            if (retryCodes.contains(response.code)) { // 网关502,503，可重试
                 true
             } else {
                 ErrorMsgLogUtil.resetErrorMsg() // #5806 成功时将异常信息清理掉
@@ -104,7 +108,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
             logger.warn("UnknownHostException|request($request),error is :$e, try to retry $retryCount")
             if (retryCount <= 0) {
-                ErrorMsgLogUtil.appendErrorMsg("构建机DNS解析问题(Agent DNS Error)：$e")
+                ErrorMsgLogUtil.appendErrorMsg(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = AGENT_DNS_ERROR,
+                        language = AgentEnv.getLocaleLanguage()
+                    ) + "：$e"
+                )
                 false
             } else {
                 true
@@ -112,30 +121,50 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         } catch (e: ConnectException) {
             logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
             if (retryCount <= 0) {
-                ErrorMsgLogUtil.appendErrorMsg("构建机网络连接问题(Agent Network Connect Failed)：$e")
+                ErrorMsgLogUtil.appendErrorMsg(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = AGENT_NETWORK_CONNECT_FAILED,
+                        language = AgentEnv.getLocaleLanguage()
+                    ) + "：$e"
+                )
                 false
             } else {
                 true
             }
         } catch (re: SocketTimeoutException) {
             if (re.message == "connect timed out" ||
-                (request.method() == HttpMethod.GET.name && re.message == "timeout")
+                (request.method == "GET" && re.message == "timeout")
             ) {
                 logger.warn("SocketTimeoutException(${re.message})|request($request), try to retry $retryCount")
                 if (retryCount <= 0) {
-                    ErrorMsgLogUtil.appendErrorMsg("构建机网络超时问题(Agent Network Timeout)：$re")
+                    ErrorMsgLogUtil.appendErrorMsg(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = AGENT_NETWORK_TIMEOUT,
+                            language = AgentEnv.getLocaleLanguage()
+                        ) + "：$re"
+                    )
                     false
                 } else {
                     true
                 }
             } else { // 对于因为服务器的超时，不一定能幂等重试的，抛出原来的异常，外层业务自行决定是否重试
                 logger.error("Fail to request($request),error is :$re", re)
-                ErrorMsgLogUtil.appendErrorMsg("构建机网络超时问题(Agent Network Timeout)：$re")
+                ErrorMsgLogUtil.appendErrorMsg(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = AGENT_NETWORK_TIMEOUT,
+                        language = AgentEnv.getLocaleLanguage()
+                    ) + "：$re"
+                )
                 throw re
             }
         } catch (error: Exception) {
             logger.error("Fail to request($request),error is :$error", error)
-            ErrorMsgLogUtil.appendErrorMsg("构建机网络未知异常(Agent Network Unknown)：$error")
+            ErrorMsgLogUtil.appendErrorMsg(
+                MessageUtil.getMessageByLocale(
+                    messageCode = AGENT_NETWORK_UNKNOWN,
+                    language = AgentEnv.getLocaleLanguage()
+                ) + "：$error"
+            )
             throw ClientException("Fail to request($request),error is:${error.message}")
         }
 
@@ -166,14 +195,14 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
             if (!response.isSuccessful) {
-                val responseContent = response.body()?.string()
+                val responseContent = response.body?.string()
                 logger.warn(
-                    "Fail to request($request) with code ${response.code()} ," +
-                        " message ${response.message()} and response ($responseContent)"
+                    "Fail to request($request) with code ${response.code} ," +
+                            " message ${response.message} and response ($responseContent)"
                 )
-                throw RemoteServiceException(errorMessage, response.code(), responseContent)
+                throw RemoteServiceException(errorMessage, response.code, responseContent)
             }
-            return response.body()!!.string()
+            return response.body!!.string()
         }
     }
 
@@ -192,21 +221,24 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             readTimeoutInSec = readTimeoutInSec,
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
-            if (response.code() == StatusCodes.NOT_FOUND) {
-                throw RemoteServiceException("file does not exist")
+            val httpStatus = response.code
+            if (httpStatus == HTTP_404) {
+                throw RemoteServiceException(errorMessage = "file does not exist", httpStatus = httpStatus)
             }
             if (!response.isSuccessful) {
-                LoggerService.addNormalLine(response.body()!!.string())
-                throw RemoteServiceException("Failed to get file")
+                LoggerService.addNormalLine(response.body!!.string())
+                throw RemoteServiceException(errorMessage = "Failed to get file", httpStatus = httpStatus)
             }
             val dest = destPath.toPath()
             if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
             LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
-            val body = response.body() ?: return
+            val body = response.body ?: return
             val contentLength = body.contentLength()
             if (contentLength != -1L) {
-                LoggerService.addNormalLine("download ${dest.fileName} " +
-                        ArchiveUtils.humanReadableByteCountBin(contentLength))
+                LoggerService.addNormalLine(
+                    "download ${dest.fileName} " +
+                            ArchiveUtils.humanReadableByteCountBin(contentLength)
+                )
             }
 
             // body copy时可能会出现readTimeout，即便http请求已正常响应
@@ -233,9 +265,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
     }
 
     companion object {
-        val JsonMediaType = MediaType.parse("application/json; charset=utf-8")
-        val OctetMediaType = MediaType.parse("application/octet-stream")
-        val MultipartFormData = MediaType.parse("multipart/form-data")
+        val JsonMediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+        val OctetMediaType = "application/octet-stream".toMediaTypeOrNull()
+        val MultipartFormData = "multipart/form-data".toMediaTypeOrNull()
         private const val EMPTY = ""
         private const val DEFAULT_RETRY_TIME = 5
         private const val sleepTimeMills = 500L
@@ -253,18 +285,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private fun initBuildArgs(): Map<String, String> {
             val buildType = BuildEnv.getBuildType()
             val map = mutableMapOf<String, String>()
-
             map[AUTH_HEADER_DEVOPS_BUILD_TYPE] = buildType.name
             when (buildType) {
-                BuildType.AGENT -> {
-                    map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
-                    map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
-                    map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
-//                    map[AUTH_HEADER_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
-                }
-                BuildType.DOCKER -> {
+                BuildType.DOCKER, BuildType.AGENT, BuildType.MACOS, BuildType.MACOS_NEW -> {
                     map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
@@ -314,7 +337,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         useFileDevnetGateway: Boolean? = null
     ): Request {
         val url = buildUrl(path, useFileDevnetGateway)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).get().build()
     }
 
     fun buildPost(
@@ -333,7 +356,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         useFileDevnetGateway: Boolean? = null
     ): Request {
         val url = buildUrl(path, useFileDevnetGateway)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).post(requestBody).build()
     }
 
     fun buildPut(
@@ -352,13 +375,13 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         useFileDevnetGateway: Boolean? = null
     ): Request {
         val url = buildUrl(path, useFileDevnetGateway)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).put(requestBody).build()
     }
 
     @Suppress("UNUSED")
     fun buildDelete(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).delete().build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).delete().build()
     }
 
     fun getJsonRequest(data: Any): RequestBody {
@@ -373,7 +396,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
         } else if (useFileDevnetGateway != null) {
-            if (useFileDevnetGateway) {
+            if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+                fixUrl(AgentEnv.getFileGateway()!!, path)
+            } else if (useFileDevnetGateway) {
                 val fileDevnetGateway = CommonEnv.fileDevnetGateway
                 fixUrl(if (fileDevnetGateway.isNullOrBlank()) gateway else fileDevnetGateway, path)
             } else {

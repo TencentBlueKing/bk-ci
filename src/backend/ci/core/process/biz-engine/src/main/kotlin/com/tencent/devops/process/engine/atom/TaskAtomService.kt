@@ -27,9 +27,13 @@
 
 package com.tencent.devops.process.engine.atom
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -37,17 +41,27 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.jmx.elements.JmxElements
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -57,12 +71,13 @@ import org.springframework.stereotype.Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineBuildDetailService: TaskBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     @Autowired(required = false)
-    private val measureService: MeasureService?
+    private val measureService: MeasureService?,
+    private val client: Client
 ) {
 
     /**
@@ -82,13 +97,15 @@ class TaskAtomService @Autowired(required = false) constructor(
                 userId = task.starter,
                 buildStatus = BuildStatus.RUNNING
             )
-            // 插件状态变化-启动
-            pipelineBuildDetailService.taskStart(
+            // 插件状态变化-启动（排除VM控制的启动插件）
+            if (!VMUtils.isVMTask(task.taskId)) taskBuildRecordService.taskStart(
                 projectId = task.projectId,
+                pipelineId = task.pipelineId,
                 buildId = task.buildId,
-                taskId = task.taskId
+                taskId = task.taskId,
+                executeCount = task.executeCount ?: 1
             )
-            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载内置插件业务逻辑并执行
             atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
         } catch (t: BuildTaskException) {
@@ -96,23 +113,33 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atomResponse.errorType = t.errorType
             atomResponse.errorCode = t.errorCode
-            atomResponse.errorMsg = "后台服务任务执行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_TASK_EXECUTION,
+                I18nUtil.getDefaultLocaleLanguage()
+            )
         } catch (ignored: Throwable) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atomResponse.errorType = ErrorType.SYSTEM
             atomResponse.errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED
-            atomResponse.errorMsg = "后台服务运行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_RUNNING_ERROR,
+                I18nUtil.getDefaultLocaleLanguage()
+            )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
         } finally {
             taskAfter(atomResponse, task, startTime)
@@ -172,30 +199,57 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             // 系统控制类插件不涉及到Detail编排状态修改
             if (EnvControlTaskType.parse(task.taskType) == null) {
-                val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
+                val taskParams = task.taskParams
+                val taskVersion = taskParams[VERSION].toString()
+                val atomCode = taskParams[KEY_ATOM_CODE].toString()
+                val taskType = task.taskType
+                val marketAtomFlag = taskType == MarketBuildAtomElement.classType ||
+                    taskType == MarketBuildLessAtomElement.classType
+                val projectId = task.projectId
+                val atomVersion = if (marketAtomFlag) {
+                    if (taskVersion.contains("*")) {
+                        // 市场插件如果选择最新版本号需将版本号转换为具体的版本号
+                        client.get(ServiceAtomResource::class).getAtomRealVersion(projectId, atomCode, taskVersion).data
+                    } else {
+                        taskVersion
+                    }
+                } else {
+                    INIT_VERSION
+                }
+                val endParam = TaskBuildEndParam(
                     projectId = task.projectId,
+                    pipelineId = task.pipelineId,
                     buildId = task.buildId,
+                    containerId = task.containerId,
                     taskId = task.taskId,
+                    executeCount = task.executeCount ?: 1,
                     buildStatus = atomResponse.buildStatus,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
-                    errorMsg = atomResponse.errorMsg
+                    errorMsg = atomResponse.errorMsg,
+                    atomVersion = atomVersion
                 )
+                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     pipelineTaskService.updateTaskStatusInfo(
-                        transactionContext = null,
-                        projectId = task.projectId,
-                        buildId = task.buildId,
-                        taskId = updateTaskStatusInfo.taskId,
-                        taskStatus = updateTaskStatusInfo.buildStatus
+                        task = task,
+                        updateTaskInfo = UpdateTaskInfo(
+                            projectId = task.projectId,
+                            buildId = task.buildId,
+                            executeCount = task.executeCount ?: 1,
+                            taskId = updateTaskStatusInfo.taskId,
+                            taskStatus = updateTaskStatusInfo.buildStatus
+                        )
                     )
                     if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                         buildLogPrinter.addLine(
                             buildId = task.buildId,
                             message = updateTaskStatusInfo.message!!,
                             tag = updateTaskStatusInfo.taskId,
-                            jobId = updateTaskStatusInfo.containerHashId,
-                            executeCount = updateTaskStatusInfo.executeCount
+                            containerHashId = updateTaskStatusInfo.containerHashId,
+                            executeCount = updateTaskStatusInfo.executeCount,
+                            jobId = null,
+                            stepId = updateTaskStatusInfo.stepId
                         )
                     }
                 }
@@ -223,8 +277,9 @@ class TaskAtomService @Autowired(required = false) constructor(
         buildLogPrinter.stopLog(
             buildId = task.buildId,
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount,
+            stepId = task.stepId
         )
     }
 
@@ -233,10 +288,14 @@ class TaskAtomService @Autowired(required = false) constructor(
      */
     fun tryFinish(task: PipelineBuildTask, actionType: ActionType): AtomResponse {
         val startTime = System.currentTimeMillis()
-        var atomResponse = AtomResponse(BuildStatus.FAILED)
-
+        // #8879 被动终止的插件应该设为取消状态
+        var atomResponse = if (actionType.isTerminate()) {
+            AtomResponse(BuildStatus.CANCELED)
+        } else {
+            AtomResponse(BuildStatus.FAILED)
+        }
         try {
-            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
             atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, actionType = actionType)
@@ -248,8 +307,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("[${task.buildId}]|Fail to execute the task[${task.taskName}]", t)
             atomResponse.errorType = ErrorType.SYSTEM
@@ -259,8 +320,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
             atomResponse.errorType = ErrorType.SYSTEM
@@ -277,8 +340,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
         } else {
             if (stopFlag) {
@@ -286,8 +351,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                     buildId = task.buildId,
                     message = "Try to Stop Task [${task.taskName}]...",
                     tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
             }
         }

@@ -1,0 +1,130 @@
+{
+  "type": "group_web_policy",
+  "project_id": "bkdevops",
+  "subject": {
+    "type": "group",
+    "id": "14608",
+    "name": "v3-104-web迁移"
+  },
+  "permissions": [
+    {
+      "actions": [
+        {
+          "id": "project_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "project",
+          "paths": [
+            [
+              {
+                "id": "bkdevops",
+                "name": "bkdevops",
+                "system_id": "bk_ci",
+                "type": "project"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "rule_enable"
+        }
+      ],
+      "resources": [
+        {
+          "type": "rule",
+          "paths": [
+            [
+              {
+                "id": "bkdevops",
+                "name": "bkdevops",
+                "system_id": "bk_ci",
+                "type": "project"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "project_views_manager"
+        }
+      ],
+      "resources": [
+        {
+          "type": "project",
+          "paths": [
+            [
+              {
+                "id": "bkdevops",
+                "name": "bkdevops",
+                "system_id": "bk_ci",
+                "type": "project"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "pipeline_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "bkdevops",
+                "name": "bkdevops",
+                "system_id": "bk_ci",
+                "type": "project"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "repertory_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "repertory",
+          "paths": [
+            [
+              {
+                "id": "bkdevops",
+                "name": "bkdevops",
+                "system_id": "bk_ci",
+                "type": "project"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "pk": 10468,
+      "type": "user",
+      "id": "567",
+      "expired_at": 1698808387,
+      "created_at": "2023-05-05T03:13:09Z"
+    }
+  ]
+}

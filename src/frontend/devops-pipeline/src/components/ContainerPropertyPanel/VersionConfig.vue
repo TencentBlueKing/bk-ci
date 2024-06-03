@@ -1,54 +1,44 @@
 <template>
     <div class="build-params-comp">
-        <ul v-bkloading="{ isLoading: !buildParams }" v-if="isExecDetail">
-            <li :class="{ 'param-item': true, 'diff-param-item': isDefaultDiff(param) }" v-for="param in buildParams" :key="param.key">
-                <vuex-input :disabled="true" name="key" :value="param.key" />
-                <span>=</span>
-                <vuex-input :disabled="true" name="value" :value="param.value" />
-            </li>
-        </ul>
-        <template v-else>
-            <accordion show-checkbox :show-content="isShowVersionParams" is-version="true">
-                <template slot="header">
-                    <span>
-                        {{ $t('preview.introVersion') }}
-                        <bk-popover placement="right" :max-width="200">
-                            <i style="display:block;" class="bk-icon icon-info-circle"></i>
-                            <div slot="content" style="white-space: pre-wrap;">
-                                <div> {{ $t('editPage.introVersionTips') }} </div>
-                            </div>
-                        </bk-popover>
-                    </span>
-                    <input class="accordion-checkbox" :disabled="disabled" type="checkbox" name="versions" :checked="showVersions" @click.stop @change="toggleVersions" />
-                </template>
-                <div slot="content">
-                    <pipeline-versions-form ref="versionForm"
-                        v-if="showVersions"
-                        :build-no="buildNo"
-                        :disabled="!showVersions || disabled"
-                        :version-param-values="versionValues"
-                        :handle-version-change="handleVersionsChange"
-                        :handle-build-no-change="handleBuildNoChange"
-                    ></pipeline-versions-form>
-                    <form-field class="params-flex-col">
-                        <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="execuVisible" name="required" :handle-change="handleBuildNoChange" />
-                    </form-field>
-                </div>
-            </accordion>
+        <accordion show-checkbox :show-content="isShowVersionParams" is-version="true">
+            <template slot="header">
+                <span>
+                    {{ $t('preview.introVersion') }}
+                    <bk-popover placement="right" :max-width="200">
+                        <i style="display:block;" class="bk-icon icon-info-circle"></i>
+                        <div slot="content" style="white-space: pre-wrap;">
+                            <div> {{ $t('editPage.introVersionTips') }} </div>
+                        </div>
+                    </bk-popover>
+                </span>
+                <input class="accordion-checkbox" :disabled="disabled" type="checkbox" name="versions" :checked="showVersions" @click.stop @change="toggleVersions" />
+            </template>
+            <div slot="content">
+                <pipeline-versions-form
+                    ref="versionForm"
+                    v-if="showVersions"
+                    :build-no="buildNo"
+                    :disabled="!showVersions || disabled"
+                    :version-param-values="versionValues"
+                    :handle-version-change="handleVersionsChange"
+                    :handle-build-no-change="handleBuildNoChange"
+                ></pipeline-versions-form>
+                <form-field class="params-flex-col">
+                    <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="execuVisible" name="required" :handle-change="handleBuildNoChange" />
+                </form-field>
+            </div>
+        </accordion>
 
-        </template>
     </div>
 </template>
 
 <script>
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import { deepCopy, getParamsValuesMap } from '@/utils/util'
+    import { mapGetters, mapActions } from 'vuex'
+    import { getParamsValuesMap } from '@/utils/util'
     import Accordion from '@/components/atomFormField/Accordion'
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '../validMixins'
-    import { isMultipleParam, DEFAULT_PARAM, STRING } from '@/store/modules/atom/paramsConfig'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
 
@@ -56,7 +46,6 @@
         name: 'version-config',
         components: {
             Accordion,
-            VuexInput,
             FormField,
             AtomCheckbox,
             PipelineVersionsForm
@@ -90,9 +79,6 @@
                 'buildNoRules',
                 'defaultBuildNo'
             ]),
-            ...mapState('atom', [
-                'buildParamsMap'
-            ]),
             globalParams: {
                 get () {
                     return this.params.filter(p => !allVersionKeyList.includes(p.id))
@@ -110,10 +96,6 @@
             showVersions () {
                 return this.versions.length !== 0
             },
-            buildParams () {
-                const { buildNo } = this.$route.params
-                return this.buildParamsMap[buildNo]
-            },
             isExecDetail () {
                 const { buildNo } = this.$route.params
                 return !!buildNo
@@ -123,65 +105,14 @@
             }
         },
         created () {
-            const { projectId, pipelineId, buildNo: buildId } = this.$route.params
-            if (buildId && !this.buildParamsMap[buildId]) {
-                this.requestBuildParams({
-                    projectId,
-                    pipelineId,
-                    buildId
-                })
-            }
             this.isShowVersionParams = this.versions.length !== 0
         },
         methods: {
             ...mapActions('atom', [
-                'updateContainer',
-                'requestBuildParams'
+                'updateContainer'
             ]),
-            isDefaultDiff ({ key, value }) {
-                const param = this.params.find(param => param.id === key)
-                if (param && typeof param.defaultValue === 'boolean') {
-                    param.defaultValue = String(param.defaultValue)
-                }
-                return param && key ? param.defaultValue !== value : false
-            },
             getVersionById (id) {
                 return this.versions.find(v => v.id === id) || {}
-            },
-            handleUpdateParam (key, value, paramIndex) {
-                try {
-                    const param = this.params[paramIndex]
-                    if (isMultipleParam(param.type) && key === 'defaultValue') {
-                        Object.assign(param, {
-                            [key]: value.join(',')
-                        })
-                    } else if (param) {
-                        Object.assign(param, {
-                            [key]: value
-                        })
-                    }
-
-                    this.handleChange(this.params)
-                } catch (e) {
-                    console.log('update error', e)
-                }
-            },
-
-            editParam (index, isAdd) {
-                const { globalParams, versions } = this
-                if (isAdd) {
-                    const param = {
-                        ...deepCopy(DEFAULT_PARAM[STRING]),
-                        id: `param${Math.floor(Math.random() * 100)}`
-                    }
-                    globalParams.splice(index + 1, 0, param)
-                } else {
-                    globalParams.splice(index, 1)
-                }
-                this.handleChange([
-                    ...globalParams,
-                    ...versions
-                ])
             },
             handleChange (params) {
                 this.updateContainerParams('params', params)
@@ -245,9 +176,6 @@
         margin: 20px 0;
         .params-flex-col {
             display: flex;
-            &:last-child {
-                margin-top: 20px;
-            }
             .bk-form-item {
                 flex: 1;
                 padding-right: 8px;
@@ -357,21 +285,5 @@
     }
     .sortable-chosen-atom {
         transform: scale(1.0);
-    }
-
-    .param-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        > span {
-            margin: 0 10px;
-        }
-        &.diff-param-item {
-            .bk-form-input[name=value] {
-                color: #4cbd20 !important;
-            }
-
-        }
     }
 </style>

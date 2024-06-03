@@ -42,7 +42,7 @@ import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectService
 import org.slf4j.LoggerFactory
@@ -55,7 +55,8 @@ class AuthProjectService @Autowired constructor(
     val projectService: ProjectService,
     val authTokenApi: AuthTokenApi,
     val client: Client,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val bkTag: BkTag
 ) {
 
     // 项目-管理员列表 缓存， 5分钟有效时间
@@ -73,7 +74,14 @@ class AuthProjectService @Autowired constructor(
             offset = page.offset.toInt()
             limit = page.limit.toInt()
         }
-        val projectRecords = projectService.listByChannel(limit, offset, ProjectChannelCode.BS)
+        val projectRecords = projectService.listByChannel(
+            limit = limit,
+            offset = offset,
+            projectChannelCode = listOf(
+                ProjectChannelCode.BS.name,
+                ProjectChannelCode.PREBUILD.name
+            )
+        )
         val count = projectRecords?.count
         val projectInfo = mutableListOf<InstanceInfoDTO>()
         projectRecords?.records?.map {
@@ -95,7 +103,10 @@ class AuthProjectService @Autowired constructor(
         logger.info("getProjectInfo ids[$idList], attribute[$attribute]")
         authTokenApi.checkToken(token)
         val ids = idList.toSet()
-        val projectInfo = projectService.list(ids)
+        val projectInfo = projectService.list(
+            projectCodes = ids,
+            enabled = true
+        )
         val entityList = mutableListOf<InstanceInfoDTO>()
 
         projectInfo?.map {
@@ -142,9 +153,9 @@ class AuthProjectService @Autowired constructor(
         }
 
         val routerTag = projectService.getByEnglishName(projectCode)!!.routerTag
-        val managerUser = ConsulContent.invokeByTag(routerTag) {
-            client.get(ServiceProjectAuthResource::class).getProjectUsers(
-                token = tokenService.getSystemToken(null)!!,
+        val managerUser = bkTag.invokeByTag(routerTag) {
+            client.getGateway(ServiceProjectAuthResource::class).getProjectUsers(
+                token = tokenService.getSystemToken()!!,
                 projectCode = projectCode,
                 group = BkAuthGroup.MANAGER
             ).data ?: emptyList()

@@ -1,0 +1,21 @@
+version: v2.0
+
+extends:
+  template: pipeline.yml@repoC
+  parameters:
+    repo: "hello/my-first-repo"
+    receiversEmail:
+      - "${{ci.actor}}"
+      - ruotiantang
+    receiversChat:
+      - "${{ci.actor}}"
+    username1: world1
+
+resources:
+  repositories:
+    - repository: repoC
+      name: repoC
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+

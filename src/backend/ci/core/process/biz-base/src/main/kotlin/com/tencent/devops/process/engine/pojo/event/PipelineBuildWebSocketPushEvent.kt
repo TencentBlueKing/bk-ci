@@ -45,6 +45,7 @@ data class PipelineBuildWebSocketPushEvent(
     override val userId: String,
     val buildId: String,
     val refreshTypes: Long, // HISTORY or DETAIL or STATUS 位运算
+    val executeCount: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH, // 刷新状态
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

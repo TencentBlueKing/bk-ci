@@ -1,0 +1,7 @@
+resources:
+  pools:
+    - from: xxxxx/int/test_ci_temp@rezbuild
+      name: rezbuild
+
+steps:
+  - run: 123123

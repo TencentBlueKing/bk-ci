@@ -16,7 +16,7 @@
                 })">
                 <i @click.stop="itemDbClickHandler({index, deepCount, item})" class='devops-icon arrow-icon' :class='item.isOpen ? item.arrowOpenIcon : item.arrowIcon'></i>
                 <i class='devops-icon title-icon' :class='item.isOpen ? item.openIcon : item.icon'></i>
-                <span class='title-text pr15'>{{ item.name }}</span>
+                <span class='title-text pr15'>{{item.name}}</span>
             </div>
             <CollapseTransition>
                 <bk-trees

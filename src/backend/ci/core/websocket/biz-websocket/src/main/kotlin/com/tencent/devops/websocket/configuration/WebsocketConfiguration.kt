@@ -33,6 +33,8 @@ import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
+import com.tencent.devops.websocket.servcie.ProjectProxyService
+import com.tencent.devops.websocket.servcie.ProjectProxyServiceImpl
 import com.tencent.devops.websocket.utils.HostUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
@@ -47,6 +49,7 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 
@@ -176,4 +179,8 @@ class WebsocketConfiguration {
     ): TransferDispatch {
         return TransferDispatch(rabbitTemplate)
     }
+
+    @Bean
+    @ConditionalOnMissingBean(ProjectProxyService::class)
+    fun projectProxyService(): ProjectProxyService = ProjectProxyServiceImpl()
 }

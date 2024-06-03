@@ -27,8 +27,8 @@
 
 package com.tencent.devops.project.service.impl
 
-import org.junit.Test
-import org.junit.Assert
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions
 import java.util.regex.Pattern
 
 class AbsProjectServiceImplTest {
@@ -41,18 +41,18 @@ class AbsProjectServiceImplTest {
         val rightName1 = "testname"
         val rightName2 = "test-name"
         val rightName3 = "test-name-1"
-        Assert.assertTrue(Pattern.matches(patten, rightName))
-        Assert.assertTrue(Pattern.matches(patten, rightName1))
-        Assert.assertTrue(Pattern.matches(patten, rightName2))
-        Assert.assertTrue(Pattern.matches(patten, rightName3))
+        Assertions.assertTrue(Pattern.matches(patten, rightName))
+        Assertions.assertTrue(Pattern.matches(patten, rightName1))
+        Assertions.assertTrue(Pattern.matches(patten, rightName2))
+        Assertions.assertTrue(Pattern.matches(patten, rightName3))
 
         val errorName = "TestName"
         val errorName1 = "test_name"
         val errorName2 = "testname*"
         val errorName3 = "test/name-1"
-        Assert.assertFalse(Pattern.matches(patten, errorName))
-        Assert.assertFalse(Pattern.matches(patten, errorName1))
-        Assert.assertFalse(Pattern.matches(patten, errorName2))
-        Assert.assertFalse(Pattern.matches(patten, errorName3))
+        Assertions.assertFalse(Pattern.matches(patten, errorName))
+        Assertions.assertFalse(Pattern.matches(patten, errorName1))
+        Assertions.assertFalse(Pattern.matches(patten, errorName2))
+        Assertions.assertFalse(Pattern.matches(patten, errorName3))
     }
 }

@@ -49,6 +49,9 @@ data class PipelineBuildNotifyEvent(
     val notifyTemplateEnum: String, // 模板, 枚举保护： PipelineNotifyTemplateEnum.name传值
     val titleParams: MutableMap<String, String>,
     val bodyParams: MutableMap<String, String>,
+    val callbackData: Map<String, String>? = null,
+    val notifyCompleteCheck: Boolean = false,
+    val markdownContent: Boolean? = false, // 是否以markdown格式发送通知内容，为true时，会指向md格式的模板
     val position: String?,
     val stageId: String?,
     override var actionType: ActionType = ActionType.START,

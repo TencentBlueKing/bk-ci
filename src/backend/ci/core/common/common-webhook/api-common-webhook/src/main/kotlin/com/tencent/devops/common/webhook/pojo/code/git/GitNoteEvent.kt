@@ -29,7 +29,7 @@ package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitNoteEvent(
@@ -39,19 +39,22 @@ data class GitNoteEvent(
     val objectAttributes: GitNoteAttributes,
     @JsonProperty("project_id")
     val projectId: Long,
-    @ApiParam("对提交进行评论时存在")
+    @Parameter(description = "对提交进行评论时存在")
     val commit: GitCommit?,
     @JsonProperty("merge_request")
-    @ApiParam("对合并请求评论时存在")
+    @Parameter(description = "对合并请求评论时存在")
     val mergeRequest: GitMRAttributes?,
-    @ApiParam("对缺陷进行评论时存在")
-    val issue: GitIssueAttributes?
+    @Parameter(description = "对缺陷进行评论时存在")
+    val issue: GitIssueAttributes?,
+    @Parameter(description = "对评审进行评论时存在")
+    val review: GitReviewAttributes?
 ) : GitEvent() {
     companion object {
         const val classType = "note"
     }
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class GitNoteAttributes(
     val id: Long,
     val note: String,

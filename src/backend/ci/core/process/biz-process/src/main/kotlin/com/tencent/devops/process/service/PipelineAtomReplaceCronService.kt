@@ -45,15 +45,15 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
@@ -61,11 +61,9 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomParamReplaceInfo
 import com.tencent.devops.store.pojo.atom.AtomReplaceParamConvertRequest
 import com.tencent.devops.store.pojo.atom.AtomVersionReplaceInfo
@@ -75,6 +73,8 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_NAMESPACE
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -82,8 +82,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -92,7 +90,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineAtomReplaceHistoryDao: PipelineAtomReplaceHistoryDao,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val templateFacadeService: TemplateFacadeService,
@@ -137,8 +135,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 logger.info("pipelineAtomReplace baseId:$baseId replace start!!")
                 try {
                     handleAtomReplaceBase(atomReplaceBaseRecord)
-                } catch (t: Throwable) {
-                    logger.info("pipelineAtomReplace baseId:$baseId replace fail:", t)
+                } catch (ignored: Throwable) {
+                    logger.warn("pipelineAtomReplace baseId:$baseId replace fail:", ignored)
                     val handleFailFlag = redisOperation.get("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")?.toBoolean()
                     // 判断是否需要处理异常情况
                     if (handleFailFlag != null && handleFailFlag) {
@@ -153,8 +151,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     }
                 }
             }
-        } catch (t: Throwable) {
-            logger.warn("pipelineAtomReplace failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineAtomReplace failed", ignored)
         } finally {
             lock.unlock()
         }
@@ -226,11 +224,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     val projectInfoRecord = client.get(ServiceProjectResource::class).get(projectId).data
                         ?: throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                            params = arrayOf(projectId),
-                            defaultMessage = MessageCodeUtil.getCodeMessage(
-                                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                                params = arrayOf(projectId)
-                            )
+                            params = arrayOf(projectId)
                         )
                     handleProjectPipelineAtom(
                         project = ProjectBaseInfo(projectInfoRecord.id, projectInfoRecord.englishName),
@@ -383,8 +377,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         )
                         logger.info("handlePipelineAtomReplace itemId:$itemId replace success!!")
                     }
-                } catch (t: Throwable) {
-                    logger.warn("replacePipelineAtomByItem failed", t)
+                } catch (ignored: Throwable) {
+                    logger.warn("replacePipelineAtomByItem failed", ignored)
                     pipelineAtomReplaceItemDao.updateAtomReplaceItemByItemId(
                         dslContext = dslContext,
                         itemId = itemId,
@@ -427,8 +421,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             paramReplaceInfoList = paramReplaceInfoList,
                             baseId = baseId
                         )
-                    } catch (t: Throwable) {
-                        logger.warn("replaceTemplateModelAtom failed", t)
+                    } catch (ignored: Throwable) {
+                        logger.warn("replaceTemplateModelAtom failed", ignored)
                         pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                             dslContext = dslContext,
                             pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
@@ -440,7 +434,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                                 baseId = baseId,
                                 itemId = atomReplaceItem.id,
                                 userId = userId,
-                                log = getErrorMessage(t)
+                                log = getErrorMessage(ignored)
                             )
                         )
                     }
@@ -486,7 +480,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 userId = template.creator,
                 templateId = templateId,
                 versionName = templateModel.versionName,
-                template = model
+                template = model,
+                checkPermissionFlag = false
             ).toInt()
             val templateVersion = templateModel.version.toInt()
             pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
@@ -516,7 +511,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String,
         userId: String
     ) {
-        if (pipelineIdSet == null || pipelineIdSet.isEmpty()) {
+        if (pipelineIdSet.isNullOrEmpty()) {
             logger.info("pipelineIdSet is empty, skip")
             return
         }
@@ -531,7 +526,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             userId = userId
         )
         // 查询需要替换插件的流水线集合
-        val pipelineModelList = pipelineResDao.listLatestModelResource(dslContext, pipelineIdSet)
+        val pipelineModelList = pipelineResourceDao.listLatestModelResource(dslContext, pipelineIdSet)
         pipelineModelList?.forEach nextPipelineModel@{ pipelineModelObj ->
             try {
                 if (replacePipelineModelAtom(
@@ -550,8 +545,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         userId = userId
                     )
                 ) return@nextPipelineModel
-            } catch (t: Throwable) {
-                logger.warn("replacePipelineModelAtom failed", t)
+            } catch (ignored: Throwable) {
+                logger.warn("replacePipelineModelAtom failed", ignored)
                 val pipelineId = pipelineModelObj["PIPELINE_ID"] as String
                 val pipelineInfoRecord = pipelineInfoMap[pipelineId]
                 if (pipelineInfoRecord != null) {
@@ -566,7 +561,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             baseId = baseId,
                             itemId = itemId,
                             userId = userId,
-                            log = getErrorMessage(t)
+                            log = getErrorMessage(ignored)
                         )
                     )
                 }
@@ -666,9 +661,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             if (installFlag != true) {
                                 throw ErrorCodeException(
                                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID,
-                                    defaultMessage = MessageCodeUtil
-                                        .getCodeLanMessage(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID)
+                                    errorCode = ProcessMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
                                 )
                             }
                         }
@@ -734,11 +727,10 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (projectManager == null) {
             val projectManagers =
                 client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
-            if (projectManagers == null || projectManagers.isEmpty()) {
+            if (projectManagers.isNullOrEmpty()) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+                    errorCode = ProcessMessageCode.QUERY_USER_INFO_FAIL
                 )
             }
             projectManager = projectManagers[0]
@@ -861,12 +853,12 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 toAtomCode = toAtomCode,
                 toAtomVersion = toAtomVersion,
                 fromField = fromParamName,
-                fromFieldValue = fromAtomInputParamMap?.get(fromParamName),
+                fromFieldValue = fromAtomInputParamMap?.get(fromParamName) ?: paramReplaceInfo.toParamDefaultValue,
                 toField = toParamName,
                 toFieldDefaultValue = paramReplaceInfo.toParamValue
             )
             val response = OkhttpUtils.doPost(paramConvertUrl, JsonUtil.toJson(atomReplaceParamConvertRequest))
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             val errorMessage = "$fromParamName convert $toParamName fail"
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
@@ -891,8 +883,10 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             } else {
                 fromAtomInputParamMap?.get(fromParamName)
             }
-            if (inputParamValue != null) {
-                toAtomInputParamMap[toAtomInputParamName] = inputParamValue
+            // 被替换插件参数没有值则用配置的默认值作为替换插件参数值
+            val toAtomInputParamValue = inputParamValue ?: paramReplaceInfo.toParamDefaultValue
+            if (toAtomInputParamValue != null) {
+                toAtomInputParamMap[toAtomInputParamName] = toAtomInputParamValue
             }
             return true
         }

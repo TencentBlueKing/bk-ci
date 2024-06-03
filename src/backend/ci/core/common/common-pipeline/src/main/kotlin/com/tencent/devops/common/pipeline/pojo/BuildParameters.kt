@@ -28,17 +28,20 @@
 package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建模型-构建参数")
+@Schema(title = "构建模型-构建参数")
 data class BuildParameters(
-    @ApiModelProperty("元素值ID-标识符", required = true)
+    @get:Schema(title = "元素值ID-标识符", required = true)
     var key: String,
-    @ApiModelProperty("元素值名称-显示用", required = true)
+    @get:Schema(title = "元素值名称-显示用", required = true)
     var value: Any,
-    @ApiModelProperty("元素值类型", required = false)
+    @get:Schema(title = "元素值类型", required = false)
     val valueType: BuildFormPropertyType? = null,
-    @ApiModelProperty("是否只读", required = false)
-    val readOnly: Boolean? = false
+    @get:Schema(title = "是否只读", required = false)
+    val readOnly: Boolean? = false,
+    @get:Schema(title = "描述", required = false)
+    var desc: String? = null,
+    @get:Schema(title = "默认值", required = false)
+    var defaultValue: Any? = null
 )

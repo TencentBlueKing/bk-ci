@@ -29,6 +29,13 @@ package com.tencent.devops.artifactory.util
 
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
+import com.tencent.devops.artifactory.constant.BKREPO_COMMOM_REPO
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
+import com.tencent.devops.artifactory.constant.REPO_NAME_REPORT
+import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -44,16 +51,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 object BkRepoUtils {
-    const val BKREPO_DEFAULT_USER = "admin"
-    const val BKREPO_DEVOPS_PROJECT_ID = "devops"
-    const val BKREPO_STORE_PROJECT_ID = "bk-store"
-    const val BKREPO_COMMOM_REPO = "common"
-
-    const val REPO_NAME_PIPELINE = "pipeline"
-    const val REPO_NAME_CUSTOM = "custom"
-    const val REPO_NAME_REPORT = "report"
-    const val REPO_NAME_PLUGIN = "plugin"
-    const val REPO_NAME_STATIC = "static"
 
     fun parseArtifactoryInfo(path: String): ArtifactInfo {
         val normalizedPath = path.trim().removePrefix("/").removePrefix("./")
@@ -82,6 +79,8 @@ object BkRepoUtils {
     fun parseArtifactoryType(repoName: String): ArtifactoryType {
         return if (repoName == REPO_NAME_CUSTOM) {
             ArtifactoryType.CUSTOM_DIR
+        } else if (repoName == REPO_NAME_IMAGE) {
+            ArtifactoryType.IMAGE
         } else {
             ArtifactoryType.PIPELINE
         }
@@ -100,6 +99,7 @@ object BkRepoUtils {
             FileTypeEnum.BK_ARCHIVE -> REPO_NAME_PIPELINE
             FileTypeEnum.BK_CUSTOM -> REPO_NAME_CUSTOM
             FileTypeEnum.BK_REPORT -> REPO_NAME_REPORT
+            FileTypeEnum.BK_STATIC -> REPO_NAME_STATIC
             else -> BKREPO_COMMOM_REPO
         }
     }
@@ -125,7 +125,8 @@ object BkRepoUtils {
             createdTime = LocalDateTime.parse(createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
             modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
             checksums = FileChecksums(sha256, "", md5 ?: ""),
-            meta = metadata.entries.associate { Pair(it.key, it.value.toString()) }
+            meta = metadata.entries.associate { Pair(it.key, it.value.toString()) },
+            url = "/bkrepo/api/user/generic/$projectId/$repoName$fullPath?download=true"
         )
     }
 

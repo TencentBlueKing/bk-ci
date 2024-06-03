@@ -28,33 +28,45 @@
 package com.tencent.devops.common.dispatch.sdk.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
+import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_DEVOPS_FILE_GATEWAY
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_DEVOPS_GATEWAY
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_ID
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_SECRET_KEY
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_BUILD_ID
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
+import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import org.slf4j.LoggerFactory
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 
+@Suppress("LongParameterList", "TooManyFunctions")
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
@@ -62,53 +74,70 @@ class DispatchService constructor(
     private val gateway: String?,
     private val client: Client,
     private val channelUtils: ChannelUtils,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val commonConfig: CommonConfig
 ) {
 
-    fun log(buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun log(
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?,
+        jobId: String
+    ) {
         buildLogPrinter.addLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 
-    fun logRed(buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun logRed(
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?,
+        jobId: String?
+    ) {
         buildLogPrinter.addRedLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 
     fun buildDispatchMessage(event: PipelineAgentStartupEvent): DispatchMessage {
         logger.info("[${event.buildId}] Start build with gateway - ($gateway)")
         val secretInfo = setRedisAuth(event)
+
+        val customBuildEnv = event.customBuildEnv?.toMutableMap() ?: mutableMapOf()
+        customBuildEnv[ENV_KEY_BUILD_ID] = event.buildId
+        customBuildEnv[ENV_KEY_PROJECT_ID] = event.projectId
+        customBuildEnv[ENV_KEY_AGENT_ID] = secretInfo.hashId
+        customBuildEnv[ENV_KEY_AGENT_SECRET_KEY] = secretInfo.secretKey
+        commonConfig.fileDevnetGateway?.let {
+            customBuildEnv[ENV_DEVOPS_FILE_GATEWAY] = it
+        }
+        commonConfig.devopsDevnetProxyGateway?.let {
+            customBuildEnv[ENV_DEVOPS_GATEWAY] = it
+        }
+
         return DispatchMessage(
             id = secretInfo.hashId,
             secretKey = secretInfo.secretKey,
             gateway = gateway!!,
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            dispatchMessage = event.dispatchType.value,
-            userId = event.userId,
-            vmSeqId = event.vmSeqId,
-            channelCode = event.channelCode,
-            vmNames = event.vmNames,
-            atoms = event.atoms,
-            zone = event.zone,
-            containerHashId = event.containerHashId,
-            executeCount = event.executeCount,
-            containerId = event.containerId,
-            containerType = event.containerType,
-            stageId = event.stageId,
-            dispatchType = event.dispatchType,
-            customBuildEnv = event.customBuildEnv
+            customBuildEnv = customBuildEnv,
+            event = event
         )
     }
 
@@ -118,43 +147,60 @@ class DispatchService constructor(
         // job结束
         finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
         redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
-
-        val keysSet = redisOperation.hkeys(secretInfoKey)
-        if (keysSet == null || keysSet.isEmpty()) {
-            redisOperation.delete(secretInfoKey)
-        }
+        // 当hash表为空时，redis会自动删除
     }
 
-    fun checkRunning(event: PipelineAgentStartupEvent) {
-        // 判断流水线是否还在运行，如果已经停止则不在运行
-        // 只有detail的信息是在shutdown事件发出之前就写入的，所以这里去builddetail的信息。
-        // 为了兼容gitci的权限，这里把渠道号都改成GIT,以便去掉用户权限验证
-        val record = client.get(ServiceBuildResource::class).getBuildDetailStatusWithoutPermission(
-            event.userId,
-            event.projectId,
-            event.pipelineId,
-            event.buildId,
-            ChannelCode.BS
+    fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
+        // 判断流水线当前container是否在运行中
+        val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            containerId = event.containerId,
+            taskId = VMUtils.genStartVMTaskId(event.containerId)
         )
-        if (record.isNotOk() || record.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline is running because of ${record.message}")
+        val startBuildTask = statusResult.data?.startBuildTask
+        val buildContainer = statusResult.data?.buildContainer
+        if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
+            logger.warn(
+                "The build event($event) fail to check if pipeline task is running " +
+                    "because of statusResult(${statusResult.message})"
+            )
+            val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
-                formatErrorMessage = "无法获取流水线状态",
-                errorMessage = "无法获取流水线状态"
+                errorCode = UNABLE_GET_PIPELINE_JOB_STATUS.toInt(),
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
             )
         }
-        val status = BuildStatus.parse(record.data)
-        if (!status.isRunning()) {
+
+        var needStart = true
+        if (event.executeCount != startBuildTask.executeCount) {
+            // 如果已经重试过或执行次数不匹配则直接丢弃
+            needStart = false
+        } else if (startBuildTask.status.isFinish() && buildContainer.status.isRunning()) {
+            // 如果Job已经启动在运行或则直接丢弃
+            needStart = false
+        } else if (!buildContainer.status.isRunning() && !buildContainer.status.isReadyToRun()) {
+            needStart = false
+        }
+
+        if (!needStart) {
             logger.warn("The build event($event) is not running")
+            // dispatch主动发起的重试或者用户已取消的流水线忽略异常报错
+            if (event.retryTime > 1 || buildContainer.status.isCancel()) {
+                return false
+            }
+
+            val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
                 errorType = ErrorType.USER,
-                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
-                formatErrorMessage = "流水线已经不再运行",
-                errorMessage = "流水线已经不再运行"
+                errorCode = JOB_BUILD_STOPS.toInt(),
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
             )
         }
+        return true
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
@@ -175,7 +221,7 @@ class DispatchService constructor(
         }
     }
 
-    fun redispatch(event: PipelineAgentStartupEvent) {
+    fun redispatch(event: IPipelineEvent) {
         logger.info("Re-dispatch the agent event - ($event)")
         pipelineEventDispatcher.dispatch(event)
     }
@@ -224,13 +270,14 @@ class DispatchService constructor(
             redisOperation.delete(redisKey(secretInfo.hashId, secretInfo.secretKey))
             logger.warn("$buildId|$vmSeqId finishBuild success.")
         } else {
-            logger.error("$buildId|$vmSeqId finishBuild failed, secretInfo is null.")
+            logger.warn("$buildId|$vmSeqId finishBuild failed, secretInfo is null.")
         }
     }
 
     private fun setRedisAuth(event: PipelineAgentStartupEvent): SecretInfo {
         val secretInfoRedisKey = secretInfoRedisKey(event.buildId)
-        val redisResult = redisOperation.hget(key = secretInfoRedisKey,
+        val redisResult = redisOperation.hget(
+            key = secretInfoRedisKey,
             hashKey = secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1)
         )
         if (redisResult != null) {
@@ -249,7 +296,8 @@ class DispatchService constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
-                    zone = event.zone,
+                    // 待废弃属性
+                    zone = Zone.SHENZHEN,
                     atoms = event.atoms,
                     executeCount = event.executeCount ?: 1
                 )

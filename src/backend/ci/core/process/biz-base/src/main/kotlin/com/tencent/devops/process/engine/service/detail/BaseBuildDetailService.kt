@@ -28,6 +28,12 @@
 package com.tencent.devops.process.engine.service.detail
 
 import com.google.common.base.Preconditions
+import com.tencent.devops.common.api.constant.BUILD_CANCELED
+import com.tencent.devops.common.api.constant.BUILD_COMPLETED
+import com.tencent.devops.common.api.constant.BUILD_FAILED
+import com.tencent.devops.common.api.constant.BUILD_REVIEWING
+import com.tencent.devops.common.api.constant.BUILD_RUNNING
+import com.tencent.devops.common.api.constant.BUILD_STAGE_SUCCESS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -36,14 +42,17 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
+import com.tencent.devops.process.engine.control.lock.PipelineBuildDetailLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -51,22 +60,22 @@ open class BaseBuildDetailService constructor(
     val dslContext: DSLContext,
     val pipelineBuildDao: PipelineBuildDao,
     val buildDetailDao: BuildDetailDao,
+    private val stageTagService: StageTagService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     val redisOperation: RedisOperation
-
 ) {
     val logger = LoggerFactory.getLogger(BaseBuildDetailService::class.java)!!
 
     companion object {
-        private const val ExpiredTimeInSeconds: Long = 10
+        const val TRIGGER_STAGE = "stage-1"
     }
 
-    fun getBuildModel(projectId: String, buildId: String): Model? {
-        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
+    fun getBuildModel(projectId: String, buildId: String, queryDslContext: DSLContext? = null): Model? {
+        val record = buildDetailDao.get(queryDslContext ?: dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
     }
 
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "ComplexMethod")
     protected fun update(
         projectId: String,
         buildId: String,
@@ -74,17 +83,18 @@ open class BaseBuildDetailService constructor(
         buildStatus: BuildStatus,
         cancelUser: String? = null,
         operation: String = ""
-    ) {
+    ): Model {
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
-        val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
+        var record: TPipelineBuildDetailRecord? = null // 在异常catch处共享，减少一次db查询
+        val lock = PipelineBuildDetailLock(redisOperation, buildId)
 
         try {
             watcher.start("lock")
             lock.lock()
 
             watcher.start("getDetail")
-            val record = buildDetailDao.get(dslContext, projectId, buildId)
+            record = buildDetailDao.get(dslContext, projectId, buildId)
             Preconditions.checkArgument(record != null, "The build detail is not exist")
 
             watcher.start("model")
@@ -104,7 +114,7 @@ open class BaseBuildDetailService constructor(
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (modelStr.isNullOrBlank() && !change) {
                 message = "Will not update"
-                return
+                return model
             }
 
             watcher.start("updateModel")
@@ -114,20 +124,64 @@ open class BaseBuildDetailService constructor(
                 buildId = buildId,
                 model = modelStr,
                 buildStatus = finalStatus,
-                cancelUser = cancelUser
+                cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
+                    ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null
             )
 
-            watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, buildId)
             message = "update done"
+            return model
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
+            watcher.start("getDetail")
+            Preconditions.checkArgument(record != null, "The build detail is not exist")
+            watcher.start("model")
+            return JsonUtil.to(record!!.model, Model::class.java)
         } finally {
             lock.unlock()
-            watcher.stop()
-            logger.info("[$buildId|$buildStatus]|$operation|update_detail_model| $message")
+//            logger.info("[$buildId|$buildStatus]|$operation|update_detail_model| $message")
+//            if (message == "update done") { // 防止MQ异常导致锁时间过长，将推送事件移出锁定范围
+//                watcher.start("dispatchEvent")
+//                pipelineDetailChangeEvent(projectId, buildId)
+//            }
             LogUtils.printCostTimeWE(watcher)
+        }
+    }
+
+    protected fun fetchHistoryStageStatus(
+        model: Model,
+        buildStatus: BuildStatus,
+        reviewers: List<String>? = null,
+        errorMsg: String? = null,
+        cancelUser: String? = null
+    ): List<BuildStageStatus> {
+        val stageTagMap: Map<String, String>
+            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
+        // 更新Stage状态至BuildHistory
+
+        val (statusMessage, reason) = when {
+            buildStatus == BuildStatus.REVIEWING -> Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
+            buildStatus == BuildStatus.STAGE_SUCCESS -> Pair(BUILD_STAGE_SUCCESS, null)
+            buildStatus.isFailure() -> Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
+            buildStatus.isCancel() -> Pair(BUILD_CANCELED, cancelUser)
+            buildStatus.isSuccess() -> Pair(BUILD_COMPLETED, null)
+            else -> Pair(BUILD_RUNNING, null)
+        }
+        return model.stages.map { stage ->
+            BuildStageStatus(
+                stageId = stage.id!!,
+                name = stage.name ?: stage.id!!,
+                status = stage.status,
+                startEpoch = stage.startEpoch,
+                elapsed = stage.elapsed,
+                tag = stage.tag?.map { tag ->
+                    stageTagMap.getOrDefault(tag, "null")
+                },
+                // #6655 利用stageStatus中的第一个stage传递构建的状态信息
+                showMsg = if (stage.id == TRIGGER_STAGE) {
+                    I18nUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
+                } else null
+            )
         }
     }
 
@@ -194,12 +248,13 @@ open class BaseBuildDetailService constructor(
         // 异步转发，解耦核心
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
-                source = "pauseTask",
+                source = "recordDetail",
                 projectId = pipelineBuildInfo.projectId,
                 pipelineId = pipelineBuildInfo.pipelineId,
                 userId = pipelineBuildInfo.startUser,
                 buildId = buildId,
-                refreshTypes = RefreshType.DETAIL.binary
+                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary,
+                executeCount = pipelineBuildInfo.executeCount
             )
         )
     }

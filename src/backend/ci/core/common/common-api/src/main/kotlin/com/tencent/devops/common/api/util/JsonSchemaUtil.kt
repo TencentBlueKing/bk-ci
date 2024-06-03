@@ -30,6 +30,8 @@ package com.tencent.devops.common.api.util
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.main.JsonSchemaFactory
+import org.json.JSONArray
+import org.json.JSONObject
 
 object JsonSchemaUtil {
     fun validate(schema: String, json: String): Boolean {
@@ -46,9 +48,27 @@ object JsonSchemaUtil {
     fun validateJson(json: String): Boolean {
         try {
             jsonNodeFromString(json)
-        } catch (e: Exception) {
+        } catch (ignore: Throwable) {
             return false
         }
         return true
+    }
+
+    fun isJsonArray(json: String): Boolean {
+        return try {
+            JSONArray(json)
+            true
+        } catch (ignore: Throwable) {
+            false
+        }
+    }
+
+    fun isJsonObject(json: String): Boolean {
+        return try {
+            JSONObject(json)
+            true
+        } catch (ignore: Throwable) {
+            false
+        }
     }
 }

@@ -28,12 +28,13 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.git.GitMember
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.scm.pojo.GitMember
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -42,124 +43,166 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_REPO"], description = "外部-codecc-仓库资源")
+@Tag(name = "EXTERNAL_REPO", description = "外部-codecc-仓库资源")
 @Path("/external/codecc/repo/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ExternalCodeccRepoResource {
 
-    @ApiOperation("获取仓库单个文件内容")
+    @Operation(summary = "获取仓库单个文件内容")
     @GET
     @Path("/{repoId}/getFileContent")
     fun getFileContent(
-        @ApiParam(value = "仓库id")
+        @Parameter(description = "仓库id")
         @PathParam("repoId")
         repoId: String,
-        @ApiParam(value = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam(value = "版本号（svn）")
+        @Parameter(description = "版本号（svn）")
         @QueryParam("reversion")
         reversion: String?,
-        @ApiParam(value = "分支（git）")
+        @Parameter(description = "分支（git）")
         @QueryParam("branch")
         branch: String?,
-        @ApiParam(value = "子模块项目名称")
+        @Parameter(description = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null,
-        @ApiParam("代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<String>
 
-    @ApiOperation("获取仓库单个文件内容")
+    @Operation(summary = "获取仓库单个文件内容")
     @GET
     @Path("/repositories/{repoId}/v2/getFileContent")
     fun getFileContentV2(
-        @ApiParam(value = "仓库id")
+        @Parameter(description = "仓库id")
         @PathParam("repoId")
         repoId: String,
-        @ApiParam(value = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam(value = "版本号（svn）")
+        @Parameter(description = "版本号（svn）")
         @QueryParam("reversion")
         reversion: String?,
-        @ApiParam(value = "分支（git）")
+        @Parameter(description = "分支（git）")
         @QueryParam("branch")
         branch: String?,
-        @ApiParam(value = "子模块项目名称")
+        @Parameter(description = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null,
-        @ApiParam("代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<String>
 
-    @ApiOperation("获取仓库单个文件内容")
+    @Operation(summary = "获取仓库单个文件内容")
     @GET
     @Path("/getGitFileContentCommon")
     fun getGitFileContentCommon(
-        @ApiParam(value = "代码库url")
+        @Parameter(description = "代码库url")
         @QueryParam("repoUrl")
         repoUrl: String,
-        @ApiParam(value = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam(value = "分支或者commit id（git）")
+        @Parameter(description = "分支或者commit id（git）")
         @QueryParam("branch")
         ref: String?,
-        @ApiParam(value = "调用api的token")
+        @Parameter(description = "调用api的token")
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "代码块认证方式，默认http")
+        @Parameter(description = "代码块认证方式，默认http")
         @QueryParam("authType")
         authType: RepoAuthType? = RepoAuthType.HTTP,
-        @ApiParam(value = "子模块项目名称")
+        @Parameter(description = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null
     ): Result<String>
 
-    @ApiOperation("获取仓库单个文件内容")
+    @Operation(summary = "获取仓库单个文件内容")
     @GET
     @Path("/oauth/git_file_content")
     fun getGitFileContentOAuth(
-        @ApiParam(value = "用户id")
+        @Parameter(description = "用户id")
         @QueryParam("userId")
         userId: String,
-        @ApiParam(value = "代码库url")
+        @Parameter(description = "代码库url")
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam(value = "分支或者commit id（git）")
+        @Parameter(description = "分支或者commit id（git）")
         @QueryParam("ref")
         ref: String?
     ): Result<String>
 
-    @ApiOperation("获取代码库成员列表")
+    @Operation(summary = "获取代码库成员列表")
     @GET
     @Path("/members")
     fun getRepoMembers(
-        @ApiParam(value = "代码库url")
+        @Parameter(description = "代码库url")
         @QueryParam("repoName")
         repoUrl: String,
-        @ApiParam(value = "用户id")
+        @Parameter(description = "用户id")
         @QueryParam("userId")
         userId: String
     ): Result<List<GitMember>>
 
-    @ApiOperation("获取代码库有权限成员列表")
+    @Operation(summary = "获取代码库有权限成员列表")
     @GET
     @Path("/members/all")
     fun getRepoAllMembers(
-        @ApiParam(value = "代码库url")
+        @Parameter(description = "代码库url")
         @QueryParam("repoName")
         repoUrl: String,
-        @ApiParam(value = "用户id")
+        @Parameter(description = "用户id")
         @QueryParam("userId")
         userId: String
     ): Result<List<GitMember>>
+
+    @Operation(summary = "获取代码库有权限成员列表")
+    @GET
+    @Path("/isProjectMember")
+    fun isProjectMember(
+        @Parameter(description = "代码库url")
+        @QueryParam("repoName")
+        repoUrl: String,
+        @Parameter(description = "用户id")
+        @QueryParam("userId")
+        userId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "通过凭证Id获取文件内容")
+    @GET
+    @Path("/{projectId}/getFileContentByUrl")
+    fun getFileContentByUrl(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库url")
+        @QueryParam("repoUrl")
+        repoUrl: String,
+        @Parameter(description = "代码库类型")
+        @QueryParam("scmType")
+        scmType: ScmType,
+        @Parameter(description = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @Parameter(description = "版本号（svn/p4）")
+        @QueryParam("reversion")
+        reversion: String?,
+        @Parameter(description = "分支（git）")
+        @QueryParam("branch")
+        branch: String?,
+        @Parameter(description = "子模块项目名称")
+        @QueryParam("subModule")
+        subModule: String? = null,
+        @Parameter(description = "代码库ticketId")
+        @QueryParam("credentialId")
+        credentialId: String
+    ): Result<String>
 }

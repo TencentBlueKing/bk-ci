@@ -1,0 +1,28 @@
+resources:
+  repositories:
+    - repository: repoB
+      name: repoB
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+  pools:
+    - from: xxxxx/int/test_ci_temp@rezbuild1
+      name: rezbuild1
+
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: stepname
+    type: string
+    default: STEPNAME
+
+steps:
+  - run: |
+      echo "res_repoA_step_id_1 username ${{ parameters.username }}!"
+  - template: step1.yml@repoB
+    parameters:
+      username: RES_REPOA_STEP1
+  - template: step3.yml
+    parameters:
+      username: RES_REPOA_STEP1_STEP3

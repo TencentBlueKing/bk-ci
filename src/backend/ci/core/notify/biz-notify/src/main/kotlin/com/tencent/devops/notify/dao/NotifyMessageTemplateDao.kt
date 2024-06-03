@@ -30,18 +30,19 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TEmailsNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TRtxNotifyMessageTemplate
+import com.tencent.devops.model.notify.tables.TVoiceNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWechatNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
+import com.tencent.devops.model.notify.tables.records.TVoiceNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -81,13 +82,13 @@ class NotifyMessageTemplateDao {
         }
     }
 
-    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): Record1<String>? {
+    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): String? {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
             val baseStep = dslContext.select(NOTIFY_TYPE_SCOPE)
                 .from(this)
                 .where(ID.eq(templateId))
 
-            return baseStep.fetchOne()
+            return baseStep.fetchOne(NOTIFY_TYPE_SCOPE)
         }
     }
 
@@ -101,10 +102,24 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TWechatNotifyMessageTemplateRecord? {
         with(TWechatNotifyMessageTemplate.T_WECHAT_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 获取语音消息模板
+     * @param dslContext
+     * @param commonTemplateId
+     */
+    fun getVoiceNotifyMessageTemplate(
+        dslContext: DSLContext,
+        commonTemplateId: String
+    ): TVoiceNotifyMessageTemplateRecord? {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -119,10 +134,8 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TRtxNotifyMessageTemplateRecord? {
         with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -136,7 +149,7 @@ class NotifyMessageTemplateDao {
     ): TEmailsNotifyMessageTemplateRecord? {
         with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectFrom(this)
-                .where(this.COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -151,10 +164,8 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TWeworkNotifyMessageTemplateRecord? {
         with(TWeworkNotifyMessageTemplate.T_WEWORK_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -190,7 +201,7 @@ class NotifyMessageTemplateDao {
     fun modifyNotifyTypeScope(dslContext: DSLContext, typeScope: List<String>, id: String) {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.update(this)
-                .set(NOTIFY_TYPE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(typeScope))
+                .set(NOTIFY_TYPE_SCOPE, JsonUtil.toJson(typeScope, formatted = false))
                 .where(ID.eq(id))
                 .execute()
         }
@@ -221,7 +232,7 @@ class NotifyMessageTemplateDao {
                     id,
                     addNotifyTemplateMessageRequest.templateCode,
                     addNotifyTemplateMessageRequest.templateName,
-                    JsonUtil.getObjectMapper().writeValueAsString(notifyTypeScope),
+                    JsonUtil.toJson(notifyTypeScope, formatted = false),
                     addNotifyTemplateMessageRequest.priority.getValue().toByte(),
                     addNotifyTemplateMessageRequest.source.getValue().toByte()
                 )
@@ -286,6 +297,7 @@ class NotifyMessageTemplateDao {
                 COMMON_TEMPLATE_ID,
                 TITLE,
                 BODY,
+                BODY_MD,
                 CREATOR,
                 MODIFIOR,
                 CREATE_TIME,
@@ -296,12 +308,45 @@ class NotifyMessageTemplateDao {
                     id,
                     notifyTemplateMessage.title,
                     notifyTemplateMessage.body,
+                    notifyTemplateMessage.bodyMD,
                     userId,
                     userId,
                     LocalDateTime.now(),
                     LocalDateTime.now()
                 )
                 .execute()
+        }
+    }
+
+    fun addVoiceNotifyMessageTemplate(
+        dslContext: DSLContext,
+        commonTemplateId: String,
+        id: String,
+        userId: String,
+        notifyTemplateMessage: NotifyTemplateMessage
+    ) {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            val now = LocalDateTime.now()
+            dslContext.insertInto(
+                this,
+                ID,
+                COMMON_TEMPLATE_ID,
+                CREATOR,
+                MODIFIOR,
+                TASK_NAME,
+                CONTENT,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                id,
+                commonTemplateId,
+                userId,
+                userId,
+                notifyTemplateMessage.title,
+                notifyTemplateMessage.body,
+                now,
+                now
+            ).execute()
         }
     }
 
@@ -349,6 +394,14 @@ class NotifyMessageTemplateDao {
         }
     }
 
+    fun updateTXSESTemplateId(dslContext: DSLContext, templateId: String, sesTemplateId: Int?): Boolean {
+        with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.update(this).set(TENCENT_CLOUD_TEMPLATE_ID, sesTemplateId).where(
+                COMMON_TEMPLATE_ID.eq(templateId)
+            ).execute() == 1
+        }
+    }
+
     /**
      * 删除邮件类型的消息通知模板信息
      */
@@ -356,6 +409,14 @@ class NotifyMessageTemplateDao {
         with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.deleteFrom(this)
                 .where(COMMON_TEMPLATE_ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun deleteVoiceNotifyMessageTemplate(dslContext: DSLContext, commonTemplateId: String): Int {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.deleteFrom(this)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .execute()
         }
     }
@@ -405,6 +466,23 @@ class NotifyMessageTemplateDao {
         }
     }
 
+    fun updateVoiceNotifyMessageTemplate(
+        dslContext: DSLContext,
+        userId: String,
+        templateId: String,
+        notifyTemplateMessage: NotifyTemplateMessage
+    ): Int {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.update(this)
+                .set(MODIFIOR, userId)
+                .set(TASK_NAME, notifyTemplateMessage.title)
+                .set(CONTENT, notifyTemplateMessage.body)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(COMMON_TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
     /**
      * 根据模板ID，更新企业微信消息模板信息
      * @param userId 更新用户ID
@@ -422,6 +500,7 @@ class NotifyMessageTemplateDao {
                 .set(this.MODIFIOR, userId)
                 .set(this.TITLE, notifyMessageTemplate.title)
                 .set(this.BODY, notifyMessageTemplate.body)
+                .set(this.BODY_MD, notifyMessageTemplate.bodyMD)
                 .set(this.UPDATE_TIME, LocalDateTime.now())
                 .where(this.COMMON_TEMPLATE_ID.eq(templateId))
                 .execute()
@@ -465,10 +544,9 @@ class NotifyMessageTemplateDao {
         notifyTypeScopeSet: Set<String>
     ): Int {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
-            val notifyTypeScopeStr = JsonUtil.getObjectMapper().writeValueAsString(notifyTypeScopeSet)
             return dslContext.update(this)
                 .set(this.TEMPLATE_NAME, notifyMessageTemplateRequest.templateName)
-                .set(this.NOTIFY_TYPE_SCOPE, notifyTypeScopeStr)
+                .set(this.NOTIFY_TYPE_SCOPE, JsonUtil.toJson(notifyTypeScopeSet, formatted = false))
                 .set(this.PRIORITY, notifyMessageTemplateRequest.priority.getValue().toByte())
                 .set(this.SOURCE, notifyMessageTemplateRequest.source.getValue().toByte())
                 .where(this.ID.eq(templateId))
@@ -505,6 +583,15 @@ class NotifyMessageTemplateDao {
      */
     fun countRtxMessageTemplate(dslContext: DSLContext, templateId: String): Int {
         with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(COMMON_TEMPLATE_ID.eq(templateId))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countVoiceMessageTemplate(dslContext: DSLContext, templateId: String): Int {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectCount()
                 .from(this)
                 .where(COMMON_TEMPLATE_ID.eq(templateId))

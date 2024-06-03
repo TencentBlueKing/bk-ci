@@ -1,0 +1,200 @@
+{
+  "title": "",
+  "description": "",
+  "type": "object",
+  "required": [
+    "select类型-url"
+  ],
+  "properties": {
+    "默认展示的，无特殊类型": {
+      "type": "string",
+      "title": "默认展示的，无特殊类型",
+      "default": "默认展示的，无特殊类型-v",
+      "ui:component": {
+        "name": "input"
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "input类型": {
+      "type": "string",
+      "title": "input类型",
+      "default": "input类型-v",
+      "ui:component": {
+        "name": "input"
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "input类型-text": {
+      "type": "string",
+      "title": "input类型-text",
+      "default": "input类型-text-v",
+      "ui:component": {
+        "name": "input",
+        "props": {
+          "type": "textarea"
+        }
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "select类型": {
+      "type": "string",
+      "title": "select类型",
+      "default": "select类型-v",
+      "ui:component": {
+        "name": "selector",
+        "props": {
+          "options": [
+            {
+              "id": "select类型-v",
+              "name": "select类型-v"
+            },
+            {
+              "id": "123",
+              "name": "第二个"
+            },
+            {
+              "id": "true",
+              "name": "true",
+              "description": "第三个"
+            }
+          ],
+          "optionsConf": {
+            "multiple": false,
+            "clearable": true
+          }
+        }
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "select类型-url": {
+      "type": "array",
+      "title": "select类型-url",
+      "default": [
+        "select类型-v"
+      ],
+      "ui:component": {
+        "name": "selector",
+        "props": {
+          "optionsConf": {
+            "url": "",
+            "paramId": "",
+            "paramName": "",
+            "dataPath": "",
+            "itemTargetUrl": "",
+            "hasAddItem": false,
+            "itemText": "",
+            "multiple": true,
+            "clearable": true
+          }
+        }
+      },
+      "ui:props": {
+        "labelWidth": 500
+      },
+      "ui:rules": [
+        "required"
+      ]
+    },
+    "checkBox类型": {
+      "type": "array",
+      "title": "checkBox类型",
+      "default": [
+        "checkBox类型-v"
+      ],
+      "ui:component": {
+        "name": "checkbox",
+        "props": {
+          "datasource": [
+            {
+              "label": "checkBox类型-v",
+              "value": "checkBox类型-v"
+            },
+            {
+              "label": "第二个",
+              "value": "123"
+            },
+            {
+              "label": "true",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "boolean类型": {
+      "type": "boolean",
+      "title": "boolean类型",
+      "default": false,
+      "ui:component": {
+        "name": "radio",
+        "props": {
+          "datasource": [
+            {
+              "label": "true",
+              "value": true
+            },
+            {
+              "label": "false",
+              "value": false
+            }
+          ]
+        }
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "time类型": {
+      "type": "string",
+      "title": "time类型",
+      "default": "time类型-v",
+      "ui:component": {
+        "name": "bk-time-picker",
+        "props": {
+          "type": "time"
+        }
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "company-staff-input类型": {
+      "type": "array",
+      "title": "company-staff-input类型",
+      "default": [
+        "company-staff-input类型-v"
+      ],
+      "ui:component": {
+        "name": "companyStaff"
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    },
+    "tips类型": {
+      "type": "string",
+      "title": "tips类型",
+      "default": "tips类型-v",
+      "ui:component": {
+        "name": "tips",
+        "props": {
+          "tipStr": "tips类型-v"
+        }
+      },
+      "ui:props": {
+        "labelWidth": 500
+      }
+    }
+  }
+}

@@ -46,9 +46,9 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import java.io.File
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.io.File
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -129,7 +129,7 @@ abstract class AbstractDockerHostBuildService constructor(
             dockerBuildInfo.imageRDType.equals(ImageRDTypeEnum.SELF_DEVELOPED.name, ignoreCase = true)) {
             log(
                 buildId = dockerBuildInfo.buildId,
-                message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
+                message = "Public image, directly started from the local...",
                 tag = taskId,
                 containerHashId = dockerBuildInfo.containerHashId
             )
@@ -146,8 +146,9 @@ abstract class AbstractDockerHostBuildService constructor(
                     containerHashId = dockerBuildInfo.containerHashId
                 )
             } catch (t: UnauthorizedException) {
-                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；" +
-                        "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                val errorMessage = "No permission to pull image $imageName，Please check if the image path or " +
+                    "credentials are correct. [buildId=${dockerBuildInfo.buildId}]" +
+                    "[containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
                 throw ContainerException(
@@ -155,7 +156,8 @@ abstract class AbstractDockerHostBuildService constructor(
                     message = errorMessage
                 )
             } catch (t: NotFoundException) {
-                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；" +
+                val errorMessage = "Image does not exist $imageName!!，" +
+                    "Please check if the image path or credentials are correct." +
                         "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
@@ -167,13 +169,13 @@ abstract class AbstractDockerHostBuildService constructor(
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(
                     buildId = dockerBuildInfo.buildId,
-                    message = "拉取镜像失败，错误信息：${t.message}",
+                    message = "Failed to pull image：${t.message}",
                     tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
                 log(
                     buildId = dockerBuildInfo.buildId,
-                    message = "尝试使用本地镜像启动...",
+                    message = "Trying to boot from a local image...",
                     tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
@@ -199,10 +201,10 @@ abstract class AbstractDockerHostBuildService constructor(
         )
         val dockerImageName = CommonUtils.normalizeImageName(imageName)
         val taskId = if (!containerId.isNullOrBlank()) VMUtils.genStartVMTaskId(containerId!!) else ""
-        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName", taskId, containerHashId)
+        log(buildId, "Start pulling image $dockerImageName", taskId, containerHashId)
         httpLongDockerCli.pullImageCmd(dockerImageName).withAuthConfig(authConfig)
             .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId)).awaitCompletion()
-        log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
+        log(buildId, "Pull the image successfully, ready to start the build environment...", taskId, containerHashId)
         return Result(true)
     }
 
@@ -299,7 +301,7 @@ abstract class AbstractDockerHostBuildService constructor(
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,
-                        message = "正在拉取镜像,第${lays}层，进度：$currentProgress%",
+                        message = "Pulling image, layer $lays，process：$currentProgress%",
                         tag = startTaskId,
                         jobId = containerHashId
                     )

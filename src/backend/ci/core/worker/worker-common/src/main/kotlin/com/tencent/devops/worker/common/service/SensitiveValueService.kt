@@ -32,11 +32,12 @@ import org.slf4j.LoggerFactory
 object SensitiveValueService {
 
     private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
+    private const val SENSITIVE_MIXER = "******"
 
     /**
      * 每个Job内维护的敏感信息集合
      */
-    val sensitiveStringSet = mutableSetOf<String>()
+    private val sensitiveStringSet = mutableSetOf<String>()
 
     fun addSensitiveValues(sensitiveValues: List<String>?) {
         sensitiveValues?.let {
@@ -46,10 +47,24 @@ object SensitiveValueService {
         }
     }
 
+    fun addSensitiveValue(sensitiveValue: String) {
+        sensitiveStringSet.add(sensitiveValue)
+    }
+
     fun matchSensitiveValue(value: String): Boolean {
         sensitiveStringSet.forEach { sensitive ->
             if (value.contains(sensitive)) return true
         }
         return false
+    }
+
+    fun fixSensitiveContent(message: String): String {
+        var realMessage = message
+        sensitiveStringSet.forEach { sensitiveStr ->
+            if (realMessage.contains(sensitiveStr)) {
+                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
+            }
+        }
+        return realMessage
     }
 }

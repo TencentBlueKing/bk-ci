@@ -86,5 +86,27 @@ class PipelineWebSocketListener @Autowired constructor(
                 )
             )
         }
+
+        if (event.refreshTypes and RefreshType.RECORD.binary == RefreshType.RECORD.binary) {
+            event.executeCount?.let { executeCount ->
+                webSocketDispatcher.dispatch(
+                    // #8955 增加对没有执行次数的默认页面的重复推送
+                    pipelineWebsocketService.buildRecordMessage(
+                        buildId = event.buildId,
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        userId = event.userId,
+                        executeCount = executeCount
+                    ),
+                    pipelineWebsocketService.buildRecordMessage(
+                        buildId = event.buildId,
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        userId = event.userId,
+                        executeCount = null
+                    )
+                )
+            }
+        }
     }
 }

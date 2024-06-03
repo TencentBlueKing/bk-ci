@@ -28,19 +28,51 @@
 package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceAgentResource
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
+import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
-class ServiceAgentResourceImpl @Autowired constructor(val thirdPartyAgentService: ThirdPartyAgentService) : ServiceAgentResource {
+@RestResource
+@Suppress("ALL")
+class ServiceAgentResourceImpl @Autowired constructor(
+    val thirdPartyAgentService: ThirdPartyAgentService,
+    val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
+) : ServiceAgentResource {
     override fun listAgentBuild(
         agentId: String,
+        status: String?,
+        pipelineId: String?,
         page: Int?,
         pageSize: Int?
     ): Page<AgentBuildInfo> {
-        return thirdPartyAgentService.listAgentBuilds(agentId, page, pageSize)
+        return thirdPartyAgentService.listAgentBuilds(
+            agentId = agentId,
+            status = status,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun getDockerDebugUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): Result<String> {
+        return Result(
+            thirdPartyAgentDockerService.createThirdDockerDebugUrl(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId
+            )
+        )
     }
 }

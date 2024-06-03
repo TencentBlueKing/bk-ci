@@ -32,12 +32,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwAtomResourceV4
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +52,7 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         atomCode: String,
         userId: String
     ): Result<AtomVersion?> {
-        logger.info("get Atom By Code, atomCode($atomCode),userId($userId)")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom By Code")
         return client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, userId)
     }
 
@@ -61,7 +62,7 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         atomCode: String,
         userId: String
     ): Result<StoreStatistic> {
-        logger.info("get Atom Statistic By Code, atomCode($atomCode),userId($userId)")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom Statistic By Code")
         return client.get(ServiceStoreStatisticResource::class).getStatisticByCode(
             userId = userId,
             storeType = StoreTypeEnum.ATOM,
@@ -77,12 +78,12 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         page: Int?,
         pageSize: Int?
     ): Result<Page<AtomPipeline>> {
-        logger.info("get Atom Pipelines By Code, atomCode($atomCode),userId($userId),page($page),pageSize($pageSize)")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom Pipelines By Code,$page,$pageSize")
         return client.get(ServiceMarketAtomResource::class).getAtomPipelinesByCode(
             atomCode = atomCode,
             username = userId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
@@ -93,7 +94,7 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
-        logger.info("install Atom: userId[$userId] channelCode[$channelCode] installAtomReq[$installAtomReq]")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|install Atom: $channelCode, $installAtomReq")
         return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
     }
 

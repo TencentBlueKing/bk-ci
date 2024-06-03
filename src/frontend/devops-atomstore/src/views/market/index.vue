@@ -79,6 +79,7 @@
 
 <script>
     import { debounce } from '@/utils/index'
+    import eventBus from '@/utils/eventBus'
     import { mapActions } from 'vuex'
     import commentRate from '@/components/common/comment-rate'
     import breadCrumbs from '@/components/bread-crumbs.vue'
@@ -128,7 +129,7 @@
             features () {
                 return [
                     { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
-                    { name: this.$t('store.质量红线指标'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
+                    { name: this.$t('store.质量红线服务'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
                     { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
                 ]
             },
@@ -174,6 +175,16 @@
                 },
                 immediate: true
             }
+        },
+
+        created () {
+            eventBus.$off('clear')
+            eventBus.$on('clear', () => {
+                this.filterData.classifyValue = 'all'
+                this.filterData.searchStr = ''
+                this.clearFliterData('rates')
+                this.clearFliterData('features')
+            })
         },
 
         methods: {
@@ -383,6 +394,7 @@
 
     .store-main {
         overflow-y: scroll;
+        height: calc(100% - 52px);
     }
 
     .home-main {

@@ -1,7 +1,17 @@
 <template>
     <div class="config-content-wrapper">
         <div class="config-content-header">
-            <bk-button theme="primary" :disabled="lastselectConfIndex > -1"
+            <bk-button
+                v-perm="{
+                    tooltips: $t('environment.noPermission'),
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
+                theme="primary" :disabled="lastselectConfIndex > -1"
                 @click="createConfigItem">{{ $t('environment.addConfItem') }}
             </bk-button>
         </div>
@@ -62,25 +72,50 @@
                             <span class="text-type" @click="cancelEdit(row, index)">{{ $t('environment.cancel') }}</span>
                         </div>
                         <div class="preview-handler" v-else>
-                            <span class="config-edit" @click="changeConfig(row, index)">{{ $t('environment.edit') }}</span>
-                            <span class="config-edit" @click="deleteConfig(row, index)">{{ $t('environment.delete') }}</span>
+                            <span
+                                v-perm="{
+                                    hasPermission: curEnvDetail.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: envHashId,
+                                        action: ENV_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <span class="config-edit" @click="changeConfig(row, index)">{{ $t('environment.edit') }}</span>
+                            </span>
+                            <span
+                                v-perm="{
+                                    hasPermission: curEnvDetail.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: envHashId,
+                                        action: ENV_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <span class="config-edit" @click="deleteConfig(row, index)">{{ $t('environment.delete') }}</span>
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <bk-empty v-else></bk-empty>
+        <bk-exception
+            v-else
+            class="exception-wrap-item exception-part" type="empty" scene="part"
+        />
     </div>
 </template>
 
 <script>
-    import empty from '@/components/common/empty'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'config-tab',
-        components: {
-            'bk-empty': empty
-        },
         props: {
             projectId: {
                 type: String,
@@ -101,6 +136,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 curIsPlaintext: false, // 明文/密文
                 lastselectConfIndex: -1, // 最后选中的配置项索引
                 lastSelectConfig: {},
@@ -230,15 +267,12 @@
 
                     message = this.$t('environment.successfullySaved')
                     theme = 'success'
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-                } finally {
+
                     this.$bkMessage({
                         message,
                         theme
                     })
-
+                } finally {
                     this.lastselectConfIndex = -1
                     this.requestEnvDetail()
                 }
@@ -280,15 +314,12 @@
 
                                 message = this.$t('environment.successfullyDeleted')
                                 theme = 'success'
-                            } catch (err) {
-                                message = err.message ? err.message : err
-                                theme = 'error'
-                            } finally {
+
                                 this.$bkMessage({
                                     message,
                                     theme
                                 })
-
+                            } finally {
                                 this.lastselectConfIndex = -1
                                 this.requestEnvDetail()
                             }

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
@@ -36,21 +36,27 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.ProjectCreateExtInfo
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
-import com.tencent.devops.project.util.ImageUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,24 +71,34 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
-    gray: Gray,
     client: Client,
     projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
-    projectDataSourceAssignService: ProjectDataSourceAssignService
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    objectMapper: ObjectMapper,
+    projectExtService: ProjectExtService,
+    projectApprovalService: ProjectApprovalService,
+    clientTokenService: ClientTokenService,
+    profile: Profile,
+    projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : AbsProjectServiceImpl(
-    projectPermissionService,
-    dslContext,
-    projectDao,
-    projectJmxApi,
-    redisOperation,
-    gray,
-    client,
-    projectDispatcher,
-    authPermissionApi,
-    projectAuthServiceCode,
-    projectDataSourceAssignService
+    projectPermissionService = projectPermissionService,
+    dslContext = dslContext,
+    projectDao = projectDao,
+    projectJmxApi = projectJmxApi,
+    redisOperation = redisOperation,
+    client = client,
+    projectDispatcher = projectDispatcher,
+    authPermissionApi = authPermissionApi,
+    projectAuthServiceCode = projectAuthServiceCode,
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper,
+    projectExtService = projectExtService,
+    projectApprovalService = projectApprovalService,
+    clientTokenService = clientTokenService,
+    profile = profile,
+    projectUpdateHistoryDao = projectUpdateHistoryDao
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -98,21 +114,18 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo
-    ) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
-    }
-
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-            CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            CommonUtils.serviceUploadFile(
+                userId = userId,
+                serviceUrlPrefix = serviceUrlPrefix,
+                file = logoFile,
+                fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+                language = I18nUtil.getLanguage(userId),
+                staticFlag = true
+            )
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
         }
@@ -127,18 +140,25 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return projectPermissionService.getUserProjects(userId!!)
     }
 
-    override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
-        return
+    override fun getProjectFromAuth(
+        userId: String,
+        accessToken: String?,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? {
+        return projectPermissionService.filterProjects(
+            userId = userId,
+            permission = permission,
+            resourceType = resourceType
+        )
     }
 
-    override fun drawFile(projectCode: String): File {
-        // 随机生成首字母图片
-        val firstChar = projectCode.substring(0, 1).toUpperCase()
-        return ImageUtil.drawImage(
-            firstChar,
-            Width,
-            Height
-        )
+    override fun isShowUserManageIcon(routerTag: String?): Boolean {
+        return projectPermissionService.isShowUserManageIcon()
+    }
+
+    override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
+        return
     }
 
     override fun organizationMarkUp(
@@ -156,21 +176,91 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_CHECK_FAIL,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         return true
     }
 
-    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
+    override fun modifyProjectAuthResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
+        logger.info("modify project auth resource:$resourceUpdateInfo")
         projectPermissionService.modifyResource(
-            projectCode = projectCode,
-            projectName = projectName
+            resourceUpdateInfo = resourceUpdateInfo
         )
+    }
+
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelCreateAuthProject(userId = userId, projectCode = projectCode)
+    }
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelUpdateAuthProject(userId = userId, projectCode = projectCode)
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
         return true
     }
+
+    override fun isRbacPermission(projectId: String): Boolean = true
+
+    override fun getOperationalProducts(): List<OperationalProductVO> {
+        return listOf(
+            OperationalProductVO(
+                productId = -1,
+                productName = "其他"
+            )
+        )
+    }
+
+    override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
+        return listOf(
+            OperationalProductVO(
+                productId = -1,
+                productName = "其他"
+            )
+        )
+    }
+
+    override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
+        return with(tProjectRecord) {
+            ProjectOrganizationInfo(
+                bgId = bgId,
+                bgName = bgName,
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
+                centerId = centerId,
+                centerName = centerName,
+                deptId = deptId,
+                deptName = deptName
+            )
+        }
+    }
+
+    override fun remindUserOfRelatedProduct(userId: String, englishName: String): Boolean {
+        return false
+    }
+
+    override fun buildRouterTag(routerTag: String?): String? = null
+
+    override fun updateProjectRouterTag(englishName: String) = Unit
+
+    override fun validateProjectRelateProduct(
+        projectProductValidateDTO: ProjectProductValidateDTO
+    ) = Unit
+
+    override fun validateProjectOrganization(
+        projectChannel: ProjectChannelCode?,
+        bgId: Long,
+        bgName: String,
+        deptId: Long?,
+        deptName: String?
+    ) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)

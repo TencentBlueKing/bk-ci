@@ -32,12 +32,17 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
+import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
 import com.tencent.devops.model.process.tables.records.TPipelineGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GROUP_COUNT_EXCEEDS_LIMIT
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LABEL_COUNT_EXCEEDS_LIMIT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LABEL_NAME_TOO_LONG
+import com.tencent.devops.process.constant.ProcessMessageCode.GROUP_IS_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.GROUP_LABEL_IS_EXIST
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
@@ -50,7 +55,9 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -67,7 +74,8 @@ class PipelineGroupService @Autowired constructor(
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineFavorDao: PipelineFavorDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
-    private val client: Client
+    private val client: Client,
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) {
 
     fun getGroups(userId: String, projectId: String): List<PipelineGroup> {
@@ -123,48 +131,55 @@ class PipelineGroupService @Autowired constructor(
         return groups.map {
             PipelineGroupWithLabels(
                 id = it.id,
-                labels = it.labels.map { label -> label.id }
+                labels = it.labels.map { label -> label.id },
+                labelNames = it.labels.map { label -> label.name }
             )
         }
     }
 
     fun addGroup(userId: String, pipelineGroup: PipelineGroupCreate): Boolean {
-        try {
-            val groupCount = pipelineGroupDao.count(dslContext = dslContext, projectId = pipelineGroup.projectId)
-            if (groupCount >= MAX_GROUP_UNDER_PROJECT) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_GROUP_COUNT_EXCEEDS_LIMIT,
-                    defaultMessage = "At most $MAX_GROUP_UNDER_PROJECT label groups under a project"
-                )
-            }
-            val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_GROUP").data
-            pipelineGroupDao.create(
-                dslContext = dslContext,
-                projectId = pipelineGroup.projectId,
-                name = pipelineGroup.name,
-                userId = userId,
-                id = id
-            )
-        } catch (t: DuplicateKeyException) {
+        val count = pipelineGroupDao.countByName(dslContext, pipelineGroup.projectId, pipelineGroup.name)
+        if (count >= 1) {
             logger.warn("Fail to create the group $pipelineGroup by userId $userId")
-            throw OperationException("The group is already exist")
+            throw ErrorCodeException(
+                errorCode = GROUP_IS_EXIST,
+                params = arrayOf("${pipelineGroup.projectId}-${pipelineGroup.name}")
+            )
         }
+        val groupCount = pipelineGroupDao.count(dslContext = dslContext, projectId = pipelineGroup.projectId)
+        if (groupCount >= MAX_GROUP_UNDER_PROJECT) {
+            throw ErrorCodeException(
+                errorCode = ERROR_GROUP_COUNT_EXCEEDS_LIMIT,
+                defaultMessage = "At most $MAX_GROUP_UNDER_PROJECT label groups under a project"
+            )
+        }
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_GROUP").data
+        pipelineGroupDao.create(
+            dslContext = dslContext,
+            projectId = pipelineGroup.projectId,
+            name = pipelineGroup.name,
+            userId = userId,
+            id = id
+        )
         return true
     }
 
     fun updateGroup(userId: String, pipelineGroup: PipelineGroupUpdate): Boolean {
-        try {
-            return pipelineGroupDao.update(
-                dslContext = dslContext,
-                projectId = pipelineGroup.projectId,
-                groupId = decode(pipelineGroup.id),
-                name = pipelineGroup.name,
-                userId = userId
+        val count = pipelineGroupDao.countByName(dslContext, pipelineGroup.projectId, pipelineGroup.name)
+        if (count >= 1) {
+            logger.warn("Fail to create the group $pipelineGroup by userId $userId")
+            throw ErrorCodeException(
+                errorCode = GROUP_IS_EXIST,
+                params = arrayOf("${pipelineGroup.projectId}-${pipelineGroup.name}")
             )
-        } catch (t: DuplicateKeyException) {
-            logger.warn("Fail to update the group $pipelineGroup by userId $userId")
-            throw OperationException("The group is already exist")
         }
+        return pipelineGroupDao.update(
+            dslContext = dslContext,
+            projectId = pipelineGroup.projectId,
+            groupId = decode(pipelineGroup.id),
+            name = pipelineGroup.name,
+            userId = userId
+        )
     }
 
     fun deleteGroup(userId: String, projectId: String, groupId: String): Boolean {
@@ -188,39 +203,46 @@ class PipelineGroupService @Autowired constructor(
     }
 
     fun addLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelCreate): Boolean {
-        try {
-            val groupId = decode(pipelineLabel.groupId)
-            val labelCount = pipelineLabelDao.countByGroupId(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupId = groupId
-            )
-            if (labelCount >= MAX_LABEL_UNDER_GROUP) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_LABEL_COUNT_EXCEEDS_LIMIT,
-                    defaultMessage = "No more than $MAX_LABEL_UNDER_GROUP labels under a label group"
-                )
-            }
-            if (pipelineLabel.name.length > MAX_LABEL_NAME_LENGTH) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_LABEL_NAME_TOO_LONG,
-                    defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
-                )
-            }
-            val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_LABEL").data
-            pipelineLabelDao.create(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupId = groupId,
-                name = pipelineLabel.name,
-                userId = userId,
-                id = id
-            )
-        } catch (t: DuplicateKeyException) {
+        val groupId = decode(pipelineLabel.groupId)
+        val labelNameCount = pipelineLabelDao.countByGroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupId = groupId,
+            name = pipelineLabel.name
+        )
+        if (labelNameCount >= 1) {
             logger.warn("Fail to add the label $pipelineLabel by userId $userId")
-            throw OperationException("The label is already exist")
+            throw ErrorCodeException(
+                errorCode = GROUP_LABEL_IS_EXIST,
+                params = arrayOf("${pipelineLabel.groupId}-${pipelineLabel.name}")
+            )
         }
-
+        val labelCount = pipelineLabelDao.countByGroupId(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupId = groupId
+        )
+        if (labelCount >= MAX_LABEL_UNDER_GROUP) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_LABEL_COUNT_EXCEEDS_LIMIT,
+                defaultMessage = "No more than $MAX_LABEL_UNDER_GROUP labels under a label group"
+            )
+        }
+        if (pipelineLabel.name.length > MAX_LABEL_NAME_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = ERROR_LABEL_NAME_TOO_LONG,
+                defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
+            )
+        }
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_LABEL").data
+        pipelineLabelDao.create(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupId = groupId,
+            name = pipelineLabel.name,
+            userId = userId,
+            id = id
+        )
         return true
     }
 
@@ -235,29 +257,70 @@ class PipelineGroupService @Autowired constructor(
                 labelId = id,
                 userId = userId
             )
+            measureEventDispatcher.dispatch(
+                LabelChangeMetricsBroadCastEvent(
+                    projectId = projectId,
+                    type = PipelineLabelChangeTypeEnum.DELETE,
+                    pipelineLabelRelateInfos = listOf(
+                        PipelineLabelRelateInfo(
+                            projectId = projectId,
+                            labelId = id
+                        )
+                    )
+                )
+            )
+            logger.info("LableChangeMetricsBroadCastEvent： deleteLabel $projectId|$id")
             result
         }
     }
 
     fun updateLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelUpdate): Boolean {
-        try {
-            if (pipelineLabel.name.length > MAX_LABEL_NAME_LENGTH) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_LABEL_NAME_TOO_LONG,
-                    defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
-                )
-            }
-            return pipelineLabelDao.update(
-                dslContext = dslContext,
-                projectId = projectId,
-                labelId = decode(pipelineLabel.id),
-                name = pipelineLabel.name,
-                userId = userId
+        val groupId = decode(pipelineLabel.groupId)
+        val labelNameCount = pipelineLabelDao.countByGroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupId = groupId,
+            name = pipelineLabel.name
+        )
+        if (labelNameCount >= 1) {
+            logger.warn("Fail to add the label $pipelineLabel by userId $userId")
+            throw ErrorCodeException(
+                errorCode = GROUP_LABEL_IS_EXIST,
+                params = arrayOf("${pipelineLabel.groupId}-${pipelineLabel.name}")
             )
-        } catch (t: DuplicateKeyException) {
-            logger.warn("Fail to update the label $pipelineLabel by userId $userId")
-            throw OperationException("The label is already exist")
         }
+        if (pipelineLabel.name.length > MAX_LABEL_NAME_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = ERROR_LABEL_NAME_TOO_LONG,
+                defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
+            )
+        }
+        val result = pipelineLabelDao.update(
+            dslContext = dslContext,
+            projectId = projectId,
+            labelId = decode(pipelineLabel.id),
+            name = pipelineLabel.name,
+            userId = userId
+        )
+        if (result) {
+            measureEventDispatcher.dispatch(
+                LabelChangeMetricsBroadCastEvent(
+                    projectId = projectId,
+                    userId = userId,
+                    type = PipelineLabelChangeTypeEnum.UPDATE,
+                    statisticsTime = LocalDateTime.now(),
+                    pipelineLabelRelateInfos = listOf(
+                        PipelineLabelRelateInfo(
+                            projectId = projectId,
+                            labelId = decode(pipelineLabel.id),
+                            name = pipelineLabel.name
+                        )
+                    )
+                )
+            )
+            logger.info("LableChangeMetricsBroadCastEvent： updateLabel $projectId|${decode(pipelineLabel.id)}")
+        }
+        return result
     }
 
     fun deletePipelineLabel(userId: String, projectId: String, pipelineId: String) {
@@ -270,6 +333,20 @@ class PipelineGroupService @Autowired constructor(
                 userId = userId
             )
         }
+        measureEventDispatcher.dispatch(
+            LabelChangeMetricsBroadCastEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                type = PipelineLabelChangeTypeEnum.DELETE,
+                pipelineLabelRelateInfos = listOf(
+                    PipelineLabelRelateInfo(
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                )
+            )
+        )
+        logger.info("LableChangeMetricsBroadCastEvent： deletePipelineLabel $projectId|$pipelineId")
     }
 
     fun addPipelineLabel(userId: String, projectId: String, pipelineId: String, labelIds: List<String>) {
@@ -278,18 +355,35 @@ class PipelineGroupService @Autowired constructor(
         }
         try {
             val labelIdArr = labelIds.map { decode(it) }.toSet()
-            val pipelineLabelRels = mutableListOf<Pair<Long, Long?>>()
-            labelIdArr.forEach { labelId ->
-                val id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId(PIPELINE_LABEL_PIPELINE_BIZ_TAG_NAME).data
-                pipelineLabelRels.add(Pair(labelId, id))
-            }
+            val pipelineLabelSegmentIdPairs = pipelineLabelSegmentIdPairs(labelIdArr)
             pipelineLabelPipelineDao.batchCreate(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                pipelineLabelRels = pipelineLabelRels,
-                userId = userId)
+                pipelineLabelRels = pipelineLabelSegmentIdPairs,
+                userId = userId
+            )
+
+            val createData = pipelineLabelDao.getByIds(dslContext, projectId, labelIdArr)
+            measureEventDispatcher.dispatch(
+                LabelChangeMetricsBroadCastEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    type = PipelineLabelChangeTypeEnum.CREATE,
+                    pipelineLabelRelateInfos = createData.map {
+                        PipelineLabelRelateInfo(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            labelId = it.id,
+                            name = it.name,
+                            createUser = userId,
+                            createTime = it.createTime
+                        )
+                    }
+                )
+            )
+            logger.info("LableChangeMetricsBroadCastEvent： addPipelineLabel $projectId|$labelIds")
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to add the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
@@ -298,12 +392,7 @@ class PipelineGroupService @Autowired constructor(
 
     fun updatePipelineLabel(userId: String, projectId: String, pipelineId: String, labelIds: List<String>) {
         val labelIdArr = labelIds.map { decode(it) }.toSet()
-        val pipelineLabelRels = mutableListOf<Pair<Long, Long?>>()
-        labelIdArr.forEach { labelId ->
-            val id =
-                client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_LABEL_PIPELINE_BIZ_TAG_NAME).data
-            pipelineLabelRels.add(Pair(labelId, id))
-        }
+        val pipelineLabelSegmentIdPairs = pipelineLabelSegmentIdPairs(labelIdArr)
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -317,7 +406,7 @@ class PipelineGroupService @Autowired constructor(
                     dslContext = context,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    pipelineLabelRels = pipelineLabelRels,
+                    pipelineLabelRels = pipelineLabelSegmentIdPairs,
                     userId = userId
                 )
             }
@@ -325,15 +414,68 @@ class PipelineGroupService @Autowired constructor(
             logger.warn("Fail to update the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
         }
+        val deleteData = PipelineLabelRelateInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val createData = pipelineLabelDao.getByIds(dslContext, projectId, labelIdArr)
+        measureEventDispatcher.dispatch(
+            LabelChangeMetricsBroadCastEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                type = PipelineLabelChangeTypeEnum.DELETE,
+                pipelineLabelRelateInfos = listOf(deleteData)
+            )
+        )
+        logger.info("LableChangeMetricsBroadCastEvent： updatePipelineLabel-delete $projectId|$pipelineId")
+        measureEventDispatcher.dispatch(
+            LabelChangeMetricsBroadCastEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                type = PipelineLabelChangeTypeEnum.CREATE,
+                pipelineLabelRelateInfos = createData.map {
+                    PipelineLabelRelateInfo(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        labelId = it.id,
+                        name = it.name,
+                        createUser = userId,
+                        createTime = it.createTime
+                    )
+                }
+            )
+        )
+        logger.info(
+            "LableChangeMetricsBroadCastEvent： " +
+                "updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds"
+        )
     }
 
-    fun getViewLabelToPipelinesMap(projectId: String, labels: List<String>): Map<String, List<String>> {
+    private fun pipelineLabelSegmentIdPairs(labelIdArr: Set<Long>): MutableList<Pair<Long, Long?>> {
+        val generateSegmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId(PIPELINE_LABEL_PIPELINE_BIZ_TAG_NAME, labelIdArr.size)
+        val pairs = mutableListOf<Pair<Long, Long?>>()
+        var index = 0
+        labelIdArr.forEach { pairs.add(Pair(it, generateSegmentIds.data!![index++])) }
+        return pairs
+    }
+
+    fun getViewLabelToPipelinesMap(
+        projectId: String,
+        labels: List<String>,
+        queryDSLContext: DSLContext? = null
+    ): Map<String, List<String>> {
         val labelIds = labels.map { decode(it) }.toSet()
         if (labelIds.isEmpty()) {
             return emptyMap()
         }
 
-        val pipelines = pipelineLabelPipelineDao.listPipelines(dslContext, projectId, labelIds)
+        val pipelines = pipelineLabelPipelineDao.listPipelines(
+            dslContext = queryDSLContext ?: dslContext,
+            projectId = projectId,
+            labelId = labelIds
+        )
 
         val labelToPipelineMap = mutableMapOf<String, MutableList<String>>()
         pipelines.forEach {

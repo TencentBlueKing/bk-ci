@@ -27,27 +27,40 @@
 
 package com.tencent.devops.project.pojo.user
 
+import com.tencent.devops.project.pojo.BkDeptInfo
+import io.swagger.v3.oas.annotations.media.Schema
+
 /**
  * 用户机构信息
  *
  * since: 2018-12-09
  */
+@Schema(title = "用户部门信息")
 data class UserDeptDetail(
-        // TODO 给别名会报错。不给别名成功
-//    @JsonProperty("bg_name")
+    @get:Schema(title = "bg名称")
     val bgName: String,
-//    @JsonProperty("bg_id")
+    @get:Schema(title = "bgID")
     val bgId: String,
-//    @JsonProperty("dept_name")
+    @get:Schema(title = "业务线名称")
+    val businessLineName: String? = null,
+    @get:Schema(title = "业务线ID")
+    val businessLineId: String? = null,
+    @get:Schema(title = "部门名称")
     val deptName: String,
-//    @JsonProperty("bg_id")
+    @get:Schema(title = "部门ID")
     val deptId: String,
-//    @JsonProperty("center_name")
+    @get:Schema(title = "中心名称")
     val centerName: String,
-//    @JsonProperty("center_id")
+    @get:Schema(title = "中心ID")
     val centerId: String,
-//    @JsonProperty("group_id")
+    @get:Schema(title = "组ID")
     val groupId: String,
-//    @JsonProperty("group_name")
-    val groupName: String
+    @get:Schema(title = "组名称")
+    val groupName: String,
+    @get:Schema(title = "用户ID")
+    val userId: String? = null,
+    @get:Schema(title = "用户名称")
+    var name: String? = null,
+    @get:Schema(title = "部门及以上层级")
+    val deptInfos: List<BkDeptInfo>? = emptyList()
 )

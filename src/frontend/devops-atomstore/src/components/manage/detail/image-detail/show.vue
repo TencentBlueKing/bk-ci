@@ -40,6 +40,7 @@
                         :external-link="false"
                         :box-shadow="false"
                         preview-background="#fff"
+                        :language="mavenLang"
                         v-model="detail.description"
                     />
                 </li>
@@ -74,6 +75,7 @@
                         :external-link="false"
                         :box-shadow="false"
                         preview-background="#fff"
+                        :language="mavenLang"
                         v-model="detail.versionContent"
                     />
                 </li>
@@ -135,6 +137,9 @@
                     })
                 })
                 return agentNames
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         mounted () {

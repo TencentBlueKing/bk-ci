@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.engine.api.BuildJobResource
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -44,7 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED")
 @RestResource
 class BuildJobResourceImpl @Autowired constructor(
-    private val vMBuildService: EngineVMBuildService
+    private val vMBuildService: EngineVMBuildService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) : BuildJobResource {
 
     override fun jobStarted(
@@ -55,13 +58,15 @@ class BuildJobResourceImpl @Autowired constructor(
         retryCount: String
     ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName, retryCount)
-        return Result(vMBuildService.buildVMStarted(
-            projectId = projectId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            vmName = vmName,
-            retryCount = retryCount.toInt()
-        ))
+        return Result(
+            vMBuildService.buildVMStarted(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName,
+                retryCount = retryCount.toInt()
+            )
+        )
     }
 
     override fun claimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
@@ -143,7 +148,8 @@ class BuildJobResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        executeCount: Int?
+        executeCount: Int?,
+        jobHeartbeatRequest: JobHeartbeatRequest?
     ): Result<HeartBeatInfo> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(
@@ -151,7 +157,9 @@ class BuildJobResourceImpl @Autowired constructor(
                 projectId = projectId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
-                vmName = vmName
+                vmName = vmName,
+                executeCount = executeCount,
+                jobHeartbeatRequest = jobHeartbeatRequest
             )
         )
     }
@@ -171,6 +179,10 @@ class BuildJobResourceImpl @Autowired constructor(
             errorInfo = errorInfo
         )
         return Result(true)
+    }
+
+    override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
+        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, null, null, true))
     }
 
     companion object {

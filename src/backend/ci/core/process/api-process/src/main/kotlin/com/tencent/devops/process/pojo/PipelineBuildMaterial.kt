@@ -27,24 +27,26 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.ScmType
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 构建历史中的源材料
  */
-@ApiModel("")
+@Schema(title = "")
 data class PipelineBuildMaterial(
-    @ApiModelProperty("别名", required = false)
+    @get:Schema(title = "代码库类型", required = false)
+    val scmType: String? = ScmType.CODE_TGIT.name,
+    @get:Schema(title = "别名", required = false)
     val aliasName: String?,
-    @ApiModelProperty("url 地址", required = false)
+    @get:Schema(title = "url 地址", required = false)
     val url: String,
-    @ApiModelProperty("分支名称", required = false)
+    @get:Schema(title = "分支名称", required = false)
     val branchName: String?,
-    @ApiModelProperty("当前最新提交id", required = false)
+    @get:Schema(title = "当前最新提交id", required = false)
     val newCommitId: String?,
-    @ApiModelProperty("当前提交备注信息", required = false)
+    @get:Schema(title = "当前提交备注信息", required = false)
     val newCommitComment: String?,
-    @ApiModelProperty("提交次数", required = false)
+    @get:Schema(title = "提交次数", required = false)
     val commitTimes: Int?
 )

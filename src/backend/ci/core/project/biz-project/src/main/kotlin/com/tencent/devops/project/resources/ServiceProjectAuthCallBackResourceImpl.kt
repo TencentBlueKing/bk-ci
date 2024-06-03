@@ -30,30 +30,39 @@ package com.tencent.devops.project.resources
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
+import com.tencent.devops.project.constant.ProjectMessageCode.ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT
+import com.tencent.devops.project.pojo.Result
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProjectAuthCallBackResourceImpl @Autowired constructor(
     val authProjectService: AuthProjectService
 ) : ServiceProjectAuthCallBackResource {
-    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): Result<CallbackBaseResponseDTO> {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        when (method) {
+        val callbackBaseResponseDTO = when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authProjectService.getProjectList(page, token)
+                authProjectService.getProjectList(page, token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 val attribute = callBackInfo.filter.attributeList
-                return authProjectService.getProjectInfo(ids, token, attribute)
+                authProjectService.getProjectInfo(ids, token, attribute)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
+                authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
             }
+            else ->
+                throw ErrorCodeException(
+                    errorCode = ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT,
+                    params = arrayOf(method.method),
+                    defaultMessage = "iam callback method ${method.method} not support"
+                )
         }
-        return null
+        return Result(callbackBaseResponseDTO)
     }
 }

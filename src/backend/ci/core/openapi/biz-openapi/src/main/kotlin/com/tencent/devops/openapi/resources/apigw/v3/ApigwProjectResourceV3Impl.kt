@@ -28,10 +28,11 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
+import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -46,7 +47,9 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class ApigwProjectResourceV3Impl @Autowired constructor(
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val bkTag: BkTag,
+    private val openapiPermissionService: OpenapiPermissionService
 ) : ApigwProjectResourceV3 {
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceV3Impl::class.java)
@@ -62,11 +65,11 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        logger.info("create project projectCreateInfo($projectCreateInfo) by user $userId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|create|$projectCreateInfo|$accessToken|$projectRouteTag")
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectRouteTag!!)
+            bkTag.setGatewayTag(projectRouteTag)
         }
 
         return client.get(ServiceProjectResource::class).create(
@@ -84,7 +87,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        logger.info("update project projectId($projectId) projectCreateInfo($projectUpdateInfo) by user $userId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|update|$projectId|$projectUpdateInfo|$accessToken")
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
@@ -99,8 +102,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<ProjectVO?> {
-        logger.info("get project projectId($projectId) by user $userId")
+    ): Result<ProjectVO?> {
+        logger.info("OPENAPI_PROJECT_V3|$userId|get|$projectId")
         return client.get(ServiceProjectResource::class).get(
             englishName = projectId
         )
@@ -112,7 +115,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         userId: String,
         accessToken: String?
     ): Result<List<ProjectVO>> {
-        logger.info("list project by user $userId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|list")
         return client.get(ServiceProjectResource::class).list(
             userId = userId
         )
@@ -126,7 +129,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         name: String,
         projectId: String?
     ): Result<Boolean> {
-        logger.info("validate project by user $userId| ${validateType.name}| $name| $projectId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|validate|$validateType|$name|$projectId")
         return client.get(ServiceProjectResource::class).validate(
             validateType = validateType,
             name = name,
@@ -137,14 +140,16 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
     override fun createProjectUser(
         appCode: String?,
         apigwType: String?,
+        userId: String?,
         projectId: String,
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean?> {
+        logger.info("OPENAPI_PROJECT_V3|$appCode|create project user|$userId|$projectId|$createInfo")
+        openapiPermissionService.validProjectManagerPermission(appCode, apigwType, userId, projectId)
         val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
         if (!projectConsulTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectConsulTag)
+            bkTag.setGatewayTag(projectConsulTag)
         }
-        logger.info("createProjectUser v3 $projectId| $createInfo $projectConsulTag")
         return client.get(ServiceProjectResource::class).createProjectUser(
             projectId = projectId,
             createInfo = createInfo

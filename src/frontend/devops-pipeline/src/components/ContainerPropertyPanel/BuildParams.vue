@@ -19,7 +19,7 @@
                     </div>
                     <template v-else>
                         <draggable v-model="globalParams" :options="paramsDragOptions">
-                            <accordion v-for="(param, index) in globalParams" :key="param.paramIdKey" :is-error="errors.any(`param-${param.id}`)">
+                            <accordion v-for="(param, index) in globalParams" condition :key="param.paramIdKey" :is-error="errors.any(`param-${param.id}`)">
                                 <header class="param-header" slot="header">
                                     <span>
                                         <bk-popover style="vertical-align: middle" v-if="errors.all(`param-${param.id}`).length" placement="top">
@@ -30,7 +30,7 @@
                                         </bk-popover>
                                         {{ param.id }}
                                     </span>
-                                    <i v-if="!disabled && settingKey !== 'templateParams'" @click.stop.prevent="editParamShow(index)" class="devops-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
+                                    <i v-if="!disabled && !isTemplateParams" @click.stop.prevent="editParamShow(index)" class="devops-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
                                     <i v-if="!disabled" class="devops-icon icon-move" />
                                     <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus" />
                                 </header>
@@ -47,7 +47,7 @@
                                                 :value="param.type"
                                             />
                                         </bk-form-item>
-                                        <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
+                                        <bk-form-item label-width="auto" class="flex-col-span-1" v-if="!isTemplateParams">
                                             <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="param.required" name="required" :handle-change="(name, value) => handleUpdateParam(name, value, index)" />
                                         </bk-form-item>
                                     </div>
@@ -67,6 +67,7 @@
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :placeholder="$t('editPage.defaultValueTips')"
                                                 :disabled="disabled"
+                                                show-select-all
                                                 :key="param.type"
                                                 :value="getSelectorDefaultVal(param)"
                                             >
@@ -81,10 +82,10 @@
                                                 :value="param.defaultValue">
                                             </enum-input>
                                             <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
-                                            <vuex-textarea v-if="isTextareaParam(param.type)" :click-unfold="true" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
-                                            <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
-                                            <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
-                                            <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
+                                            <vuex-textarea v-if="isTextareaParam(param.type)" :click-unfold="true" :hover-unfold="true" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <request-selector v-if="isCodelibParam(param.type)" style="max-width: 250px" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
+                                            <request-selector v-if="isBuildResourceParam(param.type)" style="max-width: 250px" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
+                                            <request-selector v-if="isSubPipelineParam(param.type)" style="max-width: 250px" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
                                         </bk-form-item>
                                     </div>
 
@@ -93,7 +94,7 @@
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
-                                        <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
+                                        <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
@@ -101,7 +102,7 @@
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isGitParam(param.type)" :label="$t('editPage.gitRepo')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
-                                        <request-selector v-bind="getRepoOption('CODE_GIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
+                                        <request-selector v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'" replace-key="{keyword}" :search-url="getSearchUrl()"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isCodelibParam(param.type)" :label="$t('editPage.codelibParams')" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
@@ -142,42 +143,42 @@
 </template>
 
 <script>
-    import { mapGetters, mapState } from 'vuex'
-    import { deepCopy } from '@/utils/util'
+    import FileParamInput from '@/components/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import FileParamInput from '@/components/FileParamInput'
-    import validMixins from '../validMixins'
-    import draggable from 'vuedraggable'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
     import {
-        isTextareaParam,
-        isStringParam,
-        isBooleanParam,
-        isBuildResourceParam,
-        isEnumParam,
-        isMultipleParam,
-        isCodelibParam,
-        isSvnParam,
-        isGitParam,
-        isSubPipelineParam,
-        isFileParam,
-        getRepoOption,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
+        CODE_LIB_OPTION,
+        CODE_LIB_TYPE,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING,
-        CODE_LIB_OPTION,
-        CODE_LIB_TYPE,
-        SUB_PIPELINE_OPTION
+        SUB_PIPELINE_OPTION,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
+        getRepoOption,
+        isBooleanParam,
+        isBuildResourceParam,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isStringParam,
+        isSubPipelineParam,
+        isSvnParam,
+        isTextareaParam
     } from '@/store/modules/atom/paramsConfig'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy } from '@/utils/util'
+    import draggable from 'vuedraggable'
+    import { mapGetters } from 'vuex'
+    import validMixins from '../validMixins'
 
     const BOOLEAN = [
         {
@@ -239,13 +240,13 @@
         },
 
         computed: {
-            ...mapState('atom', [
-                'buildParamsMap'
-            ]),
             ...mapGetters('atom', [
                 'osList',
                 'getBuildResourceTypeList'
             ]),
+            isTemplateParams () {
+                return this.settingKey === 'templateParams'
+            },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
                     id: os.value,
@@ -297,14 +298,6 @@
                     animation: 200,
                     disabled: this.disabled
                 }
-            },
-            buildParams () {
-                const { buildNo } = this.$route.params
-                return this.buildParamsMap[buildNo]
-            },
-            isExecDetail () {
-                const { buildNo } = this.$route.params
-                return !!buildNo
             }
         },
 
@@ -353,7 +346,8 @@
                     {
                         ...deepCopy(DEFAULT_PARAM[value]),
                         id: this.globalParams[paramIndex].id,
-                        paramIdKey: this.globalParams[paramIndex].paramIdKey
+                        paramIdKey: this.globalParams[paramIndex].paramIdKey,
+                        required: !this.isTemplateParams
                     },
                     ...this.globalParams.slice(paramIndex + 1)
                 ]
@@ -417,10 +411,8 @@
                     const param = {
                         ...deepCopy(DEFAULT_PARAM[STRING]),
                         id: `param${Math.floor(Math.random() * 100)}`,
-                        paramIdKey: `paramIdKey-${this.paramIdCount++}`
-                    }
-                    if (this.settingKey === 'templateParams') {
-                        Object.assign(param, { required: false })
+                        paramIdKey: `paramIdKey-${this.paramIdCount++}`,
+                        required: !this.isTemplateParams
                     }
                     globalParams.splice(index + 1, 0, param)
                 } else {
@@ -447,7 +439,7 @@
                     if (value && typeof value === 'string') {
                         opts = value.split('\n').map(opt => {
                             const v = opt.trim()
-                            const res = v.match(/^([\w\.\-\\\/]+)=(\S+)$/) || [v, v, v]
+                            const res = v.match(/^([\w\.\-\\\/]+)=([\S\s]+)$/) || [v, v, v]
                             const [, key, value] = res
                             console.log(key, value)
                             return {
@@ -508,6 +500,10 @@
                 return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
 
+            getSearchUrl () {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+            },
+
             handleChange (params) {
                 this.updateContainerParams(this.settingKey, params)
             },
@@ -532,7 +528,6 @@
                     return []
                 }
             },
-
             // 全局参数添加遍历的key值
             getParams (params) {
                 const result = params.map(item => {

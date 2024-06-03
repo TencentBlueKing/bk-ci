@@ -32,28 +32,35 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.PipelineStageTag
+import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -65,514 +72,559 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["USER_PIPELINE"], description = "用户-流水线资源")
+@Tag(name = "USER_PIPELINE", description = "用户-流水线资源")
 @Path("/user/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserPipelineResource {
 
-    @ApiOperation("用户是否拥有创建流水线权限")
+    @Operation(summary = "用户是否拥有创建流水线权限")
     @GET
     // @Path("/projects/{projectId}/hasCreatePermission")
     @Path("/{projectId}/hasCreatePermission")
     fun hasCreatePermission(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("流水线名是否存在")
+    @Operation(summary = "流水线名是否存在")
     @GET
     // @Path("/projects/{projectId}/pipelineExist")
     @Path("/{projectId}/pipelineExist")
     fun pipelineExist(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线名", required = true)
+        @Parameter(description = "流水线名", required = true)
         @QueryParam("pipelineName")
         pipelineName: String
     ): Result<Boolean>
 
-    @ApiOperation("拥有权限流水线列表")
+    @Operation(summary = "拥有权限流水线列表")
     @GET
     // @Path("/projects/{projectId}/hasPermissionList")
     @Path("/{projectId}/hasPermissionList")
     fun hasPermissionList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("对应权限", required = true, defaultValue = "")
+        @Parameter(description = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @ApiParam("排除流水线ID", required = false, defaultValue = "")
+        @Parameter(description = "排除流水线ID", required = false, example = "")
         @QueryParam("excludePipelineId")
         excludePipelineId: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Pipeline>>
 
-    @ApiOperation("新建流水线编排")
+    @Operation(summary = "新建流水线编排")
     @POST
     // @Path("/projects/{projectId}/createPipeline")
     @Path("/{projectId}")
     fun create(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("是否使用模板配置", required = false)
+        @Parameter(description = "是否使用模板配置", required = false)
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean? = false,
-        @ApiParam(value = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         pipeline: Model
     ): Result<PipelineId>
 
-    @ApiOperation("用户是否拥有流水线权限")
+    @Operation(summary = "用户是否拥有流水线权限")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/hasPermission")
     @Path("/{projectId}/{pipelineId}/hasPermission")
     fun hasPermission(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "权限", required = true)
+        @Parameter(description = "权限", required = true)
         @QueryParam("permission")
         permission: Permission
     ): Result<Boolean>
 
-    @ApiOperation("复制流水线编排")
+    @Operation(summary = "复制流水线编排")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/copy")
     @Path("/{projectId}/{pipelineId}/copy")
     fun copy(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "流水线COPY", required = true)
+        @Parameter(description = "流水线COPY", required = true)
         pipeline: PipelineCopy
     ): Result<PipelineId>
 
-    @ApiOperation("编辑流水线编排")
+    @Operation(summary = "编辑流水线编排")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
-    fun edit(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+    fun editPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         pipeline: Model
     ): Result<Boolean>
 
-    @ApiOperation("编辑流水线编排以及设置")
+    @Operation(summary = "编辑流水线编排以及设置")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/saveAll")
     @Path("/{projectId}/{pipelineId}/saveAll")
     fun saveAll(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "流水线模型与设置", required = true)
+        @Parameter(description = "流水线模型与设置", required = true)
         @Valid
         modelAndSetting: PipelineModelAndSetting
     ): Result<Boolean>
 
-    @ApiOperation("保存流水线设置")
+    @Operation(summary = "保存流水线设置")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/saveSetting")
     @Path("/{projectId}/{pipelineId}/saveSetting")
     fun saveSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "流水线设置", required = true)
+        @Parameter(description = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线编排")
+    @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/lock")
+    fun lockPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "开启true/锁定false", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "获取流水线编排")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun get(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        includeDraft: Boolean? = false
     ): Result<Model>
 
-    @ApiOperation("获取流水线编排版本")
+    @Operation(summary = "获取流水线编排版本")
     @GET
     @Path("/{projectId}/{pipelineId}/{version}")
     fun getVersion(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("流水线编排版本", required = true)
+        @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
         version: Int
     ): Result<Model>
 
-    @ApiOperation("生成远程执行token")
+    @Operation(summary = "生成远程执行token")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/remoteToken")
     @Path("/{projectId}/{pipelineId}/remoteToken")
     fun generateRemoteToken(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineRemoteToken>
 
-    @ApiOperation("删除流水线编排")
+    @Operation(summary = "删除流水线编排")
     @DELETE
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun softDelete(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线版本")
+    @Operation(summary = "批量删除流水线编排")
+    @DELETE
+    @Path("/batchDelete")
+    fun batchDelete(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        batchDeletePipeline: BatchDeletePipeline
+    ): Result<Map<String, Boolean>>
+
+    @Operation(summary = "删除流水线版本")
     @DELETE
     @Path("/{projectId}/{pipelineId}/{version}/")
     fun deleteVersion(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("流水线编排版本", required = true)
+        @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
         version: Int
     ): Result<Boolean>
 
-    @ApiOperation("用户获取视图设置和流水线编排列表")
+    @Operation(summary = "用户获取视图设置和流水线编排列表")
     @GET
     // @Path("/projects/{projectId}/listViewSettingAndPipelines")
     @Path("/projects/{projectId}/listViewSettingAndPipelines")
     fun listViewSettingAndPipelines(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<PipelineViewAndPipelines>
 
-    @ApiOperation("用户获取视图流水线编排列表")
+    @Operation(summary = "用户获取视图流水线编排列表")
     @GET
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
-        @ApiParam("按流水线过滤", required = false)
+        @Parameter(description = "按流水线过滤", required = false)
         @QueryParam("filterByPipelineName")
         filterByPipelineName: String?,
-        @ApiParam("按创建人过滤", required = false)
+        @Parameter(description = "按创建人过滤", required = false)
         @QueryParam("filterByCreator")
         filterByCreator: String?,
-        @ApiParam("按标签过滤", required = false)
+        @Parameter(description = "按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String?,
-        @ApiParam("用户视图ID", required = true)
+        @Parameter(description = "按视图过滤", required = false)
+        @QueryParam("filterByViewIds")
+        filterByViewIds: String? = null,
+        @Parameter(description = "用户视图ID,表示用户当前所在视图", required = true)
         @QueryParam("viewId")
-        viewId: String
+        viewId: String,
+        @Parameter(description = "排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation?,
+        @Parameter(description = "是否展示已删除流水线", required = false)
+        @QueryParam("showDelete")
+        showDelete: Boolean? = false
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
-    @ApiOperation("有权限流水线编排列表")
+    @Operation(summary = "有权限流水线编排列表")
     @GET
     @Path("/{projectId}/")
     fun list(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
-        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
+        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
+        @Parameter(description = "流水线名称", required = false)
+        @QueryParam("filterByPipelineName")
+        filterByPipelineName: String?
     ): Result<PipelinePage<Pipeline>>
 
-    @ApiOperation("流水线状态列表")
+    @Operation(summary = "流水线状态列表")
     @POST
     // @Path("/projects/{projectId}/pipelineStatus")
     @Path("/{projectId}/pipelineStatus")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Pipeline ID 列表", required = true)
+        @Parameter(description = "Pipeline ID 列表", required = true)
         pipelines: Set<String>
     ): Result<Map<String, PipelineStatus>>
 
-    @ApiOperation("收藏流水线消息")
+    @Operation(summary = "收藏流水线消息")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/favor")
     @Path("/{projectId}/{pipelineId}/favor")
     fun favor(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("是否收藏", required = true)
+        @Parameter(description = "是否收藏", required = true)
         @QueryParam("type")
         favor: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线编排")
-    @DELETE
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/forceDelete")
-    @Path("/{projectId}/{pipelineId}/true")
-    fun trueDelete(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<Boolean>
-
-    @ApiOperation("还原流水线编排")
+    @Operation(summary = "还原流水线编排")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/restore")
     @Path("/{projectId}/{pipelineId}/restore")
     fun restore(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("列出等还原回收的流水线列表")
+    @Operation(summary = "列出等还原回收的流水线列表")
     @GET
-    // @Path("/projects/{projectId}/pipelineRecycleList")
     @Path("/{projectId}/pipelineRecycleList")
     fun recycleList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
-        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
+        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
+        @Parameter(description = "排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation?,
+        @Parameter(description = "按流水线过滤", required = false)
+        @QueryParam("filterByPipelineName")
+        filterByPipelineName: String?
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
-    @ApiOperation("流水线重命名")
+    @Operation(summary = "流水线重命名")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/rename")
     @Path("/{projectId}/{pipelineId}/")
     fun rename(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "流水线名称", required = true)
+        @Parameter(description = "流水线名称", required = true)
         name: PipelineName
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线阶段标签")
+    @Operation(summary = "获取流水线阶段标签")
     @GET
     @Path("/stageTag")
     fun getStageTag(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<PipelineStageTag>>
 
-    @ApiOperation("导出流水线模板")
+    @Operation(summary = "导出流水线模板")
     @GET
     @Path("{pipelineId}/projects/{projectId}/export")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Response
 
-    @ApiOperation("导入流水线模板")
+    @Operation(summary = "导入流水线模板")
     @POST
     @Path("/projects/{projectId}/upload")
     fun uploadPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         pipelineInfo: PipelineModelAndSetting,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<String?>
 
-    @ApiOperation("流水线编排版本列表")
+    @Operation(summary = "流水线编排版本列表")
     @GET
     @Path("/{projectId}/{pipelineId}/version")
     fun versionList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineInfo>>
+    ): Result<Page<PipelineVersionWithInfo>>
 
-    @ApiOperation("校验matrix yaml格式")
+    @Operation(summary = "校验matrix yaml格式")
     @POST
     @Path("/{projectId}/{pipelineId}/matrix/check")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun checkYaml(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("yaml内容", required = true)
+        @Parameter(description = "yaml内容", required = true)
         yaml: MatrixPipelineInfo
     ): Result<MatrixPipelineInfo>
+
+    @Operation(summary = "获取列表页列表相关的数目")
+    @GET
+    @Path("/projects/{projectId}/getCount")
+    fun getCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineCount>
 }

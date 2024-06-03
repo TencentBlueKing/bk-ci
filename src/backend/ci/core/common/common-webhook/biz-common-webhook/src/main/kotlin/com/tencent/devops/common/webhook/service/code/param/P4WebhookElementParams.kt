@@ -46,16 +46,17 @@ class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerEleme
         variables: Map<String, String>
     ): WebHookParams {
         val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+            repositoryConfig = RepositoryConfigUtils.buildWebhookConfig(
+                element = element,
                 variables = variables
-            )
+            ).third
         )
         with(element.data.input) {
             params.eventType = eventType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
             params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
             params.codeType = CodeType.P4
+            params.version = element.version
             return params
         }
     }

@@ -137,7 +137,7 @@ object MarketBuildUtils {
         }
 
         OkhttpUtils.doHttp(request.build()).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("before delete execute result: $body")
         }
     }

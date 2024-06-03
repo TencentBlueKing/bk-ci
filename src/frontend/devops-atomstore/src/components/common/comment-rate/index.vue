@@ -37,13 +37,11 @@
                 type: Number,
                 default: 16
             },
+            maxStars: {
+                type: Number,
+                default: 5
+            },
             edit: Boolean
-        },
-
-        data () {
-            return {
-                maxStars: new Array(5)
-            }
         },
 
         methods: {

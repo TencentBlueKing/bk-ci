@@ -23,6 +23,11 @@
                         :key="item.projectCode"
                         :id="item.projectCode"
                         :name="item.projectName"
+                        :disabled="!item.pipelineTemplateInstallPerm"
+                        v-bk-tooltips="{
+                            content: $t('store.无该项目的模板安装权限'),
+                            disabled: item.pipelineTemplateInstallPerm
+                        }"
                     >
                     </bk-option>
                     <div slot="extension" style="cursor: pointer;">
@@ -36,7 +41,9 @@
                     <button class="bk-button bk-default" type="button" @click="toBack"> {{ $t('store.取消') }} </button>
                 </div>
                 <section v-if="installedProject.length">
-                    <p class="project-title">{{ $t('store.该') }}{{ type|typeFilter }}{{ $t('store.已安装至以下项目：') }} </p>
+                    <p class="project-title">
+                        {{ $t('store.该 {0} 已安装至以下项目：', [type || typeFilter]) }}
+                    </p>
                     <table class="bk-table project-table">
                         <thead>
                         </thead>

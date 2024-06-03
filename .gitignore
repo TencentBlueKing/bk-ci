@@ -1,7 +1,9 @@
 .DS_Store
 .idea
 .vscode
+.fleet
 .gradle
+.settings
 bin/
 docs/node_modules
 docs/_book
@@ -35,3 +37,16 @@ out
 build.yml
 *.ipa
 build/
+bkci-slim.tar.gz
+
+# 容器化忽略文件
+helm-charts/core/ci/bk-ci*.tgz
+helm-charts/core/ci/values.yaml
+helm-charts/core/ci/templates/configmap/tpl/
+docker-images/core/ci/ci
+docker-images/core/ci/ci-docker
+docker-images/core/ci/*.gz
+
+#turbo 忽略文件
+src/backend/turbo/**/build/
+src/backend/turbo/release/

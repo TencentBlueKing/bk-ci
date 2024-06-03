@@ -28,8 +28,6 @@
 package com.tencent.devops.process.engine.compatibility
 
 import com.tencent.devops.process.engine.compatibility.v2.V2BuildParametersCompatibilityTransformer
-import com.tencent.devops.process.util.PswParameterUtils
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,6 +37,5 @@ class CompatibilityConfig {
 
     @Bean
     @ConditionalOnMissingBean(BuildParametersCompatibilityTransformer::class)
-    fun buildParamCompatibilityTransformer(@Autowired pswParameterUtils: PswParameterUtils) =
-        V2BuildParametersCompatibilityTransformer(pswParameterUtils)
+    fun buildParamCompatibilityTransformer() = V2BuildParametersCompatibilityTransformer()
 }

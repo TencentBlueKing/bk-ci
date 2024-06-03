@@ -74,6 +74,7 @@
                 iframe.postMessage({
                     atomPropsValue: this.element.data.input,
                     atomPropsModel: this.atomPropsModel.input,
+                    atomHashId: this.element.id,
                     containerInfo,
                     currentUserInfo,
                     envConf,
@@ -87,8 +88,14 @@
                 // if (location.href.indexOf(e.origin) === 0) return
                 if (!e.data) return
                 if (e.data.atomValue) {
-                    this.setPipelineEditing(true)
-                    this.$nextTick(this.handleUpdateWholeAtomInput(e.data.atomValue))
+                    console.log(e.data, this.element?.id, 'dataFromIframeAtom')
+                    // 如果不含有elementId(旧版本的自定义插件)， 或者elementId与当前id相同，则更新
+                    if (!e.data.elementId || (e.data.elementId && e.data.elementId === this.element?.id)) {
+                        this.setPipelineEditing(true)
+                        this.handleUpdateWholeAtomInput(e.data.atomValue)
+                    } else {
+                        console.log(`nowId: ${this.element.id}, 'fromId: ${e.data.elementId}`)
+                    }
                 } else if (e.data.isError !== undefined) {
                     this.handleUpdateElement('isError', e.data.isError)
                 } else if (e.data.iframeHeight) {

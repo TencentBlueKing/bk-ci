@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    api("org.reflections:reflections")
     api(project(":core:process:api-process"))
     api(project(":core:log:api-log"))
     api(project(":core:store:api-store"))
@@ -35,6 +36,7 @@ dependencies {
     api(project(":core:dockerhost:api-dockerhost"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-pipeline"))
+    api(project(":core:common:common-test"))
     api("org.apache.commons:commons-exec")
     api("org.apache.commons:commons-compress")
     api("com.github.oshi:oshi-core")
@@ -44,7 +46,13 @@ dependencies {
     api("ch.qos.logback:logback-core")
     api("ch.qos.logback:logback-classic")
     api("com.github.ben-manes.caffeine:caffeine")
-    api(fileTree(mapOf("dir" to "lib/KillProcessTree.jar", "include" to listOf("*.jar"))))
+    api("io.github.resilience4j:resilience4j-circuitbreaker")
+    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+    api(project(":core:misc:api-image"))
+    // jenkins java代码依赖
+    api("org.jvnet.winp:winp")
+    api("net.java.dev.jna:jna")
+    api("org.jenkins-ci:version-number")
 }
 
 configurations.forEach {

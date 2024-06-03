@@ -26,11 +26,7 @@
             },
             desc: {
                 type: String,
-                default: false
-            },
-            title: {
-                type: String,
-                default: false
+                default: ''
             },
             disabled: {
                 type: Boolean,

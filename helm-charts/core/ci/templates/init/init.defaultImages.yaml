@@ -1,0 +1,42 @@
+# 初始化构建镜像
+{{ if .Values.init.defaultImage }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-init-default-image
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: init-default-image
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: init-default-image
+    spec:
+      containers:
+        - name: init-default-image
+          image: {{ include "bkci-backend.image" . }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          workingDir: /data/workspace/
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              services="store project auth"
+              for service in $services
+              do
+                until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
+                do 
+                  echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
+                  sleep 2;
+                done
+                echo "{{ include "bkci.names.fullname" . }}-$service is available";
+              done
+
+              echo "{{ include "bkci.names.fullname" . }}-store is available";
+              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST
+      restartPolicy: OnFailure
+{{- end -}}

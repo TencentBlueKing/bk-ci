@@ -79,6 +79,12 @@ interface NotifyMessageTemplateService {
     ): Result<Boolean>
 
     /**
+     * 更新腾讯云ses模板id信息
+     * @param templateId 模板ID
+     */
+    fun updateTXSESTemplateId(userId: String, templateId: String, sesTemplateId: Int?): Result<Boolean>
+
+    /**
      * 删除消息通知模板
      * @param templateId 模板ID
      */
@@ -95,6 +101,12 @@ interface NotifyMessageTemplateService {
      * @param request 使用模板发送消息通知请求报文体
      */
     fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean>
+
+    /**
+     * 使用模板取消消息通知
+     * @param request 使用模板发送消息通知请求报文体
+     */
+    fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean>
 
     /**
      * 使用模板发送消息通知

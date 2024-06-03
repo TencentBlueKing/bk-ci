@@ -63,6 +63,7 @@
                             default-open="preview"
                             :box-shadow="false"
                             :subfield="false"
+                            :language="mavenLang"
                             preview-back-ground="#fafbfd"
                         />
                     </p>
@@ -114,6 +115,7 @@
                         default-open="preview"
                         :box-shadow="false"
                         :subfield="false"
+                        :language="mavenLang"
                         preview-back-ground="#fafbfd"
                     />
                 </span>
@@ -172,6 +174,9 @@
                     })
                 })
                 return AgentNames
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         mounted () {

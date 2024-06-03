@@ -1,0 +1,5 @@
+node_modules
+public/assets
+jest.config.js
+vue.config.js
+babel.config.js

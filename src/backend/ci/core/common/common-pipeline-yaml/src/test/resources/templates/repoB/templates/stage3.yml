@@ -1,0 +1,16 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: stagename
+    type: string
+    default: STAGENAME
+
+stages:
+  - name: "res_repoB_stage_id_2"
+    jobs:
+      res_repoB_stage_id_2_job_id_1:
+        name: res_repoB_stage_id_2_job_id_1
+        steps:
+          - run: |
+              echo "res_repoB_stage_id_2_job_id_1 username ${{ parameters.username }}"

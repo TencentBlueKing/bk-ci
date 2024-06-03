@@ -26,22 +26,23 @@
  */
 
 dependencies {
-    api(project(":core:process:plugin-load")) // Model检查
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client")) // 其他微服务调用
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db-sharding"))
     api(project(":core:common:common-websocket")) // 依赖websocket枚举
+    api(project(":core:common:common-expression")) // 依赖表达式解析
+    api(project(":core:common:common-pipeline-yaml"))
     api(project(":core:dispatch:api-dispatch")) // Dispatch配额实现在dispatch，考虑移除
     api(project(":core:project:api-project")) // 依赖读取项目VO
     api(project(":core:process:api-process"))
-    api(project(":core:plugin:codecc-plugin:common-codecc")) // MarketBuildUtils依赖了CodeCC，考虑移除
     api(project(":core:notify:api-notify")) // 消息通知API，考虑移除
+    api(project(":core:environment:api-environment")) // Agent复用互斥逻辑，需要从Name拿到Id加互斥锁
     api(project(":core:process:model-process"))
     api("org.springframework.boot:spring-boot-starter-jooq")
     api("com.zaxxer:HikariCP")
     api("org.jooq:jooq")
-    api("mysql:mysql-connector-java")
+    api("com.mysql:mysql-connector-j")
     implementation("com.github.ben-manes.caffeine:caffeine")
     testImplementation(project(":core:common:common-test"))
 }

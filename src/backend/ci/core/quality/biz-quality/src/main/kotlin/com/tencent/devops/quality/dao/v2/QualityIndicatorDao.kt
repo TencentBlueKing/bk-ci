@@ -28,15 +28,17 @@
 package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.quality.tables.TQualityIndicator
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
+import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityIndicatorDao {
@@ -98,6 +100,7 @@ class QualityIndicatorDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
+                .skipCheck() // 小表不加索引
                 .fetch()
         }
     }
@@ -161,7 +164,7 @@ class QualityIndicatorDao {
                 indicatorUpdate.defaultOperation,
                 indicatorUpdate.operationAvailable,
                 indicatorUpdate.threshold,
-                indicatorUpdate.thresholdType?.toUpperCase(),
+                indicatorUpdate.thresholdType?.uppercase(),
                 indicatorUpdate.desc,
                 indicatorUpdate.readOnly,
                 indicatorUpdate.stage,
@@ -213,7 +216,7 @@ class QualityIndicatorDao {
                 if (enable != null) update.set(ENABLE, enable)
                 if (type != null) update.set(TYPE, type.toString())
                 if (!tag.isNullOrBlank()) update.set(TAG, tag)
-                if (!logPrompt.isNullOrBlank()) update.set(LOG_PROMPT, logPrompt)
+                if (!logPrompt.isNullOrBlank()) update.set(LOG_PROMPT, logPrompt) else update.set(LOG_PROMPT, "")
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
@@ -227,6 +230,22 @@ class QualityIndicatorDao {
             dslContext.selectFrom(this)
                 .where(ID.eq(indicatorId))
                 .fetchOne()!!
+        }
+    }
+
+    fun batchCrateQualityIndicator(dslContext: DSLContext, qualityIndicatorPOs: List<QualityIndicatorPO>) {
+        with(TQualityIndicator.T_QUALITY_INDICATOR) {
+            dslContext.batch(
+                qualityIndicatorPOs.map { qualityIndicatorPO ->
+                    dslContext.insertInto(this)
+                        .set(dslContext.newRecord(this, qualityIndicatorPO))
+                        .onDuplicateKeyUpdate()
+                        .set(ELEMENT_NAME, qualityIndicatorPO.elementName)
+                        .set(DESC, qualityIndicatorPO.desc)
+                        .set(STAGE, qualityIndicatorPO.stage)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                }
+            ).execute()
         }
     }
 }

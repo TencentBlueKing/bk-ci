@@ -1,8 +1,8 @@
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
-import com.tencent.devops.worker.common.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import org.slf4j.LoggerFactory

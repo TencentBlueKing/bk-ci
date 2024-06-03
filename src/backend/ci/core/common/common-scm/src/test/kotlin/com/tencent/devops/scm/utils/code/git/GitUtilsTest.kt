@@ -27,9 +27,9 @@
 
 package com.tencent.devops.scm.utils.code.git
 
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class GitUtilsTest {
 
@@ -44,6 +44,20 @@ class GitUtilsTest {
         domainAndRepoName = GitUtils.getDomainAndRepoName("http://github.com/Tencent/bk-ci.git")
         assertEquals(domain, domainAndRepoName.first)
         assertEquals(repoName, domainAndRepoName.second)
+    }
+
+    @Test
+    fun getSpecialDomainAndRepoName() {
+        val baseRepoName = "aaa-bbb/aaa_github"
+        var domainAndRepoName = GitUtils.getDomainAndRepoName("https://github.com/aaa-bbb/aaa_github.git")
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(baseRepoName, domainAndRepoName.second)
+        domainAndRepoName = GitUtils.getDomainAndRepoName("https://github.com/aaa-bbb/aaa_github")
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(baseRepoName, domainAndRepoName.second)
+        domainAndRepoName = GitUtils.getDomainAndRepoName("git@github.com:aaa-bbb/aaa_github.git")
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(baseRepoName, domainAndRepoName.second)
     }
 
     @Test
@@ -115,6 +129,8 @@ class GitUtilsTest {
     fun getProjectName() {
         var projectName = GitUtils.getProjectName("git@github.com:Tencent/bk-ci.git")
         assertEquals(repoName, projectName)
+        projectName = GitUtils.getProjectName("git@github.com:2Tencent/bk-ci.git")
+        assertEquals("2$repoName", projectName)
         projectName = GitUtils.getProjectName("git@git.xxx.com:Tencent/bk-ci.git")
         assertEquals(repoName, projectName)
         projectName = GitUtils.getProjectName("https://github.com/Tencent/bk-ci.git")
@@ -127,21 +143,21 @@ class GitUtilsTest {
 
     @Test
     fun isLegalHttpUrl() {
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("https://github.com/Tencent/bk-ci.git"))
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("http://github.com/Tencent/bk-ci.git"))
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("https://github.com/Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("http://github.com/Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci.git"))
     }
 
     @Test
     fun isLegalSshUrl() {
-        Assert.assertFalse(GitUtils.isLegalSshUrl("https://github.com/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci"))
-        Assert.assertTrue(GitUtils.isLegalSshUrl("git@git.xxx.com:Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("https://github.com/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci"))
+        Assertions.assertTrue(GitUtils.isLegalSshUrl("git@git.xxx.com:Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci"))
     }
 
     @Test

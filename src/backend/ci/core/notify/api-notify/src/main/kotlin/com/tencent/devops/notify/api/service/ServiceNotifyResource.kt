@@ -34,9 +34,10 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
@@ -46,70 +47,93 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_NOTIFIES"], description = "通知")
+@Tag(name = "SERVICE_NOTIFIES", description = "通知")
 @Path("/service/notifies")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceNotifyResource {
-    @ApiOperation("发送RTX信息通知")
+    @Operation(summary = "发送RTX信息通知")
     @POST
     @Path("/rtx")
     fun sendRtxNotify(
-        @ApiParam(value = "RTX信息内容", required = true)
+        @Parameter(description = "RTX信息内容", required = true)
         message: RtxNotifyMessage
     ): Result<Boolean>
 
-    @ApiOperation("发送电子邮件通知")
+    @Operation(summary = "发送电子邮件通知")
     @POST
     @Path("/email")
-    fun sendEmailNotify(@ApiParam(value = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
+    fun sendEmailNotify(
+        @Parameter(
+            description = "电子邮件信息内容",
+            required = true
+        ) message: EmailNotifyMessage
+    ): Result<Boolean>
 
-    @ApiOperation("发送微信通知")
+    @Operation(summary = "发送微信通知")
     @POST
     @Path("/wechat")
-    fun sendWechatNotify(@ApiParam(value = "微信信息内容", required = true) message: WechatNotifyMessage): Result<Boolean>
+    fun sendWechatNotify(
+        @Parameter(
+            description = "微信信息内容",
+            required = true
+        ) message: WechatNotifyMessage
+    ): Result<Boolean>
 
-    @ApiOperation("发送短信通知")
+    @Operation(summary = "发送短信通知")
     @POST
     @Path("/sms")
-    fun sendSmsNotify(@ApiParam(value = "短信信息内容", required = true) message: SmsNotifyMessage): Result<Boolean>
+    fun sendSmsNotify(
+        @Parameter(
+            description = "短信信息内容",
+            required = true
+        ) message: SmsNotifyMessage
+    ): Result<Boolean>
 
-    @ApiOperation("发送企业微信多媒体信息")
+    @Operation(summary = "发送企业微信多媒体信息")
     @POST
     @Path("/wework/media")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun sendWeworkMediaNotify(
-        @ApiParam("企业微信群Id", required = true)
+        @Parameter(description = "企业微信群Id", required = true)
         @QueryParam("receivers")
         receivers: String,
-        @ApiParam("接受人类型", required = true)
+        @Parameter(description = "接受人类型", required = true)
         @QueryParam("receiverType")
         receiverType: WeworkReceiverType,
-        @ApiParam("文件类型", required = true)
+        @Parameter(description = "文件类型", required = true)
         @QueryParam("mediaType")
         mediaType: WeworkMediaType,
-        @ApiParam("文件名称", required = true)
+        @Parameter(description = "文件名称", required = true)
         @QueryParam("mediaName")
         mediaName: String,
-        @ApiParam("文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream
     ): Result<Boolean>
 
-    @ApiOperation("发送企业微信文本信息")
+    @Operation(summary = "发送企业微信文本信息")
     @POST
     @Path("/wework/text")
     fun sendWeworkTextNotify(
-        @ApiParam("企业微信群Id", required = true)
+        @Parameter(description = "企业微信群Id", required = true)
         @QueryParam("receivers")
         receivers: String,
-        @ApiParam("接受人类型", required = true)
+        @Parameter(description = "接受人类型", required = true)
         @QueryParam("receiverType")
         receiverType: WeworkReceiverType,
-        @ApiParam("文本类型", required = true)
+        @Parameter(description = "文本类型", required = true)
         @QueryParam("textType")
         textType: WeworkTextType,
-        @ApiParam("文件内容", required = true)
+        @Parameter(description = "文件内容", required = true)
         message: String
+    ): Result<Boolean>
+
+    @Operation(summary = "发送企微机器人信息")
+    @POST
+    @Path("/wework/robot")
+    fun sendWeworkRobotNotify(
+        @Parameter(description = "企微机器人信息内容", required = true)
+        weworkRobotNotifyMessage: WeworkRobotNotifyMessage
     ): Result<Boolean>
 }

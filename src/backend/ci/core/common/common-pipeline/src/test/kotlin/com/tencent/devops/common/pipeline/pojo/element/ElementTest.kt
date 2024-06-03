@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -36,20 +37,33 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import com.tencent.devops.common.pipeline.utils.ElementUtils
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class ElementTest {
+
+    @Test
+    fun unknownSubType() {
+        val json = """{
+            "@type" : "not exist sub type",
+            "name" : "这个是不存在的Element，为了验证反序列化Json时不出错",
+            "id" : "e-e89bb10191344f6b84e42c358050dbea",
+            "atomCode" : "builder3Dunity"
+          } """
+        val element = JsonUtil.to(json, Element::class.java)
+        println(JsonUtil.toJson(element))
+        assertTrue(element is EmptyElement)
+    }
 
     @Test
     fun takeStatus() {
         val element = ManualTriggerElement(id = "1")
         element.status = BuildStatus.QUEUE.name
-        val skipElementVariableName = SkipElementUtils.getSkipElementVariableName(element.id!!)
+        val skipElementVariableName = ElementUtils.getSkipElementVariableName(element.id!!)
         var rerun = true
         element.disableBySkipVar(mapOf(skipElementVariableName to "true"))
         var takeStatus = element.initStatus(rerun = rerun)
@@ -130,10 +144,12 @@ class ElementTest {
         }
 
         run WebHookTriggerElement@{
-            val element = CodeGitWebHookTriggerElement(id = "3",
+            val element = CodeGitWebHookTriggerElement(
+                id = "3",
                 branchName = "master", eventType = CodeEventType.MERGE_REQUEST, block = false,
                 repositoryHashId = null, excludeBranchName = null, excludePaths = null,
-                excludeTagName = null, excludeUsers = null, includePaths = null)
+                excludeTagName = null, excludeUsers = null, includePaths = null
+            )
             assertNotEquals(element.id, element.findFirstTaskIdByStartType(StartType.MANUAL))
             assertNotEquals(element.id, element.findFirstTaskIdByStartType(StartType.SERVICE))
             assertNotEquals(element.id, element.findFirstTaskIdByStartType(StartType.PIPELINE))

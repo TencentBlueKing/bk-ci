@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -36,7 +38,9 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_FINISHED_AND_DENY_PAUSE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
@@ -45,9 +49,9 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 /**
  *
@@ -72,21 +76,27 @@ class PipelinePauseBuildFacadeService(
         pipelineId: String,
         buildId: String,
         projectId: String,
-        taskId: String,
+        taskId: String?,
         stageId: String,
         containerId: String,
         isContinue: Boolean,
         element: Element?,
-        checkPermission: Boolean? = true
+        checkPermission: Boolean? = true,
+        stepId: String?
     ): Boolean {
         logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue")
         if (checkPermission!!) {
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 无权限执行暂停流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)), pipelineId)
+                )
             )
         }
 
@@ -94,7 +104,6 @@ class PipelinePauseBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
 
@@ -104,12 +113,37 @@ class PipelinePauseBuildFacadeService(
             )
         }
 
-        val taskRecord = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
-
-        if (taskRecord?.status != BuildStatus.PAUSE) {
+        if (buildInfo.isFinish()) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PARUS_PIEPLINE_IS_RUNNINT,
-                defaultMessage = "暂停流水线已恢复执行"
+                errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
+                defaultMessage = "Fail to execute pause atom",
+                params = arrayOf(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_BUILD_FINISHED_AND_DENY_PAUSE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
+            )
+        }
+
+        val taskRecord = when {
+            taskId != null -> pipelineTaskService.getBuildTask(
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId
+            )
+            stepId != null -> pipelineTaskService.getBuildTask(
+                projectId = projectId,
+                buildId = buildId,
+                taskId = null,
+                stepId = stepId
+            )
+            else -> null
+        } ?: return false
+
+        if (taskRecord.status != BuildStatus.PAUSE) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PAUSE_PIPELINE_IS_RUNNING
             )
         }
 
@@ -123,7 +157,7 @@ class PipelinePauseBuildFacadeService(
                 element = element,
                 projectId = projectId,
                 buildId = buildId,
-                taskId = taskId,
+                taskId = taskRecord.taskId,
                 taskRecord = taskRecord
             )
         }
@@ -136,7 +170,7 @@ class PipelinePauseBuildFacadeService(
                 projectId = projectId,
                 stageId = stageId,
                 containerId = containerId,
-                taskId = taskId,
+                taskId = taskRecord.taskId,
                 actionType = actionType,
                 userId = userId
             )
@@ -156,10 +190,15 @@ class PipelinePauseBuildFacadeService(
         }
         val newInputData = ParameterUtils.getElementInput(newElement)
 
+        if (newInputData.isNullOrEmpty()) {
+            logger.info("newInputData is empty $buildId $taskId $newElement")
+            return isDiff
+        }
+
         // issues_6210 若原input为空,新input不为空。则直接返回有变化
         val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: emptyMap()
 
-        if (newInputData!!.toString() != oldInputData.toString()) {
+        if (newInputData.toString() != oldInputData.toString()) {
             logger.info("pause continue value diff,new| $newInputData, old|$oldInputData")
             isDiff = true
         }
@@ -179,22 +218,28 @@ class PipelinePauseBuildFacadeService(
                     buildId = buildId,
                     message = "plugin: ${oldTask.taskName}, params $it updated:",
                     tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = oldTask.executeCount ?: 1
+                    containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1,
+                    jobId = null,
+                    stepId = newElement.stepId
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "before: $oldData",
                     tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = oldTask.executeCount ?: 1
+                    containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1,
+                    jobId = null,
+                    stepId = newElement.stepId
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "after: $newData",
                     tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = oldTask.executeCount ?: 1
+                    containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1,
+                    jobId = null,
+                    stepId = newElement.stepId
                 )
             }
         }
@@ -214,25 +259,39 @@ class PipelinePauseBuildFacadeService(
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                 errorCode = ProcessMessageCode.ERROR_ELEMENT_TOO_LONG,
-                defaultMessage = "${buildId}element大小越界",
                 params = arrayOf(buildId)
             )
         }
-        val isDiff = findDiffValue(
+        val currPause = pipelineTaskPauseService.getPauseTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = taskRecord.executeCount
+        )
+        if (currPause != null) {
+            logger.warn("executePauseAtom element has been continue")
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
+                params = arrayOf(buildId)
+            )
+        }
+        findDiffValue(
             buildId = buildId,
             taskId = taskId,
             newElement = element,
             oldTask = taskRecord
         )
-
-        if (isDiff) {
-            pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
+        // #9113 凡是有操作记录都保存下来，用于冲突判断
+        pipelineTaskPauseService.savePauseValue(
+            PipelinePauseValue(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
                 newValue = newElementStr,
-                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false)
-            ))
-        }
+                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false),
+                executeCount = taskRecord.executeCount
+            )
+        )
     }
 }

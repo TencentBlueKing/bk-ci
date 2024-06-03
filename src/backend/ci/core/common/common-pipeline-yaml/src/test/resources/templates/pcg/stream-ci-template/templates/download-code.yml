@@ -1,0 +1,73 @@
+# .ci/templates/download-code.yml 下载代码插件模版
+parameters:
+- name: id
+  type: string
+  default: ""
+- name: checkout
+  type: string
+  default: ""
+  # AutoCrlf配置值
+- name: autoCrlf
+  type: string
+  default: "false"
+  # ref，分支名、TAG名或 COMMIT_ID
+- name: refName
+  type: string
+  default: master
+- name: enableAutoCrlf
+  type: string
+  default: "false"
+- name: enableGitLfs
+  type: boolean
+  default: true
+- name: enableSubmodule
+  type: boolean
+  default: true
+- name: enableVirtualMergeBranch
+  type: boolean
+  default: true
+  # 排除代码库以下路径
+- name: excludePath
+  type: string
+  default: ""
+  # git fetch的depth参数值
+- name: fetchDepth
+  type: string
+  default: ""
+  # 代码库拉取相对子路径
+- name: includePath
+  type: string
+  default: ""
+  # 代码拉取到本地的路径。当拉取其他代码库时，推荐填写，避免和当前代码库冲突。
+- name: localPath
+  type: string
+  default: ""
+  # 拉取方式，可选值为：BRANCH |  TAG | COMMIT_ID
+- name: pullType
+  type: string
+  default: BRANCH
+  # 拉取策略，可选值为：
+  # REVERT_UPDATE  增量,每次先 git reset --hard HEAD ,再 git pull
+  # FRESH_CHECKOUT 全量,每次都会全新clone代码,之前会delete整个工作空间
+  # INCREMENT_UPDATE  增量,只使用 git pull ,并不清除冲突及历史缓存文件
+- name: strategy
+  type: string
+  default: REVERT_UPDATE
+
+steps:
+- name: 拉取Git代码
+  id: ${{ parameters.id }}
+  checkout: ${{ parameters.checkout }}
+  with:
+    autoCrlf: ${{ parameters.autoCrlf }}
+    refName: ${{ parameters.refName }}
+    enableAutoCrlf: ${{ parameters.enableAutoCrlf }}
+    enableGitLfs: ${{ parameters.enableGitLfs }}
+    enableSubmodule: ${{ parameters.enableSubmodule }}
+    enableVirtualMergeBranch: ${{ parameters.enableVirtualMergeBranch }}
+    excludePath: ${{ parameters.excludePath }}
+    fetchDepth: ${{ parameters.fetchDepth }}
+    includePath: ${{ parameters.includePath }}
+    localPath: ${{ parameters.localPath }}
+    pullType: ${{ parameters.pullType }}
+    strategy: ${{ parameters.strategy }}

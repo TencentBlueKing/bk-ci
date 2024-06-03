@@ -42,4 +42,8 @@ object ReflectUtil {
             bean is Byte ||
             bean is Boolean
     }
+
+    fun isCollectionType(obj: Any): Boolean {
+        return obj is Map<*, *> || obj is Collection<*>
+    }
 }

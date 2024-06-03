@@ -1,0 +1,9 @@
+parameters:
+  - name: STEP2
+    type: string
+    default: LOCAL-STEP2
+  - name: STEP3
+    type: string
+  - name: STEP4
+    type: string
+    default: LOCAL-STEP4

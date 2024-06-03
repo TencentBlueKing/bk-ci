@@ -12,11 +12,18 @@
         <hgroup class="list-cards" v-if="!isLoading">
             <card v-for="card in cards" :key="card.atomCode" :atom="card" :has-summary="true" class="list-card"></card>
         </hgroup>
-        <p class="g-empty list-empty" v-if="cards.length <= 0"> {{ $t('store.没找到相关结果') }} </p>
+        <div class="g-empty list-empty" v-if="cards.length <= 0">
+            <p style="margin-top: 50px;"> {{ $t('store.没找到相关结果') }} </p>
+            <div class="empty-tips">
+                {{ $t('store.可以尝试 调整关键词 或') }}
+                <button class="bk-text-button" @click="handleClear">{{$t('store.清空筛选条件')}}</button>
+            </div>
+        </div>
     </article>
 </template>
 
 <script>
+    import eventBus from '@/utils/eventBus.js'
     import card from '@/components/common/card'
 
     export default {
@@ -163,6 +170,10 @@
             removeScrollLoadMore () {
                 const mainBody = document.querySelector('.store-main')
                 if (mainBody) mainBody.removeEventListener('scroll', this.scrollLoadMore, { passive: true })
+            },
+
+            handleClear () {
+                eventBus.$emit('clear')
             }
         }
     }
@@ -233,6 +244,7 @@
             position: absolute;
             top: 16px;
             right: 0;
+            z-index: 999;
             background: $white;
             border: 1px solid $borderWeightColor;
             border-radius: 2px;

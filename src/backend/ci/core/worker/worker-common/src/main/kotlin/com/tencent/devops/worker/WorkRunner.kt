@@ -30,17 +30,14 @@ package com.tencent.devops.worker
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.ErrorMsgLogUtil
-import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.SLAVE_AGENT_PREPARE_START_FILE
 import com.tencent.devops.worker.common.SLAVE_AGENT_START_FILE
-import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
-import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
@@ -52,7 +49,6 @@ import kotlin.system.exitProcess
 object WorkRunner {
     private val logger = LoggerFactory.getLogger(WorkRunner::class.java)
 
-    @Suppress("ALL")
     fun execute(args: Array<String>) {
         try {
             val buildInfo = getBuildInfo(args)!!
@@ -71,22 +67,12 @@ object WorkRunner {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val replaceWorkspace = if (workspace.isNotBlank()) {
-                        ReplacementUtils.replace(
-                            workspace, object : ReplacementUtils.KeyReplacement {
-                            override fun getReplacement(key: String): String? = variables[key]
-                        }, mapOf(
-                            WORKSPACE_CONTEXT to workspace,
-                            JOB_OS_CONTEXT to AgentEnv.getOS().name
-                        )
-                        )
-                    } else {
-                        workspace
-                    }
-                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
-                    if (!workspaceDir.exists()) {
-                        workspaceDir.mkdirs()
-                    }
+                    val workspaceDir = WorkspaceUtils.getWorkspaceDir(
+                        workspace = workspace,
+                        buildType = BuildType.AGENT,
+                        pipelineId = pipelineId,
+                        variables = variables
+                    )
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
@@ -97,7 +83,7 @@ object WorkRunner {
             exitProcess(-1)
         } catch (re: RemoteServiceException) {
             ErrorMsgLogUtil.appendErrorMsg(re.responseContent ?: re.message!!)
-            exitProcess(-1) // fix #8366
+            exitProcess(-1) // fix #8360
         } catch (ignore: Throwable) {
             logger.error("Encounter unknown exception", ignore)
             LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)

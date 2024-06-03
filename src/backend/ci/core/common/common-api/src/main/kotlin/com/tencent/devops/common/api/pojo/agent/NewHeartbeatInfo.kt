@@ -27,35 +27,44 @@
 
 package com.tencent.devops.common.api.pojo.agent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("心跳信息模型")
+@Schema(title = "心跳信息模型")
 data class NewHeartbeatInfo(
-    @ApiModelProperty("主版本")
+    @get:Schema(title = "主版本")
     val masterVersion: String,
-    @ApiModelProperty("从属版本")
+    @get:Schema(title = "从属版本")
     val slaveVersion: String,
-    @ApiModelProperty("主机名")
+    @get:Schema(title = "主机名")
     val hostName: String,
-    @ApiModelProperty("构建机模型")
+    @get:Schema(title = "构建机模型")
     val agentIp: String,
-    @ApiModelProperty("并行任务计数")
+    @get:Schema(title = "并行任务计数")
     val parallelTaskCount: Int,
-    @ApiModelProperty("构建机安装路径")
+    @get:Schema(title = "构建机安装路径")
     val agentInstallPath: String,
-    @ApiModelProperty("启动者")
+    @get:Schema(title = "启动者")
     val startedUser: String,
-    @ApiModelProperty("第三方构建信息列表")
-    var taskList: List<ThirdPartyBuildInfo>,
-    @ApiModelProperty("构建机id")
+    @get:Schema(title = "第三方构建信息列表")
+    var taskList: List<ThirdPartyBuildInfo>?,
+    @get:Schema(title = "Agent属性信息")
+    val props: AgentPropsInfo?,
+    @get:Schema(title = "构建机id")
     var agentId: Long?,
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     var projectId: String?,
-    @ApiModelProperty("心跳时间戳")
+    @get:Schema(title = "心跳时间戳")
     var heartbeatTime: Long?,
-    @ApiModelProperty("忙碌运行中任务数量")
-    var busyTaskSize: Int = 0
+    @get:Schema(title = "忙碌运行中任务数量")
+    var busyTaskSize: Int = 0,
+    @get:Schema(title = "docker并行任务计数")
+    val dockerParallelTaskCount: Int?,
+    @get:Schema(title = "docker构建信息列表")
+    var dockerTaskList: List<ThirdPartyDockerBuildInfo>?,
+    @get:Schema(title = "忙碌运行docker中任务数量")
+    var dockerBusyTaskSize: Int = 0,
+    @get:Schema(title = "Agent退出的错误信息")
+    val errorExitData: AgentErrorExitData?
 ) {
     companion object {
         fun dummyHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo {
@@ -68,9 +77,13 @@ data class NewHeartbeatInfo(
                 agentInstallPath = "",
                 startedUser = "",
                 taskList = listOf(),
+                props = AgentPropsInfo("", null, null),
                 agentId = agentId,
                 projectId = projectId,
-                heartbeatTime = System.currentTimeMillis()
+                heartbeatTime = System.currentTimeMillis(),
+                dockerParallelTaskCount = 0,
+                dockerTaskList = listOf(),
+                errorExitData = null
             )
         }
     }

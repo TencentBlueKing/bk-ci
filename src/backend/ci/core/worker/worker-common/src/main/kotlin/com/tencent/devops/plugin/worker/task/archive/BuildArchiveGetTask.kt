@@ -27,6 +27,7 @@
 
 package com.tencent.devops.plugin.worker.task.archive
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
@@ -41,7 +42,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory

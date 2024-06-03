@@ -1,0 +1,146 @@
+@import './conf.css';
+
+.aside-nav {
+    min-width: 240px;
+    height: 100%;
+    background: #FFFFFF;
+    border-right: 1px solid #dde4eb;
+    .nav-title {
+        height: 50px;
+        line-height: 50px;
+        padding: 0 8px;
+        margin: 0;
+        font-size: 14px;
+        color: #313328;
+        font-weight: normal;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #dde4eb;
+        .bk-icon {
+            font-size: 34px;
+            margin-right: 4px;
+            cursor: pointer;
+            &:hover {
+                color: #3a84ff;
+            }
+        }
+    }
+    ul {
+        height: calc(100% - 60px);
+        overflow: auto;
+    }
+    .nav-item {
+        position: relative;
+        line-height: 40px;
+        height: 40px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        max-width: 240px;
+        &.disabled {
+            color: #b9bcc3;
+            cursor: default;
+        }
+        &:hover {
+            background: #f0f1f5;
+        }
+        &.active {
+            background: #e0ecff;
+            color: #3c96ff;
+            &:after {
+                content: '';
+                height: 40px;
+                width: 3px;
+                position: absolute;
+                left: 0;
+                background: #3c96ff;
+            }
+        }
+        svg {
+            margin: 0 16px 0 18px;
+            min-width: 24px;
+        }
+        .item-text {
+            display: inline-block;
+            width: 180px;
+            padding-right: 10px;
+        }
+    }
+}
+
+.executing:before {
+    display: inline-block;
+    animation: rotating infinite .6s ease-in-out;
+}
+
+@keyframes rotating {
+    from {
+        transform: rotate(0)
+    }
+    to {
+        transform: rotate(359deg)
+    }
+}
+
+.warning {
+    color: $warningColor;
+}
+
+.danger {
+    color: $dangerColor;
+}
+
+.success {
+    color: $successColor;
+}
+
+.update-btn {
+    color: #3a84ff;
+    margin-right: 15px;
+    display: inline-block;
+    cursor: pointer;
+    &.disabled {
+        cursor: not-allowed;
+        color: #c4c6cc;
+    }
+}
+
+.text-ellipsis {
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.table-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+    line-height: 32px;
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+    h5 {
+        margin-bottom: 15px;
+    }
+}
+
+.text-link {
+    cursor: pointer;
+    color: #3a84ff;
+}
+
+.section-box {
+    box-shadow: 1px 2px 3px 0 rgb(0 0 0 / 5%);
+    border: none;
+}
+
+.w200 {
+    width: 200px !important;
+}
+
+.stream-flag {
+    font-size: 16px !important;
+}

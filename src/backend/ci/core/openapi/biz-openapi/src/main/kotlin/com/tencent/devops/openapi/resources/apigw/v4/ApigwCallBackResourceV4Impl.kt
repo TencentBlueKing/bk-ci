@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwCallBackResourceV4
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceCallBackResource
 import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
@@ -56,6 +57,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         event: CallBackEvent,
         secretToken: String?
     ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|create|$projectId|$url|$region|$event|$secretToken")
         return client.get(ServiceCallBackResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -76,6 +78,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         event: String,
         secretToken: String?
     ): Result<CreateCallBackResult> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|batch create|$projectId|$url|$region|$event|$secretToken")
         return client.get(ServiceCallBackResource::class).batchCreate(
             userId = userId,
             projectId = projectId,
@@ -94,11 +97,12 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|list|$projectId|$page|$pageSize")
         return client.get(ServiceCallBackResource::class).list(
             userId = userId,
             projectId = projectId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
@@ -109,6 +113,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         projectId: String,
         id: Long
     ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|remove|$projectId|$id")
         return client.get(ServiceCallBackResource::class).remove(
             userId = userId,
             projectId = projectId,
@@ -128,6 +133,10 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>> {
+        logger.info(
+            "OPENAPI_CALLBACK_V4|$userId|list history|$projectId|$url|$event|$startTime|$endTime|$page" +
+                "|$pageSize"
+        )
         return client.get(ServiceCallBackResource::class).listHistory(
             userId = userId,
             projectId = projectId,
@@ -144,7 +153,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
                 DateTimeUtil.stringToLocalDateTime(endTime).timestampmilli()
             },
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
@@ -155,6 +164,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
         projectId: String,
         id: Long
     ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V4|$userId|retry|$projectId|$id")
         return client.get(ServiceCallBackResource::class).retry(
             userId = userId,
             projectId = projectId,

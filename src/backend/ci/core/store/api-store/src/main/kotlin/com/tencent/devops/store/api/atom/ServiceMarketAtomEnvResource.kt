@@ -28,49 +28,32 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
-import com.tencent.devops.store.pojo.common.StoreVersion
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.store.pojo.common.version.StoreVersion
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_ATOM_ENV"], description = "插件市场-插件执行环境")
+@Tag(name = "SERVICE_MARKET_ATOM_ENV", description = "插件市场-插件执行环境")
 @Path("/service/market/atom/env/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceMarketAtomEnvResource {
 
-    @ApiOperation("批量获取插件运行时信息")
+    @Operation(summary = "批量获取插件运行时信息")
     @POST
     @Path("/project/{projectCode}/run/info/list")
     fun batchGetAtomRunInfos(
-        @ApiParam("项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("插件版本信息", required = true)
+        @Parameter(description = "插件版本信息", required = true)
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?>
-
-    @ApiOperation("根据插件代码和版本号查看插件执行环境信息")
-    @GET
-    @Path("/{projectCode}/{atomCode}/{version}")
-    fun getAtomEnv(
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("版本号", required = true)
-        @PathParam("version")
-        version: String
-    ): Result<AtomEnv?>
 }

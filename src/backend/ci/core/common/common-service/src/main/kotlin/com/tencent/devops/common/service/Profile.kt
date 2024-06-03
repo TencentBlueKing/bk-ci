@@ -36,12 +36,14 @@ import org.springframework.stereotype.Component
  * Powered By Tencent
  */
 const val PROFILE_DEFAULT = "default"
-const val PROFILE_INNER = "inner"
 
 const val PROFILE_DEVELOPMENT = "dev"
 const val PROFILE_PRODUCTION = "prod"
 const val PROFILE_TEST = "test"
-const val PROFILE_EXP = "exp"
+const val PROFILE_STREAM = "stream"
+const val PROFILE_AUTO = "auto"
+const val PROFILE_DEVX = "devx"
+const val PROFILE_RBAC = "rbac"
 
 @Component
 class Profile(private val environment: Environment) {
@@ -49,17 +51,14 @@ class Profile(private val environment: Environment) {
     private val activeProfiles = environment.activeProfiles
 
     fun isDebug(): Boolean {
-        return activeProfiles.isEmpty() || activeProfiles.contains(PROFILE_DEFAULT) || activeProfiles.contains(
-            PROFILE_DEVELOPMENT
-        ) || activeProfiles.contains(PROFILE_TEST)
+        return activeProfiles.isEmpty() ||
+            activeProfiles.contains(PROFILE_DEFAULT) ||
+            activeProfiles.contains(PROFILE_DEVELOPMENT) ||
+            activeProfiles.contains(PROFILE_TEST)
     }
 
     fun isDev(): Boolean {
         return activeProfiles.contains(PROFILE_DEVELOPMENT)
-    }
-
-    fun isExp(): Boolean {
-        return activeProfiles.contains(PROFILE_EXP)
     }
 
     fun isTest(): Boolean {
@@ -73,6 +72,42 @@ class Profile(private val environment: Environment) {
     fun isLocal() =
         activeProfiles.contains(PROFILE_DEFAULT)
 
+    fun isStream(): Boolean {
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_STREAM)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isAuto(): Boolean {
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_AUTO)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isDevx(): Boolean {
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_DEVX)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isRbac(): Boolean {
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_RBAC)) {
+                return true
+            }
+        }
+        return false
+    }
+
     fun getEnv(): Env {
         return when {
             isProd() -> Env.PROD
@@ -83,14 +118,9 @@ class Profile(private val environment: Environment) {
         }
     }
 
-    fun isInEnv(profileNames: Set<String>): Boolean {
-        if (activeProfiles.isEmpty() && profileNames.contains(PROFILE_DEFAULT)) {
-            return true
-        }
-        return profileNames.any { activeProfiles.contains(it) }
+    fun getActiveProfiles(): Array<String> {
+        return activeProfiles
     }
-
-    fun getActiveProfiles() = activeProfiles
 
     fun getApplicationName() = environment.getProperty("spring.application.name")
 }

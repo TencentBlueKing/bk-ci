@@ -1,3 +1,4 @@
+   
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
 -- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
@@ -15,15 +16,8 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-local ns_config = nil
-if ngx.var.devops_region ~= "DEVNET" then
-    ns_config = config.ns
-else
-    ns_config = config.ns_devnet
-end
-
 -- 获取tag
-local tag = tagUtil:get_tag(ns_config)
+local tag = tagUtil:get_tag(config.ns)
 
 -- 根据tag路由front目录
 ngx.var.static_dir = tagUtil:get_frontend_path(tag, "ci")

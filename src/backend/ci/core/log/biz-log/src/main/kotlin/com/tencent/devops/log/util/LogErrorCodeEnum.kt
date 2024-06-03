@@ -31,6 +31,6 @@ enum class LogErrorCodeEnum(
     val errorCode: Int,
     val formatErrorMessage: String
 ) {
-    PRINT_QUEUE_LIMIT(errorCode = 2108001, formatErrorMessage = "log print queue exceeds the limit"),
-    PRINT_IS_DISABLED(errorCode = 2108002, formatErrorMessage = "log print config is disabled")
+    PRINT_QUEUE_LIMIT(errorCode = 2108005, formatErrorMessage = "log print queue exceeds the limit"),
+    PRINT_IS_DISABLED(errorCode = 2108006, formatErrorMessage = "log print config is disabled")
 }

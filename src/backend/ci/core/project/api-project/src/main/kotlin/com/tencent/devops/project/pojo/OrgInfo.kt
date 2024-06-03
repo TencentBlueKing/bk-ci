@@ -27,13 +27,12 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("公司组织数据")
+@Schema(title = "公司组织数据")
 data class OrgInfo(
-    @ApiModelProperty("组织ID")
+    @get:Schema(title = "组织ID")
     val orgId: String,
-    @ApiModelProperty("组织级别")
+    @get:Schema(title = "组织级别")
     val orgLevel: Int
 )

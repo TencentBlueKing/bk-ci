@@ -8,41 +8,53 @@
             <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span>
             <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
         </span>
+        <span slot="tool"
+            v-if="currentTab === 'setting' && showDebugDockerBtn"
+            class="head-tool"
+            @click="handleDebug"
+        >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
-            
-            <plugin-log :id="currentJob.containerHashId"
-                :build-id="execDetail.id"
-                :current-tab="currentTab"
-                :execute-count="currentJob.executeCount"
-                type="containerLog"
-                ref="jobLog"
-                v-show="currentTab === 'log'"
-                v-if="currentJob.matrixGroupFlag"
-            />
-            <job-log
-                v-else
-                v-show="currentTab === 'log'"
-                :plugin-list="pluginList"
-                :build-id="execDetail.id"
-                :down-load-link="downLoadJobLink"
-                :execute-count="executeCount"
-                ref="jobLog"
-            />
+            <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
+            <template v-if="currentTab === 'log'">
+                <plugin-log :id="currentJob.containerHashId"
+                    :key="currentJob.containerHashId"
+                    :build-id="execDetail.id"
+                    :exec-detail="execDetail"
+                    :current-tab="currentTab"
+                    :execute-count="currentJob.executeCount"
+                    type="containerLog"
+                    ref="jobLog"
+                    v-if="currentJob.matrixGroupFlag"
+                />
+                <job-log
+                    v-else
+                    :key="currentJob.id"
+                    :plugin-list="pluginList"
+                    :build-id="execDetail.id"
+                    :down-load-link="downLoadJobLink"
+                    :execute-count="executeCount"
+                    ref="jobLog"
+                />
+            </template>
             <container-content v-if="currentTab === 'setting'"
                 :container-index="editingElementPos.containerIndex"
                 :container-group-index="editingElementPos.containerGroupIndex"
                 :stage-index="editingElementPos.stageIndex"
                 :stages="execDetail.model.stages"
                 :editable="false"
+                :pipeline="pipeline"
+                ref="container"
             />
         </template>
     </detail-container>
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     import jobLog from './log/jobLog'
     import pluginLog from './log/pluginLog'
     import detailContainer from './detailContainer'
+    import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
 
     export default {
@@ -50,7 +62,8 @@
             detailContainer,
             jobLog,
             pluginLog,
-            ContainerContent
+            ContainerContent,
+            ErrorSummary
         },
         props: {
             execDetail: {
@@ -60,6 +73,9 @@
             editingElementPos: {
                 type: Object,
                 required: true
+            },
+            pipeline: {
+                type: Object
             }
         },
         data () {
@@ -71,7 +87,9 @@
         },
 
         computed: {
-
+            ...mapGetters('atom', [
+                'checkShowDebugDockerBtn'
+            ]),
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
@@ -84,7 +102,7 @@
                 const model = execDetail.model || {}
                 const stages = model.stages || []
                 const currentStage = stages[editingElementPos.stageIndex] || []
-                
+
                 try {
                     if (editingElementPos.containerGroupIndex === undefined) {
                         return currentStage.containers[editingElementPos.containerIndex]
@@ -101,9 +119,26 @@
                 return [startUp, ...this.currentJob.elements]
             },
 
+            showDebugDockerBtn () {
+                return this.checkShowDebugDockerBtn(this.currentJob, this.$route.name, this.execDetail)
+            },
+
             executeCount () {
                 const executeCountList = this.pluginList.map((plugin) => plugin.executeCount || 1)
                 return Math.max(...executeCountList)
+            },
+            activeErorr () {
+                return null
+                // try {
+                //     return this.execDetail.errorInfoList.find(error => error.containerId === this.currentJob.id && !error.taskId)
+                // } catch (error) {
+                //     return null
+                // }
+            }
+        },
+        methods: {
+            handleDebug () {
+                this.$refs.container?.startDebug?.()
             }
         }
     }

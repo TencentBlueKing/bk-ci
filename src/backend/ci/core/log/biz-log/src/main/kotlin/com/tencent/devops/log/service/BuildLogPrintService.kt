@@ -28,32 +28,29 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.log.pojo.ILogEvent
-import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
+import com.tencent.devops.log.event.ILogEvent
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.scheduling.annotation.Scheduled
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import org.springframework.scheduling.annotation.Scheduled
-import java.util.concurrent.RejectedExecutionException
-import javax.annotation.Resource
 
+@Suppress("MagicNumber")
 class BuildLogPrintService @Autowired constructor(
-    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
-    private val logServiceConfig: LogServiceConfig
+    logServiceConfig: LogServiceConfig
 ) {
 
     private val logExecutorService = ThreadPoolExecutor(
@@ -65,33 +62,23 @@ class BuildLogPrintService @Autowired constructor(
     )
 
     fun dispatchEvent(event: ILogEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) {
-                    // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
-            }
-        } catch (ignored: Throwable) {
-            logger.error("Fail to dispatch the event($event)", ignored)
-        }
+        event.sendTo(streamBridge)
     }
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
         if (!isEnabled(storageProperties.enable)) {
             val warnings = "Service refuses to write the log, the log file of the task will be archived."
-            if (event is LogEvent && event.logs.isNotEmpty()) {
-                dispatchEvent(event.copy(
-                    logs = listOf(event.logs.first().copy(
-                        message = Ansi().fgYellow().a(warnings).reset().toString(),
-                        logType = LogType.WARN
-                    ))
-                ))
+            if (event is LogOriginEvent && event.logs.isNotEmpty()) {
+                dispatchEvent(
+                    event.copy(
+                        logs = listOf(
+                            event.logs.first().copy(
+                                message = Ansi().fgYellow().a(warnings).reset().toString(),
+                                logType = LogType.WARN
+                            )
+                        )
+                    )
+                )
             }
             return Result(
                 status = 503,
@@ -106,7 +93,11 @@ class BuildLogPrintService @Autowired constructor(
             Result(true)
         } catch (e: RejectedExecutionException) {
             // 队列满时的处理逻辑
-            logger.error("[${event.buildId}] asyncDispatchEvent failed with queue tasks exceed the limit", e)
+            logger.warn(
+                "BuildLogPrintService[${event.buildId}] " +
+                    "asyncDispatchEvent failed with queue tasks exceed the limit",
+                e
+            )
             Result(
                 status = 509,
                 message = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.formatErrorMessage,
@@ -125,7 +116,7 @@ class BuildLogPrintService @Autowired constructor(
     private fun isEnabled(value: String?): Boolean {
         // 假设没有配置默认为开启日志保存
         return if (!value.isNullOrBlank()) {
-            value!!.toBoolean()
+            value.toBoolean()
         } else {
             true
         }

@@ -31,70 +31,80 @@ import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ReturnCount")
-@ApiModel("流水线模型-普通任务容器")
+@Schema(title = "流水线模型-普通任务容器")
 data class NormalContainer(
-    @ApiModelProperty("构建容器序号id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
-    @ApiModelProperty("容器名称", required = true)
+    @get:Schema(title = "容器名称", required = true)
     override var name: String = "",
-    @ApiModelProperty("任务集合", required = true)
+    @get:Schema(title = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @ApiModelProperty("容器状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器状态", required = false, readOnly = true)
     override var status: String? = null,
-    @ApiModelProperty("系统运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "系统运行时间", required = false, readOnly = true)
+    @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "系统耗时（开机时间）", required = false, readOnly = true)
+    @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "插件执行耗时", required = false, readOnly = true)
+    @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @ApiModelProperty("允许可跳过", required = false)
+    @get:Schema(title = "允许可跳过", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))
     val enableSkip: Boolean? = false,
-    @ApiModelProperty("触发条件", required = false)
+    @get:Schema(title = "触发条件", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
     val conditions: List<NameAndValue>? = null,
-    @ApiModelProperty(
+    @get:Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
-        accessMode = ApiModelProperty.AccessMode.READ_ONLY
+        readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @ApiModelProperty("容器唯一ID", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
-    @ApiModelProperty("无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
+    @get:Schema(title = "无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
     @Deprecated(message = "do not use")
     val maxQueueMinutes: Int = 60,
-    @ApiModelProperty("无构建环境-运行最长时间(分钟)", required = false)
+    @get:Schema(title = "无构建环境-运行最长时间(分钟)", required = false)
     @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 1440,
-    @ApiModelProperty("流程控制选项", required = true)
+    @get:Schema(title = "流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @ApiModelProperty("互斥组", required = false)
+    @get:Schema(title = "互斥组", required = false)
     var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var executeCount: Int? = 0,
-    @ApiModelProperty("用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null,
-    @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "容器运行次数", required = false, readOnly = true)
+    override var executeCount: Int? = null,
+    @get:Schema(title = "用户自定义ID", required = false, hidden = false)
+    override var jobId: String? = null,
+    @get:Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
-    @ApiModelProperty("构建矩阵配置项", required = false)
+    @get:Schema(title = "各项耗时", required = true)
+    override var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "开机任务序号", required = false, readOnly = true)
+    override var startVMTaskSeq: Int? = null,
+    @get:Schema(title = "构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
-    @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
+    @get:Schema(title = "所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
     var matrixGroupId: String? = null,
-    @ApiModelProperty("当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
+    @get:Schema(title = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
     var matrixContext: Map<String, String>? = null,
-    @ApiModelProperty("分裂后的容器集合（分裂后的父容器特有字段）", required = false)
-    var groupContainers: MutableList<NormalContainer>? = null
+    @get:Schema(title = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
+    var groupContainers: MutableList<NormalContainer>? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "normal"
@@ -122,5 +132,19 @@ data class NormalContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? {
         return matrixContext
+    }
+
+    override fun isContainerEnable(): Boolean {
+        return jobControlOption?.enable ?: true
+    }
+
+    override fun transformCompatibility() {
+        if (jobControlOption?.timeoutVar.isNullOrBlank()) {
+            jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
+        }
+        if (mutexGroup?.timeoutVar.isNullOrBlank()) {
+            mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
+        }
+        super.transformCompatibility()
     }
 }

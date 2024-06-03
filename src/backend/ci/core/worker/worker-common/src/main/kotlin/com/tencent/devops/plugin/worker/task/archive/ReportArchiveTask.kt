@@ -27,8 +27,13 @@
 
 package com.tencent.devops.plugin.worker.task.archive
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildTask
@@ -38,14 +43,17 @@ import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_CHECK_FINISH
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_NOT_IN_FOLDER
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.FOLDER_NOT_EXIST
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_OUTPUT_SUCCESS
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -53,7 +61,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
@@ -73,37 +81,58 @@ class ReportArchiveTask : ITask() {
         val reportType = taskParams["reportType"] ?: ReportTypeEnum.INTERNAL.name
         val indexFileParam: String
         var indexFileContent: String
+        val token = RepoServiceFactory.getInstance().getRepoToken(
+            userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+            projectId = buildVariables.projectId,
+            repoName = "report",
+            path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+            type = TokenType.UPLOAD,
+            expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+        )
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             val fileDirParam = taskParams["fileDir"] ?: throw ParamBlankException("param [fileDir] is empty")
             indexFileParam = taskParams["indexFile"] ?: throw ParamBlankException("param [indexFile] is empty")
 
             val fileDir = getFile(workspace, fileDirParam)
             if (!fileDir.isDirectory) {
-                throw NotFoundException("文件夹($fileDirParam)不存在")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        FOLDER_NOT_EXIST,
+                        AgentEnv.getLocaleLanguage(),
+                        arrayOf(fileDirParam)
+                    )
+                )
             }
 
             val indexFile = getFile(fileDir, indexFileParam)
             if (!indexFile.exists()) {
-                throw RuntimeException("入口文件($indexFileParam)不在文件夹($fileDirParam)下")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        ENTRANCE_FILE_NOT_IN_FOLDER,
+                        AgentEnv.getLocaleLanguage(),
+                        arrayOf(indexFileParam, fileDirParam)
+                    )
+                )
             }
-            LoggerService.addNormalLine("入口文件检测完成")
+            LoggerService.addNormalLine(
+                MessageUtil.getMessageByLocale(ENTRANCE_FILE_CHECK_FINISH, AgentEnv.getLocaleLanguage())
+            )
             val reportRootUrl = api.getRootUrl(elementId).data!!
             addEnv(REPORT_DYNAMIC_ROOT_URL, reportRootUrl)
 
             indexFileContent = indexFile.readText()
-            indexFileContent = indexFileContent.replace("\${$REPORT_DYNAMIC_ROOT_URL}", reportRootUrl)
-            indexFile.writeText(indexFileContent)
+            // pdf文件即使变量不存在，重新写入文件，虽然文件md5不变，但是会无法正常显示
+            if (!indexFile.name.endsWith(".pdf")) {
+                indexFileContent = indexFileContent.replace("\${$REPORT_DYNAMIC_ROOT_URL}", reportRootUrl)
+                indexFile.writeText(indexFileContent)
+            }
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = recursiveGetFiles(fileDir)
-            val token = RepoServiceFactory.getInstance().getRepoToken(
-                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                projectId = buildVariables.projectId,
-                repoName = "report",
-                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
-                type = TokenType.UPLOAD,
-                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
-            )
             if (allFileList.size > 10) {
                 val executors = Executors.newFixedThreadPool(10)
                 allFileList.forEach {
@@ -120,7 +149,13 @@ class ReportArchiveTask : ITask() {
                     uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
                 }
             }
-            LoggerService.addNormalLine("上传自定义产出物成功，共产生了${allFileList.size}个文件")
+            LoggerService.addNormalLine(
+                MessageUtil.getMessageByLocale(
+                    UPLOAD_CUSTOM_OUTPUT_SUCCESS,
+                    AgentEnv.getLocaleLanguage(),
+                    arrayOf("${allFileList.size}")
+                )
+            )
         } else {
             val reportUrl = taskParams["reportUrl"] as String
             indexFileParam = reportUrl // 第三方构建产出物链接
@@ -142,7 +177,15 @@ class ReportArchiveTask : ITask() {
         }
 
         logger.info("indexFileParam is:$indexFileParam,reportNameParam is:$reportNameParam,reportType is:$reportType")
-        api.createReportRecord(elementId, indexFileParam, reportNameParam, reportType, reportEmail)
+        api.createReportRecord(
+            buildVariables = buildVariables,
+            taskId = elementId,
+            indexFile = indexFileParam,
+            name = reportNameParam,
+            reportType = reportType,
+            reportEmail = reportEmail,
+            token = token
+        )
     }
 
     private fun uploadReportFile(

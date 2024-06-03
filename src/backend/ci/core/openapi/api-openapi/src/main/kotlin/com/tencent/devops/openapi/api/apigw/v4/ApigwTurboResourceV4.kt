@@ -29,13 +29,16 @@ package com.tencent.devops.openapi.api.apigw.v4
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
+import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
 import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,7 +49,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_TURBO_V4"], description = "编译加速open api接口")
+@Tag(name = "OPENAPI_TURBO_V4", description = "编译加速open api接口")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/turbo")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -54,67 +57,100 @@ import javax.ws.rs.core.MediaType
 interface ApigwTurboResourceV4 {
 
     @GET
-    @ApiOperation("获取方案列表", tags = ["v4_app_turbo_plan_list", "v4_user_turbo_plan_list"])
+    @Operation(summary = "获取方案列表", tags = ["v4_app_turbo_plan_list", "v4_user_turbo_plan_list"])
     @Path("/projectId/{projectId}/turbo_plan_list")
     fun getTurboPlanByProjectIdAndCreatedDate(
-        @ApiParam(value = "项目id", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "开始日期", required = false)
+        @Parameter(description = "开始日期", required = false)
         @QueryParam("startTime")
         startTime: String?,
-        @ApiParam(value = "结束日期", required = false)
+        @Parameter(description = "结束日期", required = false)
         @QueryParam("endTime")
         endTime: String?,
-        @ApiParam(value = "页数", required = false)
+        @Parameter(description = "页数", required = false)
         @QueryParam(value = "pageNum")
         pageNum: Int?,
-        @ApiParam(value = "每页多少条", required = false)
+        @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam(value = "用户信息", required = true)
+        @Parameter(description = "用户信息", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Response<Page<TurboPlanStatRowVO>>
 
     @POST
-    @ApiOperation("获取加速历史列表", tags = ["v4_app_turbo_history_list", "v4_user_turbo_history_list"])
+    @Operation(summary = "获取加速历史列表", tags = ["v4_app_turbo_history_list", "v4_user_turbo_history_list"])
     @Path("/projectId/{projectId}/history_list")
     fun getTurboRecordHistoryList(
-        @ApiParam(value = "页数", required = false)
+        @Parameter(description = "页数", required = false)
         @QueryParam(value = "pageNum")
         pageNum: Int?,
-        @ApiParam(value = "每页多少条", required = false)
+        @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam(value = "排序字段", required = false)
+        @Parameter(description = "排序字段", required = false)
         @QueryParam("sortField")
         sortField: String?,
-        @ApiParam(value = "排序类型", required = false)
+        @Parameter(description = "排序类型", required = false)
         @QueryParam("sortType")
         sortType: String?,
-        @ApiParam(value = "编译加速历史请求数据信息", required = true)
+        @Parameter(description = "编译加速历史请求数据信息", required = true)
         turboRecordModel: TurboRecordModel,
-        @ApiParam(value = "蓝盾项目id", required = true)
+        @Parameter(description = "蓝盾项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "用户信息", required = true)
+        @Parameter(description = "用户信息", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Response<Page<TurboRecordHistoryVO>>
 
     @GET
-    @ApiOperation("获取加速方案详情", tags = ["v4_app_turbo_plan_detail", "v4_user_turbo_plan_detail"])
+    @Operation(summary = "获取加速方案详情", tags = ["v4_app_turbo_plan_detail", "v4_user_turbo_plan_detail"])
     @Path("/projectId/{projectId}/turbo_plan_detail")
     fun getTurboPlanDetailByPlanId(
-        @ApiParam(value = "方案id", required = true)
+        @Parameter(description = "方案id", required = true)
         @QueryParam("planId")
         planId: String,
-        @ApiParam(value = "蓝盾项目id", required = true)
+        @Parameter(description = "蓝盾项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "用户信息", required = true)
+        @Parameter(description = "用户信息", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Response<TurboPlanDetailVO>
+
+    @POST
+    @Operation(summary = "新增加速方案", tags = ["v4_app_turbo_plan_add_new", "v4_user_turbo_plan_add_new"])
+    @Path("/projectId/{projectId}/addTurboPlan")
+    fun addNewTurboPlan(
+        @Parameter(description = "蓝盾项目id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户信息", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "新增加速方案请求数据信息", required = true)
+        @Valid
+        turboPlanModel: TurboPlanModel
+    ): Response<String?>
+
+    @GET
+    @Operation(summary = "DevCloud专用资源统计查询接口", tags = ["v4_app_server_resources", "v4_user_server_resources"])
+    @Path("/server_resources")
+    fun getServerResourcesSummary(
+        @Parameter(description = "起始统计日期")
+        @QueryParam(value = "startDate")
+        startDate: String?,
+        @Parameter(description = "截止统计日期")
+        @QueryParam("endDate")
+        endDate: String?,
+        @Parameter(description = "页数")
+        @QueryParam(value = "pageNum")
+        pageNum: Int?,
+        @Parameter(description = "每页多少条")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Response<Page<ProjectResourceUsageVO>>
 }

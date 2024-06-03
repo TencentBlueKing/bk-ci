@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class ProjectNameFilterTest {
     private val response = WebhookFilterResponse()
@@ -40,27 +40,27 @@ class ProjectNameFilterTest {
             triggerOnProjectName = "aaa/bbb",
             projectName = "aaa/bbb"
         )
-        Assert.assertTrue(projectNameFilter.doFilter(response))
+        Assertions.assertTrue(projectNameFilter.doFilter(response))
 
         projectNameFilter = ProjectNameFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnProjectName = "aaa/ccc",
             projectName = "aaa/bbb"
         )
-        Assert.assertFalse(projectNameFilter.doFilter(response))
+        Assertions.assertFalse(projectNameFilter.doFilter(response))
 
         projectNameFilter = ProjectNameFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnProjectName = "bbb",
             projectName = "aaa/bbb/ccc"
         )
-        Assert.assertTrue(projectNameFilter.doFilter(response))
+        Assertions.assertTrue(projectNameFilter.doFilter(response))
 
         projectNameFilter = ProjectNameFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnProjectName = "bbb",
             projectName = "aaa/bbb/ccc/ddd"
         )
-        Assert.assertFalse(projectNameFilter.doFilter(response))
+        Assertions.assertFalse(projectNameFilter.doFilter(response))
     }
 }

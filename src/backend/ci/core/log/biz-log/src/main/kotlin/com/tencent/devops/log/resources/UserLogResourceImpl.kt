@@ -34,6 +34,7 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.service.BuildLogQueryService
+import io.micrometer.core.annotation.Timed
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,9 +51,14 @@ class UserLogResourceImpl @Autowired constructor(
     private val meterRegistry: MeterRegistry
 ) : UserLogResource {
 
+    companion object {
+        private const val defaultNum = 100
+    }
+
     @Value("\${spring.application.name:#{null}}")
     private val applicationName: String? = null
 
+    @Timed
     override fun getInitLogs(
         userId: String,
         projectId: String,
@@ -63,7 +69,8 @@ class UserLogResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         val initLogs = buildLogQueryService.getInitLogs(
             userId = userId,
@@ -74,8 +81,11 @@ class UserLogResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null,
+            archiveFlag = archiveFlag
         )
         recordListLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs
@@ -95,7 +105,8 @@ class UserLogResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getMoreLogs(
             userId = userId,
@@ -104,17 +115,21 @@ class UserLogResourceImpl @Autowired constructor(
             buildId = buildId,
             debug = debug,
             logType = logType,
-            num = num,
+            num = num ?: defaultNum,
             fromStart = fromStart,
             start = start,
             end = end,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null,
+            archiveFlag = archiveFlag
         )
     }
 
+    @Timed
     override fun getAfterLogs(
         userId: String,
         projectId: String,
@@ -126,7 +141,8 @@ class UserLogResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         val afterLogs = buildLogQueryService.getAfterLogs(
             userId = userId,
@@ -138,8 +154,11 @@ class UserLogResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null,
+            archiveFlag = archiveFlag
         )
         recordListLogCount(afterLogs.data?.logs?.size ?: 0)
 
@@ -155,7 +174,8 @@ class UserLogResourceImpl @Autowired constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?,
-        fileName: String?
+        fileName: String?,
+        archiveFlag: Boolean?
     ): Response {
         return buildLogQueryService.downloadLogs(
             userId = userId,
@@ -164,9 +184,12 @@ class UserLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag ?: "",
             subTag = subTag ?: "",
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
-            fileName = fileName
+            fileName = fileName,
+            jobId = null,
+            stepId = null,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -176,7 +199,8 @@ class UserLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogStatus> {
         return buildLogQueryService.getLogMode(
             userId = userId,
@@ -184,7 +208,9 @@ class UserLogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            stepId = null,
+            archiveFlag = archiveFlag
         )
     }
 

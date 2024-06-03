@@ -100,14 +100,22 @@ class EnvNodeDao {
         }
     }
 
-    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
+    fun deleteByNodeIds(dslContext: DSLContext, projectId: String, nodeIds: List<Long>) {
         if (nodeIds.isEmpty()) {
             return
         }
-
         with(TEnvNode.T_ENV_NODE) {
             dslContext.deleteFrom(this)
                 .where(NODE_ID.`in`(nodeIds))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun deleteByEnvId(dslContext: DSLContext, envId: Long) {
+        with(TEnvNode.T_ENV_NODE) {
+            dslContext.deleteFrom(this)
+                .where(ENV_ID.eq(envId))
                 .execute()
         }
     }

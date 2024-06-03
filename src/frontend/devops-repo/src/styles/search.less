@@ -1,0 +1,120 @@
+.repo-search {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .repo-search-header {
+    display: flex;
+    background-color: white;
+    justify-content: center;
+    padding: 20px 0;
+    @searchInputHeight: 42px;
+    .repo-search-input {
+      display: flex;
+      align-items: center;
+      width: 60%;
+      .repo-serach-type-reference {
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        height: @searchInputHeight;
+        border: 1px solid @borderColor;
+        border-right: 0;
+        .repo-serach-type-icon {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          font-size: 12px;
+          width: 50px;
+        }
+      }
+      .repo-type-select-menu{
+        display: grid;
+        padding: 30px;
+        background-color: #fff;
+        grid-template: auto/repeat(2, 88px);
+        gap: 20px;
+        .repo-type-item {
+          padding: 5px;
+          width: 88px;
+          height: 66px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          border: 1px solid @borderColor;
+          font-size: 12px;
+          color: @defaultColor;
+          &.selected {
+            border-color: @primaryColor;
+            color: @primaryColor;
+            background-color: @lightBlue;
+          }
+        }
+      }
+      .repo-search-key {
+        height: @searchInputHeight;
+        border-color: @borderColor;
+      }
+      .repo-search-btn {
+        display: flex;
+        height: 100%;
+        width: 64px;
+        align-items: center;
+        justify-content: center;
+        background: @primaryColor;
+        color: white;
+      }
+    }
+  }
+  
+  .repo-search-result {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    align-items: center;
+    flex: 1;
+    overflow: hidden;
+    .repo-search-info {
+      display: flex;
+      align-self: stretch;
+      align-items: flex-end;
+      margin: 0 20px;
+      justify-content: space-between;
+      color: @weightGray;
+      font-size: 12px;
+      .repo-search-sort {
+        display: flex;
+        align-items: center;
+        > :first-child {
+          margin-right: 12px;
+        }
+      }
+    }
+    .repo-search-content {
+      display: flex;
+      flex: 1;
+      align-self: stretch;
+      overflow: hidden;
+      margin-top: 10px;
+      border-top: 1px solid @borderColor;
+      .repo-search-construct {
+        width: 200px;
+        font-size: 12px;
+        border-right: 1px solid @borderColor;
+        .repo-tree-expand-icon {
+          display: flex;
+          align-items: center;
+        }
+        .repo-tree-count-append {
+          padding-right: 10px;
+        }
+      }
+      .repo-search-list {
+        flex: 1;
+        overflow: auto;
+        padding: 10px 20px 0;
+        margin-bottom: 10px;
+      }
+    }
+  }
+}

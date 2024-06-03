@@ -27,17 +27,28 @@
 
 package com.tencent.devops.process.sharding
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.DEFAULT_DATA_SOURCE_NAME
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue
 import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue
 import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm
+import java.util.Properties
 
 class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
 
+    /**
+     * 分片路由算法
+     * @param availableTargetNames 可用的数据源列表
+     * @param shardingValue 分片规则名称
+     * @return 分片规则值（数据源名称）
+     */
     override fun doSharding(
         availableTargetNames: MutableCollection<String>,
         shardingValue: PreciseShardingValue<String>
@@ -47,17 +58,28 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
             // 如果分片键为空则路由到默认数据源
             return DEFAULT_DATA_SOURCE_NAME
         }
+        // 获取路由规则在缓存中的key值
+        val key = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = CommonUtils.getDbClusterName(),
+            moduleCode = SystemModuleEnum.PROCESS.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = routingName
+        )
         // 从本地缓存获取路由规则
-        var routingRule = BkShardingRoutingCacheUtil.getIfPresent(routingName)
+        var routingRule = BkShardingRoutingCacheUtil.getIfPresent(key)
         if (routingRule.isNullOrBlank()) {
             // 本地缓存没有查到路由规则信息则调接口去db实时查
             val client = SpringContextUtil.getBean(Client::class.java)
             val ruleObj = client.get(ServiceShardingRoutingRuleResource::class)
-                .getShardingRoutingRuleByName(routingName).data
+                .getShardingRoutingRuleByName(
+                    routingName = routingName,
+                    moduleCode = SystemModuleEnum.PROCESS,
+                    ruleType = ShardingRuleTypeEnum.DB
+                ).data
             if (ruleObj != null) {
                 routingRule = ruleObj.routingRule
                 // 将路由规则信息放入本地缓存
-                BkShardingRoutingCacheUtil.put(routingName, routingRule)
+                BkShardingRoutingCacheUtil.put(key, routingRule)
             }
         }
         if (routingRule.isNullOrBlank() || !availableTargetNames.contains(routingRule)) {
@@ -78,5 +100,9 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
         return null
     }
 
-    override fun init() = Unit
+    override fun init(props: Properties?) = Unit
+
+    override fun getProps(): Properties? {
+        return null
+    }
 }

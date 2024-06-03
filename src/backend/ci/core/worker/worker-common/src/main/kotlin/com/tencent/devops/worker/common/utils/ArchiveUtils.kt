@@ -30,10 +30,13 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
 import java.io.IOException
@@ -108,7 +111,10 @@ object ArchiveUtils {
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorType = ErrorType.USER,
-                errorMsg = "单次归档文件数太多，请打包后再归档！"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    WorkerMessageCode.ARCHIVE_FILE_LIMIT,
+                    AgentEnv.getLocaleLanguage()
+                )
             )
         }
         LoggerService.addNormalLine("$size file match: ")

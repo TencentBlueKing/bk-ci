@@ -27,28 +27,12 @@
 
 package com.tencent.devops.common.dispatch.sdk.pojo
 
-import com.tencent.devops.common.api.pojo.Zone
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 
 data class DispatchMessage(
     val id: String,
     val secretKey: String,
     val gateway: String,
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val dispatchMessage: String,
-    val userId: String,
-    val vmSeqId: String,
-    val channelCode: String,
-    val vmNames: String,
-    val atoms: Map<String, String> = mapOf(),
-    val zone: Zone?,
-    val containerHashId: String?,
-    val executeCount: Int?,
-    val containerId: String,
-    val containerType: String,
-    val stageId: String,
-    val dispatchType: DispatchType?,
-    val customBuildEnv: Map<String, String>? = null
+    val customBuildEnv: Map<String, String>? = null,
+    val event: PipelineAgentStartupEvent
 )

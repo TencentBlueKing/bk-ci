@@ -32,71 +32,176 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubOauth
+import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
+import com.tencent.devops.repository.service.ScmUrlProxyService
 import com.tencent.devops.scm.config.GitConfig
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 
 @Service
 @Suppress("ALL")
 class GithubOAuthService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
-    private val githubTokenService: GithubTokenService
+    private val githubTokenService: GithubTokenService,
+    private val githubUserService: GithubUserService,
+    private val scmUrlProxyService: ScmUrlProxyService
 ) {
 
-    fun getGithubOauth(projectId: String, userId: String, repoHashId: String?): GithubOauth {
-        val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId!!).toString() else ""
-        val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}"
+    fun getGithubOauth(
+        projectId: String,
+        userId: String,
+        repoHashId: String?,
+        popupTag: String? = "#popupGithub",
+        resetType: String? = ""
+    ): GithubOauth {
+        val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId).toString() else ""
+        val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}," +
+            "$popupTag,$resetType"
         val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
+            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
         return GithubOauth(redirectUrl)
     }
 
     fun getGithubAppUrl() = GithubAppUrl(gitConfig.githubAppUrl)
 
-    fun githubCallback(code: String, state: String): Response {
-        if (!state.contains(",BK_DEVOPS__")) {
+    fun oauthUrl(redirectUrl: String, userId: String?, tokenType: GithubTokenType): String {
+        val clientId = when (tokenType) {
+            GithubTokenType.GITHUB_APP -> gitConfig.githubClientId
+            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientId
+        }
+        val stateParams = mutableMapOf(
+            "redirectUrl" to redirectUrl,
+            "randomStr" to RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)
+        )
+        // 如果非空将以该userId入库，否则会以github login name 入库
+        if (userId != null) stateParams["userId"] = userId
+
+        val state = URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
+
+        return when (tokenType) {
+            GithubTokenType.GITHUB_APP -> "$GITHUB_URL/login/oauth/authorize" +
+                "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+            GithubTokenType.OAUTH_APP -> "$GITHUB_URL/login/oauth/authorize" +
+                "?client_id=$clientId&state=$state&scope=user,repo"
+        }
+    }
+
+    fun githubCallback(
+        code: String,
+        state: String?,
+        channelCode: String? = null,
+        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubOauthCallback {
+        return if (channelCode == ChannelCode.GIT.name || state?.contains("redirectUrl") == true) {
+            githubCallbackForGIT(code = code, state = state, githubTokenType = tokenType)
+        } else {
+            githubCallbackForBS(code = code, state = state, githubTokenType = tokenType)
+        }
+    }
+
+    fun githubCallbackForBS(
+        code: String,
+        state: String?,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubOauthCallback {
+        if (state.isNullOrBlank() || !state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
-
+        // 回调状态信息
+        // @see com.tencent.devops.repository.service.github.GithubOAuthService.getGithubOauth
+        // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},{{重置类型}}
         val arrays = state.split(",")
         val userId = arrays[0]
         val projectId = arrays[1]
         val repoHashId = if (arrays[2].isNotBlank()) HashUtil.encodeOtherLongId(arrays[2].toLong()) else ""
-        val githubToken = getAccessTokenImpl(code)
-
-        githubTokenService.createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
-        return Response.temporaryRedirect(
-            UriBuilder.fromUri("${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId").build())
-                .build()
+        val githubToken = getAccessTokenImpl(code, githubTokenType)
+        // 弹框标志位
+        val popupTag = arrays.getOrNull(4) ?: ""
+        // 重置类型
+        val resetType = arrays.getOrNull(5) ?: ""
+        githubTokenService.createAccessToken(
+            userId = userId,
+            accessToken = githubToken.accessToken,
+            tokenType = githubToken.tokenType,
+            scope = githubToken.scope,
+            githubTokenType = githubTokenType
+        )
+        return GithubOauthCallback(
+            userId = userId,
+            redirectUrl = "${gitConfig.githubRedirectUrl}/$projectId$popupTag$repoHashId?" +
+                    "resetType=$resetType&userId=$userId"
+        )
     }
 
-    private fun getAccessTokenImpl(code: String): GithubToken {
+    fun githubCallbackForGIT(
+        code: String,
+        state: String?,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubOauthCallback {
+        logger.info("github callback for git|code:$code|state:$state")
+        val githubToken = getAccessTokenImpl(code, githubTokenType)
+        val userResponse = githubUserService.getUser(githubToken.accessToken)
+        val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
+        githubTokenService.createAccessToken(
+            userId = stateMap["userId"]?.toString() ?: userResponse.login,
+            accessToken = githubToken.accessToken,
+            tokenType = githubToken.tokenType,
+            scope = githubToken.scope,
+            githubTokenType = githubTokenType
+        )
+        return GithubOauthCallback(
+            userId = userResponse.login,
+            email = userResponse.email,
+            redirectUrl = stateMap["redirectUrl"]?.toString() ?: ""
+        )
+    }
+
+    private fun getAccessTokenImpl(
+        code: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubToken {
+        val clientId = when (githubTokenType) {
+            GithubTokenType.GITHUB_APP -> gitConfig.githubClientId
+            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientId
+        }
+
+        val secret = when (githubTokenType) {
+            GithubTokenType.GITHUB_APP -> gitConfig.githubClientSecret
+            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientSecret
+        }
         val url = "$GITHUB_URL/login/oauth/access_token" +
-            "?client_id=${gitConfig.githubClientId}&client_secret=${gitConfig.githubClientSecret}&code=$code"
+            "?client_id=$clientId&client_secret=$secret&code=$code"
 
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
-            .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+            .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.info("Github get code(${response.code()}) and response($data)")
-                throw CustomException(Response.Status.fromStatusCode(response.code())
-                    ?: Response.Status.BAD_REQUEST, "获取Github access_token失败: $data")
+                logger.info("Github get code(${response.code}) and response($data)")
+                throw CustomException(
+                    Response.Status.fromStatusCode(response.code)
+                        ?: Response.Status.BAD_REQUEST,
+                    "get Github access_token fail: $data"
+                )
             }
             return objectMapper.readValue(data)
         }

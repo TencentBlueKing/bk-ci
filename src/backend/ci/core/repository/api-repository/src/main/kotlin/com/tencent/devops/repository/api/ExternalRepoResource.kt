@@ -27,9 +27,9 @@
 
 package com.tencent.devops.repository.api
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -38,21 +38,48 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["EXTERNAL_REPO"], description = "外部-仓库资源")
+@Tag(name = "EXTERNAL_REPO", description = "外部-仓库资源")
 @Path("/external/repo/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalRepoResource {
 
-    @ApiOperation("根据用户ID列举Git上面的工程")
+    @Operation(summary = "git oauth 授权回调")
     @GET
     @Path("/git/callback")
     fun gitCallback(
-        @ApiParam(value = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @ApiParam(value = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String
+    ): Response
+
+    @Operation(summary = "tgit oauth 授权回调")
+    @GET
+    @Path("/tgit/callback")
+    fun tGitCallback(
+        @Parameter(description = "code")
+        @QueryParam("code")
+        code: String,
+        @Parameter(description = "state")
+        @QueryParam("state")
+        state: String
+    ): Response
+
+    @Operation(summary = "tapd回调重定向url")
+    @GET
+    @Path("/tapd/callback")
+    fun tapdCallback(
+        @Parameter(description = "code")
+        @QueryParam("code")
+        code: String,
+        @Parameter(description = "state")
+        @QueryParam("state")
+        state: String,
+        @Parameter(description = "resource")
+        @QueryParam("resource")
+        resource: String
     ): Response
 }

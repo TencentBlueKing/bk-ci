@@ -2,8 +2,9 @@
     <portal to="atom-selector-popup">
         <transition name="selector-slide">
             <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
+
                 <header class="atom-selector-header">
-                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
+                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? 'spin-icon' : ''" /></h3>
                     <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
                 </header>
                 <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
@@ -34,13 +35,13 @@
                         <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
                             <empty-tips type="no-result"></empty-tips>
                         </div>
+
                     </bk-tab-panel>
                 </bk-tab>
                 <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
                     <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
                     <atom-card v-for="atom in installArr"
                         :key="atom.atomCode"
-                        :disabled="atom.disabled"
                         :atom="atom"
                         :container="container"
                         :element-index="elementIndex"
@@ -56,7 +57,6 @@
                     <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
                     <atom-card v-for="atom in uninstallArr"
                         :key="atom.atomCode"
-                        :disabled="atom.disabled"
                         :atom="atom"
                         :container="container"
                         :element-index="elementIndex"
@@ -73,16 +73,19 @@
                         <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
+
             </div>
         </transition>
     </portal>
 </template>
 
 <script>
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import atomCard from './atomCard'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import EmptyTips from '../common/empty'
+    import atomCard from './atomCard'
+
     const RD_STORE_CODE = 'rdStore'
+
     export default {
         name: 'atom-selector',
         components: {
@@ -90,6 +93,8 @@
             EmptyTips
         },
         props: {
+            showAtomYaml: Boolean,
+            atomYaml: String,
             container: {
                 type: Object,
                 default: () => ({})
@@ -97,6 +102,9 @@
             element: {
                 type: Object,
                 default: () => ({})
+            },
+            beforeClose: {
+                type: Function
             },
             elementIndex: Number
         },
@@ -111,6 +119,7 @@
                 isThrottled: false
             }
         },
+
         computed: {
             ...mapGetters('atom', [
                 'classifyCodeListByCategory',
@@ -127,6 +136,7 @@
                 'isAtomPageOver',
                 'isCommendAtomPageOver'
             ]),
+
             atomCode () {
                 if (this.element) {
                     const isThird = this.element.atomCode && this.element['@type'] !== this.element.atomCode
@@ -138,18 +148,23 @@
                 }
                 return null
             },
+
             category () {
                 return this.isTriggerContainer(this.container) ? 'TRIGGER' : 'TASK'
             },
+
             baseOS () {
                 return this.container.baseOS
             },
+
             projectCode () {
                 return this.$route.params.projectId
             },
+
             classifyId () {
                 return this.atomClassifyMap[this.classifyCode] && this.atomClassifyMap[this.classifyCode].id
             },
+
             classifyCodeList () {
                 const atomClassifyCodeList = this.classifyCodeListByCategory(this.category)
                 if (this.category !== 'TRIGGER') {
@@ -158,10 +173,12 @@
                 }
                 return atomClassifyCodeList
             },
+
             firstClassify () {
                 return Array.isArray(this.classifyCodeList) ? this.classifyCodeList[0] : 'all'
             }
         },
+
         watch: {
             showAtomSelectorPopup: {
                 handler (visible) {
@@ -169,23 +186,27 @@
                     if (visible) {
                         this.classifyCode = atomMap[atomCode] ? atomMap[atomCode].classifyCode : firstClassify
                         this.activeAtomCode = atomCode
+                        // 收起变量侧栏
+                        this.setShowVariable(false)
                         this.fetchClassify()
                         this.fetchAtomList()
                         setTimeout(() => {
-                            this.$refs.searchStr.focus()
+                            this.$refs.searchStr?.focus?.()
                         }, 0)
                     } else {
-                        this.clearSearch()
+                        this.clearSearch(false)
                     }
                 },
                 immediate: true
             },
+
             classifyCode: {
                 handler (val) {
                     this.freshRequestAtomData()
                     this.fetchAtomList()
                 }
             },
+
             atomList: {
                 handler (val) {
                     this.curTabList = val
@@ -196,6 +217,7 @@
                 },
                 immediate: true
             },
+
             fetchingAtomList: {
                 handler () {
                     // 如果获取完可用插件, 就请求一页不可用插件数据
@@ -206,15 +228,18 @@
                 immediate: true
             }
         },
+
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'setRequestAtomData',
+                'setShowVariable',
                 'fetchAtoms',
                 'fetchClassify',
                 'setAtomPageOver',
                 'clearAtomData'
             ]),
+
             /**
              * 获取插件列表数据
              */
@@ -223,15 +248,16 @@
                     this.isThrottled = true
                     this.timer = setTimeout(async () => {
                         this.isThrottled = false
-                        const queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
-        
+                        let queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
+
                         let jobType // job类型 => 触发器插件无需传jobType
                         if (this.category === 'TRIGGER') {
                             jobType = undefined
+                            queryProjectAtomFlag = false
                         } else {
                             jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
                         }
-                        
+
                         await this.fetchAtoms({
                             projectCode: this.projectCode,
                             category: this.category,
@@ -244,12 +270,14 @@
                     }, 100)
                 }
             },
+
             getClassifyCls (classifyCode) {
                 return `classify-${classifyCode}-cls`
             },
             getAtomClass (atomCode) {
                 return `atom-${atomCode}-cls`
             },
+
             activeAtom (code) {
                 this.activeAtomCode = code
             },
@@ -258,6 +286,7 @@
                 this.freshRequestAtomData()
                 this.fetchAtomList()
             },
+
             handleClear (str) {
                 if (str === '') {
                     this.clearSearch()
@@ -274,19 +303,22 @@
                 })
                 this.clearAtomData()
             },
-            clearSearch () {
+            clearSearch (refetch = true) {
                 const input = this.$refs.searchStr || {}
                 input.curValue = ''
                 this.searchKey = ''
-                this.setAtomPageOver()
                 this.freshRequestAtomData()
-                this.fetchAtomList()
+                if (refetch) {
+                    this.fetchAtomList()
+                }
             },
             close () {
+                this.beforeClose?.()
                 this.toggleAtomSelectorPopup(false)
                 this.clearSearch()
             },
-            freshAtomList (searchKey) {
+
+            freshAtomList () {
                 if (this.fetchingAtomList) return
                 if (this.searchKey) {
                     this.$refs.searchResult.scrollTo(0, 0)
@@ -297,11 +329,13 @@
                 this.freshRequestAtomData()
                 this.fetchAtomList()
             },
+
             scrollLoadMore (classify, $event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
                 if (bottomDis <= 600) this.fetchAtomList()
             },
+
             installAtomSuccess (atom) {
                 const curAtom = this.curTabList.find(item => item.atomCode === atom.atomCode)
                 this.installArr.push(curAtom)
@@ -317,13 +351,12 @@
         right: 660px;
         position: absolute;
         width: 600px;
-        height: calc(100% - 20px);
+        height: calc(100% - 80px);
         background: white;
         z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 0;
-        margin: 10px 0;
+        top: 64px;
         &:before {
             content: '';
             display: block;
@@ -338,6 +371,7 @@
             right: -6px;
             top: 136px;
         }
+
         .not-recommend {
             text-decoration: line-through;
         }
@@ -431,6 +465,7 @@
                     opacity: 1;
                 }
             }
+
             &:not(.active):hover {
                 background: #FAFBFD;
             }
@@ -447,6 +482,9 @@
                 line-height: 50px;
                 margin-right: 15px;
                 color: $fontLighterColor;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 .devops-icon {
                     fill: currentColor
                 }
@@ -464,6 +502,8 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                width: calc(100% - 143px);
+                max-width: 345px;
                 .atom-name {
                     display: flex;
                     align-items: center;
@@ -492,11 +532,12 @@
                 }
             }
             .atom-operate {
-                width: 60px;
+                width: 88px;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
                 position: relative;
+
                 button.select-atom-btn[disabled] {
                     cursor: not-allowed !important;
                     background-color: #fff;
@@ -507,6 +548,7 @@
                 }
                 .select-atom-btn:hover {
                     background-color: $primaryColor;
+                    border-color: $primaryColor;
                     color: white;
                 }
                 .atom-link {
@@ -519,24 +561,29 @@
             }
         }
     }
+
     .empty-atom-list {
         display: flex;
         height: 100%;
         align-items: center;
         justify-content: center;
     }
+
     .atom-item-main {
         display: flex;
         height: 100%;
     }
+
     .selector-slide-enter-active, .selector-slide-leave-active {
         transition: transform .2s linear, opacity .2s cubic-bezier(1, -0.05, .94, .17);
     }
+
     .selector-slide-enter {
         -webkit-transform: translate3d(600px, 0, 0);
         transform: translateX(600px);
         opacity: 0;
     }
+
     .selector-slide-leave-active {
         display: none;
     }

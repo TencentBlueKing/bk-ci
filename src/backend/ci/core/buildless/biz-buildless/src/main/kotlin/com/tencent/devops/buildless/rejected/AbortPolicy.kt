@@ -39,7 +39,7 @@ class AbortPolicy : RejectedExecutionHandler {
         throw NoIdleContainerException(
             errorCode = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorCode,
             errorType = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorType,
-            errorMsg = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.formatErrorMessage
+            errorMsg = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.getFormatErrorMessage()
         )
     }
 

@@ -31,9 +31,11 @@ const getters = {}
 const mutations = {}
 
 const actions = {
-    requestRecyclePipelineList ({ commit }, { projectId }) {
-        console.log('ajax')
-        return ajax.get(`${prefix}/pipelines/${projectId}/pipelineRecycleList?page=1&pageSize=-1`).then(response => {
+    requestRecyclePipelineList ({ commit }, { projectId, ...query }) {
+        console.log('ajax', query)
+        return ajax.get(`${prefix}/pipelines/${projectId}/pipelineRecycleList`, {
+            params: query
+        }).then(response => {
             return response.data
         })
     },

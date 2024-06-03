@@ -28,11 +28,15 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.SERVICE_ADD_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_TYPE_PREFIX
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -61,10 +65,11 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
         if (tServiceRecord != null) {
+            val name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + tServiceRecord.englishName)
             return Result(
                 ServiceVO(
                     id = tServiceRecord.id ?: 0,
-                    name = MessageCodeUtil.getMessageByLocale(tServiceRecord.name, tServiceRecord.englishName),
+                    name = name.ifBlank { tServiceRecord.name },
                     link = tServiceRecord.link,
                     linkNew = tServiceRecord.linkNew,
                     status = tServiceRecord.status, injectType = tServiceRecord.injectType,
@@ -80,11 +85,15 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     collected = favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
                     weigHt = tServiceRecord.weight ?: 0,
                     logoUrl = tServiceRecord.logoUrl,
-                    webSocket = tServiceRecord.webSocket
+                    webSocket = tServiceRecord.webSocket,
+                    clusterType = tServiceRecord.clusterType
                 )
             )
         } else {
-            return Result(405, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID))
+            return Result(
+                405,
+                I18nUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID, language = I18nUtil.getLanguage(userId))
+            )
         }
     }
 
@@ -136,10 +145,12 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             projectIdType = tServiceRecord.projectIdType,
             logoUrl = tServiceRecord.logoUrl,
             webSocket = tServiceRecord.webSocket,
+            weight = tServiceRecord.weight,
             createdUser = tServiceRecord.createdUser ?: "",
             createdTime = DateTimeUtil.toDateTime(tServiceRecord.createdTime),
             updatedUser = tServiceRecord.updatedUser ?: "",
-            updatedTime = DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
+            updatedTime = DateTimeUtil.toDateTime(tServiceRecord.updatedTime),
+            clusterType = tServiceRecord.clusterType
         )
     }
 
@@ -157,7 +168,10 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         if (tServiceRecord != null) {
             return Result(genServiceVO(tServiceRecord))
         }
-        return Result(500, "服务添加失败")
+        return Result(
+            500,
+            MessageUtil.getMessageByLocale(SERVICE_ADD_FAIL, I18nUtil.getLanguage(userId))
+        )
     }
 
     /**
@@ -168,7 +182,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             if (favoriteDao.create(dslContext, userId, serviceId) > 0) {
                 return Result(
                     status = 0,
-                    message = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.COLLECTION_SUCC),
+                    message = I18nUtil.getCodeLanMessage(
+                        ProjectMessageCode.COLLECTION_SUCC, language = I18nUtil.getLanguage(userId)
+                    ),
                     requestId = "",
                     result = true
                 )
@@ -177,7 +193,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             if (favoriteDao.delete(dslContext, userId, serviceId) > 0) {
                 return Result(
                     status = 0,
-                    message = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.COLLECTION_CANCEL_SUCC),
+                    message = I18nUtil.getCodeLanMessage(
+                        ProjectMessageCode.COLLECTION_CANCEL_SUCC, language = I18nUtil.getLanguage(userId)
+                    ),
                     requestId = "",
                     result = true
                 )
@@ -197,12 +215,12 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             val groupService = serviceDao.getServiceList(dslContext).groupBy { it.serviceTypeId }
 
             val favorServices = favoriteDao.list(dslContext, userId).map { it.serviceId }.toList()
-
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
-                val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
+                val typeName = I18nUtil.getCodeLanMessage(
+                    T_SERVICE_TYPE_PREFIX + serviceType.englishTitle
+                ).ifBlank { serviceType.title }
                 val services = ArrayList<ServiceVO>()
-
                 val s = groupService[typeId]
 
                 s?.forEach {
@@ -211,7 +229,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     services.add(
                         ServiceVO(
                             id = it.id,
-                            name = MessageCodeUtil.getMessageByLocale(it.name, it.englishName),
+                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName).ifBlank {
+                                it.name
+                            },
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
                             status = status,
@@ -230,7 +250,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                             logoUrl = it.logoUrl,
                             webSocket = it.webSocket,
                             newWindow = it.newWindow,
-                            newWindowUrl = it.newWindowurl
+                            newWindowUrl = it.newWindowurl,
+                            clusterType = it.clusterType
                         )
                     )
                 }

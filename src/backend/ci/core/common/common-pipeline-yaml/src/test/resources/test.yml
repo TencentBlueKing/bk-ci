@@ -1,0 +1,160 @@
+version: v2.0   # YAML 的版本，v2.0 为此新版语法
+name: 勋章事件-master分支监听  # 流水线名称，必填
+
+on: # on上的注释
+  push:
+    branches:
+      - master
+      - release/*
+    branches-ignore:
+      - master
+      - develop
+#    paths:
+#      - src/*
+#    paths-ignore:
+#      - release
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  tag:
+#    tags:
+#      - release_*
+#    tags-ignore:
+#      - master
+#    from-branches:
+#      - master
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  mr:
+#    target-branches:
+#      - master
+#    source-branches-ignore:
+#      - story
+#    paths:
+#      - src/*/*
+#    paths-ignore:
+#      - build/
+#    action:
+#      - open
+#      - reopen
+#      - push-update
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  schedules:
+#    cron: 0 0/5 0 0 0
+#    branches:
+#      - master
+#      - develop
+#    always: false
+
+variables:
+  DEPLOY_TYPE:
+    value: dev
+  APPROVE:
+    value: ${{ sss }}_${{ approve22 }}
+  GIT_USERNAME:
+    value: user1
+    readonly: true
+
+#variables:
+#  - template: templates/vars.yml@repoA
+#  - name: var_1
+#    value: val_1
+
+stages:
+  - name: "stage1"
+    id: abc
+    label:
+      - Build
+    if: envs.BK_CI_EVENT == 'push' || varivable.approve
+    jobs:
+      job_id_1:
+        name: my_job_1
+        runs-on: agentless
+        services:
+          mysql1:
+            image: mysql:8.0
+            with:
+              password: 123456
+        if: variables.DEPLOY_TYPE == 'dev' || cancelled()
+        steps:
+          - name: xxx
+            id: idxxx
+            if: xxx
+            uses: UploadArtifactory@1.*
+            with:
+              path: test.txt
+            timeout-minutes: 480
+            continue-on-error: false
+            retry-times: 0
+
+          - run: |
+              echo "stage1, job_id_1"
+              echo "hello world" >> test.txt
+
+        timeout-minutes: 480
+
+        continue-on-error: false
+        strategy:
+          fast-kill: true
+          max-parallel: 10
+        depend-on:
+          - job1
+          - job2
+
+      job_id_2:
+        name: my_job_2
+        steps:
+          - run: |
+              echo "stage1, job_id_2"
+
+      build_docker:
+        name: build and push docker
+        runs-on:
+          self-hosted: true
+          pool-name: sawyer-test
+          agent-selector: [ windows ]
+        steps:
+          - checkout: self
+          - uses: DockerBuildAndPushImage@3.*
+            with:
+              targetImage: ${{ variables.IMAGE_NAME }}
+              targetImageTag: ${{ variables.IMAGE_TAG }}
+              dockerBuildDir: .
+              dockerFilePath: ./Dockerfile
+              targetRepoItem:
+                url: ${{ variables.IMAGE_HOST }}
+                username: ${{ settings.CSIGHUB_USER }}
+                password: ${{ settings.CSIGHUB_PWD }}
+
+#finally:
+#  f_job_1:
+#    name: f-job-1
+#    if: FAILURE
+#    steps:
+#      - run: |
+#          echo "[f-job-1]variables.a is ${{ variables.a }}"
+#      - template: steps.yml
+#  f_job_2:
+#    name: f-job-2
+#    steps:
+#      - run: |
+#          echo "[f-job-2]variables.a is ${{ variables.a }}"
+#  template:
+#    - name: jobs.yml
+
+extends:
+  template: epc-build.yml
+  parameters:
+    repo: "hello/my-first-repo"
+resources:
+  repositories:
+    - repository: epc-ieg-bk-common
+      name: ieg/epc-ieg-bk-common
+      ref: refs/tags/v1.0
+

@@ -42,7 +42,8 @@
     import nodeTab from '@/components/envTabs/nodeTab'
     import settingTab from '@/components/envTabs/settingTab'
     import { convertTime } from '@/utils/util'
-
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+    
     export default {
         components: {
             baseTab,
@@ -93,7 +94,6 @@
             },
             activeTabComp () {
                 const activeTab = this.tabs.find(tab => tab.tabName === this.curItemTab)
-                console.log(activeTab)
                 return activeTab && activeTab.comp ? activeTab.comp : null
             },
             projectId () {
@@ -141,16 +141,17 @@
                             item.isSecure = 'plaintext'
                         }
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: this.envHashId,
+                            action: ENV_RESOURCE_ACTION.VIEW
+                        }
+                    )
                 } finally {
-                    console.log('121221')
                     this.loading.isLoading = false
                 }
             },

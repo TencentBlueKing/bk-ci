@@ -9,7 +9,7 @@
                     <bk-input :placeholder="$t('store.请输入版本')" v-model="searchData.version"></bk-input>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button theme="primary" @click="getPipelineList" :loading="isLoading">{{ $t('store.搜索') }}</bk-button>
+                    <bk-button theme="primary" @click="handleSearch" :loading="isLoading">{{ $t('store.搜索') }}</bk-button>
                 </bk-form-item>
                 <bk-form-item>
                     <bk-button @click="savePipelines" :loading="isSaving">{{ $t('store.导出') }}</bk-button>
@@ -99,6 +99,11 @@
                 }).finally(() => {
                     this.isLoading = false
                 })
+            },
+
+            handleSearch () {
+                this.pagination.current = 1
+                this.getPipelineList()
             },
 
             pageLimitChanged (currentLimit, prevLimit) {

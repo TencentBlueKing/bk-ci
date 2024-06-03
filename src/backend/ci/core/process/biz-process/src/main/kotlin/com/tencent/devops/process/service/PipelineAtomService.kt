@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
 import com.tencent.devops.common.api.constant.LATEST_EXECUTOR
 import com.tencent.devops.common.api.constant.LATEST_MODIFIER
@@ -41,13 +42,16 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.CsvUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.GET_PIPELINE_ATOM_INFO_NO_PERMISSION
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -64,8 +68,11 @@ import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -73,10 +80,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 
 @Service
 @RefreshScope
@@ -352,12 +355,12 @@ class PipelineAtomService @Autowired constructor(
             page++
         } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
         val headers = arrayOf(
-            MessageCodeUtil.getCodeLanMessage(PIPELINE_URL),
-            MessageCodeUtil.getCodeLanMessage(VERSION),
-            MessageCodeUtil.getCodeLanMessage(LATEST_MODIFIER),
-            MessageCodeUtil.getCodeLanMessage(LATEST_UPDATE_TIME),
-            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTOR),
-            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTE_TIME)
+            I18nUtil.getCodeLanMessage(PIPELINE_URL),
+            I18nUtil.getCodeLanMessage(VERSION),
+            I18nUtil.getCodeLanMessage(LATEST_MODIFIER),
+            I18nUtil.getCodeLanMessage(LATEST_UPDATE_TIME),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTOR),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTE_TIME)
         )
         val bytes = CsvUtil.writeCsv(headers, dataList)
         CsvUtil.setCsvResponse(atomCode, bytes, response)
@@ -379,7 +382,7 @@ class PipelineAtomService @Autowired constructor(
             )
         } else if (validateResult.isOk() && validateResult.data == false) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_PIPELINE_ATOM_INFO_NO_PERMISSION,
                 params = arrayOf(atomCode)
             )
         }
@@ -389,31 +392,35 @@ class PipelineAtomService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        version: Int?,
         checkPermission: Boolean = true
     ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
+            val permission = AuthPermission.VIEW
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
             )
         }
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         // 获取流水线下插件标识集合
-        val atomCodes = mutableSetOf<String>()
-        model.stages.forEach { stage ->
-            stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    atomCodes.add(element.getAtomCode())
-                }
-            }
-        }
+        val atomCodes = ModelUtils.getModelAtoms(model)
         return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
     }
 }

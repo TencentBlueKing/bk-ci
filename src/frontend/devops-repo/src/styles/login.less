@@ -1,0 +1,41 @@
+.bk-repo-login {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  .bg-login-img {
+    flex: 1;
+    object-fit: cover;
+    object-position: left;
+    overflow: hidden;
+  }
+  .bk-repo-login-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 600px;
+    > img {
+      width: 150px;
+    }
+    .bk-repo-login-form {
+      width: 320px;
+      margin-top: 36px;
+      display: flex;
+      flex-direction: column;
+      .login-error-tip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: @dangerColor;
+      } 
+      .bk-repo-login-input {
+        margin: 12px 0;
+      }
+      .bk-repo-login-btn {
+        align-self: stretch;
+      }
+    }
+  }
+}

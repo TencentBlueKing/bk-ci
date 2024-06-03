@@ -18,7 +18,6 @@
  */
 const path = require('path')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
-
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -26,13 +25,12 @@ const webpackBaseConfig = require('../webpack.base')
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
     const envDist = env && env.dist ? env.dist : 'frontend'
-    const extUrlPrefix = env && env.name ? `${env.name}-` : ''
     const dist = path.join(__dirname, `../${envDist}/pipeline`)
     const config = webpackBaseConfig({
         env,
         argv,
         entry: {
-            pipeline: './src/main.js'
+            pipeline: './src/entry.js'
         },
         publicPath: '/pipeline/',
         dist: '/pipeline',
@@ -42,19 +40,38 @@ module.exports = (env, argv) => {
     config.plugins = [
         ...config.plugins,
         new MonacoWebpackPlugin({
-            publicPath: '/pipeline/'
+            publicPath: '/pipeline',
+            languages: ['yaml'],
+            customLanguages: [
+                {
+                    label: 'yaml',
+                    entry: 'monaco-yaml',
+                    worker: {
+                        id: 'monaco-yaml/yamlWorker',
+                        entry: 'monaco-yaml/yaml.worker'
+                    }
+                }
+            ]
         }),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
             inject: true,
-            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`,
-            extUrlPrefix
+            publicPath: `${isProd ? '__BK_CI_PUBLIC_PATH__' : ''}/pipeline/`,
+            minify: {
+                removeComments: false
+            },
+            templateParameters: {
+                PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : '',
+                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : ''
+            },
+            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),
         new webpack.DllReferencePlugin({
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
+
         new CopyWebpackPlugin({
             patterns: [{ from: path.join(__dirname, './dist'), to: dist }]
         })

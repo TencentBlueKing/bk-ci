@@ -42,11 +42,13 @@ class PipelineBuildExtServiceImpl @Autowired constructor(
     ): Map<String, String> {
         return pipelineContextService.buildContext(
             projectId = task.projectId,
+            pipelineId = task.pipelineId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
             taskId = null,
-            variables = variables
+            variables = variables,
+            executeCount = task.executeCount
         )
     }
 

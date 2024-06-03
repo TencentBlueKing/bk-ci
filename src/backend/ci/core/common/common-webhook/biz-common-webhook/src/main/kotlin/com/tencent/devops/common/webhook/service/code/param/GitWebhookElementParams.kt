@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -48,10 +49,10 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         variables: Map<String, String>
     ): WebHookParams? {
         val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+            repositoryConfig = RepositoryConfigUtils.buildWebhookConfig(
+                element = element,
                 variables = variables
-            )
+            ).third
         )
         params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
             ""
@@ -65,6 +66,41 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         }
         params.block = isBlock(element)
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
+        params.version = element.version
+        when {
+            // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
+            element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                params.includeMrAction = CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE
+            }
+
+            element.eventType == CodeEventType.MERGE_REQUEST &&
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                    element.includeMrAction == null -> {
+                params.includeMrAction = joinToString(
+                    listOf(
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+                    )
+                )
+            }
+
+            element.eventType == CodeEventType.PUSH &&
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                    element.includePushAction == null -> {
+                params.includePushAction = joinToString(
+                    listOf(
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
+                    )
+                )
+            }
+
+            else -> {
+                params.includeMrAction = joinToString(element.includeMrAction)
+                params.includePushAction = joinToString(element.includePushAction)
+            }
+        }
         params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
         params.pathFilterType = element.pathFilterType
@@ -78,11 +114,13 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.webhookQueue = element.webhookQueue ?: false
         params.includeCrState = joinToString(element.includeCrState)
         params.includeCrTypes = joinToString(element.includeCrTypes)
-        params.includeNoteComment = joinToString(element.includeNoteComment)
+        params.includeNoteComment = element.includeNoteComment
         params.includeNoteTypes = joinToString(element.includeNoteTypes)
         params.includeIssueAction = joinToString(element.includeIssueAction)
         params.fromBranches = EnvUtils.parseEnv(element.fromBranches ?: "", variables)
-        params.includeMrAction = joinToString(element.includeMrAction)
+        params.enableThirdFilter = element.enableThirdFilter
+        params.thirdUrl = EnvUtils.parseEnv(element.thirdUrl ?: "", variables)
+        params.thirdSecretToken = EnvUtils.parseEnv(element.thirdSecretToken ?: "", variables)
         return params
     }
 

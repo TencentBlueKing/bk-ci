@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -189,47 +190,36 @@ class PipelinePostElementService @Autowired constructor(
             originElementId = modelTaskIdGenerator.getNextId()
             originAtomElement.id = originElementId
         } else {
+            // 若post插件的父类插件id不为空，可能会通过变量的方式来进行对父插件的跳过，需要对父插件启用状态设置为false
             if (startValues != null) {
                 originAtomElement.disableBySkipVar(variables = startValues)
-                val status = originAtomElement.initStatus(rerun = finallyStage)
-                // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
-                if (status == BuildStatus.SKIP) {
-                    elementStatus = BuildStatus.SKIP.name
-                }
             }
+        }
+        val status = originAtomElement.initStatus(rerun = finallyStage)
+        // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
+        if (status == BuildStatus.SKIP) {
+            elementStatus = BuildStatus.SKIP.name
         }
         val elementName =
             if (originAtomElement.name.length > 128) originAtomElement.name.substring(0, 128)
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
-        var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-        when (postCondition) {
-            "failed()" -> {
-                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-            }
-            "always()" -> {
-                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-            }
-            "canceledOrTimeOut()" -> {
-                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
-            }
+        val postAtomRunCondition = getPostAtomRunCondition(postCondition)
+        val additionalOptions = originAtomElement.additionalOptions?.deepCopy<ElementAdditionalOptions>()
+        additionalOptions?.let {
+            additionalOptions.enable = true
+            additionalOptions.continueWhenFailed = true
+            additionalOptions.retryWhenFailed = false
+            additionalOptions.runCondition = postAtomRunCondition
+            additionalOptions.pauseBeforeExec = null
+            additionalOptions.subscriptionPauseUser = null
+            additionalOptions.retryCount = 0
+            additionalOptions.otherTask = null
+            additionalOptions.customCondition = null
+            additionalOptions.elementPostInfo = elementPostInfo
         }
-        val additionalOptions = ElementAdditionalOptions(
-            enable = true,
-            continueWhenFailed = true,
-            retryWhenFailed = false,
-            runCondition = postAtomRunCondition,
-            pauseBeforeExec = null,
-            subscriptionPauseUser = null,
-            customVariables = originAtomElement.additionalOptions?.customVariables,
-            retryCount = 0,
-            timeout = 100,
-            otherTask = null,
-            customCondition = null,
-            elementPostInfo = elementPostInfo
-        )
         // 生成post操作的element
-        val postElementName = "$postPrompt$elementName"
+        val postElementName = getPostElementName(elementName)
         if (originAtomElement is MarketBuildAtomElement) {
             val marketBuildAtomElement = MarketBuildAtomElement(
                 name = postElementName,
@@ -253,5 +243,27 @@ class PipelinePostElementService @Autowired constructor(
             marketBuildLessAtomElement.additionalOptions = additionalOptions
             finalElementList.add(marketBuildLessAtomElement)
         }
+    }
+
+    fun getPostElementName(elementName: String): String {
+        return "$postPrompt$elementName"
+    }
+
+    fun getPostAtomRunCondition(postCondition: String): RunCondition {
+        var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
+        when (postCondition) {
+            "failed()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            }
+
+            "always()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            }
+
+            "canceledOrTimeOut()" -> {
+                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
+            }
+        }
+        return postAtomRunCondition
     }
 }

@@ -27,14 +27,15 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -42,7 +43,6 @@ import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcatDistinct
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -53,7 +53,8 @@ class PipelineModelTaskDao {
     fun batchSave(dslContext: DSLContext, modelTasks: Collection<PipelineModelTask>) {
         with(T_PIPELINE_MODEL_TASK) {
             modelTasks.forEach { modelTask ->
-                val taskParamJson = JsonUtil.toJson(modelTask.taskParams, formatted = false)
+                val taskParamJson =
+                    BkCryptoUtil.encryptSm4ButNone(JsonUtil.toJson(modelTask.taskParams, formatted = false))
                 val additionalOptionsJson = JsonUtil.toJson(modelTask.additionalOptions ?: "", formatted = false)
                 val currentTime = LocalDateTime.now()
                 dslContext.insertInto(this)
@@ -131,6 +132,32 @@ class PipelineModelTaskDao {
         }
     }
 
+    fun batchGetPipelineIdByAtomCode(
+        dslContext: DSLContext,
+        projectId: String?,
+        atomCodeList: List<String>,
+        limit: Int,
+        offset: Int
+    ): Result<Record2<String, String>>? {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            return dslContext.select(PROJECT_ID, PIPELINE_ID)
+                .from(this)
+                .where(ATOM_CODE.`in`(atomCodeList))
+                .let {
+                    if (projectId.isNullOrEmpty()) {
+                        it
+                    } else {
+                        it.and(PROJECT_ID.eq(projectId))
+                    }
+                }
+                .groupBy(PROJECT_ID, PIPELINE_ID)
+                .orderBy(PROJECT_ID, PIPELINE_ID)
+                .offset(offset)
+                .limit(limit)
+                .fetch()
+        }
+    }
+
     fun getModelTasks(
         dslContext: DSLContext,
         projectId: String,
@@ -147,9 +174,13 @@ class PipelineModelTaskDao {
                     condition.add(ATOM_VERSION.isNotNull)
                 }
             }
-            return dslContext.selectFrom(this)
+            val records = dslContext.selectFrom(this)
                 .where(condition)
                 .fetch()
+            for (r in records) {
+                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(r.taskParams))
+            }
+            return records
         }
     }
 
@@ -159,9 +190,13 @@ class PipelineModelTaskDao {
         pipelineIds: Collection<String>
     ): Result<TPipelineModelTaskRecord>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.selectFrom(this)
+            val records = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .fetch()
+            for (r in records) {
+                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(r.taskParams))
+            }
+            return records
         }
     }
 
@@ -293,9 +328,5 @@ class PipelineModelTaskDao {
                 .and(TASK_ID.eq(taskId))
                 .execute()
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineModelTaskDao::class.java)
     }
 }

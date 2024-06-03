@@ -34,9 +34,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResp
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.store.pojo.container.ContainerType
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,93 +47,98 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_CONTAINER"], description = "流水线-构建容器")
+@Tag(name = "USER_PIPELINE_CONTAINER", description = "流水线-构建容器")
 @Path("/user/pipeline/container")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserContainerResource {
 
-    @ApiOperation("获取构建容器资源信息")
+    @Operation(summary = "获取构建容器资源信息")
     @GET
     @Path("/projects/{projectCode}/containers/{containerId}/oss/{os}")
     fun getContainerResource(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("容器ID", required = true)
+        @Parameter(description = "容器ID", required = true)
         @PathParam("containerId")
         containerId: String,
-        @ApiParam("操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @ApiParam("资源类型", required = false)
+        @Parameter(description = "资源类型", required = false)
         @QueryParam("buildType")
         buildType: BuildType
     ): Result<ContainerResource?>
 
-    @ApiOperation("获取构建容器资源信息")
+    @Operation(summary = "获取构建容器资源信息")
     @GET
     @Path("/projects/{projectCode}/oss/{os}")
     fun getContainerResource(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @ApiParam("资源类型", required = false)
+        @Parameter(description = "资源类型", required = false)
         @QueryParam("buildType")
         buildType: BuildType
     ): Result<ContainerResource?>
 
-    @ApiOperation("获取所有的流水线构建容器信息")
+    @Operation(summary = "获取所有的流水线构建容器信息")
     @GET
     @Path("/{projectCode}")
     fun getAllContainerInfos(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<ContainerResp>>
 
-    @ApiOperation("根据容器类型获取流水线构建容器信息")
+    @Operation(summary = "根据容器类型获取流水线构建容器信息")
     @GET
     @Path("/{projectCode}/{type}")
     fun getContainerInfoByType(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
+        @Parameter(description = "容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
         @PathParam("type")
         type: String
     ): Result<List<ContainerResp>>
 
-    @ApiOperation("根据容器类型和操作系统获取流水线构建容器信息")
+    @Operation(summary = "根据容器类型和操作系统获取流水线构建容器信息")
     @GET
     @Path("/{projectCode}/{type}/{os}")
     fun getContainerInfoByTypeAndOs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
+        @Parameter(description = "容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
         @PathParam("type")
         type: String,
-        @ApiParam("操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS
     ): Result<List<ContainerResp>>
+
+    @Operation(summary = "获取全部流水线构建容器信息")
+    @GET
+    @Path("/all")
+    fun getAllContainers(): Result<List<ContainerType>?>
 }

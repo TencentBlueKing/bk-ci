@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.engine.common
 
+import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.process.utils.PipelineVarUtil
 import java.util.concurrent.TimeUnit
 
 object Timeout {
@@ -45,12 +47,29 @@ object Timeout {
 
     val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES.toLong()) + 1 // 毫秒+1
 
-    fun transMinuteTimeoutToMills(timeoutMinutes: Int?): Pair<Int, Long> {
-        var minute = timeoutMinutes ?: DEFAULT_TIMEOUT_MIN
+    private fun transTimeoutObj(timeoutStr: String?): TimeoutObj {
+        var change = false
+        var minute = try {
+            if (!timeoutStr.isNullOrBlank()) {
+                timeoutStr.toInt()
+            } else {
+                change = true
+                DEFAULT_TIMEOUT_MIN
+            }
+        } catch (badConfig: Exception) {
+            change = true
+            DEFAULT_TIMEOUT_MIN
+        }
         if (minute <= 0 || minute > MAX_MINUTES) {
+            change = true
             minute = MAX_MINUTES
         }
-        return minute to TimeUnit.MINUTES.toMillis(minute.toLong())
+        return TimeoutObj(
+            beforeChangeStr = timeoutStr,
+            minutes = minute,
+            millis = transMinuteTimeoutToMills(minute),
+            change = change
+        )
     }
 
     fun transMinuteTimeoutToSec(timeoutMinutes: Int?): Long {
@@ -60,4 +79,46 @@ object Timeout {
         }
         return TimeUnit.MINUTES.toSeconds(minute.toLong()) + 1 // #5109 buffer 1 second
     }
+
+    fun transMinuteTimeoutToMills(timeoutMinutes: Int?): Long {
+        var minute = timeoutMinutes ?: DEFAULT_TIMEOUT_MIN
+        if (minute <= 0 || minute > MAX_MINUTES) {
+            minute = MAX_MINUTES
+        }
+        return TimeUnit.MINUTES.toMillis(minute.toLong()) + 1 // #5109 buffer 1 second
+    }
+
+    /**
+     * #7954 timeout支持变量解析
+     */
+    fun decTimeout(timeoutVar: String?, contextMap: Map<String, String>): TimeoutObj {
+
+        val obj: TimeoutObj
+
+        val timeoutStr = timeoutVar?.trim()
+
+        if (PipelineVarUtil.isVar(timeoutStr)) { // 使用了变量的方式定义超时，需要解析
+
+            val tTimeout = EnvReplacementParser.parse(timeoutStr, contextMap = contextMap)
+
+            // 要检查配置的超时值是否在合理范围内
+            obj = transTimeoutObj(tTimeout)
+
+            if (tTimeout != timeoutStr) { // 发生了变量替换 ${{ xxx }} ==> 123
+                obj.replaceByVar = true
+            }
+        } else { // 普通的方式，做了重置
+            obj = transTimeoutObj(timeoutStr)
+        }
+
+        return obj
+    }
+
+    data class TimeoutObj(
+        var beforeChangeStr: String?, // 原超时字符串形式 比如 123 或者 ${{ xxx }}
+        var minutes: Int, // 超时分钟数
+        var millis: Long, // 超时毫秒数
+        var change: Boolean = false, // 是否有被修改过
+        var replaceByVar: Boolean = false // 是否被变量替换成功
+    )
 }

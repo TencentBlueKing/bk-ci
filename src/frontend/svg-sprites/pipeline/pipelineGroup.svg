@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icon/3 面性图标/收藏</title>
+    <g id="流水线组" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="流水线组展示与管理-交互说明" transform="translate(-82.000000, -1377.000000)">
+            <g id="编组-3备份-6" transform="translate(49.597590, 847.000000)">
+                <g id="编组-27" transform="translate(0.000000, 110.000000)">
+                    <g id="编组-24" transform="translate(0.402410, 244.000000)">
+                        <g id="编组-23" transform="translate(0.000000, 44.000000)">
+                            <g id="Frame/左侧一级导航元件/一级未选中备份-12" transform="translate(0.000000, 120.000000)">
+                                <g id="Icon/3-面性图标/收藏" transform="translate(32.000000, 12.000000)">
+                                    <path d="M12.8544,0.96 L12.854,3.145 L15.04,3.1456 L15.04,15.04 L3.1456,15.04 L3.145,12.854 L0.96,12.8544 L0.96,0.96 L12.8544,0.96 Z M12.8544,12.8544 L4.169,12.854 L4.1696,14.016 L14.016,14.016 L14.016,4.1696 L12.854,4.169 L12.8544,12.8544 Z M11.8304,1.984 L1.984,1.984 L1.984,11.8304 L11.8304,11.8304 L11.8304,1.984 Z" id="形状结合" fill="currentColor"></path>
+                                    <rect id="codesign_placeholder_name" x="0" y="0" width="16" height="16"></rect>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

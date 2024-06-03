@@ -27,11 +27,10 @@
 
 package com.tencent.devops.process.pojo.github
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("github url模型")
+@Schema(title = "github url模型")
 data class GithubAppUrl(
-    @ApiModelProperty("url 地址", required = false)
+    @get:Schema(title = "url 地址", required = false)
     val url: String
 )

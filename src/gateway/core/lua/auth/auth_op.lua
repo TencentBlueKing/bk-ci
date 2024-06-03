@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ]]
 
 -- 判断是否是白名单
-local service_ip_whitelist = config.service_ip_whitelist
+local service_ip_whitelist = consulUtil.getAllWhitelistIp()
 local isInServiceWhitelist = false
 -- 白名单为空的时候
 if next(service_ip_whitelist) ~= nil then

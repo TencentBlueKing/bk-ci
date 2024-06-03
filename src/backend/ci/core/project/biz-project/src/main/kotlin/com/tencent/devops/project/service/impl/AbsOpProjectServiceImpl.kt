@@ -28,30 +28,30 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
-import com.tencent.devops.project.ProjectInfoResponseRepoGray
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
-import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
-import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.OpProjectService
+import com.tencent.devops.project.service.ProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.util.CollectionUtils
 
@@ -61,79 +61,27 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
-    private val gray: Gray,
-    private val macosGray: MacOSGray,
-    private val projectDispatcher: ProjectDispatcher
+    private val projectDispatcher: ProjectDispatcher,
+    private val projectService: ProjectService
 ) : OpProjectService {
 
-    override fun listGrayProject(): Result<OpGrayProject> {
-        // 从redis中获取灰度项目列表
-        return Result(OpGrayProject(grayProjectSet().toList()))
-    }
-
-    override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
-        // 使用set集合（去除重复元素）操作提交的项目列表
-        for (item in projectCodeList) {
-            if (1 == operateFlag) {
-                gray.addGrayProject(item, redisOperation) // 添加项目为灰度项目
-                setGrayExt(projectCodeList, operateFlag, SystemEnums.CI)
-//                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // 添加项目为灰度项目
-            } else if (2 == operateFlag) {
-                gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
-                setGrayExt(projectCodeList, operateFlag, SystemEnums.CI)
-//                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
-            }
-        }
-        val projectCodeSet = grayProjectSet()
-        logger.info("the set projectSet is: $projectCodeSet")
-        return true
-    }
-
-    override fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set gray codecc project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
-        // 使用set集合（去除重复元素）操作提交的项目列表
-        for (item in projectCodeList) {
-            if (1 == operateFlag) {
-                gray.addCodeCCGrayProject(item, redisOperation) // 添加项目为灰度项目
-                setGrayExt(projectCodeList, operateFlag, SystemEnums.CODECC)
-            } else if (2 == operateFlag) {
-                gray.removeCodeCCGrayProject(item, redisOperation) // 取消项目为灰度项目
-                setGrayExt(projectCodeList, operateFlag, SystemEnums.CODECC)
-            }
-        }
-        val projectCodeSet = grayProjectSet()
-        logger.info("the set projectSet is: $projectCodeSet")
-        return true
-    }
-
-    override fun setMacOSGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set macos gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
-        for (item in projectCodeList) {
-            if (1 == operateFlag) {
-                macosGray.addGrayProject(item, redisOperation)
-//                redisOperation.addSetValue(macosGray.getRepoGrayRedisKey(), item)
-            } else if (2 == operateFlag) {
-                macosGray.removeGrayProject(item, redisOperation)
-//                redisOperation.removeSetMember(macosGray.getRepoGrayRedisKey(), item)
-            }
-        }
-        val projectCodeSet = grayProjectSet()
-        logger.info("the set projectSet is: $projectCodeSet")
-        return true
-    }
+    @Value("\${tag.gray:#{null}}")
+    private val grayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
         accessToken: String,
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Int {
-        logger.info("the projectInfoRequest is: $projectInfoRequest")
         val projectId = projectInfoRequest.projectId
         val dbProjectRecord = projectDao.get(dslContext, projectId)
         if (dbProjectRecord == null) {
-            logger.warn("The project $projectId is not exist")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            logger.warn("The project is not exist : projectId = $projectId")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    ProjectMessageCode.PROJECT_NOT_EXIST, language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         // 判断项目是不是审核的情况
         var flag = false
@@ -152,8 +100,13 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             try {
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (ignored: DuplicateKeyException) {
-                logger.warn("Duplicate project $projectInfoRequest", ignored)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                logger.warn("Duplicate ${projectInfoRequest.projectId} or ${projectInfoRequest.projectName}", ignored)
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        ProjectMessageCode.PROJECT_NAME_EXIST,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
             // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
@@ -203,73 +156,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getProjectList(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean
-    ): Result<Map<String, Any?>?> {
-        val dataObj = mutableMapOf<String, Any?>()
-
-        val grayProjectSet = grayProjectSet()
-
-        val projectInfos = projectDao.getProjectList(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            offset = offset,
-            limit = limit,
-            grayFlag = grayFlag,
-            repoGrayFlag = null,
-            macosGrayFlag = null,
-            codeCCGrayFlag = null,
-            grayNames = grayProjectSet,
-            repoGrayNames = null,
-            macosGrayNames = null,
-            codeCCGrayNames = null
-        )
-        val totalCount = projectDao.getProjectCount(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            grayFlag = grayFlag,
-            repoGrayFlag = null,
-            macosGrayFlag = null,
-            codeCCGrayFlag = null,
-            grayNames = grayProjectSet,
-            repoGrayNames = null,
-            macosGrayNames = null,
-            codeCCGrayNames = null
-        )
-        val dataList = mutableListOf<ProjectInfoResponse>()
-
-        for (i in projectInfos.indices) {
-            val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponse(projectData, grayProjectSet)
-            dataList.add(projectInfo)
-        }
-        dataObj["projectList"] = dataList
-        dataObj["count"] = totalCount
-        return Result(dataObj)
-    }
-
-    override fun getProjectList(
+    @Suppress("LongParameterList")
+    override fun getProjectListByFlag(
         projectName: String?,
         englishName: String?,
         projectType: Int?,
@@ -280,19 +168,27 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
-        codeCCGrayFlag: Boolean?,
-        repoGrayFlag: Boolean?,
-        macosGrayFlag: Boolean?
-    ): Result<Map<String, Any?>?> {
+        codeCCGrayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        remoteDevFlag: Boolean,
+        productId: Int?
+    ): Map<String, Any?>? {
         val dataObj = mutableMapOf<String, Any?>()
 
-        val grayProjectSet = grayProjectSet()
+        val routerTag = if (grayFlag) grayTag else null
 
-        val codeCCGrayProjectSet = grayCodeCCProjectSet()
+        val otherRouterTagMaps = mutableMapOf<String, String>()
+        if (codeCCGrayFlag && grayTag != null) {
+            otherRouterTagMaps[SystemEnums.CODECC.name] = grayTag
+        }
+        if (repoGrayFlag && grayTag != null) {
+            otherRouterTagMaps[SystemEnums.REPO.name] = grayTag
+        }
 
-        val repoGrayProjectSet = repoGrayProjectSet()
-
-        val macosGrayProjectSet = macosGrayProjectSet()
+        val propertiesMaps = mutableMapOf<String, String>()
+        if (remoteDevFlag) {
+            propertiesMaps["remotedev"] = "true"
+        }
 
         val projectInfos = projectDao.getProjectList(
             dslContext = dslContext,
@@ -305,14 +201,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approvalStatus = approvalStatus,
             offset = offset,
             limit = limit,
-            grayFlag = grayFlag,
-            repoGrayFlag = repoGrayFlag,
-            macosGrayFlag = macosGrayFlag,
-            codeCCGrayFlag = codeCCGrayFlag,
-            grayNames = grayProjectSet,
-            codeCCGrayNames = codeCCGrayProjectSet,
-            repoGrayNames = repoGrayProjectSet,
-            macosGrayNames = macosGrayProjectSet
+            routerTag = routerTag,
+            otherRouterTagMaps = otherRouterTagMaps,
+            remoteDevFlag = remoteDevFlag,
+            productId = productId
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -323,151 +215,75 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             creator = creator,
             approver = approver,
             approvalStatus = approvalStatus,
-            grayFlag = grayFlag,
-            codeCCGrayFlag = codeCCGrayFlag,
-            repoGrayFlag = repoGrayFlag,
-            macosGrayFlag = macosGrayFlag,
-            grayNames = grayProjectSet,
-            codeCCGrayNames = codeCCGrayProjectSet,
-            repoGrayNames = repoGrayProjectSet,
-            macosGrayNames = macosGrayProjectSet
+            routerTag = routerTag,
+            otherRouterTagMaps = otherRouterTagMaps,
+            remoteDevFlag = remoteDevFlag,
+            productId = productId
         )
-        val dataList = mutableListOf<ProjectInfoResponseRepoGray>()
+        val dataList = mutableListOf<ProjectInfoResponse>()
 
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponseRepoGray(
-                projectData = projectData,
-                grayProjectSet = grayProjectSet,
-                codeCCProjectSet = codeCCGrayProjectSet,
-                repoProjectSet = repoGrayProjectSet,
-                macosProjectSet = macosGrayProjectSet
-            )
+            val projectInfo = getProjectInfoResponse(projectData)
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
         dataObj["count"] = totalCount
-        return Result(dataObj)
+        return dataObj
     }
 
-    override fun getProjectCount(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        grayFlag: Boolean
-    ): Result<Int> {
-        return Result(
-            data = projectDao.getProjectCount(
-                dslContext = dslContext,
+    private fun getProjectInfoResponse(
+        projectData: TProjectRecord
+    ): ProjectInfoResponse {
+        val otherRouterTagMap = projectData.otherRouterTags?.let {
+            JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
+        } ?: emptyMap()
+
+        val fixProjectOrganization = projectService.fixProjectOrganization(projectData)
+
+        val projectProperties = projectData.properties?.let {
+            JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
+        } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
+        return with(projectData) {
+            ProjectInfoResponse(
+                projectId = projectId,
                 projectName = projectName,
-                englishName = englishName,
+                projectEnglishName = englishName,
+                creatorBgName = creatorBgName,
+                creatorDeptName = creatorDeptName,
+                creatorCenterName = creatorCenterName,
+                bgId = fixProjectOrganization.bgId,
+                bgName = fixProjectOrganization.bgName,
+                businessLineId = fixProjectOrganization.businessLineId,
+                businessLineName = fixProjectOrganization.businessLineName,
+                deptId = fixProjectOrganization.deptId,
+                deptName = fixProjectOrganization.deptName,
+                centerId = fixProjectOrganization.centerId,
+                centerName = fixProjectOrganization.centerName,
                 projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
                 approver = approver,
+                approvalTime = approvalTime?.timestampmilli(),
                 approvalStatus = approvalStatus,
-                grayFlag = grayFlag,
-                repoGrayFlag = null,
-                macosGrayFlag = null,
-                codeCCGrayFlag = null,
-                grayNames = grayProjectSet(),
-                repoGrayNames = null,
-                macosGrayNames = null,
-                codeCCGrayNames = null
+                secrecyFlag = isSecrecy,
+                creator = creator,
+                createdAtTime = createdAt.timestampmilli(),
+                ccAppId = ccAppId,
+                useBk = useBk,
+                offlinedFlag = isOfflined,
+                kind = kind,
+                enabled = enabled ?: true,
+                grayFlag = routerTag == grayTag,
+                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
+                repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
+                hybridCCAppId = hybridCcAppId,
+                enableExternal = enableExternal,
+                enableIdc = enableIdc,
+                pipelineLimit = pipelineLimit,
+                properties = projectProperties,
+                productId = productId
             )
-        )
+        }
     }
-
-    private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
-
-    private fun grayCodeCCProjectSet() = gray.grayCodeCCProjectSet(redisOperation)
-
-    private fun macosGrayProjectSet() = macosGray.grayProjectSet(redisOperation)
-
-    private fun repoGrayProjectSet() = setOf<String>()
-
-    private fun getProjectInfoResponse(projectData: TProjectRecord, grayProjectSet: Set<String>): ProjectInfoResponse {
-        return ProjectInfoResponse(
-            projectId = projectData.projectId,
-            projectName = projectData.projectName,
-            projectEnglishName = projectData.englishName,
-            creatorBgName = projectData.creatorBgName,
-            creatorDeptName = projectData.creatorDeptName,
-            creatorCenterName = projectData.creatorCenterName,
-            bgId = projectData.bgId,
-            bgName = projectData.bgName,
-            deptId = projectData.deptId,
-            deptName = projectData.deptName,
-            centerId = projectData.centerId,
-            centerName = projectData.centerName,
-            projectType = projectData.projectType,
-            approver = projectData.approver,
-            approvalTime = projectData.approvalTime?.timestampmilli(),
-            approvalStatus = projectData.approvalStatus,
-            secrecyFlag = projectData.isSecrecy,
-            creator = projectData.creator,
-            createdAtTime = projectData.createdAt.timestampmilli(),
-            ccAppId = projectData.ccAppId,
-            useBk = projectData.useBk,
-            offlinedFlag = projectData.isOfflined,
-            kind = projectData.kind,
-            enabled = projectData.enabled ?: true,
-            grayFlag = grayProjectSet.contains(projectData.englishName),
-            hybridCCAppId = projectData.hybridCcAppId,
-            enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc,
-            pipelineLimit = projectData.pipelineLimit
-        )
-    }
-
-    private fun getProjectInfoResponseRepoGray(
-        projectData: TProjectRecord,
-        grayProjectSet: Set<String>,
-        codeCCProjectSet: Set<String>,
-        macosProjectSet: Set<String>,
-        repoProjectSet: Set<String>
-    ): ProjectInfoResponseRepoGray {
-        return ProjectInfoResponseRepoGray(
-            projectId = projectData.projectId,
-            projectName = projectData.projectName,
-            projectEnglishName = projectData.englishName,
-            creatorBgName = projectData.creatorBgName,
-            creatorDeptName = projectData.creatorDeptName,
-            creatorCenterName = projectData.creatorCenterName,
-            bgId = projectData.bgId,
-            bgName = projectData.bgName,
-            deptId = projectData.deptId,
-            deptName = projectData.deptName,
-            centerId = projectData.centerId,
-            centerName = projectData.centerName,
-            projectType = projectData.projectType,
-            approver = projectData.approver,
-            approvalTime = projectData.approvalTime?.timestampmilli(),
-            approvalStatus = projectData.approvalStatus,
-            secrecyFlag = projectData.isSecrecy,
-            creator = projectData.creator,
-            createdAtTime = projectData.createdAt.timestampmilli(),
-            ccAppId = projectData.ccAppId,
-            useBk = projectData.useBk,
-            offlinedFlag = projectData.isOfflined,
-            kind = projectData.kind,
-            enabled = projectData.enabled ?: true,
-            grayFlag = grayProjectSet.contains(projectData.englishName),
-            codeCCGrayFlag = codeCCProjectSet.contains(projectData.englishName),
-            repoGrayFlag = repoProjectSet.contains(projectData.englishName),
-            macosGrayFlag = macosProjectSet.contains(projectData.englishName),
-            hybridCCAppId = projectData.hybridCcAppId,
-            enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc,
-            pipelineLimit = projectData.pipelineLimit
-        )
-    }
-
-    abstract fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums)
 
     companion object {
         val logger = LoggerFactory.getLogger(AbsOpProjectServiceImpl::class.java)!!

@@ -27,9 +27,17 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
@@ -53,17 +61,16 @@ class JobQuotaService constructor(
 
     fun checkAndAddRunningJob(
         startupEvent: PipelineAgentStartupEvent,
-        vmType: JobQuotaVmType?,
+        jobType: JobQuotaVmType?,
         demoteQueueRouteKeySuffix: String
     ): Boolean {
-        if (null == vmType || !jobQuotaEnable) {
+        if (null == jobType || !jobQuotaEnable) {
             logger.info("JobQuota not enabled or VmType is null, job quota check will be skipped.")
             return true
         }
 
-        val dispatchService = SpringContextUtil.getBean(DispatchService::class.java)
-
         with(startupEvent) {
+            val logPrefix = "$projectId|$jobType|$buildId|$vmSeqId|$executeCount"
             val checkResult = checkAndAddRunningJob(
                 projectId = projectId,
                 buildId = buildId,
@@ -71,52 +78,121 @@ class JobQuotaService constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
-                vmType = vmType
+                channelCode = startupEvent.channelCode,
+                vmType = jobType
             )
 
             if (checkResult == null || checkResult) {
-                logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota success.")
+                logger.info("$logPrefix Check job quota success.")
                 return true
             }
 
-            if (!checkResult && startupEvent.retryTime > RETRY_TIME) {
-                logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess. " +
-                        "Send event to demoteQueue.")
+            jobQuoteOverrunHandler(
+                logPrefix = logPrefix,
+                buildId = buildId,
+                containerId = containerId,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                queueTimeoutMinutes = queueTimeoutMinutes ?: 10,
+                jobType = jobType,
+                demoteQueueRouteKeySuffix = demoteQueueRouteKeySuffix,
+                startupEvent = startupEvent
+            )
 
-                buildLogPrinter.addYellowLine(
-                    buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值, " +
-                            "并已延迟等待${retryTime}次，将放入降级队列执行.",
-                    tag = VMUtils.genStartVMTaskId(containerId),
-                    jobId = containerHashId,
-                    executeCount = executeCount ?: 1
-                )
+            return false
+        }
+    }
 
-                dispatchService.redispatch(startupEvent.copy(
-                    routeKeySuffix = demoteQueueRouteKeySuffix,
-                    delayMills = 0
-                ))
+    fun jobQuoteOverrunHandler(
+        logPrefix: String,
+        buildId: String,
+        containerId: String,
+        containerHashId: String?,
+        executeCount: Int?,
+        queueTimeoutMinutes: Int,
+        jobType: JobQuotaVmType,
+        demoteQueueRouteKeySuffix: String,
+        startupEvent: IPipelineEvent
+    ) {
+        val maxJobRetry = queueTimeoutMinutes * 60 * 1000 / RETRY_DELTA
+        val dispatchService = SpringContextUtil.getBean(DispatchService::class.java)
 
-                return false
-            } else {
-                logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess. delay: " +
-                        "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
+        if (startupEvent.retryTime < RETRY_TIME) {
+            logger.info("$logPrefix Job quota excess. delay: " +
+                    "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
 
-                buildLogPrinter.addYellowLine(
-                    buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
-                            "将延迟 ${RETRY_DELTA / 1000}s 后重试，当前重试次数：${startupEvent.retryTime}",
-                    tag = VMUtils.genStartVMTaskId(containerId),
-                    jobId = containerHashId,
-                    executeCount = executeCount ?: 1
-                )
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY,
+                    params = arrayOf(jobType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}"),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                tag = VMUtils.genStartVMTaskId(containerId),
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
+            )
 
-                startupEvent.retryTime += 1
-                startupEvent.delayMills = RETRY_DELTA
-                dispatchService.redispatch(startupEvent)
+            startupEvent.retryTime += 1
+            startupEvent.delayMills = RETRY_DELTA
+            dispatchService.redispatch(startupEvent)
+        } else if (startupEvent.retryTime == RETRY_TIME) { // 重试次数刚刚超过最大重试次数，会将消息丢到降级队列
+            logger.warn("$logPrefix Job quota excess. Send event to demoteQueue.")
 
-                return false
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED,
+                    params = arrayOf(jobType.displayName, "${startupEvent.retryTime}")
+                ),
+                tag = VMUtils.genStartVMTaskId(containerId),
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
+            )
+
+            startupEvent.retryTime += 1
+            startupEvent.delayMills = RETRY_DELTA
+            if (startupEvent is PipelineAgentStartupEvent) {
+                startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
             }
+            dispatchService.redispatch(startupEvent)
+        } else if (startupEvent.retryTime < maxJobRetry) {
+            logger.info("$logPrefix DemoteQueue job quota excess. delay: " +
+                    "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
+
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED,
+                    params = arrayOf(jobType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}")
+                ),
+                tag = VMUtils.genStartVMTaskId(containerId),
+                containerHashId = containerHashId,
+                executeCount = executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(containerId)
+            )
+
+            startupEvent.retryTime += 1
+            startupEvent.delayMills = RETRY_DELTA
+            if (startupEvent is PipelineAgentStartupEvent) {
+                startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
+            }
+            dispatchService.redispatch(startupEvent)
+        } else {
+            logger.info("$logPrefix DemoteQueue Job Maximum number of retries reached. " +
+                    "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
+            val errorMessage = I18nUtil.getCodeLanMessage(DispatchSdkErrorCode.JOB_QUOTA_EXCESS.toString())
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = DispatchSdkErrorCode.JOB_QUOTA_EXCESS,
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
+            )
         }
     }
 
@@ -137,6 +213,7 @@ class JobQuotaService constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
+                channelCode = agentLessStartupEvent.channelCode,
                 vmType = vmType
             ) ?: true
         }
@@ -172,6 +249,7 @@ class JobQuotaService constructor(
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
+        channelCode: String,
         vmType: JobQuotaVmType?
     ): Boolean? {
         if (null == vmType || !jobQuotaEnable) {
@@ -188,7 +266,8 @@ class JobQuotaService constructor(
                 vmSeqId = vmSeqId,
                 executeCount = executeCount ?: 1,
                 containerId = containerId,
-                containerHashId = containerHashId
+                containerHashId = containerHashId,
+                channelCode = channelCode
             ).data
         } catch (e: Throwable) {
             logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota failed.", e)

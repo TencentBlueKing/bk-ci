@@ -29,27 +29,45 @@ package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.repository.pojo.git.GitMrInfo
-import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitOperationFile
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitListMergeRequest
+import com.tencent.devops.scm.pojo.GitMember
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.scm.pojo.TapdWorkItem
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -63,448 +81,880 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_SCM_GIT"], description = "Service Code GIT resource")
+@Tag(name = "SERVICE_SCM_GIT", description = "Service Code GIT resource")
 @Path("/service/git/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ServiceGitResource {
 
-    @ApiOperation("获取用户所有git项目")
+    @Operation(summary = "获取用户所有git项目")
     @GET
     @Path("/getProject")
     fun getProject(
-        @ApiParam("accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<List<Project>>
 
-    @ApiOperation("获取用户所有git项目，分页方式获取")
+    @Operation(summary = "获取用户所有git项目，分页方式获取")
     @GET
     @Path("/getProjectList")
     fun getProjectList(
-        @ApiParam("accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("第几页", required = true)
+        @Parameter(description = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数据条数", required = true)
+        @Parameter(description = "每页数据条数", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "搜索条件，模糊匹配path,name")
+        @QueryParam("search")
+        search: String? = null,
+        @Parameter(description = "排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitProjectsOrderBy? = null,
+        @Parameter(description = "排序方式")
+        @QueryParam("sort")
+        sort: GitSortAscOrDesc? = null,
+        @Parameter(description = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean? = null,
+        @Parameter(description = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum? = null
     ): Result<List<Project>>
 
-    @ApiOperation("获取用户所有git分支")
+    @Operation(summary = "获取用户所有git分支")
     @GET
     @Path("/getBranch")
     fun getBranch(
-        @ApiParam("accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("仓库ID", required = true)
+        @Parameter(description = "仓库ID", required = true)
         @QueryParam("repository")
         repository: String,
-        @ApiParam("第几页", required = true)
+        @Parameter(description = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数据条数", required = true)
+        @Parameter(description = "每页数据条数", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "搜索条件", required = true)
+        @QueryParam("search")
+        search: String?
     ): Result<List<GitBranch>>
 
-    @ApiOperation("获取用户所有git TAG")
+    @Operation(summary = "获取用户所有git TAG")
     @GET
     @Path("/getTag")
     fun getTag(
-        @ApiParam("accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("仓库ID", required = true)
+        @Parameter(description = "仓库ID", required = true)
         @QueryParam("repository")
         repository: String,
-        @ApiParam("第几页", required = true)
+        @Parameter(description = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数据条数", required = true)
+        @Parameter(description = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitTag>>
 
-    @ApiOperation("刷新用户的token")
+    @Operation(summary = "刷新用户的token")
     @PUT
     @Path("/refreshToken")
     fun refreshToken(
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         accessToken: GitToken
     ): Result<GitToken>
 
-    @ApiOperation("获取授权路径")
+    @Operation(summary = "获取授权路径")
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-        @ApiParam("参数json串", required = true)
+        @Parameter(description = "参数json串", required = true)
         @QueryParam("authParamJsonStr")
         authParamJsonStr: String
     ): Result<String>
 
-    @ApiOperation("获取用户的token")
+    @Operation(summary = "获取用户的token")
     @GET
     @Path("/getToken")
     fun getToken(
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("code", required = true)
+        @Parameter(description = "code", required = true)
         @QueryParam("code")
         code: String
     ): Result<GitToken>
 
-    @ApiOperation("获取转发地址")
+    @Operation(summary = "获取转发地址")
     @GET
     @Path("/getRedirectUrl")
     fun getRedirectUrl(
-        @ApiParam("参数json串", required = true)
+        @Parameter(description = "参数json串", required = true)
         @QueryParam("authParamJsonStr")
         authParamJsonStr: String
     ): Result<String>
 
-    @ApiOperation("获取git文件内容")
+    @Operation(summary = "获取git文件内容")
     @GET
     @Path("/getGitFileContent")
     fun getGitFileContent(
-        @ApiParam(value = "仓库名字")
+        @Parameter(description = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam(value = "认证方式")
+        @Parameter(description = "认证方式")
         @QueryParam("authType")
         authType: RepoAuthType?,
-        @ApiParam(value = "token")
+        @Parameter(description = "token")
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "提交id 或者 分支")
+        @Parameter(description = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String
     ): Result<String>
 
-    @ApiOperation("获取gitlab文件内容")
+    @Operation(summary = "获取gitlab文件内容")
     @GET
     @Path("/getGitlabFileContent")
     fun getGitlabFileContent(
-        @ApiParam(value = "仓库Url")
+        @Parameter(description = "仓库Url")
         @QueryParam("repoUrl")
         repoUrl: String,
-        @ApiParam(value = "仓库名字")
+        @Parameter(description = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam(value = "提交id 或者 分支")
+        @Parameter(description = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String,
-        @ApiParam(value = "accessToken")
+        @Parameter(description = "accessToken")
         @QueryParam("accessToken")
         accessToken: String
     ): Result<String>
 
-    @ApiOperation("更新git代码库信息")
+    @Operation(summary = "更新git代码库信息")
     @PUT
     @Path("/updateGitCodeRepository")
     fun updateGitCodeRepository(
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @ApiParam(value = "更新git项目信息", required = true)
+        @Parameter(description = "更新git项目信息", required = true)
         updateGitProjectInfo: UpdateGitProjectInfo,
-        @ApiParam(value = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("把项目迁移到指定项目组下")
+    @Operation(summary = "把项目迁移到指定项目组下")
     @POST
     @Path("/moveProjectToGroup")
     fun moveProjectToGroup(
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "项目组代码", required = true)
+        @Parameter(description = "项目组代码", required = true)
         @QueryParam("groupCode")
         groupCode: String,
-        @ApiParam(value = "代码库名称", required = true)
+        @Parameter(description = "代码库名称", required = true)
         @QueryParam("repositoryName")
         repositoryName: String,
-        @ApiParam(value = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
 
-    @ApiOperation("创建git代码库")
+    @Operation(summary = "创建git代码库")
     @POST
     @Path("/createGitCodeRepository")
     fun createGitCodeRepository(
-        @ApiParam("用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "代码库名称", required = true)
+        @Parameter(description = "代码库名称", required = true)
         @QueryParam("repositoryName")
         repositoryName: String,
-        @ApiParam("样例工程路径", required = true)
+        @Parameter(description = "样例工程路径", required = true)
         @QueryParam("sampleProjectPath")
         sampleProjectPath: String,
-        @ApiParam(value = "命名空间ID", required = false)
+        @Parameter(description = "命名空间ID", required = false)
         @QueryParam("namespaceId")
         namespaceId: Int?,
-        @ApiParam(value = "项目可视范围", required = false)
+        @Parameter(description = "项目可视范围", required = false)
         @QueryParam("visibilityLevel")
         visibilityLevel: VisibilityLevelEnum?,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @ApiParam(value = "前端UI渲染方式", required = false)
+        @Parameter(description = "前端UI渲染方式", required = false)
         @QueryParam("frontendType")
         frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?>
 
-    @ApiOperation("为项目成员赋予代码库权限")
+    @Operation(summary = "为项目成员赋予代码库权限")
     @POST
     @Path("/addGitProjectMember")
     fun addGitProjectMember(
-        @ApiParam("增加的用户列表", required = true)
+        @Parameter(description = "增加的用户列表", required = true)
         @QueryParam("userIdList")
         userIdList: List<String>,
-        @ApiParam(value = "代码库命名空间名称", required = true)
+        @Parameter(description = "代码库命名空间名称", required = true)
         @QueryParam("repositorySpaceName")
         repositorySpaceName: String,
-        @ApiParam(value = "git访问权限", required = true)
+        @Parameter(description = "git访问权限", required = true)
         @QueryParam("gitAccessLevel")
         gitAccessLevel: GitAccessLevelEnum,
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("删除项目成员的代码库权限")
+    @Operation(summary = "删除项目成员的代码库权限")
     @DELETE
     @Path("/deleteGitProjectMember")
     fun deleteGitProjectMember(
-        @ApiParam("删除的用户列表", required = true)
+        @Parameter(description = "删除的用户列表", required = true)
         @QueryParam("userIdList")
         userIdList: List<String>,
-        @ApiParam(value = "代码库命名空间名称", required = true)
+        @Parameter(description = "代码库命名空间名称", required = true)
         @QueryParam("repositorySpaceName")
         repositorySpaceName: String,
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("获取mr信息")
+    @Operation(summary = "获取mr信息")
     @GET
     @Path("/getMergeRequestInfo")
     fun getMergeRequestInfo(
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "合并请求的 id", required = true)
+        @Parameter(description = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @ApiParam(value = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "仓库url", required = true)
+        @Parameter(description = "仓库url", required = true)
         @QueryParam("repoUrl")
         repoUrl: String? = null
     ): Result<GitMrInfo>
 
-    @ApiOperation("下载git仓库")
+    @Operation(summary = "下载git仓库文件")
     @GET
     @Path("/downloadGitRepoFile")
     fun downloadGitRepoFile(
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
-        @QueryParam("repoName")
-        repoName: String,
-        @ApiParam("commit hash值、分支名或tag", required = false)
+        @Parameter(description = "仓库id")
+        @QueryParam("repoId")
+        repoId: String,
+        @Parameter(description = "代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @Parameter(description = "commit hash值、分支名或tag", required = false)
         @QueryParam("sha")
         sha: String?,
-        @ApiParam("token", required = true)
-        @QueryParam("token")
-        token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
+        @Parameter(description = "限定为下载指定路径的文件", required = false)
+        @QueryParam("filePath")
+        filePath: String?,
+        @Parameter(description = "支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
+        @QueryParam("format")
+        format: String?,
+        @Parameter(description = "将项目名作为目录打包进去 (默认：false)", required = false)
+        @QueryParam("isProjectPathWrapped")
+        isProjectPathWrapped: Boolean?,
         @Context
         response: HttpServletResponse
     )
 
-    @ApiOperation("获取mr信息")
+    @Operation(summary = "获取mr信息")
     @GET
     @Path("/getMergeRequestReviewersInfo")
     fun getMergeRequestReviewersInfo(
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "合并请求的 id", required = true)
+        @Parameter(description = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @ApiParam(value = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "仓库url", required = true)
+        @Parameter(description = "仓库url", required = true)
         @QueryParam("repoUrl")
         repoUrl: String? = null
     ): Result<GitMrReviewInfo>
 
-    @ApiOperation("获取mr信息")
+    @Operation(summary = "获取mr信息")
     @GET
     @Path("/getMergeRequestChangeInfo")
     fun getMergeRequestChangeInfo(
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "合并请求的 id", required = true)
+        @Parameter(description = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @ApiParam(value = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "仓库url", required = true)
+        @Parameter(description = "仓库url", required = true)
         @QueryParam("repoUrl")
         repoUrl: String? = null
     ): Result<GitMrChangeInfo>
 
-    @ApiOperation("获取仓库最近一次提交信息")
+    @Operation(summary = "获取仓库最近一次提交信息")
     @GET
     @Path("/getRepoRecentCommitInfo")
     fun getRepoRecentCommitInfo(
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "hash值、分支名或tag", required = true)
+        @Parameter(description = "hash值、分支名或tag", required = true)
         @QueryParam("sha")
         sha: String,
-        @ApiParam(value = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitCommit?>
 
-    @ApiOperation("解锁hook锁")
+    @Operation(summary = "解锁hook锁")
     @POST
     @Path("/unLockHookLock")
     fun unLockHookLock(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String? = "",
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @ApiParam(value = "合并请求的 id", required = true)
+        @Parameter(description = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long
     ): Result<Boolean>
 
-    @ApiOperation("获取git项目组的详细信息")
+    @Operation(summary = "获取git项目组的详细信息")
     @GET
     @Path("/getProjectGroupInfo")
     fun getProjectGroupInfo(
-        @ApiParam(value = "git项目组id", required = true)
+        @Parameter(description = "git项目组id", required = true)
         @QueryParam("id")
         id: String,
-        @ApiParam(value = "是否包含subgroup项目", required = false)
+        @Parameter(description = "是否包含subgroup项目", required = false)
         @QueryParam("includeSubgroups")
         includeSubgroups: Boolean?,
-        @ApiParam(value = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitProjectGroupInfo>
 
-    @ApiOperation("获取两次提交的差异文件列表")
+    @Operation(summary = "获取两次提交的差异文件列表")
     @GET
     @Path("/getChangeFileList")
     fun getChangeFileList(
-        @ApiParam(value = "token")
+        @Parameter(description = "token")
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @ApiParam(value = "gitProjectId")
+        @Parameter(description = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @ApiParam(value = "旧commit")
+        @Parameter(description = "旧commit")
         @QueryParam("from")
         from: String,
-        @ApiParam(value = "新commit")
+        @Parameter(description = "新commit")
         @QueryParam("to")
         to: String,
-        @ApiParam(value = "true：两个点比较差异，false：三个点比较差异。默认是 false")
+        @Parameter(description = "true：两个点比较差异，false：三个点比较差异。默认是 false")
         @QueryParam("straight")
         straight: Boolean? = false,
-        @ApiParam(value = "页码")
+        @Parameter(description = "页码")
         @QueryParam("page")
         page: Int,
-        @ApiParam(value = "每页大小")
+        @Parameter(description = "每页大小")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<List<ChangeFileInfo>>
 
-    @ApiOperation("获取指定项目详细信息")
+    @Operation(summary = "获取指定项目详细信息")
     @GET
     @Path("/getProjectInfo")
     fun getProjectInfo(
-        @ApiParam(value = "token")
+        @Parameter(description = "token")
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @ApiParam(value = "gitProjectId")
+        @Parameter(description = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitProjectInfo?>
+
+    @Operation(summary = "获取某仓库某成员的信息")
+    @GET
+    @Path("/checkUserGitAuth")
+    fun getProjectUserInfo(
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitMember>
+
+    @Operation(summary = "获取用户所有项目组列表，分页获取")
+    @GET
+    @Path("/getProjectGroupsList")
+    fun getProjectGroupsList(
+        @Parameter(description = "oauth accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @Parameter(description = "第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页数据条数,最大值100", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "若为true则只返回owner为当前用户的group")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @Parameter(description = "指定最小访问级别，返回的group列表中，当前用户的group访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitCodeGroup>>
+
+    @Operation(summary = "获取GitCode项目成员信息")
+    @GET
+    @Path("/getMembers")
+    fun getMembers(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @Parameter(description = "搜索用户关键字", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>>
+
+    @Operation(summary = "校验用户git项目权限")
+    @GET
+    @Path("/getUserId")
+    fun getGitUserId(
+        @Parameter(description = "userId", required = true)
+        @QueryParam("userId")
+        rtxUserId: String,
+        @Parameter(description = "gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<String?>
+
+    @Operation(summary = "获取项目下具有权限的成员信息")
+    @GET
+    @Path("/projects/members/all")
+    fun getProjectMembersAll(
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @Parameter(description = "搜索用户关键字", required = true)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitMember>>
+
+    @Operation(summary = "文件内容和一些文件信息")
+    @GET
+    @Path("/getGitFileInfo")
+    fun getGitFileInfo(
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "文件路径")
+        @QueryParam("filePath")
+        filePath: String?,
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String?,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCodeFileInfo>
+
+    @Operation(summary = "添加mr评论")
+    @POST
+    @Path("/addMrComment")
+    fun addMrComment(
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "mrId")
+        @QueryParam("mrId")
+        mrId: Long,
+        @Parameter(description = "mr评论请求体")
+        mrBody: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    )
+
+    @Operation(summary = "获取git文件目录列表")
+    @GET
+    @Path("/getGitFileTree")
+    fun getGitFileTree(
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "目录路径")
+        @QueryParam("path")
+        path: String,
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String?,
+        @Parameter(description = "是否支持递归目录结构")
+        @QueryParam("recursive")
+        recursive: Boolean? = false,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitFileInfo>>
+
+    @Operation(summary = "获取仓库的所有提交记录")
+    @GET
+    @Path("/stream/commits")
+    fun getCommits(
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @Parameter(description = "filePath")
+        @QueryParam("filePath")
+        filePath: String?,
+        @Parameter(description = "branch")
+        @QueryParam("branch")
+        branch: String?,
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "在这之后的时间的提交")
+        @QueryParam("since")
+        since: String?,
+        @Parameter(description = "在这之前的时间的提交")
+        @QueryParam("until")
+        until: String?,
+        @Parameter(description = "页码", example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量,最大100", example = "20")
+        @QueryParam("perPage")
+        perPage: Int,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<Commit>>
+
+    @Operation(summary = "开启git仓库ci")
+    @GET
+    @Path("/stream/gitEnableCi")
+    fun enableCi(
+        @Parameter(description = "仓库id或编码过的仓库path")
+        @QueryParam("projectName")
+        projectName: String,
+        @QueryParam("token")
+        token: String,
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @QueryParam("enable")
+        enable: Boolean? = true
+    ): Result<Boolean>
+
+    @Operation(summary = "工蜂创建文件")
+    @POST
+    @Path("/gitcode/create/file")
+    fun gitCreateFile(
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "创建文件内容")
+        gitOperationFile: GitOperationFile,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @Operation(summary = "工蜂修改文件")
+    @POST
+    @Path("/gitcode/update/file")
+    fun gitUpdateFile(
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "token")
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "创建文件内容")
+        gitOperationFile: GitOperationFile,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @Operation(summary = "获取用户的基本信息")
+    @GET
+    @Path("/getUserInfoByToken")
+    fun getUserInfoByToken(
+        @Parameter(description = "用户id", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
+    ): Result<GitUserInfo>
+
+    @Operation(summary = "获取用户的基本信息")
+    @GET
+    @Path("/getUserInfoById")
+    fun getUserInfoById(
+        @Parameter(description = "用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
+    ): Result<GitUserInfo>
+
+    @Operation(summary = "获取用户所有git项目，分页方式获取")
+    @GET
+    @Path("/getGitCodeProjectList")
+    fun getGitCodeProjectList(
+        @Parameter(description = "accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @Parameter(description = "第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "搜索条件，模糊匹配path,name")
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @Parameter(description = "排序方式")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?,
+        @Parameter(description = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @Parameter(description = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>>
+
+    @Operation(summary = "获取mr关联的tapd单")
+    @GET
+    @Path("/getTapdWorkItems")
+    fun getTapdWorkItems(
+        @Parameter(description = "accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "类型,可选mr,cr,issue")
+        @QueryParam("type")
+        type: String,
+        @Parameter(description = "iid,类型对应的iid")
+        @QueryParam("iid")
+        iid: Long
+    ): Result<List<TapdWorkItem>>
+
+    @Operation(summary = "获得某次commit的文件变更信息")
+    @GET
+    @Path("/get_commit_diff")
+    fun getCommitDiff(
+        @Parameter(description = "accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @Parameter(description = "commit hash 值、分支名或 tag")
+        @QueryParam("sha")
+        sha: String,
+        @Parameter(description = "文件路径")
+        @QueryParam("path")
+        path: String?,
+        @Parameter(description = "有差异的内容是否忽略空白符，默认不忽略")
+        @QueryParam("ignore_white_space")
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>>
+
+    @Operation(summary = "创建分支")
+    @POST
+    @Path("/createBranch")
+    fun createBranch(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean>
+
+    @Operation(summary = "获取合并请求列表")
+    @POST
+    @Path("/listMergeRequest")
+    fun listMergeRequest(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>>
+
+    @Operation(summary = "创建合并请求")
+    @POST
+    @Path("/createMergeRequest")
+    fun createMergeRequest(
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo>
 }

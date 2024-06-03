@@ -17,10 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
 
@@ -28,6 +28,7 @@ const state = {
     pageLoading: false,
     showViewManage: false,
     showViewCreate: false,
+    isManage: false,
     currentViewId: '',
     viewManageAuth: [],
     currentViewList: [],
@@ -129,13 +130,15 @@ const actions = {
             return response.data
         })
     },
-    checkViewManageAuth ({ commit }, { projectId }) {
-        return ajax.get(`/project/api/user/projects/${projectId}/hasPermission/VIEWS_MANAGER`).then(response => {
-            return response.data
-        }).catch(e => {
-            console.log(e)
+    async checkViewManageAuth ({ commit, state }, { projectId }) {
+        try {
+            const { data } = await ajax.get(`/auth/api/user/project/members/projectIds/${projectId}/checkManager`)
+            state.isManage = data
+            return data
+        } catch (error) {
+            console.error(error)
             return false
-        })
+        }
     }
 }
 

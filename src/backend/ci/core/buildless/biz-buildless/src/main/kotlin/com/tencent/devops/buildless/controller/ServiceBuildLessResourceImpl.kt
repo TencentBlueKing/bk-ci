@@ -35,6 +35,8 @@ import com.tencent.devops.buildless.exception.NoIdleContainerException
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.service.BuildLessContainerService
+import com.tencent.devops.buildless.utils.ThreadPoolName
+import com.tencent.devops.buildless.utils.ThreadPoolUtils
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
@@ -67,14 +69,17 @@ class ServiceBuildLessResourceImpl @Autowired constructor(
     override fun endBuild(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
         logger.warn("${buildLessEndInfo.buildId}|${buildLessEndInfo.vmSeqId} Stop the container, " +
                 "containerId: ${buildLessEndInfo.containerId}")
-        buildLessContainerService.stopContainer(
-            buildId = buildLessEndInfo.buildId,
-            vmSeqId = buildLessEndInfo.vmSeqId.toString(),
-            containerId = buildLessEndInfo.containerId
-        )
 
-        // 容器关闭后接着创建新容器
-        containerPoolExecutor.addContainer()
+        ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.BUILD_END.name).submit {
+            buildLessContainerService.stopContainer(
+                buildId = buildLessEndInfo.buildId,
+                vmSeqId = buildLessEndInfo.vmSeqId.toString(),
+                containerId = buildLessEndInfo.containerId
+            )
+
+            // 容器关闭后接着创建新容器
+            containerPoolExecutor.addContainer()
+        }
 
         return Result(true)
     }

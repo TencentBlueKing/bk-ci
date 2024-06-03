@@ -2,8 +2,8 @@
     <section class="job-log">
         <bk-log-search :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
             <template v-slot:tool>
-                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
-                <li class="more-button" @click="downloadLog">Download Log</li>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('hideDebugLog') : $t('showDebugLog') }}</li>
+                <li class="more-button" @click="downloadLog">{{ $t('downloadLog') }}</li>
             </template>
         </bk-log-search>
         <bk-multiple-log ref="multipleLog"
@@ -137,21 +137,7 @@
 
                     res = res.data || {}
                     if (res.status !== 0) {
-                        let errMessage
-                        switch (res.status) {
-                            case 1:
-                                errMessage = this.$t('history.logEmpty')
-                                break
-                            case 2:
-                                errMessage = this.$t('history.logClear')
-                                break
-                            case 3:
-                                errMessage = this.$t('history.logClose')
-                                break
-                            default:
-                                errMessage = this.$t('history.logErr')
-                                break
-                        }
+                        const errMessage = res.message ?? this.$t('history.logErr')
                         ref.handleApiErr(errMessage, id)
                         return
                     }

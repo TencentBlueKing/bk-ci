@@ -1,0 +1,12 @@
+# 测试单远程模板时resource的获取情况
+
+version: v2.0
+
+resources:
+  repositories:
+    - repository: specials
+      name: specials
+
+
+extends:
+  template: resource/remote.yml@specials

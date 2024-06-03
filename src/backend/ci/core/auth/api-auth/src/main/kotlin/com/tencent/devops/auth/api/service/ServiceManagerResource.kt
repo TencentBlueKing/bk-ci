@@ -30,8 +30,8 @@ package com.tencent.devops.auth.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -41,8 +41,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MANAGER"], description = "权限校验--超级管理员")
-@Path("/service/auth/manager")
+@Tag(name = "SERVICE_MANAGER", description = "权限校验--超级管理员")
+@Path("/open/service/auth/manager")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceManagerResource {
@@ -51,19 +51,19 @@ interface ServiceManagerResource {
     @Path("/projects/{projectCode}")
     fun validateManagerPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @PathParam("projectCode")
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         projectCode: String,
         @QueryParam("action")
-        @ApiParam("资源类型", required = true)
+        @Parameter(description = "资源类型", required = true)
         action: String,
         @QueryParam("resourceCode")
-        @ApiParam("资源编码", required = false)
+        @Parameter(description = "资源编码", required = false)
         resourceCode: String
     ): Result<Boolean>
 }

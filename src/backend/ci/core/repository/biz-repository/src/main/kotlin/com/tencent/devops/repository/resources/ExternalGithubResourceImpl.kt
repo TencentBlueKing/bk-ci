@@ -30,11 +30,13 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalGithubResource
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.IGithubService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalGithubResourceImpl @Autowired constructor(
@@ -49,7 +51,21 @@ class ExternalGithubResourceImpl @Autowired constructor(
     }
 
     override fun oauthCallback(code: String, state: String): Response {
-        return githubOauthService.githubCallback(code, state)
+        val githubCallback = githubOauthService.githubCallback(
+            code,
+            state,
+            tokenType = GithubTokenType.GITHUB_APP
+        )
+        return Response.temporaryRedirect(UriBuilder.fromUri(githubCallback.redirectUrl).build()).build()
+    }
+
+    override fun oauthAppCallback(code: String, state: String): Response {
+        val githubCallback = githubOauthService.githubCallback(
+            code = code,
+            state = state,
+            tokenType = GithubTokenType.OAUTH_APP
+        )
+        return Response.temporaryRedirect(UriBuilder.fromUri(githubCallback.redirectUrl).build()).build()
     }
 
     companion object {

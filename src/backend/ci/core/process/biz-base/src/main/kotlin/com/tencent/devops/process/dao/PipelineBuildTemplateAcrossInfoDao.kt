@@ -23,7 +23,8 @@ class PipelineBuildTemplateAcrossInfoDao {
         userId: String
     ) {
         with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 TEMPLATE_ID,
                 PROJECT_ID,
                 PIPELINE_ID,
@@ -82,6 +83,32 @@ class PipelineBuildTemplateAcrossInfoDao {
                     LocalDateTime.now(),
                     userId
                 ).execute()
+            }
+        }
+    }
+
+    fun batchUpdate(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        templateAcrossInfos: List<BuildTemplateAcrossInfo>
+    ) {
+        if (templateAcrossInfos.isEmpty()) {
+            return
+        }
+
+        with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
+            dslContext.batched { c ->
+                templateAcrossInfos.forEach { info ->
+                    c.dsl().update(this)
+                        .set(TEMPLATE_INSTANCE_IDS, JsonUtil.toJson(info.templateInstancesIds, formatted = false))
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(BUILD_ID.eq(buildId))
+                        .and(TEMPLATE_TYPE.eq(info.templateType.name))
+                        .execute()
+                }
             }
         }
     }

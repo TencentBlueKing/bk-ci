@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.service.scm.Ip4Service
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -46,7 +48,6 @@ class ServiceP4ResourceImpl @Autowired constructor(
         repositoryType: RepositoryType?,
         change: Int
     ): Result<List<P4FileSpec>> {
-
         return Result(
             p4Service.getChangelistFiles(
                 projectId = projectId,
@@ -65,6 +66,70 @@ class ServiceP4ResourceImpl @Autowired constructor(
     ): Result<List<P4FileSpec>> {
         return Result(
             p4Service.getShelvedFiles(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType,
+                change = change
+            )
+        )
+    }
+
+    override fun getFileContent(
+        p4Port: String,
+        filePath: String,
+        reversion: Int,
+        username: String,
+        password: String
+    ): Result<String> {
+        return Result(
+            p4Service.getFileContent(
+                p4Port = p4Port,
+                filePath = filePath,
+                reversion = reversion,
+                username = username,
+                password = password
+            )
+        )
+    }
+
+    override fun getServerInfo(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): Result<P4ServerInfo> {
+        return Result(
+            p4Service.getServerInfo(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType
+            )
+        )
+    }
+
+    override fun getChangelist(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): Result<P4ChangeList> {
+        return Result(
+            p4Service.getChangelist(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType,
+                change = change
+            )
+        )
+    }
+
+    override fun getShelvedChangeList(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): Result<P4ChangeList> {
+        return Result(
+            p4Service.getShelvedChangeList(
                 projectId = projectId,
                 repositoryId = repositoryId,
                 repositoryType = repositoryType,

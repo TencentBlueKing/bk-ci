@@ -13,14 +13,14 @@
             @page-change="(page) => $emit('pageChanged', page)"
             @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
         >
-            <bk-table-column :label="$t('store.版本')">
+            <bk-table-column :label="$t('store.版本')" show-overflow-tooltip>
                 <template slot-scope="props">
                     <span>{{ props.row.version || 'init' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('store.状态')" prop="atomStatus" :formatter="statusFormatter"></bk-table-column>
-            <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t('store.创建时间')" prop="createTime"></bk-table-column>
+            <bk-table-column :label="$t('store.状态')" prop="atomStatus" :formatter="statusFormatter" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('store.创建人')" prop="creator" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('store.创建时间')" prop="createTime" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('store.操作')" width="150" class-name="handler-btn">
                 <template slot-scope="props">
                     <section v-show="!index">
@@ -72,19 +72,19 @@
             <template slot="content">
                 <atom-detail :detail="detail" v-bkloading="{ isLoading: detailLoading }" class="version-detail">
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.发布者：') }}：</span>
+                        <span class="detail-label">{{ $t('store.发布者：') }}</span>
                         <span>{{ detail.publisher || '--' }}</span>
                     </li>
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.发布类型：') }}：</span>
+                        <span class="detail-label">{{ $t('store.发布类型：') }}</span>
                         <span>{{ releaseMap[detail.releaseType] || '--' }}</span>
                     </li>
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.版本：') }}：</span>
+                        <span class="detail-label">{{ $t('store.版本：') }}</span>
                         <span>{{ detail.version || '--' }}</span>
                     </li>
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.版本日志') }}：</span>
+                        <span class="detail-label">{{ $t('store.版本日志：') }}</span>
                         <mavon-editor
                             :editable="false"
                             default-open="preview"
@@ -93,6 +93,7 @@
                             :external-link="false"
                             :box-shadow="false"
                             preview-background="#fff"
+                            :language="mavenLang"
                             v-model="detail.versionContent"
                         />
                     </li>
@@ -153,6 +154,9 @@
             disableAddVersion () {
                 const firstVersion = this.versionList[0] || {}
                 return this.upgradeStatus.indexOf(firstVersion.atomStatus) === -1
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

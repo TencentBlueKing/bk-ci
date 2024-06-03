@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
-@Suppress("ALL")
+@Suppress("NestedBlockDepth")
 @Service
 class IndexService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -53,19 +53,25 @@ class IndexService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(IndexService::class.java)
         private const val LOG_INDEX_LOCK = "log:build:enable:lock:key"
         private const val LOG_LINE_NUM = "log:build:line:num:"
-        private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock"
+        private const val INDEX_CACHE_MAX_SIZE = 100000L
+        private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
+        private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
         fun getLineNumRedisKey(buildId: String) = LOG_LINE_NUM + buildId
     }
 
     private val indexCache = Caffeine.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .maximumSize(INDEX_CACHE_MAX_SIZE)
+        .expireAfterAccess(INDEX_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
         .build<String/*BuildId*/, String/*IndexName*/> { buildId ->
             dslContext.transactionResult { configuration ->
                 val context = DSL.using(configuration)
                 var indexName = indexDao.getIndexName(context, buildId)
                 if (indexName.isNullOrBlank()) {
-                    val redisLock = RedisLock(redisOperation, "$LOG_INDEX_LOCK:$buildId", 10)
+                    val redisLock = RedisLock(
+                        redisOperation = redisOperation,
+                        lockKey = "$LOG_INDEX_LOCK:$buildId",
+                        expiredTimeInSeconds = INDEX_LOCK_EXPIRE_SECONDS
+                    )
                     redisLock.lock()
                     try {
                         indexName = indexDao.getIndexName(context, buildId)
@@ -86,7 +92,9 @@ class IndexService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             indexDao.create(context, buildId, indexName, true)
-            redisOperation.set(getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2))
+            redisOperation.set(
+                getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2)
+            )
         }
         logger.info("[$buildId|$indexName] Create new index in db and cache")
         return indexName
@@ -101,28 +109,37 @@ class IndexService @Autowired constructor(
     }
 
     fun getAndAddLineNum(buildId: String, size: Int): Long? {
-        var lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
-        // val startLineNum = indexDaoV2.updateLastLineNum(dslContext, buildId, size)
+        // 缓存命中则直接进行自增，缓存未命中则从db中取值，自增后再刷新缓存
+        var lineNum = redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
         if (lineNum == null) {
-            val redisLock = RedisLock(redisOperation, "$LOG_LINE_NUM_LOCK:$buildId", 10)
-            try {
-                redisLock.lock()
-                lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
-                if (lineNum == null) {
-                    logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
-                    val build = indexDao.getBuild(dslContext, buildId)
-                    if (build == null) {
-                        logger.warn("[$buildId|$size] The build is not exist in db")
-                        return null
-                    }
-                    lineNum = build.lastLineNum + size.toLong()
-                    redisOperation.set(getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2))
-                }
-            } finally {
-                redisLock.unlock()
+            logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
+            val lastLineNum = indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: run {
+                logger.warn("[$buildId|$size] The build is not exist in db")
+                0L
             }
+            logger.warn("[$buildId|$size] Got from db, lastLineNum: $lastLineNum")
+            lineNum = lastLineNum + size.toLong()
+            // 如果设置失败说明已被另一个并发任务写入，继续执行行号自增
+            val success = redisOperation.setIfAbsent(
+                getLineNumRedisKey(buildId = buildId),
+                lineNum.toString(),
+                TimeUnit.DAYS.toSeconds(2)
+            )
+            if (success) return lineNum - size
         }
+        // 自增并刷新过期时间
+        lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
+        redisOperation.expire(getLineNumRedisKey(buildId), TimeUnit.DAYS.toSeconds(2))
         return lineNum!! - size
+    }
+
+    fun getBuildIndexName(buildId: String): String? {
+        return indexDao.getBuild(dslContext, buildId)?.indexName
+    }
+
+    fun getLastLineNum(buildId: String): Long {
+        return redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
+            ?: indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: 0
     }
 
     fun flushLineNum2DB(buildId: String) {
@@ -132,13 +149,15 @@ class IndexService @Autowired constructor(
             return
         }
         val latestLineNum = try {
-            lineNum!!.toLong()
-        } catch (e: Exception) {
-            logger.warn("[$buildId|$lineNum] Fail to convert line num to long", e)
+            lineNum.toLong()
+        } catch (ignore: Exception) {
+            logger.warn("[$buildId|$lineNum] Fail to convert line num to long", ignore)
             return
         }
         val updateCount = indexDao.updateLastLineNum(dslContext, buildId, latestLineNum)
-        if (updateCount != 1) {
+        if (updateCount == 1) {
+            redisOperation.delete(getLineNumRedisKey(buildId))
+        } else {
             logger.warn("[$buildId|$latestLineNum] Fail to update the build latest line num")
         }
     }

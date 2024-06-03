@@ -73,7 +73,13 @@ object SvnUtils {
                 false
             )
         } else {
-            SVNPasswordAuthentication.newInstance(userName, privateKey.toCharArray(), false, svnURL, false)
+            SVNPasswordAuthentication.newInstance(
+                userName,
+                privateKey?.toCharArray(),
+                false,
+                svnURL,
+                false
+            )
         }
 
         val basicAuthenticationManager = TmatesoftBasicAuthenticationManager2(arrayOf(auth))
@@ -87,7 +93,7 @@ object SvnUtils {
 
     fun isSSHProtocol(protocol: String?): Boolean {
         if (protocol == "http" ||
-            protocol == "https"
+            protocol == "https" || protocol == "svn"
         ) {
             return false
         }
@@ -114,21 +120,22 @@ object SvnUtils {
     }
 
     fun getSvnProjectName(svnUrl: String): String {
-        val urlSplitArray = svnUrl.split("tencent.com/")
+        val urlSplitArray = svnUrl.split("//")
         if (urlSplitArray.size < 2) {
             throw ScmException("Invalid svn url($svnUrl)", ScmType.CODE_SVN.name)
         }
-
+        // urlSplitArray[0] -> 协议  urlSplitArray[1] -> repo路径
         val path = urlSplitArray[1]
         val pathArray = path.split("/")
         if (pathArray.size < 2) {
             throw ScmException("Invalid svn url($svnUrl)", ScmType.CODE_SVN.name)
         }
-
-        return if (pathArray.size >= 3 && pathArray[2].endsWith("_proj")) {
-            "${pathArray[0]}/${pathArray[1]}/${pathArray[2]}"
+        // pathArray[0] -> 域名
+        return if (pathArray.size >= 4 && pathArray[3].endsWith("_proj")) {
+            // 兼容旧工蜂svn
+            "${pathArray[1]}/${pathArray[2]}/${pathArray[3]}"
         } else {
-            "${pathArray[0]}/${pathArray[1]}"
+            "${pathArray[1]}/${pathArray[2]}"
         }
     }
 

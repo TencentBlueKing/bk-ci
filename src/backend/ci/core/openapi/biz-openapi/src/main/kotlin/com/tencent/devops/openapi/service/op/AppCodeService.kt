@@ -60,10 +60,10 @@ class AppCodeService(
                 override fun load(appCode: String): Map<String, String> {
                     return try {
                         val projectMap = getAppCodeProject(appCode)
-                        logger.info("appCode[$appCode] openapi projectMap:$projectMap.")
+                        logger.info("appCode[$appCode] openapi projectMap|$projectMap.")
                         projectMap
                     } catch (t: Throwable) {
-                        logger.info("appCode[$appCode] failed to get projectMap.")
+                        logger.warn("appCode[$appCode] failed to get projectMap.", t)
                         mutableMapOf()
                     }
                 }
@@ -78,10 +78,10 @@ class AppCodeService(
                 override fun load(appCode: String): Pair<String, AppCodeGroup?> {
                     return try {
                         val appCodeGroup = getAppCodeGroup(appCode)
-                        logger.info("appCode[$appCode] openapi appCodeGroup:$appCodeGroup.")
+                        logger.info("appCode[$appCode] openapi appCodeGroup|$appCodeGroup.")
                         Pair(appCode, appCodeGroup)
                     } catch (t: Throwable) {
-                        logger.info("appCode[$appCode] failed to get appCodeGroup.")
+                        logger.warn("appCode[$appCode] failed to get appCodeGroup.", t)
                         Pair(appCode, null)
                     }
                 }
@@ -96,10 +96,10 @@ class AppCodeService(
                 override fun load(projectId: String): Pair<String, ProjectVO?> {
                     return try {
                         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
-                        logger.info("projectId[$projectId] openapi projectInfo:$projectInfo.")
+                        logger.info("projectId[$projectId] openapi projectInfo|$projectInfo.")
                         Pair(projectId, projectInfo)
                     } catch (t: Throwable) {
-                        logger.info("projectId[projectIdappCode] failed to get projectInfo.")
+                        logger.warn("projectId[$projectId] failed to get projectInfo.", t)
                         Pair(projectId, null)
                     }
                 }
@@ -131,9 +131,13 @@ class AppCodeService(
         }
     }
 
+    fun validProjectInfo(projectId: String) = projectInfoCache.get(projectId).second
+
+    fun invalidProjectInfo(projectId: String) = projectInfoCache.invalidate(projectId)
+
     fun validAppCode(appCode: String, projectId: String): Boolean {
         val appCodeProject = appCodeProjectCache.get(appCode)
-        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache:$appCodeProject.")
+        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache|$appCodeProject.")
         if (appCodeProject.isNotEmpty()) {
             val projectId2 = appCodeProject[projectId]
             if (projectId2 != null && projectId2.isNotBlank()) {
@@ -143,26 +147,29 @@ class AppCodeService(
         }
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache no matched.")
         val appCodeGroup = appCodeGroupCache.get(appCode).second
-        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$appCodeGroup.")
+        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache|$appCodeGroup.")
         if (appCodeGroup != null) {
             val projectInfo = projectInfoCache.get(projectId).second
-            logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache projectInfo:$projectInfo.")
+            logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache projectInfo|$projectInfo.")
             if (projectInfo != null) {
                 if (appCodeGroup.centerId != null &&
                     projectInfo.centerId != null &&
-                    appCodeGroup.centerId.toString() == projectInfo.centerId) {
+                    appCodeGroup.centerId.toString() == projectInfo.centerId
+                ) {
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache centerId matched.")
                     return true
                 }
                 if (appCodeGroup.deptId != null &&
                     projectInfo.deptId != null &&
-                    appCodeGroup.deptId.toString() == projectInfo.deptId) {
+                    appCodeGroup.deptId.toString() == projectInfo.deptId
+                ) {
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache deptId matched.")
                     return true
                 }
                 if (appCodeGroup.bgId != null &&
                     projectInfo.bgId != null &&
-                    appCodeGroup.bgId.toString() == projectInfo.bgId) {
+                    appCodeGroup.bgId.toString() == projectInfo.bgId
+                ) {
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache bgId matched.")
                     return true
                 }

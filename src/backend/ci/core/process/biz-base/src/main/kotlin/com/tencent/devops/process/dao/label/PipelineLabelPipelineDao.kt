@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.dao.label
 
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
+import com.tencent.devops.model.process.tables.TPipelineLabel
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineLabelPipelineRecord
 import org.jooq.Condition
@@ -171,6 +173,20 @@ class PipelineLabelPipelineDao {
         }
     }
 
+    fun exitsLabelPipelines(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Set<String>
+    ): Set<String> {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            return dslContext.selectDistinct(PIPELINE_ID)
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .fetch()
+                .map { it[PIPELINE_ID] }.toSet()
+        }
+    }
+
     fun listPipelineLabelRels(
         dslContext: DSLContext,
         pipelineIds: Collection<String>,
@@ -181,6 +197,27 @@ class PipelineLabelPipelineDao {
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
             conditions.add(PROJECT_ID.eq(projectId))
             return dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    fun getPipelineLabelRelateInfos(
+        dslContext: DSLContext,
+        projectIds: List<String>
+    ): List<PipelineLabelRelateInfo> {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            val pipelineLabel = TPipelineLabel.T_PIPELINE_LABEL
+            return dslContext.select(
+                PROJECT_ID,
+                PIPELINE_ID,
+                LABEL_ID,
+                pipelineLabel.NAME,
+                CREATE_USER,
+                CREATE_TIME
+            ).from(this)
+                .join(pipelineLabel)
+                .on(LABEL_ID.eq(pipelineLabel.ID))
+                .where(this.PROJECT_ID.`in`(projectIds))
+                .fetchInto(PipelineLabelRelateInfo::class.java)
         }
     }
 

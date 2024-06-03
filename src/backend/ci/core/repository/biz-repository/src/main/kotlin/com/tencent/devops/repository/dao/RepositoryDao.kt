@@ -28,14 +28,22 @@
 package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
+import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
+import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
+import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.jooq.Record1
+import org.jooq.Result
+import org.jooq.impl.DSL
+import org.springframework.stereotype.Repository
 
 @Repository
 @Suppress("ALL")
@@ -47,43 +55,67 @@ class RepositoryDao {
         userId: String,
         aliasName: String,
         url: String,
-        type: ScmType
+        type: ScmType,
+        atom: Boolean? = false,
+        enablePac: Boolean?
     ): Long {
         val now = LocalDateTime.now()
+        var repoId = 0L
         with(TRepository.T_REPOSITORY) {
-            val record = dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                USER_ID,
-                ALIAS_NAME,
-                URL,
-                TYPE,
-                CREATED_TIME,
-                UPDATED_TIME,
-                IS_DELETED
-            ).values(
-                projectId,
-                userId,
-                aliasName,
-                url,
-                type.name,
-                now,
-                now,
-                false
-            )
-                .returning(REPOSITORY_ID)
-                .fetchOne()!!
-            return record.repositoryId
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                repoId = dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    USER_ID,
+                    ALIAS_NAME,
+                    URL,
+                    TYPE,
+                    CREATED_TIME,
+                    UPDATED_TIME,
+                    IS_DELETED,
+                    UPDATED_USER,
+                    ATOM,
+                    ENABLE_PAC
+                ).values(
+                    projectId,
+                    userId,
+                    aliasName,
+                    url,
+                    type.name,
+                    now,
+                    now,
+                    false,
+                    userId,
+                    atom,
+                    enablePac
+                )
+                    .returning(REPOSITORY_ID)
+                    .fetchOne()!!.repositoryId
+                val hashId = HashUtil.encodeOtherLongId(repoId)
+                transactionContext.update(this)
+                    .set(REPOSITORY_HASH_ID, hashId)
+                    .where(REPOSITORY_ID.eq(repoId))
+                    .execute()
+            }
         }
+        return repoId
     }
 
-    fun edit(dslContext: DSLContext, repositoryId: Long, aliasName: String, url: String) {
+    fun edit(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        aliasName: String,
+        url: String,
+        updateUser: String
+    ) {
         val now = LocalDateTime.now()
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(ALIAS_NAME, aliasName)
                 .set(URL, url)
                 .set(UPDATED_TIME, now)
+                .set(UPDATED_USER, updateUser)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -92,9 +124,10 @@ class RepositoryDao {
     fun countByProject(
         dslContext: DSLContext,
         projectIds: Collection<String>,
-        repositoryType: ScmType?,
+        repositoryTypes: List<ScmType>?,
         aliasName: String?,
-        repositoryIds: Set<Long>?
+        repositoryIds: Set<Long>?,
+        enablePac: Boolean? = null
     ): Long {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectCount()
@@ -104,15 +137,19 @@ class RepositoryDao {
             if (repositoryIds != null) {
                 step.and(REPOSITORY_ID.`in`(repositoryIds))
             }
+
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
-            return when (repositoryType) {
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
+            }
+            return when (repositoryTypes) {
                 null -> {
                     step.fetchOne(0, Long::class.java)!!
                 }
                 else -> {
-                    step.and(TYPE.eq(repositoryType.name))
+                    step.and(TYPE.`in`(repositoryTypes))
                     step.fetchOne(0, Long::class.java)!!
                 }
             }
@@ -214,11 +251,14 @@ class RepositoryDao {
     fun listByProject(
         dslContext: DSLContext,
         projectId: String,
-        repositoryType: ScmType?,
+        repositoryTypes: List<ScmType>?,
         aliasName: String?,
         repositoryIds: Set<Long>?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        sortBy: String? = null,
+        sortType: String? = null,
+        enablePac: Boolean? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -227,30 +267,47 @@ class RepositoryDao {
             if (repositoryIds != null) {
                 step.and(REPOSITORY_ID.`in`(repositoryIds))
             }
-
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
+            }
 
-            when (repositoryType) {
+            when (repositoryTypes) {
                 null -> {
                 }
                 else -> {
-                    step.and(TYPE.eq(repositoryType.name))
+                    step.and(TYPE.`in`(repositoryTypes))
                 }
             }
+            val sortField = when (sortBy) {
+                RepositorySortEnum.ALIAS_NAME.name -> ALIAS_NAME
+                RepositorySortEnum.URL.name -> URL
+                RepositorySortEnum.TYPE.name -> TYPE
+                RepositorySortEnum.REPOSITORY_ID.name -> REPOSITORY_ID
+                else -> UPDATED_TIME
+            }
 
-            return step.orderBy(REPOSITORY_ID.desc())
+            val sort = when (sortType) {
+                RepositorySortTypeEnum.ASC.name -> sortField.asc()
+                RepositorySortTypeEnum.DESC.name -> sortField.desc()
+                else -> sortField.desc()
+            }
+
+            return step.orderBy(sort)
                 .offset(offset)
                 .limit(limit)
                 .fetch()
         }
     }
 
-    fun delete(dslContext: DSLContext, repositoryId: Long) {
+    fun delete(dslContext: DSLContext, repositoryId: Long, deleteAliasName: String, updateUser: String) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(IS_DELETED, true)
+                .set(ALIAS_NAME, deleteAliasName)
+                .set(UPDATED_USER, updateUser)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -262,7 +319,19 @@ class RepositoryDao {
             if (!projectId.isNullOrBlank()) {
                 query.and(PROJECT_ID.eq(projectId))
             }
-            return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException("代码库不存在")
+            return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(repositoryId.toString()))
+            )
+        }
+    }
+
+    fun getOrNull(dslContext: DSLContext, repositoryId: Long, projectId: String? = null): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            val query = dslContext.selectFrom(this).where(REPOSITORY_ID.eq(repositoryId))
+            if (!projectId.isNullOrBlank()) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            return query.and(IS_DELETED.eq(false)).fetchOne()
         }
     }
 
@@ -272,7 +341,9 @@ class RepositoryDao {
                 .where(ALIAS_NAME.eq(repositoryName))
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
-                .fetchOne() ?: throw NotFoundException("代码库${repositoryName}不存在")
+                .fetchAny() ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(repositoryName))
+            )
         }
     }
 
@@ -301,6 +372,177 @@ class RepositoryDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()
+        }
+    }
+
+    fun getAllRepo(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.select(REPOSITORY_ID).from(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateHashId(
+        dslContext: DSLContext,
+        id: Long,
+        hashId: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(REPOSITORY_HASH_ID, hashId)
+                .where(REPOSITORY_ID.eq(id))
+                .and(REPOSITORY_HASH_ID.isNull)
+                .execute()
+        }
+    }
+
+    fun getProjectIdByGitDomain(
+        dslContext: DSLContext,
+        gitDomain: String,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.select(PROJECT_ID).from(this)
+                .where(URL.like("%$gitDomain%"))
+                .groupBy(PROJECT_ID)
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun updateGitDomainByProjectId(
+        dslContext: DSLContext,
+        oldGitDomain: String,
+        newGitDomain: String,
+        projectId: String
+    ): Int {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this).set(URL, DSL.replace(URL, oldGitDomain, newGitDomain))
+                .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun rename(
+        dslContext: DSLContext,
+        hashId: String,
+        updateUser: String,
+        projectId: String,
+        newName: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ALIAS_NAME, newName)
+                .set(UPDATED_USER, updateUser)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(REPOSITORY_HASH_ID.eq(hashId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun getById(
+        dslContext: DSLContext,
+        repositoryId: Long
+    ): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
+                .where(
+                    REPOSITORY_ID.eq(repositoryId).and(IS_DELETED.eq(false))
+                )
+                .fetchAny()
+        }
+    }
+
+    fun updateAtomRepoFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryId: Long,
+        atom: Boolean
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ATOM, atom)
+                .where(REPOSITORY_ID.eq(repositoryId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun getGitProjectIdByRepositoryHashId(
+        dslContext: DSLContext,
+        repositoryHashIdList: List<String>
+    ): List<String> {
+        val tRepository = TRepository.T_REPOSITORY
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            return dslContext.select(GIT_PROJECT_ID)
+                .from(this)
+                .join(tRepository).on(REPOSITORY_ID.eq(tRepository.REPOSITORY_ID))
+                .where(tRepository.REPOSITORY_HASH_ID.`in`(repositoryHashIdList))
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun getPacRepositoryByIds(dslContext: DSLContext, repositoryIds: List<Long>): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
+                .where(REPOSITORY_ID.`in`(repositoryIds))
+                .and(ENABLE_PAC.eq(true))
+                .and(IS_DELETED.eq(false))
+                .fetchOne()
+        }
+    }
+
+    fun enablePac(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .set(ENABLE_PAC, true)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun disablePac(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ENABLE_PAC, false)
+                .setNull(YAML_SYNC_STATUS)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun updateYamlSyncStatus(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        syncStatus: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(YAML_SYNC_STATUS, syncStatus)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
         }
     }
 }

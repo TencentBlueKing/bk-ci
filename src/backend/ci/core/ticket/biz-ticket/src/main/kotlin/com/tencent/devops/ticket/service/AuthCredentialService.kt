@@ -44,12 +44,17 @@ class AuthCredentialService @Autowired constructor(
     private val authTokenApi: AuthTokenApi
 ) {
 
-    fun getCredential(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+    fun getCredential(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
         val credentialInfos = credentialService.serviceList(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId 项目下无凭证")
+            logger.info("$projectId no credential")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -63,12 +68,16 @@ class AuthCredentialService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, credentialInfos.count)
     }
 
-    fun getCredentialInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    fun getCredentialInfo(
+        projectId: String?,
+        ids: List<Any>?,
+        token: String
+    ): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
-        val credentialInfos = credentialService.getCredentialByIds(null, ids!!.toSet() as Set<String>)
+        val credentialInfos = credentialService.getCredentialByIds(projectId, ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
-            logger.info("$ids 无凭证")
+            logger.info("$ids no credential")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -95,10 +104,11 @@ class AuthCredentialService @Autowired constructor(
             projectId = projectId,
             offset = offset,
             limit = limit,
-            credentialId = keyword)
+            credentialId = keyword
+        )
         val result = SearchInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId 项目下无证书")
+            logger.info("$projectId no cert")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
