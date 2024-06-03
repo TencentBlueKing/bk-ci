@@ -220,13 +220,14 @@ export default {
           this.hasLoadEnd = !data.hasNext;
           // this.groupList.push(...data.records);
           this.groupList.push({
-            "managerId": 7997,
+            "managerId": 13034,
             "defaultGroup": true,
             "groupId": 0,
             "name": "全部项目成员",
             "displayName": "全部项目成员",
-            "userCount": 2,
-            "departmentCount": 0
+            "userCount": 9,
+            "departmentCount": 0,
+            "allProjectMembersFlag": true
           });
           // 首页需要加载
           if (this.page === 1) {

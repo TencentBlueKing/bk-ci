@@ -75,7 +75,7 @@ export default {
     },
     handleChooseGroup(payload) {
       // this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
-      if (payload.groupId) {
+      if (!payload.allProjectMembersFlag) {
         this.isAllMember = false;
         this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
       } else {

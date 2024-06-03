@@ -37,8 +37,66 @@
           <bk-button @click="handleReset">{{ t('批量移交') }}</bk-button>
           <bk-button @click="handleReset">{{ t('批量移出') }}</bk-button>
         </div>
-        <div class="manage-content-project">4</div>
-        <div class="manage-content-resource">5</div>
+        <div class="manage-content-project">
+          <p class="project-group">项目级用户组</p>
+          <div class="project-group-table">
+            <p class="group-title" @click="toggleTable">
+              项目（project）
+              <span class="group-num">3</span>
+            </p>
+            <transition name="collapse">
+              <div v-if="isTableVisible">
+                <bk-table
+                  max-height="320"
+                  :data="projectTable"
+                  :column="projectColumn"
+                  show-overflow-tooltip
+                  class="person-table"
+                >
+                </bk-table>
+              </div>
+            </transition>
+          </div>
+        </div>
+        <div class="manage-content-resource">
+          <p class="project-group">资源级用户组</p>
+          <div class="project-group-table">
+            <p class="group-title" @click="toggleTable">
+              流水线-流水线组
+              <span class="group-num">3</span>
+            </p>
+            <transition name="collapse">
+              <div v-if="isTableVisible">
+                <bk-table
+                  max-height="320"
+                  :data="projectTable"
+                  show-overflow-tooltip
+                  class="person-table"
+                >
+                  <bk-table-column label="用户" prop="person" />
+                </bk-table>
+              </div>
+            </transition>
+          </div>
+          <div class="project-group-table">
+            <p class="group-title" @click="toggleTable">
+              流水线-流水线组
+              <span class="group-num">3</span>
+            </p>
+            <transition name="collapse">
+              <div v-if="isTableVisible">
+                <bk-table
+                  max-height="320"
+                  :data="projectTable"
+                  show-overflow-tooltip
+                  class="person-table"
+                >
+                  <bk-table-column label="用户" prop="person" />
+                </bk-table>
+              </div>
+            </transition>
+          </div>
+        </div>
       </div>
     </div>
   </bk-loading>
@@ -52,6 +110,7 @@ import ManageAside from './manage-aside.vue';
 
 const { t } = useI18n();
 const isLoading = ref(false);
+const isTableVisible = ref(true);
 
 const serveValue = ref([]);
 const serveList = ref([
@@ -120,6 +179,41 @@ const searchData = ref([
   },
 ]);
 
+const projectTable = ref([]);
+const projectColumn = ref([
+  {
+    label: '用户组',
+    field: 'usergroup',
+  },
+  {
+    label: '用户描述',
+    field: 'usergroup',
+  },
+  {
+    label: '有效期',
+    field: 'usergroup',
+  },
+  {
+    label: '加入时间',
+    field: 'usergroup',
+  },
+  {
+    label: '加入方式/操作人',
+    field: 'usergroup',
+  },
+  {
+    // label: '操作',
+    // field: 'action',
+    // render: ({ row }) => (
+    //   <div>
+    //     <bk-button text theme="primary">续期</bk-button>
+    //     <bk-button text theme="primary">移交</bk-button>
+    //     <bk-button text theme="primary">移出</bk-button>
+    //   </div>
+    // ),
+  },
+]);
+
 const stateRefs = {
   serve: serveValue,
   resource: resourceValue,
@@ -160,12 +254,27 @@ function handleChange(value, target) {
 function handleClick(id) {
   console.log(id, '这里根据id展示表格数据');
 }
-
+function toggleTable() {
+  isTableVisible.value  = !isTableVisible.value;
+}
 </script>
 
 <style lang="scss" scoped>
+
+.collapse-enter-active, .collapse-leave-active {
+  transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+.collapse-enter-from, .collapse-leave-to {
+  opacity: 0;
+}
+.collapse-enter-to, .collapse-leave-from {
+  opacity: 1;
+}
+
 .manage{
   width: 100%;
+  height: 100%;
+  overflow: hidden;
 
   .manage-search{
     display: flex;
@@ -181,12 +290,12 @@ function handleClick(id) {
   }
 
   .manage-article{
+    height: calc(100% - 104px);
     display: flex;
     margin: 16px 0 24px 24px;
 
     .manage-aside{
       width: 230px;
-      height: 686px;
       padding: 8px 0 0;
       background: #FFFFFF;
       box-shadow: 0 2px 4px 0 #1919290d;
@@ -206,16 +315,58 @@ function handleClick(id) {
       }
 
       .manage-content-project{
-        height: 280px;
+        max-height: 280px;
         margin-bottom: 15px;
         background: #FFFFFF;
+        padding: 16px 24px;
         box-shadow: 0 2px 4px 0 #1919290d;
       }
 
       .manage-content-resource{
-        margin-bottom: 24px;
         background: #FFFFFF;
+        padding: 16px 24px;
         box-shadow: 0 2px 4px 0 #1919290d;
+      }
+
+      .project-group {
+        margin-bottom: 16px;
+        font-family: MicrosoftYaHei-Bold;
+        font-weight: 700;
+        font-size: 14px;
+        color: #63656E;
+        letter-spacing: 0;
+        line-height: 22px;
+      }
+
+      .project-group-table{
+        width: 100%;
+
+        .group-title {
+          width: 100%;
+          height: 26px;
+          line-height: 26px;
+          padding-left: 10px;
+          margin-bottom: 10px;
+          background: #EAEBF0;
+          border-radius: 2px;
+          font-family: MicrosoftYaHei;
+          font-size: 12px;
+          color: #313238;
+          cursor: pointer;
+        }
+
+        .group-num {
+          display: inline-block;
+          width: 23px;
+          height: 16px;
+          line-height: 16px;
+          background: #F0F1F5;
+          border-radius: 2px;
+          font-size: 12px;
+          color: #979BA5;
+          letter-spacing: 0;
+          text-align: center;
+        }
       }
     }
   }

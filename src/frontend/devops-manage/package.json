@@ -23,7 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "bk-permission": "^0.0.28",
-    "bkui-vue": "0.0.1-beta.456",
+    "bkui-vue": "0.0.2-beta.121",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
     "vue": "^3.2.41",

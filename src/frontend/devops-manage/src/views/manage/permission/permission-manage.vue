@@ -86,9 +86,9 @@
           <img src="@/css/svg/close.svg" class="close-icon">
           以下授权重置失败，请<span>重新指定其他授权人</span>
         </p>
+        <p class="reset-table-item">代码库授权</p>
         <bk-table
           ref="resetTable"
-          height="100%"
           :data="resetTableData"
           :border="['outer', 'row']"
           show-overflow-tooltip
