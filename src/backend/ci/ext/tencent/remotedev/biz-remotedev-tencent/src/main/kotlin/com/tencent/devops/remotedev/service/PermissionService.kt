@@ -52,7 +52,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys
 import java.net.URLEncoder
 import java.util.Base64
 import java.util.concurrent.TimeUnit
