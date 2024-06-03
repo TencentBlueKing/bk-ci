@@ -126,7 +126,7 @@ class ProjectOperationalProductService constructor(
             )
             val requestBody = JsonUtils.objectMapper.writeValueAsString(obsBaseDictDTO)
             OkhttpUtils.doPost(
-                url = "${config.devopsHostGateway}$obsUrl",
+                url = "${config.devopsWhiteProxy}$obsUrl",
                 jsonParam = requestBody,
                 headers = mapOf("Authorization" to "Bearer $obsToken")
             ).use {

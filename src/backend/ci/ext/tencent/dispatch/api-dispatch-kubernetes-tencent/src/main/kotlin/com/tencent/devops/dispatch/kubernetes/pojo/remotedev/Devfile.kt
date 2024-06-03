@@ -33,8 +33,6 @@ data class Devfile(
     val machineType: String? = null,
     @get:Schema(title = "指定云桌面Id")
     val cgsId: String? = null,
-    @get:Schema(title = "团队空间是否自动分配")
-    val autoAssign: Boolean? = false,
     @get:Schema(title = "start自定义镜像地址")
     val imageCosFile: String? = "",
     @get:Schema(title = "通过已有task uid进行创建")

@@ -3,8 +3,8 @@ package com.tencent.devops.common.auth.api.pojo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "条件迁移项目实体")
-data class MigrateProjectConditionDTO(
+@Schema(title = "筛选项目条件实体")
+data class ProjectConditionDTO(
     @get:Schema(title = "中心ID")
     val centerId: Long? = null,
     @get:Schema(title = "部门ID")
@@ -27,6 +27,8 @@ data class MigrateProjectConditionDTO(
     val relatedProduct: Boolean? = null,
     @get:Schema(title = "排除创建时间大于该值的项目")
     val excludedCreateTime: String? = null,
+    @get:Schema(title = "是否启用")
+    val enabled: Boolean? = null,
     @get:Schema(title = "渠道代码")
     val channelCode: String? = null
 )

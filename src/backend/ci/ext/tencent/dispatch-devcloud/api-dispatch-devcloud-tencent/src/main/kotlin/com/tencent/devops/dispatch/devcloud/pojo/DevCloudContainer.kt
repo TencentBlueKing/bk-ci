@@ -80,5 +80,6 @@ enum class OriginContainerStatus {
     stop,
     deleted,
     running,
-    exception
+    exception,
+    error
 }

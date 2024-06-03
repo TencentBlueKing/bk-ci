@@ -51,6 +51,7 @@ import com.tencent.devops.common.ci.image.PoolType as TXPoolType
 
 @Primary
 @Component
+@Suppress("ComplexMethod")
 class TXDispatchTransfer @Autowired(required = false) constructor(
     client: Client,
     objectMapper: ObjectMapper,
@@ -122,7 +123,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
             ),
             macOS = null,
             third = null,
-            env = job.env,
+            env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
             buildType = buildType,
             image = PoolImage(
                 imageCode = inner.defaultImageCode,
@@ -152,7 +153,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
                     buildType = buildType,
                     image = PoolImage(
                         imageCode = imageCode,
@@ -186,7 +187,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     ),
                     macOS = null,
                     third = null,
-                    env = job.env,
+                    env = job.env?.map { it.key to (it.value?.toString() ?: "") }?.toMap(),
                     buildType = buildType,
                     image = PoolImage(
                         imageCode = imageCode,

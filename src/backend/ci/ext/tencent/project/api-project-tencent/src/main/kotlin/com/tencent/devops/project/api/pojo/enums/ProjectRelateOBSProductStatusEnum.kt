@@ -29,7 +29,7 @@ package com.tencent.devops.project.api.pojo.enums
 
 @Suppress("MaxLineLength")
 enum class ProjectRelateOBSProductStatusEnum(val value: String, val action: String) {
-    ACTIVE_BUT_NOT_RELATE_PRODUCT("启用中，活跃但未关联OBS运营产品", "<p><a href=\"%s/console/manage/%s/edit\">去关联运营产品</a> <a href=\"%s/console/manage/%s/show\">停用项目</a></p>"),
-    RELATE_PRODUCT_BUT_INACTIVE("启用中，关联OBS运营产品但不活跃", "<p><a href=\"%s/console/manage/%s/show\">停用项目</a> </p>"),
-    INACTIVE_AND_NOT_RELATE_PRODUCT("启用中，不活跃且未关联OBS运营产品", "<p><a href=\"%s/console/manage/%s/edit\">去关联运营产品</a> <a href=\"%s/console/manage/%s/show\">停用项目</a></p>"),
+    RELATE_PRODUCT_BUT_INACTIVE("已关联OBS运营产品，但已有 4 个月不活跃", "<p>联系助手加白名单</p>"),
+    INACTIVE_AND_NOT_RELATE_PRODUCT("未关联OBS运营产品，且已有 2 个月不活跃", "<p><a href=\"%s/console/manage/%s/show\">关联并启用</a></p>"),
+    NOT_RELATE_PRODUCT("未关联OBS运营产品", "<p><a href=\"%s/console/manage/%s/edit\">去关联运营产品</a> <a href=\"%s/console/manage/%s/show\">停用项目</a></p>"),
 }

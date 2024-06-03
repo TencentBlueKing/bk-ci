@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
+import org.json.JSONObject
 
 @Schema(title = "脚本任务（linux和macOS环境）", description = LinuxScriptElement.classType)
 data class LinuxScriptElement(
@@ -72,7 +73,7 @@ data class LinuxScriptElement(
         return mutableMap
     }
 
-    override fun transferYaml(defaultValue: Map<String, String>?): PreStep = PreStep(
+    override fun transferYaml(defaultValue: JSONObject?): PreStep = PreStep(
         name = name,
         id = stepId,
         // bat插件上的

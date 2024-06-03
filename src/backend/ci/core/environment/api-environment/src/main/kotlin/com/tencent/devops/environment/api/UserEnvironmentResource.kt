@@ -41,14 +41,15 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -353,5 +354,26 @@ interface UserEnvironmentResource {
         @Parameter(description = "共享的项目id", required = true)
         @PathParam("sharedProjectId")
         sharedProjectId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "停用或者启用节点")
+    @PUT
+    @Path("/{projectId}/{envHashId}/enableNode/{nodeHashId}")
+    fun enableNodeEnv(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @Parameter(description = "节点 hashId", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @Parameter(description = "启动或者停用", required = true)
+        @QueryParam("enableNode")
+        enableNode: Boolean
     ): Result<Boolean>
 }

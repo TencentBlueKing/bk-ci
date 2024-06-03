@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
+import org.json.JSONObject
 
 @Schema(title = "脚本任务（windows环境）", description = WindowsScriptElement.classType)
 data class WindowsScriptElement(
@@ -66,7 +67,7 @@ data class WindowsScriptElement(
         return mutableMap
     }
 
-    override fun transferYaml(defaultValue: Map<String, String>?): PreStep = PreStep(
+    override fun transferYaml(defaultValue: JSONObject?): PreStep = PreStep(
         name = name,
         id = stepId,
         // bat插件上的

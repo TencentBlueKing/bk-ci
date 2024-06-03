@@ -447,6 +447,28 @@ class ContainerBuildRecordService(
         }
     }
 
+    /**
+     * 获取job在stage中的执行順序
+     * */
+    fun getContainerOrderInStage(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        stageId: String,
+        containerId: String
+    ): Int {
+        val containerIdList = recordContainerDao.getLatestNormalRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount
+        ).map { it.containerId }
+        return containerIdList.indexOf(containerId)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ContainerBuildRecordService::class.java)
     }

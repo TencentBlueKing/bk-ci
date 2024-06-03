@@ -62,7 +62,7 @@ data class PreJob(
     @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: String? = null,
-    val env: Map<String, String>? = emptyMap(),
+    val env: Map<String, Any?>? = emptyMap(),
     @get:Schema(title = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = null,

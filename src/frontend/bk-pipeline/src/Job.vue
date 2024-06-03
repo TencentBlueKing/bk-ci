@@ -24,18 +24,30 @@
             <Logo v-if="(reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag
             " name="matrix" size="16" class="matrix-flag-icon">
             </Logo>
-            <Logo v-if="showMatrixFold" name="angle-circle-down" size="18" @click.stop="toggleShowAtom()"
-                :class="matrixFoldLogoCls">
+            <Logo
+                name="angle-circle-down"
+                size="18"
+                @click.stop="toggleShowAtom()"
+                :class="matrixFoldLogoCls"
+            >
             </Logo>
             <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">
                 {{ t("debugConsole") }}
             </bk-button>
             <Logo v-if="container.locateActive" name="location-right" class="container-locate-icon" size="18" />
         </h3>
-        <atom-list v-if="showAtomList || !showMatrixFold" ref="atomList" :stage="stage" :container="container"
-            :stage-index="stageIndex" :handle-change="handleChange" :container-index="containerIndex"
-            :container-group-index="containerGroupIndex" :container-status="containerStatus"
-            :container-disabled="disabled">
+        <atom-list
+            v-if="showAtomList"
+            ref="atomList"
+            :stage="stage"
+            :container="container"
+            :stage-index="stageIndex"
+            :handle-change="handleChange"
+            :container-index="containerIndex"
+            :container-group-index="containerGroupIndex"
+            :container-status="containerStatus"
+            :container-disabled="disabled"
+        >
         </atom-list>
     </div>
 </template>
@@ -102,7 +114,7 @@
             return {
                 showContainerName: false,
                 showAtomName: false,
-                showAtomList: false,
+                showAtomList: true,
                 cruveHeight: 0
             }
         },
@@ -340,15 +352,12 @@
             background: white;
             border-radius: 50%;
             bottom: -10px;
-            left: 111px;
+            left: calc(50% - 9px);
+            color: #c4cdd6;
             transition: all 0.3s ease;
 
             &.open {
                 transform: rotate(-180deg);
-            }
-
-            &.readonly {
-                color: $fontWeightColor;
             }
         }
 

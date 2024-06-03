@@ -1,21 +1,25 @@
 <template>
-    <bk-tag-input
-        allow-create
-        :value="value"
-        :disabled="disabled || isLoading"
-        :placeholder="placeholder"
-        :save-key="'english_name'"
-        :display-key="'chinese_name'"
-        :search-key="'english_name'"
-        :list="list"
-        :tag-tpl="renderMemberTag"
-        :tpl="renderMerberList"
-        :create-tag-validator="detect"
-        :paste-fn="paste"
-        @change="handleSelect"
-    >
-    </bk-tag-input>
-
+    <div class="staff-input">
+        <div v-if="prependText" class="group-text prepend-box">
+            {{ prependText }}
+        </div>
+        <bk-tag-input
+            allow-create
+            :value="value"
+            :disabled="disabled || isLoading"
+            :placeholder="placeholder"
+            :save-key="'english_name'"
+            :display-key="'chinese_name'"
+            :search-key="'english_name'"
+            :list="list"
+            :tag-tpl="renderMemberTag"
+            :tpl="renderMerberList"
+            :create-tag-validator="detect"
+            :paste-fn="paste"
+            @change="handleSelect"
+        >
+        </bk-tag-input>
+    </div>
 </template>
 
 <script>
@@ -35,6 +39,10 @@
                 default: false
             },
             placeholder: {
+                type: String,
+                default: ''
+            },
+            prependText: {
                 type: String,
                 default: ''
             }
@@ -160,6 +168,17 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
+        }
+    }
+    .staff-input {
+        display: flex;
+        .prepend-box {
+            border: 1px solid #c4c6cc;
+            border-right: none;
+            padding: 0 15px;
+        }
+        .bk-tag-selector {
+            flex: 1;
         }
     }
 </style>

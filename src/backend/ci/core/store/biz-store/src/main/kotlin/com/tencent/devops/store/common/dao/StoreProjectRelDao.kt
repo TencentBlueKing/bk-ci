@@ -53,6 +53,7 @@ class StoreProjectRelDao {
         projectCode: String,
         type: Byte,
         storeType: Byte,
+        instanceId: String? = null,
         version: String? = null
     ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
@@ -63,6 +64,7 @@ class StoreProjectRelDao {
                 PROJECT_CODE,
                 TYPE,
                 STORE_TYPE,
+                INSTANCE_ID,
                 VERSION,
                 CREATOR,
                 MODIFIER
@@ -72,6 +74,7 @@ class StoreProjectRelDao {
                 projectCode,
                 type,
                 storeType,
+                instanceId,
                 version,
                 userId,
                 userId
@@ -79,6 +82,9 @@ class StoreProjectRelDao {
                 .set(PROJECT_CODE, projectCode)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
+            instanceId?.let {
+                baseStep.set(INSTANCE_ID, instanceId)
+            }
             version?.let {
                 baseStep.set(VERSION, version)
             }
@@ -113,11 +119,13 @@ class StoreProjectRelDao {
         }
     }
 
-    fun countInstalledProject(
+    fun countStoreProject(
         dslContext: DSLContext,
         projectCode: String,
         storeCode: String,
         storeType: Byte,
+        storeProjectType: StoreProjectTypeEnum? = null,
+        instanceId: String? = null,
         version: String? = null
     ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
@@ -125,6 +133,12 @@ class StoreProjectRelDao {
             conditions.add(PROJECT_CODE.eq(projectCode))
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
+            storeProjectType?.let {
+                conditions.add(TYPE.eq(storeProjectType.type.toByte()))
+            }
+            instanceId?.let {
+                conditions.add(INSTANCE_ID.eq(instanceId))
+            }
             version?.let {
                 conditions.add(VERSION.eq(version))
             }
@@ -238,45 +252,52 @@ class StoreProjectRelDao {
     }
 
     /**
-     * 获取项目下关联的组件信息
+     * 获取项目下关联的组件版本信息
      */
-    fun getProjectComponents(
+    fun getProjectComponentVersionMap(
         dslContext: DSLContext,
         projectCode: String,
         storeType: Byte,
         storeProjectTypes: List<Byte>? = null,
-        offset: Int? = 0,
-        limit: Int? = -1
-    ): Result<TStoreProjectRelRecord>? {
+        instanceId: String? = null
+    ): Map<String, String?>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions = mutableListOf(PROJECT_CODE.eq(projectCode))
             storeProjectTypes?.let {
                 conditions.add(TYPE.`in`(storeProjectTypes))
             }
-            val baseQuery = dslContext.selectFrom(this)
+            instanceId?.let {
+                conditions.add(INSTANCE_ID.eq(instanceId))
+            }
+            val baseQuery = dslContext.select(STORE_CODE, VERSION)
+                .from(this)
                 .where(conditions)
                 .and(STORE_TYPE.eq(storeType))
-            if (offset != null && offset >= 0) {
-                baseQuery.offset(offset)
-            }
-            if (limit != null && limit > 0) {
-                baseQuery.limit(limit)
-            }
-            return baseQuery.fetch()
+            return baseQuery.groupBy(STORE_CODE).fetch().intoMap(STORE_CODE, VERSION)
         }
     }
 
     /**
      * 卸载时删除关联关系
      */
-    fun deleteRel(dslContext: DSLContext, storeCode: String, storeType: Byte, projectCode: String) {
+    fun deleteRel(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        projectCode: String,
+        instanceIdList: List<String>? = null
+    ) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            if (!instanceIdList.isNullOrEmpty()) {
+                conditions.add(INSTANCE_ID.`in`(instanceIdList))
+            }
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
             dslContext.deleteFrom(this)
-                .where(STORE_CODE.eq(storeCode)
-                    .and(PROJECT_CODE.eq(projectCode))
-                    .and(STORE_TYPE.eq(storeType))
-                )
-                .and(TYPE.eq(1))
+                .where(conditions)
                 .execute()
         }
     }
@@ -527,6 +548,30 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .groupBy(STORE_CODE)
                 .fetch()
+        }
+    }
+
+    fun updateProjectStoreVersion(
+        dslContext: DSLContext,
+        userId: String,
+        projectCode: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        storeProjectType: StoreProjectTypeEnum,
+        instanceId: String,
+        version: String
+    ) {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            dslContext.update(this)
+                .set(VERSION, version)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(TYPE.eq(storeProjectType.type.toByte()))
+                .and(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(INSTANCE_ID.eq(instanceId))
+                .execute()
         }
     }
 }

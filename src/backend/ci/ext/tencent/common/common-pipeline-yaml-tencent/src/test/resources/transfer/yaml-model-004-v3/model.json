@@ -11,7 +11,7 @@
           "@type" : "manualTrigger",
           "name" : "手动触发",
           "id" : "T-1-1-1",
-          "canElementSkip" : true,
+          "canElementSkip" : false,
           "useLatestParameters" : false,
           "executeCount" : 1,
           "version" : "1.*",
@@ -28,8 +28,8 @@
             "enableCustomEnv" : false
           },
           "classType" : "manualTrigger",
-          "elementEnable" : true,
           "atomCode" : "manualTrigger",
+          "elementEnable" : true,
           "taskAtom" : ""
         }, {
           "@type" : "codeGitWebHookTrigger",
@@ -58,8 +58,8 @@
             "enableCustomEnv" : false
           },
           "classType" : "codeGitWebHookTrigger",
-          "elementEnable" : true,
           "atomCode" : "codeGitWebHookTrigger",
+          "elementEnable" : true,
           "taskAtom" : ""
         }, {
           "@type" : "codeGitWebHookTrigger",
@@ -88,8 +88,8 @@
             "enableCustomEnv" : false
           },
           "classType" : "codeGitWebHookTrigger",
-          "elementEnable" : true,
           "atomCode" : "codeGitWebHookTrigger",
+          "elementEnable" : true,
           "taskAtom" : ""
         }, {
           "@type" : "codeGitWebHookTrigger",
@@ -116,18 +116,20 @@
             "enableCustomEnv" : false
           },
           "classType" : "codeGitWebHookTrigger",
-          "elementEnable" : true,
           "atomCode" : "codeGitWebHookTrigger",
+          "elementEnable" : true,
           "taskAtom" : ""
         } ],
         "params" : [ ],
         "matrixGroupFlag" : false,
-        "classType" : "trigger"
+        "classType" : "trigger",
+        "containerEnable" : true
       } ],
       "id" : "stage-1",
       "name" : "stage-1",
       "fastKill" : false,
-      "finally" : false
+      "finally" : false,
+      "stageEnable" : true
     }, {
       "containers" : [ {
         "@type" : "vmBuild",
@@ -135,13 +137,12 @@
         "elements" : [ {
           "@type" : "marketBuild",
           "name" : "checkout",
-          "id" : "e-8b5caa20b925424185c4d9cdbb2c9bd0",
+          "id" : "e-d08f0dc4bffa471f96378d169e1f2e4d",
           "atomCode" : "checkout",
           "version" : "1.*",
           "data" : {
             "input" : {
-              "repositoryUrl" : "self",
-              "repositoryType" : "URL"
+              "repositoryType" : "SELF"
             }
           },
           "additionalOptions" : {
@@ -166,7 +167,7 @@
         }, {
           "@type" : "marketBuild",
           "name" : "run",
-          "id" : "e-d9460a8817ee42fb8f71902b8fab33f0",
+          "id" : "e-7d9c047e69d24d2cadac3c76ef37abd7",
           "atomCode" : "run",
           "version" : "1.*",
           "data" : {
@@ -197,7 +198,7 @@
         }, {
           "@type" : "marketBuild",
           "name" : "run",
-          "id" : "e-8248186df14d4d7b9a477ddd9eb176ff",
+          "id" : "e-d96e74619bec4b129e12648747a3c998",
           "atomCode" : "run",
           "version" : "1.*",
           "data" : {
@@ -240,7 +241,6 @@
           "credentialProject" : "",
           "imageCode" : "tlinux3_ci",
           "imageVersion" : "2.*",
-          "imageName" : "",
           "dockerBuildVersion" : "tlinux3_ci",
           "imagePublicFlag" : false,
           "imageRDType" : "",
@@ -259,10 +259,11 @@
           "dependOnName" : "",
           "continueWhenFailed" : false
         },
-        "jobId" : "job_069",
+        "jobId" : "job_qsR",
         "matrixGroupFlag" : false,
         "nfsSwitch" : false,
-        "classType" : "vmBuild"
+        "classType" : "vmBuild",
+        "containerEnable" : true
       } ],
       "id" : "stage-2",
       "name" : "stage_1",
@@ -274,14 +275,15 @@
         "runCondition" : "AFTER_LAST_FINISHED",
         "customVariables" : [ ],
         "manualTrigger" : false
-      }
+      },
+      "stageEnable" : true
     } ],
     "labels" : [ ],
     "instanceFromTemplate" : false,
     "pipelineCreator" : "",
     "events" : { },
     "staticViews" : [ ],
-    "latestVersion" : 0
+    "latestVersion" : 1
   },
   "setting" : {
     "projectId" : "",
@@ -290,6 +292,7 @@
     "version" : 1,
     "desc" : "",
     "labels" : [ ],
+    "labelNames" : [ ],
     "successSubscription" : {
       "types" : [ ],
       "groups" : [ ],
@@ -310,26 +313,8 @@
       "detailFlag" : false,
       "content" : ""
     },
-    "successSubscriptionList" : [ {
-      "types" : [ ],
-      "groups" : [ ],
-      "users" : "",
-      "wechatGroupFlag" : false,
-      "wechatGroup" : "",
-      "wechatGroupMarkdownFlag" : false,
-      "detailFlag" : false,
-      "content" : ""
-    } ],
-    "failSubscriptionList" : [ {
-      "types" : [ ],
-      "groups" : [ ],
-      "users" : "",
-      "wechatGroupFlag" : false,
-      "wechatGroup" : "",
-      "wechatGroupMarkdownFlag" : false,
-      "detailFlag" : false,
-      "content" : ""
-    } ],
+    "successSubscriptionList" : [ ],
+    "failSubscriptionList" : [ ],
     "runLockType" : "MULTIPLE",
     "waitQueueTimeMinute" : 480,
     "maxQueueSize" : 10,

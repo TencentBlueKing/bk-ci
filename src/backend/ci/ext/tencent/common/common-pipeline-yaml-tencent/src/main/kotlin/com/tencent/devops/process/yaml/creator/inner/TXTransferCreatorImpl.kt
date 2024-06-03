@@ -28,12 +28,16 @@
 package com.tencent.devops.process.yaml.creator.inner
 
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.process.yaml.transfer.TransferCacheService
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreatorImpl
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
 @Primary
 @Component
-class TXTransferCreatorImpl : TransferCreatorImpl() {
+class TXTransferCreatorImpl @Autowired constructor(
+    override val transferCache: TransferCacheService
+) : TransferCreatorImpl(transferCache) {
     override fun defaultLinuxDispatchType(): BuildType = BuildType.PUBLIC_DEVCLOUD
 }

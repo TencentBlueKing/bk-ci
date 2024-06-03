@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -357,8 +357,8 @@ class PipelineRepositoryVersionService(
             var offset = 0
             val limit = PageUtil.DEFAULT_PAGE_SIZE
             do {
-                val projectInfos = client.get(ServiceProjectResource::class).listMigrateProjects(
-                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = ProjectConditionDTO(
                         channelCode = projectChannelCode,
                         routerTag = routerTag
                     ),

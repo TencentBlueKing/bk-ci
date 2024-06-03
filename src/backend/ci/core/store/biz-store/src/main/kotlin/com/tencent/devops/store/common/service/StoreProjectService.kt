@@ -80,7 +80,8 @@ interface StoreProjectService {
     fun uninstall(
         storeType: StoreTypeEnum,
         storeCode: String,
-        projectCode: String
+        projectCode: String,
+        instanceIdList: List<String>? = null
     ): Result<Boolean>
 
     /**
@@ -99,7 +100,8 @@ interface StoreProjectService {
     fun getProjectComponents(
         projectCode: String,
         storeType: Byte,
-        storeProjectTypes: List<Byte>
+        storeProjectTypes: List<Byte>,
+        instanceId: String? = null
     ): Map<String, String?>?
 
     /**

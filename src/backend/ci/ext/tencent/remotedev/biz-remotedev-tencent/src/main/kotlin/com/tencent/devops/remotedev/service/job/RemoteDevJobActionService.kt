@@ -72,11 +72,16 @@ class RemoteDevJobActionService @Autowired constructor(
                 startType = StartType.SERVICE
             )
         } catch (e: Exception) {
+            val errMsg = "start pipeline error $e"
             remoteDevJobExecRecordDao.updateStatus(
                 dslContext = dslContext,
                 id = id,
                 status = JobRecordStatus.FAIL,
-                errMsg = "start pipeline error $e",
+                errMsg = if (errMsg.length >= 255) {
+                    errMsg.substring(0, 255)
+                } else {
+                    errMsg
+                },
                 endTime = LocalDateTime.now()
             )
             return
