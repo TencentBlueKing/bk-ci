@@ -1537,7 +1537,7 @@ class PipelineBuildDao {
                     .execute() == 1
             }
         }
-        return if (!success) with(T_PIPELINE_BUILD_HISTORY) {
+        return if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
             newBuildStatus?.let { update.set(STATUS, it.ordinal) }
