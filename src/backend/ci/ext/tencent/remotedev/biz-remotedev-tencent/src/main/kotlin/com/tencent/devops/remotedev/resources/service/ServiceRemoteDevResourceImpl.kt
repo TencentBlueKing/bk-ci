@@ -454,6 +454,7 @@ class ServiceRemoteDevResourceImpl(
         val dToken = permissionService.init1Password(
             ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner"),
             ws.workspaceName,
+            ws.projectId,
             600
         )
         val rsaPublicKey = kotlin.runCatching { RsaUtil.generatePublicKey(Base64.getDecoder().decode(sign.publicKey)) }

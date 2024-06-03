@@ -214,10 +214,10 @@ class PermissionService @Autowired constructor(
         return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
     }
 
-    fun init1Password(userId: String, workspaceName: String, expiredInSecond: Long?): String {
+    fun init1Password(userId: String, workspaceName: String, projectId: String, expiredInSecond: Long?): String {
         val key = initRedisUser(
             UserOnePassword(
-                userId, workspaceName
+                userId, workspaceName, projectId
             ), expiredInSecond
         )
         logger.info("start init1Password|$userId|$workspaceName|$key")
