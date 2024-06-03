@@ -48,6 +48,7 @@ interface IElementBizPluginService {
         container: Container,
         element: Element,
         contextMap: Map<String, String>,
-        appearedCnt: Int
+        appearedCnt: Int,
+        isTemplate: Boolean
     ): ElementCheckResult
 }

@@ -37,6 +37,8 @@
                 <bk-table
                     :data="pipelineVersionList"
                     :pagination="pagination"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handleLimitChange"
                     :max-height="$refs?.tableBox?.offsetHeight"
                     size="small"
                 >
@@ -193,12 +195,11 @@
                 'deletePipelineVersion'
             ]),
             handleShown () {
-                this.init(1)
+                this.handlePageChange(1)
             },
             async init (page) {
                 try {
                     this.isLoading = true
-
                     await this.getPipelineVersions(page)
                 } catch (error) {
                     this.$bkMessage({
@@ -210,8 +211,17 @@
                 }
             },
             queryVersionList () {
-                console.log(this.filterKeys, this.filterQuery)
-                this.init(1)
+                this.handlePageChange(1)
+            },
+            handlePageChange (page) {
+                this.pagination.current = page
+                this.init(page)
+            },
+            handleLimitChange (limit) {
+                this.pagination.limit = limit
+                this.$nextTick(() => {
+                    this.handlePageChange(1)
+                })
             },
             async getPipelineVersions (page) {
                 const { projectId, pipelineId } = this.$route.params
@@ -254,7 +264,7 @@
                                 pipelineId,
                                 version: row.version
                             })
-                            this.init(1)
+                            this.handlePageChange(1)
                             this.$showTips({
                                 message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                 theme: 'success'

@@ -160,6 +160,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
         }
+        val instanceId = installStoreReq.instanceId
         var increment = 0
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -169,14 +170,27 @@ class StoreProjectServiceImpl @Autowired constructor(
                 val installStoreLock = RedisLock(redisOperation, installStoreLockKey, 10)
                 try {
                     installStoreLock.lock()
-                    val relCount = storeProjectRelDao.countInstalledProject(
+                    val relCount = storeProjectRelDao.countStoreProject(
                         dslContext = context,
                         projectCode = projectCode,
                         storeCode = storeCode,
                         storeType = storeType.type.toByte(),
-                        version = version
+                        storeProjectType = StoreProjectTypeEnum.COMMON,
+                        instanceId = instanceId
                     )
                     if (relCount > 0) {
+                        instanceId?.let {
+                            storeProjectRelDao.updateProjectStoreVersion(
+                                dslContext = dslContext,
+                                userId = userId,
+                                projectCode = projectCode,
+                                storeCode = storeCode,
+                                storeType = storeType,
+                                storeProjectType = StoreProjectTypeEnum.COMMON,
+                                instanceId = instanceId,
+                                version = version ?: ""
+                            )
+                        }
                         continue
                     }
                     // 未安装则入库
@@ -187,6 +201,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                         projectCode = projectCode,
                         type = StoreProjectTypeEnum.COMMON.type.toByte(),
                         storeType = storeType.type.toByte(),
+                        instanceId = instanceId,
                         version = version
                     )
                     // 使用 ON DUPLICATE KEY UPDATE，如果将行作为新行插入，则每行的受影响行值为 1，如果更新现有行，则为 2
@@ -310,9 +325,16 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun uninstall(
         storeType: StoreTypeEnum,
         storeCode: String,
-        projectCode: String
+        projectCode: String,
+        instanceIdList: List<String>?
     ): Result<Boolean> {
-        storeProjectRelDao.deleteRel(dslContext, storeCode, storeType.type.toByte(), projectCode)
+        storeProjectRelDao.deleteRel(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            projectCode = projectCode,
+            instanceIdList = instanceIdList
+        )
         return Result(true)
     }
 
@@ -335,14 +357,16 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun getProjectComponents(
         projectCode: String,
         storeType: Byte,
-        storeProjectTypes: List<Byte>
+        storeProjectTypes: List<Byte>,
+        instanceId: String?
     ): Map<String, String?>? {
-        return storeProjectRelDao.getProjectComponents(
+        return storeProjectRelDao.getProjectComponentVersionMap(
             dslContext = dslContext,
             projectCode = projectCode,
             storeType = storeType,
-            storeProjectTypes = storeProjectTypes
-        )?.intoMap({ it.storeCode }, { it.version })
+            storeProjectTypes = storeProjectTypes,
+            instanceId = instanceId
+        )
     }
 
     override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean {

@@ -63,7 +63,4 @@ class BkRepoClientConfig {
 
     @Value("\${bkrepo.devxIdcBkrepoUrl:}")
     val bkRepoDevxIdcHost: String = ""
-
-    @Value("\${bkrepo.devxDevnetBkrepoUrl:}")
-    val bkRepoDevxDevnetHost: String = ""
 }

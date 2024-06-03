@@ -7,7 +7,7 @@
             <ul>
                 <template v-if="hasGroup">
                     <li v-for="(item, index) in filteredList"
-                        :key="item.id"
+                        :key="item.id + index"
                         :disabled="item.disabled">
                         <div class="option-group-name">{{ item.name }}</div>
                         <div class="option-group-item"
@@ -22,7 +22,16 @@
                     </li>
                 </template>
                 <template v-else>
-                    <li class="option-item" v-for="(item, index) in filteredList" :key="item.id" :class="{ active: item.id === value, selected: selectedPointer === index }" :disabled="item.disabled" @click.stop="selectOption(item)" @mouseover="setSelectPointer(index)" :title="item.name">
+                    <li
+                        v-for="(item, index) in filteredList"
+                        class="option-item"
+                        :key="item.id + index"
+                        :class="{ active: item.id === value, selected: selectedPointer === index }"
+                        :disabled="item.disabled"
+                        @click.stop="selectOption(item)"
+                        @mouseover="setSelectPointer(index)"
+                        :title="item.name"
+                    >
                         {{ item.name }}
                     </li>
                 </template>

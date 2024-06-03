@@ -55,6 +55,19 @@
                         </div>
                         
                     </div>
+                    <div v-if="activeIndex === index" class="filter-tab">
+                        <div
+                            v-for="(tab, tabIndex) in filterTabList"
+                            :key="tabIndex"
+                            :class="{
+                                'tab-item': true,
+                                'active': filterTab === tab.id
+                            }"
+                            @click="handleToggleTab(tab)">
+                            {{ tab.name }}
+                            <span class="num">{{ reasonNumMap[tab.key] }}</span>
+                        </div>
+                    </div>
                     <div
                         class="trigger-list-table"
                         v-if="activeIndex === index && eventDetailList.length"
@@ -168,6 +181,7 @@
             }
         },
         data () {
+            const reason = this.searchValue.find(i => i.id === 'reason')?.values[0].id || ''
             return {
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
@@ -180,12 +194,22 @@
                     limit: 10,
                     count: 0
                 },
-                isZH: true
+                isZH: true,
+                filterTab: reason,
+                reason,
+                reasonNumMap: {}
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            filterTabList () {
+                return [
+                    { name: this.$t('codelib.触发成功'), id: 'TRIGGER_SUCCESS', key: 'triggerSuccess' },
+                    { name: this.$t('codelib.触发失败'), id: 'TRIGGER_FAILED', key: 'triggerFailed' },
+                    { name: this.$t('codelib.触发器不匹配'), id: 'TRIGGER_NOT_MATCH', key: 'triggerNotMatch' }
+                ]
             }
         },
         created () {
@@ -194,6 +218,7 @@
         methods: {
             ...mapActions('codelib', [
                 'fetchEventDetail',
+                'fetchTriggerReasonNum',
                 'replayAllEvent',
                 'replayEvent'
             ]),
@@ -250,12 +275,13 @@
             /**
              * 展示触发事件详情
              */
-            handleShowDetail (data, index) {
+            async handleShowDetail (data, index) {
                 this.pagination.current = 1
                 this.activeIndex === index ? this.activeIndex = -1 : this.activeIndex = index
                 if (this.activeIndex === -1) return
                 this.eventId = data.eventId
-                this.getEventDetail()
+                await this.handleFetchTriggerReasonNum()
+                await this.getEventDetail()
             },
 
             getEventDetail () {
@@ -266,6 +292,7 @@
                     eventId: this.eventId,
                     page: this.pagination.current,
                     pageSize: this.pagination.limit,
+                    reason: this.filterTab,
                     pipelineId
                 }).then(res => {
                     this.eventDetailList = res.records
@@ -285,6 +312,27 @@
             },
             getEventDescTitle (str) {
                 return str.replace(/(<\/?font.*?>)|(<\/?span.*?>)|(<\/?a.*?>)/gi, '')
+            },
+            handleToggleTab (tab) {
+                this.filterTab = tab.id
+                this.getEventDetail()
+            },
+
+            async handleFetchTriggerReasonNum () {
+                try {
+                    const pipelineId = this.searchValue.find(i => i.id === 'pipelineId')?.values[0].id || ''
+
+                    this.reasonNumMap = await this.fetchTriggerReasonNum({
+                        projectId: this.projectId,
+                        eventId: this.eventId,
+                        pipelineId
+                    })
+                    if (!this.reason) {
+                        this.filterTab = this.filterTabList.find(i => this.reasonNumMap[i.key] > 0)?.id
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
             }
         }
     }
@@ -380,9 +428,40 @@
                 color: red;
             }
         }
+        .filter-tab {
+            display: flex;
+            align-items: center;
+            width: fit-content;
+            height: 42px;
+            border: 1px solid #dfe0e5;
+            border-bottom: none;
+            .tab-item {
+                font-size: 12px;
+                height: 42px;
+                line-height: 42px;
+                padding: 0 15px;
+                border-right: 1px solid #dfe0e5;
+                cursor: pointer;
+                &:last-child {
+                    border: none
+                }
+                &:hover {
+                    color: #3a84ff;
+                }
+                &.active {
+                    color: #3a84ff;
+                }
+            }
+            .num {
+                color: #979ba5;
+                background: #f0f5ff;
+                border-radius: 50%;
+                padding: 2px;
+            }
+        }
         .trigger-list-table {
             width: 100%;
-            margin: 8px 0;
+            margin-bottom: 8px;
             border: 1px solid #dfe0e5;
             border-radius: 2px;
             transition: opacity 3s linear;
