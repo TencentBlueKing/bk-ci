@@ -1,11 +1,9 @@
 <template>
     <div class="cron-trigger">
-        <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
+        <accordion show-checkbox :show-content="isShowBasicRule" :disabled="disabled" :after-toggle="toggleBasicRule">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.baseRule') }}</span>
-                <i class="devops-icon icon-angle-down" style="display:block"></i>
-
-                <!-- <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" /> -->
+                <input :class="{ 'accordion-checkbox': true, 'disabled': disabled }" type="checkbox" :disabled="disabled" :checked="isShowBasicRule" style="margin-left: auto;" />
             </header>
             <div slot="content">
                 <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
@@ -14,11 +12,10 @@
             </div>
         </accordion>
 
-        <accordion show-checkbox :show-content="advance" :after-toggle="toggleAdvance">
+        <accordion show-checkbox :show-content="advance" :disabled="disabled" :after-toggle="toggleAdvance">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.crontabTitle') }}</span>
-                <i class="devops-icon icon-angle-down" style="display:block"></i>
-                <!-- <input class="accordion-checkbox" type="checkbox" :checked="advance" style="margin-left: auto;" /> -->
+                <input class="accordion-checkbox" type="checkbox" :checked="advance" :disabled="disabled" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
                 <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has('advanceExpression')" :error-msg="errors.first('advanceExpression')">
@@ -27,11 +24,10 @@
             </div>
         </accordion>
         <p class="empty-trigger-tips" v-if="!isShowBasicRule && !advance">{{ $t('editPage.triggerEmptyTips') }}</p>
-        <accordion show-checkbox :show-content="isShowCodelibConfig" :after-toggle="toggleCodelibConfig">
+        <accordion show-checkbox :show-content="isShowCodelibConfig" :disabled="disabled" :after-toggle="toggleCodelibConfig">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.codelibConfigs') }}</span>
-                <i class="devops-icon icon-angle-down" style="display:block"></i>
-                <!-- <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" style="margin-left: auto;" /> -->
+                <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" :disabled="disabled" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
                 <form-field class="cron-build-tab" :desc="$t('editPage.timerTriggerCodelibTips')" :required="false" :label="$t('editPage.codelib')">
@@ -113,9 +109,9 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                isShowBasicRule: this.notEmptyArray('newExpression'),
-                advance: this.notEmptyArray('advanceExpression'),
-                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branchs.length,
+                isShowBasicRule: false,
+                advance: false,
+                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branchs?.length,
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
                 repositoryType: this.element.repositoryType || 'ID'
             }
@@ -179,6 +175,8 @@
                     propKey: 'expression'
                 })
             }
+            this.isShowBasicRule = this.notEmptyArray('newExpression')
+            this.advance = this.notEmptyArray('advanceExpression')
         },
         methods: {
             notEmptyArray (prop) {
