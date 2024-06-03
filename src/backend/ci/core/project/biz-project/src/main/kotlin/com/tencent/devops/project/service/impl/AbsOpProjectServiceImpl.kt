@@ -173,7 +173,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         remoteDevFlag: Boolean,
-        productId: Int?
+        productId: Int?,
+        channelCode: String?
     ): Map<String, Any?>? {
         val dataObj = mutableMapOf<String, Any?>()
 
@@ -206,7 +207,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
             remoteDevFlag = remoteDevFlag,
-            productId = productId
+            productId = productId,
+            channelCode = channelCode
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -220,7 +222,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
             remoteDevFlag = remoteDevFlag,
-            productId = productId
+            productId = productId,
+            channelCode = channelCode
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
 

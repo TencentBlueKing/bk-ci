@@ -523,7 +523,8 @@ class ProjectDao {
         routerTag: String?,
         otherRouterTagMaps: Map<String, String>?,
         remoteDevFlag: Boolean?,
-        productId: Int?
+        productId: Int?,
+        channelCode: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!projectName.isNullOrBlank()) {
@@ -551,6 +552,7 @@ class ProjectDao {
             conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
             conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
         }
+        channelCode?.let { conditions.add(CHANNEL.eq(channelCode)) }
         return conditions
     }
 
@@ -568,7 +570,8 @@ class ProjectDao {
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
         remoteDevFlag: Boolean? = null,
-        productId: Int? = null
+        productId: Int? = null,
+        channelCode: String?
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -582,7 +585,8 @@ class ProjectDao {
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
                 remoteDevFlag = remoteDevFlag,
-                productId = productId
+                productId = productId,
+                channelCode = channelCode
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
@@ -752,7 +756,8 @@ class ProjectDao {
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
         remoteDevFlag: Boolean? = null,
-        productId: Int? = null
+        productId: Int? = null,
+        channelCode: String?
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -766,7 +771,8 @@ class ProjectDao {
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
                 remoteDevFlag = remoteDevFlag,
-                productId = productId
+                productId = productId,
+                channelCode = channelCode
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
