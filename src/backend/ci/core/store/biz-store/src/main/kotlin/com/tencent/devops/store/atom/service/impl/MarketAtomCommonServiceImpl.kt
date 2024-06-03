@@ -49,6 +49,7 @@ import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -433,6 +434,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         } else {
             runtimeVersion
         }
+        val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(language)
         if (null != osList) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
@@ -452,6 +454,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         params = arrayOf(KEY_TARGET)
                     )
                 }
+                atomBusHandleService.checkTarget(target)
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
                 // 统计每种操作系统默认环境配置数量
@@ -498,6 +501,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     params = arrayOf(KEY_TARGET)
                 )
             }
+            atomBusHandleService.checkTarget(target)
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,
