@@ -146,7 +146,7 @@ class BcsDeployService @Autowired constructor(
             .withName(getServiceName(serviceCode))
             .endMetadata()
             .withNewSpec()
-            .addToSelector(Collections.singletonMap(defaultLabelKey, serviceCode))
+            .addToSelector(Collections.singletonMap("bkci.dispatch.kubenetes", serviceCode))
             .addNewPort()
             .withName("$serviceCode-port")
             .withProtocol("TCP")
