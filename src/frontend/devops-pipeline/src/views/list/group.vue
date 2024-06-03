@@ -380,6 +380,7 @@
                 this.active.isGroupEdit = false
                 this.addTagGroupIndex = null
                 this.addTagIndex = null
+
                 this.$bkInfo({
                     title: this.$t('labelDeleteConfirm'),
                     confirmFn: () => {
