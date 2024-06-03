@@ -628,8 +628,10 @@ class CreateControl @Autowired constructor(
                     type = ws.workspaceSystemType
                 )
 
-                // 创建成功后做异步设置
-                workspaceCommon.makeDiskMount(ip, event.userId)
+                // 个人云桌面创建成功后做异步设置，团队项目改到分配时做L盘挂载
+                if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
+                    workspaceCommon.makeDiskMount(ip, event.userId)
+                }
 
                 // 给有cfs的机器绑定权限组
                 tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)

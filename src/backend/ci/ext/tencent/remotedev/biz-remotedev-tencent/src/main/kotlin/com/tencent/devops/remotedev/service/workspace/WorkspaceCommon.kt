@@ -615,6 +615,8 @@ class WorkspaceCommon @Autowired constructor(
                         "userId" to it.userId
                     )
                 )
+                // 分配拥有者后触发L盘挂载
+                makeDiskMount(cgsId.substringAfter("."), operator)
             }
             notifyControl.dispatchWebsocketPushEvent(
                 userId = it.userId,

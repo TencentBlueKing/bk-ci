@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -8,11 +10,11 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -83,15 +85,6 @@ interface ServiceRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
-
-    @Operation(summary = "获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
-    @GET
-    @Path("/project/cvm")
-    fun queryProjectRemoteDevCvm(
-        @Parameter(description = "project_id", required = false)
-        @QueryParam("project_id")
-        projectId: String?
-    ): Result<List<RemotedevCvmData>>
 
     @Operation(summary = "校验是否是当前项目下的云桌面")
     @GET
@@ -305,4 +298,22 @@ interface ServiceRemoteDevResource {
         @QueryParam("available")
         available: Boolean?
     ): Result<QuotaInApiRes>
+
+    @Operation(summary = "DevcloudCvm列表")
+    @GET
+    @Path("/devcloud/cvmList")
+    fun fetchCvmList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<Page<DevcloudCVMData>?>
 }

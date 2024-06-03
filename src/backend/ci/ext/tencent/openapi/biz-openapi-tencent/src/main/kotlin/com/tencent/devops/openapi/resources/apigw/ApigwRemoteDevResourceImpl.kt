@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -12,10 +13,10 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -66,15 +67,6 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
         return client.get(ServiceRemoteDevResource::class).getRemotedevProjects(projectId)
-    }
-
-    override fun queryProjectRemoteDevCvm(
-        appCode: String?,
-        apigwType: String?,
-        projectId: String?
-    ): Result<List<RemotedevCvmData>> {
-        logger.info("Get  project cvm")
-        return client.get(ServiceRemoteDevResource::class).queryProjectRemoteDevCvm(projectId)
     }
 
     override fun checkUserCgsPermission(
@@ -242,6 +234,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             machineType = machineType,
             count = count,
             available = available
+        )
+    }
+
+    override fun fetchCvmList(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<DevcloudCVMData>?> {
+        logger.info("fetchCvmList $userId|$projectId|$page|$pageSize")
+        return client.get(ServiceRemoteDevResource::class).fetchCvmList(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize
         )
     }
 }
