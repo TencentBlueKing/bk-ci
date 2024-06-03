@@ -114,9 +114,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
         return Result(
             permissionService.init1Password(
-                userId,
-                workspaceName,
-                redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull()
+                userId = userId,
+                workspaceName = workspaceName,
+                projectId = null,
+                expiredInSecond = redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull()
             )
         )
     }
