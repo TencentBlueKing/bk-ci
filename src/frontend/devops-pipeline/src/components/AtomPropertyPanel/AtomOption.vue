@@ -126,10 +126,7 @@
                 })
             },
             initOptionConfig (isInit = false) {
-                // 编辑状态
-                if (!this.disabled) {
-                    this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption), isInit)
-                }
+                this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption), isInit)
             }
         }
     }
