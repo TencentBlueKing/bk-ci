@@ -259,7 +259,8 @@ class GitCheckService @Autowired constructor(
                         )
                         gitCheckClient.updateGitCheck(
                             gitCheckId = record.gitCheckId,
-                            buildNumber = buildNum.toInt()
+                            buildNumber = buildNum.toInt(),
+                            checkRunId = null
                         )
                     } else {
                         logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")

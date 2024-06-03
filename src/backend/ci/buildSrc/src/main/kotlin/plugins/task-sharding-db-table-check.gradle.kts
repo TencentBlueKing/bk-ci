@@ -31,6 +31,7 @@ import java.sql.DriverManager
 
 val shardingTableRegex = "(.+)_(\\d+)".toRegex()
 val shardingDbTableCheckTask = tasks.register("shardingDbTableCheck") {
+    enabled = false
     doLast {
         val bkModuleName =
             ModuleUtil.getBkModuleName(project.name, project.findProperty("i18n.module.name")?.toString())

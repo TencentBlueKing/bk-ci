@@ -873,4 +873,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun tryGetSession(repository: Repository, credentialType: CredentialType) =
         (repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeSvnRepository) &&
                 (credentialType == CredentialType.USERNAME_PASSWORD)
+
+    fun addCommitCheck(
+
+    )
 }

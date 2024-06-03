@@ -25,20 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.RepositoryGitCheck
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Component
-class CodeWebhookListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService
-) {
-    // 迁移后，仅处理流水线构建结束的消息，开始构建的消息由process服务进行消费
-    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onBuildFinished(event = event)
-    }
+@Tag(name = "SERVICE_COMMIT", description = "提交检查")
+@Path("/service/commit/check/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceCommitCheckResource {
+    @Operation(summary = "添加提交检查信息")
+    @POST
+    @Path("/add")
+    fun add(repositoryGitCheck: RepositoryGitCheck)
+
+    @Operation(summary = "添加提交检查信息")
+    @PUT
+    @Path("/git/{checkId}")
+    fun update(
+        checkId: Long,
+        buildNum: Int,
+        checkRunId: Long? = null
+    )
+
+    @Operation(summary = "获取提交检查信息")
+    @GET
+    @Path("/pipelines/{pipelineId}/commits/{commitId}")
+    fun get(
+        pipelineId: String,
+        commitId: String,
+        targetBranch: String?,
+        context: String,
+        repositoryConfig: RepositoryConfig,
+    ): Result<RepositoryGitCheck?>
 }

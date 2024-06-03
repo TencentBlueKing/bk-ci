@@ -25,20 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
+import com.tencent.devops.process.pojo.SetContextVarData
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Component
-class CodeWebhookListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService
-) {
-    // 迁移后，仅处理流水线构建结束的消息，开始构建的消息由process服务进行消费
-    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onBuildFinished(event = event)
-    }
+@Tag(name = "SERVICE_VARIABLE", description = "服务-流水线检查信息")
+@Path("/service/commit/check")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceCommitCheckResource {
+
+    @Operation(summary = "消费git检查事件")
+    @Path("/consume_git_commit_check_event")
+    @GET
+    fun consumeGitCommitCheckEvent(
+        event: GitCommitCheckEvent
+    ): Result<Map<String, String>>
 }

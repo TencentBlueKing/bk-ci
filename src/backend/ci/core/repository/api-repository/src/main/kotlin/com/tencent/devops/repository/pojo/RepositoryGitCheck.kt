@@ -21,5 +21,7 @@ data class RepositoryGitCheck(
     @get:Schema(title = "来源类型")
     val source: ExecuteSource,
     @get:Schema(title = "目标分支")
-    val targetBranch: String? = ""
+    val targetBranch: String? = "",
+    @get:Schema(title = "检查信息ID,仅github使用")
+    val checkRunId: Long? = null
 )

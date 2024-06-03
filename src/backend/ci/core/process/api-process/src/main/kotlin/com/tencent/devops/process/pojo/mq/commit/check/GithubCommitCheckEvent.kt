@@ -25,20 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.process.pojo.mq.commit.check
 
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
-@Component
-class CodeWebhookListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService
-) {
-    // 迁移后，仅处理流水线构建结束的消息，开始构建的消息由process服务进行消费
-    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onBuildFinished(event = event)
-    }
-}
+/**
+ * Github PullRequest 检查事件
+ */
+@Event(MQ.EXCHANGE_GIT_COMMIT_CHECK_EVENT, MQ.ROUTE_GITHUB_COMMIT_CHECK_EVENT)
+data class GithubCommitCheckEvent(
+    override val projectId: String,
+    override val pipelineId: String,
+    val buildId: String,
+    val repositoryConfig: RepositoryConfig,
+    val commitId: String,
+    val status: String,
+    val startedAt: Long?,
+    val conclusion: String?,
+    val completedAt: Long?,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override val source: String,
+    override val userId: String,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

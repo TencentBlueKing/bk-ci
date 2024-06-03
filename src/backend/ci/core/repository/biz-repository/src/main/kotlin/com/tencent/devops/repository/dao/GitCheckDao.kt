@@ -67,11 +67,22 @@ class GitCheckDao {
         }
     }
 
-    fun update(dslContext: DSLContext, id: Long, buildNumber: Int) {
+    fun update(
+        dslContext: DSLContext,
+        id: Long,
+        buildNumber: Int,
+        checkRunId: Long?
+    ) {
         with(TRepositoryGitCheck.T_REPOSITORY_GIT_CHECK) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(BUILD_NUMBER, buildNumber)
+                .let {
+                    if (checkRunId!=null){
+                        it.set(CHECK_RUN_ID, checkRunId)
+                    }
+                    it
+                }
                 .where(ID.eq(id))
                 .execute()
         }

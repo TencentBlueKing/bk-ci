@@ -25,20 +25,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.repository.resources
 
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceCommitCheckResource
+import com.tencent.devops.repository.pojo.RepositoryGitCheck
+import com.tencent.devops.repository.service.GitCheckService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
 
-@Component
-class CodeWebhookListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService
-) {
-    // 迁移后，仅处理流水线构建结束的消息，开始构建的消息由process服务进行消费
-    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onBuildFinished(event = event)
+@RestResource
+class ServiceCommitCheckResourceImpl @Autowired constructor(
+    val gitCheckService: GitCheckService
+) : ServiceCommitCheckResource {
+    override fun add(repositoryGitCheck: RepositoryGitCheck) {
+        gitCheckService.creatGitCheck(repositoryGitCheck)
+    }
+
+    override fun get(
+        pipelineId: String,
+        commitId: String,
+        targetBranch: String?,
+        context: String,
+        repositoryConfig: RepositoryConfig
+    ): Result<RepositoryGitCheck?> {
+        return Result(
+            gitCheckService.getGitCheck(
+                pipelineId = pipelineId,
+                repositoryConfig = repositoryConfig,
+                commitId = commitId,
+                targetBranch = targetBranch,
+                context = context
+            )
+        )
+    }
+
+    override fun update(
+        checkId: Long,
+        buildNum: Int,
+        checkRunId: Long?
+    ) {
+        gitCheckService.updateGitCheck(
+            gitCheckId = checkId,
+            buildNumber = buildNum,
+            checkRunId = checkRunId
+        )
     }
 }

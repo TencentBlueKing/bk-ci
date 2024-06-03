@@ -32,7 +32,8 @@ class GitCheckService @Autowired constructor(
             commitId = result.commitId,
             context = result.context,
             source = ExecuteSource.valueOf(result.source),
-            targetBranch = result.targetBranch
+            targetBranch = result.targetBranch,
+            checkRunId = result.checkRunId
         )
     }
 
@@ -44,12 +45,14 @@ class GitCheckService @Autowired constructor(
 
     fun updateGitCheck(
         gitCheckId: Long,
-        buildNumber: Int
+        buildNumber: Int,
+        checkRunId: Long?
     ) {
         gitCheckDao.update(
             dslContext = dslContext,
             id = gitCheckId,
-            buildNumber = buildNumber
+            buildNumber = buildNumber,
+            checkRunId = checkRunId
         )
     }
 }

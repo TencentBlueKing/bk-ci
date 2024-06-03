@@ -57,6 +57,9 @@ interface ServiceRepositoryGitCheckResource {
         gitCheckId: Long,
         @Parameter(description = "buildNumber", required = true)
         @QueryParam("buildNumber")
-        buildNumber: Int
+        buildNumber: Int,
+        @Parameter(description = "checkRunId", required = false)
+        @QueryParam("checkRunId")
+        checkRunId: Long?
     )
 }

@@ -26,7 +26,7 @@ class ServiceRepositoryGitCheckResourceImpl @Autowired constructor(
         gitCheckService.creatGitCheck(gitCheck)
     }
 
-    override fun updateGitCheck(gitCheckId: Long, buildNumber: Int) {
-        gitCheckService.updateGitCheck(gitCheckId = gitCheckId, buildNumber = buildNumber)
+    override fun updateGitCheck(gitCheckId: Long, buildNumber: Int, checkRunId: Long?) {
+        gitCheckService.updateGitCheck(gitCheckId = gitCheckId, buildNumber = buildNumber, checkRunId = checkRunId)
     }
 }

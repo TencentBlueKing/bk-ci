@@ -25,14 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.init
+package com.tencent.devops.process.service.commit.check.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.plugin.listener.CodeWebhookListener
-import com.tencent.devops.plugin.listener.GitHubPullRequestListener
-import com.tencent.devops.plugin.listener.TGitCommitListener
+import com.tencent.devops.process.service.commit.check.listener.CodeWebhookListener
+import com.tencent.devops.process.service.commit.check.listener.GitHubCommitCheckListener
+import com.tencent.devops.process.service.commit.check.listener.TGitCommitCheckListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -132,12 +132,45 @@ class CodeWebhookListenerConfiguration {
         )
     }
 
+    @Bean
+    fun buildQueueCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_QUEUE_CODE_WEBHOOK)
+
+    @Bean
+    fun buildQueueCodeWebhookQueueBind(
+        @Autowired buildQueueCodeWebhookQueue: Queue,
+        @Autowired pipelineBuildQueueFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(buildQueueCodeWebhookQueue).to(pipelineBuildQueueFanoutExchange)
+    }
+
+    @Bean
+    fun codeWebhookBuildQueueListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired buildQueueCodeWebhookQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: CodeWebhookListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(listener, CodeWebhookListener::onBuildQueue.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildQueueCodeWebhookQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = webhookConcurrency!!,
+            maxConcurrency = BUILD_MAX_CONCURRENT
+        )
+    }
+
     /**
      * Git事件交换机
      */
     @Bean
-    fun gitCommitCheckExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_GIT_COMMIT_CHECK, true, false)
+    fun tgitCommitCheckExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_GIT_COMMIT_CHECK_EVENT, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
@@ -149,30 +182,29 @@ class CodeWebhookListenerConfiguration {
      * gitcommit队列--- 并发小
      */
     @Bean
-    fun gitCommitCheckQueue() = Queue(MQ.QUEUE_GIT_COMMIT_CHECK)
+    fun tgitCommitCheckQueue() = Queue(MQ.QUEUE_GIT_COMMIT_CHECK_EVENT)
 
     @Bean
-    fun gitCommitCheckQueueBind(
+    fun tgitCommitCheckQueueBind(
         @Autowired gitCommitCheckQueue: Queue,
         @Autowired gitCommitCheckExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(gitCommitCheckQueue).to(gitCommitCheckExchange)
-            .with(MQ.ROUTE_GIT_COMMIT_CHECK)
+        return BindingBuilder.bind(gitCommitCheckQueue).to(gitCommitCheckExchange).with(MQ.ROUTE_GIT_COMMIT_CHECK_EVENT)
     }
 
     @Bean
     fun gitCommitCheckListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired gitCommitCheckQueue: Queue,
+        @Autowired tgitCommitCheckQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: TGitCommitListener,
+        @Autowired listener: TGitCommitCheckListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = gitCommitCheckQueue,
+            queue = tgitCommitCheckQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 10000,
@@ -189,30 +221,30 @@ class CodeWebhookListenerConfiguration {
      * github pr队列--- 并发小
      */
     @Bean
-    fun githubPrQueue() = Queue(MQ.QUEUE_GITHUB_PR)
+    fun githubCommitCheckQueue() = Queue(MQ.QUEUE_GITHUB_COMMIT_CHECK_EVENT)
 
     @Bean
     fun githubPrQueueBind(
-        @Autowired githubPrQueue: Queue,
-        @Autowired gitCommitCheckExchange: DirectExchange
+        @Autowired githubCommitCheckQueue: Queue,
+        @Autowired tgitCommitCheckExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(githubPrQueue).to(gitCommitCheckExchange)
-            .with(MQ.ROUTE_GITHUB_PR)
+        return BindingBuilder.bind(githubCommitCheckQueue).to(tgitCommitCheckExchange)
+            .with(MQ.ROUTE_GITHUB_COMMIT_CHECK_EVENT)
     }
 
     @Bean
     fun githubPrQueueListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired githubPrQueue: Queue,
+        @Autowired githubCommitCheckQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: GitHubPullRequestListener,
+        @Autowired listener: GitHubCommitCheckListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = githubPrQueue,
+            queue = githubCommitCheckQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 10000,

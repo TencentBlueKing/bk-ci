@@ -25,20 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.process.service.commit.check.listener
 
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.process.pojo.mq.commit.check.GithubCommitCheckEvent
+import com.tencent.devops.process.service.commit.check.CodeWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class CodeWebhookListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService
-) {
-    // 迁移后，仅处理流水线构建结束的消息，开始构建的消息由process服务进行消费
-    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onBuildFinished(event = event)
+class GitHubCommitCheckListener @Autowired constructor(
+    private val codeWebhookService: CodeWebhookService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<GithubCommitCheckEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: GithubCommitCheckEvent) {
+        codeWebhookService.consumeGitHubPrEvent(event)
     }
 }
