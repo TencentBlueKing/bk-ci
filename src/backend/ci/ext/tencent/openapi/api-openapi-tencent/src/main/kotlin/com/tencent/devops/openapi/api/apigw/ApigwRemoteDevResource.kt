@@ -4,6 +4,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -388,4 +390,19 @@ interface ApigwRemoteDevResource {
         @QueryParam("projectId")
         projectId: String?
     ): Result<Map<String, Any>>
+
+    @Operation(summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁", tags = ["v4_app_modify_workspace_display_name"])
+    @POST
+    @Path("/modify/display_name")
+    fun modifyWorkspaceDisplayName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String,
+        @Parameter(description = "别名", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Boolean>
 }

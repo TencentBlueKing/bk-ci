@@ -273,4 +273,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId
         )
     }
+
+    override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
+        logger.info("modifyWorkspaceDisplayName |$userId|$ip|$displayName")
+        return client.get(ServiceRemoteDevResource::class).modifyWorkspaceDisplayName(
+            userId = userId,
+            ip = ip,
+            displayName = displayName
+        )
+    }
 }

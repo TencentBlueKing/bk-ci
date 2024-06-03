@@ -464,4 +464,8 @@ class ServiceRemoteDevResourceImpl(
 
         return Result(allImages)
     }
+
+    override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
+        return Result(workspaceService.modifyWorkspaceDisplayName(userId, ip, displayName))
+    }
 }
