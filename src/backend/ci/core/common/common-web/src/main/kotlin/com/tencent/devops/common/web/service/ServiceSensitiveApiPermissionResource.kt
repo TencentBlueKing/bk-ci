@@ -31,9 +31,6 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_ARCH
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
-import com.tencent.devops.common.api.constant.KEY_INSTALLED_PKG_SHA_CONTENT
-import com.tencent.devops.common.api.constant.KEY_OS_ARCH
-import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes

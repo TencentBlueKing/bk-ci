@@ -28,7 +28,6 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
