@@ -25,21 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.template.service.impl
+package com.tencent.devops.store.common.service.impl
 
-import com.tencent.devops.store.template.dao.MarketTemplateDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
-@Service("templateMemberService")
-class TemplateMemberServiceImpl : StoreMemberServiceImpl() {
-
-    @Autowired
-    private lateinit var marketTemplateDao: MarketTemplateDao
+@Primary
+@Service
+class StoreComponentMemberServiceImpl @Autowired constructor(
+    private val storeBaseQueryDao: StoreBaseQueryDao
+) : StoreMemberServiceImpl() {
 
     override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
-        return marketTemplateDao.getLatestTemplateByCode(dslContext, storeCode)?.templateName ?: ""
+        return storeBaseQueryDao.getLatestComponentByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )?.name ?: ""
     }
 }
