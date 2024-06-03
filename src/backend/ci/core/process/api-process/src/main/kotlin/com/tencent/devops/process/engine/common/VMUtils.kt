@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.engine.common
 
+import com.tencent.devops.common.api.util.timestampmilli
+import java.time.LocalDateTime
 import kotlin.random.Random
 
 /**
@@ -62,14 +64,19 @@ object VMUtils {
 
     fun getEndLabel() = "end-"
 
-    fun getContainerJobId(containerId: Int): String {
-        val random = Random(containerId)
+    fun getContainerJobId(randomSeed: Int, jobIdSet: MutableSet<String>): String {
+        val random = Random(randomSeed)
         val sequence = StringBuilder()
         for (i in 0 until 3) {
             val randomChar = ('A'..'z').random(random)
             sequence.append(randomChar)
         }
-        return "job_$sequence"
+        val jobId = "job_$sequence"
+        return if (jobIdSet.contains(jobId)) {
+            "${jobId}_${LocalDateTime.now().timestampmilli()}"
+        } else {
+            jobId
+        }
     }
 
     fun isVMTask(taskId: String) = taskId.startsWith(getStartVmLabel()) ||
