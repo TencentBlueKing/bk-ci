@@ -118,6 +118,15 @@ object PipelineUtils {
         }
     }
 
+    fun transformUserIllegalReviewParams(reviewParams: List<ManualReviewParam>?) {
+        reviewParams?.forEach { param ->
+            val value = param.value
+            if (param.valueType == ManualReviewParamType.MULTIPLE && value is String && value.isBlank()) {
+                param.value = null
+            }
+        }
+    }
+
     private fun checkVariablesLength(key: String, value: String) {
         if (value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
             throw ErrorCodeException(
