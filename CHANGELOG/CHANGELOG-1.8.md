@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v1.8.5](#v185)
+   - [Changelog since v1.8.4](#changelog-since-v184)
+
 - [v1.8.4](#v184)
    - [Changelog since v1.8.3](#changelog-since-v183)
 
@@ -7,6 +10,10 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v1.8.5
+## Changelog since v1.8.4
+#### 新增
+- [新增] p4支持ssl [链接](http://github.com/TencentBlueKing/bk-ci/issues/6745)
 # v1.8.4
 ## Changelog since v1.8.3
 #### 新增
