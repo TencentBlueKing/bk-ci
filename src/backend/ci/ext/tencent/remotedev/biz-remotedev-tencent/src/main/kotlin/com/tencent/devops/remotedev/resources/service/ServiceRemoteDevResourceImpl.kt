@@ -14,6 +14,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -39,8 +40,10 @@ import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
@@ -64,8 +67,10 @@ class ServiceRemoteDevResourceImpl(
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
+    private val devcloudService: DevcloudService,
     private val whiteListService: WhiteListService,
-    private val devcloudService: DevcloudService
+    private val deliverControl: DeliverControl,
+    private val imageManageService: ImageManageService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -438,5 +443,37 @@ class ServiceRemoteDevResourceImpl(
         pageSize: Int
     ): Result<Page<DevcloudCVMData>?> {
         return Result(devcloudService.fetchCVMList(userId, projectId, page, pageSize))
+    }
+
+    override fun assignUser(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean> {
+        deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
+        return Result(true)
+    }
+
+    override fun getWorkspaceImageList(projectId: String?): Result<Map<String, Any>> {
+        // 获取基础镜像
+        val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
+
+        // 获取项目特定镜像（如果有）
+        val projectImageMap = if (!projectId.isNullOrBlank()) {
+            val projectImages = imageManageService.getProjectImageList(projectId).map { JsonUtil.toMap(it) }
+            mapOf(projectId to projectImages)
+        } else {
+            emptyMap()
+        }
+
+        // 合并基础镜像和项目镜像
+        val allImages = projectImageMap + mapOf("base" to baseImages)
+
+        return Result(allImages)
+    }
+
+    override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
+        return Result(workspaceService.modifyWorkspaceDisplayName(userId, ip, displayName))
     }
 }

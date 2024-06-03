@@ -165,7 +165,12 @@ class WorkspaceService @Autowired constructor(
         content = ActionAuditContent.CGS_EDIT_CONTENT
     )
     // 修改workspace备注名称
-    fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
+    fun editWorkspace(
+        userId: String,
+        workspaceName: String,
+        displayName: String,
+        checkPermission: Boolean = true
+    ): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
 
         val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -178,7 +183,7 @@ class WorkspaceService @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
-        if (!permissionService.hasUserManager(userId, ws.projectId)) {
+        if (checkPermission && !permissionService.hasUserManager(userId, ws.projectId)) {
             permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
         }
         dslContext.transaction { configuration ->
@@ -189,21 +194,6 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
-        val owner = workspaceSharedDao.fetchWorkspaceSharedInfo(
-            dslContext = dslContext,
-            workspaceName = workspaceName,
-            assignType = WorkspaceShared.AssignType.OWNER
-        ).firstOrNull()?.sharedUser
-        // 同步修改 cc 主机名称
-        workspaceCommon.updateHostMonitor(
-            workspaceName = workspaceName,
-            props = workspaceCommon.genWorkspaceCCInfo(
-                projectId = ws.projectId,
-                workspaceName = displayName.ifBlank { workspaceName },
-                owner = owner
-            ).plus(mapOf("bk_host_name" to displayName)),
-            type = ws.workspaceSystemType
-        )
         return true
     }
 
@@ -1537,6 +1527,26 @@ class WorkspaceService @Autowired constructor(
                 mountType = WorkspaceMountType.START
             )
         }
+    }
+
+    fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Boolean {
+        logger.info("$userId modifyWorkspaceDisplayName $ip|$displayName")
+        val record = workspaceDao.fetchWorkspaceByIp(dslContext, ip).ifEmpty {
+            logger.warn("$ip fetchWorkspaceByIp not found")
+            return false
+        }
+        if (record.size > 1) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.REMOTEDEV_CLIENT_IP_DUPLICATE_ERROR.errorCode,
+                params = arrayOf(ip)
+            )
+        }
+        return editWorkspace(
+            userId = userId,
+            workspaceName = record.first().name,
+            displayName = displayName,
+            checkPermission = false
+        )
     }
 
     companion object {

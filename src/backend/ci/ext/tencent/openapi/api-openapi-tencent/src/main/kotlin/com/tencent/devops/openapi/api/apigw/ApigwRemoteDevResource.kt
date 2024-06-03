@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
@@ -355,4 +356,57 @@ interface ApigwRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int = 20
     ): Result<Page<DevcloudCVMData>?>
+
+    @Operation(summary = "提供给Devcloud分配云桌面拥有者或共享人", tags = ["v4_app_assign_workspace_users"])
+    @POST
+    @Path("/{projectId}/assign/workspace/users")
+    fun assignWorkspaceUsers(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "分配数据", required = true)
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean>
+
+    @Operation(summary = "提供给Devcloud获取云桌面镜像列表", tags = ["v4_app_query_workspace_image_list"])
+    @GET
+    @Path("/workspace/image/list")
+    fun queryWorkspaceImageList(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Map<String, Any>>
+
+    @Operation(summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁", tags = ["v4_app_modify_workspace_display_name"])
+    @POST
+    @Path("/modify/display_name")
+    fun modifyWorkspaceDisplayName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String,
+        @Parameter(description = "别名", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Boolean>
 }
