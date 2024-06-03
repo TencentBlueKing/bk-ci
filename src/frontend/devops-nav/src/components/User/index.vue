@@ -120,14 +120,14 @@
         }
 
         logout (): void {
-         try {
-            const url = new URL(location.protocol + window.getLoginUrl())
-            url.searchParams.delete('is_signin')
-            url.searchParams.append('is_from_logout', '1')
-            window.location.href = url.href
-         } catch (error) {
-            console.error(error)
-         }
+            try {
+                const loginUrl = new URL(window.getLoginUrl())
+                loginUrl.searchParams.delete('is_signin')
+                loginUrl.searchParams.append('is_from_logout', '1')
+                window.location.href = loginUrl.href
+            } catch (error) {
+                console.error(error)
+            }
         }
     }
 </script>

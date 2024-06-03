@@ -329,7 +329,7 @@ class V1YamlBuild @Autowired constructor(
             maxQueueMinutes = 60,
             maxRunningMinutes = 900,
             buildEnv = null,
-            customBuildEnv = null,
+            customEnv = null,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
             thirdPartyWorkspace = null,
