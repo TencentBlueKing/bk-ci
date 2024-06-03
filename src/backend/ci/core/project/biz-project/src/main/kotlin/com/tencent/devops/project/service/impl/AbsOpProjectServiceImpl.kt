@@ -67,6 +67,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.gray:#{null}}")
     private val grayTag: String? = null
+    @Value("\${tag.codecc.gray:#{null}}")
+    private val codeccGrayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
@@ -178,8 +180,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         val routerTag = if (grayFlag) grayTag else null
 
         val otherRouterTagMaps = mutableMapOf<String, String>()
-        if (codeCCGrayFlag && grayTag != null) {
-            otherRouterTagMaps[SystemEnums.CODECC.name] = grayTag
+        if (codeCCGrayFlag && codeccGrayTag != null) {
+            otherRouterTagMaps[SystemEnums.CODECC.name] = codeccGrayTag
         }
         if (repoGrayFlag && grayTag != null) {
             otherRouterTagMaps[SystemEnums.REPO.name] = grayTag

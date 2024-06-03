@@ -80,6 +80,12 @@ class ProjectTagService @Autowired constructor(
     @Value("\${tag.gray:#{null}}")
     private val grayTag: String? = null
 
+    @Value("\${tag.codecc.gray:#{null}}")
+    private val codeccGrayTag: String? = null
+
+    @Value("\${tag.codecc.prod:#{null}}")
+    private val codeccProdTag: String? = null
+
     @Value("\${system.inContainer:#{null}}")
     private val inContainerTags: String? = null
 
@@ -90,8 +96,22 @@ class ProjectTagService @Autowired constructor(
 
     fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums): Boolean {
         val routerTag = when (operateFlag) {
-            grayLabel -> grayTag
-            prodLabel -> prodTag
+            grayLabel -> {
+                if (system == SystemEnums.CODECC) {
+                    codeccGrayTag
+                } else {
+                    grayTag
+                }
+            }
+
+            prodLabel -> {
+                if (system == SystemEnums.CODECC) {
+                    codeccProdTag
+                } else {
+                    grayTag
+                }
+            }
+
             else -> null
         }
 
