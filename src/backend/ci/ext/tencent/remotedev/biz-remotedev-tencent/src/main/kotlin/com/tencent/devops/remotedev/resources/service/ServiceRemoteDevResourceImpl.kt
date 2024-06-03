@@ -1,5 +1,8 @@
 package com.tencent.devops.remotedev.resources.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -7,6 +10,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
@@ -449,17 +454,34 @@ class ServiceRemoteDevResourceImpl(
         val dToken = permissionService.init1Password(
             ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner"),
             ws.workspaceName,
-            60
+            600
         )
-        val rsaPublicKey = RsaUtil.generatePublicKey(Base64.getDecoder().decode(sign.publicKey))
+        val rsaPublicKey = kotlin.runCatching { RsaUtil.generatePublicKey(Base64.getDecoder().decode(sign.publicKey)) }
+            .onFailure { throwTokenFail(desktopIP, "wrong publicKey", sign.publicKey) }.getOrThrow()
         return Result(RsaUtil.rsaEncrypt(dToken, rsaPublicKey))
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_TOKEN_GENERATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#ws?.projectId")],
+        scopeId = "#ws?.projectId",
+        content = ActionAuditContent.CGS_TOKEN_GENERATE_CONTENT
+    )
     fun check(
         ws: WeSecProjectWorkspace,
         sign: DesktopTokenSign,
         desktopIP: String
     ) {
+        // 审计
+        ActionAuditContext.current().addInstanceInfo(
+            ws.workspaceName,
+            desktopIP,
+            null,
+            sign
+        )
         // 校验指纹
         val realFingerprint = DigestUtils.md5Hex("${ws.macAddress}${bkConfig.desktopSdkToken}").uppercase()
         if (realFingerprint != sign.fingerprint) {
