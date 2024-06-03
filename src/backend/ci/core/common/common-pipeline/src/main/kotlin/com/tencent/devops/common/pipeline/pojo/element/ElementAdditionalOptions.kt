@@ -70,7 +70,7 @@ data class ElementAdditionalOptions(
     val enableCustomEnv: Boolean? = true,
     @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
     @Deprecated("移到Element级别来维护，与Job保持层级一致")
-    val customEnv: List<NameAndValue>? = null
+    var customEnv: List<NameAndValue>? = null
 )
 
 enum class RunCondition {

@@ -99,7 +99,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -129,7 +128,6 @@ class CreateControl @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
-    private val rabbitTemplate: RabbitTemplate,
     private val workspaceSharedDao: WorkspaceSharedDao
 ) {
     companion object {
@@ -1028,7 +1026,7 @@ class CreateControl @Autowired constructor(
             buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(userId)) } }
         }
 
-        windowsGpuCheck(userId, workspaceNames.size)
+        whiteListService.windowsGpuCheck(userId, workspaceNames.size)
         workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
         val resourceCount = startCloudResourceCountCheck(
             type = workspaceCreate.windowsType, zone = workspaceCreate.windowsZone, quotaType = QuotaType.DEVCLOUD
@@ -1128,20 +1126,6 @@ class CreateControl @Autowired constructor(
             remoteDevSettingDao.fetchOneSetting(dslContext, userId)
         }
         return userProjectId
-    }
-
-    private fun windowsGpuCheck(userId: String, count: Int) {
-
-        whiteListService.windowsNumberLimit(
-            userId = userId,
-            value = workspaceDao.countUserWorkspace(
-                dslContext = dslContext,
-                userId = userId,
-                unionShared = false,
-                status = WorkspaceStatus.Types.USING.status(),
-                systemType = WorkspaceSystemType.WINDOWS_GPU
-            ) + count
-        )
     }
 
     private fun startCloudResourceCountCheck(type: String, zone: String, quotaType: QuotaType) =

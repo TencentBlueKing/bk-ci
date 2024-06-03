@@ -239,22 +239,23 @@
           ? WOA_LOGIN_SERVICE_URL
           : LOGIN_SERVICE_URL
 
+      const loginUrl = loginUrlPlaceholder.startsWith('//') ? `${location.protocol}${loginUrlPlaceholder}` : loginUrlPlaceholder
       var cUrl =
         location.origin +
         location.pathname +
         encodeURIComponent(location.search)
-      if (/=%s/.test(loginUrlPlaceholder)) {
-        return loginUrlPlaceholder.replace(/%s/, cUrl)
+      if (/=%s/.test(loginUrl)) {
+        return loginUrl.replace(/%s/, cUrl)
       } else {
-        const loginUrl = new URL(loginUrlPlaceholder)
-        if (/=$/.test(loginUrl.search)) {
-          return loginUrlPlaceholder + cUrl
+        const url = new URL(loginUrl)
+        if (/=$/.test(url.search)) {
+          return loginUrl + cUrl
         } else {
-          loginUrl.searchParams.append('c_url', cUrl)
-          return loginUrl.href
+          url.searchParams.append('c_url', cUrl)
+          return url.href
         }
       }
-      return loginUrlPlaceholder
+      return loginUrl
     }
 
     function asyncGet(url, pid, includeCredentials) {
