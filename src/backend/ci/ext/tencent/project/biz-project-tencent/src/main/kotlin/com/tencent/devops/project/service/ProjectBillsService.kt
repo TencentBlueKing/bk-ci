@@ -102,8 +102,8 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE
             )
-            clearCacheAfterCheck()
             logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList|$project2Status")
+            clearCacheAfterCheck()
         }
         return true
     }
@@ -195,8 +195,8 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
             )
-            clearCacheAfterCheck()
             logger.info("check project related product finished, total: $totalCount|$disabledProjectList")
+            clearCacheAfterCheck()
         }
         return true
     }
