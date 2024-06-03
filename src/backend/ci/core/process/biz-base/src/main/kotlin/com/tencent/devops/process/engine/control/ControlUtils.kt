@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
@@ -171,8 +170,7 @@ object ControlUtils {
         containerFinalStatus: BuildStatus,
         variables: Map<String, String>,
         hasFailedTaskInSuccessContainer: Boolean,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
         message.append(
             I18nUtil.getCodeLanMessage(BK_CHECK_TASK_RUN_CONDITION)
@@ -222,8 +220,7 @@ object ControlUtils {
                     buildId = buildId,
                     additionalOptions = additionalOptions,
                     variables = variables,
-                    message = message,
-                    asCodeEnabled = asCodeEnabled
+                    message = message
                 )
             } else -> {
                 message.clear()
@@ -237,8 +234,7 @@ object ControlUtils {
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
         variables: Map<String, String>,
-        message: StringBuilder,
-        asCodeEnabled: Boolean
+        message: StringBuilder
     ): Boolean {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
             !additionalOptions.customCondition.isNullOrBlank()
@@ -256,8 +252,7 @@ object ControlUtils {
         buildId: String,
         runCondition: JobRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
         message.append(
             I18nUtil.getCodeLanMessage(BK_CHECK_JOB_RUN_CONDITION)
@@ -303,8 +298,7 @@ object ControlUtils {
         buildId: String,
         runCondition: StageRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
         var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
@@ -325,48 +319,6 @@ object ControlUtils {
             }
         }
         return skip
-    }
-
-    private fun evalExpression(
-        customCondition: String?,
-        buildId: String,
-        variables: Map<String, Any>,
-        message: StringBuilder
-    ): Boolean {
-        return if (!customCondition.isNullOrBlank()) {
-            try {
-                val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
-                logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=$expressionResult"
-                )
-                message.append(
-                    "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!expressionResult) {
-                            " will be skipped! "
-                        } else {
-                            ""
-                        }
-                )
-                expressionResult
-            } catch (ignore: Exception) {
-                // 异常，则任务表达式为false
-                logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}",
-                    ignore
-                )
-                message.append(
-                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
-                )
-                return false
-            }
-        } else {
-            // 空表达式也认为是false
-            logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
-            message.append("Custom condition is empty, will be skipped!")
-            false
-        }
     }
 
     private fun evalExpressionAsCode(
