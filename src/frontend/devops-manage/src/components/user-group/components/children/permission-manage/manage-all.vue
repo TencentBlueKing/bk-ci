@@ -5,19 +5,19 @@
         :value="serveValue"
         :options="serveList"
         prefix="所属服务"
-        @handle-change="value => handleChange(value, 'serve')"
+        @handle-change="value => handleSearchChange(value, 'serve')"
       />
       <select-group
         :value="resourceValue"
         :options="resourceList"
         prefix="资源"
-        @handle-change="value => handleChange(value, 'resource')"
+        @handle-change="value => handleSearchChange(value, 'resource')"
       />
       <select-group
         :value="operateValue"
         :options="operateList"
         prefix="操作"
-        @handle-change="value => handleChange(value, 'operate')"
+        @handle-change="value => handleSearchChange(value, 'operate')"
       />
       <bk-search-select
         v-model="searchValue"
@@ -29,33 +29,57 @@
     </div>
     <div class="manage-article">
       <div class="manage-aside">
-        <manage-aside :member-list="memberList" @handle-click="handleClick" />
+        <manage-aside :member-list="memberList" @handle-click="handleAsideClick" />
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
-          <bk-button @click="handleReset">{{ t('批量续期') }}</bk-button>
-          <bk-button @click="handleReset">{{ t('批量移交') }}</bk-button>
-          <bk-button @click="handleReset">{{ t('批量移出') }}</bk-button>
+          <bk-button @click="batchRenewal">批量续期</bk-button>
+          <bk-button @click="batchHandover">批量移交</bk-button>
+          <bk-button @click="batchRemove">批量移出</bk-button>
         </div>
         <div class="manage-content-project">
           <p class="project-group">项目级用户组</p>
           <div class="project-group-table">
-            <p class="group-title" @click="toggleTable">
-              项目（project）
-              <span class="group-num">3</span>
-            </p>
-            <transition name="collapse">
-              <div v-if="isTableVisible">
-                <bk-table
-                  max-height="320"
-                  :data="projectTable"
-                  :column="projectColumn"
-                  show-overflow-tooltip
-                  class="person-table"
-                >
-                </bk-table>
-              </div>
-            </transition>
+            <bk-collapse>
+              <bk-collapse-panel v-model="activeIndex">
+                <template #header>
+                  <p class="group-title">
+                    <i class="permission-icon permission-icon-down-shape"></i>
+                    项目（project）
+                    <span class="group-num">3</span>
+                  </p>
+                </template>
+                <template #content>
+                  <bk-table
+                    max-height="200"
+                    :data="projectTable"
+                    show-overflow-tooltip
+                  >
+                    <bk-table-column label="用户组" prop="usergroup">
+                    </bk-table-column>
+                    <bk-table-column label="用户描述" prop="describe" />
+                    <bk-table-column label="有效期" prop="validity" />
+                    <bk-table-column label="加入时间" prop="data" />
+                    <bk-table-column label="加入方式/操作人" prop="type" />
+                    <bk-table-column label="操作">
+                      <template #default="{row}">
+                        <div class="operation-btn">
+                          <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                            <bk-button text theme="primary" :disabled="row.isUninstall" @click="handleRenewal(row)">续期</bk-button>
+                          </span>
+                          <span v-bk-tooltips="{ content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。', disabled: !row.isUninstall }">
+                            <bk-button text theme="primary" :disabled="row.isUninstall" @click="handleHandover(row)">移交</bk-button>
+                          </span>
+                          <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                            <bk-button text theme="primary" :disabled="row.isUninstall" @click="handleRemove(row)">移出</bk-button>
+                          </span>
+                        </div>
+                      </template>
+                    </bk-table-column>
+                  </bk-table>
+                </template>
+              </bk-collapse-panel>
+            </bk-collapse>
           </div>
         </div>
         <div class="manage-content-resource">
@@ -68,12 +92,30 @@
             <transition name="collapse">
               <div v-if="isTableVisible">
                 <bk-table
-                  max-height="320"
+                  max-height="200"
                   :data="projectTable"
                   show-overflow-tooltip
-                  class="person-table"
                 >
-                  <bk-table-column label="用户" prop="person" />
+                  <bk-table-column label="用户组" prop="usergroup" />
+                  <bk-table-column label="用户描述" prop="usergroup" />
+                  <bk-table-column label="有效期" prop="usergroup" />
+                  <bk-table-column label="加入时间" prop="usergroup" />
+                  <bk-table-column label="加入方式/操作人" prop="usergroup" />
+                  <bk-table-column label="操作">
+                    <template #default="{ row }">
+                      <div class="operation-btn">
+                        <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                          <bk-button text theme="primary" :disabled="row.isUninstall">续期</bk-button>
+                        </span>
+                        <span v-bk-tooltips="{ content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。', disabled: !row.isUninstall }">
+                          <bk-button text theme="primary" :disabled="row.isUninstall">移交</bk-button>
+                        </span>
+                        <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                          <bk-button text theme="primary" :disabled="row.isUninstall">移出</bk-button>
+                        </span>
+                      </div>
+                    </template>
+                  </bk-table-column>
                 </bk-table>
               </div>
             </transition>
@@ -86,12 +128,32 @@
             <transition name="collapse">
               <div v-if="isTableVisible">
                 <bk-table
-                  max-height="320"
+                  max-height="200"
                   :data="projectTable"
                   show-overflow-tooltip
-                  class="person-table"
                 >
-                  <bk-table-column label="用户" prop="person" />
+                  <bk-table-column label="用户组" prop="usergroup" />
+                  <bk-table-column label="用户描述" prop="usergroup" />
+                  <bk-table-column label="有效期" prop="usergroup" />
+                  <bk-table-column label="加入时间" prop="usergroup" />
+                  <bk-table-column label="加入方式/操作人" prop="usergroup" />
+                  <bk-table-column label="操作">
+                    <template #default="{ row }">
+                      <div class="operation-btn">
+                        <div class="operation-btn">
+                          <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                            <bk-button text theme="primary" :disabled="row.isUninstall">续期</bk-button>
+                          </span>
+                          <span v-bk-tooltips="{ content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。', disabled: !row.isUninstall }">
+                            <bk-button text theme="primary" :disabled="row.isUninstall">移交</bk-button>
+                          </span>
+                          <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                            <bk-button text theme="primary" :disabled="row.isUninstall">移出</bk-button>
+                          </span>
+                        </div>
+                      </div>
+                    </template>
+                  </bk-table-column>
                 </bk-table>
               </div>
             </transition>
@@ -179,40 +241,37 @@ const searchData = ref([
   },
 ]);
 
-const projectTable = ref([]);
-const projectColumn = ref([
-  {
-    label: '用户组',
-    field: 'usergroup',
-  },
-  {
-    label: '用户描述',
-    field: 'usergroup',
-  },
-  {
-    label: '有效期',
-    field: 'usergroup',
-  },
-  {
-    label: '加入时间',
-    field: 'usergroup',
-  },
-  {
-    label: '加入方式/操作人',
-    field: 'usergroup',
-  },
-  {
-    // label: '操作',
-    // field: 'action',
-    // render: ({ row }) => (
-    //   <div>
-    //     <bk-button text theme="primary">续期</bk-button>
-    //     <bk-button text theme="primary">移交</bk-button>
-    //     <bk-button text theme="primary">移出</bk-button>
-    //   </div>
-    // ),
-  },
-]);
+const projectTable = ref([{
+  usergroup: 'asdsa',
+  describe: 'kjkjkjk',
+  validity: '0505',
+  data: '08-18',
+  type: '加入组',
+  isUninstall: true,
+},
+{
+  usergroup: 'asdsa',
+  describe: 'kjkjkjk',
+  validity: '0505',
+  data: '08-18',
+  type: '加入组',
+  isUninstall: false,
+}, {
+  usergroup: 'asdsa',
+  describe: 'kjkjkjk',
+  validity: '0505',
+  data: '08-18',
+  type: '加入组',
+  isUninstall: false,
+},
+{
+  usergroup: 'asdsa',
+  describe: 'kjkjkjk',
+  validity: '0505',
+  data: '08-18',
+  type: '加入组',
+  isUninstall: false,
+}]);
 
 const stateRefs = {
   serve: serveValue,
@@ -242,16 +301,23 @@ const memberList = ref([
   },
 ]);
 
+const activeIndex =  ref([0]);
+
 watch([serveValue, resourceValue, operateValue, searchValue], () => {
   // 侦听值的变化，调用接口获取筛选数据
   console.log(serveValue.value, resourceValue.value, operateValue.value, searchValue.value, '搜索的数据');
 });
 
-function handleChange(value, target) {
+function handleSearchChange(value, target) {
   stateRefs[target].value = value;
 }
+const groups = [
+  { title: '流水线-流水线组', num: 3, data: projectTable },
+  { title: '流水线-流水线组', num: 3, data: projectTable },
+  { title: '流水线-流水线组', num: 3, data: projectTable },
+];
 
-function handleClick(id) {
+function handleAsideClick(id) {
   console.log(id, '这里根据id展示表格数据');
 }
 function toggleTable() {
@@ -306,6 +372,18 @@ function toggleTable() {
       margin-left: 16px;
       overflow-y: auto;
 
+      &::-webkit-scrollbar-thumb {
+        background-color: #c4c6cc !important;
+        border-radius: 5px !important;
+        &:hover {
+          background-color: #979ba5 !important;
+        }
+      }
+      &::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+      }
+
       .manage-content-btn{
         margin-bottom: 10px;
 
@@ -315,7 +393,7 @@ function toggleTable() {
       }
 
       .manage-content-project{
-        max-height: 280px;
+        max-height: 300px;
         margin-bottom: 15px;
         background: #FFFFFF;
         padding: 16px 24px;
@@ -329,7 +407,6 @@ function toggleTable() {
       }
 
       .project-group {
-        margin-bottom: 16px;
         font-family: MicrosoftYaHei-Bold;
         font-weight: 700;
         font-size: 14px;
@@ -341,12 +418,17 @@ function toggleTable() {
       .project-group-table{
         width: 100%;
 
+        ::v-deep .bk-collapse-content {
+          padding: 5px 0 !important;
+        }
+
         .group-title {
           width: 100%;
           height: 26px;
           line-height: 26px;
+          margin-top: 16px;
           padding-left: 10px;
-          margin-bottom: 10px;
+          margin-bottom: 4px;
           background: #EAEBF0;
           border-radius: 2px;
           font-family: MicrosoftYaHei;
@@ -367,8 +449,15 @@ function toggleTable() {
           letter-spacing: 0;
           text-align: center;
         }
+
+        .operation-btn {
+          display: flex;
+          justify-content: space-around;
+        }
       }
     }
   }
 }
+
+
 </style>
