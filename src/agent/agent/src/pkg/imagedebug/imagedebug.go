@@ -515,7 +515,7 @@ func CreateExecServer(
 		Cmd:         conf.Cmd,
 	})
 
-	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s", config.GAgentEnv.AgentIp, conf.Port, exec.ID, containerId)
+	url := fmt.Sprintf("ws://%s:%d/start_exec?exec_id=%s&container_id=%s", config.GAgentEnv.GetAgentIp(), conf.Port, exec.ID, containerId)
 
 	// 上报结束并附带 url
 	imageDebugLogs.Infof("ws url: %s", url)

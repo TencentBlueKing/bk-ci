@@ -57,7 +57,7 @@ func Run(isDebug bool) {
 	}
 
 	// 数据采集
-	go collector.DoAgentCollect()
+	go collector.Collect()
 
 	// 定期清理
 	go cron.CleanJob()

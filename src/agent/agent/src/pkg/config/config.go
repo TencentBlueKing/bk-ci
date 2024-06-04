@@ -105,17 +105,29 @@ type AgentConfig struct {
 // AgentEnv Agent 环境配置
 type AgentEnv struct {
 	OsName           string
-	AgentIp          string
+	agentIp          string
 	HostName         string
 	SlaveVersion     string
 	AgentVersion     string
 	AgentInstallPath string
 }
 
+func (e *AgentEnv) GetAgentIp() string {
+	return e.agentIp
+}
+
+func (e *AgentEnv) SetAgentIp(ip string) {
+	// IP变更时发送事件
+	if e.agentIp != "" && e.agentIp != ip && ip != "127.0.0.1" {
+		EBus.Publish(IpEvent, ip)
+	}
+	e.agentIp = ip
+}
+
 var GAgentEnv *AgentEnv
 var GAgentConfig *AgentConfig
 var UseCert bool
-var IsDebug bool = false
+var IsDebug = false
 
 // Init 加载和初始化配置
 func Init(isDebug bool) {
@@ -142,12 +154,11 @@ func LoadAgentEnv() {
 	   忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
 	   更像是一些路由器的192开头的IP，属于干扰IP，安装了这类软件的windows机器IP都会变成相同，所以需要忽略掉
 	*/
+	var splitIps []string
 	if len(GAgentConfig.IgnoreLocalIps) > 0 {
-		splitIps := util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
-		GAgentEnv.AgentIp = systemutil.GetAgentIp(splitIps)
-	} else {
-		GAgentEnv.AgentIp = systemutil.GetAgentIp([]string{})
+		splitIps = util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
 	}
+	GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
 
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()

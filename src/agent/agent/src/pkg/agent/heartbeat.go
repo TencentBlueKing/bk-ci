@@ -109,8 +109,8 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 	*/
 	if len(config.GAgentConfig.IgnoreLocalIps) > 0 {
 		splitIps := util.SplitAndTrimSpace(config.GAgentConfig.IgnoreLocalIps, ",")
-		if util.Contains(splitIps, config.GAgentEnv.AgentIp) { // Agent检测到的IP与要忽略的本地VPN IP相同，则更换真正IP
-			config.GAgentEnv.AgentIp = systemutil.GetAgentIp(splitIps)
+		if util.Contains(splitIps, config.GAgentEnv.GetAgentIp()) { // Agent检测到的IP与要忽略的本地VPN IP相同，则更换真正IP
+			config.GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
 		}
 	}
 
