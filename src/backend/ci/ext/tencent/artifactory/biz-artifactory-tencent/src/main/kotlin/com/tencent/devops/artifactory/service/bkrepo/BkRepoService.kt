@@ -180,7 +180,7 @@ class BkRepoService @Autowired constructor(
     ) {
         logger.info(
             "setProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-                "argPath: $argPath, properties: $properties"
+                    "argPath: $argPath, properties: $properties"
         )
         if (properties.isEmpty()) {
             logger.info("property empty")
@@ -198,7 +198,7 @@ class BkRepoService @Autowired constructor(
     ): List<Property> {
         logger.info(
             "getProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
-                " path: $path"
+                    " path: $path"
         )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val matadataMap =
@@ -230,8 +230,8 @@ class BkRepoService @Autowired constructor(
     ): List<FileDetail> {
         logger.info(
             "getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
-                "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
-                "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo"
+                    "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                    "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo"
         )
 
         var targetProjectId = projectId
@@ -334,7 +334,7 @@ class BkRepoService @Autowired constructor(
     ): List<AppFileInfo> {
         logger.info(
             "getBuildFileList, userId: $userId, projectId: $projectId," +
-                " pipelineId: $pipelineId, buildId: $buildId"
+                    " pipelineId: $pipelineId, buildId: $buildId"
         )
         pipelineService.validatePermission(
             userId,
@@ -533,7 +533,7 @@ class BkRepoService @Autowired constructor(
 
                     logger.info(
                         "pipelineHasPermissionList.contains(pipelineId):" +
-                            " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}"
+                                " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}"
                     )
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
@@ -809,7 +809,7 @@ class BkRepoService @Autowired constructor(
     ): String {
         logger.info(
             "externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
-                " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
+                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
         )
         val shareUri = bkRepoClient.createShareUri(
             creatorId = creatorId,
@@ -820,11 +820,11 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return StringUtil.chineseUrlEncode(
-            "${
-                HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-            }/bkrepo/api/external/repository$shareUri&download=true&userId=$userId"
-        )
+        return HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!) + "/bkrepo/api/external/repository${
+            StringUtil.repoPathUrlEncode(
+                shareUri
+            )
+        }&download=true&userId=$userId"
     }
 
     fun internalDownloadUrl(
