@@ -41,9 +41,16 @@
                         :handle-change="handleUpdateStageControl"
                     />
                 </form-field>
-                <form-field v-if="showCondition" :label="$t('storeMap.customConditionExp')">
+                <form-field
+                    v-if="showCondition"
+                    required
+                    :label="$t('storeMap.customConditionExp')"
+                    :is-error="errors.has('customCondition')"
+                    :error-msg="errors.first('customCondition')"
+                >
                     <vuex-input
                         :value="customConditionExpress"
+                        v-validate.initial="showCondition ? 'required' : ''"
                         name="customCondition"
                         :handle-change="handleUpdateStageControl"
                     >
