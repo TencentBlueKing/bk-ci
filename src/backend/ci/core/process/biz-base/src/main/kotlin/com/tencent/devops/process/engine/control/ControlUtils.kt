@@ -243,7 +243,11 @@ object ControlUtils {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
             !additionalOptions.customCondition.isNullOrBlank()
         ) {
-            return !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
+            return if (asCodeEnabled) {
+                !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
+            } else {
+                !evalExpression(additionalOptions.customCondition, buildId, variables, message)
+            }
         }
 
         return false
@@ -274,7 +278,11 @@ object ControlUtils {
                 false
             } // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpressionAsCode(customCondition, buildId, variables, message)
+                return if (asCodeEnabled) {
+                    !evalExpressionAsCode(customCondition, buildId, variables, message)
+                } else {
+                    !evalExpression(customCondition, buildId, variables, message)
+                }
             }
             else -> {
                 message.append(runCondition)
@@ -310,7 +318,11 @@ object ControlUtils {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpressionAsCode(customCondition, buildId, variables, message)
+                return if (asCodeEnabled) {
+                    !evalExpressionAsCode(customCondition, buildId, variables, message)
+                } else {
+                    !evalExpression(customCondition, buildId, variables, message)
+                }
             }
             else -> return false // 其它类型直接返回不跳过
         }
