@@ -180,17 +180,16 @@ export function ifShowNotice (currentNotice) {
 }
 
 export function showLoginPopup () {
-    const successUrl = `${window.location.origin}/console/static/login_success.html`
+    const successUrl = `${window.location.origin}/console/static/login_done.html`
 
     // 系统的登录页地址
-    let siteLoginUrl = window.getLoginUrl()
+    const siteLoginUrl = window.getLoginUrl()
     if (!siteLoginUrl) {
         console.error('Login URL not configured!')
         return
     }
 
     // 处理登录地址为登录小窗需要的格式，主要是设置c_url参数
-    !siteLoginUrl.startsWith('https:') && (siteLoginUrl = `${location.protocol}${siteLoginUrl}`)
     const loginURL = new URL(siteLoginUrl)
     loginURL.searchParams.set('c_url', successUrl)
     const pathname = loginURL.pathname.endsWith('/') ? loginURL.pathname : `${loginURL.pathname}/`

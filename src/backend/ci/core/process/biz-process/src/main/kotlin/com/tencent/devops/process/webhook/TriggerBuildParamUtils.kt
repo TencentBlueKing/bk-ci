@@ -57,6 +57,8 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_REF_T
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_TIME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_URL
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKNAMES
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REPO_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_DESCRIPTION
@@ -103,6 +105,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REVIEW_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA_SHORT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_WORKSPACE
 
 @SuppressWarnings("TooManyFunctions")
 object TriggerBuildParamUtils {
@@ -144,7 +147,10 @@ object TriggerBuildParamUtils {
             CI_PIPELINE_CREATOR,
             CI_PIPELINE_MODIFIER,
             CI_PIPELINE_VERSION,
-            CI_BUILD_START_TYPE
+            CI_BUILD_START_TYPE,
+            CI_WORKSPACE,
+            CI_FAILED_TASKNAMES,
+            CI_FAILED_TASKS
         ).sortedBy {
             it
         }.map {

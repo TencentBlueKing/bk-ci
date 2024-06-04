@@ -96,10 +96,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
-                    // todo action
+                    includePushAction = push.action,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(push.enable)
+                ).checkTriggerElementEnable(push.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -115,7 +117,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = CodeEventType.TAG_PUSH,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(tag.enable)
+                ).checkTriggerElementEnable(tag.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -136,11 +140,13 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    // todo action
+                    includeMrAction = mr.action,
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(mr.enable)
+                ).checkTriggerElementEnable(mr.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -153,7 +159,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = CodeEventType.REVIEW,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(review.enable)
+                ).checkTriggerElementEnable(review.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -165,7 +173,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = CodeEventType.ISSUES,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(issue.enable)
+                ).checkTriggerElementEnable(issue.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -185,7 +195,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = CodeEventType.NOTE,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(note.enable)
+                ).checkTriggerElementEnable(note.enable).apply {
+                    version = "2.*"
+                }
             )
         }
     }
@@ -231,8 +243,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    // todo action
-                    action = null
+                    action = git.includePushAction
                 )
 
                 CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
@@ -260,8 +271,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    // todo action
-                    action = null
+                    action = git.includeMrAction
                 )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
@@ -311,6 +321,21 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathsIgnore = git.excludePaths?.disjoin()
                 )
 
+                CodeEventType.PULL_REQUEST -> nowExist.mr = MrRule(
+                    name = git.name.nullIfDefault(defaultName),
+                    enable = git.enable.nullIfDefault(true),
+                    targetBranches = git.branchName?.disjoin(),
+                    targetBranchesIgnore = git.excludeBranchName?.disjoin(),
+                    sourceBranches = git.includeSourceBranchName?.disjoin(),
+                    sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers,
+                    pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
+                    action = git.includeMrAction
+                )
+
                 else -> {}
             }
             aspectWrapper.setYamlTriggerOn(nowExist, PipelineTransferAspectWrapper.AspectType.AFTER)
@@ -340,12 +365,14 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            // todo action
+                            includeMrAction = push.action,
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
-                ).checkTriggerElementEnable(push.enable)
+                ).checkTriggerElementEnable(push.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -365,7 +392,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             repositoryName = triggerOn.repoName
                         )
                     )
-                ).checkTriggerElementEnable(tag.enable)
+                ).checkTriggerElementEnable(tag.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -388,13 +417,15 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             enableCheck = mr.reportCommitCheck,
                             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
-                            // todo action
+                            includeMrAction = mr.action,
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
-                ).checkTriggerElementEnable(mr.enable)
+                ).checkTriggerElementEnable(mr.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -411,7 +442,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             repositoryName = triggerOn.repoName
                         )
                     )
-                ).checkTriggerElementEnable(review.enable)
+                ).checkTriggerElementEnable(review.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -427,7 +460,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             repositoryName = triggerOn.repoName
                         )
                     )
-                ).checkTriggerElementEnable(issue.enable)
+                ).checkTriggerElementEnable(issue.enable).apply {
+                    version = "2.*"
+                }
             )
         }
 
@@ -451,7 +486,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             repositoryName = triggerOn.repoName
                         )
                     )
-                ).checkTriggerElementEnable(note.enable)
+                ).checkTriggerElementEnable(note.enable).apply {
+                    version = "2.*"
+                }
             )
         }
     }
@@ -515,7 +552,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    // todo action
+                    includeMrAction = mr.action,
                     eventType = CodeEventType.PULL_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName

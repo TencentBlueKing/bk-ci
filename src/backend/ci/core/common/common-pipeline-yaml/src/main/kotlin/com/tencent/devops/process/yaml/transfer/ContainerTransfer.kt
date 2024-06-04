@@ -55,6 +55,7 @@ import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_QU
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
+import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.job.Container3
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
@@ -131,7 +132,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
             maxQueueMinutes = DEFAULT_JOB_MAX_QUEUE_MINUTES,
             maxRunningMinutes = job.timeoutMinutes?.toIntOrNull() ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES,
             buildEnv = buildEnv,
-            customBuildEnv = job.env,
+            customEnv = ModelCreateUtil.getCustomEnv(job.env),
             jobControlOption = getJobControlOption(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
@@ -240,7 +241,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
             },
             steps = steps,
             timeoutMinutes = makeJobTimeout(job.jobControlOption),
-            env = null,
+            env = job.customEnv?.associateBy({ it.key ?: "" }) {
+                it.value
+            }?.ifEmpty { null },
             continueOnError = job.jobControlOption?.continueWhenFailed.nullIfDefault(DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
                 getMatrixFromJob(job.matrixControlOption)
