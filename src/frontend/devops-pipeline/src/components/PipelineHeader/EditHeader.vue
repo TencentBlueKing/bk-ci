@@ -87,6 +87,7 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { UI_MODE } from '@/utils/pipelineConst'
+    import { showPipelineCheckMsg } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
@@ -278,28 +279,9 @@
                     const { projectId, pipelineId } = this.$route.params
 
                     if (e.code === 2101244) {
-                        const h = this.$createElement
-                        this.$bkMessage({
-                            theme: 'error',
-                            delay: 0,
-                            ellipsisLine: 0,
-                            message: h('div', {
-                                class: 'pipeline-save-error-list-box'
-                            }, e.data.map(item => h('div', {
-                                class: 'pipeline-save-error-list-item'
-                            }, [
-                                h('p', {}, item.errorTitle),
-                                h('ul', {
-                                    class: 'pipeline-save-error-list'
-                                }, item.errorDetails.map(err => h('li', {
-                                    domProps: {
-                                        innerHTML: err
-                                    }
-                                })))
-                            ])))
-                        })
+                        showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
                     } else {
-                        this.handleError({
+                        this.handleError(e, {
                             projectId,
                             resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EDIT

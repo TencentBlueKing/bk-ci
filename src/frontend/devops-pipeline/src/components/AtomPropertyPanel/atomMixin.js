@@ -50,7 +50,12 @@ import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
 import FormFieldGroup from './FormFieldGroup'
+import StaffInput from '@/components/atomFormField/StaffInput'
 import CompositeInput from '@/components/atomFormField/CompositeInput'
+import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
+import EnumButton from '@/components/atomFormField/EnumButton'
+import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
+import Tips from '@/components/AtomFormComponent/Tips'
 
 const atomMixin = {
     props: {
@@ -96,8 +101,13 @@ const atomMixin = {
         AutoComplete,
         DevopsSelect,
         AtomMarkdown,
+        StaffInput,
         FormFieldGroup,
-        CompositeInput
+        CompositeInput,
+        ConditionalInputSelector,
+        EnumButton,
+        TipsSimple,
+        Tips
     },
     computed: {
         ...mapGetters('atom', [

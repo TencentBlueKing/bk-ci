@@ -289,7 +289,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             create = false,
             versionStatus = VersionStatus.RELEASED,
-            channelCode = pipeline.channelCode
+            channelCode = pipeline.channelCode,
+            yamlInfo = request.yamlInfo
         )
         val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         // 如果不匹配已有状态则报错，需要用户重新刷新页面
@@ -407,7 +408,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yaml = YamlWithVersion(versionTag = draftVersion.yamlVersion, yamlStr = draftVersion.yaml),
-            baseVersion = draftVersion.baseVersion
+            baseVersion = draftVersion.baseVersion,
+            yamlInfo = request.yamlInfo
         )
         // 添加标签
         pipelineGroupService.addPipelineLabel(
@@ -672,7 +674,6 @@ class PipelineVersionFacadeService @Autowired constructor(
         } else {
             // 修改已存在的流水线
             val isTemplate = templateService.isTemplatePipeline(projectId, pipelineId)
-            val draft = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
             val release = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
             val savedSetting = pipelineSettingFacadeService.saveSetting(
                 userId = userId,
@@ -681,7 +682,6 @@ class PipelineVersionFacadeService @Autowired constructor(
                 setting = setting ?: modelAndYaml.modelAndSetting.setting,
                 checkPermission = false,
                 versionStatus = versionStatus,
-                updateVersion = draft == null,
                 dispatchPipelineUpdateEvent = false,
                 updateLabels = false
             )

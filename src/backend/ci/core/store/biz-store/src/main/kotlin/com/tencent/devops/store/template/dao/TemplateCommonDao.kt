@@ -68,6 +68,10 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
         }
     }
 
+    override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
+        return null
+    }
+
     override fun getStorePublicFlagByCode(dslContext: DSLContext, storeCode: String): Boolean {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.select(PUBLIC_FLAG).from(this)

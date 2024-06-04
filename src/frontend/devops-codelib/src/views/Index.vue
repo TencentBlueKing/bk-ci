@@ -167,6 +167,9 @@
             },
             userId () {
                 return this.$route.query.userId || ''
+            },
+            resetType () {
+                return this.$route.query.resetType || ''
             }
         },
 
@@ -196,7 +199,6 @@
             this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             this.init()
             this.projectList = this.$store.state.projectList
-
             this.refreshCodelibList()
             if (
                 this.$route.hash.includes('popupGit')
@@ -213,6 +215,12 @@
                 const query = { ...this.$route.query }
                 delete query.userId
                 delete query.resetType
+                this.$router.push({
+                    query
+                })
+            } else if (!this.resetType && this.userId) {
+                const query = { ...this.$route.query }
+                delete query.userId
                 this.$router.push({
                     query
                 })

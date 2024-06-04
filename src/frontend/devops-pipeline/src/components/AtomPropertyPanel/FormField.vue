@@ -64,8 +64,16 @@
         },
         render (h) {
             const { label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider } = this
+            const descMap = desc.split('\n')
             return (
-                <div class={{ 'form-field': true, 'bk-form-item': !inline, 'form-field-group-item': type === 'groupItem', 'bk-form-inline-item': inline, 'is-required': required, 'is-danger': isError }} >
+                <div class={{
+                    'form-field': true,
+                    'bk-form-item': !inline,
+                    'form-field-group-item': type === 'groupItem',
+                    'bk-form-inline-item': inline,
+                    'is-required': required,
+                    'is-danger': isError
+                }} >
                     { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>{label}{hideColon ? '' : '：'}
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
@@ -73,11 +81,21 @@
                         { label.trim() && desc.trim() && <bk-popover placement="top">
                             <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
                             <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
-                                <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
+                                <div>
+                                    {
+                                        descMap.length > 1
+                                        ? descMap.map(item => (
+                                            <div>{item}</div>
+                                        ))
+                                        : desc
+                                    }
+                                    { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
+                                </div>
                             </div>
                         </bk-popover>
                     }
                     </label> }
+                    
                     <div class='bk-form-content'>
                         {$slots.default}
                         {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
@@ -138,7 +156,6 @@
     .desc-link {
         color: #3c96ff;
     }
-    
     .bottom-border-divider {
         height: 1px;
         width: 100%;

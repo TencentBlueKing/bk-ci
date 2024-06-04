@@ -148,8 +148,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
     override fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String,
-        idcFlag: Boolean
+        pkgPath: String
     ): String {
         val repoPrefixUrl = getRepoPrefixUrl(storeType)
         val temporaryAccessUrls = bkRepoClient.createTemporaryAccessUrl(
@@ -167,8 +166,6 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         )
         return when {
             temporaryAccessUrls.isEmpty() -> ""
-            !idcFlag && storeType == StoreTypeEnum.DEVX && bkRepoClientConfig.bkRepoDevxDevnetHost.isNotBlank() ->
-                temporaryAccessUrls[0].url.replace(repoPrefixUrl, bkRepoClientConfig.bkRepoDevxDevnetHost)
             else -> temporaryAccessUrls[0].url
         }
     }

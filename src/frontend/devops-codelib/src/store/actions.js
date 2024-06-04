@@ -468,9 +468,10 @@ const actions = {
         triggerUser = '',
         pipelineId = '',
         startTime = '',
-        endTime = ''
+        endTime = '',
+        reason = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineId=${pipelineId}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineId=${pipelineId}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}&reason=${reason}`)
     },
 
     /**
@@ -481,10 +482,11 @@ const actions = {
         eventId,
         page,
         pageSize,
+        reason,
         pipelineId
     }) {
         let queryUrl = ''
-        queryUrl = pipelineId ? `page=${page}&pageSize=${pageSize}&pipelineId=${pipelineId}` : `page=${page}&pageSize=${pageSize}`
+        queryUrl = pipelineId ? `page=${page}&pageSize=${pageSize}&reason=${reason}&pipelineId=${pipelineId}` : `reason=${reason}&page=${page}&pageSize=${pageSize}`
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail?${queryUrl}`)
     },
 
@@ -538,9 +540,9 @@ const actions = {
     fetchAtomModal ({ commit }, {
         projectCode,
         atomCode,
-        version = '1.*',
         queryOfflineFlag = false
     }) {
+        const version = atomCode === 'codeGitWebHookTrigger' ? '2.*' : '1.*'
         return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
     },
 
@@ -601,6 +603,13 @@ const actions = {
             id: _.pipelineId,
             name: _.pipelineName
         })))
+    },
+    fetchTriggerReasonNum ({ commit }, {
+        projectId,
+        eventId,
+        pipelineId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/triggerReasonStatistics?pipelineId=${pipelineId}`)
     }
 }
 

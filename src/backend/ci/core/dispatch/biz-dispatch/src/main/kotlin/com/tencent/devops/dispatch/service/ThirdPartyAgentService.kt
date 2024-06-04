@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -39,7 +40,9 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
@@ -87,7 +90,8 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
+    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService,
+    private val tokenService: ClientTokenService
 ) {
     @Value("\${thirdagent.workerErrorTemplate:#{null}}")
     val workerErrorRtxTemplate: String? = null
@@ -99,7 +103,8 @@ class ThirdPartyAgentService @Autowired constructor(
         retryCount: Int = 0,
         dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
         envId: Long?,
-        ignoreEnvAgentIds: Set<String>?
+        ignoreEnvAgentIds: Set<String>?,
+        jobId: String?
     ) {
         with(dispatchMessage.event) {
             try {
@@ -120,7 +125,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     executeCount = executeCount,
                     containerHashId = containerHashId,
                     envId = envId,
-                    ignoreEnvAgentIds = ignoreEnvAgentIds
+                    ignoreEnvAgentIds = ignoreEnvAgentIds,
+                    jobId = jobId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
@@ -132,7 +138,8 @@ class ThirdPartyAgentService @Autowired constructor(
                         retryCount = retryCount + 1,
                         dockerInfo = dockerInfo,
                         envId = envId,
-                        ignoreEnvAgentIds = ignoreEnvAgentIds
+                        ignoreEnvAgentIds = ignoreEnvAgentIds,
+                        jobId = jobId
                     )
                 } else {
                     throw OperationException("Fail to add the third party agent build")
@@ -706,11 +713,102 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
+    fun countProjectJobRunningAndQueueAll(
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        projectId: String
+    ): Long {
+        return thirdPartyAgentBuildDao.countProjectJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            projectId = projectId
+        )
+    }
+
+    fun countAgentsJobRunningAndQueueAll(
+        projectId: String,
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        agentIds: Set<String>
+    ): Map<String, Int> {
+        return thirdPartyAgentBuildDao.countAgentsJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            agentIds = agentIds,
+            projectId = projectId
+        )
+    }
+
+    fun agentRepeatedInstallAlarm(
+        projectId: String,
+        agentId: String,
+        newIp: String
+    ) {
+        val agent = try {
+            client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId).data ?: return
+        } catch (e: RemoteServiceException) {
+            logger.warn("Fail to get the agent($agentId) of project($projectId) because of ${e.message}")
+            return
+        }
+
+        if (agent.ip == newIp || agent.ip.isIgnoreLocalIp() || newIp.isIgnoreLocalIp()) {
+            return
+        }
+
+        val redisKey = "$AGENT_REPEATED_INSTALL_ALARM:$agentId"
+        if (redisOperation.get(redisKey) == null) {
+            redisOperation.set(redisKey, "", 60 * 60 * 24)
+        } else {
+            return
+        }
+
+        val users = mutableSetOf(agent.createUser)
+        val nodeHashId = agent.nodeId ?: return
+        val authUsers = kotlin.runCatching {
+            client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectId,
+                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+                resourceCode = nodeHashId
+            ).data
+        }.onFailure {
+            logger.warn("agentStartup|getResourceGroupMembers|$projectId|$nodeHashId")
+        }.getOrNull()
+        users.addAll(authUsers ?: emptySet())
+        kotlin.runCatching {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                SendNotifyMessageTemplateRequest(
+                    templateCode = "THIRDPART_AGENT_REPEAT_INSTALL",
+                    receivers = users,
+                    titleParams = mapOf(
+                        "projectId" to projectId,
+                        "agentId" to agentId
+                    ),
+                    bodyParams = mapOf(
+                        "oldIp" to agent.ip,
+                        "newIp" to newIp,
+                        "url" to "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
+                                "nodeDetail/$nodeHashId"
+                    )
+                )
+            ) }.onFailure {
+            logger.warn("agentStartup|sendNotifyMessageByTemplate|$projectId|$agentId")
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
 
         private const val QUEUE_RETRY_COUNT = 3
 
-        private const val THIRD_DOCKER_TASK_INTERVAL: Long = 2000 // 轮询间隔时间，单位为毫秒
+        private const val AGENT_REPEATED_INSTALL_ALARM = "environment:thirdparty:goagent:repeatedinstall"
+
+        private fun String.isIgnoreLocalIp() = this.trim() == "127.0.0.1" || this.trim().startsWith("192.168.")
     }
 }

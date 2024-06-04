@@ -56,6 +56,7 @@ interface OpProjectService {
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         remoteDevFlag: Boolean,
-        productId: Int?
+        productId: Int?,
+        channelCode: String?
     ): Map<String, Any?>?
 }

@@ -16,10 +16,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
+    import { mapActions } from 'vuex'
     export default {
         name: 'job-mutual',
         mixins: [atomMixin, validMixins, jobOptionConfigMixin],
@@ -65,9 +65,7 @@
                 this.handleUpdateJobMutual('enable', enable)
             },
             initOptionConfig () {
-                if (this.mutexGroup === undefined || JSON.stringify(this.mutexGroup) === '{}') {
-                    this.updateContainerParams('mutexGroup', this.getJobOptionDefault(this.JOB_MUTUAL))
-                }
+                this.updateContainerParams('mutexGroup', this.getJobOptionDefault(this.JOB_MUTUAL, this.mutexGroup))
             }
         }
     }

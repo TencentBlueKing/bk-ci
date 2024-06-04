@@ -1,4 +1,3 @@
-
 import { showLoginPopup } from '@/utils/util'
 import eventBus from './eventBus'
 interface UrlParam {
@@ -26,7 +25,7 @@ function iframeUtil (router: any) {
             params
         }, '*')
     }
-    
+
     utilMap.updateTabTitle = function (title: string): void {
         if (title) {
             document.title = title

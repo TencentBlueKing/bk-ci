@@ -53,6 +53,9 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -61,9 +64,6 @@ import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Repository
@@ -494,20 +494,27 @@ class PipelineBuildDao {
     }
 
     fun getOneQueueBuild(dslContext: DSLContext, projectId: String, pipelineId: String): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny(debugMapper)
+        }
+        return when {
+            release == null -> debug
+            debug == null -> release
+            release.queueTime > debug.queueTime -> debug
+            else -> release
         }
     }
 
@@ -517,7 +524,7 @@ class PipelineBuildDao {
         concurrencyGroup: String,
         pipelineId: String? = null
     ): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -527,7 +534,8 @@ class PipelineBuildDao {
             }
             select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -537,6 +545,12 @@ class PipelineBuildDao {
             }
             select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny(debugMapper)
+        }
+        return when {
+            release == null -> debug
+            debug == null -> release
+            release.queueTime > debug.queueTime -> debug
+            else -> release
         }
     }
 
@@ -1523,7 +1537,7 @@ class PipelineBuildDao {
                     .execute() == 1
             }
         }
-        return if (!success) with(T_PIPELINE_BUILD_HISTORY) {
+        return if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
             newBuildStatus?.let { update.set(STATUS, it.ordinal) }
@@ -1732,7 +1746,7 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
-                    versionName = t.versionName,
+                    versionName = t.versionName ?: "V${t.version}(init)",
                     yamlVersion = t.yamlVersion,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
@@ -1740,7 +1754,7 @@ class PipelineBuildDao {
                     // queueTime在数据库中必定会写值，不为空，以防万一用当前时间兜底
                     queueTime = t.queueTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
                     startUser = t.startUser,
-                    triggerUser = t.triggerUser,
+                    triggerUser = t.triggerUser ?: t.startUser ?: "",
                     startTime = t.startTime?.timestampmilli(),
                     endTime = t.endTime?.timestampmilli(),
                     taskCount = t.taskCount,
@@ -1802,7 +1816,7 @@ class PipelineBuildDao {
                     status = BuildStatus.values()[t.status],
                     queueTime = t.queueTime?.timestampmilli() ?: 0L,
                     startUser = t.startUser,
-                    triggerUser = t.triggerUser,
+                    triggerUser = t.triggerUser ?: t.startUser ?: "",
                     startTime = t.startTime?.timestampmilli() ?: 0L,
                     endTime = t.endTime?.timestampmilli() ?: 0L,
                     taskCount = t.taskCount,
