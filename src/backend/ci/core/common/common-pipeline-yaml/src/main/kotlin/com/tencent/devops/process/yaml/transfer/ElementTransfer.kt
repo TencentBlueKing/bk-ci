@@ -344,7 +344,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             manualSkip = continueOnError == Step.ContinueOnErrorType.MANUAL_SKIP,
             timeout = step.timeoutMinutes?.toLongOrNull() ?: VariableDefault.DEFAULT_TASK_TIME_OUT,
             timeoutVar = step.timeoutMinutes ?: VariableDefault.DEFAULT_TASK_TIME_OUT.toString(),
-            retryWhenFailed = step.retryTimes != null,
+            retryWhenFailed = step.retryTimes != null && step.retryTimes > 0,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             runCondition = runCondition,
             customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) step.ifFiled else null,
