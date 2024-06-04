@@ -196,7 +196,7 @@ class CmdbNodeService @Autowired constructor(
             }
             queryAgentStatusService.getAgentVersions(
                 nodeCCInfoList.map {
-                    AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
+                    AgentVersion(serverId = it.svrId, ip = it.bkHostInnerip, bkHostId = it.bkHostId)
                 }
             )?.associateBy { it.serverId }
         } else null
