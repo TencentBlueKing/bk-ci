@@ -1112,7 +1112,15 @@
     "afterPreStageSuccess": "Run when pre-stage done",
     "manualRunStage": "Manual",
     "autoSkip": "Auto",
-    "manualSkip": "Manual"
+    "manualSkip": "Manual",
+    "timeoutPeriod": "Timeout Period",
+    "execTimeOut": "Execution Timeout",
+    "queueTimeOut": "Queue Timeout",
+    "singleNodeConcurrency": "Concurrency limit on a node",
+    "singleNodeConcurrencyPlaceholder": "Default is the maximum concurrency set on the node",
+    "allNodeConcurrency": "Concurrency limit across all nodes",
+    "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
+    "minutes": "Minutes"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",

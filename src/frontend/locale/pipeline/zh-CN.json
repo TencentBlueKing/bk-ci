@@ -1110,7 +1110,15 @@
     "afterPreStageSuccess": "前一个Stage成功时运行",
     "manualRunStage": "手动触发运行",
     "autoSkip": "自动跳过",
-    "manualSkip": "手动跳过"
+    "manualSkip": "手动跳过",
+    "timeoutPeriod": "超时时间",
+    "execTimeOut": "执行超时",
+    "queueTimeOut": "排队超时",
+    "singleNodeConcurrency": "单节点上的并发",
+    "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
+    "allNodeConcurrency": "所有节点上的总并发",
+    "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
+    "minutes": "分钟"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
