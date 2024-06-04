@@ -222,15 +222,15 @@ interface OpServiceResource {
         deptIds: String
     ): Result<Boolean>
 
-    @Operation(summary = "根据ID迁移已部署的扩展服务")
+    @Operation(summary = "迁移已部署的扩展服务")
     @GET
-    @Path("/migrate/serviceIds/{serviceId}")
+    @Path("/migrate/serviceIds/{serviceCode}")
     fun migrateService(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展Id", required = true)
-        @PathParam("serviceId")
-        serviceId: String
+        @Parameter(description = "扩展服务代码", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String
     ): Result<Boolean>
 }
