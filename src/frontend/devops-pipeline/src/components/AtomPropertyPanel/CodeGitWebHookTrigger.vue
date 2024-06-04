@@ -62,7 +62,7 @@
             }
         },
         created () {
-            if (!this.atomPropsModel?.repositoryType?.list) {
+            if (!this.atomPropsModel?.branchSettings) {
                 this.enableThirdFilter = this.element.enableThirdFilter || false
                 if (this.element.eventType === 'MERGE_REQUEST') {
                     this.atomPropsModel.webhookQueue.hidden = false
@@ -78,7 +78,7 @@
         },
         methods: {
             handleBlockEnable (name, value) {
-                if (!this.atomPropsModel?.repositoryType?.list) {
+                if (!this.atomPropsModel?.branchSettings) {
                     if (value === 'MERGE_REQUEST') {
                         this.atomPropsModel.block.hidden = false
                         this.atomPropsModel.webhookQueue.hidden = false
@@ -91,9 +91,7 @@
             },
             handleMethods (name, value) {
                 // 兼容逻辑，后续该需求上线后可删除
-                if (this.atomPropsModel?.repositoryType?.list) {
-                    console.log(name, value, 123)
-
+                if (this.atomPropsModel?.branchSettings) {
                     this.handleUpdateElement(name, value)
                 } else {
                     if (name === 'repositoryType') {
@@ -104,7 +102,7 @@
                 }
             },
             handleChooseCodelibType (name, value) {
-                if (!this.atomPropsModel?.repositoryType?.list) {
+                if (!this.atomPropsModel?.branchSettings) {
                     if (value === 'ID') {
                         this.atomPropsModel.repositoryHashId.hidden = false
                         this.atomPropsModel.repositoryName.hidden = true
