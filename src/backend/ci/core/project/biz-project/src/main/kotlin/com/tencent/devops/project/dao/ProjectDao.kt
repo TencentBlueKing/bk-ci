@@ -571,7 +571,7 @@ class ProjectDao {
         otherRouterTagMaps: Map<String, String>? = null,
         remoteDevFlag: Boolean? = null,
         productId: Int? = null,
-        channelCode: String?
+        channelCode: String? = null
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -757,7 +757,7 @@ class ProjectDao {
         otherRouterTagMaps: Map<String, String>? = null,
         remoteDevFlag: Boolean? = null,
         productId: Int? = null,
-        channelCode: String?
+        channelCode: String? = null
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
