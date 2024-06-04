@@ -96,7 +96,8 @@ class ExtServiceBcsInitService @Autowired constructor(
             email = extServiceImageSecretConfig.repoEmail
         )
         // 创建已发布扩展服务版本的命名空间拉取镜像secret
-        val createReleaseNsImagePullSecretResult = client.get(ServiceKubernetesManagementResource::class).createImagePullSecretTest(
+        val createReleaseNsImagePullSecretResult =
+            client.get(ServiceKubernetesManagementResource::class).createImagePullSecretTest(
             userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
             namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
             secretName = secretName,
@@ -107,7 +108,8 @@ class ExtServiceBcsInitService @Autowired constructor(
         )
         // 创建已发布扩展服务版本的命名空间拉取镜像secret
         val graySecretName = extServiceImageSecretConfig.graySecretName
-        val createGrayNsImagePullSecretResult = client.get(ServiceKubernetesManagementResource::class).createImagePullSecretTest(
+        val createGrayNsImagePullSecretResult =
+            client.get(ServiceKubernetesManagementResource::class).createImagePullSecretTest(
             userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
             namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
             secretName = graySecretName,

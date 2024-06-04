@@ -77,7 +77,11 @@ class ServiceKubernetesManagementResourceImpl @Autowired constructor(
         return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName)
     }
 
-    override fun getDeploymentInfos(userId: String, namespaceName: String, deploymentNames: String): Result<Map<String, Deployment>> {
+    override fun getDeploymentInfos(
+        userId: String,
+        namespaceName: String,
+        deploymentNames: String
+    ): Result<Map<String, Deployment>> {
         return bcsQueryService.getBcsDeploymentInfos(userId, namespaceName, deploymentNames)
     }
 }
