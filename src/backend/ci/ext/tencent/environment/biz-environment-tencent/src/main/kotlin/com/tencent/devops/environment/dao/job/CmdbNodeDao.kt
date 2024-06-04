@@ -139,8 +139,30 @@ class CmdbNodeDao {
                         .set(NODE_STATUS, it.nodeStatus)
                         .set(AGENT_STATUS, it.agentStatus)
                         .set(AGENT_VERSION, it.agentVersion)
+                        .set(HOST_ID, it.hostId)
+                        .set(CLOUD_AREA_ID, it.cloudAreaId)
+                        .set(OS_TYPE, it.osType)
                         .set(LAST_MODIFY_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
+                }
+            )
+            batchUpdate.execute()
+        }
+    }
+
+    fun batchUpdateCCInfoByServerId(dslContext: DSLContext, updateAgentInfo: List<UpdateTNodeInfo>) {
+        with(TNode.T_NODE) {
+            val batchUpdate = dslContext.batch(
+                updateAgentInfo.map {
+                    dslContext.update(this)
+                        .set(NODE_STATUS, it.nodeStatus)
+                        .set(AGENT_STATUS, it.agentStatus)
+                        .set(AGENT_VERSION, it.agentVersion)
+                        .set(HOST_ID, it.hostId)
+                        .set(CLOUD_AREA_ID, it.cloudAreaId)
+                        .set(OS_TYPE, it.osType)
+                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                        .where(SERVER_ID.eq(it.serverId))
                 }
             )
             batchUpdate.execute()

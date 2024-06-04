@@ -255,7 +255,7 @@ class CmdbNodeService @Autowired constructor(
         val nodeRecords = cmdbNodeDao.getCmdbNodesByNodeIdList(dslContext, nodeIdList)
         val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
             nodeIdToCCInfoMap.values.mapNotNull {
-                AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId)
+                AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId, serverId = it?.svrId)
             }
         )?.associateBy { it.ip }
         val agentStatusMap = if (!ipToAgentVersionInfoMap.isNullOrEmpty()) {
@@ -281,6 +281,8 @@ class CmdbNodeService @Autowired constructor(
                 },
                 hostId = nodeIdToCCInfoMap[nodeId]?.bkHostId,
                 cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
+                serverId = nodeIdToCCInfoMap[nodeId]?.svrId,
+                osType = nodeIdToCCInfoMap[nodeId]?.osType,
                 agentStatus = if (grayTag) {
                     1 == ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.status
                 } else {
@@ -365,22 +367,25 @@ class CmdbNodeService @Autowired constructor(
             importNodesStatus
         }.map {
             val nodeId = it[T_NODE_NODE_ID] as Long
+            val serverId = it[T_NODE_SERVER_ID] as Long
             UpdateTNodeInfo(
                 nodeId = nodeId,
                 nodeStatus = if (nodeIdToCCInfoMap.containsKey(nodeId)) {
-                    getNodeStatus(serverIdToAgentVersionInfoMap?.get(it[T_NODE_SERVER_ID] as Long))
+                    getNodeStatus(serverIdToAgentVersionInfoMap?.get(serverId))
                 } else {
                     NodeStatus.NOT_IN_CC.name
                 },
                 hostId = nodeIdToCCInfoMap[nodeId]?.bkHostId,
                 cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
+                serverId = serverId,
+                osType = nodeIdToCCInfoMap[nodeId]?.osType,
                 agentVersion = if (grayTag)
-                    serverIdToAgentVersionInfoMap?.get(it[T_NODE_SERVER_ID] as Long)?.version
+                    serverIdToAgentVersionInfoMap?.get(serverId)?.version
                 else null,
                 lastModifyTime = LocalDateTime.now()
             )
         }
-        cmdbNodeDao.batchUpdateCCInfo(dslContext, updateNodeInfo)
+        cmdbNodeDao.batchUpdateCCInfoByServerId(dslContext, updateNodeInfo)
         val addToCCNodeList = nodeRecords.map {
             NodeAgent(
                 nodeIp = it[T_NODE_NODE_IP] as String,
