@@ -394,7 +394,7 @@ class OpExtServiceService @Autowired constructor(
         checkPermissionFlag: Boolean = true
     ): Result<Boolean> {
         logger.info(
-            "migrateService userId: $userId , serviceId: $serviceCode , checkPermissionFlag: $checkPermissionFlag"
+            "migrateService userId: $userId , serviceCode: $serviceCode , checkPermissionFlag: $checkPermissionFlag"
         )
         val serviceRecord =
             extServiceDao.getServiceLatestByCode(dslContext, serviceCode) ?: return I18nUtil.generateResponseDataObject(
