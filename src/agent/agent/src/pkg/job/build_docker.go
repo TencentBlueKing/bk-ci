@@ -241,7 +241,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	// 解析docker options
-	dockerConfig, err := job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
+	dockerConfig, err := job_docker.ParseDockerOptions(cli, dockerBuildInfo.Options)
 	if err != nil {
 		logs.Error("DOCKER_JOB|" + err.Error())
 		dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))

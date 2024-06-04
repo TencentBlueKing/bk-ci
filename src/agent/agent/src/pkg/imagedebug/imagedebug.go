@@ -245,7 +245,7 @@ func CreateDebugContainer(
 	}
 
 	// 解析docker options
-	dockerConfig, err := job_docker.ParseDockeroptions(cli, debugInfo.Options)
+	dockerConfig, err := job_docker.ParseDockerOptions(cli, debugInfo.Options)
 	if err != nil {
 		imageDebugLogs.Error(err.Error())
 		return err

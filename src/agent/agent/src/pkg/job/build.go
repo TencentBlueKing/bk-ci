@@ -132,7 +132,7 @@ func DoBuild(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 }
 
-// checkParallelTaskCount 检查当前运行的最大任务数
+// CheckParallelTaskCount checkParallelTaskCount 检查当前运行的最大任务数
 func CheckParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
