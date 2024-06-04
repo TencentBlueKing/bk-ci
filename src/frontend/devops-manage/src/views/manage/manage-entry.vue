@@ -23,6 +23,10 @@ const manageTabs = ref([
     title: t('用户管理'),
     name: 'group',
   },
+  {
+    title: t('授权管理'),
+    name: 'permission',
+  },
   // {
   //   title: t('微扩展管理'),
   //   name: 'expand',
