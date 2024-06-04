@@ -33,7 +33,6 @@
           :columns="columns"
           height="100%"
           show-overflow-tooltip
-          v-bkloading="{ isLoading }"
           :scroll-loading="isScrollLoading"
           @select-all="handleSelectAll"
           @selection-change="handleSelectionChange"

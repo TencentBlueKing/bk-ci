@@ -51,10 +51,23 @@
                 </template>
                 <template #content>
                   <bk-table
+                    ref="refTable"
+                    checked
                     max-height="200"
                     :data="projectTable"
                     show-overflow-tooltip
+                    @select-all="handleSelectAll"
+                    @selection-change="handleSelectionChange"
                   >
+                    <template #prepend>
+                      <div v-if="selectList.length" class="prepend">
+                        已选择 {{ selectList.length }} 条数据，
+                        <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
+                        &nbsp; | &nbsp;
+                        <span @click="handleClear">清除选择</span>
+                      </div>
+                    </template>
+                    <!-- <bk-table-column type="selection" :min-width="30" width="30" align="center" /> -->
                     <bk-table-column label="用户组" prop="usergroup">
                     </bk-table-column>
                     <bk-table-column label="用户描述" prop="describe" />
@@ -177,6 +190,67 @@
       </div>
     </div>
   </bk-loading>
+  <bk-dialog
+    :width="450"
+    theme="danger"
+    cancel-text="关闭"
+    confirm-text="确认移出"
+    header-align="center"
+    footer-align="center"
+    class="renewal-dialog"
+    :is-show="isShowRenewal"
+    @closed="() => isShowRenewal = false"
+    @confirm="() => isShowRenewal = false"
+  >
+    <template #header>
+      人员列表
+      <span class="dialog-header"> 蓝鲸运营组 </span>
+    </template>
+    <template #default>
+      <p class="remove-text">
+        <span>用户组名：</span> 开发人员
+      </p>
+      <p class="remove-text">
+        <span class="is-required">授权期限</span>
+        <bk-radio-group
+          size="small"
+          v-model="radioGroupValue"
+        >
+          <bk-radio-button label="1个月" />
+          <bk-radio-button label="3个月" />
+          <bk-radio-button label="6个月" />
+          <bk-radio-button label="自定义" />
+        </bk-radio-group>
+      </p>
+      <p class="remove-text">
+        <span>到期时间：</span> 已过期
+      </p>
+    </template>
+  </bk-dialog>
+  <bk-dialog
+    :width="450"
+    theme="danger"
+    cancel-text="关闭"
+    confirm-text="确认移出"
+    header-align="center"
+    footer-align="center"
+    class="remove-dialog"
+    :is-show="isShowRemove"
+    @closed="() => isShowRemove = false"
+    @confirm="() => isShowRemove = false"
+  >
+    <template #header>
+      <span class="dialog-header"> 确认从用户组中移出用户吗？ </span>
+    </template>
+    <template #default>
+      <p class="remove-text">
+        <span>待移出用户：</span> fayewang (王玉菊)
+      </p>
+      <p class="remove-text">
+        <span>所在用户组：</span> 开发人员
+      </p>
+    </template>
+  </bk-dialog>
 </template>
 
 <script setup name="manageAll">
@@ -186,8 +260,14 @@ import SelectGroup from './select-group.vue';
 import ManageAside from './manage-aside.vue';
 
 const { t } = useI18n();
+const refTable = ref(null);
+const selectList = ref([]);
 const isLoading = ref(false);
 const isTableVisible = ref(true);
+const isShowRenewal = ref(false);
+const isShowHandover = ref(false);
+const isShowRemove = ref(false);
+const radioGroupValue = ref('1个月');
 
 const serveValue = ref([]);
 const serveList = ref([
@@ -326,17 +406,64 @@ watch([serveValue, resourceValue, operateValue, searchValue], () => {
 function handleSearchChange(value, target) {
   stateRefs[target].value = value;
 }
-const groups = [
-  { title: '流水线-流水线组', num: 3, data: projectTable },
-  { title: '流水线-流水线组', num: 3, data: projectTable },
-  { title: '流水线-流水线组', num: 3, data: projectTable },
-];
 
 function handleAsideClick(id) {
   console.log(id, '这里根据id展示表格数据');
 }
 function toggleTable() {
   isTableVisible.value  = !isTableVisible.value;
+}
+
+function handleRenewal(row) {
+  isShowRenewal.value = true;
+}
+
+function handleHandover(row) {
+  isShowHandover.value = true;
+}
+
+function handleRemove(row) {
+  isShowRemove.value = true;
+}
+
+/**
+ * 当前页全选事件
+ */
+function handleSelectAll(val) {
+  selectList.value = [];
+  if (val.checked) {
+    projectTable.value.forEach((item) => {
+      selectList.value.push(item.id);
+    });
+  } else {
+    selectList.value = [];
+  }
+}
+/**
+ * 多选事件
+ * @param val
+ */
+function handleSelectionChange(val) {
+  if (val.checked) {
+    selectList.value.push(val.row.id);
+  } else {
+    selectList.value = selectList.value.filter((item) => item !== val.row.id);
+  }
+};
+/**
+ * 全量数据选择
+ */
+function handleSelectAllData() {
+  refTable.value.toggleAllSelection();
+  // 调用接口获取全部数据后
+  selectList.value = projectTable.value.map((item) => item.id);
+}
+/**
+ * 清除选择
+ */
+function handleClear() {
+  refTable.value.clearSelection();
+  selectList.value = [];
 }
 </script>
 
@@ -433,6 +560,24 @@ function toggleTable() {
       .project-group-table{
         width: 100%;
 
+        .prepend{
+          width: 100%;
+          height: 32px;
+          line-height: 32px;
+          background: #F0F1F5;
+          text-align: center;
+          box-shadow: 0 -1px 0 0 #DCDEE5;
+
+          span{
+            font-family: MicrosoftYaHei;
+            font-size: 12px;
+            color: #3A84FF;
+            letter-spacing: 0;
+            line-height: 20px;
+            cursor: pointer;
+          }
+        }
+
         ::v-deep .bk-collapse-content {
           padding: 5px 0 !important;
         }
@@ -474,5 +619,59 @@ function toggleTable() {
   }
 }
 
+.renewal-dialog {
 
+  .is-required{
+    position: relative;
+  }
+  .is-required:after {
+    position: absolute;
+    top: 0;
+    width: 14px;
+    color: #ea3636;
+    text-align: center;
+    content: "*";
+  }
+
+  .remove-text {
+    margin: 12px 0;
+
+    span {
+      display: inline-block;
+      min-width: 68px;
+      padding-right: 14px;
+    }
+  }
+}
+
+.remove-dialog{
+  .dialog-header {
+    display: inline-block;
+    padding-left: 17px;
+    margin-left: 17px;
+    border-left: 1px solid #C4C6CC;
+    font-family: MicrosoftYaHei;
+    font-size: 12px;
+    color: #63656E;
+    letter-spacing: 0;
+  }
+
+}
+
+.dialog-header-text {
+  font-family: MicrosoftYaHei;
+  font-size: 20px;
+  color: #313238;
+  font-weight: 600;
+}
+
+.remove-text {
+  font-family: MicrosoftYaHei;
+  font-size: 12px;
+  color: #313238;
+  line-height: 20px;
+  span {
+    color: #63656E;
+  }
+}
 </style>
