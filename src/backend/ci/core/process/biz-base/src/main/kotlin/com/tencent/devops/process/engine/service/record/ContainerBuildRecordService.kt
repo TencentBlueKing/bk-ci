@@ -249,9 +249,6 @@ class ContainerBuildRecordService(
                     if (recordContainer.endTime == null) {
                         endTime = LocalDateTime.now()
                     }
-                    if (!BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
-                        containerVar[Container::startVMStatus.name] = buildStatus.name
-                    }
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, LocalDateTime.now().timestampmilli()
                     )
