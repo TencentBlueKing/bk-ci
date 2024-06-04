@@ -23,7 +23,10 @@
                 v-bkloading="{ isLoading: tableLoading }"
                 ref="shareDiaglogTable"
                 :data="curNodeList"
+                :pagination="pagination"
                 :row-class-name="handleRowClassName"
+                @page-change="handlePageChange"
+                @page-limit-change="handlePageLimitChange"
             >
                 <bk-table-column :label="$t('environment.envInfo.name')" width="150" prop="displayName" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :width="150" label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
@@ -189,7 +192,8 @@
                 return window.userInfo
             },
             curNodeList () {
-                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode)
+                const { limit, current } = this.pagination
+                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode).slice(limit * (current - 1), limit * current)
             }
         },
         watch: {
@@ -638,6 +642,10 @@
             handleRowClassName ({ row, rowIndex }) {
                 return row.envEnableNode ? '' : 'useless'
             },
+            handlePageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+            },
             async handleToggleEnable (row) {
                 try {
                     await this.$store.dispatch('environment/enableNode', {
@@ -647,6 +655,7 @@
                         enableNode: !row.envEnableNode
                     })
 
+                    this.pagination.current = 1
                     await this.requestList()
 
                     this.$bkMessage({
