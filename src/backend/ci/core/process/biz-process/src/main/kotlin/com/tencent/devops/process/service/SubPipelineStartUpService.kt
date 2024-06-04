@@ -60,6 +60,7 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.utils.PIPELINE_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
@@ -173,7 +174,8 @@ class SubPipelineStartUpService @Autowired constructor(
             pipelineId = callPipelineId,
             channelCode = callChannelCode,
             parameters = startParams,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            runMode = runMode
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -204,7 +206,8 @@ class SubPipelineStartUpService @Autowired constructor(
         channelCode: ChannelCode,
         parameters: Map<String, String>,
         isMobile: Boolean = false,
-        triggerUser: String? = null
+        triggerUser: String? = null,
+        runMode: String
     ): String {
 
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
@@ -253,13 +256,15 @@ class SubPipelineStartUpService @Autowired constructor(
             params[PIPELINE_START_PIPELINE_USER_ID] =
                 BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = triggerUser ?: userId)
             params[PIPELINE_START_PARENT_PROJECT_ID] =
-                BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId)
+                BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId, readOnly = true)
             params[PIPELINE_START_PARENT_PIPELINE_ID] =
-                BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId)
+                BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId, readOnly = true)
             params[PIPELINE_START_PARENT_PIPELINE_NAME] =
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
-                BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
+                BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId, readOnly = true)
+            params[PIPELINE_RUN_MODE] =
+                BuildParameters(key = PIPELINE_RUN_MODE, value = runMode, readOnly = true)
             params[PIPELINE_START_PARENT_BUILD_NUM] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_NUM, value = parentBuildInfo.buildNum)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
