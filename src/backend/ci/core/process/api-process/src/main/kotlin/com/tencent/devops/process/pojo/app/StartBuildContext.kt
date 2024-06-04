@@ -136,7 +136,7 @@ data class StartBuildContext(
     // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
     var currentBuildNo: Int? = null,
     val debug: Boolean,
-    val debugModel: Model?
+    val debugModelStr: String?
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -239,9 +239,10 @@ data class StartBuildContext(
             resourceVersion: Int,
             versionName: String?,
             yamlVersion: String?,
-            model: Model,
+            modelStr: String,
             debug: Boolean,
             pipelineSetting: PipelineSetting? = null,
+            realStartParamKeys: List<String>,
             pipelineParamMap: MutableMap<String, BuildParameters>,
             webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
@@ -250,7 +251,6 @@ data class StartBuildContext(
 
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
             // 解析出定义的流水线变量
-            val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]
 
             val (actionType, executeCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
@@ -308,7 +308,7 @@ data class StartBuildContext(
                 pipelineSetting = pipelineSetting,
                 pipelineParamMap = pipelineParamMap,
                 debug = debug,
-                debugModel = model,
+                debugModelStr = modelStr,
                 yamlVersion = yamlVersion
             )
         }
@@ -424,7 +424,7 @@ data class StartBuildContext(
             concurrencyGroup = null,
             pipelineSetting = null,
             debug = debug,
-            debugModel = null,
+            debugModelStr = null,
             yamlVersion = null
         )
 

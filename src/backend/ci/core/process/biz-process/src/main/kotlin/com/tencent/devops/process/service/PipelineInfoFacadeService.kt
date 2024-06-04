@@ -179,7 +179,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         )
 
-        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)
+        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )

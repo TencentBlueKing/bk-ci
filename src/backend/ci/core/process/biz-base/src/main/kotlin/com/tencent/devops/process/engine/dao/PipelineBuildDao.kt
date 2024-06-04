@@ -180,7 +180,7 @@ class PipelineBuildDao {
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
                         startBuildContext.yamlVersion,
-                        startBuildContext.debugModel?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                        startBuildContext.debugModelStr
                     ).execute()
                 }
             }
