@@ -20,6 +20,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class RbacPermissionResourceMemberService constructor(
@@ -87,7 +88,11 @@ class RbacPermissionResourceMemberService constructor(
                 " managerId = $managerId | groupInfoList: $groupInfoList"
         )
         // 3、获取组成员
-        return groupInfoList.map { getUsersUnderGroup(groupInfo = it) }
+        return groupInfoList.map {
+            executorService.submit<BkAuthGroupAndUserList> {
+                getUsersUnderGroup(groupInfo = it)
+            }
+        }.map { it.get() }
     }
 
     override fun batchAddResourceGroupMembers(
@@ -245,8 +250,9 @@ class RbacPermissionResourceMemberService constructor(
         }
         val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupInfo.id, pageInfoDTO).results
         val members = mutableListOf<String>()
+        val nowTimestamp = System.currentTimeMillis() / 1000
         groupMemberInfoList.forEach { memberInfo ->
-            if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+            if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) && memberInfo.expiredAt > nowTimestamp) {
                 members.add(memberInfo.id)
             }
         }
@@ -359,5 +365,7 @@ class RbacPermissionResourceMemberService constructor(
 
         // 自动续期默认180天
         private val AUTO_RENEWAL_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
+
+        private val executorService = Executors.newFixedThreadPool(10)
     }
 }
