@@ -42,6 +42,9 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
@@ -63,9 +66,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
@@ -89,8 +89,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PipelineVarUtil.CONTEXT_PREFIX
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import org.slf4j.LoggerFactory
 
 /**
  * 启动流水线上下文类，属于非线程安全类
@@ -292,18 +292,15 @@ data class StartBuildContext(
                 webhookInfo = getWebhookInfo(params),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
                 buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
-                // 优化并发组逻辑，只在正式执行且GROUP_LOCK时才保存进history表
-                concurrencyGroup = if (!debug) {
-                    pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
-                        ?.concurrencyGroup?.let {
-                            val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
-                            val tConcurrencyGroup = EnvUtils.parseEnv(
-                                it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
-                            )
-                            logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
-                            tConcurrencyGroup
-                        }
-                } else null,
+                concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                    ?.concurrencyGroup?.let {
+                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                        val tConcurrencyGroup = EnvUtils.parseEnv(
+                            it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                        )
+                        logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
+                        tConcurrencyGroup
+                    },
                 triggerReviewers = triggerReviewers,
                 startBuildStatus =
                 if (triggerReviewers.isNullOrEmpty()) BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
@@ -378,7 +375,7 @@ data class StartBuildContext(
          * 是否支持自定义触发材料
          */
         private fun supportCustomMaterials(startType: String?) = startType == StartType.REMOTE.name ||
-                startType == StartType.SERVICE.name
+            startType == StartType.SERVICE.name
 
         /**
          * 简易只为实现推送PipelineBuildStartEvent事件所需要的参数，不是全部

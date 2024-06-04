@@ -540,9 +540,9 @@ const actions = {
     fetchAtomModal ({ commit }, {
         projectCode,
         atomCode,
-        version = '1.*',
         queryOfflineFlag = false
     }) {
+        const version = atomCode === 'codeGitWebHookTrigger' ? '2.*' : '1.*'
         return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
     },
 

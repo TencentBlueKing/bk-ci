@@ -49,7 +49,7 @@
         watch: {
             element: {
                 handler (val) {
-                    if (!this.atomPropsModel?.repositoryType?.list) {
+                    if (!this.atomPropsModel?.branchSettings) {
                         const showName = this.element.repositoryType === 'NAME'
                         this.atomPropsModel.repositoryName.hidden = !showName
                         this.atomPropsModel.repositoryHashId.hidden = showName
@@ -60,7 +60,7 @@
             }
         },
         created () {
-            if (!this.atomPropsModel?.repositoryType?.list) {
+            if (!this.atomPropsModel?.branchSettings) {
                 const { thirdUrl, thirdSecretToken } = this.atomPropsModel
                 if (thirdUrl && thirdSecretToken) {
                     this.customTriggerControlModel.thirdUrl = thirdUrl
