@@ -289,7 +289,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             create = false,
             versionStatus = VersionStatus.RELEASED,
-            channelCode = pipeline.channelCode
+            channelCode = pipeline.channelCode,
+            yamlInfo = request.yamlInfo
         )
         val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         // 如果不匹配已有状态则报错，需要用户重新刷新页面
@@ -407,7 +408,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yaml = YamlWithVersion(versionTag = draftVersion.yamlVersion, yamlStr = draftVersion.yaml),
-            baseVersion = draftVersion.baseVersion
+            baseVersion = draftVersion.baseVersion,
+            yamlInfo = request.yamlInfo
         )
         // 添加标签
         pipelineGroupService.addPipelineLabel(
