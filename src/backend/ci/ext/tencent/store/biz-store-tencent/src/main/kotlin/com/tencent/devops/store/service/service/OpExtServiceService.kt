@@ -39,7 +39,6 @@ import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_NOT_DEPLOY
-import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_RELEASE_STEPS_ERROR
 import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT

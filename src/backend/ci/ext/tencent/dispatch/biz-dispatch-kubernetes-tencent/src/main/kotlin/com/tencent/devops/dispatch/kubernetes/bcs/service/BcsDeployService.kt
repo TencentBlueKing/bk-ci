@@ -314,7 +314,6 @@ class BcsDeployService @Autowired constructor(
         return Result(true)
     }
 
-
     fun stopApp(
         userId: String,
         stopApp: StopApp
