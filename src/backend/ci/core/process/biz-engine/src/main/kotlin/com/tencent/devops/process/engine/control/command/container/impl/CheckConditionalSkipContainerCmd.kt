@@ -125,6 +125,8 @@ class CheckConditionalSkipContainerCmd constructor(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = containerContext.variables.plus(contextMap),
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
