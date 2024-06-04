@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
-import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_NOT_DEPLOY
@@ -439,26 +438,7 @@ class OpExtServiceService @Autowired constructor(
             userId = userId,
             deployApp = deployApp
         )
-        logger.info("bcsDeployAppResult is :$bcsDeployAppResult")
-        if (bcsDeployAppResult.isOk()) {
-            val bcsStopAppResult = client.get(ServiceKubernetesManagementResource::class).bcsStopApp(
-                userId = userId,
-                stopApp = StopApp(
-                    bcsUrl = extServiceBcsConfig.masterUrl,
-                    token = extServiceBcsConfig.token,
-                    grayNamespaceName = if (grayFlag) namespaceName else "",
-                    grayHost = extServiceIngressConfig.grayHost,
-                    namespaceName = if (!grayFlag) namespaceName else "",
-                    host = extServiceIngressConfig.host,
-                    deploymentName = serviceCode,
-                    serviceName = "$serviceCode-service"
-                )
-            )
-            if (bcsStopAppResult.isNotOk()) {
-                logger.warn("the bcs stop app fail, result is :$bcsStopAppResult")
-            }
-        }
-        return Result(true)
+        return bcsDeployAppResult
     }
 
     companion object {
