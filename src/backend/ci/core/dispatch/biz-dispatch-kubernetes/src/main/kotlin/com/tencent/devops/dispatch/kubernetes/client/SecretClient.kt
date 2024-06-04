@@ -75,7 +75,7 @@ class SecretClient @Autowired constructor(
         userId: String,
         namespace: String,
         secretName: String
-    ): KubernetesResult<Service> {
+    ): KubernetesResult<Secret> {
         val url = "/api/namespace/$namespace/secrets/$secretName"
         val request = clientCommon.microBaseRequest(url).get().build()
         logger.info("Get secret: $secretName request url: $url, userId: $userId")
@@ -129,7 +129,7 @@ class SecretClient @Autowired constructor(
         namespaceName: String,
         kubernetesRepoInfo: KubernetesRepo
     ) {
-        var secret = getSecretByName(userId, secretName).data
+        var secret = getSecretByName(userId, namespaceName, secretName).data
         logger.info("the secret is: $secret")
         if (secret == null) {
             val secretData: HashMap<String, String> = HashMap(1)
@@ -163,7 +163,7 @@ class SecretClient @Autowired constructor(
                 .addToData(secretData)
                 .withType("kubernetes.io/dockerconfigjson")
                 .build()
-            createSecret(userId, secret)
+            createSecret(userId, namespaceName, secret)
             logger.info("create new secret: $secret")
         }
     }

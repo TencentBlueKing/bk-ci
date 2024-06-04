@@ -72,7 +72,7 @@ class IngressClient @Autowired constructor(
         userId: String,
         namespace: String,
         ingressName: String
-    ): KubernetesResult<Service> {
+    ): KubernetesResult<Ingress> {
         val url = "/api/namespace/$namespace/ingress/$ingressName"
         val request = clientCommon.microBaseRequest(url).get().build()
         logger.info("Get ingress: $ingressName request url: $url, userId: $userId")
