@@ -209,6 +209,11 @@ const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
 const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 
 /**
+ * 流水线设置-自定义表达式执行条件的条件长度-最大值
+ */
+const val PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX = 512
+
+/**
  * 入库VAR表，流水线变量最大长度
  */
 const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
