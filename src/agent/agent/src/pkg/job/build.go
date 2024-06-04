@@ -348,7 +348,7 @@ func getUnixWorkerStartScriptFile(projectId, buildId, vmSeqId string) string {
 		systemutil.GetWorkDir(), startScriptFilePrefix, projectId, buildId, vmSeqId, startScriptFileSuffix)
 }
 
-// 校验当前是否有正在跑的任务
+// CheckRunningJob 校验当前是否有正在跑的任务
 func CheckRunningJob() bool {
 	if GBuildManager.GetPreInstancesCount() > 0 ||
 		GBuildManager.GetInstanceCount() > 0 ||
