@@ -74,7 +74,7 @@
                     </div>
                 </form-field>
     
-                <form-field class="cron-build-tab" :label="$t('editPage.branches')">
+                <form-field class="cron-build-tab" :label="$t('editPage.branches')" :desc="$t('editPage.timerTriggerBranchTips')">
                     <BranchParameterArray
                         name="branches"
                         :repository-type="element['repositoryType']"
