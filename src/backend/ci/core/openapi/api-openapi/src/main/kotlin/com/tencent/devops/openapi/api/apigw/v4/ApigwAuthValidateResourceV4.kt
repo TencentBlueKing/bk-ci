@@ -5,9 +5,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,5 +45,26 @@ interface ApigwAuthValidateResourceV4 {
         @QueryParam("group")
         @Parameter(description = "用户组类型", required = false)
         group: BkAuthGroup? = null
+    ): Result<Boolean>
+
+    @GET
+    @Path("/check_user_in_project_level_group")
+    @Operation(
+        summary = "检查用户是否在项目级别的用户组中",
+        tags = ["v4_app_check_user_in_project_level_group"]
+    )
+    fun checkUserInProjectLevelGroup(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "用户Id", required = true)
+        userId: String,
+        @PathParam("projectId")
+        @Parameter(description = "项目Code", required = true)
+        projectId: String
     ): Result<Boolean>
 }

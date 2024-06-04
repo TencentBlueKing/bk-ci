@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
@@ -98,6 +99,12 @@ interface PermissionResourceGroupService {
         resourceType: String,
         groupCode: String
     ): Boolean
+
+    fun createGroup(
+        userId: String,
+        projectId: String,
+        groupAddDTO: GroupAddDTO
+    ): Int
 
     fun rename(
         userId: String,
