@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.bcs.service
 
-import com.sun.org.apache.xml.internal.resolver.readers.OASISXMLCatalogReader.namespaceName
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.dispatch.kubernetes.bcs.config.KubernetesConfig
 import com.tencent.devops.dispatch.kubernetes.client.SecretClient
@@ -59,7 +58,7 @@ class BcsInitService @Autowired constructor(
         // 创建已发布扩展服务版本的命名空间拉取镜像secret
         secretClient.createImagePullSecret(
             userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-            namespaceName = namespaceName,
+            namespaceName = kubernetesConfig.namespaceName,
             secretName = kubernetesConfig.secretName,
             kubernetesRepoInfo = kubernetesRepo
         )
