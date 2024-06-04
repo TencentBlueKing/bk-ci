@@ -38,6 +38,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManag
 import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_NOT_DEPLOY
 import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_RELEASE_STEPS_ERROR
 import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.PASS
@@ -389,19 +390,18 @@ class OpExtServiceService @Autowired constructor(
 
     fun migrateService(
         userId: String,
-        serviceId: String,
+        serviceCode: String,
         checkPermissionFlag: Boolean = true
     ): Result<Boolean> {
         logger.info(
-            "migrateService userId: $userId , serviceId: $serviceId , checkPermissionFlag: $checkPermissionFlag"
+            "migrateService userId: $userId , serviceId: $serviceCode , checkPermissionFlag: $checkPermissionFlag"
         )
         val serviceRecord =
-            extServiceDao.getServiceById(dslContext, serviceId) ?: return I18nUtil.generateResponseDataObject(
+            extServiceDao.getServiceLatestByCode(dslContext, serviceCode) ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(serviceId),
+                params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
             )
-        val serviceCode = serviceRecord.serviceCode
         val status = ExtServiceStatusEnum.getServiceStatus(serviceRecord.serviceStatus.toInt())
         val version = serviceRecord.version
         val grayFlag = when {
@@ -419,8 +419,7 @@ class OpExtServiceService @Autowired constructor(
 
             else -> {
                 return I18nUtil.generateResponseDataObject(
-                    messageCode = USER_SERVICE_RELEASE_STEPS_ERROR,
-                    params = arrayOf(serviceCode),
+                    messageCode = USER_SERVICE_NOT_DEPLOY,
                     language = I18nUtil.getLanguage(userId)
                 )
             }
