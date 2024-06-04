@@ -141,7 +141,7 @@ class UserDao {
 
     fun usernamesByParentId(dslContext: DSLContext, parentId: Int): List<String> {
         with(TUser.T_USER) {
-            return dslContext.select(NAME)
+            return dslContext.select(USER_ID)
                 .from(this)
                 .where(BG_ID.eq(parentId))
                 .or(DEPT_ID.eq(parentId))
