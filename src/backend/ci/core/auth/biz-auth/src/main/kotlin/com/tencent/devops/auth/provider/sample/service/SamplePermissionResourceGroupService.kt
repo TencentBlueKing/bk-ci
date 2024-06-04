@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.provider.sample.service
 
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
@@ -102,6 +103,12 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
     ): Boolean {
         return true
     }
+
+    override fun createGroup(
+        userId: String,
+        projectId: String,
+        groupAddDTO: GroupAddDTO
+    ): Int = 0
 
     override fun rename(
         userId: String,

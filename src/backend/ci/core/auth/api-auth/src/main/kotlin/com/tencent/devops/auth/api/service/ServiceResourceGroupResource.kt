@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -38,6 +39,20 @@ interface ServiceResourceGroupResource {
         @QueryParam("groupCode")
         groupCode: BkAuthGroup
     ): Result<Boolean>
+
+    @POST
+    @Path("/{projectCode}/createGroup/")
+    @Operation(summary = "创建自定义组(不包含权限，空权限组)")
+    fun createGroup(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "创建组DTO", required = true)
+        groupAddDTO: GroupAddDTO
+    ): Result<Int>
 
     @DELETE
     @Path("/{projectCode}/deleteGroup/")

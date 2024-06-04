@@ -3,6 +3,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -101,6 +102,21 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
             projectCode = projectId,
             resourceType = resourceType,
             groupCode = groupCode
+        )
+    }
+
+    override fun createGroup(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        groupAddDTO: GroupAddDTO
+    ): Result<Int> {
+        logger.info("createGroup v4 |$appCode|$userId|$projectId|$groupAddDTO")
+        return client.get(ServiceResourceGroupResource::class).createGroup(
+            userId = userId,
+            projectCode = projectId,
+            groupAddDTO = groupAddDTO
         )
     }
 
