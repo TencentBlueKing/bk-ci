@@ -25,25 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.service.impl
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.atom.service.AtomBusHandleService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-class CommonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
-
-    override fun handleOsName(osName: String): String {
-        return osName.lowercase()
-    }
-
-    override fun handleOsArch(osName: String, osArch: String): String {
-        return osArch
-    }
-
-    override fun handleTarget(reqTarget: String?, target: String): String {
-        return if (reqTarget.isNullOrBlank()) target else reqTarget
-    }
-
-    override fun checkTarget(target: String): Boolean {
-        return true
-    }
-}
+@Schema(title = "组件关联初始化项目信息")
+data class StoreProjectInfo(
+    @get:Schema(title = "组件负责人", required = true)
+    val userId: String,
+    @get:Schema(title = "组件代码", required = true)
+    val storeCode: String,
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum
+)
