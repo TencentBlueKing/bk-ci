@@ -55,12 +55,14 @@
         },
         methods: {
             handleBaseInfoChange (name, value) {
-                this.updatePipelineSetting({
-                    setting: this.pipelineSetting,
-                    param: {
-                        [name]: value
-                    }
-                })
+                if (this.pipelineSetting[name] !== value) {
+                    this.updatePipelineSetting({
+                        setting: this.pipelineSetting,
+                        param: {
+                            [name]: value
+                        }
+                    })
+                }
             },
             handleRunningLockChange (param) {
                 this.updatePipelineSetting({

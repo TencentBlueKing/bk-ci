@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.utils
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import java.lang.StringBuilder
 import java.util.ArrayDeque
 
@@ -89,5 +90,19 @@ object ModelCreateUtil {
         }
 
         return result.toString()
+    }
+
+    fun getCustomEnv(env: Map<String, Any?>?): List<NameAndValue>? {
+        if (env == null) return null
+        val nameAndValueList = mutableListOf<NameAndValue>()
+        env.forEach {
+            nameAndValueList.add(
+                NameAndValue(
+                    key = it.key,
+                    value = it.value.toString()
+                )
+            )
+        }
+        return nameAndValueList
     }
 }

@@ -72,7 +72,9 @@ class BuildVariableService @Autowired constructor(
      */
     fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
         return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
-            val word = PipelineVarUtil.oldVarToNewVar(templateWord) ?: templateWord
+            val word = PipelineVarUtil.oldVarToNewVar(templateWord)
+                ?: PipelineVarUtil.fetchVarName(templateWord)
+                ?: templateWord
             val templateValByType = pipelineBuildVarDao.getVarsWithType(
                 dslContext = commonDslContext,
                 projectId = projectId,

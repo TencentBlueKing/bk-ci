@@ -71,7 +71,8 @@ class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
         container: Container,
         element: MarketBuildLessAtomElement,
         contextMap: Map<String, String>,
-        appearedCnt: Int
+        appearedCnt: Int,
+        isTemplate: Boolean
     ): ElementCheckResult {
         return elementBizPluginServices.find {
             it.supportElement(element)
@@ -82,7 +83,8 @@ class MarketBuildLessAtomElementBizPlugin @Autowired constructor(
             container = container,
             element = element,
             contextMap = contextMap,
-            appearedCnt = appearedCnt
+            appearedCnt = appearedCnt,
+            isTemplate = isTemplate
         ) ?: ElementCheckResult(true)
     }
 }
