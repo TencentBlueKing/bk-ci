@@ -1126,6 +1126,10 @@ class ExperienceService @Autowired constructor(
         outerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord
     ) {
+        if (outerReceivers.size > BATCH_SEND_LIMIT) {
+            logger.warn("sendMessageToOuterReceivers over limit , experienceId:${experienceRecord.id}")
+            return
+        }
         outerReceivers.forEach {
             val appMessage = AppNotifyUtil.makeMessage(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
@@ -1167,6 +1171,10 @@ class ExperienceService @Autowired constructor(
         deptUsers: Set<String>,
         experienceRecord: TExperienceRecord
     ) {
+        if (deptUsers.size > BATCH_SEND_LIMIT) {
+            logger.warn("sendMessageToDeptUsers over limit , experienceId:${experienceRecord.id}")
+            return
+        }
         deptUsers.forEach {
             val appMessage = AppNotifyUtil.makeMessage(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
@@ -1190,6 +1198,10 @@ class ExperienceService @Autowired constructor(
         pcUrl: String,
         appUrl: String
     ) {
+        if (innerReceivers.size > BATCH_SEND_LIMIT) {
+            logger.warn("sendMessageToInnerReceivers over limit , experienceId:${experienceRecord.id}")
+            return
+        }
         // 内部邮件
         if (notifyTypeList.contains(NotifyType.EMAIL)) {
             val message = EmailUtil.makeMessage(
@@ -1420,5 +1432,6 @@ class ExperienceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceService::class.java)
+        private const val BATCH_SEND_LIMIT = 2000
     }
 }
