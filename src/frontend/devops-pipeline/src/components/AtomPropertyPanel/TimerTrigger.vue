@@ -111,7 +111,7 @@
             return {
                 isShowBasicRule: false,
                 advance: false,
-                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branchs?.length,
+                isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branches?.length || this.element?.repositoryType === 'SELF',
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
                 repositoryType: this.element.repositoryType || 'ID'
             }
