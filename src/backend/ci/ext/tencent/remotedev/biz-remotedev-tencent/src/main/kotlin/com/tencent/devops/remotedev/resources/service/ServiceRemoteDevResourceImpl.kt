@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.resources.service
 
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -13,6 +14,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -21,11 +23,11 @@ import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
@@ -36,9 +38,12 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
@@ -62,7 +67,10 @@ class ServiceRemoteDevResourceImpl(
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
-    private val whiteListService: WhiteListService
+    private val devcloudService: DevcloudService,
+    private val whiteListService: WhiteListService,
+    private val deliverControl: DeliverControl,
+    private val imageManageService: ImageManageService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -120,10 +128,6 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
         return Result(workspaceService.getWorkspaceProject(projectId))
-    }
-
-    override fun queryProjectRemoteDevCvm(projectId: String?): Result<List<RemotedevCvmData>> {
-        return Result(workspaceService.getRemotedevCvm(projectId))
     }
 
     override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {
@@ -228,11 +232,11 @@ class ServiceRemoteDevResourceImpl(
             }
             AsyncExecute.dispatch(
                 rabbitTemplate, AsyncPipelineEvent(
-                    userId = info.userId ?: operator,
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
+                userId = info.userId ?: operator,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam
+            )
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)
@@ -430,5 +434,46 @@ class ServiceRemoteDevResourceImpl(
                 quotas = res.quotas?.mapValues { it.value - (mix?.get(it.key) ?: 0) }
             )
         )
+    }
+
+    override fun fetchCvmList(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<DevcloudCVMData>?> {
+        return Result(devcloudService.fetchCVMList(userId, projectId, page, pageSize))
+    }
+
+    override fun assignUser(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean> {
+        deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
+        return Result(true)
+    }
+
+    override fun getWorkspaceImageList(projectId: String?): Result<Map<String, Any>> {
+        // 获取基础镜像
+        val baseImages = imageManageService.getVmStandardImages().map { JsonUtil.toMap(it) }
+
+        // 获取项目特定镜像（如果有）
+        val projectImageMap = if (!projectId.isNullOrBlank()) {
+            val projectImages = imageManageService.getProjectImageList(projectId).map { JsonUtil.toMap(it) }
+            mapOf(projectId to projectImages)
+        } else {
+            emptyMap()
+        }
+
+        // 合并基础镜像和项目镜像
+        val allImages = projectImageMap + mapOf("base" to baseImages)
+
+        return Result(allImages)
+    }
+
+    override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
+        return Result(workspaceService.modifyWorkspaceDisplayName(userId, ip, displayName))
     }
 }

@@ -320,7 +320,7 @@ class PreBuildService @Autowired constructor(
             maxQueueMinutes = 60,
             maxRunningMinutes = 900,
             buildEnv = job.job.pool?.env,
-            customBuildEnv = null,
+            customEnv = null,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
             thirdPartyWorkspace = null,

@@ -1,7 +1,10 @@
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
@@ -18,7 +21,6 @@ import com.tencent.devops.project.pojo.BkDataSourceBillsDTO
 import com.tencent.devops.project.pojo.BkSummaryBillDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.BkBillKind
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -37,7 +39,8 @@ class ProjectBillsService constructor(
     val redisOperation: RedisOperation,
     val projectNotifyService: ProjectNotifyService,
     val projectUserService: ProjectUserService,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val objectMapper: ObjectMapper
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -99,8 +102,8 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE
             )
-            clearCacheAfterCheck()
             logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList|$project2Status")
+            clearCacheAfterCheck()
         }
         return true
     }
@@ -192,8 +195,8 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
             )
-            clearCacheAfterCheck()
             logger.info("check project related product finished, total: $totalCount|$disabledProjectList")
+            clearCacheAfterCheck()
         }
         return true
     }
@@ -333,7 +336,7 @@ class ProjectBillsService constructor(
         projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 10
+            val limit = 100
             var count = 0
             val yearAndMonthOfReportDate = LocalDate.parse(
                 yearAndMonthOfReportStr + "01", DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -343,12 +346,11 @@ class ProjectBillsService constructor(
             } else {
                 LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue - 1, 15)
             }
-            val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 14)
+            val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 15)
             do {
                 val projects = projectService.listProjectsByCondition(
                     projectConditionDTO = ProjectConditionDTO(
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        channelCode = ProjectChannelCode.BS.name
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
                     ),
                     limit = limit,
                     offset = offset
@@ -410,7 +412,8 @@ class ProjectBillsService constructor(
                             bills = bills
                         )
                         val summaryBillDTO = BkSummaryBillDTO(
-                            dataSourceBills = dataSourceBillsDTO
+                            dataSourceBills = dataSourceBillsDTO,
+                            overwrite = true
                         )
                         // 上报数据至saas
                         reportBillsDataToSaas(summaryBillDTO = summaryBillDTO)
@@ -438,6 +441,15 @@ class ProjectBillsService constructor(
                 if (!it.isSuccessful) {
                     logger.warn("request bill data failed,response:($it)")
                     throw RemoteServiceException("request failed, response:($it)")
+                }
+                val responseStr = it.body!!.string()
+                val responseDTO = objectMapper.readValue(
+                    responseStr,
+                    object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
+                if (responseDTO.code != 200L || !responseDTO.result) {
+                    // 请求错误
+                    logger.warn("request failed, message:(${responseDTO.message})")
+                    throw RemoteServiceException("request failed, response:(${responseDTO.message})")
                 }
             }
         } catch (ignore: Exception) {
