@@ -224,7 +224,7 @@ interface OpServiceResource {
 
     @Operation(summary = "迁移已部署的扩展服务")
     @GET
-    @Path("/migrate/serviceIds/{serviceCode}")
+    @Path("/migrate/serviceCodes/{serviceCode}")
     fun migrateService(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
