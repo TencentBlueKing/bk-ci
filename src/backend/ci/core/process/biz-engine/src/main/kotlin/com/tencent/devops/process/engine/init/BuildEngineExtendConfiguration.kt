@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.init
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFinishListener
+import com.tencent.devops.process.engine.listener.run.start.SubPipelineBuildStartListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -151,6 +152,40 @@ class BuildEngineExtendConfiguration {
         return Tools.createSimpleMessageListenerContainer(
             connectionFactory = connectionFactory,
             queue = subPipelineBuildStatusQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = buildListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
+    }
+
+    @Bean
+    fun subPipelineBuildStartQueue(): Queue {
+        return Queue(MQ.QUEUE_PIPELINE_BUILD_START_SUBPIPEINE)
+    }
+
+    @Bean
+    fun subPipelineBuildStartQueueBind(
+        @Autowired subPipelineBuildStartQueue: Queue,
+        @Autowired pipelineBuildStartFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(subPipelineBuildStartQueue).to(pipelineBuildStartFanoutExchange)
+    }
+
+    @Bean
+    fun subPipelineBuildFinishListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired subPipelineBuildStartQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: SubPipelineBuildStartListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = subPipelineBuildStartQueue,
             rabbitAdmin = rabbitAdmin,
             buildListener = buildListener,
             messageConverter = messageConverter,
