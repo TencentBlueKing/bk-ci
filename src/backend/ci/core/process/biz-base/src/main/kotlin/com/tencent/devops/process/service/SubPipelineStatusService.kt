@@ -106,19 +106,23 @@ class SubPipelineStatusService @Autowired constructor(
             if (triggerType != StartType.PIPELINE.name) {
                 return
             }
-            updateParentPipelineTaskStatus(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                asyncStatus = "finish"
-            )
-            // 子流水线是异步启动的，不需要缓存状态
-            if (redisOperation.get(getSubPipelineStatusKey(buildId)) != null) {
-                redisOperation.set(
-                    key = getSubPipelineStatusKey(buildId),
-                    value = JsonUtil.toJson(getSubPipelineStatusFromDB(event.projectId, buildId)),
-                    expiredInSecond = SUBPIPELINE_STATUS_FINISH_EXPIRED
+            try {
+                updateParentPipelineTaskStatus(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    asyncStatus = "finish"
                 )
+                // 子流水线是异步启动的，不需要缓存状态
+                if (redisOperation.get(getSubPipelineStatusKey(buildId)) != null) {
+                    redisOperation.set(
+                        key = getSubPipelineStatusKey(buildId),
+                        value = JsonUtil.toJson(getSubPipelineStatusFromDB(event.projectId, buildId)),
+                        expiredInSecond = SUBPIPELINE_STATUS_FINISH_EXPIRED
+                    )
+                }
+            } catch (ignored: Exception) {
+                logger.warn("fail to update parent pipeline task status", ignored)
             }
         }
     }
