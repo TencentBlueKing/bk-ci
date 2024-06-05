@@ -70,6 +70,9 @@ class ProjectBillsService constructor(
     @Value("\${bill.key:#{null}}")
     private var billKey: String = ""
 
+    @Value("\${bill.limit:#{null}}")
+    private var billLimit: Int = 30
+
     fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -336,7 +339,7 @@ class ProjectBillsService constructor(
         projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 20
+            val limit = billLimit
             var count = 0
             val yearAndMonthOfReportDate = LocalDate.parse(
                 yearAndMonthOfReportStr + "01", DateTimeFormatter.ofPattern("yyyyMMdd")
