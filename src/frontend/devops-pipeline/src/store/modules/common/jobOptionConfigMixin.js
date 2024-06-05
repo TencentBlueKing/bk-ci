@@ -121,6 +121,10 @@ const jobOptionConfigMixin = {
                 {
                     id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                     name: this.$t('storeMap.varNotMatch')
+                },
+                {
+                    id: 'CUSTOM_CONDITION_MATCH',
+                    name: this.$t('storeMap.customCondition')
                 }
             ],
             finallyRunConditionList: [
@@ -153,6 +157,15 @@ const jobOptionConfigMixin = {
                     text: this.$t('storeMap.enableJob'),
                     default: true
                 },
+                // enableCustomEnv: {
+                //     rule: {},
+                //     type: 'boolean',
+                //     component: 'atom-checkbox',
+                //     text: this.$t('storeMap.customEnv'),
+                //     default: false,
+                //     clearValue: false,
+                //     clearFields: ['customEnv']
+                // },
                 dependOnType: {
                     component: 'enum-input',
                     label: this.$t('storeMap.dependOn'),
@@ -189,6 +202,70 @@ const jobOptionConfigMixin = {
                         return !(jobOption && jobOption.dependOnType === 'NAME')
                     }
                 },
+                maxConcurrency: {
+                    type: 'group',
+                    label: this.$t('storeMap.maxConcurrency'),
+                    isHidden: (container) => {
+                        const dispatchType = container.dispatchType || {}
+                        return dispatchType.buildType !== 'THIRD_PARTY_AGENT_ENV'
+                    },
+                    children: [
+                        {
+                            key: 'singleNodeConcurrency',
+                            rule: { maxConcurrencyRule: true },
+                            type: 'groupItem',
+                            component: 'vuex-input',
+                            labelWidth: 150,
+                            label: this.$t('storeMap.singleNodeConcurrency'),
+                            placeholder: this.$t('storeMap.singleNodeConcurrencyPlaceholder')
+                        },
+                        {
+                            key: 'allNodeConcurrency',
+                            rule: { maxConcurrencyRule: true },
+                            type: 'groupItem',
+                            component: 'vuex-input',
+                            labelWidth: 150,
+                            label: this.$t('storeMap.allNodeConcurrency'),
+                            placeholder: this.$t('storeMap.allNodeConcurrencyPlaceholder')
+                        }
+                    ]
+                },
+                timeoutPeriod: {
+                    type: 'group',
+                    label: this.$t('storeMap.timeoutPeriod'),
+                    isHidden: (container) => {
+                        const dispatchType = container.dispatchType || {}
+                        return dispatchType.buildType !== 'THIRD_PARTY_AGENT_ENV'
+                    },
+                    children: [
+                        {
+                            key: 'prepareTimeout',
+                            type: 'groupItem',
+                            rule: { timeoutsRule: true },
+                            component: 'composite-input',
+                            appendText: this.$t('storeMap.minutes'),
+                            labelWidth: 90,
+                            width: 150,
+                            required: true,
+                            label: this.$t('storeMap.queueTimeOut'),
+                            iconDesc: this.$t('storeMap.prepareTimeoutDesc'),
+                            default: '10'
+                        },
+                        {
+                            key: 'timeoutVar',
+                            type: 'groupItem',
+                            rule: { timeoutsRule: true },
+                            component: 'composite-input',
+                            appendText: this.$t('storeMap.minutes'),
+                            labelWidth: 90,
+                            width: 150,
+                            required: true,
+                            label: this.$t('storeMap.execTimeOut'),
+                            iconDesc: this.$t('storeMap.timeoutDesc'),
+                            default: '900'
+                        }
+                    ]
+                },
                 timeoutVar: {
                     rule: { timeoutsRule: true },
                     component: 'vuex-input',
@@ -196,19 +273,10 @@ const jobOptionConfigMixin = {
                     label: this.$t('storeMap.jobTimeout'),
                     desc: this.$t('storeMap.timeoutDesc'),
                     placeholder: this.$t('storeMap.timeoutPlaceholder'),
-                    default: '900'
-                },
-                prepareTimeout: {
-                    rule: { numeric: true, max_value: 10080 },
-                    component: 'vuex-input',
-                    required: true,
-                    label: this.$t('storeMap.prepareTimeout'),
-                    desc: this.$t('storeMap.prepareTimeoutDesc'),
-                    placeholder: this.$t('storeMap.timeoutPlaceholder'),
-                    default: '10',
+                    default: '900',
                     isHidden: (container) => {
                         const dispatchType = container.dispatchType || {}
-                        return dispatchType.buildType !== 'THIRD_PARTY_AGENT_ENV'
+                        return dispatchType.buildType === 'THIRD_PARTY_AGENT_ENV'
                     }
                 },
                 runCondition: {
@@ -230,8 +298,13 @@ const jobOptionConfigMixin = {
                     }
                 },
                 customCondition: {
-                    isHidden: true,
-                    default: ''
+                    component: 'vuex-input',
+                    default: '',
+                    required: true,
+                    label: this.$t('storeMap.customConditionExp'),
+                    isHidden: (container) => {
+                        return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'
+                    }
                 }
             }
         },
@@ -253,15 +326,21 @@ const jobOptionConfigMixin = {
         }
     },
     methods: {
-        getJobOptionDefault (OPTION = this.JOB_OPTION) {
-            return Object.keys(OPTION).reduce((formProps, key) => {
-                if (OPTION[key] && typeof OPTION[key].default === 'object') {
-                    formProps[key] = JSON.parse(JSON.stringify(OPTION[key].default))
-                } else {
-                    formProps[key] = OPTION[key].default
+        getJobOptionDefault (model, values) {
+            return Object.keys(model).reduce((formProps, key) => {
+                if (!Object.prototype.hasOwnProperty.apply(values, [key])) {
+                    formProps[key] = this.getFieldDefault(key, model)
                 }
                 return formProps
-            }, {})
+            }, {
+                ...values
+            })
+        },
+        getFieldDefault (key, model) {
+            if (typeof model[key]?.default === 'object') {
+                return JSON.parse(JSON.stringify(model[key].default))
+            }
+            return model[key].default
         }
     }
 }

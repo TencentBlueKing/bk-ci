@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.matcher
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.test.BkCiAbstractTest
@@ -204,7 +205,12 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
                 repositoryName = null
             ),
             eventType = CodeEventType.MERGE_REQUEST,
-            branchName = "master"
+            branchName = "master",
+            includeMrAction = listOf(
+                CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
+                CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
+                CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+            ).joinToString(",")
         )
         val matcher = GitWebHookMatcher(event = event)
 

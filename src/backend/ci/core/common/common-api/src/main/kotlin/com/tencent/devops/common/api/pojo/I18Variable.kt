@@ -36,7 +36,7 @@ data class I18Variable(
     @get:Schema(title = "国际化变量名")
     val code: String,
     @get:Schema(title = "国际化参数")
-    val params: List<String>,
+    val params: List<String>? = emptyList(),
     @get:Schema(title = "默认信息")
     val defaultMessage: String? = null
 ) {

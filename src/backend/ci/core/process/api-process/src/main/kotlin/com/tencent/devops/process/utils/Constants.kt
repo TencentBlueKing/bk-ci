@@ -121,6 +121,12 @@ const val PIPELINE_ATOM_VERSION = "BK_CI_ATOM_VERSION" // "流水线插件版本
 const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步骤名称）"
 const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文标识）"
 const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时时间"
+/**
+ * 自定义触发材料
+ */
+const val BK_CI_MATERIAL_ID = "BK_CI_MATERIAL_ID" // 触发材料ID
+const val BK_CI_MATERIAL_NAME = "BK_CI_MATERIAL_NAME" // 触发材料名称
+const val BK_CI_MATERIAL_URL = "BK_CI_MATERIAL_URL" // 触发材料链接
 
 /**
  * 流水线设置-最大排队数量-默认值
@@ -203,6 +209,11 @@ const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
 const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 
 /**
+ * 流水线设置-自定义表达式执行条件的条件长度-最大值
+ */
+const val PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX = 512
+
+/**
  * 入库VAR表，流水线变量最大长度
  */
 const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
@@ -212,11 +223,6 @@ const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
-
-/**
- * 流水线设置-CONCURRENCY GROUP 并发组-默认值
- */
-const val PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT = "\${{ci.pipeline_id}}"
 
 /**
  * 保存流水线编排的最大个数

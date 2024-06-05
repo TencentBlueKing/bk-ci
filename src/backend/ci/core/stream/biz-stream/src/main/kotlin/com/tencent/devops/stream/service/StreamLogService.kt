@@ -79,9 +79,11 @@ class StreamLogService @Autowired constructor(
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
             tag = tag,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
-            debug = debug
+            debug = debug,
+            jobId = null,
+            stepId = null
         ).data!!
     }
 
@@ -105,9 +107,11 @@ class StreamLogService @Autowired constructor(
             buildId = buildId,
             start = start,
             tag = tag,
-            jobId = jobId,
+            containerHashId = jobId,
             executeCount = executeCount,
-            debug = debug
+            debug = debug,
+            jobId = null,
+            stepId = null
         ).data!!
     }
 

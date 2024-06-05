@@ -72,6 +72,17 @@ object PipelineUtils {
                     )
                 )
             }
+            if (param.constant == true) {
+                if (param.defaultValue.toString().isBlank()) throw OperationException(
+                    message = I18nUtil.getCodeLanMessage(
+                        ProcessMessageCode.ERROR_PIPELINE_CONSTANTS_BLANK_ERROR,
+                        params = arrayOf(param.id)
+                    )
+                )
+                // 常量一定不作为入参，且只读不可覆盖
+                param.required = false
+                param.readOnly = true
+            }
             map[param.id] = param
         }
         return map
@@ -103,6 +114,15 @@ object PipelineUtils {
                 else -> {
                     checkVariablesLength(param.key, param.value.toString())
                 }
+            }
+        }
+    }
+
+    fun transformUserIllegalReviewParams(reviewParams: List<ManualReviewParam>?) {
+        reviewParams?.forEach { param ->
+            val value = param.value
+            if (param.valueType == ManualReviewParamType.MULTIPLE && value is String && value.isBlank()) {
+                param.value = null
             }
         }
     }

@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreDockingPlatformResource
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformInfo
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import com.tencent.devops.store.common.service.StoreDockingPlatformService
 import org.springframework.beans.factory.annotation.Autowired
 

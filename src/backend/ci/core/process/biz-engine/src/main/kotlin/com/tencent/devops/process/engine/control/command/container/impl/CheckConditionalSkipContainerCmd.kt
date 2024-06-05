@@ -81,9 +81,11 @@ class CheckConditionalSkipContainerCmd constructor(
             buildLogPrinter.addErrorLine(
                 buildId = container.buildId,
                 message = "[${e.kind}] condition of job is invalid: ${e.message}",
-                jobId = container.containerHashId,
+                containerHashId = container.containerHashId,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                executeCount = commandContext.executeCount
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
             commandContext.buildStatus = BuildStatus.FAILED
             commandContext.latestSummary = "j(${container.containerId}) check condition failed"
@@ -126,8 +128,7 @@ class CheckConditionalSkipContainerCmd constructor(
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
@@ -138,7 +139,9 @@ class CheckConditionalSkipContainerCmd constructor(
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 buildId = container.buildId,
                 message = message.toString(),
-                jobId = container.containerHashId
+                containerHashId = container.containerHashId,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         }
 

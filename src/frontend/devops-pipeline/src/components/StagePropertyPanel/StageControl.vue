@@ -5,33 +5,58 @@
             <i class="bk-icon icon-angle-down" style="display:block"></i>
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
-            <bk-form :label-width="200" form-type="vertical">
+            <form-field>
+                <bk-checkbox :disabled="disabled" v-model="stageEnable">
+                    {{ $t('enableStage') }}
+                </bk-checkbox>
+            </form-field>
+            <template v-if="!isFinally">
                 <form-field>
-                    <bk-checkbox :disabled="disabled" v-model="stageEnable">
-                        {{ $t('enableStage') }}
+                    <bk-checkbox :disabled="disabled" v-model="stageFastKill">
+                        {{ $t('stageFastKill') }}
                     </bk-checkbox>
+                    <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
                 </form-field>
-                <section v-if="!isFinally">
-                    <form-field>
-                        <bk-checkbox :disabled="disabled" v-model="stageFastKill">
-                            {{ $t('stageFastKill') }}
-                        </bk-checkbox>
-                        <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
-                    </form-field>
-                    <bk-form-item :label="$t('stageOptionLabel')">
-                        <bk-select :disabled="disabled" v-model="stageCondition" searchable>
-                            <bk-option v-for="option in conditionConf"
-                                :key="option.id"
-                                :id="option.id"
-                                :name="option.name">
-                            </bk-option>
-                        </bk-select>
-                    </bk-form-item>
-                    <bk-form-item v-if="showVariable">
-                        <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
-                    </bk-form-item>
-                </section>
-            </bk-form>
+                <form-field required :label="$t('stageOptionLabel')" :is-error="errors.has('stageCondition')" :error-msg="errors.first('stageCondition')">
+                    <bk-select
+                        name="stageCondition"
+                        v-validate.initial="'required'"
+                        :disabled="disabled"
+                        v-model="stageCondition"
+                        searchable
+                    >
+                        <bk-option v-for="option in conditionConf"
+                            :key="option.id"
+                            :id="option.id"
+                            :name="option.name">
+                        </bk-option>
+                    </bk-select>
+                </form-field>
+                <form-field v-if="showVariable">
+                    <key-value-normal
+                        :disabled="disabled"
+                        :value="variables"
+                        :allow-null="false"
+                        name="customVariables"
+                        :handle-change="handleUpdateStageControl"
+                    />
+                </form-field>
+                <form-field
+                    v-if="showCondition"
+                    required
+                    :label="$t('storeMap.customConditionExp')"
+                    :is-error="errors.has('customCondition')"
+                    :error-msg="errors.first('customCondition')"
+                >
+                    <vuex-input
+                        :value="customConditionExpress"
+                        v-validate.initial="showCondition ? 'required' : ''"
+                        name="customCondition"
+                        :handle-change="handleUpdateStageControl"
+                    >
+                    </vuex-input>
+                </form-field>
+            </template>
         </div>
     </accordion>
 </template>
@@ -39,6 +64,7 @@
 <script>
     import { mapActions } from 'vuex'
     import Accordion from '@/components/atomFormField/Accordion'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import FormField from '@/components/AtomPropertyPanel/FormField'
 
@@ -47,7 +73,8 @@
         components: {
             Accordion,
             KeyValueNormal,
-            FormField
+            FormField,
+            VuexInput
         },
         props: {
             stageControl: {
@@ -93,7 +120,10 @@
                 }
             },
             variables () {
-                return this.stageControl && Array.isArray(this.stageControl.customVariables) ? this.stageControl.customVariables : []
+                return Array.isArray(this.stageControl?.customVariables) ? this.stageControl?.customVariables : []
+            },
+            customConditionExpress () {
+                return this.stageControl?.customCondition ?? ''
             },
             conditionConf () {
                 return [
@@ -106,6 +136,10 @@
                         name: this.$t('storeMap.varMatch')
                     },
                     {
+                        id: 'CUSTOM_CONDITION_MATCH',
+                        name: this.$t('storeMap.customCondition')
+                    },
+                    {
                         id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                         name: this.$t('storeMap.varNotMatch')
                     }
@@ -113,6 +147,9 @@
             },
             showVariable () {
                 return ['CUSTOM_VARIABLE_MATCH', 'CUSTOM_VARIABLE_MATCH_NOT_RUN'].indexOf(this.stageCondition) > -1
+            },
+            showCondition () {
+                return ['CUSTOM_CONDITION_MATCH'].indexOf(this.stageCondition) > -1
             }
         },
         watch: {
@@ -141,6 +178,7 @@
                     this.handleStageChange('stageControlOption', {
                         enable: true,
                         runCondition: 'AFTER_LAST_FINISHED',
+                        customCondition: '',
                         customVariables: [{ key: 'param1', value: '' }],
                         manualTrigger: false,
                         triggerUsers: [],

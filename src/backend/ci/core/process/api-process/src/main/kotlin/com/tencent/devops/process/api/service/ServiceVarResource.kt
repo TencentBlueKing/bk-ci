@@ -88,4 +88,21 @@ interface ServiceVarResource {
     fun setContextVar(
         data: SetContextVarData
     )
+
+    @Operation(summary = "获取指定构建或指定流水线下的构建变量")
+    @Path("/var/data/get")
+    @POST
+    fun getBuildVars(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "字段key集合", required = false)
+        keys: Set<String>? = null
+    ): Result<Map<String, String>>
 }

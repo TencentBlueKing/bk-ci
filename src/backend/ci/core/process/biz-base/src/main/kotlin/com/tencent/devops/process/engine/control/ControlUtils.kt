@@ -27,12 +27,9 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.expression.EvaluationResult
-import com.tencent.devops.common.expression.expression.ParseExceptionKind
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -51,6 +48,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_TASK_DISABLED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
@@ -171,8 +169,7 @@ object ControlUtils {
         containerFinalStatus: BuildStatus,
         variables: Map<String, String>,
         hasFailedTaskInSuccessContainer: Boolean,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
         message.append(
             I18nUtil.getCodeLanMessage(BK_CHECK_TASK_RUN_CONDITION)
@@ -222,8 +219,7 @@ object ControlUtils {
                     buildId = buildId,
                     additionalOptions = additionalOptions,
                     variables = variables,
-                    message = message,
-                    asCodeEnabled = asCodeEnabled
+                    message = message
                 )
             } else -> {
                 message.clear()
@@ -237,17 +233,12 @@ object ControlUtils {
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
         variables: Map<String, String>,
-        message: StringBuilder,
-        asCodeEnabled: Boolean
+        message: StringBuilder
     ): Boolean {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
             !additionalOptions.customCondition.isNullOrBlank()
         ) {
-            return if (asCodeEnabled) {
-                !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
-            } else {
-                !evalExpression(additionalOptions.customCondition, buildId, variables, message)
-            }
+            return !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
         }
 
         return false
@@ -260,8 +251,7 @@ object ControlUtils {
         buildId: String,
         runCondition: JobRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
         message.append(
             I18nUtil.getCodeLanMessage(BK_CHECK_JOB_RUN_CONDITION)
@@ -278,11 +268,7 @@ object ControlUtils {
                 false
             } // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return if (asCodeEnabled) {
-                    !evalExpressionAsCode(customCondition, buildId, variables, message)
-                } else {
-                    !evalExpression(customCondition, buildId, variables, message)
-                }
+                return !evalExpressionAsCode(customCondition, buildId, variables, message)
             }
             else -> {
                 message.append(runCondition)
@@ -311,18 +297,13 @@ object ControlUtils {
         buildId: String,
         runCondition: StageRunCondition,
         customCondition: String? = null,
-        message: StringBuilder = StringBuilder(),
-        asCodeEnabled: Boolean
+        message: StringBuilder = StringBuilder()
     ): Boolean {
         var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return if (asCodeEnabled) {
-                    !evalExpressionAsCode(customCondition, buildId, variables, message)
-                } else {
-                    !evalExpression(customCondition, buildId, variables, message)
-                }
+                return !evalExpressionAsCode(customCondition, buildId, variables, message)
             }
             else -> return false // 其它类型直接返回不跳过
         }
@@ -339,48 +320,6 @@ object ControlUtils {
         return skip
     }
 
-    private fun evalExpression(
-        customCondition: String?,
-        buildId: String,
-        variables: Map<String, Any>,
-        message: StringBuilder
-    ): Boolean {
-        return if (!customCondition.isNullOrBlank()) {
-            try {
-                val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
-                logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=$expressionResult"
-                )
-                message.append(
-                    "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!expressionResult) {
-                            " will be skipped! "
-                        } else {
-                            ""
-                        }
-                )
-                expressionResult
-            } catch (ignore: Exception) {
-                // 异常，则任务表达式为false
-                logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}",
-                    ignore
-                )
-                message.append(
-                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
-                )
-                return false
-            }
-        } else {
-            // 空表达式也认为是false
-            logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
-            message.append("Custom condition is empty, will be skipped!")
-            false
-        }
-    }
-
     private fun evalExpressionAsCode(
         customCondition: String?,
         buildId: String,
@@ -389,7 +328,11 @@ object ControlUtils {
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
-                val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables, false)
+                // 新增的表达式调用需要去掉兼容老流水线变量
+                val variablesWithOutOld = variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
+                val expressionResult = ExpressionParser.evaluateByMap(
+                    customCondition, variablesWithOutOld, false
+                )
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=$expressionResult"
@@ -408,7 +351,7 @@ object ControlUtils {
                         }
                 )
                 resultIsTrue
-            } catch (ignore: ExpressionParseException) {
+            } catch (ignore: Throwable) {
                 // 异常，则任务表达式为false
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
@@ -418,13 +361,13 @@ object ControlUtils {
                 message.append(
                     "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
                 )
-                throw ignore
+                false
             }
         } else {
             // 空表达式也认为是false
             logger.info("[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
             message.append("Custom condition is empty, will be skipped!")
-            throw ExpressionParseException(ParseExceptionKind.UnexpectedSymbol, null, "Custom condition is empty")
+            false
         }
     }
 

@@ -46,10 +46,10 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
         variables: Map<String, String>
     ): WebHookParams? {
         val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+            repositoryConfig = RepositoryConfigUtils.buildWebhookConfig(
+                element = element,
                 variables = variables
-            )
+            ).third
         )
         with(element) {
             params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {

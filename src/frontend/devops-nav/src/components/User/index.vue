@@ -102,10 +102,10 @@
 
         logout (): void {
             try {
-                const url = new URL(window.getLoginUrl())
-                url.searchParams.append('is_from_logout', '1')
-                console.log(url.href)
-                window.location.href = url.href
+                const loginUrl = new URL(window.getLoginUrl())
+                loginUrl.searchParams.append('is_from_logout', '1')
+                console.log(loginUrl.href)
+                window.location.href = loginUrl.href
             } catch (error) {
                 console.error(error)
             }

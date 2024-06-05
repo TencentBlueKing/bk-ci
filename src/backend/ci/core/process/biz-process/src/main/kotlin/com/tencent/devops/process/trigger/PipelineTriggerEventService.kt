@@ -28,7 +28,6 @@
 
 package com.tencent.devops.process.trigger
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -39,7 +38,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -50,7 +48,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
@@ -105,7 +103,6 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
     ) {
-        triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineTriggerEventDao.save(
@@ -119,6 +116,20 @@ class PipelineTriggerEventService @Autowired constructor(
         }
     }
 
+    fun saveTriggerEvent(triggerEvent: PipelineTriggerEvent) {
+        pipelineTriggerEventDao.save(
+            dslContext = dslContext,
+            triggerEvent = triggerEvent
+        )
+    }
+
+    fun saveTriggerDetail(triggerDetail: PipelineTriggerDetail) {
+        pipelineTriggerEventDao.saveDetail(
+            dslContext = dslContext,
+            triggerDetail = triggerDetail
+        )
+    }
+
     fun listPipelineTriggerEvent(
         userId: String,
         projectId: String,
@@ -126,6 +137,8 @@ class PipelineTriggerEventService @Autowired constructor(
         eventType: String?,
         triggerType: String?,
         triggerUser: String?,
+        eventId: Long?,
+        reason: String?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -141,6 +154,8 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerType = triggerType,
             triggerUser = triggerUser,
             pipelineId = pipelineId,
+            eventId = eventId,
+            reason = reason,
             startTime = startTime,
             endTime = endTime
         )
@@ -151,6 +166,8 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
+            eventId = eventId,
+            reason = reason,
             startTime = startTime,
             endTime = endTime,
             limit = sqlLimit.limit,
@@ -170,6 +187,7 @@ class PipelineTriggerEventService @Autowired constructor(
         pipelineId: String?,
         eventId: Long?,
         pipelineName: String?,
+        reason: String?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -179,9 +197,10 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val language = I18nUtil.getLanguage(userId)
+        // 仅查询Event表
+        val queryEvent = pipelineName.isNullOrBlank() && pipelineId.isNullOrBlank() && reason == null
         // 事件ID to 总数
-        val (eventIds, count) = if (pipelineName.isNullOrBlank() && pipelineId.isNullOrBlank()) {
+        val (eventIds, count) = if (queryEvent) {
             val eventIds = pipelineTriggerEventDao.getEventIdsByEvent(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -214,6 +233,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 eventSource = repoHashId,
                 eventId = eventId,
                 eventType = eventType,
+                reason = reason,
                 triggerUser = triggerUser,
                 triggerType = triggerType,
                 startTime = startTime,
@@ -229,6 +249,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 eventSource = repoHashId,
                 eventId = eventId,
                 eventType = eventType,
+                reason = reason,
                 triggerUser = triggerUser,
                 triggerType = triggerType,
                 startTime = startTime,
@@ -270,6 +291,7 @@ class PipelineTriggerEventService @Autowired constructor(
         eventId: Long,
         pipelineId: String?,
         pipelineName: String?,
+        reason: String?,
         page: Int?,
         pageSize: Int?,
         userId: String
@@ -286,6 +308,7 @@ class PipelineTriggerEventService @Autowired constructor(
             eventId = eventId,
             pipelineId = pipelineId,
             pipelineName = pipelineName,
+            reason = reason,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
@@ -296,7 +319,8 @@ class PipelineTriggerEventService @Autowired constructor(
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,
-            pipelineName = pipelineName
+            pipelineName = pipelineName,
+            reason = reason
         )
         return SQLPage(count = count, records = records)
     }
@@ -388,6 +412,21 @@ class PipelineTriggerEventService @Autowired constructor(
         return true
     }
 
+    fun triggerReasonStatistics(
+        projectId: String,
+        eventId: Long,
+        pipelineId: String?,
+        pipelineName: String?
+    ): PipelineTriggerReasonStatistics {
+        return pipelineTriggerEventDao.triggerReasonStatistics(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventId = eventId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName
+        )
+    }
+
     /**
      * 获取国际化构建事件描述
      */
@@ -396,32 +435,6 @@ class PipelineTriggerEventService @Autowired constructor(
     } catch (ignored: Exception) {
         logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
         eventDesc
-    }
-
-    /**
-     * 获取国际化构建事件详情描述
-     */
-    private fun getI18nReasonDetailDesc(triggerType: String, reasonDetailList: List<String>?): List<String>? {
-        return when {
-            reasonDetailList.isNullOrEmpty() -> null
-            // 非webhook触发,直接返回异常信息
-            !PipelineTriggerType.webhookTrigger(triggerType) -> reasonDetailList
-            else -> try {
-                reasonDetailList.map {
-                    val reasonDetail = JsonUtil.to(it, PipelineTriggerReasonDetail::class.java)
-                    // 国际化触发失败原因
-                    val i18nReason = JsonUtil.to(
-                        json = reasonDetail.reasonMsg,
-                        typeReference = object : TypeReference<I18Variable>() {}
-                    ).getCodeLanMessage()
-                    // 详情格式： {{触发器名称}}|{{国际化后的触发失败原因}}
-                    "${reasonDetail.elementName} | $i18nReason"
-                }
-            } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo trigger event detail", ignored)
-                reasonDetailList
-            }
-        }
     }
 
     private fun getI18nReason(reason: String?): String = getCodeLanMessage(
@@ -456,7 +469,6 @@ class PipelineTriggerEventService @Autowired constructor(
         return with(eventParam) {
             eventDesc = getI18nEventDesc(eventDesc)
             buildNum = getBuildNumUrl()
-            reasonDetailList = getI18nReasonDetailDesc(triggerType = triggerType, reasonDetailList = reasonDetailList)
             reason = getI18nReason(eventParam.reason)
             this
         }
