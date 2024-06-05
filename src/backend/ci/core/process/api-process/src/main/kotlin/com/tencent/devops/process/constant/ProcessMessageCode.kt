@@ -536,6 +536,8 @@ object ProcessMessageCode {
     const val BK_QUALITY_IN = "bkQualityIn" // 质量红线(准入)
     const val BK_QUALITY_OUT = "bkQualityOut" // 质量红线(准出)
     const val BK_BUILD_FINISHED_AND_DENY_PAUSE = "bkBuildFinishedAndDenyPause" // 构建已结束，禁止暂停请求
+    const val BK_PIPELINE_RUN_CONDITION_RESULT = "bkPipelineRunConditionResult" // 执行条件计算结果
+    const val BK_PIPELINE_RUN_CONDITION_NOT_MATCH = "bkPipelineRunConditionNotMatch" // 执行条件为满足，将跳过
 
     // TODO: AgentReuseMutex
     const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
