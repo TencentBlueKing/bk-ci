@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
@@ -81,7 +82,7 @@ class SubPipelineStatusService @Autowired constructor(
     /**
      * 异步启动子流水线
      */
-    fun onAsyncStart(event: PipelineBuildStartEvent) {
+    fun onAsyncStart(event: PipelineBuildStartBroadCastEvent) {
         with(event) {
             try {
                 updateParentPipelineTaskStatus(
@@ -160,7 +161,7 @@ class SubPipelineStatusService @Autowired constructor(
             buildId = buildVariables[PIPELINE_START_PARENT_BUILD_ID]!!
         )?.let {
             logger.info("start update parent pipeline asyncStatus[$asyncStatus]|${it.projectId}|${it.pipelineId}|" +
-                    "${it.buildId}|${it.executeCount}|")
+                    "${it.buildId}|${it.executeCount}")
             pipelineRuntimeService.updateAsyncStatus(
                 projectId = it.projectId,
                 pipelineId = it.pipelineId,
