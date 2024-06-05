@@ -83,6 +83,10 @@ class SubPipelineStatusService @Autowired constructor(
      */
     fun onAsyncStart(event: PipelineBuildStartBroadCastEvent) {
         with(event) {
+            // 不是流水线启动
+            if (triggerType != StartType.PIPELINE.name) {
+                return
+            }
             try {
                 updateParentPipelineTaskStatus(
                     projectId = projectId,
