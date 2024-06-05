@@ -733,7 +733,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 includeDraft = includeDraft
             )
         } else null
-        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+        val (size, pipelines) = repositoryVersionService.listPipelineVersionWithInfo(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -772,6 +772,69 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
     }
 
+    fun listPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        page: Int,
+        pageSize: Int,
+        fromVersion: Int?,
+        includeDraft: Boolean? = true,
+        versionName: String? = null,
+        creator: String? = null,
+        description: String? = null
+    ): Page<PipelineVersionSimple> {
+        var slqLimit: SQLLimit? = null
+        if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+
+        val offset = slqLimit?.offset ?: 0
+        var limit = slqLimit?.limit ?: -1
+        // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
+        val fromResource = if (fromVersion != null && page == 1) {
+            limit -= 1
+            repositoryVersionService.getPipelineVersionSimple(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = fromVersion
+            )
+        } else null
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+            pipelineInfo = pipelineInfo,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            includeDraft = includeDraft,
+            excludeVersion = fromVersion,
+            offset = offset,
+            limit = limit
+        )
+        fromResource?.let { pipelines.add(it) }
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = size.toLong(),
+            records = pipelines
+        )
+    }
+
+    fun getPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionSimple {
+        return repositoryVersionService.getPipelineVersionSimple(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
+    }
+
     fun rollbackDraftFromVersion(
         userId: String,
         projectId: String,
@@ -788,6 +851,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             creator = resource.creator,
             createTime = resource.createTime.timestampmilli(),
+            updater = resource.updater,
             updateTime = resource.updateTime?.timestampmilli(),
             version = resource.version,
             versionName = resource.versionName ?: "",

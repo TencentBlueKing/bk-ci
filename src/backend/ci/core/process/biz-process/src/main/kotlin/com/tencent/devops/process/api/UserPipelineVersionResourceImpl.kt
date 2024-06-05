@@ -302,7 +302,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         description: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<PipelineVersionWithInfo>> {
+    ): Result<Page<PipelineVersionSimple>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -322,7 +322,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(
-            pipelineVersionFacadeService.listPipelineVersionInfo(
+            pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 fromVersion = fromVersion,
@@ -341,7 +341,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): Result<PipelineVersionWithInfo> {
+    ): Result<PipelineVersionSimple> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -361,7 +361,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(
-            pipelineVersionFacadeService.getPipelineVersionInfo(
+            pipelineVersionFacadeService.getPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version
