@@ -39,7 +39,7 @@ data class PipelineVersionSimple(
     @get:Schema(title = "创建时间戳", required = true)
     val createTime: Long,
     @get:Schema(title = "更新操作人", required = true)
-    val updater: String,
+    val updater: String?,
     @get:Schema(title = "更新时间戳", required = true)
     val updateTime: Long?,
     @get:Schema(title = "流水线版本号", required = true)

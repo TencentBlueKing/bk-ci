@@ -241,6 +241,7 @@ class PipelineRepositoryVersionService(
                         pipelineId = record.pipelineId,
                         creator = record.creator,
                         createTime = record.createTime.timestampmilli(),
+                        updater = record.updater,
                         updateTime = record.updateTime?.timestampmilli(),
                         version = record.version,
                         versionName = record.versionName ?: PipelineVersionUtils.getVersionName(
