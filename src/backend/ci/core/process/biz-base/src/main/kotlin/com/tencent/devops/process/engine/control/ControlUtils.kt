@@ -366,7 +366,14 @@ object ControlUtils {
                     ignore
                 )
                 message.append(
-                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_WITH_ERROR,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(ignore.message ?: "")
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_NOT_MATCH,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
                 false
             }
