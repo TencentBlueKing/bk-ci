@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.constant.SECURITY
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -811,6 +812,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = repositoryHashId,
                 branch = branch
             )
+        } catch (exception: RemoteServiceException) {
+            logger.error("BKSystemErrorMonitor|getTaskJsonContent|$atomCode|error=${exception.message}", exception)
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_PULL_FILE_FAIL,
+                params = arrayOf(TASK_JSON_NAME, exception.message ?: "")
+            )
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|getTaskJsonContent|$atomCode|error=${ignored.message}", ignored)
             throw ErrorCodeException(
@@ -818,7 +825,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf(TASK_JSON_NAME)
             )
         }
-        if (null == taskJsonStr || !JsonSchemaUtil.validateJson(taskJsonStr)) {
+        if ((null == taskJsonStr) || !JsonSchemaUtil.validateJson(taskJsonStr)) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL,
                 params = arrayOf(branch ?: MASTER, TASK_JSON_NAME)

@@ -93,6 +93,10 @@ object StoreMessageCode {
     const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
     // 研发商店：java插件配置文件[task.json]target配置不正确,java插件的target命令配置需要以java开头
     const val JAVA_ATOM_TASK_JSON_TARGET_IS_INVALID = "2120041"
+    // 研发商店: 拉取文件[{0}]失败，失败原因：{1}
+    const val USER_PULL_FILE_FAIL = "2120042"
+    // 插件包文件[{0}]不存在，请检查文件所在路径是否正确
+    const val ATOM_PACKAGE_FILE_NOT_FOUND = "2120043"
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
