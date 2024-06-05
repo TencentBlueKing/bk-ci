@@ -81,7 +81,7 @@ import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 
-@Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber")
+@Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber", "TooManyFunctions")
 open class BkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoService: BkRepoService,
@@ -153,7 +153,8 @@ open class BkRepoDownloadService @Autowired constructor(
             val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
             if (!check.isOk() || !check.data!!) {
                 throw CustomException(
-                    Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
+                    Response.Status.BAD_REQUEST,
+                    MessageUtil.getMessageByLocale(
                         messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -489,10 +490,10 @@ open class BkRepoDownloadService @Autowired constructor(
         userId: String?
     ): List<String> {
         logger.info(
-            "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
-                    ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
-                    "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, crossBuildId: $crossBuildId, " +
-                    "region：$region, userId: $userId"
+            "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                    "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, " +
+                    "crossBuildId: $crossBuildId, region：$region, userId: $userId"
         )
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
