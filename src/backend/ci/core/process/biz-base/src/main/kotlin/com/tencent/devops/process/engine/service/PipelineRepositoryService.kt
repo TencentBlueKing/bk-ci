@@ -1726,7 +1726,7 @@ class PipelineRepositoryService constructor(
             }
             if (versionStatus.isReleasing()) pipelineSettingDao.saveSetting(
                 transactionContext, setting, isTemplate
-            ).toString()
+            )
         }
 
         return PipelineName(name = setting.pipelineName, oldName = oldName)
