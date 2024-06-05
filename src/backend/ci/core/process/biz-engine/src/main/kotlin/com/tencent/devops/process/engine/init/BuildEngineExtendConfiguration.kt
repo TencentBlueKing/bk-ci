@@ -176,7 +176,7 @@ class BuildEngineExtendConfiguration {
     }
 
     @Bean
-    fun subPipelineBuildFinishListenerContainer(
+    fun subPipelineBuildStartListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired subPipelineBuildStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
