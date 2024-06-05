@@ -96,34 +96,4 @@ class ProjectMiscDao {
             ).from(this).where(conditions).fetch()
         }
     }
-
-    fun getDisableProject(
-        dslContext: DSLContext,
-        channelCodes: List<String>,
-        /*获取小于该更新时间的项目*/
-        ltUpdateTime: String,
-        limit: Int,
-        offset: Int
-    ): Result<TProjectRecord> {
-        val date = DateTimeUtil.stringToLocalDate(ltUpdateTime)!!.atStartOfDay()
-        return with(TProject.T_PROJECT) {
-            val execute = dslContext.selectFrom(this)
-                .where(ENABLED.eq(false))
-                .and(CHANNEL.`in`(channelCodes))
-                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(UPDATED_AT.lt(date))
-                .orderBy(UPDATED_AT)
-                .limit(limit).offset(offset)
-            logger.info("get disable project sql ${execute.sql}")
-            execute.fetch()
-        }
-    }
-
-    companion object {
-        private val UNSUCCESSFUL_CREATE_STATUS = listOf(
-            ProjectApproveStatus.CREATE_PENDING.status,
-            ProjectApproveStatus.CREATE_REJECT.status
-        )
-        private val logger = LoggerFactory.getLogger(ProjectMiscDao::class.java)
-    }
 }

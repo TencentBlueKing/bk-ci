@@ -59,6 +59,7 @@ import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.lower
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.util.Locale
 
@@ -1039,6 +1040,29 @@ class ProjectDao {
                 .from(this)
                 .where(ENGLISH_NAME.`in`(englishNameList))
                 .fetch(ENGLISH_NAME, String::class.java)
+        }
+    }
+
+
+    fun getDisableProject(
+        dslContext: DSLContext,
+        channelCodes: List<String>,
+        /*获取小于该更新时间的项目*/
+        ltUpdateTime: String,
+        limit: Int,
+        offset: Int
+    ): Result<TProjectRecord> {
+        val date = DateTimeUtil.stringToLocalDate(ltUpdateTime)!!.atStartOfDay()
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this)
+                .where(ENABLED.eq(false))
+                .and(CHANNEL.`in`(channelCodes))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .and(UPDATED_AT.lt(date))
+                .orderBy(UPDATED_AT)
+                .limit(limit)
+                .offset(offset)
+                .fetch()
         }
     }
 
