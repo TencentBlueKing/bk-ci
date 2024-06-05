@@ -51,6 +51,7 @@ import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
@@ -163,6 +164,9 @@ abstract class ImageReleaseService {
 
     @Autowired
     lateinit var client: Client
+
+    @Autowired
+    lateinit var storeInnerPipelineConfig: StoreInnerPipelineConfig
 
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
 
@@ -620,11 +624,12 @@ abstract class ImageReleaseService {
         val imageCode = imageRecord.imageCode
         val version = imageRecord.version
         val imagePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, imageCode, StoreTypeEnum.IMAGE)
+        // 查找新增镜像时关联的项目
         val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            context,
-            imageCode,
-            StoreTypeEnum.IMAGE.type.toByte()
-        ) // 查找新增镜像时关联的项目
+            dslContext = context,
+            storeCode = imageCode,
+            storeType = StoreTypeEnum.IMAGE.type.toByte()
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         val ticketId = imageRecord.ticketId
         var userName: String? = null
         var password: String? = null
@@ -633,7 +638,7 @@ abstract class ImageReleaseService {
             val encoder = Base64.getEncoder()
             val decoder = Base64.getDecoder()
             val credentialResult = client.get(ServiceCredentialResource::class).get(
-                projectCode!!, ticketId,
+                projectCode, ticketId,
                 encoder.encodeToString(pair.publicKey)
             )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
@@ -691,7 +696,11 @@ abstract class ImageReleaseService {
                 startParams = startParams
             )
             val storeInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initStorePipeline(userId, projectCode!!, storeInitPipelineReq).data
+                .initStorePipeline(
+                    userId = storeInnerPipelineConfig.innerPipelineUser,
+                    projectId = storeInnerPipelineConfig.innerPipelineProject,
+                    storeInitPipelineReq = storeInitPipelineReq
+                ).data
             logger.info("runCheckImagePipeline storeInitPipelineResp is:$storeInitPipelineResp")
             if (null != storeInitPipelineResp) {
                 storePipelineRelDao.add(
@@ -699,7 +708,7 @@ abstract class ImageReleaseService {
                     storeCode = imageCode,
                     storeType = StoreTypeEnum.IMAGE,
                     pipelineId = storeInitPipelineResp.pipelineId,
-                    projectCode = projectCode
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject
                 )
                 val buildId = storeInitPipelineResp.buildId
                 val imageStatus = if (buildId.isNullOrBlank()) {
@@ -723,9 +732,14 @@ abstract class ImageReleaseService {
             }
         } else {
             // 触发执行流水线
+            val startProjectCode = if (imagePipelineRelRecord.projectCode.isNullOrBlank()) {
+                projectCode
+            } else {
+                imagePipelineRelRecord.projectCode
+            }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
-                projectId = projectCode!!,
+                projectId = startProjectCode,
                 pipelineId = imagePipelineRelRecord.pipelineId,
                 values = startParams,
                 channelCode = ChannelCode.AM,
