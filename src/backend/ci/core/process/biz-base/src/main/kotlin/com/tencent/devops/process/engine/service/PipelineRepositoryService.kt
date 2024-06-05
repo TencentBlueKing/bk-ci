@@ -784,7 +784,7 @@ class PipelineRepositoryService constructor(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    creator = userId,
+                    userId = userId,
                     version = 1,
                     model = model,
                     yamlStr = yaml?.yamlStr,
@@ -1091,7 +1091,7 @@ class PipelineRepositoryService constructor(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    creator = userId,
+                    userId = userId,
                     version = version,
                     model = model,
                     yamlStr = yaml?.yamlStr,
@@ -1178,7 +1178,7 @@ class PipelineRepositoryService constructor(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                creator = userId,
+                userId = userId,
                 version = releaseResource.version,
                 model = releaseResource.model,
                 yamlVersion = releaseResource.yamlVersion,
@@ -1414,7 +1414,7 @@ class PipelineRepositoryService constructor(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                creator = userId,
+                userId = userId,
                 version = newDraft.version,
                 versionName = "",
                 model = newDraft.model,
@@ -2018,7 +2018,7 @@ class PipelineRepositoryService constructor(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    creator = userId,
+                    userId = userId,
                     version = version,
                     model = newModel,
                     yamlStr = yamlWithVersion?.yamlStr,
@@ -2050,6 +2050,7 @@ class PipelineRepositoryService constructor(
     }
 
     fun updatePipelineBranchVersion(
+        userId: String,
         projectId: String,
         pipelineId: String,
         branchName: String?,
@@ -2058,6 +2059,7 @@ class PipelineRepositoryService constructor(
     ) {
         pipelineResourceVersionDao.updateBranchVersion(
             dslContext = transactionContext ?: dslContext,
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             branchName = branchName,

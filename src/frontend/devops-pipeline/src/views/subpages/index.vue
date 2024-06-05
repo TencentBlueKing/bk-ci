@@ -54,7 +54,8 @@
                 'setPipelineYaml',
                 'selectPipelineVersion',
                 'setPipelineWithoutTrigger',
-                'requestPipelineSummary'
+                'requestPipelineSummary',
+                'resetAtomModalMap'
             ]),
             async fetchPipelineInfo () {
                 try {

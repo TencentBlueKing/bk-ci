@@ -42,6 +42,7 @@ import {
     INSERT_ATOM,
     PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
+    RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
@@ -509,7 +510,7 @@ export default {
     clearAtomData: ({ commit }) => {
         commit(CLEAR_ATOM_DATA)
     },
-
+    resetAtomModalMap: actionCreator(RESET_ATOM_MODAL_MAP),
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container, queryOfflineFlag = false }) => {
         try {
             commit(SET_ATOM_MODAL_FETCHING, true)
