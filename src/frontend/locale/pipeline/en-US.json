@@ -1018,7 +1018,8 @@
     "codelib": "Code Repositories",
     "branches": "Branch",
     "codelibConfigs": "Code Repositories Config",
-    "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path."
+    "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
+    "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met."
   },
   "storeMap": {
     "textarea": "Textarea",
