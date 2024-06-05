@@ -150,6 +150,7 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 		buildGateway = "http://" + buildGateway
 	}
 
+	ip := config.GAgentEnv.GetAgentIp()
 	templateData := map[string]string{
 		"ProjectType": projectType,
 		"AgentId":     config.GAgentConfig.AgentId,
@@ -161,6 +162,7 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 		"BuildType":   config.GAgentConfig.BuildType,
 		"TlsCa":       tlsCa,
 	}
+	logs.Debugf("telegraf agentip %s", ip)
 
 	var content = new(bytes.Buffer)
 	tmpl, err := template.New("tmpl").Parse(telegrafconf.TelegrafConf)
