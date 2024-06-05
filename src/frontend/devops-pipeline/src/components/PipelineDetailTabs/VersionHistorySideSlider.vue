@@ -60,7 +60,7 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="222" :label="$t('operate')">
+                    <bk-table-column :width="222" :label="$t('operate')">
                         <div slot-scope="props" class="pipeline-history-version-operate">
                             <rollback-entry
                                 v-if="props.row.canRollback"
@@ -150,23 +150,25 @@
                     prop: 'createTime',
                     label: this.$t('createTime'),
                     showOverflowTooltip: true,
-                    width: 180,
+                    width: 156,
                     formatter: (row) => {
                         return convertTime(row.createTime)
                     }
                 }, {
                     prop: 'creator',
+                    width: 90,
                     label: this.$t('creator')
                 }, {
                     prop: 'updateTime',
                     label: this.$t('lastUpdateTime'),
                     showOverflowTooltip: true,
-                    width: 180,
+                    width: 156,
                     formatter: (row) => {
                         return convertTime(row.updateTime)
                     }
                 }, {
                     prop: 'updater',
+                    width: 90,
                     label: this.$t('audit.operator')
                 }]
             },
