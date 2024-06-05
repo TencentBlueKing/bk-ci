@@ -70,6 +70,9 @@ class ProjectBillsService constructor(
     @Value("\${bill.key:#{null}}")
     private var billKey: String = ""
 
+    @Value("\${bill.limit:#{null}}")
+    private var billLimit: Int = 30
+
     fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -336,7 +339,7 @@ class ProjectBillsService constructor(
         projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 100
+            val limit = billLimit
             var count = 0
             val yearAndMonthOfReportDate = LocalDate.parse(
                 yearAndMonthOfReportStr + "01", DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -359,38 +362,38 @@ class ProjectBillsService constructor(
                 if (projects.isEmpty()) break
                 val bills = mutableListOf<BkBillDTO>()
                 projects.forEach forEach@{
-                    try {
-                        val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
-                        // 若项目不活跃（无人访问），不上报
-                        val projectActiveUserResponse = client.get(ServiceMetricsResource::class)
-                            .getProjectActiveUserCount(
-                                BaseQueryReqVO(
-                                    projectId = it.englishName,
-                                    startTime = startTime.format(DATE_FORMATTER),
-                                    endTime = endTime.format(DATE_FORMATTER)
-                                )
-                            ).data ?: return@forEach
-                        // 不活跃项目不上报
-                        if (projectActiveUserResponse.userCount == 0)
-                            return@forEach
-
-                        val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
+                    val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
+                    // 若项目不活跃（无人访问），不上报
+                    val projectActiveUserResponse = client.get(ServiceMetricsResource::class)
+                        .getProjectActiveUserCount(
                             BaseQueryReqVO(
                                 projectId = it.englishName,
                                 startTime = startTime.format(DATE_FORMATTER),
                                 endTime = endTime.format(DATE_FORMATTER)
                             )
-                        ).data
-                        val billKind2Usage = mapOf(
-                            BkBillKind.DOCKER_VM to (maxJobConcurrency?.dockerVm ?: 0),
-                            BkBillKind.DOCKER_DEVCLOUD to (maxJobConcurrency?.dockerDevcloud ?: 0),
-                            BkBillKind.MACOS_DEVCLOUD to (maxJobConcurrency?.macosDevcloud ?: 0),
-                            BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
-                            BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
-                            BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
-                            BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
+                        ).data ?: return@forEach
+                    // 不活跃项目不上报
+                    if (projectActiveUserResponse.userCount == 0)
+                        return@forEach
+
+                    val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
+                        BaseQueryReqVO(
+                            projectId = it.englishName,
+                            startTime = startTime.format(DATE_FORMATTER),
+                            endTime = endTime.format(DATE_FORMATTER)
                         )
-                        billKind2Usage.forEach { (billKind, usage) ->
+                    ).data
+                    val billKind2Usage = mapOf(
+                        BkBillKind.DOCKER_VM to (maxJobConcurrency?.dockerVm ?: 0),
+                        BkBillKind.DOCKER_DEVCLOUD to (maxJobConcurrency?.dockerDevcloud ?: 0),
+                        BkBillKind.MACOS_DEVCLOUD to (maxJobConcurrency?.macosDevcloud ?: 0),
+                        BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
+                        BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
+                        BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
+                        BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
+                    )
+                    billKind2Usage.forEach { (billKind, usage) ->
+                        if (usage != 0) {
                             val bkBillDTO = BkBillDTO(
                                 costDate = yearAndMonthOfReportStr,
                                 projectId = it.englishName,
@@ -407,22 +410,20 @@ class ProjectBillsService constructor(
                             }
                             bills.add(bkBillDTO)
                         }
-                        val dataSourceBillsDTO = BkDataSourceBillsDTO(
-                            dataSourceName = "蓝盾服务",
-                            bills = bills
-                        )
-                        val summaryBillDTO = BkSummaryBillDTO(
-                            dataSourceBills = dataSourceBillsDTO,
-                            overwrite = true
-                        )
-                        // 上报数据至saas
-                        reportBillsDataToSaas(summaryBillDTO = summaryBillDTO)
-                        logger.info("report bills data:$summaryBillDTO")
-                        count += 1
-                    } catch (ignore: Exception) {
-                        logger.warn("report bills data failed!${ignore.message}|${it.englishName}")
                     }
+                    count += 1
                 }
+                val dataSourceBillsDTO = BkDataSourceBillsDTO(
+                    dataSourceName = "蓝盾服务",
+                    bills = bills
+                )
+                val summaryBillDTO = BkSummaryBillDTO(
+                    dataSourceBills = dataSourceBillsDTO,
+                    overwrite = true
+                )
+                // 上报数据至saas
+                reportBillsDataToSaas(summaryBillDTO = summaryBillDTO)
+                logger.info("report bills data:$summaryBillDTO")
                 offset += limit
             } while (projects.size == limit)
             logger.info("report bills data total :$count")
@@ -453,7 +454,8 @@ class ProjectBillsService constructor(
                 }
             }
         } catch (ignore: Exception) {
-            logger.warn("request bill data failed!${ignore.message}")
+            val reportFailedProject = summaryBillDTO.dataSourceBills.bills.map { it.projectId }
+            logger.warn("request bill data failed!${ignore.message}|$reportFailedProject")
         }
     }
 }
