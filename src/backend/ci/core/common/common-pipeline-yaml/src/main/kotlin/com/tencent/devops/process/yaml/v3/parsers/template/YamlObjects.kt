@@ -297,7 +297,8 @@ object YamlObjects {
                         null
                     } else {
                         transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
-                    }
+                    },
+                    privileged = getNullValue("privileged", optionsMap)?.toBoolean()
                 )
             },
             imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)
