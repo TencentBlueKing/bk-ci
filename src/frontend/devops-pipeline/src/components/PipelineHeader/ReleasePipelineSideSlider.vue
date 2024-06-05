@@ -17,6 +17,10 @@
                 <aside class="release-pipeline-pac-conf-leftside">
                     <label for="enablePac">
                         {{ $t("pacMode") }}
+                        <span
+                            class="devops-icon icon-info-circle"
+                            v-bk-tooltips="pacDesc"
+                        />
                     </label>
                     <bk-switcher
                         :disabled="pacEnabled || isTemplatePipeline"
@@ -217,6 +221,12 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
+            pacDesc () {
+                return {
+                    content: this.$t('pacDesc'),
+                    maxWidth: 300
+                }
+            },
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionName || '--'
             },
@@ -903,7 +913,7 @@
         color: #3fc06d;
         font-size: 36px;
     }
-    
+
     .part-of-mr {
         position: relative;
         width: 42px;
@@ -931,7 +941,7 @@
             width: 28px;
             height: 28px;
             border-radius: 50%;
-    
+
         }
     }
 
@@ -950,7 +960,7 @@
         line-height: 1.2;
         text-align: center;
     }
-    
+
     .pipeline-release-suc-tips {
         background: #f5f6fa;
         display: flex;

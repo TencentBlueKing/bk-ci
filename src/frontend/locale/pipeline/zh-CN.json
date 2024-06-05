@@ -1538,5 +1538,6 @@
   "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式查看和PAC模式发布。",
   "eventID": "事件ID",
   "runningSteps": "正在运行的步骤：",
-  "completeness": "完成度："
+  "completeness": "完成度：",
+  "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。"
 }

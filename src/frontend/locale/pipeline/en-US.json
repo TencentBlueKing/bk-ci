@@ -1537,5 +1537,6 @@
   "templateYamlNotSupport": "The constrained mode pipeline (template instance) currently does not support Code mode viewing and PAC mode publishing.",
   "eventID": "Event ID",
   "runningSteps": "Running steps: ",
-  "completeness": "Completeness: "
+  "completeness": "Completeness: ",
+  "pacDesc": "Pipeline as Code mode, referred to as PAC mode. After enabling and submitting the pipeline file to the code base, you can maintain the pipeline by maintaining the code base file."
 }
