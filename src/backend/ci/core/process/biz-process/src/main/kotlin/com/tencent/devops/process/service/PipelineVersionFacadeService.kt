@@ -399,7 +399,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             model = draftVersion.model,
             projectId = projectId,
             signPipelineId = pipelineId,
-            userId = draftVersion.creator,
+            userId = userId,
             channelCode = pipeline.channelCode,
             create = false,
             updateLastModifyUser = true,
