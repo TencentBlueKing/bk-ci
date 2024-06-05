@@ -118,11 +118,8 @@ class StartBuildContextTest : TestBase() {
             buildId = buildId,
             resourceVersion = version,
             versionName = null,
-            model = Model(
-                name = "pipelineName",
-                desc = null,
-                stages = genStages(2, jobSize = 2, elementSize = 2, needFinally = false)
-            ),
+            realStartParamKeys = emptyList(),
+            modelStr = "",
             pipelineParamMap = pipelineParamMap,
             currentBuildNo = null,
             triggerReviewers = null,
