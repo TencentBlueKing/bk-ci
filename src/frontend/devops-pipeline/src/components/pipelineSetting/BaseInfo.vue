@@ -4,13 +4,15 @@
         <bk-form form-type="vertical" :label-width="300" class="new-ui-form">
             <bk-form-item :label="$t('pipelineName')" :required="true">
                 <vuex-input
+                    v-bk-focus
                     :disabled="!editable"
                     :placeholder="$t('pipelineNameInputTips')"
                     name="pipelineName"
                     :value="pipelineSetting.pipelineName"
                     v-validate.initial="'required|max:128'"
                     :max-length="128"
-                    :handle-change="handleBaseInfoChange" />
+                    :handle-change="handleBaseInfoChange"
+                />
             </bk-form-item>
 
             <bk-form-item :required="false">

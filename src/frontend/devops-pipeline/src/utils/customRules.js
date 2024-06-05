@@ -116,6 +116,11 @@ const customeRules = {
         validate: function (value, args) {
             return /^(?:[1-9]|[1-9]\d|1[0-5][0-9]|168)$/.test(value)
         }
+    },
+    maxConcurrencyRule: {
+        validate: function (value, args) {
+            return /^(?:[1-9]|[1-9]\d|[1-9]\d{2}|1000)$/.test(value)
+        }
     }
 }
 

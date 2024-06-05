@@ -349,6 +349,7 @@ class PipelineTriggerEventAspect(
             result != null -> {
                 val buildId = result as BuildId
                 triggerDetailBuilder.status(PipelineTriggerStatus.SUCCEED.name)
+                triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
                 triggerDetailBuilder.buildId(buildId.id)
                 triggerDetailBuilder.buildNum(buildId.num?.toString() ?: "")
             }

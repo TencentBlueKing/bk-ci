@@ -142,5 +142,5 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         permission: AuthPermission,
         resourceType: String?
-    ): List<String>? = null
+    ): List<String>? = supplierForPermission()
 }

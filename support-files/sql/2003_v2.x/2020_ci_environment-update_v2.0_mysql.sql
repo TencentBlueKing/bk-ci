@@ -125,6 +125,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ENV_NODE'
+                    AND COLUMN_NAME = 'ENABLE_NODE') THEN
+        ALTER TABLE `T_ENV_NODE`
+            ADD COLUMN `ENABLE_NODE` bit(1) DEFAULT 1 NOT NULL COMMENT '是否启用节点';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_ENVIRONMENT_THIRDPARTY_AGENT'

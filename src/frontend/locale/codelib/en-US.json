@@ -145,7 +145,6 @@
     "事件类型": "Event Type",
     "触发人": "Trigger",
     "流水线名称": "Pipeline Name",
-    "事件ID/触发器类型/事件类型/触发人/流水线名称": "Event ID / Trigger Type / Event Type / Trigger / Pipeline Name",
     "加载更多": "Load More",
     "到底啦": "End",
     "全部重放": "Replay Event",
@@ -214,5 +213,9 @@
     "重放此事件，符合条件的流水线将触发执行": "Replay this event will trigger the execution of pipelines that meet the conditions",
     "重放此事件，仅触发当前流水线": "Replay this event, will only trigger the current pipeline",
     "相同代码库只支持在一个蓝盾项目下开启 PAC 模式": "The same repository only supports enabling PAC mode under one Blue Shield project.",
-    "去开启PAC": "To enable PAC"
+    "去开启PAC": "To enable PAC",
+    "触发成功": "Trigger Success",
+    "触发失败": "Trigger Failed",
+    "触发器不匹配": "Trigger Not Match",
+    "触发结果": "Trigger Result"
 }

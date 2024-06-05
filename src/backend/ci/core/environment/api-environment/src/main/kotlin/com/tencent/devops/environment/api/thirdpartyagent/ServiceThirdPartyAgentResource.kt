@@ -44,6 +44,7 @@ import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -118,7 +119,7 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Environment Hash ID", required = true)
         @PathParam("envId")
         envId: String
-    ): Result<List<ThirdPartyAgent>>
+    ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "根据环境名称获取Agent列表")
     @GET
@@ -130,7 +131,7 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
         envName: String
-    ): Result<List<ThirdPartyAgent>>
+    ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "Agent是否能升级")
     @GET
@@ -414,7 +415,7 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
         envName: String
-    ): Result<Pair<Long?, List<ThirdPartyAgent>>>
+    ): Result<Pair<Long?, List<EnvNodeAgent>>>
 
     @Operation(summary = "禁用Agent")
     @POST

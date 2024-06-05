@@ -108,6 +108,7 @@ data class Model(
                             maxRunningMinutes = container.maxRunningMinutes,
                             buildEnv = container.buildEnv,
                             customBuildEnv = container.customBuildEnv,
+                            customEnv = container.customEnv,
                             thirdPartyAgentId = container.thirdPartyAgentId,
                             thirdPartyAgentEnvId = container.thirdPartyAgentEnvId,
                             thirdPartyWorkspace = container.thirdPartyWorkspace,

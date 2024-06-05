@@ -184,4 +184,13 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             }
         }
     }
+
+    override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(REPOSITORY_HASH_ID)
+                .from(this)
+                .where(ATOM_CODE.eq(storeCode))
+                .fetchAny()?.into(String::class.java)
+        }
+    }
 }

@@ -45,6 +45,7 @@ import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -89,7 +90,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvId(projectId: String, envId: String) =
         Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
 
-    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> {
+    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<EnvNodeAgent>> {
         val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName)
         return Result(res)
     }
@@ -275,7 +276,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvNameWithId(
         projectId: String,
         envName: String
-    ): Result<Pair<Long?, List<ThirdPartyAgent>>> {
+    ): Result<Pair<Long?, List<EnvNodeAgent>>> {
         return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
     }
 
