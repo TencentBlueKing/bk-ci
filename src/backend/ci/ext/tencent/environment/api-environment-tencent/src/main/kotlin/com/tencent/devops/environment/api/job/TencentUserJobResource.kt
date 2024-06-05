@@ -7,6 +7,7 @@ import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
+import com.tencent.devops.environment.pojo.job.agentres.ApResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -264,4 +265,16 @@ interface TencentUserJobResource {
         @QueryParam("hostId")
         hostId: Long
     ): AgentResult<ObtainManualCommandResult>
+
+    @Operation(summary = "查询接入点信息列表")
+    @GET
+    @Path("/{projectId}/get_ap_list")
+    fun getApList(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): AgentResult<ApResult>
 }

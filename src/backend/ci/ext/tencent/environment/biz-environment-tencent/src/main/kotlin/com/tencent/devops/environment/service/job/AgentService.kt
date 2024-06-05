@@ -47,6 +47,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentApInfo
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentObtainManualCommand
@@ -56,6 +57,8 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatu
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.agentres.ApInfo
+import com.tencent.devops.environment.pojo.job.agentres.ApResult
 import com.tencent.devops.environment.pojo.job.agentres.Content
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
@@ -63,11 +66,13 @@ import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
 import com.tencent.devops.environment.pojo.job.agentres.Meta
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
+import com.tencent.devops.environment.pojo.job.agentres.PortConfig
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.agentres.ServerInfo
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
@@ -173,7 +178,7 @@ data class AgentService @Autowired constructor(
         keyFile: InputStream?,
         installAgentReqString: String
     ): AgentResult<InstallAgentResult> {
-        NodeManApi.setNodemanOperationName("installAgent")
+        NodeManApi.setNodemanOperationName(::installAgent.name)
         val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentReqString)
         val hostIdToqueryCCResDataMap = tencentQueryFromCCService.queryCCFindHostBizRelations(
             installAgentReq.hosts.mapNotNull { it.bkHostId?.toLong() }
@@ -442,7 +447,7 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
-        NodeManApi.setNodemanOperationName("queryAgentTaskLog")
+        NodeManApi.setNodemanOperationName(::queryAgentTaskLog.name)
         val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> =
             nodeManApi.executeGetRequest(
                 Array<AgentQueryAgentTaskLog>::class.java, jobId, instanceId
@@ -475,7 +480,7 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
-        NodeManApi.setNodemanOperationName("terminalAgentInstallTask")
+        NodeManApi.setNodemanOperationName(::terminalAgentInstallTask.name)
         val terminalAgentInstallTaskRequest = AgentTerminateAgentInstallTaskReq(
             instanceIdList = terminateAgentInstallTaskReq.instanceIdList
         )
@@ -503,7 +508,7 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
-        NodeManApi.setNodemanOperationName("retryAgentInstallTask")
+        NodeManApi.setNodemanOperationName(::retryAgentInstallTask.name)
         val retryAgentInstallTaskRequest = AgentRetryAgentInstallTaskReq(
             instanceIdList = retryAgentInstallTaskReq.instanceIdList
         )
@@ -530,7 +535,7 @@ data class AgentService @Autowired constructor(
         projectId: String,
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult> {
-        NodeManApi.setNodemanOperationName("queryAgentInstallChannel")
+        NodeManApi.setNodemanOperationName(::queryAgentInstallChannel.name)
         val agentQueryAgentInsChannelRes: AgentOriginalResult<Array<AgentInstallAgentChannel>> =
             nodeManApi.executeGetRequest(
                 Array<AgentInstallAgentChannel>::class.java, DEFAULT_PLACE_HOLDER, withHidden
@@ -562,7 +567,7 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         hostId: Long
     ): AgentResult<ObtainManualCommandResult> {
-        NodeManApi.setNodemanOperationName("obtainManualInstallationCommand")
+        NodeManApi.setNodemanOperationName(::obtainManualInstallationCommand.name)
         val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> =
             nodeManApi.executeGetRequest(
                 AgentObtainManualCommand::class.java, jobId, hostId
@@ -598,5 +603,67 @@ data class AgentService @Autowired constructor(
             }
         )
         return obtainManualCommandRes
+    }
+
+    fun getApList(userId: String, projectId: String): AgentResult<ApResult> {
+        NodeManApi.setNodemanOperationName(::getApList.name)
+        val agentGetApListRes: AgentOriginalResult<Array<AgentApInfo>> =
+            nodeManApi.executeGetRequest(Array<AgentApInfo>::class.java, null, null)
+        val getApListRes: AgentResult<ApResult> = AgentResult(
+            code = agentGetApListRes.code,
+            result = agentGetApListRes.result,
+            message = agentGetApListRes.message,
+            errors = agentGetApListRes.errors,
+            data = ApResult(
+                apList = agentGetApListRes.data?.map {
+                    val apInfo = ApInfo(
+                        id = it.id,
+                        name = it.name,
+                        btFileServer = it.btFileServer.map { btFileServer ->
+                            ServerInfo(
+                                innerIp = btFileServer.innerIp,
+                                outerIp = btFileServer.outerIp,
+                                innerIpv6 = btFileServer.innerIpv6,
+                                outerIpv6 = btFileServer.outerIpv6
+                            )
+                        },
+                        dataServer = it.btFileServer.map { dataServer ->
+                            ServerInfo(
+                                innerIp = dataServer.innerIp,
+                                outerIp = dataServer.outerIp,
+                                innerIpv6 = dataServer.innerIpv6,
+                                outerIpv6 = dataServer.outerIpv6
+                            )
+                        },
+                        taskServer = it.btFileServer.map { taskServer ->
+                            ServerInfo(
+                                innerIp = taskServer.innerIp,
+                                outerIp = taskServer.outerIp,
+                                innerIpv6 = taskServer.innerIpv6,
+                                outerIpv6 = taskServer.outerIpv6
+                            )
+                        },
+                        portConfig = PortConfig(
+                            btPort = it.portConfig.btPort,
+                            ioPort = it.portConfig.ioPort,
+                            dataPort = it.portConfig.dataPort,
+                            procPort = it.portConfig.procPort,
+                            trunkPort = it.portConfig.trunkPort,
+                            btPortEnd = it.portConfig.btPortEnd,
+                            trackerPort = it.portConfig.trackerPort,
+                            btPortStart = it.portConfig.btPortStart,
+                            dbProxyPort = it.portConfig.dbProxyPort,
+                            fileSvrPort = it.portConfig.fileSvrPort,
+                            apiServerPort = it.portConfig.apiServerPort,
+                            agentThriftPort = it.portConfig.agentThriftPort,
+                            btsvrThriftPort = it.portConfig.btsvrThriftPort,
+                            dataPrometheusPort = it.portConfig.dataPrometheusPort
+                        )
+                    )
+                    apInfo
+                }
+            )
+        )
+        return getApListRes
     }
 }
