@@ -404,7 +404,6 @@
                 this.handleUpdateParam(key, value)
             },
             handleUpdateParam (key, value) {
-                console.log(key, value, 'inner')
                 this.handleChange(key, value)
             }
         }

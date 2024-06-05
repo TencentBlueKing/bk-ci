@@ -129,7 +129,7 @@ const routes = [
                         component: PipelineListAuth
                     },
                     {
-                        path: ':viewId/:type?',
+                        path: ':viewId?/:type?',
                         name: 'PipelineManageList',
                         component: PipelineManageList,
                         meta: {

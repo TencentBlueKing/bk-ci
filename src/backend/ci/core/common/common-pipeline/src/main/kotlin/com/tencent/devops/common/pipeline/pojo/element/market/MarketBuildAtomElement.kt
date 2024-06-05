@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
+import org.json.JSONObject
 
 @Schema(title = "流水线模型-插件市场第三方构建环境类插件", description = MarketBuildAtomElement.classType)
 data class MarketBuildAtomElement(
@@ -61,7 +62,7 @@ data class MarketBuildAtomElement(
         return atomCode
     }
 
-    override fun transferYaml(defaultValue: Map<String, String>?): PreStep {
+    override fun transferYaml(defaultValue: JSONObject?): PreStep {
         val input = data["input"] as Map<String, Any>? ?: emptyMap()
         return PreStep(
             name = name,

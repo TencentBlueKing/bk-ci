@@ -24,6 +24,7 @@
                 ref="shareDiaglogTable"
                 :data="curNodeList"
                 :pagination="pagination"
+                :row-class-name="handleRowClassName"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
             >
@@ -61,6 +62,23 @@
                 </bk-table-column>
                 <bk-table-column :width="180" :label="$t('environment.operation')">
                     <template slot-scope="props">
+                        <bk-button
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                            v-if="curEnvDetail.envType === 'BUILD'"
+                            text
+                            @click="handleToggleEnable(props.row)"
+                        >
+                            {{ props.row.envEnableNode ? $t('environment.停用') : $t('environment.启用') }}
+                        </bk-button>
                         <span
                             v-perm="{
                                 hasPermission: curEnvDetail.canEdit,
@@ -175,7 +193,7 @@
             },
             curNodeList () {
                 const { limit, current } = this.pagination
-                return this.nodeList.slice(limit * (current - 1), limit * current)
+                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode).slice(limit * (current - 1), limit * current)
             }
         },
         watch: {
@@ -621,12 +639,35 @@
                     }
                 })
             },
-            handlePageChange (page) {
-                this.pagination.current = page
+            handleRowClassName ({ row, rowIndex }) {
+                return row.envEnableNode ? '' : 'useless'
             },
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
+            },
+            async handleToggleEnable (row) {
+                try {
+                    await this.$store.dispatch('environment/enableNode', {
+                        projectId: this.projectId,
+                        envHashId: this.envHashId,
+                        nodeHashId: row.nodeHashId,
+                        enableNode: !row.envEnableNode
+                    })
+
+                    this.pagination.current = 1
+                    await this.requestList()
+
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: row.envEnableNode ? this.$t('environment.停用成功') : this.$t('environment.启用成功')
+                    })
+                } catch (e) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
+                }
             }
         }
     }
@@ -637,6 +678,9 @@
         margin-top: 24px;
         height: calc(95% - 32px);
         overflow: auto;
+        .useless {
+            color: #c3cdd7;
+        }
     }
     .loading-icon {
         display: inline-flex;

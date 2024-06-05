@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 /**
@@ -79,7 +80,8 @@ interface StoreProjectService {
     fun uninstall(
         storeType: StoreTypeEnum,
         storeCode: String,
-        projectCode: String
+        projectCode: String,
+        instanceIdList: List<String>? = null
     ): Result<Boolean>
 
     /**
@@ -98,6 +100,12 @@ interface StoreProjectService {
     fun getProjectComponents(
         projectCode: String,
         storeType: Byte,
-        storeProjectTypes: List<Byte>
+        storeProjectTypes: List<Byte>,
+        instanceId: String? = null
     ): Map<String, String?>?
+
+    /**
+     * 更新组件初始化项目信息
+     */
+    fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean
 }

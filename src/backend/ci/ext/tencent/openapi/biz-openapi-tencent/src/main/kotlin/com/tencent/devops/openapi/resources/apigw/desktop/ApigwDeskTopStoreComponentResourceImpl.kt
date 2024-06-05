@@ -31,12 +31,16 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
         apigwType: String?,
         userId: String,
         storeType: String,
+        projectCode: String?,
+        instanceId: String?,
         page: Int,
         pageSize: Int
     ): Result<List<MarketMainItem>> {
         return client.get(ServiceStoreComponentResource::class).getMainPageComponents(
             userId = userId,
             storeType = storeType,
+            projectCode = projectCode,
+            instanceId = instanceId,
             page = page,
             pageSize = pageSize
         )
@@ -59,6 +63,7 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
         updateFlag: Boolean?,
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
+        instanceId: String?,
         page: Int,
         pageSize: Int
     ): Result<Page<MarketItem>> {
@@ -77,6 +82,7 @@ class ApigwDeskTopStoreComponentResourceImpl @Autowired constructor(private val 
             updateFlag = updateFlag,
             queryProjectComponentFlag = queryProjectComponentFlag,
             sortType = sortType,
+            instanceId = instanceId,
             page = page,
             pageSize = pageSize
         )

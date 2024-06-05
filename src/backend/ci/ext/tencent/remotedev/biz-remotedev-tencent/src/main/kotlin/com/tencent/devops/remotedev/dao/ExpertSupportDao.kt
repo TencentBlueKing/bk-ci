@@ -173,6 +173,18 @@ class ExpertSupportDao {
         }
     }
 
+    fun deleteExpertSupportConfigWithData(
+        dslContext: DSLContext,
+        type: ExpertSupportConfigType,
+        content: String
+    ) {
+        with(TRemotedevExpertSupportConfig.T_REMOTEDEV_EXPERT_SUPPORT_CONFIG) {
+            dslContext.deleteFrom(this).where(TYPE.eq(type.name))
+                .and(CONTENT.eq(content))
+                .execute()
+        }
+    }
+
     fun fetchExpertSupportConfig(
         dslContext: DSLContext,
         type: ExpertSupportConfigType

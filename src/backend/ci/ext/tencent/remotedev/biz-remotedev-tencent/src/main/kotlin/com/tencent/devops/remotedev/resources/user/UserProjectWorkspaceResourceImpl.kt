@@ -90,7 +90,6 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             pmUserId = userId,
             projectId = projectId,
             cgsId = null,
-            autoAssign = false,
             workspaceCreate = workspace
         )
         return Result(true)
@@ -137,7 +136,6 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean> {
-        permissionService.checkUserManager(userId, projectId)
         deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
         return Result(true)
     }

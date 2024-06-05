@@ -80,8 +80,8 @@ class PipelineBuildTaskService @Autowired constructor(
             // 为取消任务设置最大超时时间，防止构建异常产生的脏数据
             redisOperation.expire(cancelTaskKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
         }
-        // 如果是取消的构建，则会统一取消子流水线的构建
-        if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {
+        // 如果是取消的构建/超时的构建，则会统一取消子流水线的构建
+        if (buildStatus.isPassiveStop() || buildStatus.isCancel() || buildStatus.isTimeout()) {
             terminateSubPipeline(buildId, buildTask)
         }
         if (sendEventFlag) {

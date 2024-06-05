@@ -351,6 +351,17 @@ object ProcessMessageCode {
 
     const val ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY = "2101243" // 定时触发SVN分支不能为空
     const val ERROR_PIPELINE_ELEMENT_CHECK_FAILED = "2101244" // 流水线有效性校验失败
+    const val ERROR_TIMER_TRIGGER_REPO_NOT_FOUND = "2101245" // 定时触发代码库不存在
+    const val ERROR_TIMER_TRIGGER_NEED_ENABLE_PAC = "2101246" // 定时触发需要流水线开启PAC
+    const val ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY = "2101247" // 流水线定时触发分支为空
+    const val ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE = "2101248" // 定时触发分支{0}代码没有变更
+    const val ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND = "2101249" // 定时触发分支{0}不存在
+    const val ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN = "2101252" // 定时触发分支{0}未知错误
+
+    const val ERROR_PIPELINE_JOB_ID_FORMAT = "2101250" // 流水线Job:{0}的jobId为空或长度超过{1}位
+    const val ERROR_PIPELINE_JOB_CONTROL_NODECURR = "2101251" // 流水线Job:{0}的单节点或总结点并发配置需要为小于1000的正整数
+
+    const val ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG = "2101253" // 自定义条件表达式{0}的长度超过{1}位
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -532,6 +543,9 @@ object ProcessMessageCode {
     const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
     const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
 
-    const val BK_NOT_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotExecutePermissionErrorTitle" // 没有执行权限错误标题
-    const val BK_NOT_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotExecutePermissionErrorMessage" // 没有执行权限错误消息
+    const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
+    // 没有子流水线执行权限错误标题
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
+    // 没有子流水线执行权限错误消息
+    const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
 }

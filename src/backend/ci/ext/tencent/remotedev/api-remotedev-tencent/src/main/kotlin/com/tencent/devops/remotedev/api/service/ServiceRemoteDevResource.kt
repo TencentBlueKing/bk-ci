@@ -1,18 +1,22 @@
 package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -21,6 +25,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -81,15 +86,6 @@ interface ServiceRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
-
-    @Operation(summary = "获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
-    @GET
-    @Path("/project/cvm")
-    fun queryProjectRemoteDevCvm(
-        @Parameter(description = "project_id", required = false)
-        @QueryParam("project_id")
-        projectId: String?
-    ): Result<List<RemotedevCvmData>>
 
     @Operation(summary = "校验是否是当前项目下的云桌面")
     @GET
@@ -282,4 +278,84 @@ interface ServiceRemoteDevResource {
         @QueryParam("type")
         type: QuotaType
     ): Result<Map<String, Map<String, Int>>>
+
+    @Operation(summary = "更新项目/个人在使用云桌面上的配额")
+    @PUT
+    @Path("/update_usage_limit")
+    fun updateUsageLimit(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "机型", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
+        @Parameter(description = "配额增量(可负，可零，可正)", required = true)
+        @QueryParam("count")
+        count: Int,
+        @Parameter(description = "返回可用配额", required = false)
+        @QueryParam("available")
+        available: Boolean?
+    ): Result<QuotaInApiRes>
+
+    @Operation(summary = "DevcloudCvm列表")
+    @GET
+    @Path("/devcloud/cvmList")
+    fun fetchCvmList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<Page<DevcloudCVMData>?>
+
+    @Operation(summary = "分配云桌面拥有者和共享人")
+    @POST
+    @Path("/assign_user")
+    fun assignUser(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "工作空间描述", required = true)
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean>
+
+    @Operation(summary = "获取镜像列表")
+    @GET
+    @Path("/image/list")
+    fun getWorkspaceImageList(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Map<String, Any>>
+
+    @Operation(summary = "修改工作空间")
+    @POST
+    @Path("/modify/display_name")
+    fun modifyWorkspaceDisplayName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String,
+        @Parameter(description = "别名", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Boolean>
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -37,15 +38,21 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
+import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
+import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
@@ -69,7 +76,10 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val storeUserService: StoreUserService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val storePipelineRelDao: StorePipelineRelDao,
+    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
+    private val storeCommonService: StoreCommonService
 ) : StoreProjectService {
 
     /**
@@ -150,6 +160,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
         }
+        val instanceId = installStoreReq.instanceId
         var increment = 0
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -159,14 +170,27 @@ class StoreProjectServiceImpl @Autowired constructor(
                 val installStoreLock = RedisLock(redisOperation, installStoreLockKey, 10)
                 try {
                     installStoreLock.lock()
-                    val relCount = storeProjectRelDao.countInstalledProject(
+                    val relCount = storeProjectRelDao.countStoreProject(
                         dslContext = context,
                         projectCode = projectCode,
                         storeCode = storeCode,
                         storeType = storeType.type.toByte(),
-                        version = version
+                        storeProjectType = StoreProjectTypeEnum.COMMON,
+                        instanceId = instanceId
                     )
                     if (relCount > 0) {
+                        instanceId?.let {
+                            storeProjectRelDao.updateProjectStoreVersion(
+                                dslContext = dslContext,
+                                userId = userId,
+                                projectCode = projectCode,
+                                storeCode = storeCode,
+                                storeType = storeType,
+                                storeProjectType = StoreProjectTypeEnum.COMMON,
+                                instanceId = instanceId,
+                                version = version ?: ""
+                            )
+                        }
                         continue
                     }
                     // 未安装则入库
@@ -177,6 +201,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                         projectCode = projectCode,
                         type = StoreProjectTypeEnum.COMMON.type.toByte(),
                         storeType = storeType.type.toByte(),
+                        instanceId = instanceId,
                         version = version
                     )
                     // 使用 ON DUPLICATE KEY UPDATE，如果将行作为新行插入，则每行的受影响行值为 1，如果更新现有行，则为 2
@@ -300,9 +325,16 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun uninstall(
         storeType: StoreTypeEnum,
         storeCode: String,
-        projectCode: String
+        projectCode: String,
+        instanceIdList: List<String>?
     ): Result<Boolean> {
-        storeProjectRelDao.deleteRel(dslContext, storeCode, storeType.type.toByte(), projectCode)
+        storeProjectRelDao.deleteRel(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            projectCode = projectCode,
+            instanceIdList = instanceIdList
+        )
         return Result(true)
     }
 
@@ -325,13 +357,55 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun getProjectComponents(
         projectCode: String,
         storeType: Byte,
-        storeProjectTypes: List<Byte>
+        storeProjectTypes: List<Byte>,
+        instanceId: String?
     ): Map<String, String?>? {
-        return storeProjectRelDao.getProjectComponents(
+        return storeProjectRelDao.getProjectComponentVersionMap(
             dslContext = dslContext,
             projectCode = projectCode,
             storeType = storeType,
-            storeProjectTypes = storeProjectTypes
-        )?.intoMap({ it.storeCode }, { it.version })
+            storeProjectTypes = storeProjectTypes,
+            instanceId = instanceId
+        )
+    }
+
+    override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean {
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            // 获取组件当前初始化项目
+            val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                dslContext = context,
+                storeCode = storeProjectInfo.storeCode,
+                storeType = storeProjectInfo.storeType.type.toByte()
+            )!!
+            // 更新组件关联初始化项目
+            storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
+            val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
+                dslContext = context,
+                storeCode = storeProjectInfo.storeCode,
+                storeType = storeProjectInfo.storeType
+            )
+            storePipelineRel?.let {
+                storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
+                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPiplineId(context, storePipelineRel.id)
+                client.get(ServicePipelineResource::class).delete(
+                    userId = userId,
+                    pipelineId = it.pipelineId,
+                    channelCode = ChannelCode.AM,
+                    projectId = initProjectCode,
+                    checkFlag = false
+                )
+            }
+            val storeRepoHashId =
+                storeCommonService.getStoreRepoHashIdByCode(storeProjectInfo.storeCode, storeProjectInfo.storeType)
+            storeRepoHashId?.let {
+                client.get(ServiceRepositoryResource::class).updateStoreRepoProject(
+                    userId = storeProjectInfo.userId,
+                    projectId = storeProjectInfo.projectId,
+                    repositoryId = HashUtil.decodeOtherIdToLong(storeRepoHashId)
+                )
+            }
+        }
+        return true
     }
 }
