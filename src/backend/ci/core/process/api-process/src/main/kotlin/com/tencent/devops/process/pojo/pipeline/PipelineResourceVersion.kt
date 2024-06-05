@@ -55,7 +55,7 @@ data class PipelineResourceVersion(
     @get:Schema(title = "版本创建时间", required = true)
     val createTime: LocalDateTime,
     @get:Schema(title = "更新操作人", required = true)
-    val updater: String,
+    val updater: String?,
     @get:Schema(title = "版本修改时间", required = true)
     val updateTime: LocalDateTime?,
     @get:Schema(title = "发布版本号", required = false)
