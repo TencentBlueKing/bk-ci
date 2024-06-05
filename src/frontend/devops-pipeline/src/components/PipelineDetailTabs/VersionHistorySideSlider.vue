@@ -1,7 +1,7 @@
 <template>
     <bk-sideslider
         quick-close
-        :width="950"
+        :width="1080"
         :is-show="showVersionSideslider"
         :before-close="handleClose"
         @shown="handleShown"
@@ -60,7 +60,7 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="266" :label="$t('operate')">
+                    <bk-table-column width="222" :label="$t('operate')">
                         <div slot-scope="props" class="pipeline-history-version-operate">
                             <rollback-entry
                                 v-if="props.row.canRollback"
@@ -150,11 +150,23 @@
                     prop: 'createTime',
                     label: this.$t('createTime'),
                     showOverflowTooltip: true,
+                    width: 180,
                     formatter: (row) => {
                         return convertTime(row.createTime)
                     }
                 }, {
-                    prop: 'lastModifyUser',
+                    prop: 'creator',
+                    label: this.$t('creator')
+                }, {
+                    prop: 'updateTime',
+                    label: this.$t('lastUpdateTime'),
+                    showOverflowTooltip: true,
+                    width: 180,
+                    formatter: (row) => {
+                        return convertTime(row.updateTime)
+                    }
+                }, {
+                    prop: 'updater',
                     label: this.$t('audit.operator')
                 }]
             },
