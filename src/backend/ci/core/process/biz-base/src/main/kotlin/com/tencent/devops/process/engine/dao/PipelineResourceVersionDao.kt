@@ -72,47 +72,8 @@ class PipelineResourceVersionDao {
         branchAction: BranchVersionAction?,
         description: String?
     ): TPipelineResourceVersionRecord? {
-        return create(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            creator = creator,
-            version = version,
-            versionName = versionName,
-            modelStr = JsonUtil.toJson(model, formatted = false),
-            yamlStr = yamlStr,
-            yamlVersion = yamlVersion,
-            baseVersion = baseVersion,
-            versionNum = versionNum,
-            pipelineVersion = pipelineVersion,
-            triggerVersion = triggerVersion,
-            settingVersion = settingVersion,
-            versionStatus = versionStatus,
-            branchAction = branchAction,
-            description = description
-        )
-    }
-
-    fun create(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        creator: String,
-        version: Int,
-        versionName: String,
-        modelStr: String,
-        baseVersion: Int?,
-        yamlStr: String?,
-        yamlVersion: String?,
-        versionNum: Int?,
-        pipelineVersion: Int?,
-        triggerVersion: Int?,
-        settingVersion: Int?,
-        versionStatus: VersionStatus?,
-        branchAction: BranchVersionAction?,
-        description: String?
-    ): TPipelineResourceVersionRecord? {
         with(T_PIPELINE_RESOURCE_VERSION) {
+            val modelStr = JsonUtil.toJson(model, formatted = false)
             return dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
