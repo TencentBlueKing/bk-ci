@@ -49,26 +49,30 @@ class BcsInitService @Autowired constructor(
     @PostConstruct
     fun initBcsImagePullSecret() {
         logger.info("begin execute initBcsImagePullSecret")
-        val kubernetesRepo = KubernetesRepo(
-            registryUrl = kubernetesConfig.repoRegistryUrl,
-            username = kubernetesConfig.repoUsername,
-            password = kubernetesConfig.repoPassword,
-            email = kubernetesConfig.repoEmail
-        )
-        // 创建已发布扩展服务版本的命名空间拉取镜像secret
-        secretClient.createImagePullSecret(
-            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-            namespaceName = kubernetesConfig.namespaceName,
-            secretName = kubernetesConfig.secretName,
-            kubernetesRepoInfo = kubernetesRepo
-        )
-        // 创建已发布扩展服务版本的命名空间拉取镜像secret
-        secretClient.createImagePullSecret(
-            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-            namespaceName = kubernetesConfig.grayNamespaceName,
-            secretName = kubernetesConfig.graySecretName,
-            kubernetesRepoInfo = kubernetesRepo
-        )
+        try {
+            val kubernetesRepo = KubernetesRepo(
+                registryUrl = kubernetesConfig.repoRegistryUrl,
+                username = kubernetesConfig.repoUsername,
+                password = kubernetesConfig.repoPassword,
+                email = kubernetesConfig.repoEmail
+            )
+            // 创建已发布扩展服务版本的命名空间拉取镜像secret
+            secretClient.createImagePullSecret(
+                userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                namespaceName = kubernetesConfig.namespaceName,
+                secretName = kubernetesConfig.secretName,
+                kubernetesRepoInfo = kubernetesRepo
+            )
+            // 创建已发布扩展服务版本的命名空间拉取镜像secret
+            secretClient.createImagePullSecret(
+                userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                namespaceName = kubernetesConfig.grayNamespaceName,
+                secretName = kubernetesConfig.graySecretName,
+                kubernetesRepoInfo = kubernetesRepo
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("init bcs image pull secret fail, case:${ignored.message}")
+        }
         logger.info("end execute initBcsImagePullSecret")
     }
 }
