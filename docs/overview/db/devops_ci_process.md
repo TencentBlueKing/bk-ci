@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.2
+**文档版本：** 1.0.1
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -211,7 +211,7 @@
 |  4   | BUILD_NUM |   int   | 10 |   0    |    Y     |  N   |   0    | 构建次数  |
 |  5   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
 |  6   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线 ID  |
-|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 版本号  |
+|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 编排版本号  |
 |  8   | START_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 启动者  |
 |  9   | TRIGGER |   varchar   | 32 |   0    |    N     |  N   |       | 触发器  |
 |  10   | START_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 开始时间  |
@@ -241,7 +241,7 @@
 |  34   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
 |  35   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的 group  |
 |  36   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
-|  37   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 版本名称  |
+|  37   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 正式版本名称  |
 |  38   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML 的版本标记  |
 
 **表名：** <a>T_PIPELINE_BUILD_HISTORY_DEBUG</a>
@@ -258,7 +258,7 @@
 |  4   | BUILD_NUM |   int   | 10 |   0    |    Y     |  N   |   0    | 构建次数  |
 |  5   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
 |  6   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线 ID  |
-|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 版本号  |
+|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 编排版本号  |
 |  8   | START_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 启动者  |
 |  9   | TRIGGER |   varchar   | 32 |   0    |    N     |  N   |       | 触发器  |
 |  10   | START_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 开始时间  |
@@ -1265,6 +1265,7 @@
 |  9   | SECRET_TOKEN |   text   | 65535 |   0    |    Y     |  N   |       | Sendtoyourwithhttpheader:X-DEVOPS-WEBHOOK-TOKEN  |
 |  10   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 启用  |
 |  11   | FAILURE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 失败时间  |
+|  12   | SECRET_PARAM |   text   | 65535 |   0    |    Y     |  N   |       | 鉴权参数  |
 
 **表名：** <a>T_PROJECT_PIPELINE_CALLBACK_HISTORY</a>
 
@@ -1399,3 +1400,4 @@
 |  12   | BUILD_NO |   text   | 65535 |   0    |    Y     |  N   |       | 构建号  |
 |  13   | PARAM |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 参数  |
 |  14   | DELETED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 流水线已被软删除  |
+|  15   | INSTANCE_ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 实例化错误信息  |
