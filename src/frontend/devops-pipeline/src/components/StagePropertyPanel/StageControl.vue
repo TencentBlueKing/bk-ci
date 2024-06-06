@@ -50,6 +50,7 @@
                 >
                     <vuex-input
                         :value="customConditionExpress"
+                        :disabled="disabled"
                         v-validate.initial="showCondition ? 'required' : ''"
                         name="customCondition"
                         :handle-change="handleUpdateStageControl"
@@ -62,11 +63,11 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import Accordion from '@/components/atomFormField/Accordion'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import Accordion from '@/components/atomFormField/Accordion'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'stage-control',
