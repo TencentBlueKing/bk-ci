@@ -383,7 +383,8 @@ data class AgentService @Autowired constructor(
                             bkBizName = hostDetail.bkBizName,
                             jobId = hostDetail.jobId,
                             status = hostDetail.status,
-                            statusDisplay = hostDetail.statusDisplay
+                            statusDisplay = hostDetail.statusDisplay,
+                            isManual = hostDetail.isManual
                         )
                     },
                     statistics = it.statistics.let { statistics ->
