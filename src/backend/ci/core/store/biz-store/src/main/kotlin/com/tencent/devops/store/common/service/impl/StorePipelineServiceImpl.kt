@@ -47,7 +47,6 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
-import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -348,7 +347,6 @@ class StorePipelineServiceImpl @Autowired constructor(
                     storeType = storeType,
                     storeCode = storeCode
                 )
-                val tTemplate = TTemplate.T_TEMPLATE
                 storePipelineRelRecords?.forEach { storePipelineRelRecord ->
                     var initProjectCode = storePipelineRelRecord.projectCode
                     if (excludeProjectCode == initProjectCode) {
