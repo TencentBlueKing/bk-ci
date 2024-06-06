@@ -47,8 +47,10 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
@@ -324,6 +326,59 @@ class StorePipelineServiceImpl @Autowired constructor(
                     )
                 )
             }
+        }
+        return true
+    }
+
+    override fun deleteStoreInnerPipeline(
+        userId: String,
+        storeType: StoreTypeEnum?,
+        storeCode: String?,
+        excludeProjectCode: String?
+    ): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin deleteStoreInnerPipeline!!")
+            var offset = 0
+            do {
+                // 查询组件内置流水线信息记录
+                val storePipelineRelRecords = storePipelineRelDao.getStorePipelineRelRecords(
+                    dslContext = dslContext,
+                    offset = offset,
+                    limit = pageSize,
+                    storeType = storeType,
+                    storeCode = storeCode
+                )
+                val tTemplate = TTemplate.T_TEMPLATE
+                storePipelineRelRecords?.forEach { storePipelineRelRecord ->
+                    var initProjectCode = storePipelineRelRecord.projectCode
+                    if (excludeProjectCode == initProjectCode) {
+                        // 如果内置流水线的项目属于要排除的项目，则不删除该内置流水线
+                        return@forEach
+                    }
+                    storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(
+                        dslContext,
+                        storePipelineRelRecord.pipelineId
+                    )
+                    storePipelineRelDao.deleteStorePipelineRelById(dslContext, storePipelineRelRecord.id)
+                    if (initProjectCode.isNullOrBlank()) {
+                        initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                            dslContext = dslContext,
+                            storeCode = storePipelineRelRecord.storeCode,
+                            storeType = storePipelineRelRecord.storeType
+                        )
+                    }
+                    // 调接口删除内置流水线
+                    client.get(ServicePipelineResource::class).delete(
+                        userId = userId,
+                        pipelineId = storePipelineRelRecord.pipelineId,
+                        channelCode = ChannelCode.AM,
+                        projectId = initProjectCode,
+                        checkFlag = false
+                    )
+                }
+                offset += pageSize
+            } while (storePipelineRelRecords?.size == pageSize)
+            logger.info("end deleteStoreInnerPipeline!!")
         }
         return true
     }

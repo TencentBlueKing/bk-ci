@@ -387,7 +387,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             )
             storePipelineRel?.let {
                 storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
-                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPiplineId(context, storePipelineRel.id)
+                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(context, storePipelineRel.id)
                 client.get(ServicePipelineResource::class).delete(
                     userId = userId,
                     pipelineId = it.pipelineId,
