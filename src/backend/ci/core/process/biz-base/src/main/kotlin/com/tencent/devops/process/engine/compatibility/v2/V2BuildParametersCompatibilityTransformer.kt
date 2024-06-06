@@ -44,13 +44,6 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         val paramsMap = HashMap<String, BuildParameters>(paramProperties.size, 1F)
 
         paramProperties.forEach { param ->
-            if (param.valueNotEmpty == true && param.value?.toString()?.isEmpty() != false) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY,
-                    params = arrayOf(param.id)
-                )
-            }
-
             // 通过对现有Model存在的旧变量替换成新变量， 如果已经是新的会为空，直接为it.id
             val key = PipelineVarUtil.oldVarToNewVar(param.id) ?: param.id
 
@@ -60,6 +53,12 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 param.defaultValue
             } else {
                 paramValues[key] ?: paramValues[param.id] ?: param.defaultValue
+            }
+            if (param.valueNotEmpty == true && value.toString().isEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY,
+                    params = arrayOf(param.id)
+                )
             }
 
             paramsMap[key] = BuildParameters(
