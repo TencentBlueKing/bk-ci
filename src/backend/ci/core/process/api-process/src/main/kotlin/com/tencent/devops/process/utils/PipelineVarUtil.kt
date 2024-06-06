@@ -285,7 +285,9 @@ object PipelineVarUtil {
         "ci.repo_type" to BK_REPO_WEBHOOK_REPO_TYPE,
         "ci.branch" to BK_REPO_GIT_WEBHOOK_BRANCH,
         "ci.create_ref" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME,
-        "ci.create_type" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
+        "ci.create_type" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE,
+        "ci.failed_tasks" to BK_CI_BUILD_FAIL_TASKS,
+        "ci.failed_tasknames" to BK_CI_BUILD_FAIL_TASKNAMES
     )
 
     /**

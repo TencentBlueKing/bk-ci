@@ -27,15 +27,54 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 流水线校验失败原因
  */
-@Schema(title = "流水线校验失败原因")
-class PipelineCheckFailedReason(
-    @get:Schema(title = "失败标题,多个插件校验时相同的错误", required = true)
-    val errorTitle: String,
-    @get:Schema(title = "失败详情,具体哪个插件失败详情", required = true)
-    val errorDetails: List<String>
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "@type"
 )
+@JsonSubTypes(
+    JsonSubTypes.Type(value = PipelineCheckFailedMsg::class, name = PipelineCheckFailedMsg.classType),
+    JsonSubTypes.Type(value = PipelineCheckFailedErrors::class, name = PipelineCheckFailedErrors.classType)
+)
+@Schema(title = "流水线校验失败原因")
+open class PipelineCheckFailedReason(
+    @get:Schema(title = "失败信息描述", required = true)
+    open val message: String
+)
+
+@Schema(title = "流水线校验-简单失败原因")
+data class PipelineCheckFailedMsg(
+    @get:Schema(title = "失败描述信息", required = true)
+    override val message: String
+) : PipelineCheckFailedReason(message = message) {
+    companion object {
+        const val classType = "msg"
+    }
+}
+
+@Schema(title = "流水线校验-多个失败原因")
+data class PipelineCheckFailedErrors(
+    @get:Schema(title = "失败信息描述", required = true)
+    override val message: String,
+    @get:Schema(title = "失败详情", required = true)
+    val errors: List<ErrorInfo>
+) : PipelineCheckFailedReason(message = message) {
+
+    companion object {
+        const val classType = "errors"
+    }
+
+    data class ErrorInfo(
+        @get:Schema(title = "失败标题,多个插件校验时相同的错误", required = true)
+        val errorTitle: String,
+        @get:Schema(title = "失败详情,具体哪个插件失败详情", required = true)
+        val errorDetails: Set<String>
+    )
+}

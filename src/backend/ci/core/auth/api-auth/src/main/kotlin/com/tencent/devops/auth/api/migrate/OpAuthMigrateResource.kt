@@ -31,7 +31,7 @@ package com.tencent.devops.auth.api.migrate
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -73,7 +73,7 @@ interface OpAuthMigrateResource {
     @Operation(summary = "按条件升级到rbac权限")
     fun toRbacAuthByCondition(
         @Parameter(description = "按条件迁移项目实体", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
 
     @POST
@@ -138,6 +138,6 @@ interface OpAuthMigrateResource {
     @Operation(summary = "自动续期")
     fun autoRenewal(
         @Parameter(description = "按条件迁移项目实体", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
 }

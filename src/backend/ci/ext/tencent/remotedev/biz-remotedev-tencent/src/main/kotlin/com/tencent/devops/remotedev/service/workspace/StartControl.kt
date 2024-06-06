@@ -163,7 +163,6 @@ class StartControl @Autowired constructor(
                 }
 
                 else -> {
-                    permissionService.checkUserCreate(userId, true)
                     /*处理异常的情况*/
                     workspaceCommon.checkAndFixExceptionWS(
                         status = workspace.status,

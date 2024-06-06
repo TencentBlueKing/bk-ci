@@ -17,9 +17,19 @@
                 <aside class="release-pipeline-pac-conf-leftside">
                     <label for="enablePac">
                         {{ $t("pacMode") }}
+                        <span
+                            class="devops-icon icon-info-circle"
+                            v-bk-tooltips="pacDesc"
+                        />
                     </label>
-                    <bk-switcher :disabled="pacEnabled" theme="primary" name="enablePac"
-                        v-model="releaseParams.enablePac" @change="handlePacEnableChange" />
+                    <bk-switcher
+                        :disabled="pacEnabled || isTemplatePipeline"
+                        theme="primary"
+                        name="enablePac"
+                        :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
+                        v-model="releaseParams.enablePac"
+                        @change="handlePacEnableChange"
+                    />
                 </aside>
                 <aside v-if="releaseParams.enablePac" class="release-pipeline-pac-conf-rightside">
                     <label for="enablePac">
@@ -211,11 +221,20 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
+            pacDesc () {
+                return {
+                    content: this.$t('pacDesc'),
+                    maxWidth: 300
+                }
+            },
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionName || '--'
             },
             pipelineName () {
                 return this.pipelineSetting?.pipelineName
+            },
+            isTemplatePipeline () {
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             viewNames () {
                 return this.pipelineInfo?.viewNames || []
@@ -894,7 +913,7 @@
         color: #3fc06d;
         font-size: 36px;
     }
-    
+
     .part-of-mr {
         position: relative;
         width: 42px;
@@ -922,7 +941,7 @@
             width: 28px;
             height: 28px;
             border-radius: 50%;
-    
+
         }
     }
 
@@ -941,7 +960,7 @@
         line-height: 1.2;
         text-align: center;
     }
-    
+
     .pipeline-release-suc-tips {
         background: #f5f6fa;
         display: flex;

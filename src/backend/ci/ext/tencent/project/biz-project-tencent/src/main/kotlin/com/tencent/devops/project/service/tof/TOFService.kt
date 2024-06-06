@@ -42,6 +42,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_USER_INFORM
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
+import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.BkDeptInfo
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
@@ -57,16 +58,16 @@ import com.tencent.devops.project.pojo.tof.ParentDeptInfoRequest
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.tof.StaffInfoRequest
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils
-import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * API
@@ -76,7 +77,8 @@ import org.springframework.stereotype.Service
 class TOFService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val userService: ProjectUserService
+    private val dslContext: DSLContext,
+    private val userDao: UserDao
 ) {
 
     @Value("\${tof.host:#{null}}")
@@ -506,9 +508,9 @@ class TOFService @Autowired constructor(
     }
 
     private fun getPublicAccount(userId: String): UserDeptDetail? {
-        val bkCacheDeft = userService.getPublicAccount(userId)
-        if (bkCacheDeft != null) {
-            return bkCacheDeft
+        val userRecord = userDao.getPublicType(dslContext, userId)
+        if (userRecord != null) {
+            return userDao.convertToUserDeptDetail(userRecord)
         }
         return null
     }
@@ -527,9 +529,21 @@ class TOFService @Autowired constructor(
             userCache = userCache
         )
         if (checkUserLeave(staffInfo)) return null
-        val parentDeptInfo = getParentDeptInfo(staffInfo.groupId, 10)
+        return generateUserDeptDetail(userId, staffInfo.groupId.toInt(), staffInfo.chineseName)
+    }
+
+    fun generateUserDeptDetail(
+        userId: String,
+        userGroupId: Int?,
+        userChineseName: String
+    ): UserDeptDetail {
         // 获取用户当前部门及祖先部门
-        val deptInfos = parentDeptInfo.plus(getDeptInfo(id = staffInfo.groupId.toInt()))
+        val deptInfos = if (userGroupId != null) {
+            val parentDeptInfo = getParentDeptInfo(userGroupId.toString(), 10)
+            parentDeptInfo.plus(getDeptInfo(id = userGroupId))
+        } else {
+            emptyList()
+        }
         var groupId = "0"
         var groupName = ""
         var bgId = ""
@@ -540,7 +554,7 @@ class TOFService @Autowired constructor(
         var centerName = ""
         var businessLineId = "0"
         var businessLineName = ""
-        for (deptInfo in deptInfos) {
+        deptInfos.forEach { deptInfo ->
             val typeId = deptInfo.typeId.toInt()
             val name = deptInfo.name
             val id = deptInfo.id
@@ -549,10 +563,12 @@ class TOFService @Autowired constructor(
                     bgName = name
                     bgId = id
                 }
+
                 OrganizationType.businessLine.typeId -> {
                     businessLineName = name
                     businessLineId = id
                 }
+
                 OrganizationType.dept.typeId -> {
                     deptName = name
                     deptId = id
@@ -562,6 +578,7 @@ class TOFService @Autowired constructor(
                     centerName = name
                     centerId = id
                 }
+
                 OrganizationType.group.typeId -> {
                     groupName = name
                     groupId = id
@@ -582,7 +599,7 @@ class TOFService @Autowired constructor(
             groupName = groupName,
             // 该字段只返回部门及部门以上的层级，若不包含部门，将直接置空
             deptInfos = filterDeptInfos(deptInfos = deptInfos),
-            name = staffInfo.chineseName,
+            name = userChineseName,
             userId = userId
         )
     }

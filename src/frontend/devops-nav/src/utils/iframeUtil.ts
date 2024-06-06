@@ -1,6 +1,7 @@
 import eventBus from './eventBus'
 import { goToPage, toggleAsidePanel, toggleDialog } from './util'
 
+import { showLoginPopup } from '@/utils/util'
 interface UrlParam {
     url: string
     refresh: boolean
@@ -26,7 +27,7 @@ function iframeUtil (router: any) {
             params
         }, '*')
     }
-    
+
     utilMap.updateTabTitle = function (title: string): void {
         if (title) {
             document.title = title
@@ -81,9 +82,7 @@ function iframeUtil (router: any) {
         }
     }
 
-    utilMap.toggleLoginDialog = function () {
-        location.href = window.getLoginUrl()
-    }
+    utilMap.toggleLoginDialog = showLoginPopup
 
     utilMap.popProjectDialog = function (project: Project): void {
         eventBus.$emit('show-project-dialog', project)

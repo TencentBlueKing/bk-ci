@@ -1,7 +1,7 @@
 <template>
     <bk-sideslider
         quick-close
-        :width="950"
+        :width="1080"
         :is-show="showVersionSideslider"
         :before-close="handleClose"
         @shown="handleShown"
@@ -37,6 +37,8 @@
                 <bk-table
                     :data="pipelineVersionList"
                     :pagination="pagination"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handleLimitChange"
                     :max-height="$refs?.tableBox?.offsetHeight"
                     size="small"
                 >
@@ -58,7 +60,7 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="266" :label="$t('operate')">
+                    <bk-table-column :width="222" :label="$t('operate')">
                         <div slot-scope="props" class="pipeline-history-version-operate">
                             <rollback-entry
                                 v-if="props.row.canRollback"
@@ -148,11 +150,25 @@
                     prop: 'createTime',
                     label: this.$t('createTime'),
                     showOverflowTooltip: true,
+                    width: 156,
                     formatter: (row) => {
                         return convertTime(row.createTime)
                     }
                 }, {
-                    prop: 'lastModifyUser',
+                    prop: 'creator',
+                    width: 90,
+                    label: this.$t('creator')
+                }, {
+                    prop: 'updateTime',
+                    label: this.$t('lastUpdateTime'),
+                    showOverflowTooltip: true,
+                    width: 156,
+                    formatter: (row) => {
+                        return convertTime(row.updateTime)
+                    }
+                }, {
+                    prop: 'updater',
+                    width: 90,
                     label: this.$t('audit.operator')
                 }]
             },
@@ -193,12 +209,11 @@
                 'deletePipelineVersion'
             ]),
             handleShown () {
-                this.init(1)
+                this.handlePageChange(1)
             },
             async init (page) {
                 try {
                     this.isLoading = true
-
                     await this.getPipelineVersions(page)
                 } catch (error) {
                     this.$bkMessage({
@@ -210,8 +225,17 @@
                 }
             },
             queryVersionList () {
-                console.log(this.filterKeys, this.filterQuery)
-                this.init(1)
+                this.handlePageChange(1)
+            },
+            handlePageChange (page) {
+                this.pagination.current = page
+                this.init(page)
+            },
+            handleLimitChange (limit) {
+                this.pagination.limit = limit
+                this.$nextTick(() => {
+                    this.handlePageChange(1)
+                })
             },
             async getPipelineVersions (page) {
                 const { projectId, pipelineId } = this.$route.params
@@ -254,7 +278,7 @@
                                 pipelineId,
                                 version: row.version
                             })
-                            this.init(1)
+                            this.handlePageChange(1)
                             this.$showTips({
                                 message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                 theme: 'success'

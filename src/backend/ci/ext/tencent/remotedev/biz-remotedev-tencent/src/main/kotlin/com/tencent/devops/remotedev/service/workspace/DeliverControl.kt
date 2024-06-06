@@ -55,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -78,6 +79,7 @@ class DeliverControl @Autowired constructor(
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
     private val httpCallBackService: HttpCallBackService,
+    private val permissionService: PermissionService,
     private val gitProxyTGitService: GitProxyTGitService
 ) {
 
@@ -89,8 +91,7 @@ class DeliverControl @Autowired constructor(
     fun safeInitialization(
         projectId: String,
         userId: String,
-        workspaceName: String,
-        autoAssign: Boolean? = false
+        workspaceName: String
     ) {
         logger.info("$userId start workspace $workspaceName")
         RedisCallLimit(
@@ -125,8 +126,7 @@ class DeliverControl @Autowired constructor(
                         userId,
                         regionId = detail.regionId.toString(),
                         ip = detail.environmentIP,
-                        workspaceName = workspaceName,
-                        autoAssign = autoAssign
+                        workspaceName = workspaceName
                     )
                 }
 
@@ -155,6 +155,7 @@ class DeliverControl @Autowired constructor(
         assigns: List<ProjectWorkspaceAssign>
     ) {
         logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
+        permissionService.checkUserManager(userId, projectId)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -264,7 +265,6 @@ class DeliverControl @Autowired constructor(
         workspaceName: String,
         projectId: String,
         userId: String,
-        autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
         logger.info(
@@ -287,20 +287,8 @@ class DeliverControl @Autowired constructor(
                             newStatus = WorkspaceStatus.DISTRIBUTING,
                             action = WorkspaceAction.CREATE
                         )
-                        if (autoAssign == true) {
-                            assignUser2Workspace(
-                                userId = userId,
-                                projectId = projectId,
-                                workspaceName = workspaceName,
-                                assigns = listOf(
-                                    ProjectWorkspaceAssign(
-                                        userId = userId,
-                                        type = WorkspaceShared.AssignType.OWNER,
-                                        expiration = null
-                                    )
-                                )
-                            )
-                        }
+                        workspaceCommon.autoAssignOwner(workspace)
+
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
                             cc = mutableSetOf(workspace.createUserId),

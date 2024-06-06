@@ -71,13 +71,23 @@ object PipelineVersionUtils {
         newModel: Model
     ): Int {
         return try {
+            var changed = false
             val originTrigger = (originModel.stages.first().containers.first() as TriggerContainer)
                 .copy(params = emptyList())
             val newTrigger = (newModel.stages.first().containers.first() as TriggerContainer)
                 .copy(params = emptyList())
-            if (originTrigger == newTrigger) currVersion else currVersion + 1
+            if (originTrigger == newTrigger) {
+                originTrigger.elements.forEachIndexed { index, origin ->
+                    val new = newTrigger.elements[index]
+                    if (origin != new) changed = true
+                    if (origin.isElementEnable() != new.isElementEnable()) changed = true
+                }
+            } else {
+                changed = true
+            }
+            if (changed) currVersion + 1 else currVersion
         } catch (ignore: Throwable) {
-            currVersion
+            currVersion + 1
         }
     }
 

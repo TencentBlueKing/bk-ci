@@ -438,7 +438,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
             params = arrayOf("$storeCode:$version")
         )
         if (StoreStatusEnum.RELEASED.name != baseRecord.status) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_COMPONENT_IS_NOT_ALLOW_OFFLINE)
         }
         val storeId = baseRecord.id
         dslContext.transaction { t ->

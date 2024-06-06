@@ -37,7 +37,9 @@ import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
@@ -78,11 +80,29 @@ class StoreArchiveServiceImpl @Autowired constructor(
                 params = arrayOf(storeCode)
             )
         }
-        val storeRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(storeCode)
+        val storeRecord = storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = storeType
+        )
+        var storeName = storeRecord?.name
+        // 判断是否有资格上传包
+        if (storeRecord != null && storeRecord.status !in listOf(
+                StoreStatusEnum.INIT.name,
+                StoreStatusEnum.GROUNDING_SUSPENSION.name
             )
+        ) {
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
+        }
+        if (storeName == null) {
+            val storeNewestRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(storeCode)
+                )
+            storeName = storeNewestRecord.name
+        }
         // 不是重新上传的包才需要校验版本号
         if (null != releaseType) {
             storeCommonService.validateStoreVersion(
@@ -92,7 +112,7 @@ class StoreArchiveServiceImpl @Autowired constructor(
                     releaseType = releaseType,
                     version = version
                 ),
-                name = storeRecord.name
+                name = storeName ?: ""
             )
         }
         return true

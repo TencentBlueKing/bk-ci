@@ -269,6 +269,13 @@ class RemoteDevService @Autowired constructor(
         return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceInfo(userId, workspaceName)
     }
 
+    fun deleteWorkspace(
+        userId: String,
+        workspaceName: String
+    ) {
+        dispatchWorkspaceDao.deleteWorkspace(workspaceName, dslContext)
+    }
+
     fun workspaceTaskCallback(
         taskStatus: TaskStatus,
         mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD

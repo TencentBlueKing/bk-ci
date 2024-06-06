@@ -84,12 +84,12 @@ class WindowsResourceConfigService @Autowired constructor(
         client.get(ServiceStartCloudResource::class).getResourceVm(
             ResourceVmReq(null, null, quotaType.getInternal())
         ).data?.forEach { resource ->
-                val key = resource.zoneId.replace(Regex("\\d+"), "")
-                val map = res.getOrPut(key) { mutableMapOf() }
-                resource.machineResources?.forEach { mas ->
-                    map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
-                }
+            val key = resource.zoneId.replace(Regex("\\d+"), "")
+            val map = res.getOrPut(key) { mutableMapOf() }
+            resource.machineResources?.forEach { mas ->
+                map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
             }
+        }
         return res
     }
 
@@ -222,6 +222,18 @@ class WindowsResourceConfigService @Autowired constructor(
         return windowsSpecResourceDao.delete(dslContext = dslContext, projectId = projectId, size = size)
     }
 
+    fun updateAndGetAllSpec(
+        projectId: String,
+        machineType: String?,
+        count: Int
+    ): Map<String, Int> {
+        if (count != 0 && machineType != null) {
+            val res = windowsSpecResourceDao.fetchQuota(dslContext, projectId, machineType) ?: 0
+            windowsSpecResourceDao.createOrUpdateSpecRes(dslContext, projectId, machineType, count + res)
+        }
+        return windowsSpecResourceDao.fetchAllQuota(dslContext, projectId)
+    }
+
     fun fetchSpec(
         projectId: String?,
         machineType: String?,
@@ -246,11 +258,11 @@ class WindowsResourceConfigService @Autowired constructor(
     }
 
     // 追加项目的云桌面配额
-    fun addProjectTotalQuota(
+    fun updateAndGetProjectTotalQuota(
         userId: String,
         projectId: String,
         quota: Int
-    ): Boolean {
+    ): Int {
         logger.info("addProjectTotalQuota|projectId|$projectId|quota|$quota")
         // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
         val projectInfo = kotlin.runCatching {
@@ -262,16 +274,21 @@ class WindowsResourceConfigService @Autowired constructor(
         val projectProperties = projectInfo.properties
         if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
             logger.info("addProjectTotalQuota|$projectId|not open remotedev")
-            return false
+            throw RemoteServiceException(
+                "project $projectId not open remotedev", HTTP_400
+            )
         }
         val curQuota = projectProperties.cloudDesktopNum
-        return client.get(OPProjectResource::class).setProjectProperties(
-            userId = userId,
-            projectCode = projectId,
-            properties = projectProperties.copy(
-                cloudDesktopNum = (curQuota + quota)
+        if (quota != 0) {
+            client.get(OPProjectResource::class).setProjectProperties(
+                userId = userId,
+                projectCode = projectId,
+                properties = projectProperties.copy(
+                    cloudDesktopNum = (curQuota + quota)
+                )
             )
-        ).data == true
+        }
+        return curQuota + quota
     }
 
     fun addProjectRemotedevManager(

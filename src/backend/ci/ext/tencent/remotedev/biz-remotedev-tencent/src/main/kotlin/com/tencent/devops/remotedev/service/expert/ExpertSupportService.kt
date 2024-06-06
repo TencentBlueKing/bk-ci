@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -37,6 +38,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -98,10 +101,14 @@ class ExpertSupportService @Autowired constructor(
         )
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    Triple(
+                        "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}",
+                        it.value["PHONE"] as String,
+                        it.value["PHONE_COUNTRY_CODE"] as String
+                    )
                 } else {
-                    it.key
+                    Triple(it.key, "", "")
                 }
             }
         val projectInfo = kotlin.runCatching {
@@ -140,27 +147,44 @@ class ExpertSupportService @Autowired constructor(
         val newParam = mutableMapOf<String, String>()
         val hostIdSub = data.hostIp.split(".")
         val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+
+        // 获取请求来源ip
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        val requestIp = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
+            ?.firstOrNull { it.isNotBlank() }?.trim()
+
         info.buildParam.forEach { (k, v) ->
             when (v) {
                 "ip" -> newParam[k] = detail.regionId.toString().plus(":").plus(ip)
                 "projectId" -> newParam[k] = data.projectId
                 "projectName" -> newParam[k] = projectInfo.projectName
                 "ticketId" -> newParam[k] = id.toString()
-                "creator" -> newParam[k] = taiUserCN[data.creator] ?: data.creator
+                "creator" -> newParam[k] = taiUserCN[data.creator]?.first ?: data.creator
                 "content" -> newParam[k] = data.content
                 "city" -> newParam[k] = data.city
                 "machineType" -> newParam[k] = data.machineType
                 "createTime" -> newParam[k] = DateTimeUtil.toDateTime(
                     LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
                 )
+
                 "zone" -> newParam[k] = detail.regionId.toString()
                 "workspaceName" -> newParam[k] = data.workspaceName
+                "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
+                "phoneCountryCode" -> newParam[k] = taiUserCN[data.creator]?.third ?: ""
+                "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) {
+                    UserUtil.removeTaiSuffix(data.creator)
+                } else {
+                    ""
+                }
+                "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
+                "requestIp" -> newParam[k] = requestIp ?: ""
+
                 else -> newParam[k] = v
             }
         }
         AsyncExecute.dispatch(
             rabbitTemplate,
-                AsyncPipelineEvent(
+            AsyncPipelineEvent(
                 userId = info.userId ?: "",
                 projectId = info.projectId,
                 pipelineId = info.pipelineId,
@@ -334,6 +358,12 @@ class ExpertSupportService @Autowired constructor(
                 content = it.content
             )
         }
+    }
+
+    fun deleteConfigWithData(
+        data: CreateExpertSupportConfigData
+    ) {
+        expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
     }
 
     companion object {

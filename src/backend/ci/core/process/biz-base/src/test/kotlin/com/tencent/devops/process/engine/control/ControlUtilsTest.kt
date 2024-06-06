@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -45,7 +44,6 @@ import io.mockk.mockkObject
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 /**
  * @version 1.0
@@ -183,7 +181,7 @@ class ControlUtilsTest : TestBase() {
                 asCodeEnabled = true
             )
         )
-        assertThrows<ExpressionParseException> {
+        Assertions.assertTrue(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = variables,
@@ -192,7 +190,7 @@ class ControlUtilsTest : TestBase() {
                 customCondition = "a==a",
                 asCodeEnabled = true
             )
-        }
+        )
     }
 
     @Test

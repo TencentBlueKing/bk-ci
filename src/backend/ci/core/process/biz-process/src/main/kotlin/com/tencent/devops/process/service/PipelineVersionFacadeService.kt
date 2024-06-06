@@ -124,11 +124,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        // 有草稿且不是空白的编排才可以发布，如果是模板实例则直接可发布
-        val canRelease = detailInfo.instanceFromTemplate ||
-            (draftVersion != null && draftVersion.model.stages.size > 1)
-        // 存在草稿版本就可以调试，如果是模板实例则永远不可调试
-        val canDebug = !detailInfo.instanceFromTemplate && draftVersion != null
+        // 有草稿且不是空白的编排才可以发布
+        val canRelease = draftVersion != null && draftVersion.model.stages.size > 1
+        // 存在草稿版本就可以调试
+        val canDebug = draftVersion != null
         val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId
@@ -258,11 +257,11 @@ class PipelineVersionFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
-        if (templateService.isTemplatePipeline(projectId, pipelineId)) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
-            )
-        }
+//        if (templateService.isTemplatePipeline(projectId, pipelineId)) {
+//            throw ErrorCodeException(
+//                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
+//            )
+//        }
         val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -290,7 +289,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             create = false,
             versionStatus = VersionStatus.RELEASED,
-            channelCode = pipeline.channelCode
+            channelCode = pipeline.channelCode,
+            yamlInfo = request.yamlInfo
         )
         val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         // 如果不匹配已有状态则报错，需要用户重新刷新页面
@@ -399,7 +399,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             model = draftVersion.model,
             projectId = projectId,
             signPipelineId = pipelineId,
-            userId = draftVersion.creator,
+            userId = userId,
             channelCode = pipeline.channelCode,
             create = false,
             updateLastModifyUser = true,
@@ -408,7 +408,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yaml = YamlWithVersion(versionTag = draftVersion.yamlVersion, yamlStr = draftVersion.yaml),
-            baseVersion = draftVersion.baseVersion
+            baseVersion = draftVersion.baseVersion,
+            yamlInfo = request.yamlInfo
         )
         // 添加标签
         pipelineGroupService.addPipelineLabel(
@@ -671,13 +672,9 @@ class PipelineVersionFacadeService @Autowired constructor(
                 yaml = newYaml
             )
         } else {
-            // 修改已存在的草稿，如果是模板实例则不允许这个方式的保存调用
-            if (templateService.isTemplatePipeline(projectId, pipelineId)) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
-                )
-            }
-            val draft = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+            // 修改已存在的流水线
+            val isTemplate = templateService.isTemplatePipeline(projectId, pipelineId)
+            val release = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
             val savedSetting = pipelineSettingFacadeService.saveSetting(
                 userId = userId,
                 projectId = projectId,
@@ -685,16 +682,18 @@ class PipelineVersionFacadeService @Autowired constructor(
                 setting = setting ?: modelAndYaml.modelAndSetting.setting,
                 checkPermission = false,
                 versionStatus = versionStatus,
-                updateVersion = draft == null,
                 dispatchPipelineUpdateEvent = false,
                 updateLabels = false
             )
-
             pipelineInfoFacadeService.editPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                model = model ?: modelAndYaml.modelAndSetting.model,
+                model = if (isTemplate) {
+                    release?.model
+                } else {
+                    model
+                } ?: modelAndYaml.modelAndSetting.model,
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 checkTemplate = false,
@@ -734,7 +733,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 includeDraft = includeDraft
             )
         } else null
-        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+        val (size, pipelines) = repositoryVersionService.listPipelineVersionWithInfo(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -773,6 +772,69 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
     }
 
+    fun listPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        page: Int,
+        pageSize: Int,
+        fromVersion: Int?,
+        includeDraft: Boolean? = true,
+        versionName: String? = null,
+        creator: String? = null,
+        description: String? = null
+    ): Page<PipelineVersionSimple> {
+        var slqLimit: SQLLimit? = null
+        if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+
+        val offset = slqLimit?.offset ?: 0
+        var limit = slqLimit?.limit ?: -1
+        // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
+        val fromResource = if (fromVersion != null && page == 1) {
+            limit -= 1
+            repositoryVersionService.getPipelineVersionSimple(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = fromVersion
+            )
+        } else null
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+            pipelineInfo = pipelineInfo,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            includeDraft = includeDraft,
+            excludeVersion = fromVersion,
+            offset = offset,
+            limit = limit
+        )
+        fromResource?.let { pipelines.add(it) }
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = size.toLong(),
+            records = pipelines
+        )
+    }
+
+    fun getPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionSimple {
+        return repositoryVersionService.getPipelineVersionSimple(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
+    }
+
     fun rollbackDraftFromVersion(
         userId: String,
         projectId: String,
@@ -789,6 +851,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             creator = resource.creator,
             createTime = resource.createTime.timestampmilli(),
+            updater = resource.updater,
             updateTime = resource.updateTime?.timestampmilli(),
             version = resource.version,
             versionName = resource.versionName ?: "",

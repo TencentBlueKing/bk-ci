@@ -29,7 +29,12 @@
                     :delay="[300, 0]"
                     class="material-span-tooltip-box"
                 >
-                    <span class="material-span">
+                    <span :class="{
+                              'material-span': true,
+                              'material-url': field === 'materialId'
+                          }"
+                        @click="handleToLink(field)"
+                    >
                         {{ materialInfoValueMap[field] }}
                     </span>
                 </bk-popover>
@@ -95,7 +100,9 @@
                     reviewId: 'webhook-review',
                     webhookSourceTarget: 'branch',
                     parentPipelineName: 'pipeline',
-                    parentBuildNum: 'sharp'
+                    parentBuildNum: 'sharp',
+                    materialName: scmIcon,
+                    materialId: 'link'
                 }
             },
             materialInfoKeys () {
@@ -163,10 +170,15 @@
                             'parentBuildNum'
                         ]
                     default:
-                        return [
-                            'webhookAliasName',
-                            'webhookBranch'
-                        ]
+                        return this.material?.materialId
+                            ? [
+                                'materialName',
+                                'materialId'
+                            ]
+                            : [
+                                'webhookAliasName',
+                                'webhookBranch'
+                            ]
                 }
             },
             materialInfoValueMap () {
@@ -216,6 +228,12 @@
                     default:
                         return this.material?.linkUrl ?? ''
                 }
+            },
+
+            handleToLink (field) {
+                if (field === 'materialId') {
+                    window.open(this.getLink(field), '_blink')
+                }
             }
         }
     }
@@ -226,6 +244,7 @@
             // padding: 0 0 8px 0;
             display: grid;
             grid-gap: 20px;
+            height: 38px;
             grid-auto-flow: column;
             &.fit-content {
                 grid-auto-columns: minmax(auto, max-content) 36px;
@@ -291,6 +310,10 @@
               .bk-link-text {
                 font-size: 12px;
               }
+            }
+            .material-url {
+                color: #3a84ff;
+                cursor: pointer;
             }
           }
 </style>

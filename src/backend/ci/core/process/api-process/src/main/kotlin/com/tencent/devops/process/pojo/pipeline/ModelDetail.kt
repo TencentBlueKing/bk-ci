@@ -69,5 +69,7 @@ data class ModelDetail(
     @get:Schema(title = "执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
     @get:Schema(title = "触发审核人列表", required = false)
-    val triggerReviewers: List<String>? = null
+    val triggerReviewers: List<String>? = null,
+    @get:Schema(title = "是否为调试构建", required = false)
+    val debug: Boolean? = false
 )
