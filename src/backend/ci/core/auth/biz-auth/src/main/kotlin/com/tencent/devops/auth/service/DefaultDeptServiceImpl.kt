@@ -71,6 +71,21 @@ class DefaultDeptServiceImpl : DeptService {
         UserAndDeptInfoVo(
             id = 0,
             name = name,
+            displayName = name,
             type = ManagerScopesEnum.USER
         )
+
+    override fun getMemberInfo(
+        memberId: String,
+        memberType: ManagerScopesEnum
+    ): UserAndDeptInfoVo = UserAndDeptInfoVo(
+        id = 0,
+        name = memberId,
+        displayName = memberId,
+        type = memberType
+    )
+
+    override fun getUserDisPlayName(userId: String): String? = null
+
+    override fun isUserDeparted(userId: String): Boolean = false
 }

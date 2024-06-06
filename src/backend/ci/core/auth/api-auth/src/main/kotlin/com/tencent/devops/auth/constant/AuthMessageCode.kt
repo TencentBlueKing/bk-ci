@@ -133,4 +133,10 @@ object AuthMessageCode {
 
     const val ERROR_MOA_CREDENTIAL_KEY_VERIFY_FAIL = "2121082" // MOA票据校验失败
     const val ERROR_USER_NOT_BELONG_TO_THE_PROJECT = "2121083" // 用户不属于项目
+
+    const val ERROR_RESOURCE_AUTHORIZATION_NOT_FOUND = "2121084" // 授权记录不存在
+    const val ERROR_BATCH_RENEWAL_GROUP_MEMBERS = "2121085" // 批量续期用户组成员失败
+    const val ERROR_GROUP_MEMBERS_NOT_EXIST = "2121086" // 用户组[{0}]下不存在成员[{1}]
+    const val ERROR_BATCH_OPERATE_GROUP_MEMBERS = "2121087" // 批量操作组成员失败
+    const val INVALID_HANDOVER_TO = "2121088" // 目标对象和交接人不允许相同
 }

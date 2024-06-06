@@ -90,6 +90,11 @@ object RepositoryMessageCode {
     const val ATOM_REPO_CAN_NOT_EDIT = "2115040" // 插件仓库不得修改
     const val ATOM_REPO_CAN_NOT_DELETE = "2115041" // 插件仓库不得删除
 
+    const val ERROR_USER_HAVE_NOT_USED_OAUTH = "2115042" // 用户没有使用过Oauth
+    const val ERROR_USER_HAVE_NOT_DOWNLOAD_PEM = "2115043" // 用户（{0}）无（{1}）项目下载权限
+    const val NOT_GITHUB_AUTHORIZED_BY_OAUTH = "2115044" // 用户[{0}]尚未进行GITHUB OAUTH授权，请先授权。
+    const val REPOSITORY_NO_SUPPORT_OAUTH = "2115045" // （{0}）类型代码库暂不支持OAUTH授权
+
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
     const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns" // 更新检测任务

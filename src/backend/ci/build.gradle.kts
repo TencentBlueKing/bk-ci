@@ -167,4 +167,8 @@ allprojects {
             }
         }
     }
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor(0,"seconds")
+        resolutionStrategy.cacheDynamicVersionsFor(0,"seconds")
+    }
 }

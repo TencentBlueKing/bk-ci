@@ -43,11 +43,14 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
@@ -83,6 +86,7 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
+import com.tencent.devops.process.permission.PipelineAuthorizationService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -106,6 +110,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.time.LocalDateTime
 import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
@@ -132,7 +137,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
     private val yamlFacadeService: PipelineYamlFacadeService,
-    private val operationLogService: PipelineOperationLogService
+    private val operationLogService: PipelineOperationLogService,
+    private val pipelineAuthorizationService: PipelineAuthorizationService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -484,6 +490,19 @@ class PipelineInfoFacadeService @Autowired constructor(
                             pipelineId = pipelineId,
                             pipelineName = model.name
                         )
+                        pipelineAuthorizationService.addResourceAuthorization(
+                            projectId = projectId,
+                            resourceAuthorizationList = listOf(
+                                ResourceAuthorizationDTO(
+                                    projectCode = projectId,
+                                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                                    resourceCode = pipelineId,
+                                    resourceName = model.name,
+                                    handoverFrom = userId,
+                                    handoverTime = LocalDateTime.now().timestampmilli()
+                                )
+                            )
+                        )
                     } catch (ignored: Throwable) {
                         if (fixPipelineId != pipelineId) {
                             throw ignored
@@ -814,6 +833,19 @@ class PipelineInfoFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineName = resource.model.name
+            )
+            pipelineAuthorizationService.addResourceAuthorization(
+                projectId = projectId,
+                resourceAuthorizationList = listOf(
+                    ResourceAuthorizationDTO(
+                        projectCode = projectId,
+                        resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                        resourceCode = pipelineId,
+                        resourceName = resource.model.name,
+                        handoverFrom = userId,
+                        handoverTime = LocalDateTime.now().timestampmilli()
+                    )
+                )
             )
             ActionAuditContext.current().setInstanceName(resource.model.name)
             return DeployPipelineResult(

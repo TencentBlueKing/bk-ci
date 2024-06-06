@@ -31,12 +31,10 @@ package com.tencent.devops.auth.provider.rbac.service.migrate
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
@@ -50,6 +48,7 @@ import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiServic
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_WEB_POLICY
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.USER_CUSTOM_POLICY
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -78,7 +77,8 @@ abstract class AbMigratePolicyService(
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) {
 
     companion object {
@@ -258,6 +258,7 @@ abstract class AbMigratePolicyService(
             }
             // 往用户组添加成员
             batchAddGroupMember(
+                projectCode = projectCode,
                 groupId = groupId,
                 defaultGroup = defaultGroup,
                 members = result.members,
@@ -276,6 +277,7 @@ abstract class AbMigratePolicyService(
     ): Pair<List<AuthorizationScopes>/*组授权范围*/, List<String>/*流水线用户组ID（关联流水线动作组）*/>
 
     abstract fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -377,13 +379,13 @@ abstract class AbMigratePolicyService(
                     permission = permission
                 )
                 groupIds.forEach { groupId ->
-                    val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
-                    val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-                        .members(listOf(managerMember))
-                        .expiredAt(
-                            System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY)
-                        ).build()
-                    v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+                    permissionResourceMemberService.addGroupMember(
+                        projectCode = projectCode,
+                        memberId = userId,
+                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.USER),
+                        expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
+                        iamGroupId = groupId
+                    )
                 }
             }
         }

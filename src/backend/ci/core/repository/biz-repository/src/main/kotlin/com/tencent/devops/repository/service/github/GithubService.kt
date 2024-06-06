@@ -58,7 +58,11 @@ import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.sdk.github.pojo.RepositoryPermissions
 import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryPermissionsRequest
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
 import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.scm.config.GitConfig
@@ -428,6 +432,34 @@ class GithubService @Autowired constructor(
         }
         logger.info("github isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
+    }
+
+    override fun getAccessToken(userId: String): GithubToken? {
+        return githubTokenService.getAccessToken(userId)
+    }
+
+    override fun getUser(token: String): GetUserResponse? {
+        return try {
+            githubUserService.getUser(token)
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github user failed: $ignored")
+            null
+        }
+    }
+
+    override fun getRepositoryPermissions(projectName: String, userId: String, token: String): RepositoryPermissions? {
+        return try {
+            githubRepositoryService.getRepositoryPermissions(
+                request = GetRepositoryPermissionsRequest(
+                    repoName = projectName,
+                    username = userId
+                ),
+                token = token
+            )
+        } catch (ignored: Exception) {
+            logger.warn("get github repository permissions failed: $ignored")
+            null
+        }
     }
 
     companion object {

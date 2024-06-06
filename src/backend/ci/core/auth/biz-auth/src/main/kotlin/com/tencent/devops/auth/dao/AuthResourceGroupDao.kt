@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
@@ -83,6 +84,49 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun batchCreate(
+        dslContext: DSLContext,
+        authResourceGroups: List<AuthResourceGroup>
+    ) {
+        val now = LocalDateTime.now()
+        with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.batch(authResourceGroups.map {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_CODE,
+                    RESOURCE_TYPE,
+                    RESOURCE_CODE,
+                    RESOURCE_NAME,
+                    IAM_RESOURCE_CODE,
+                    GROUP_CODE,
+                    GROUP_NAME,
+                    DEFAULT_GROUP,
+                    RELATION_ID,
+                    CREATE_TIME,
+                    UPDATE_TIME,
+                    DESCRIPTION,
+                    IAM_TEMPLATE_ID
+                ).values(
+                    it.projectCode,
+                    it.resourceType,
+                    it.resourceCode,
+                    it.resourceName,
+                    it.iamResourceCode,
+                    it.groupCode,
+                    it.groupName,
+                    it.defaultGroup,
+                    it.relationId.toString(),
+                    now,
+                    now,
+                    it.description,
+                    it.iamTemplateId
+                ).onDuplicateKeyUpdate()
+                    .set(GROUP_NAME, it.groupName)
+                    .set(UPDATE_TIME, it.updateTime)
+            }).execute()
+        }
+    }
+
     fun update(
         dslContext: DSLContext,
         projectCode: String,
@@ -103,6 +147,24 @@ class AuthResourceGroupDao {
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(GROUP_CODE.eq(groupCode))
                 .execute()
+        }
+    }
+
+    fun batchUpdate(
+        dslContext: DSLContext,
+        authResourceGroups: List<AuthResourceGroup>
+    ) {
+        val now = LocalDateTime.now()
+        with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.batch(authResourceGroups.map {
+                dslContext.update(this)
+                    .set(GROUP_NAME, it.groupName)
+                    .set(DESCRIPTION, it.description)
+                    .set(IAM_TEMPLATE_ID, it.iamTemplateId)
+                    .set(UPDATE_TIME, now)
+                    .where(PROJECT_CODE.eq(it.projectCode))
+                    .and(ID.eq(it.id!!))
+            }).execute()
         }
     }
 
@@ -239,6 +301,42 @@ class AuthResourceGroupDao {
                 .from(this).where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun listGroupByResourceType(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        offset: Int,
+        limit: Int
+    ): List<AuthResourceGroup> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .offset(offset)
+                .limit(limit)
+                .fetch().map { convert(it) }
+        }
+    }
+
+    fun convert(record: TAuthResourceGroupRecord): AuthResourceGroup {
+        return with(record) {
+            AuthResourceGroup(
+                id = id,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                iamResourceCode = iamResourceCode,
+                groupCode = groupCode,
+                groupName = groupName,
+                defaultGroup = defaultGroup,
+                relationId = relationId.toInt(),
+                createTime = createTime,
+                updateTime = updateTime
+            )
         }
     }
 }
