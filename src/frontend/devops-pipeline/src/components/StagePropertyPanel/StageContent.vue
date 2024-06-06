@@ -1,22 +1,45 @@
 <template>
     <section v-if="stage" :class="{ 'readonly': !editable }" class="stage-property-panel bk-form bk-form-vertical">
-        <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
+        <form-field required :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
             <div class="stage-name">
-                <vuex-input :disabled="!editable || stage.finally === true " input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="'required'" :value="stageTitle" :handle-change="handleStageChange" />
+                <vuex-input
+                    :disabled="!editable || isFinallyStage"
+                    input-type="text"
+                    :placeholder="$t('nameInputTips')"
+                    name="name"
+                    v-validate.initial="'required'"
+                    :value="stageTitle"
+                    :handle-change="handleStageChange"
+                />
             </div>
         </form-field>
-        <form-field :required="true" :label="$t('label')" :is-error="errors.has('tag')" :error-msg="errors.first('tag')">
+        <form-field required :label="$t('label')" :is-error="errors.has('tag')" :error-msg="errors.first('tag')">
             <div class="stage-tag">
-                <bk-select v-model="stageTag" v-validate.initial="'required'" name="tag" :disabled="!editable" multiple searchable>
+                <bk-select
+                    v-model="stageTag"
+                    v-validate.initial="'required'"
+                    name="tag"
+                    :disabled="!editable"
+                    multiple
+                    searchable
+                >
                     <bk-option v-for="tag in stageTagList"
                         :key="tag.id"
                         :id="tag.id"
-                        :name="tag.stageTagName">
+                        :name="tag.stageTagName"
+                    >
                     </bk-option>
                 </bk-select>
             </div>
         </form-field>
-        <stage-control v-if="!isTriggerStage" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :is-finally="stage.finally === true" :handle-stage-change="handleStageChange"></stage-control>
+        <stage-control
+            v-if="!isTriggerStage"
+            ref="stageControl"
+            :stage-control="stageControl"
+            :disabled="!editable"
+            :is-finally="isFinallyStage"
+            :handle-stage-change="handleStageChange"
+        />
     </section>
 </template>
 
@@ -45,6 +68,9 @@
             ...mapGetters('atom', [
                 'isTriggerContainer'
             ]),
+            isFinallyStage () {
+                return this.stage?.finally === true
+            },
             stageTag: {
                 get () {
                     return this.stage.tag
@@ -76,7 +102,8 @@
                     if (!this.editable) {
                         return
                     }
-                    const isError = errors.any()
+
+                    const isError = errors.any() || this.$refs.stageControl?.errors?.any?.()
 
                     this.handleStageChange('isError', isError)
                 }

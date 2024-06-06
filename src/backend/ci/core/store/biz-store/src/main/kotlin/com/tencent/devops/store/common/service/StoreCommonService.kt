@@ -146,4 +146,12 @@ interface StoreCommonService {
      * 获取普通升级标识
      */
     fun getNormalUpgradeFlag(storeCode: String, storeType: StoreTypeEnum, status: StoreStatusEnum): Boolean
+
+    /**
+     * 根据标识获取组件关联代码库hashId
+     */
+    fun getStoreRepoHashIdByCode(
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): String?
 }

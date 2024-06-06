@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
@@ -151,6 +152,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                             else -> return@m ""
                         }
                     }
+                val (repoHashId, repoName) = if (element.repositoryType == TriggerRepositoryType.SELF) {
+                    Pair(null, null)
+                } else {
+                    Pair(element.repoHashId, element.repoName)
+                }
                 schedules.add(
                     SchedulesRule(
                         name = element.name,
@@ -160,8 +166,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                         } else {
                             element.advanceExpression
                         },
-                        repoId = element.repoHashId,
-                        repoName = element.repoName,
+                        repoId = repoHashId,
+                        repoName = repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
                         enable = element.isElementEnable().nullIfDefault(true)

@@ -13,7 +13,7 @@
                                 :error-msg="errors.first(i.key)"
                             >
                                 <component
-                                    :is="i.component"
+                                    :is="i.component || i.type"
                                     :container="container"
                                     :atom-value="atomValue"
                                     :disabled="disabled"
@@ -38,7 +38,7 @@
                         :error-msg="errors.first(obj.key)"
                     >
                         <component
-                            :is="obj.component"
+                            :is="obj.component || obj.type"
                             :container="container"
                             :disabled="disabled"
                             :element="element.data.input"

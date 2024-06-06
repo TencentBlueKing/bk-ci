@@ -116,8 +116,7 @@ class CheckConditionalSkipStageCmd constructor(
                 variables = variables.plus(contextMap),
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
-                customCondition = controlOption.customCondition,
-                asCodeEnabled = commandContext.pipelineAsCodeEnabled == true
+                customCondition = controlOption.customCondition
             ) // #6366 增加日志明确展示跳过的原因  stage 没有相关可展示的地方，暂时不加
         }
         if (skip) {

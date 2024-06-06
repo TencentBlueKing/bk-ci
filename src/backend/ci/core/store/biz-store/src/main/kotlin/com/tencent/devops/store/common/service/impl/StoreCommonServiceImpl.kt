@@ -203,6 +203,10 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         return publicFlag
     }
 
+    override fun getStoreRepoHashIdByCode(storeCode: String, storeType: StoreTypeEnum): String? {
+        return getStoreCommonDao(storeType.name).getStoreRepoHashIdByCode(dslContext, storeCode)
+    }
+
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
         return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
     }

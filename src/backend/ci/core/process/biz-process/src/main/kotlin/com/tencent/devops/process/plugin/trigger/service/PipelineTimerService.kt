@@ -153,27 +153,29 @@ open class PipelineTimerService @Autowired constructor(
     }
 
     private fun convert(timerRecord: TPipelineTimerRecord): PipelineTimer? {
-        return PipelineTimer(
-            projectId = timerRecord.projectId,
-            pipelineId = timerRecord.pipelineId,
-            startUser = timerRecord.creator,
-            crontabExpressions = try {
-                JsonUtil.to(timerRecord.crontab, object : TypeReference<List<String>>() {})
-            } catch (ignored: Throwable) {
-                listOf(timerRecord.crontab)
-            },
-            channelCode = try {
-                ChannelCode.valueOf(timerRecord.channel)
-            } catch (e: IllegalArgumentException) {
-                logger.warn("Unkown channel code", e)
-                return null
-            },
-            repoHashId = timerRecord.repoHashId,
-            branchs = timerRecord.branchs?.let {
-                JsonUtil.to(it, object : TypeReference<List<String>>() {})
-            },
-            noScm = timerRecord.noScm
-        )
+        with(timerRecord) {
+            return PipelineTimer(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                startUser = creator,
+                crontabExpressions = try {
+                    JsonUtil.to(crontab, object : TypeReference<List<String>>() {})
+                } catch (ignored: Throwable) {
+                    listOf(crontab)
+                },
+                channelCode = try {
+                    ChannelCode.valueOf(channel)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("Unkown channel code", e)
+                    return null
+                },
+                repoHashId = repoHashId,
+                branchs = branchs?.let {
+                    JsonUtil.to(it, object : TypeReference<List<String>>() {})
+                },
+                noScm = noScm
+            )
+        }
     }
 
     open fun list(start: Int, limit: Int): Result<Collection<PipelineTimer>> {

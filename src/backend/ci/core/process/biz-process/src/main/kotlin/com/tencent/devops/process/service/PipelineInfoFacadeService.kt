@@ -179,7 +179,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         )
 
-        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)
+        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
@@ -663,7 +663,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (releaseBranch == true || branchVersionAction != BranchVersionAction.INACTIVE) {
                 // 如果是发布分支版本则直接更新
                 pipelineRepositoryService.updatePipelineBranchVersion(
-                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                    userId, projectId, pipelineId, branchName, branchVersionAction, transactionContext
                 )
             } else {
                 // 如果是删除分支版本则判断是否为最后一个版本
@@ -671,7 +671,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     projectId, pipelineId, branchName
                 )
                 pipelineRepositoryService.updatePipelineBranchVersion(
-                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                    userId, projectId, pipelineId, branchName, branchVersionAction, transactionContext
                 )
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                     projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
@@ -710,7 +710,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (setting.pipelineAsCodeSettings?.enable == true && !pipelineAsCodeSettings.enable) {
             // 关闭PAC开关时，将所有分支版本设为
             pipelineRepositoryService.updatePipelineBranchVersion(
-                projectId, pipelineId, null, BranchVersionAction.INACTIVE
+                userId, projectId, pipelineId, null, BranchVersionAction.INACTIVE
             )
         }
 

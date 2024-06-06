@@ -868,6 +868,12 @@
     "paramValueTips": "请输入变量值",
     "selectParamValueTips": "请选择变量值",
     "selectOptions": "下拉选项",
+    "batchAdd": "批量添加",
+    "batchAddTips": "● 多个选项用换行符分隔\n ● 每个选项不能包含英文逗号\n ● 重复的选项将只会显示一个\n ● 与 HTML select 标签类似，选项支持 value=name / value 两种格式",
+    "batchAddBtn": "解析并添加",
+    "optionSetting": "选项设置",
+    "optionValTips": "请输入value",
+    "optionNameTips": "请输入name（为空则与value一致）",
     "optionsDesc": "多个选项用换行符分隔<br>每个选项不能包含英文逗号<br>重复的选项将只会显示一个<br>与HTML select标签类似，选项支持value=name / value两种格式",
     "optionTips": "多行记录请换行输入",
     "chineseName": "中文名称",
@@ -1010,7 +1016,8 @@
     "codelib": "代码库",
     "branches": "分支",
     "codelibConfigs": "代码库配置",
-    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录"
+    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
+    "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1104,7 +1111,15 @@
     "afterPreStageSuccess": "前一个Stage成功时运行",
     "manualRunStage": "手动触发运行",
     "autoSkip": "自动跳过",
-    "manualSkip": "手动跳过"
+    "manualSkip": "手动跳过",
+    "timeoutPeriod": "超时时间",
+    "execTimeOut": "执行超时",
+    "queueTimeOut": "排队超时",
+    "singleNodeConcurrency": "单节点上的并发",
+    "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
+    "allNodeConcurrency": "所有节点上的总并发",
+    "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
+    "minutes": "分钟"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1524,5 +1539,6 @@
   "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式查看和PAC模式发布。",
   "eventID": "事件ID",
   "runningSteps": "正在运行的步骤：",
-  "completeness": "完成度："
+  "completeness": "完成度：",
+  "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。"
 }
