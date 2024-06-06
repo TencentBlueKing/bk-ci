@@ -64,6 +64,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -178,7 +179,7 @@ class ExperienceDownloadService @Autowired constructor(
 
         val projectId = experienceRecord.projectId
         val bundleIdentifier = experienceRecord.bundleIdentifier
-        val path = experienceRecord.artifactoryPath
+        val path = URLEncoder.encode(experienceRecord.artifactoryPath, Charsets.UTF_8.toString()).replace("+", "%20")
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
             val tail = ttl?.let { "&ttl=$ttl" } ?: ""

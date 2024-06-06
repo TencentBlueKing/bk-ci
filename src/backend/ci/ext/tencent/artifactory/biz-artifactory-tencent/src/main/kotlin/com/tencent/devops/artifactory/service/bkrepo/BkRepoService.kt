@@ -48,7 +48,6 @@ import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
-import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
