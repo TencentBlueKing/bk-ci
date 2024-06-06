@@ -206,7 +206,6 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentIDDispatchType
     ) {
-
         val agentResult = if (dispatchType.idType()) {
             client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(dispatchMessage.event.projectId, dispatchType.displayName)
@@ -303,8 +302,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                 }
 
                 // #10082 对于复用的机器和被复用的，需要加锁校验看看这台机器能不能使用
+                val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(event.projectId, agent.agentId)
                 if (hasReuseMutex) {
-                    val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(event.projectId, agent.agentId)
                     val lock = RedisLockByValue(
                         redisOperation = redisOperation,
                         lockKey = lockKey,
@@ -347,6 +346,28 @@ class ThirdPartyDispatchService @Autowired constructor(
                         }
                     } catch (e: Exception) {
                         logger.error("inQueue|doAgentInQueue|error", e)
+                    }
+                } else if (redisOperation.get(lockKey) != null) {
+                    // 没有复用逻辑的需要检查下如果这个机器剩一个可调度空间且有复用锁那么不能进行调度
+                    val checkRes = if (dockerInfo != null) {
+                        ((agent.dockerParallelTaskCount ?: 4) -
+                                thirdPartyAgentBuildService.getDockerRunningBuilds(agent.agentId)) <= 1
+                    } else {
+                        ((agent.parallelTaskCount ?: 4) -
+                                thirdPartyAgentBuildService.getRunningBuilds(agent.agentId)) <= 1
+                    }
+                    if (checkRes) {
+                        log(
+                            dispatchMessage.event,
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
+                                language = I18nUtil.getDefaultLocaleLanguage(),
+                                params = arrayOf(
+                                    "${agent.agentId}|${agent.hostname}/${agent.ip}", redisOperation.get(lockKey) ?: ""
+                                )
+                            )
+                        )
+                        return false
                     }
                 }
 
