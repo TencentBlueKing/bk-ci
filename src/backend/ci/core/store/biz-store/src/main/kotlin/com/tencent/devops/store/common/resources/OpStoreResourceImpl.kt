@@ -25,45 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreResource
+import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
+import org.springframework.beans.factory.annotation.Autowired
 
-interface StorePipelineService {
+@RestResource
+class OpStoreResourceImpl @Autowired constructor(
+    private val storePipelineService: StorePipelineService
+) : OpStoreResource {
 
-    /**
-     * @param userId 用户ID
-     * @param updateStorePipelineModelRequest 更新研发商店流水线模型请求报文
-     */
-    fun updatePipelineModel(
+    override fun deleteStoreInnerPipeline(
         userId: String,
-        updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
-    ): Result<Boolean>
-
-    /**
-     * 运行流水线
-     * @param storeRunPipelineParam 运行流水线参数
-     * @return 布尔值
-     */
-    fun runPipeline(
-        storeRunPipelineParam: StoreRunPipelineParam
-    ): Boolean
-
-    /**
-     * 删除组件内置流水线
-     * @param userId 用户ID
-     * @param storeType 组件类型
-     * @param storeCode 组件标识
-     * @param excludeProjectCode 需排除的项目
-     * @return 布尔值
-     */
-    fun deleteStoreInnerPipeline(
-        userId: String,
-        storeType: StoreTypeEnum? = null,
-        storeCode: String? = null,
-        excludeProjectCode: String? = null
-    ): Boolean
+        storeType: StoreTypeEnum?,
+        storeCode: String?,
+        excludeProjectCode: String?
+    ): Result<Boolean> {
+        return Result(
+            storePipelineService.deleteStoreInnerPipeline(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                excludeProjectCode = excludeProjectCode
+            )
+        )
+    }
 }

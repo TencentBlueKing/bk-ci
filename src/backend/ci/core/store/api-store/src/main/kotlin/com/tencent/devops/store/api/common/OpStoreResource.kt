@@ -25,45 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-interface StorePipelineService {
+@Tag(name = "OP_STORE", description = "OP-商店")
+@Path("/op/store")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreResource {
 
-    /**
-     * @param userId 用户ID
-     * @param updateStorePipelineModelRequest 更新研发商店流水线模型请求报文
-     */
-    fun updatePipelineModel(
-        userId: String,
-        updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
-    ): Result<Boolean>
-
-    /**
-     * 运行流水线
-     * @param storeRunPipelineParam 运行流水线参数
-     * @return 布尔值
-     */
-    fun runPipeline(
-        storeRunPipelineParam: StoreRunPipelineParam
-    ): Boolean
-
-    /**
-     * 删除组件内置流水线
-     * @param userId 用户ID
-     * @param storeType 组件类型
-     * @param storeCode 组件标识
-     * @param excludeProjectCode 需排除的项目
-     * @return 布尔值
-     */
+    @Operation(summary = "删除组件内置流水线")
+    @DELETE
+    @Path("/inner/pipeline/delete")
     fun deleteStoreInnerPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "组件类型", required = false)
+        @QueryParam("storeType")
         storeType: StoreTypeEnum? = null,
+        @Parameter(description = "组件标识", required = false)
+        @QueryParam("storeCode")
         storeCode: String? = null,
+        @Parameter(description = "需排除的项目", required = false)
+        @QueryParam("excludeProjectCode")
         excludeProjectCode: String? = null
-    ): Boolean
+    ): Result<Boolean>
 }

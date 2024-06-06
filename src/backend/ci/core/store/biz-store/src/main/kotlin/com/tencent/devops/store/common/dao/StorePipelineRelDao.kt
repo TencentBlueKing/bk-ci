@@ -32,7 +32,9 @@ import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.records.TStorePipelineRelRecord
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -120,6 +122,29 @@ class StorePipelineRelDao {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun getStorePipelineRelRecords(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int,
+        storeType: StoreTypeEnum? = null,
+        storeCode: String? = null
+    ): Result<TStorePipelineRelRecord>? {
+        return with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            val conditions = mutableListOf<Condition>()
+            storeType?.let {
+                conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            }
+            storeCode?.let {
+                conditions.add(STORE_CODE.eq(storeCode))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.asc(), ID.asc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 }
