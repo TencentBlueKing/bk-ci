@@ -820,11 +820,7 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!) + "/bkrepo/api/external/repository${
-            StringUtil.repoPathUrlEncode(
-                shareUri
-            )
-        }&download=true&userId=$userId"
+        return HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!) + "/bkrepo/api/external/repository$shareUri&download=true&userId=$userId"
     }
 
     fun internalDownloadUrl(
