@@ -77,7 +77,7 @@ class VariableTransfer @Autowired constructor() {
                 it.type == BuildFormPropertyType.ENUM -> VariableProps(
                     type = VariablePropType.SELECTOR.value,
                     options = it.options?.map { form ->
-                        VariablePropOption(id = form.value, label = form.key)
+                        VariablePropOption(id = form.key, label = form.value)
                     },
                     payload = it.payload
                 )

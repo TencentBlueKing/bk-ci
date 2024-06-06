@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.engine.compatibility.v2
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
 
@@ -42,6 +44,11 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         val paramsMap = HashMap<String, BuildParameters>(paramProperties.size, 1F)
 
         paramProperties.forEach { param ->
+            if (param.valueNotEmpty == true && param.value?.toString()?.isEmpty() != false) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY
+                )
+            }
 
             // 通过对现有Model存在的旧变量替换成新变量， 如果已经是新的会为空，直接为it.id
             val key = PipelineVarUtil.oldVarToNewVar(param.id) ?: param.id
