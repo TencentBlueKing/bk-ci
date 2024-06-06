@@ -45,9 +45,13 @@
             <bk-alert v-if="showChangedParamsAlert && changedParams.length" type="warning"
                 :title="$t('paramChangeTips', [changedParams.length])">
             </bk-alert>
-            <pipeline-params-form v-if="paramList.length > 0" ref="paramsForm" :param-values="paramsValues"
+            <pipeline-params-form
+                v-if="paramList.length > 0"
+                ref="paramsForm"
+                :param-values="paramsValues"
                 :highlight-changed-param="showChangedParamsAlert" :handle-param-change="handleParamChange"
-                :params="paramList" />
+                :params="paramList"
+            />
             <bk-exception v-else type="empty" scene="part">
                 {{ $t('noParams') }}
             </bk-exception>
@@ -62,7 +66,7 @@
             </header>
             <div v-if="activeName.has(4)" class="params-collapse-content">
                 <pipeline-params-form
-                    ref="paramsForm"
+                    ref="constParamsForm"
                     disabled
                     :param-values="constantValues"
                     :params="constantParams"
@@ -77,7 +81,12 @@
                 {{ $t('newui.pipelineParam.otherVar') }}
             </header>
             <div v-if="activeName.has(5)" class="params-collapse-content">
-                <pipeline-params-form ref="paramsForm" disabled :param-values="otherValues" :params="otherParams" />
+                <pipeline-params-form
+                    ref="otherParamsForm"
+                    disabled
+                    :param-values="otherValues"
+                    :params="otherParams"
+                />
             </div>
         </template>
 
