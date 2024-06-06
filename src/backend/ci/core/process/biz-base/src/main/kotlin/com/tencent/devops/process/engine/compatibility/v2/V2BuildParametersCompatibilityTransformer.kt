@@ -46,7 +46,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         paramProperties.forEach { param ->
             if (param.valueNotEmpty == true && param.value?.toString()?.isEmpty() != false) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY,
+                    params = arrayOf(param.id)
                 )
             }
 
