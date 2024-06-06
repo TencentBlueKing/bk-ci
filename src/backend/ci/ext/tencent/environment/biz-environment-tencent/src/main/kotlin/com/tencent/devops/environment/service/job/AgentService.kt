@@ -48,6 +48,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentApInfo
+import com.tencent.devops.environment.pojo.job.agentres.AgentCloudInfo
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentObtainManualCommand
@@ -59,6 +60,8 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTa
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.ApInfo
 import com.tencent.devops.environment.pojo.job.agentres.ApResult
+import com.tencent.devops.environment.pojo.job.agentres.CloudInfo
+import com.tencent.devops.environment.pojo.job.agentres.CloudResult
 import com.tencent.devops.environment.pojo.job.agentres.Content
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
@@ -67,6 +70,7 @@ import com.tencent.devops.environment.pojo.job.agentres.IpFilter
 import com.tencent.devops.environment.pojo.job.agentres.Meta
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.PortConfig
+import com.tencent.devops.environment.pojo.job.agentres.Proxy
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
@@ -172,12 +176,7 @@ data class AgentService @Autowired constructor(
             checkAgentStatusExecutor.maximumPoolSize.toDouble()
     }
 
-    fun installAgent(
-        userId: String,
-        projectId: String,
-        keyFile: InputStream?,
-        installAgentReqString: String
-    ): AgentResult<InstallAgentResult> {
+    fun installAgent(keyFile: InputStream?, installAgentReqString: String): AgentResult<InstallAgentResult> {
         NodeManApi.setNodemanOperationName(::installAgent.name)
         val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentReqString)
         val hostIdToqueryCCResDataMap = tencentQueryFromCCService.queryCCFindHostBizRelations(
@@ -251,9 +250,7 @@ data class AgentService @Autowired constructor(
                 }
             )
         )
-        checkAgentStatus(
-            userId, projectId, installAgentRes.data?.jobId, installAgentReq.hosts.mapNotNull { it.innerIp }
-        )
+        checkAgentStatus(installAgentRes.data?.jobId, installAgentReq.hosts.mapNotNull { it.innerIp })
         return installAgentRes
     }
 
@@ -262,11 +259,11 @@ data class AgentService @Autowired constructor(
      * 发起安装任务后，轮询安装状态：安装中 - NODE_STATUS: RUNNING
      * 执行定时轮询任务，每隔 3000ms 检查任务状态，如果结束（成功/失败）则停止轮询。
      */
-    fun checkAgentStatus(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
-        checkAgentStatusTimed(userId, projectId, jobId, ipList)
+    fun checkAgentStatus(jobId: Int?, ipList: List<String>?) {
+        checkAgentStatusTimed(jobId, ipList)
     }
 
-    private fun checkAgentStatusTimed(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
+    private fun checkAgentStatusTimed(jobId: Int?, ipList: List<String>?) {
         if (null == jobId) {
             throw CustomException(
                 Response.Status.BAD_REQUEST,
@@ -284,7 +281,7 @@ data class AgentService @Autowired constructor(
                         page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
                     )
                     val queryAgentTaskStatusRes = queryAgentTaskStatus(
-                        userId, projectId, jobId, queryAgentTaskStatusReq
+                        jobId, queryAgentTaskStatusReq
                     )
                     queryAgentTaskStatusRes.data?.list?.filter {
                         it.ip in runningIpList
@@ -342,8 +339,6 @@ data class AgentService @Autowired constructor(
     }
 
     fun queryAgentTaskStatus(
-        userId: String,
-        projectId: String,
         jobId: Int,
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
@@ -422,7 +417,7 @@ data class AgentService @Autowired constructor(
                 else -> NodeStatus.ABNORMAL.name
             }
             Pair(it.ip, it.bkHostId) to status
-        }?.filter { (key, value) -> value != NodeStatus.RUNNING.name } // RUNNING的节点不更新
+        }?.filter { it.value != NodeStatus.RUNNING.name } // RUNNING的节点不更新
         hostInfoToStatusMap?.map { (key, value) ->
             hostIdToNodeStatus[key.second.toLong()] = value
         }
@@ -443,8 +438,6 @@ data class AgentService @Autowired constructor(
     }
 
     fun queryAgentTaskLog(
-        userId: String,
-        projectId: String,
         jobId: Int,
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
@@ -476,8 +469,6 @@ data class AgentService @Autowired constructor(
     }
 
     fun terminalAgentInstallTask(
-        userId: String,
-        projectId: String,
         jobId: Int,
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
@@ -504,8 +495,6 @@ data class AgentService @Autowired constructor(
     }
 
     fun retryAgentInstallTask(
-        userId: String,
-        projectId: String,
         jobId: Int,
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
@@ -531,11 +520,7 @@ data class AgentService @Autowired constructor(
         return retryAgentInstallTaskRes
     }
 
-    fun queryAgentInstallChannel(
-        userId: String,
-        projectId: String,
-        withHidden: Boolean
-    ): AgentResult<QueryAgentInstallChannelResult> {
+    fun queryAgentInstallChannel(withHidden: Boolean): AgentResult<QueryAgentInstallChannelResult> {
         NodeManApi.setNodemanOperationName(::queryAgentInstallChannel.name)
         val agentQueryAgentInsChannelRes: AgentOriginalResult<Array<AgentInstallAgentChannel>> =
             nodeManApi.executeGetRequest(
@@ -562,12 +547,7 @@ data class AgentService @Autowired constructor(
         return queryAgentInsChannelRes
     }
 
-    fun obtainManualInstallationCommand(
-        userId: String,
-        projectId: String,
-        jobId: Int,
-        hostId: Long
-    ): AgentResult<ObtainManualCommandResult> {
+    fun obtainManualInstallationCommand(jobId: Int, hostId: Long): AgentResult<ObtainManualCommandResult> {
         NodeManApi.setNodemanOperationName(::obtainManualInstallationCommand.name)
         val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> =
             nodeManApi.executeGetRequest(
@@ -606,7 +586,7 @@ data class AgentService @Autowired constructor(
         return obtainManualCommandRes
     }
 
-    fun getApList(userId: String, projectId: String): AgentResult<ApResult> {
+    fun getApList(): AgentResult<ApResult> {
         NodeManApi.setNodemanOperationName(::getApList.name)
         val agentGetApListRes: AgentOriginalResult<Array<AgentApInfo>> =
             nodeManApi.executeGetRequest(Array<AgentApInfo>::class.java, null, null)
@@ -666,5 +646,40 @@ data class AgentService @Autowired constructor(
             )
         )
         return getApListRes
+    }
+
+    fun getCloudList(): AgentResult<CloudResult> {
+        NodeManApi.setNodemanOperationName(::getCloudList.name)
+        val agentGetCloudListRes: AgentOriginalResult<Array<AgentCloudInfo>> =
+            nodeManApi.executeGetRequest(Array<AgentCloudInfo>::class.java, null, null)
+        val getCloudListRes: AgentResult<CloudResult> = AgentResult(
+            code = agentGetCloudListRes.code,
+            result = agentGetCloudListRes.result,
+            message = agentGetCloudListRes.message,
+            errors = agentGetCloudListRes.errors,
+            data = CloudResult(
+                cloudList = agentGetCloudListRes.data?.map {
+                    CloudInfo(
+                        bkCloudId = it.bkCloudId,
+                        bkCloudName = it.bkCloudName,
+                        apId = it.apId,
+                        apName = it.apName,
+                        proxies = it.proxies?.map { proxy ->
+                            Proxy(
+                                bkCloudId = proxy.bkCloudId,
+                                innerIp = proxy.innerIp,
+                                innerIpv6 = proxy.innerIpv6,
+                                outerIp = proxy.outerIp,
+                                outerIpv6 = proxy.outerIpv6,
+                                bkHostId = proxy.bkHostId,
+                                bkAgentId = proxy.bkAgentId
+                            )
+                        }
+
+                    )
+                }
+            )
+        )
+        return getCloudListRes
     }
 }

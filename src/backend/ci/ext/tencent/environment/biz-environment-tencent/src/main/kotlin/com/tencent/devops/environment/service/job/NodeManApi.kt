@@ -68,7 +68,8 @@ class NodeManApi {
             "queryAgentStatusFromNodeman" to "/host/search",
             "queryAgentInstallChannel" to "/install_channel",
             "obtainManualInstallationCommand" to "/job/%s/get_job_commands",
-            "getApList" to "/ap"
+            "getApList" to "/ap",
+            "getCloudList" to "/cloud?with_default_area=true"
         )
         private val suffix = mapOf(
             "queryAgentTaskLog" to "/?instance_id=%s",

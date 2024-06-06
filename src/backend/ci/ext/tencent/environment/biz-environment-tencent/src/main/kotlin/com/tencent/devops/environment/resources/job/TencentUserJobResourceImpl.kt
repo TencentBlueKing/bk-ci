@@ -12,6 +12,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ApResult
+import com.tencent.devops.environment.pojo.job.agentres.CloudResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -108,7 +109,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         installAgentReq: String
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return agentService.installAgent(userId, projectId, keyFile, installAgentReq)
+        return agentService.installAgent(keyFile, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(
@@ -118,7 +119,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
+        return agentService.queryAgentTaskStatus(jobId, queryAgentTaskStatusReq)
     }
 
     override fun queryAgentTaskLog(
@@ -128,7 +129,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskLog(userId, projectId, jobId, instanceId)
+        return agentService.queryAgentTaskLog(jobId, instanceId)
     }
 
     override fun terminalAgentInstallTask(
@@ -138,7 +139,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return agentService.terminalAgentInstallTask(userId, projectId, jobId, terminateAgentInstallTaskReq)
+        return agentService.terminalAgentInstallTask(jobId, terminateAgentInstallTaskReq)
     }
 
     override fun retryAgentInstallTask(
@@ -148,7 +149,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return agentService.retryAgentInstallTask(userId, projectId, jobId, retryAgentInstallTaskReq)
+        return agentService.retryAgentInstallTask(jobId, retryAgentInstallTaskReq)
     }
 
     override fun queryAgentInstallChannel(
@@ -157,7 +158,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentInstallChannel(userId, projectId, withHidden)
+        return agentService.queryAgentInstallChannel(withHidden)
     }
 
     override fun obtainManualInstallationCommand(
@@ -167,7 +168,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         hostId: Long
     ): AgentResult<ObtainManualCommandResult> {
         checkParamBlank(userId, projectId)
-        return agentService.obtainManualInstallationCommand(userId, projectId, jobId, hostId)
+        return agentService.obtainManualInstallationCommand(jobId, hostId)
     }
 
     override fun getApList(
@@ -175,7 +176,15 @@ class TencentUserJobResourceImpl @Autowired constructor(
         projectId: String
     ): AgentResult<ApResult> {
         checkParamBlank(userId, projectId)
-        return agentService.getApList(userId, projectId)
+        return agentService.getApList()
+    }
+
+    override fun getCloudList(
+        userId: String,
+        projectId: String
+    ): AgentResult<CloudResult> {
+        checkParamBlank(userId, projectId)
+        return agentService.getCloudList()
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
