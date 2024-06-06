@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -58,7 +59,8 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceLoginService: WorkspaceLoginService,
     private val startWorkspaceService: StartWorkspaceService,
     private val rabbitTemplate: RabbitTemplate,
-    private val expertSupportService: ExpertSupportService
+    private val expertSupportService: ExpertSupportService,
+    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -356,5 +358,9 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
         return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
+    }
+
+    override fun upgradeVm(userId: String, oldWorkspaceName: String, uid: String): Result<Boolean> {
+        return Result(upgradeWorkspaceHandler.upgradeVm(userId, oldWorkspaceName, uid))
     }
 }

@@ -239,15 +239,23 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
+        return deleteWorkspace(userId, event.workspaceName, event.gameId)
+    }
+
+    private fun deleteWorkspace(
+        userId: String,
+        workspaceName: String,
+        gameId: String?
+    ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.DELETE_VM,
-            workspaceName = event.workspaceName,
+            workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
-                uid = getEnvironmentUid(event.workspaceName),
-                appName = event.gameId,
+                uid = getEnvironmentUid(workspaceName),
+                appName = gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(event.workspaceName)
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName)
             )
         )
         return resp.taskUid
@@ -304,6 +312,22 @@ class StartCloudRemoteDevService @Autowired constructor(
                 dispatchWorkspaceOpHisDao.update(
                     dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
                 )
+                val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
+                    logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
+                    return false
+                }
+                kotlin.runCatching {
+                    val result = client.get(ServiceRemoteDevResource::class).upgradeVm(
+                        userId = oldWs.userId,
+                        oldWorkspaceName = oldWs.workspaceName,
+                        uid = taskStatus.uid
+                    ).data
+                    if (result != true) {
+                        logger.warn("workspaceTaskCallback|upgradeVm fail")
+                    }
+                }.onFailure {
+                    logger.warn("workspaceTaskCallback|upgradeVm error ${it.message}", it)
+                }
                 dispatchWorkspaceDao.updateWorkspaceStatus(
                     workspaceName = task.workspaceName,
                     status = EnvStatusEnum.running,
@@ -317,9 +341,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 return true
             }
         }
-        if ((task.status.needFix() && task.action == EnvironmentAction.CREATE) ||
-            (task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING)
-        ) {
+        if (task.status.needFix() && task.action == EnvironmentAction.CREATE) {
             val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
                 logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
                 return false

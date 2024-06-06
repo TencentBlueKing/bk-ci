@@ -282,4 +282,19 @@ interface ServiceRemoteDevResource {
         @QueryParam("type")
         type: QuotaType
     ): Result<Map<String, Map<String, Int>>>
+
+    @Operation(summary = "升级云桌面配置")
+    @POST
+    @Path("/upgrade_vm")
+    fun upgradeVm(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "老workspace记录", required = true)
+        @QueryParam("oldWorkspaceName")
+        oldWorkspaceName: String,
+        @Parameter(description = "机器uid", required = true)
+        @QueryParam("uid")
+        uid: String
+    ): Result<Boolean>
 }

@@ -332,7 +332,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                    "$workspaceName|${workspaceInfo.status}"
+                        "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -344,13 +344,13 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
         return (
-            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
-                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                LocalDateTime.now()
-            ).seconds < DEFAULT_WAIT_TIME
-            ) ||
-            workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
-            workspace.status.checkInProcess()
+                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                    LocalDateTime.now()
+                ).seconds < DEFAULT_WAIT_TIME
+                ) ||
+                workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
+                workspace.status.checkInProcess()
     }
 
     fun updateStatusAndCreateHistory(
@@ -373,7 +373,7 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                "newStatus|$newStatus|action|$action"
+                    "newStatus|$newStatus|action|$action"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
@@ -769,7 +769,9 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     fun updateHostMonitor(workspaceName: String, props: Map<String, Any>, type: WorkspaceSystemType) {
-        if (!type.checkWindows()) return
+        if (!type.checkWindows()) {
+            return
+        }
         val detail = getWorkspaceDetail(workspaceName) ?: return
         val regId = detail.regionId
         val ip = detail.environmentIP.substringAfter(".")
@@ -777,8 +779,17 @@ class WorkspaceCommon @Autowired constructor(
             logger.warn("update $workspaceName but regionid is null")
             return
         }
+        updateHostMonitor(regId, ip, props, type)
+    }
+
+    fun updateHostMonitor(regionId: Int, ip: String, props: Map<String, Any>, type: WorkspaceSystemType) {
+        if (!type.checkWindows()) {
+            return
+        }
         bkccService.updateHostMonitor(
-            regId, ip, props
+            regionId = regionId,
+            ip = ip,
+            props = props
         )
     }
 

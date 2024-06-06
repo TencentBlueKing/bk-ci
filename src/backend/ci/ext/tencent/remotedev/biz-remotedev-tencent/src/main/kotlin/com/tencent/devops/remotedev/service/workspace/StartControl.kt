@@ -57,6 +57,7 @@ import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -87,7 +88,8 @@ class StartControl @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val bkTicketServie: BkTicketService,
     private val workspaceCommon: WorkspaceCommon,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) {
 
     companion object {
