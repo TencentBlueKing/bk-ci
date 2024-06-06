@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
@@ -149,6 +150,26 @@ interface ApigwAuthProjectResourceV4 {
         @QueryParam("groupCode")
         groupCode: BkAuthGroup
     ): Result<Boolean>
+
+    @POST
+    @Path("/create_group")
+    @Operation(summary = "创建自定义组(不包含权限，空权限组)", tags = ["v4_app_create_group"])
+    fun createGroup(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "添加用户组实体", required = true)
+        groupAddDTO: GroupAddDTO
+    ): Result<Int>
 
     @DELETE
     @Path("/delete_group/{resourceType}")

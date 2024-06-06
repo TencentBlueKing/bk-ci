@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Result
@@ -24,6 +25,20 @@ class ServiceResourceGroupResourceImpl constructor(
                 projectId = projectCode,
                 groupCode = groupCode.value,
                 resourceType = resourceType
+            )
+        )
+    }
+
+    override fun createGroup(
+        userId: String,
+        projectCode: String,
+        groupAddDTO: GroupAddDTO
+    ): Result<Int> {
+        return Result(
+            permissionResourceGroupService.createGroup(
+                userId = userId,
+                projectId = projectCode,
+                groupAddDTO = groupAddDTO
             )
         )
     }

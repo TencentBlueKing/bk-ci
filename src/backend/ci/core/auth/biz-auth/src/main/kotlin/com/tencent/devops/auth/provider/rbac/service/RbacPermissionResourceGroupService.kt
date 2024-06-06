@@ -34,6 +34,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
@@ -44,6 +45,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_LONG
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_SHORT
 import com.tencent.devops.auth.constant.AuthMessageCode.GROUP_EXIST
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
@@ -303,7 +305,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         resourceType: String,
         groupCode: String
     ): Boolean {
-        logger.info("create group|$userId|$projectId|$groupCode|$resourceType")
+        logger.info("create group by group code|$userId|$projectId|$groupCode|$resourceType")
         permissionResourceService.hasManagerPermission(
             userId = userId,
             projectId = projectId,
@@ -317,6 +319,49 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             )
         }
         return true
+    }
+
+    override fun createGroup(
+        userId: String,
+        projectId: String,
+        groupAddDTO: GroupAddDTO
+    ): Int {
+        logger.info("create group|$userId|$projectId|$groupAddDTO")
+        permissionResourceService.hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+
+        val managerRoleGroup = with(groupAddDTO) {
+            ManagerRoleGroup(groupName, groupDesc, false)
+        }
+        val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
+            .groups(listOf(managerRoleGroup))
+            .createAttributes(false)
+            .syncSubjectTemplate(true)
+            .build()
+        val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(projectInfo.relationId.toInt(), managerRoleGroupDTO)
+
+        authResourceGroupDao.create(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            resourceName = projectInfo.resourceName,
+            iamResourceCode = projectId,
+            groupCode = "custom",
+            groupName = groupAddDTO.groupName,
+            defaultGroup = false,
+            relationId = iamGroupId.toString()
+        )
+        return iamGroupId
     }
 
     override fun rename(
