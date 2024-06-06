@@ -179,13 +179,15 @@ class ExperienceDownloadService @Autowired constructor(
 
         val projectId = experienceRecord.projectId
         val bundleIdentifier = experienceRecord.bundleIdentifier
-        val path = URLEncoder.encode(experienceRecord.artifactoryPath, Charsets.UTF_8.toString()).replace("+", "%20")
+        val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
             val tail = ttl?.let { "&ttl=$ttl" } ?: ""
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
                     "/$projectId/$artifactoryType/filePlist" +
-                    "?experienceHashId=$experienceHashId&path=$path&x-devops-project-id=$projectId$tail"
+                    "?experienceHashId=$experienceHashId&path=${
+                        URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
+                    }&x-devops-project-id=$projectId$tail"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(
