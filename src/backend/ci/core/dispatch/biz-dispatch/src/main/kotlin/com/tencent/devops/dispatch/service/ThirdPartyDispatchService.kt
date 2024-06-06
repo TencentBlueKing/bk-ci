@@ -174,7 +174,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     ThirdPartyAgentIDDispatchType(
                         displayName = agentId,
                         workspace = dispatchType.workspace,
-                        agentType = AgentType.ID,
+                        agentType = AgentType.REUSE_JOB_ID,
                         dockerInfo = dispatchType.dockerInfo,
                         reusedInfo = dispatchType.reusedInfo
                     )
