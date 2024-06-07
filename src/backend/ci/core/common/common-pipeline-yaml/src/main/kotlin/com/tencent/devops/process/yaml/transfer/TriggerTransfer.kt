@@ -99,12 +99,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
-                    includePushAction = push.action?.let {
-                        listOf(
-                            TGitPushActionType.PUSH_FILE.value,
-                            TGitPushActionType.NEW_BRANCH.value
-                        )
-                    },
+                    includePushAction = push.action ?: listOf(
+                        TGitPushActionType.PUSH_FILE.value,
+                        TGitPushActionType.NEW_BRANCH.value
+                    ),
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable).apply {
@@ -148,13 +146,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    includeMrAction = mr.action?.let {
-                        listOf(
-                            TGitMrEventAction.OPEN.value,
-                            TGitMrEventAction.REOPEN.value,
-                            TGitMrEventAction.PUSH_UPDATE.value
-                        )
-                    },
+                    includeMrAction = mr.action ?: listOf(
+                        TGitMrEventAction.OPEN.value,
+                        TGitMrEventAction.REOPEN.value,
+                        TGitMrEventAction.PUSH_UPDATE.value
+                    ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
@@ -383,12 +379,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            includeMrAction = push.action?.let {
-                                listOf(
-                                    TGitPushActionType.PUSH_FILE.value,
-                                    TGitPushActionType.NEW_BRANCH.value
-                                )
-                            },
+                            includeMrAction = push.action ?: listOf(
+                                TGitPushActionType.PUSH_FILE.value,
+                                TGitPushActionType.NEW_BRANCH.value
+                            ),
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
@@ -440,13 +434,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             enableCheck = mr.reportCommitCheck,
                             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
-                            includeMrAction = mr.action?.let {
-                                listOf(
-                                    TGitMrEventAction.OPEN.value,
-                                    TGitMrEventAction.REOPEN.value,
-                                    TGitMrEventAction.PUSH_UPDATE.value
-                                )
-                            },
+                            includeMrAction = mr.action ?: listOf(
+                                TGitMrEventAction.OPEN.value,
+                                TGitMrEventAction.REOPEN.value,
+                                TGitMrEventAction.PUSH_UPDATE.value
+                            ),
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
