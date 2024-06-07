@@ -1,6 +1,7 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
@@ -8,6 +9,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import io.swagger.v3.oas.annotations.Operation
@@ -87,6 +89,45 @@ interface ApigwAuthProjectResourceV4 {
         group: BkAuthGroup? = null
     ): Result<List<String>>
 
+    @GET
+    @Path("/get_project_group_and_users")
+    @Operation(summary = "获取项目组成员", tags = ["v4_app_get_project_group_and_users"])
+    fun getProjectGroupAndUserList(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<BkAuthGroupAndUserList>>
+
+    @GET
+    @Path("/{groupId}/get_group_permission_detail")
+    @Operation(summary = "查询用户组权限详情", tags = ["v4_app_get_group_permission_detail"])
+    fun getGroupPermissionDetail(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户组ID")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<Map<String, List<GroupPermissionDetailVo>>>
+
     @POST
     @Path("/batch_add_resource_group_members")
     @Operation(summary = "用户组批量添加成员", tags = ["v4_app_batch_add_resource_group_members"])
@@ -139,7 +180,7 @@ interface ApigwAuthProjectResourceV4 {
         apigwType: String?,
         @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
+        userId: String?,
         @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -163,7 +204,7 @@ interface ApigwAuthProjectResourceV4 {
         apigwType: String?,
         @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
+        userId: String?,
         @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -183,7 +224,7 @@ interface ApigwAuthProjectResourceV4 {
         apigwType: String?,
         @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
+        userId: String?,
         @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,

@@ -5,11 +5,13 @@ import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
+import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -96,7 +98,6 @@ class RbacPermissionResourceMemberService constructor(
     }
 
     override fun batchAddResourceGroupMembers(
-        userId: String,
         projectCode: String,
         iamGroupId: Int,
         expiredTime: Long,
@@ -136,7 +137,7 @@ class RbacPermissionResourceMemberService constructor(
                 iamMemberInfos.add(ManagerMember(deptType, it))
             }
         }
-        logger.info("batch add project user:$userId|$projectCode|$iamGroupId|$expiredTime|$iamMemberInfos")
+        logger.info("batch add project user:|$projectCode|$iamGroupId|$expiredTime|$iamMemberInfos")
         if (iamMemberInfos.isNotEmpty()) {
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
@@ -194,13 +195,12 @@ class RbacPermissionResourceMemberService constructor(
     }
 
     override fun batchDeleteResourceGroupMembers(
-        userId: String,
         projectCode: String,
         iamGroupId: Int,
         members: List<String>?,
         departments: List<String>?
     ): Boolean {
-        logger.info("batch delete resource group members :$userId|$projectCode|$iamGroupId||$members|$departments")
+        logger.info("batch delete resource group members :|$projectCode|$iamGroupId||$members|$departments")
         verifyGroupBelongToProject(
             projectCode = projectCode,
             iamGroupId = iamGroupId
@@ -352,6 +352,54 @@ class RbacPermissionResourceMemberService constructor(
         if (autoRenewalMembers.isNotEmpty()) {
             logger.info("auto renewal member|$projectCode|$resourceType|$resourceCode|$autoRenewalMembers")
         }
+    }
+
+    override fun renewalGroupMember(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
+    ): Boolean {
+        logger.info("renewal group member|$userId|$projectCode|$resourceType|$groupId")
+        val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
+            .groupIds(listOf(groupId))
+            .expiredAt(memberRenewalDTO.expiredAt)
+            .reason("renewal user group")
+            .applicant(userId).build()
+        iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
+        return true
+    }
+
+    override fun deleteGroupMember(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean {
+        logger.info("delete group member|$userId|$projectCode|$resourceType|$groupId")
+        iamV2ManagerService.deleteRoleGroupMemberV2(
+            groupId,
+            ManagerScopesEnum.getType(ManagerScopesEnum.USER),
+            userId
+        )
+        return true
+    }
+
+    override fun addGroupMember(
+        userId: String,
+        /*user 或 department*/
+        memberType: String,
+        expiredAt: Long,
+        groupId: Int
+    ): Boolean {
+        val managerMember = ManagerMember(memberType, userId)
+        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
+            .members(listOf(managerMember))
+            .expiredAt(expiredAt)
+            .build()
+        iamV2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+        return true
     }
 
     companion object {
