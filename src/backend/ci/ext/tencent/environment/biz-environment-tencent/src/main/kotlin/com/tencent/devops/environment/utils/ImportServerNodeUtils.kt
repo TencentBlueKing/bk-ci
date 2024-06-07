@@ -51,19 +51,19 @@ object ImportServerNodeUtils {
         limit: Int
     ): CmdbServerPage {
         // 对没有IP条件的查询，做缓存
-        if (ips.isEmpty()) {
+        return if (ips.isEmpty()) {
             val key = "env_node_buffer_cmdb_${userId}_${offset}_${limit}_$bakOperator"
             val buffer = redisOperation.get(key)
-            return if (buffer != null) {
+            if (buffer != null) {
                 jacksonObjectMapper().readValue(buffer)
             } else {
                 val cmdbNodePage = esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
                 redisOperation.set(key, jacksonObjectMapper().writeValueAsString(cmdbNodePage), 60)
                 cmdbNodePage
             }
+        } else {
+            esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
         }
-
-        return esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
     }
 
     fun checkImportCount(

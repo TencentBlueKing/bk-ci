@@ -25,27 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.constant
+package com.tencent.devops.environment.pojo.job.cmdbres
 
-const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
-const val DEFAULT_SYTEM_USER = "devops"
-const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment" // 项目下无环境
-const val BK_PROJECT_NO_NODE = "bkProjectNoNode" // 项目下无节点
-const val T_NODE_NODE_IP = "nodeIp"
-const val T_NODE_HOST_ID = "hostId"
-const val T_NODE_NODE_ID = "nodeId"
-const val T_NODE_NODE_TYPE = "nodeType"
-const val T_NODE_CLOUD_AREA_ID = "cloudAreaId"
-const val T_NODE_NODE_STATUS = "nodeStatus"
-const val T_NODE_AGENT_VERSION = "agentVersion"
-const val T_NODE_AGENT_STATUS = "agentStatus"
-const val T_NODE_PROJECT_ID = "projectId"
-const val T_NODE_CREATED_USER = "createdUser"
-const val T_NODE_OS_TYPE = "osType"
-const val T_NODE_OS_NAME = "osName"
-const val T_NODE_SERVER_ID = "serverId"
-const val T_NODE_OPERATOR = "operator"
-const val T_NODE_BAK_OPERATOR = "bakOperator"
-const val T_ENV_ENV_ID = "envId"
-const val T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID = "nodeId"
-const val T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION = "masterVersion"
+import io.swagger.v3.oas.annotations.media.Schema
+
+data class NewCmdbResp(
+    @get:Schema(title = "状态码", required = true)
+    var code: Int,
+    @get:Schema(title = "请求ID", required = true)
+    var traceId: String,
+    @get:Schema(title = "结果消息", required = true)
+    var message: String?,
+    @get:Schema(title = "返回数据", required = true)
+    var data: NewCmdbData
+)

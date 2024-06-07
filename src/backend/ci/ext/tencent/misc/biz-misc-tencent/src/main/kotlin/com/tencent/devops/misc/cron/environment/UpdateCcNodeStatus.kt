@@ -28,18 +28,12 @@
 package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import kotlin.math.ceil
-import kotlin.math.min
 
 @Component
 @Suppress("ALL", "UNUSED")
@@ -54,55 +48,55 @@ class UpdateCcNodeStatus @Autowired constructor(
         private const val CC_LOCK_KEY = "env_cron_updateCcNodeStatus"
         private const val CMDB_LOCK_KEY = "env_cron_updateCmdbNodeStatus"
     }
-
-    @Scheduled(initialDelay = 10000, fixedDelay = 4 * 60 * 1000)
-    fun runUpdateCmdbNodeStatus() {
-        logger.info("runUpdateCmdbNodeStatus")
-        val lock = RedisLock(redisOperation, lockKey = CMDB_LOCK_KEY, expiredTimeInSeconds = 3600)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return
-            }
-            updateCmdbNodeStatus()
-        } catch (ignore: Throwable) {
-            logger.warn("update server node status failed", ignore)
-        } finally {
-            lock.unlock()
-        }
-    }
-
-    private fun updateCmdbNodeStatus() {
-        logger.info("updateCmdbNodeStatus")
-        val allCmdbNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CMDB)
-
-        if (allCmdbNodes.isEmpty()) {
-            return
-        }
-
-        // 分页处理
-        val pageSize = 100
-        val totalCount = allCmdbNodes.size
-        val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
-        for (page in 0 until totalPage) {
-            val from = pageSize * page
-            val end = from + min(pageSize, totalCount - from)
-            val nodes = allCmdbNodes.subList(from, end)
-            updateCmdbNodes(nodes)
-        }
-    }
-
-    private fun updateCmdbNodes(nodes: List<TNodeRecord>) {
-        val rawCmdbNodes = esbAgentClient.getCmdbNodeByIps("devops", nodes.map { it.nodeIp })
-        val ipToNodeMap = rawCmdbNodes.nodes.associateBy { it.ip }
-        nodes.forEach {
-            if (ipToNodeMap.containsKey(it.nodeIp)) {
-                val cmdbNode = ipToNodeMap.getValue(it.nodeIp)
-                it.operator = cmdbNode.operator
-                it.bakOperator = cmdbNode.bakOperator
-                it.osName = cmdbNode.osName
-            }
-        }
-        nodeDao.batchUpdateNode(dslContext, nodes)
-    }
+//    该类功能转移到TencentStockDataUpdateService的checkDeployNodesIsInCmdbByPage函数中，调用新CMDB接口。
+//    @Scheduled(initialDelay = 10000, fixedDelay = 4 * 60 * 1000)
+//    fun runUpdateCmdbNodeStatus() {
+//        logger.info("runUpdateCmdbNodeStatus")
+//        val lock = RedisLock(redisOperation, lockKey = CMDB_LOCK_KEY, expiredTimeInSeconds = 3600)
+//        try {
+//            if (!lock.tryLock()) {
+//                logger.info("get lock failed, skip")
+//                return
+//            }
+//            updateCmdbNodeStatus()
+//        } catch (ignore: Throwable) {
+//            logger.warn("update server node status failed", ignore)
+//        } finally {
+//            lock.unlock()
+//        }
+//    }
+//
+//    private fun updateCmdbNodeStatus() {
+//        logger.info("updateCmdbNodeStatus")
+//        val allCmdbNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CMDB)
+//
+//        if (allCmdbNodes.isEmpty()) {
+//            return
+//        }
+//
+//        // 分页处理
+//        val pageSize = 100
+//        val totalCount = allCmdbNodes.size
+//        val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
+//        for (page in 0 until totalPage) {
+//            val from = pageSize * page
+//            val end = from + min(pageSize, totalCount - from)
+//            val nodes = allCmdbNodes.subList(from, end)
+//            updateCmdbNodes(nodes)
+//        }
+//    }
+//
+//    private fun updateCmdbNodes(nodes: List<TNodeRecord>) {
+//        val rawCmdbNodes = esbAgentClient.getCmdbNodeByIps("devops", nodes.map { it.nodeIp })
+//        val ipToNodeMap = rawCmdbNodes.nodes.associateBy { it.ip }
+//        nodes.forEach {
+//            if (ipToNodeMap.containsKey(it.nodeIp)) {
+//                val cmdbNode = ipToNodeMap.getValue(it.nodeIp)
+//                it.operator = cmdbNode.operator
+//                it.bakOperator = cmdbNode.bakOperator
+//                it.osName = cmdbNode.osName
+//            }
+//        }
+//        nodeDao.batchUpdateNode(dslContext, nodes)
+//    }
 }

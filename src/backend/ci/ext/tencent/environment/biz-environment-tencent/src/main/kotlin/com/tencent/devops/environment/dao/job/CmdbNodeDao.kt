@@ -29,6 +29,7 @@ package com.tencent.devops.environment.dao.job
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
+import com.tencent.devops.environment.constant.T_NODE_BAK_OPERATOR
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
@@ -36,6 +37,8 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
+import com.tencent.devops.environment.constant.T_NODE_OPERATOR
+import com.tencent.devops.environment.constant.T_NODE_OS_NAME
 import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
@@ -44,6 +47,7 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
+import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbDataIns
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.model.environment.tables.TNode
@@ -52,6 +56,7 @@ import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record4
+import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Record7
 import org.jooq.Result
@@ -188,6 +193,23 @@ class CmdbNodeDao {
         }
     }
 
+    fun batchUpdateNodeMaintainerAndOsNameByServerId(dslContext: DSLContext, updateNodeInfoList: List<NewCmdbDataIns>) {
+        with(TNode.T_NODE) {
+            val batchUpdate = dslContext.batch(
+                updateNodeInfoList.map {
+                    dslContext.update(this)
+                        .set(OPERATOR, it.maintainer)
+                        .set(BAK_OPERATOR, it.maintainerBak)
+                        .set(OS_NAME, it.osName)
+                        .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
+                        .where(SERVER_ID.eq(it.serverId))
+                        .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                }
+            )
+            batchUpdate.execute()
+        }
+    }
+
     fun batchUpdateNodeInCCByHostId(dslContext: DSLContext, hostIdToNodeStatus: Map<Long, String>) {
         val agentVersionDefault: String? = null
         with(TNode.T_NODE) {
@@ -230,14 +252,12 @@ class CmdbNodeDao {
     fun updateNodeNotInCCByServerId(dslContext: DSLContext, notInCCServerIdList: List<Long>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
-        val osTypeDefault: String? = null
         val agentVersionDefault: String? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
-                .set(OS_TYPE, osTypeDefault)
                 .set(AGENT_VERSION, agentVersionDefault)
                 .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
                 .where(SERVER_ID.`in`(notInCCServerIdList))
@@ -468,11 +488,14 @@ class CmdbNodeDao {
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record2<Long, Long>> {
+    ): Result<Record5<Long, Long, String, String, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
-                SERVER_ID.`as`(T_NODE_SERVER_ID)
+                SERVER_ID.`as`(T_NODE_SERVER_ID),
+                OPERATOR.`as`(T_NODE_OPERATOR),
+                BAK_OPERATOR.`as`(T_NODE_BAK_OPERATOR),
+                OS_NAME.`as`(T_NODE_OS_NAME)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .orderBy(NODE_ID.desc())

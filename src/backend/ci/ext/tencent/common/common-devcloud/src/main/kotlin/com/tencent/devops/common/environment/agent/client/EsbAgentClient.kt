@@ -219,11 +219,6 @@ class EsbAgentClient {
         }
     }
 
-    private fun getAndSetDisplayIp(displayIp: String): Pair<String, List<String>> {
-        val allIpList = displayIp.split(",", ";").filterNot { it.isBlank() }.map { it.trim() }.toList()
-        return Pair(allIpList.joinToString(";"), allIpList)
-    }
-
     private fun checkAndGetOperator(bakOperator: String): String {
         val allOperators = bakOperator.split(",", ";").filterNot { it.isBlank() }.map { it.trim() }.toList()
         return when {
@@ -231,35 +226,6 @@ class EsbAgentClient {
             bakOperator.length > 255 -> allOperators.subList(0, 9).joinToString(";")
             else -> allOperators.joinToString(";")
         }
-    }
-
-    fun getUserCmdbNode(userId: String, start: Int, limit: Int): List<RawCmdbNode> {
-        val nodeList = mutableListOf<RawCmdbNode>()
-        nodeList.addAll(getUserCmdbNodeByOperator(userId, false, listOf(), start, limit).nodes)
-        nodeList.addAll(getUserCmdbNodeByOperator(userId, true, listOf(), start, limit).nodes)
-        val noDuplicateNodeList = nodeList.associateBy { it.displayIp }.values.toList()
-
-        // 根据 gseAgent 状态重新设置IP
-        val displayIp2IpsMap =
-            noDuplicateNodeList.map { it.displayIp }.associate { Pair(it, it.split(";")) }
-        val allInnerIp = mutableSetOf<String>()
-
-        displayIp2IpsMap.forEach {
-            allInnerIp.addAll(it.value)
-        }
-
-        val ipStatusMap = getAgentStatus(DEFAULT_SYTEM_USER, allInnerIp)
-        noDuplicateNodeList.forEach { node ->
-            val ips = displayIp2IpsMap[node.displayIp]
-            ips!!.forEach lit@{ ip ->
-                if (ipStatusMap[ip] == true) {
-                    node.ip = ip
-                    node.agentStatus = true
-                    return@lit
-                }
-            }
-        }
-        return noDuplicateNodeList
     }
 
     fun getUserCmdbNodeNew(

@@ -93,25 +93,4 @@ data class UpdateTNodeInfo(
         displayName = null,
         lastModifyTime = lastModifyTime
     )
-
-    constructor(
-        nodeId: Long,
-        nodeStatus: String?,
-        hostId: Long?,
-        cloudAreaId: Long?,
-        agentStatus: Boolean,
-        agentVersion: String?,
-        osType: String?,
-        lastModifyTime: LocalDateTime
-    ) : this(
-        nodeId = nodeId,
-        nodeStatus = nodeStatus,
-        hostId = hostId,
-        cloudAreaId = cloudAreaId,
-        agentStatus = agentStatus,
-        agentVersion = agentVersion,
-        displayName = null,
-        osType = osType,
-        lastModifyTime = lastModifyTime
-    )
 }
