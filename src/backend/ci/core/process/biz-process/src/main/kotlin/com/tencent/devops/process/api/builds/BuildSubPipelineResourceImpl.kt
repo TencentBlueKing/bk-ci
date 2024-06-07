@@ -53,6 +53,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         projectId: String,
         parentPipelineId: String,
         buildId: String,
+        executeCount: Int?,
         callProjectId: String,
         callPipelineId: String,
         atomCode: String,
@@ -83,7 +84,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
                 atomCode = atomCode,
                 taskId = taskId,
                 runMode = runMode,
-                values = values
+                values = values,
+                executeCount = executeCount
             )
         }
     }
@@ -92,6 +94,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         projectId: String,
         parentPipelineId: String,
         buildId: String,
+        executeCount: Int?,
         callPipelineId: String,
         atomCode: String,
         taskId: String,
@@ -108,7 +111,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             taskId = taskId,
             runMode = runMode,
             channelCode = channelCode,
-            values = values
+            values = values,
+            executeCount = executeCount
         )
     }
 

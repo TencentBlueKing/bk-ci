@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_EXECUTE_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import org.slf4j.LoggerFactory
@@ -139,7 +140,8 @@ class SubPipelineStatusService @Autowired constructor(
             PIPELINE_START_PARENT_PIPELINE_ID,
             PIPELINE_START_PARENT_BUILD_ID,
             PIPELINE_START_PARENT_BUILD_TASK_ID,
-            PIPELINE_START_SUB_RUN_MODE
+            PIPELINE_START_SUB_RUN_MODE,
+            PIPELINE_START_PARENT_EXECUTE_COUNT
         )
         val buildVariables = pipelineRuntimeService.getBuildVariableService(
             projectId = projectId,
@@ -174,7 +176,7 @@ class SubPipelineStatusService @Autowired constructor(
                 pipelineId = it.pipelineId,
                 buildId = it.buildId,
                 taskId = buildVariables[PIPELINE_START_PARENT_BUILD_TASK_ID]!!,
-                executeCount = it.executeCount ?: 1,
+                executeCount = buildVariables[PIPELINE_START_PARENT_EXECUTE_COUNT]!!.toInt(),
                 asyncStatus = asyncStatus
             )
             pipelineEventDispatcher.dispatch(
