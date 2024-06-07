@@ -34,10 +34,12 @@ import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.MASTER
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceExtServiceBuildPipelineInitResource
@@ -49,6 +51,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
@@ -94,6 +97,9 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
 
     @Autowired
     private lateinit var extServiceImageSecretConfig: ExtServiceImageSecretConfig
+
+    @Autowired
+    private lateinit var storeInnerPipelineConfig: StoreInnerPipelineConfig
 
     override fun handleServicePackage(
         extensionInfo: InitExtServiceDTO,
@@ -192,11 +198,10 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             storeCode = serviceCode,
             storeType = StoreTypeEnum.SERVICE
         )
+        // 查找新增微扩展时关联的项目
         val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            dslContext = context,
-            storeCode = serviceCode,
-            storeType = StoreTypeEnum.SERVICE.type.toByte()
-        ) // 查找新增扩展服务时关联的项目
+            dslContext = context, storeCode = serviceCode, storeType = StoreTypeEnum.SERVICE.type.toByte()
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         val buildInfo = extServiceBuildInfoDao.getServiceBuildInfo(context, serviceId)
         logger.info("service[$serviceCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
@@ -255,8 +260,12 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 script = script,
                 extServiceBaseInfo = serviceBaseInfo
             )
-            val serviceMarketInitPipelineResp = client.get(ServiceExtServiceBuildPipelineInitResource::class)
-                .initExtServiceBuildPipeline(userId, projectCode!!, extServiceBuildInitPipelineReq).data
+            val serviceMarketInitPipelineResp =
+                client.get(ServiceExtServiceBuildPipelineInitResource::class).initExtServiceBuildPipeline(
+                    userId = storeInnerPipelineConfig.innerPipelineUser,
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject,
+                    extServiceBuildInitPipelineReq = extServiceBuildInitPipelineReq
+                ).data
             logger.info("the serviceMarketInitPipelineResp is:$serviceMarketInitPipelineResp")
             if (null != serviceMarketInitPipelineResp) {
                 storePipelineRelDao.add(
@@ -264,7 +273,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                     storeCode = serviceCode,
                     storeType = StoreTypeEnum.SERVICE,
                     pipelineId = serviceMarketInitPipelineResp.pipelineId,
-                    projectCode = projectCode
+                    projectCode = storeInnerPipelineConfig.innerPipelineProject
                 )
                 extServiceDao.setServiceStatusById(
                     dslContext = context,
@@ -297,9 +306,18 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             extServiceImageInfo.repoProjectCode?.let {
                 startParams["repoProjectCode"] = it
             }
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
-                userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
-                ChannelCode.AM
+            val startProjectCode = if (servicePipelineRelRecord.projectCode.isNullOrBlank()) {
+                projectCode
+            } else {
+                servicePipelineRelRecord.projectCode
+            }
+            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = userId,
+                projectId = startProjectCode,
+                pipelineId = servicePipelineRelRecord.pipelineId,
+                values = startParams,
+                channelCode = ChannelCode.AM,
+                startType = StartType.SERVICE
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {
