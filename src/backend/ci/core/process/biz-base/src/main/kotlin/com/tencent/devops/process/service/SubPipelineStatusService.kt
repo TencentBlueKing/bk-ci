@@ -42,7 +42,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_REC
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
-import com.tencent.devops.process.utils.PIPELINE_RUN_MODE
+import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
@@ -81,7 +81,7 @@ class SubPipelineStatusService @Autowired constructor(
     /**
      * 异步启动子流水线
      */
-    fun onAsyncStart(event: PipelineBuildStartBroadCastEvent) {
+    fun onBuildStart(event: PipelineBuildStartBroadCastEvent) {
         with(event) {
             // 不是流水线启动
             if (triggerType != StartType.PIPELINE.name) {
@@ -92,7 +92,7 @@ class SubPipelineStatusService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    asyncStatus = "start"
+                    asyncStatus = BuildStatus.RUNNING.name
                 )
             } catch (ignored: Exception) {
                 logger.warn("fail to update parent pipeline task status", ignored)
@@ -111,7 +111,7 @@ class SubPipelineStatusService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    asyncStatus = "finish"
+                    asyncStatus = event.status
                 )
                 // 子流水线是异步启动的，不需要缓存状态
                 if (redisOperation.get(getSubPipelineStatusKey(buildId)) != null) {
@@ -139,7 +139,7 @@ class SubPipelineStatusService @Autowired constructor(
             PIPELINE_START_PARENT_PIPELINE_ID,
             PIPELINE_START_PARENT_BUILD_ID,
             PIPELINE_START_PARENT_BUILD_TASK_ID,
-            PIPELINE_RUN_MODE
+            PIPELINE_START_SUB_RUN_MODE
         )
         val buildVariables = pipelineRuntimeService.getBuildVariableService(
             projectId = projectId,
@@ -158,7 +158,7 @@ class SubPipelineStatusService @Autowired constructor(
             }
         }
         // 非异步触发不处理
-        if (buildVariables[PIPELINE_RUN_MODE] != ASYNC_RUN_MODE) {
+        if (buildVariables[PIPELINE_START_SUB_RUN_MODE] != ASYNC_RUN_MODE) {
             logger.info("The build is not started asynchronously|$projectId|$pipelineId|$buildId")
             return
         }

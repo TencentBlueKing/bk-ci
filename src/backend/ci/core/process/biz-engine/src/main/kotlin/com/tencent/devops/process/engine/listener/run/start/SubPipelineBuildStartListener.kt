@@ -41,6 +41,6 @@ class SubPipelineBuildStartListener @Autowired constructor(
 ) : BaseListener<PipelineBuildStartBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildStartBroadCastEvent) {
-        subPipelineStatusService.onAsyncStart(event)
+        subPipelineStatusService.onBuildStart(event)
     }
 }
