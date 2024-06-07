@@ -97,7 +97,7 @@ class VariableTransfer @Autowired constructor() {
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
                     options = it.options?.map { form ->
-                        VariablePropOption(id = form.value, label = form.key)
+                        VariablePropOption(id = form.key, label = form.value)
                     },
                     payload = it.payload
                 )
@@ -215,10 +215,7 @@ class VariableTransfer @Autowired constructor() {
                         else -> variable.value ?: ""
                     },
                     options = variable.props?.options?.map {
-                        BuildFormValue(
-                            key = it.label ?: it.id.toString(),
-                            value = it.id.toString()
-                        )
+                        BuildFormValue(key = it.id.toString(), value = it.label ?: it.id.toString())
                     },
                     desc = variable.props?.description,
                     repoHashId = variable.props?.repoHashId,
