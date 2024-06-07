@@ -44,6 +44,7 @@ import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiServic
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
@@ -68,6 +69,7 @@ open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
     val deptService: DeptService = mockk()
     val permissionGroupPoliciesService: PermissionGroupPoliciesService = mockk()
     val groupService: PermissionResourceGroupService = mockk()
+    val permissionResourceMemberService: PermissionResourceMemberService = mockk()
 
     @BeforeEach
     fun before() {

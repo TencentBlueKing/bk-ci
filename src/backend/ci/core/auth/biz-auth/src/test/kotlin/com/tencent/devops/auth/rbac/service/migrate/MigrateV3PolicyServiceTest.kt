@@ -59,7 +59,7 @@ class MigrateV3PolicyServiceTest : AbMigratePolicyServiceTest() {
             authMigrationDao = authMigrationDao,
             deptService = deptService,
             permissionGroupPoliciesService = permissionGroupPoliciesService,
-            groupService = groupService
+            permissionResourceMemberService = permissionResourceMemberService
         ),
         recordPrivateCalls = true
     )

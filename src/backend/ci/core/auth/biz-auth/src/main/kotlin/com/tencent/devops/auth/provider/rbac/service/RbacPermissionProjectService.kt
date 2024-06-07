@@ -181,7 +181,6 @@ class RbacPermissionProjectService(
         logger.info("batch add project user:$userId|$projectCode|$roleCode|$members")
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         resourceMemberService.batchAddResourceGroupMembers(
-            userId = userId,
             projectCode = projectCode,
             iamGroupId = iamGroupId,
             expiredTime = expiredTime,

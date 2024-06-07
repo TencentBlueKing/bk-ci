@@ -27,7 +27,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceResourceMemberResource {
-
     /**
      * @param resourceType 是个枚举类型详见 AuthResourceType
      * @see AuthResourceType
@@ -78,9 +77,6 @@ interface ServiceResourceMemberResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @PathParam("projectCode")
         @Parameter(description = "项目Code", required = true)
         projectCode: String,
@@ -95,9 +91,6 @@ interface ServiceResourceMemberResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @PathParam("projectCode")
         @Parameter(description = "项目Code", required = true)
         projectCode: String,
