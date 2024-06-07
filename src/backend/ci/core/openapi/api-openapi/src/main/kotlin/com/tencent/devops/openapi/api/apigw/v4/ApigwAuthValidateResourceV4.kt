@@ -64,7 +64,7 @@ interface ApigwAuthValidateResourceV4 {
         @Parameter(description = "用户Id", required = true)
         userId: String,
         @PathParam("projectId")
-        @Parameter(description = "项目Code", required = true)
+        @Parameter(description = "项目ID", required = true)
         projectId: String
     ): Result<Boolean>
 }
