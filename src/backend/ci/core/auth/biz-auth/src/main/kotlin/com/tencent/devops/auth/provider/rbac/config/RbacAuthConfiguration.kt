@@ -82,7 +82,6 @@ import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -166,7 +165,7 @@ class RbacAuthConfiguration {
         iamV2ManagerService: V2ManagerService,
         authResourceService: AuthResourceService,
         permissionSubsetManagerService: PermissionSubsetManagerService,
-        permissionResourceService: PermissionResourceService,
+        permissionProjectService: PermissionProjectService,
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
@@ -178,7 +177,7 @@ class RbacAuthConfiguration {
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
         permissionSubsetManagerService = permissionSubsetManagerService,
-        permissionResourceService = permissionResourceService,
+        permissionProjectService = permissionProjectService,
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authResourceGroupDao = authResourceGroupDao,
         dslContext = dslContext,
@@ -495,7 +494,7 @@ class RbacAuthConfiguration {
     @Bean
     fun migratePermissionHandoverService(
         v2ManagerService: V2ManagerService,
-        permissionResourceMemberService:PermissionResourceMemberService,
+        permissionResourceMemberService: PermissionResourceMemberService,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceService: AuthResourceService,
         dslContext: DSLContext
