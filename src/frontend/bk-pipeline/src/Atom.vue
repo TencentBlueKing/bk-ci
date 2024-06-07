@@ -37,6 +37,11 @@
                 v-bind="progressConf"
                 :percent="atom.progressRate"
             />
+            <Logo
+                v-else-if="atom.asyncStatus"
+                class="atom-progress"
+                :name="`sub_pipeline_${atom.asyncStatus.toLowerCase()}`"
+            />
             <status-icon
                 v-else-if="!isSkip && !!atomStatus"
                 type="element"
@@ -309,6 +314,7 @@
                     [this.qualityStatus]: this.isQualityGateAtom && !!this.qualityStatus,
                     [this.atomStatusCls]: !!this.atomStatusCls,
                     'quality-atom': this.isQualityGateAtom,
+                    'is-sub-pipeline-atom': this.atom.atomCode === 'SubPipelineExec',
                     'is-error': this.atom.isError,
                     'is-intercept': this.isQualityCheckAtom,
                     'template-compare-atom': this.atom.templateModify,
@@ -565,6 +571,7 @@
   transition: all 0.4s ease-in-out;
   z-index: 2;
   border: 1px solid $fontLighterColor;
+
   .atom-progress {
     display: inline-flex;
     width: 42px;
