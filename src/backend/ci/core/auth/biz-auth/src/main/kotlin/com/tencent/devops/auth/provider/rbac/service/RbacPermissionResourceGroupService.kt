@@ -53,9 +53,10 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
+import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
-import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -71,7 +72,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
-    private val permissionResourceService: PermissionResourceService,
+    private val permissionProjectService: PermissionProjectService,
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
@@ -253,11 +254,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     ): Boolean {
         logger.info("delete group|$userId|$projectId|$resourceType|$groupId")
         if (userId != null) {
-            permissionResourceService.hasManagerPermission(
+            checkProjectManager(
                 userId = userId,
-                projectId = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId
+                projectId = projectId
             )
         }
         val authResourceGroup = authResourceGroupDao.getByRelationId(
@@ -280,6 +279,21 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun checkProjectManager(
+        userId: String,
+        projectId: String
+    ) {
+        val hasProjectManagePermission = permissionProjectService.checkProjectManager(
+            userId = userId,
+            projectCode = projectId
+        )
+        if (!hasProjectManagePermission) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
     }
 
     override fun createGroup(
@@ -353,11 +367,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 defaultMessage = "group name cannot be less than 5 characters"
             )
         }
-        permissionResourceService.hasManagerPermission(
+        checkProjectManager(
             userId = userId,
-            projectId = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId
+            projectId = projectId
         )
         val authResourceGroup = authResourceGroupDao.getByRelationId(
             dslContext = dslContext,
