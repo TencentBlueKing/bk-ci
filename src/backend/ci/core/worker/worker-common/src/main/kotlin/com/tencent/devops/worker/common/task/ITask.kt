@@ -27,13 +27,18 @@
 
 package com.tencent.devops.worker.common.task
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import org.slf4j.LoggerFactory
+import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
+import java.util.stream.Collectors
+import org.slf4j.LoggerFactory
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
 abstract class ITask {
@@ -50,11 +55,18 @@ abstract class ITask {
 
     private var finishKillFlag: Boolean? = null
 
+    /* 存储常量的key */
+    private lateinit var constVar: List<String>
+
     fun run(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
         workspace: File
     ) {
+        constVar = buildVariables.variablesWithType.stream()
+            .filter { it.readOnly == true }
+            .map { it.key }
+            .collect(Collectors.toList())
         execute(buildTask, buildVariables, workspace)
     }
 
@@ -83,6 +95,23 @@ abstract class ITask {
     )
 
     protected fun addEnv(env: Map<String, String>) {
+        if (this::constVar.isInitialized) {
+            var errFlag = false
+            env.forEach { (key, _) ->
+                if (key in constVar) {
+                    LoggerService.addErrorLine("variable $key is readonly, can't add again.")
+                    errFlag = true
+                }
+            }
+            if (errFlag) {
+                throw TaskExecuteException(
+                    errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: can't add readonly variable again.",
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
+                )
+            }
+        }
         environment.putAll(env)
     }
 
