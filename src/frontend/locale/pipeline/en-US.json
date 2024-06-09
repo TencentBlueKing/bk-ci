@@ -1161,7 +1161,10 @@
       "paramId": "Option ID Field Name",
       "paramName": "Option NAME Field Name",
       "paramIdTips": "When selected, this ID value is passed to the plugin",
-      "paramNameTips": "Option name as seen by the user on the page"
+      "paramNameTips": "Option name as seen by the user on the page",
+      "remove": "Remove",
+      "removeTitle": "Confirm to delete this variable?",
+      "toTop": "Move to top"
     },
     "enableVersions": "Enable Versioning",
     "editVersions": "Edit Version",

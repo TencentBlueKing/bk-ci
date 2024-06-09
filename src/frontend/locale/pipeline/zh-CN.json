@@ -1159,7 +1159,10 @@
       "paramId": "选项ID字段名",
       "paramName": "选项NAME字段名",
       "paramIdTips": "选中时将此ID值传递给插件",
-      "paramNameTips": "用户在页面上看到的选项名称"
+      "paramNameTips": "用户在页面上看到的选项名称",
+      "remove": "移除",
+      "removeTitle": "确认移除此变量吗？",
+      "toTop": "移到最前"
     },
     "enableVersions": "开启推荐版本号",
     "editVersions": "编辑版本号",
