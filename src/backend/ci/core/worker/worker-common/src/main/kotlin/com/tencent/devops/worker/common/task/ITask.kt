@@ -99,14 +99,14 @@ abstract class ITask {
             var errFlag = false
             env.forEach { (key, _) ->
                 if (key in constVar) {
-                    LoggerService.addErrorLine("variable $key is readonly, can't add again.")
+                    LoggerService.addErrorLine("Variable $key is read-only and cannot be modified.")
                     errFlag = true
                 }
             }
             if (errFlag) {
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: can't add readonly variable again.",
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
