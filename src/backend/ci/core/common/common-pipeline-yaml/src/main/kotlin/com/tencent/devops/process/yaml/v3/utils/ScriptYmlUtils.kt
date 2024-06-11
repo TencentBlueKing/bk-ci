@@ -586,6 +586,9 @@ object ScriptYmlUtils {
                 )
             }
         }
+        if (newLabels.isEmpty()) {
+            newLabels.add(StageLabel.BUILD.id)
+        }
 
         return newLabels
     }
