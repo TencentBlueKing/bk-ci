@@ -86,7 +86,7 @@ interface BuildSubPipelineResource {
         @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "当前流水线执行次数", required = true)
+        @Parameter(description = "当前流水线执行次数", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
         executeCount: Int?,
         @Parameter(description = "要启动的流水线ID", required = true)
@@ -121,7 +121,7 @@ interface BuildSubPipelineResource {
         @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "当前流水线执行次数", required = true)
+        @Parameter(description = "当前流水线执行次数", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
         executeCount: Int?,
         @Parameter(description = "要启动的流水线ID", required = true)
