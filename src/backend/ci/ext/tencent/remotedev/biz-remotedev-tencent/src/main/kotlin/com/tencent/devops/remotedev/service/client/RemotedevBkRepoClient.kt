@@ -168,7 +168,7 @@ class RemotedevBkRepoClient @Autowired constructor(
     ): String? {
         val request = Request.Builder()
             .url("$bkrepoMediaUrl/media-server/api/user/stream/create/$projectId/$workspaceName")
-            .headers(getCommonHeaders(userId).toHeaders())
+            .headers(getCommonHeaders(userId, true).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
                     .toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull())
