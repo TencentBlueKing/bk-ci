@@ -40,10 +40,10 @@ class RemotedevBkRepoClient @Autowired constructor(
     @Value("\${bkrepo.bkrepoDevxHeaderUserAuth:#{null}}")
     val bkrepoDevxHeaderUserAuth: String? = null
 
-    @Value("\${remoteDev.bkrepoMediaUrl:}")
+    @Value("\${bkrepo.bkrepoMediaUrl:}")
     val bkrepoMediaUrl = ""
 
-    @Value("\${remoteDev.bkrepoMediaHeaderUserAuth:}")
+    @Value("\${bkrepo.bkrepoMediaHeaderUserAuth:}")
     val bkrepoMediaHeaderUserAuth = ""
 
     fun createRepo(

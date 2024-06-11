@@ -143,7 +143,7 @@ class WorkspaceWindowsDao {
         ip: String
     ): Pair<String, Boolean>? {
         val dsl = dslContext.select(
-            TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME,
+            TWorkspace.T_WORKSPACE.NAME,
             TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD
         ).from(TWorkspace.T_WORKSPACE)
             .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
