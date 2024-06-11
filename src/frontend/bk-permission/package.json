@@ -41,6 +41,6 @@
     "regenerator-runtime": "^0.14.1"
   },
   "peerDependencies": {
-    "vue": "^3.2.41"
+    "vue": "~2.7.16"
   }
 }
