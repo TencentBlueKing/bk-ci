@@ -15,8 +15,11 @@
             <i class="devops-icon icon-check-small" />
             {{ $t('release') }}
         </span>
-        <ReleasePipelineSideSlider v-model="isReleaseSliderShow" :version="currentVersion"
-            :draft-base-version-name="draftBaseVersionName" />
+        <ReleasePipelineSideSlider
+            v-model="isReleaseSliderShow"
+            :version="currentVersion"
+            :draft-base-version-name="draftBaseVersionName"
+        />
     </div>
 </template>
 
@@ -101,16 +104,12 @@
 
     &.publish-diabled {
         background: #DCDEE5;
+        color: white !important;
         cursor: not-allowed;
     }
 
     .icon-check-small {
         font-size: 18px;
-    }
-
-    &.disabled {
-        background: #DCDEE5;
-        cursor: not-allowed;
     }
 }
 </style>

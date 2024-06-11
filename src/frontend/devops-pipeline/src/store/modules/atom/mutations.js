@@ -39,10 +39,12 @@ import {
     INSERT_ATOM,
     PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
+    RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
+    SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
@@ -84,8 +86,7 @@ import {
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
-    UPDATE_WHOLE_ATOM_INPUT,
-    SET_ATOM_EDITING
+    UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
 export default {
@@ -220,6 +221,10 @@ export default {
             ...state.atomModalMap,
             [key]: atomModal
         })
+        return state
+    },
+    [RESET_ATOM_MODAL_MAP]: (state) => {
+        Vue.set(state, 'atomModalMap', {})
         return state
     },
     [SET_CONTAINER_FETCHING]: (state, { fetchingContainer }) => {

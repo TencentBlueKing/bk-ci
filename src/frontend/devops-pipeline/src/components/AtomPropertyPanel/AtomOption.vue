@@ -36,6 +36,9 @@
             atomVersion () {
                 return this.element.version
             },
+            atomOptionConfig () {
+                return this.atomPropsModel.config || {}
+            },
             optionModel () {
                 const model = { ...this.ATOM_OPTION }
                 const failControlManualRetryOption = {
@@ -123,10 +126,7 @@
                 })
             },
             initOptionConfig (isInit = false) {
-                // 编辑状态
-                if (!this.disabled) {
-                    this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption), isInit)
-                }
+                this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption), isInit)
             }
         }
     }

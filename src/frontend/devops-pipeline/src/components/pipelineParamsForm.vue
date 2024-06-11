@@ -219,7 +219,7 @@
     @import '@/scss/mixins/ellipsis';
     .pipeline-execute-params-form {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
         &.bk-form.bk-form-vertical .bk-form-item+.bk-form-item {
             margin-top: 0 !important;

@@ -88,6 +88,7 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -179,7 +180,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         )
 
-        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)
+        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
@@ -299,7 +300,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
-        description: String? = null
+        description: String? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -434,7 +436,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     templateId = templateId,
                     description = description,
                     yaml = yaml,
-                    baseVersion = null
+                    baseVersion = null,
+                    yamlInfo = yamlInfo
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -551,7 +554,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean,
         description: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null
+        aspects: LinkedList<IPipelineTransferAspect>? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -589,7 +593,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             yaml = yamlWithVersion,
             versionStatus = versionStatus,
             branchName = branchName,
-            description = description
+            description = description,
+            yamlInfo = yamlInfo
         )
     }
 
@@ -602,7 +607,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean,
         description: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null
+        aspects: LinkedList<IPipelineTransferAspect>? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -646,7 +652,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
-            description = description
+            description = description,
+            yamlInfo = yamlInfo
         )
     }
 
@@ -663,7 +670,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (releaseBranch == true || branchVersionAction != BranchVersionAction.INACTIVE) {
                 // 如果是发布分支版本则直接更新
                 pipelineRepositoryService.updatePipelineBranchVersion(
-                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                    userId, projectId, pipelineId, branchName, branchVersionAction, transactionContext
                 )
             } else {
                 // 如果是删除分支版本则判断是否为最后一个版本
@@ -671,7 +678,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     projectId, pipelineId, branchName
                 )
                 pipelineRepositoryService.updatePipelineBranchVersion(
-                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                    userId, projectId, pipelineId, branchName, branchVersionAction, transactionContext
                 )
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                     projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
@@ -710,7 +717,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (setting.pipelineAsCodeSettings?.enable == true && !pipelineAsCodeSettings.enable) {
             // 关闭PAC开关时，将所有分支版本设为
             pipelineRepositoryService.updatePipelineBranchVersion(
-                projectId, pipelineId, null, BranchVersionAction.INACTIVE
+                userId, projectId, pipelineId, null, BranchVersionAction.INACTIVE
             )
         }
 
@@ -973,7 +980,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        baseVersion: Int? = null
+        baseVersion: Int? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -1075,7 +1083,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 branchName = branchName,
                 description = description,
                 yaml = yaml,
-                baseVersion = baseVersion
+                baseVersion = baseVersion,
+                yamlInfo = yamlInfo
             )
             // 审计
             ActionAuditContext.current()

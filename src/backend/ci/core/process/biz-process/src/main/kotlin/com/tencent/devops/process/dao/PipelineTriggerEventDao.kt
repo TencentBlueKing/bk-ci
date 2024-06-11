@@ -126,7 +126,7 @@ class PipelineTriggerEventDao {
                 triggerDetail.reason,
                 triggerDetail.reasonDetail?.let { JsonUtil.toJson(it, true) },
                 LocalDateTime.now()
-            ).execute()
+            ).onDuplicateKeyIgnore().execute()
         }
     }
 

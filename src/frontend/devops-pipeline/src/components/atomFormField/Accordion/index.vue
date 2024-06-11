@@ -43,6 +43,10 @@
             condition: {
                 type: Boolean,
                 default: false
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -57,6 +61,7 @@
         },
         methods: {
             toggleContent: function () {
+                if (this.disabled) return
                 if (this.isVersion) {
                     this.isShow = this.showContent ? !this.isShow : this.isShow
                 } else {

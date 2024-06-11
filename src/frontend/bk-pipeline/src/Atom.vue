@@ -108,8 +108,7 @@
                     :disabled="!atom.timeCost.executeCost"
                 >
                     <span class="atom-execute-time">
-                        <span v-if="isElapsedGt1h">&gt;</span>
-                        {{ isElapsedGt1h ? "1h" : formatTime }}
+                        {{ formatTime }}
                     </span>
                     <template slot="content">
                         <p>{{ formatTime }}</p>
@@ -345,9 +344,6 @@
                 return (
                     Array.isArray(this.atom.pauseReviewers) && this.atom.pauseReviewers.join(';')
                 )
-            },
-            isElapsedGt1h () {
-                return this.atom?.timeCost?.totalCost >= 36e5
             },
             formatTime () {
                 try {

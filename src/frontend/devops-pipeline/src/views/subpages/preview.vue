@@ -1,33 +1,51 @@
 <template>
     <div class="pipeline-execute-preview" v-bkloading="{ isLoading }">
         <template v-if="!isDebugPipeline && buildList.length">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(1)
-            }]" @click="toggleCollapse(1)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(1)
+                }]"
+                @click="toggleCollapse(1)"
+            >
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('buildMsg') }}
             </header>
             <div v-if="activeName.has(1)" class="params-collapse-content">
-                <pipeline-params-form ref="buildForm" :param-values="buildValues"
-                    :handle-param-change="handleBuildChange" :params="buildList" />
+                <pipeline-params-form
+                    ref="buildForm"
+                    :param-values="buildValues"
+                    :handle-param-change="handleBuildChange"
+                    :params="buildList"
+                />
             </div>
         </template>
         <template v-if="isVisibleVersion">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(2)
-            }]" @click="toggleCollapse(2)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(2)
+                }]"
+                @click="toggleCollapse(2)"
+            >
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('preview.introVersion') }}
             </header>
             <div v-if="activeName.has(2)" class="params-collapse-content">
-                <pipeline-versions-form ref="versionParamForm" :build-no="buildNo" :is-preview="true"
-                    :version-param-values="versionParamValues" :handle-version-change="handleVersionChange"
-                    :handle-build-no-change="handleBuildNoChange"></pipeline-versions-form>
+                <pipeline-versions-form
+                    ref="versionParamForm"
+                    :build-no="buildNo"
+                    :is-preview="true"
+                    :version-param-values="versionParamValues"
+                    :handle-version-change="handleVersionChange"
+                    :handle-build-no-change="handleBuildNoChange"
+                />
             </div>
         </template>
-        <header :class="['params-collapse-trigger', {
-            'params-collapse-expand': activeName.has(3)
-        }]" @click="toggleCollapse(3)">
+        <header
+            :class="['params-collapse-trigger', {
+                'params-collapse-expand': activeName.has(3)
+            }]"
+            @click="toggleCollapse(3)"
+        >
             <i class="devops-icon icon-angle-right" />
             {{ $t('buildParams') }}
             <template v-if="paramList.length > 0">
@@ -42,27 +60,38 @@
             </template>
         </header>
         <div v-if="activeName.has(3)" class="params-collapse-content">
-            <bk-alert v-if="showChangedParamsAlert && changedParams.length" type="warning"
-                :title="$t('paramChangeTips', [changedParams.length])">
+            <bk-alert
+                v-if="showChangedParamsAlert && changedParams.length"
+                type="warning"
+                :title="$t('paramChangeTips', [changedParams.length])"
+            >
             </bk-alert>
-            <pipeline-params-form v-if="paramList.length > 0" ref="paramsForm" :param-values="paramsValues"
-                :highlight-changed-param="showChangedParamsAlert" :handle-param-change="handleParamChange"
-                :params="paramList" />
+            <pipeline-params-form
+                v-if="paramList.length > 0"
+                ref="paramsForm"
+                :param-values="paramsValues"
+                :highlight-changed-param="showChangedParamsAlert"
+                :handle-param-change="handleParamChange"
+                :params="paramList"
+            />
             <bk-exception v-else type="empty" scene="part">
                 {{ $t('noParams') }}
             </bk-exception>
         </div>
 
         <template v-if="constantParams.length > 0">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(4)
-            }]" @click="toggleCollapse(4)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(4)
+                }]"
+                @click="toggleCollapse(4)"
+            >
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.const') }}
             </header>
             <div v-if="activeName.has(4)" class="params-collapse-content">
                 <pipeline-params-form
-                    ref="paramsForm"
+                    ref="constParamsForm"
                     disabled
                     :param-values="constantValues"
                     :params="constantParams"
@@ -70,20 +99,31 @@
             </div>
         </template>
         <template v-if="otherParams.length > 0">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(5)
-            }]" @click="toggleCollapse(5)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(5)
+                }]"
+                @click="toggleCollapse(5)"
+            >
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.pipelineParam.otherVar') }}
             </header>
             <div v-if="activeName.has(5)" class="params-collapse-content">
-                <pipeline-params-form ref="paramsForm" disabled :param-values="otherValues" :params="otherParams" />
+                <pipeline-params-form
+                    ref="otherParamsForm"
+                    disabled
+                    :param-values="otherValues"
+                    :params="otherParams"
+                />
             </div>
         </template>
 
-        <header :class="['params-collapse-trigger', {
-            'params-collapse-expand': activeName.has(6)
-        }]" @click="toggleCollapse(6)">
+        <header
+            :class="['params-collapse-trigger', {
+                'params-collapse-expand': activeName.has(6)
+            }]"
+            @click="toggleCollapse(6)"
+        >
             <i class="devops-icon icon-angle-right" />
             {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
             <template v-if="canElementSkip">
@@ -102,11 +142,14 @@
             </template>
         </header>
         <div v-if="activeName.has(6)" class="params-collapse-content pipeline-optional-model">
-            <pipeline is-preview :show-header="false" :pipeline="pipelineModel" :editable="false"
-                :can-skip-element="canElementSkip">
-            </pipeline>
+            <pipeline
+                is-preview
+                :show-header="false"
+                :pipeline="pipelineModel"
+                :editable="false"
+                :can-skip-element="canElementSkip"
+            />
         </div>
-
     </div>
 </template>
 
