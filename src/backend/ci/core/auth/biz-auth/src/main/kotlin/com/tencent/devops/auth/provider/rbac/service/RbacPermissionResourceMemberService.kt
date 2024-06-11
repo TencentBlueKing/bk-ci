@@ -22,6 +22,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -90,11 +91,16 @@ class RbacPermissionResourceMemberService constructor(
                 " managerId = $managerId | groupInfoList: $groupInfoList"
         )
         // 3、获取组成员
-        return groupInfoList.map {
-            executorService.submit<BkAuthGroupAndUserList> {
-                getUsersUnderGroup(groupInfo = it)
-            }
-        }.map { it.get() }
+        val groupUsersFutures = groupInfoList.map {
+            CompletableFuture.supplyAsync(
+                {
+                    getUsersUnderGroup(groupInfo = it)
+                },
+                executorService
+            )
+        }
+        CompletableFuture.allOf(*groupUsersFutures.toTypedArray()).join()
+        return groupUsersFutures.map { it.get() }
     }
 
     override fun batchAddResourceGroupMembers(
