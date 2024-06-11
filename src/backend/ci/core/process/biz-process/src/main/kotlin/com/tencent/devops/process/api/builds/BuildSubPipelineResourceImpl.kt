@@ -72,7 +72,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId,
                 runMode = runMode,
-                values = values
+                values = values,
+                executeCount = executeCount
             )
         } else {
             subPipeService.callPipelineStartup(
