@@ -66,7 +66,8 @@ class WindowsResourceConfigService @Autowired constructor(
     fun allWindowsQuota(
         userId: String,
         searchCustom: Boolean?,
-        quotaType: QuotaType
+        quotaType: QuotaType,
+        withProjectLimit: String?
     ): Map<String, Map<String, Int>> {
         // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
         val res = mutableMapOf<String, MutableMap<String, Int>>()
@@ -90,6 +91,33 @@ class WindowsResourceConfigService @Autowired constructor(
                 map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
             }
         }
+
+        if (withProjectLimit != null) {
+            val specSizes = windowsResourceTypeDao.fetchAll(
+                dslContext = dslContext,
+                withUnavailable = false,
+                specModel = true
+            ).map { it.size }.toSet()
+            val projectSpecQuota = windowsSpecResourceDao.fetchSpec(
+                projectId = withProjectLimit,
+                machineType = null,
+                dslContext = dslContext,
+                sqlLimit = PageUtil.convertPageSizeToSQLLimit(1, 1000)
+            ).map { it.size to it.quota }.toMap()
+            res.values.forEach { sizeAndCounts ->
+                sizeAndCounts.forEach sizeAndCount@{ (size, allCount) ->
+                    if (allCount == 0 || !specSizes.contains(size)) {
+                        return@sizeAndCount
+                    }
+                    var diff = allCount - (projectSpecQuota[size] ?: 0)
+                    if (diff < 0) {
+                        diff = 0
+                    }
+                    sizeAndCounts[size] = diff
+                }
+            }
+        }
+
         return res
     }
 
