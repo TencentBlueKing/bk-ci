@@ -415,6 +415,6 @@ class RbacPermissionResourceMemberService constructor(
         // 自动续期默认180天
         private val AUTO_RENEWAL_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
 
-        private val executorService = Executors.newFixedThreadPool(10)
+        private val executorService = Executors.newFixedThreadPool(30)
     }
 }
