@@ -126,13 +126,13 @@ importers:
 
   bk-permission:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       vue:
         specifier: ^3.2.41
         version: 3.4.27(typescript@4.6.4)
     devDependencies:
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@blueking/babel-preset-bk':
         specifier: ^2.1.0-beta7
         version: 2.1.0-beta7(eslint@8.57.0)(vue@3.4.27(typescript@4.6.4))
@@ -326,9 +326,6 @@ importers:
 
   devops-atomstore:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       '@blueking/bkcharts':
         specifier: ^2.0.10
         version: 2.0.10
@@ -399,6 +396,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.16.0
         version: 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
@@ -607,9 +607,6 @@ importers:
 
   devops-environment:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       '@blueking/search-select':
         specifier: 0.0.1-beta.2
         version: 0.0.1-beta.2
@@ -689,6 +686,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.16.0
         version: 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
@@ -764,12 +764,6 @@ importers:
 
   devops-manage:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
-      '@vue/runtime-core':
-        specifier: ^3.4.27
-        version: 3.4.27
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -792,6 +786,9 @@ importers:
         specifier: ^4.1.6
         version: 4.3.2(vue@3.4.27(typescript@4.9.5))
     devDependencies:
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@blueking/babel-preset-bk':
         specifier: ^2.1.0-beta7
         version: 2.1.0-beta7(eslint@8.57.0)(vue@3.4.27(typescript@4.9.5))
@@ -804,6 +801,9 @@ importers:
       '@blueking/stylelint-config-bk':
         specifier: ^2.1.0-beta.9
         version: 2.1.0-beta.10(postcss@8.4.38)
+      '@vue/runtime-core':
+        specifier: ^3.4.27
+        version: 3.4.27
       enhanced-resolve:
         specifier: ^5.10.0
         version: 5.16.1
@@ -843,9 +843,6 @@ importers:
 
   devops-metrics:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       '@blueking/bkcharts':
         specifier: 3.7.0-beta.2
         version: 3.7.0-beta.2(@octokit/core@6.1.2)(bufferutil@4.0.8)(chart.js@4.4.3)(encoding@0.1.13)(tslib@2.6.2)(utf-8-validate@5.0.10)(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.91.0))
@@ -868,6 +865,9 @@ importers:
         specifier: ^4.0.14
         version: 4.3.2(vue@3.4.27(typescript@4.9.5))
     devDependencies:
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@blueking/eslint-config-bk':
         specifier: 2.1.0-beta.6
         version: 2.1.0-beta.6(@babel/core@7.24.6)(eslint-plugin-prettier@4.2.1(eslint@7.32.0)(prettier@2.8.8))(prettier@2.8.8)(webpack@5.91.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.91.0)))
@@ -907,9 +907,6 @@ importers:
 
   devops-nav:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       '@blueking/login-modal':
         specifier: 1.0.4
         version: 1.0.4
@@ -1013,6 +1010,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.16.0
         version: 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@types/node':
         specifier: ^20.12.12
         version: 20.12.12
@@ -1112,9 +1112,6 @@ importers:
 
   devops-permission:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       bkui-vue:
         specifier: 0.0.1-beta.456
         version: 0.0.1-beta.456(highlight.js@10.7.3)(vue@3.4.27(typescript@4.9.5))
@@ -1137,6 +1134,9 @@ importers:
         specifier: ^4.1.6
         version: 4.3.2(vue@3.4.27(typescript@4.9.5))
     devDependencies:
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@blueking/babel-preset-bk':
         specifier: ^2.1.0-beta7
         version: 2.1.0-beta7(eslint@8.57.0)(vue@3.4.27(typescript@4.9.5))
@@ -1191,9 +1191,6 @@ importers:
 
   devops-pipeline:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       '@blueking/log':
         specifier: 2.1.4
         version: 2.1.4(vue@2.7.16)
@@ -1336,6 +1333,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.16.0
         version: 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
@@ -1420,9 +1420,6 @@ importers:
 
   devops-quality:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       echarts:
         specifier: ^5.3.2
         version: 5.5.0
@@ -1484,6 +1481,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.16.0
         version: 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
@@ -1818,9 +1818,6 @@ importers:
 
   devops-ticket:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       vee-validate:
         specifier: ^2.0.3
         version: 2.2.15
@@ -1837,6 +1834,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.16.0
         version: 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
@@ -1903,9 +1903,6 @@ importers:
 
   devops-turbo:
     dependencies:
-      '@babel/runtime':
-        specifier: ^7.15.4
-        version: 7.24.6
       '@blueking/bkcharts':
         specifier: ^2.0.10
         version: 2.0.10
@@ -1961,6 +1958,9 @@ importers:
       '@babel/preset-react':
         specifier: ^7.16.0
         version: 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime':
+        specifier: ^7.15.4
+        version: 7.24.6
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
