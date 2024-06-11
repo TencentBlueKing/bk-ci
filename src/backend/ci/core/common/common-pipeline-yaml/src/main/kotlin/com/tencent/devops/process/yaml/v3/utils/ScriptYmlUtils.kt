@@ -570,7 +570,7 @@ object ScriptYmlUtils {
 
     private fun formatStageLabel(labels: Any?): List<String> {
         if (labels == null) {
-            return emptyList()
+            return listOf(StageLabel.BUILD.id)
         }
 
         val transLabels = anyToListString(labels)
