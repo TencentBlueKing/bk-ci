@@ -477,7 +477,11 @@
                         releaseVersionName: versionName,
                         canDebug: false,
                         canRelease: false,
-                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
+                        pipelineAsCodeSettings: {
+                            ...(this.pipelineInfo.pipelineAsCodeSettings ?? {}),
+                            enable: rest.enablePac
+                        }
                     })
 
                     const tipsI18nKey = this.releaseParams.enablePac
