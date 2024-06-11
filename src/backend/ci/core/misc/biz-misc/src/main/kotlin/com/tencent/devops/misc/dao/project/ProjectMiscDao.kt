@@ -27,17 +27,13 @@
 
 package com.tencent.devops.misc.dao.project
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TProject
-import com.tencent.devops.model.project.tables.records.TProjectRecord
-import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
