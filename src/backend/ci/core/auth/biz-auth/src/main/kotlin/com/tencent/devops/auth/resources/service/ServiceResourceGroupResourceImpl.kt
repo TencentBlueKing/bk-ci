@@ -31,7 +31,7 @@ class ServiceResourceGroupResourceImpl constructor(
         return Result(
             permissionResourceGroupService.createProjectGroupByGroupCode(
                 projectId = projectCode,
-                groupCode = groupCode.value,
+                groupCode = groupCode.value
             )
         )
     }
