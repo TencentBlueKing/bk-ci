@@ -149,8 +149,13 @@ class WorkspaceWindowsDao {
             .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
             .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
             .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
-            .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
-            .fetchAny() ?: return null
+            .and(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            ).and(TWorkspace.T_WORKSPACE.HOST_NAME.like("%.$ip")).fetchAny() ?: return null
         return Pair(dsl.value1(), dsl.value2())
     }
 
