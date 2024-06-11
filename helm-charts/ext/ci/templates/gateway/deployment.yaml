@@ -138,7 +138,7 @@ spec:
           {{ if .Values.gateway.cfs.enabled -}}  
           volumeMounts:
             - name: gateway-files
-              mountPath: /data/bkee/public/ci/gateway/files/
+              mountPath: /data/bkee/public/
             - name: ci-frontend
               mountPath: /data/bkee/ci/
           {{ end }}
@@ -147,7 +147,7 @@ spec:
       volumes:
       - name: gateway-files
         nfs:
-          path: /{{ .Values.gateway.cfs.path }}/{{ .Values.gateway.cfs.env }}/bkee/public/ci/gateway/files
+          path: /{{ .Values.gateway.cfs.path }}/{{ .Values.gateway.cfs.env }}/bkee/public
           server: {{ .Values.gateway.cfs.ip }}
       - name: ci-frontend
         nfs:
