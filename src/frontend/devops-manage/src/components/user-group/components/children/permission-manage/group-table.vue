@@ -15,13 +15,11 @@
             <template #content>
               <bk-table
                 ref="refTable"
-                max-height="200"
+                max-height="464"
+                :fixed-bottom="fixedBottom"
                 :data="projectTable"
                 show-overflow-tooltip
-                :border="['outer', 'row']"
                 :pagination="pagination"
-                row-key="id"
-                :columns="columns"
                 @select-all="handleSelectAll"
                 @selection-change="handleSelectionChange"
               >
@@ -33,37 +31,62 @@
                     <span @click="handleClear">清除选择</span>
                   </div>
                 </template>
-                <!-- <bk-table-column type="selection" :min-width="30" width="30" align="center" /> -->
-                <bk-table-column label="用户组" prop="usergroup">
+                <template #fixedBottom v-if="!pagination">
+                  <div class="prepend">
+                    剩余{{ 22 }} 条数据，
+                    <span @click="handleLoadMore"> 加载更多 </span>
+                  </div>
+                </template>
+                <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
+                <bk-table-column label="用户组" prop="groupName">
                 </bk-table-column>
-                <bk-table-column label="用户描述" prop="describe" />
-                <bk-table-column label="有效期" prop="validity" />
-                <bk-table-column label="加入时间" prop="data" />
-                <bk-table-column label="加入方式/操作人" prop="type" />
+                <bk-table-column label="用户描述" prop="groupDesc" />
+                <bk-table-column label="有效期" prop="validityPeriod" />
+                <bk-table-column label="加入时间" prop="joinedTime" />
+                <bk-table-column label="加入方式/操作人" prop="operateSource">
+                  <template #default="{row}">
+                    {{ row.operateSource }}/{{ row.operator }}
+                  </template>
+                </bk-table-column>
                 <bk-table-column label="操作" v-if="isShowOperation">
                   <template #default="{row}">
                     <div class="operation-btn">
-                      <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                      <span
+                        v-bk-tooltips="{
+                          content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
+                          disabled: !row.removeMemberButtonControl
+                        }"
+                      >
                         <bk-button
                           text
                           theme="primary"
-                          :disabled="row.isUninstall"
+                          :disabled="row.removeMemberButtonControl"
                           @click="handleRenewal(row)"
                         >续期</bk-button>
                       </span>
-                      <span v-bk-tooltips="{ content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。', disabled: !row.isUninstall }">
+                      <span
+                        v-bk-tooltips="{
+                          content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。',
+                          disabled: !row.removeMemberButtonControl
+                        }"
+                      >
                         <bk-button
                           text
                           theme="primary"
-                          :disabled="row.isUninstall"
+                          :disabled="row.removeMemberButtonControl"
                           @click="handleHandover(row)"
                         >移交</bk-button>
                       </span>
-                      <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
+                      <span
+                        v-bk-tooltips="{
+                          content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
+                          disabled: !row.removeMemberButtonControl
+                        }"
+                      >
                         <bk-button
                           text
                           theme="primary"
-                          :disabled="row.isUninstall"
+                          :disabled="row.removeMemberButtonControl"
                           @click="handleRemove(row)"
                         >移出</bk-button>
                       </span>
@@ -86,28 +109,77 @@
         <transition name="collapse">
           <div v-if="isTableVisible">
             <bk-table
-              max-height="200"
+              max-height="464"
               :data="projectTable"
-              :border="['outer', 'row']"
               :pagination="pagination"
               show-overflow-tooltip
             >
-              <bk-table-column label="用户组" prop="usergroup" />
-              <bk-table-column label="用户描述" prop="usergroup" />
-              <bk-table-column label="有效期" prop="usergroup" />
-              <bk-table-column label="加入时间" prop="usergroup" />
-              <bk-table-column label="加入方式/操作人" prop="usergroup" />
+              <template #prepend>
+                <div v-if="selectList.length" class="prepend">
+                  已选择 {{ selectList.length }} 条数据，
+                  <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
+                  &nbsp; | &nbsp;
+                  <span @click="handleClear">清除选择</span>
+                </div>
+              </template>
+              <template #appendBottom v-if="!pagination">
+                <div class="prepend" @click="handleLoadMore">
+                  剩余{{ 22 }} 条数据，
+                  <span> 加载更多 </span>
+                </div>
+              </template>
+              <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
+              <bk-table-column label="用户组" prop="groupName">
+              </bk-table-column>
+              <bk-table-column label="用户描述" prop="groupDesc" />
+              <bk-table-column label="有效期" prop="validityPeriod" />
+              <bk-table-column label="加入时间" prop="joinedTime" />
+              <bk-table-column label="加入方式/操作人" prop="operateSource">
+                <template #default="{row}">
+                  {{ row.operateSource }}/{{ row.operator }}
+                </template>
+              </bk-table-column>
               <bk-table-column label="操作" v-if="isShowOperation">
-                <template #default="{ row }">
+                <template #default="{row}">
                   <div class="operation-btn">
-                    <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
-                      <bk-button text theme="primary" :disabled="row.isUninstall">续期</bk-button>
+                    <span
+                      v-bk-tooltips="{
+                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
+                        disabled: !row.removeMemberButtonControl
+                      }"
+                    >
+                      <bk-button
+                        text
+                        theme="primary"
+                        :disabled="row.removeMemberButtonControl"
+                        @click="handleRenewal(row)"
+                      >续期</bk-button>
                     </span>
-                    <span v-bk-tooltips="{ content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。', disabled: !row.isUninstall }">
-                      <bk-button text theme="primary" :disabled="row.isUninstall">移交</bk-button>
+                    <span
+                      v-bk-tooltips="{
+                        content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。',
+                        disabled: !row.removeMemberButtonControl
+                      }"
+                    >
+                      <bk-button
+                        text
+                        theme="primary"
+                        :disabled="row.removeMemberButtonControl"
+                        @click="handleHandover(row)"
+                      >移交</bk-button>
                     </span>
-                    <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
-                      <bk-button text theme="primary" :disabled="row.isUninstall">移出</bk-button>
+                    <span
+                      v-bk-tooltips="{
+                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
+                        disabled: !row.removeMemberButtonControl
+                      }"
+                    >
+                      <bk-button
+                        text
+                        theme="primary"
+                        :disabled="row.removeMemberButtonControl"
+                        @click="handleRemove(row)"
+                      >移出</bk-button>
                     </span>
                   </div>
                 </template>
@@ -124,29 +196,77 @@
         <transition name="collapse">
           <div v-if="isTableVisible">
             <bk-table
-              max-height="200"
+              max-height="522"
               :data="projectTable"
               show-overflow-tooltip
             >
-              <bk-table-column label="用户组" prop="usergroup" />
-              <bk-table-column label="用户描述" prop="usergroup" />
-              <bk-table-column label="有效期" prop="usergroup" />
-              <bk-table-column label="加入时间" prop="usergroup" />
-              <bk-table-column label="加入方式/操作人" prop="usergroup" />
+              <template #prepend>
+                <div v-if="selectList.length" class="prepend">
+                  已选择 {{ selectList.length }} 条数据，
+                  <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
+                  &nbsp; | &nbsp;
+                  <span @click="handleClear">清除选择</span>
+                </div>
+              </template>
+              <template #appendBottom v-if="!pagination">
+                <div class="prepend" @click="handleLoadMore">
+                  剩余{{ 22 }} 条数据，
+                  <span> 加载更多 </span>
+                </div>
+              </template>
+              <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
+              <bk-table-column label="用户组" prop="groupName">
+              </bk-table-column>
+              <bk-table-column label="用户描述" prop="groupDesc" />
+              <bk-table-column label="有效期" prop="validityPeriod" />
+              <bk-table-column label="加入时间" prop="joinedTime" />
+              <bk-table-column label="加入方式/操作人" prop="operateSource">
+                <template #default="{row}">
+                  {{ row.operateSource }}/{{ row.operator }}
+                </template>
+              </bk-table-column>
               <bk-table-column label="操作" v-if="isShowOperation">
-                <template #default="{ row }">
+                <template #default="{row}">
                   <div class="operation-btn">
-                    <div class="operation-btn">
-                      <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
-                        <bk-button text theme="primary" :disabled="row.isUninstall">续期</bk-button>
-                      </span>
-                      <span v-bk-tooltips="{ content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。', disabled: !row.isUninstall }">
-                        <bk-button text theme="primary" :disabled="row.isUninstall">移交</bk-button>
-                      </span>
-                      <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
-                        <bk-button text theme="primary" :disabled="row.isUninstall">移出</bk-button>
-                      </span>
-                    </div>
+                    <span
+                      v-bk-tooltips="{
+                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
+                        disabled: !row.removeMemberButtonControl
+                      }"
+                    >
+                      <bk-button
+                        text
+                        theme="primary"
+                        :disabled="row.removeMemberButtonControl"
+                        @click="handleRenewal(row)"
+                      >续期</bk-button>
+                    </span>
+                    <span
+                      v-bk-tooltips="{
+                        content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。',
+                        disabled: !row.removeMemberButtonControl
+                      }"
+                    >
+                      <bk-button
+                        text
+                        theme="primary"
+                        :disabled="row.removeMemberButtonControl"
+                        @click="handleHandover(row)"
+                      >移交</bk-button>
+                    </span>
+                    <span
+                      v-bk-tooltips="{
+                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
+                        disabled: !row.removeMemberButtonControl
+                      }"
+                    >
+                      <bk-button
+                        text
+                        theme="primary"
+                        :disabled="row.removeMemberButtonControl"
+                        @click="handleRemove(row)"
+                      >移出</bk-button>
+                    </span>
                   </div>
                 </template>
               </bk-table-column>
@@ -158,110 +278,123 @@
   </div>
 </template>
 
-<script setup>
-// import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits } from 'vue';
+<script setup> import { ref, defineProps, defineEmits } from 'vue';
 
 const total = ref(0);
 const refTable = ref(null);
 const selectList = ref([]);
-const activeIndex =  ref([0]);
+const activeIndex =  ref(true);
 const projectTable = ref([{
-  id: 1,
-  usergroup: 'asdsa',
-  describe: 'kjkjkjk',
-  validity: '0505',
-  data: '08-18',
-  type: '加入组',
-  isUninstall: true,
+  groupId: 1,
+  groupName: '11',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: true,
 },
 {
-  id: 2,
-  usergroup: 'asdsa',
-  describe: 'kjkjkjk',
-  validity: '0505',
-  data: '08-18',
-  type: '加入组',
-  isUninstall: false,
+  groupId: 2,
+  groupName: '22',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
 }, {
-  id: 3,
-  usergroup: 'asdsa',
-  describe: 'kjkjkjk',
-  validity: '0505',
-  data: '08-18',
-  type: '加入组',
-  isUninstall: false,
+  groupId: 3,
+  groupName: '33',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
 },
 {
-  id: 4,
-  usergroup: 'asdsa',
-  describe: 'kjkjkjk',
-  validity: '0505',
-  data: '08-18',
-  type: '加入组',
-  isUninstall: false,
+  groupId: 4,
+  groupName: '44',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
+}, {
+  groupId: 5,
+  groupName: '55',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
+},
+{
+  groupId: 6,
+  groupName: '66',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
+}, {
+  groupId: 7,
+  groupName: '77',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
+},
+{
+  groupId: 8,
+  groupName: '88',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
+}, {
+  groupId: 9,
+  groupName: '99',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
+},
+{
+  groupId: 10,
+  groupName: '1010',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
+},
+{
+  groupId: 11,
+  groupName: '1111',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: false,
 }]);
-const isTableVisible = ref(true);
-// const columns = ref([
-//   {
-//     type: 'selection',
-//     width: 30,
-//     align: 'center',
-//   },
-//   {
-//     label: '用户组',
-//     field: 'usergroup',
-//   },
-//   {
-//     label: '用户描述',
-//     field: 'describe',
-//   },
-//   {
-//     label: '有效期',
-//     field: 'validity',
-//   },
-//   {
-//     label: '加入时间',
-//     field: 'data',
-//   },
-//   {
-//     label: '加入方式/操作人',
-//     field: 'type',
-//   },
-//   {
-//     label: '操作',
-//     field: 'action',
-//     render: ({ row }) => (
-//       <div class="operation-btn">
-//         <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
-//           <bk-button
-//             text
-//             theme="primary"
-//             :disabled="row.isUninstall"
-//             @click="handleRenewal(row)"
-//           >续期</bk-button>
-//         </span>
-//         <span v-bk-tooltips="{ content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。', disabled: !row.isUninstall }">
-//           <bk-button
-//             text
-//             theme="primary"
-//             :disabled="row.isUninstall"
-//             @click="handleHandover(row)"
-//           >移交</bk-button>
-//         </span>
-//         <span v-bk-tooltips="{ content: '唯一管理员，不可移出。请添加新的管理员后再移出。', disabled: !row.isUninstall }">
-//           <bk-button
-//             text
-//             theme="primary"
-//             :disabled="row.isUninstall"
-//             @click="handleRemove(row)"
-//           >移出</bk-button>
-//         </span>
-//       </div>
-//     ),
-//   },
-// ]);
-
+const isTableVisible = ref(false);
+const fixedBottom = {
+  position: 'relative',
+  height: 42,
+};
 defineProps({
   isShowOperation: {
     type: Boolean,
@@ -280,7 +413,7 @@ function handleSelectAll(val) {
   selectList.value = [];
   if (val.checked) {
     projectTable.value.forEach((item) => {
-      selectList.value.push(item.id);
+      selectList.value.push(item.groupId);
     });
   } else {
     selectList.value = [];
@@ -292,9 +425,9 @@ function handleSelectAll(val) {
  */
 function handleSelectionChange(val) {
   if (val.checked) {
-    selectList.value.push(val.row.id);
+    selectList.value.push(val.row.groupId);
   } else {
-    selectList.value = selectList.value.filter(item => item !== val.row.id);
+    selectList.value = selectList.value.filter(item => item !== val.row.groupId);
   }
 };
 /**
@@ -303,7 +436,7 @@ function handleSelectionChange(val) {
 function handleSelectAllData() {
   refTable.value.toggleAllSelection();
   // 调用接口获取全部数据后
-  selectList.value = projectTable.value.map(item => item.id);
+  selectList.value = projectTable.value.map(item => item.groupId);
 }
 /**
  * 清除选择
@@ -334,7 +467,12 @@ function handleHandover(row) {
 function handleRemove(row) {
   emit('remove', row);
 }
-
+/**
+ * 加载更多
+ */
+function handleLoadMore() {
+  console.log('点击加载更多');
+}
 /**
  * 动画显隐
  */
@@ -355,7 +493,7 @@ function toggleTable() {
 }
 
 .manage-content-project {
-  max-height: 300px;
+  max-height: 630px;
   margin-bottom: 15px;
   background: #FFFFFF;
   padding: 16px 24px;
@@ -378,6 +516,12 @@ function toggleTable() {
 
 .project-group-table {
   width: 100%;
+  height: 100%;
+  margin-bottom: 16px;
+
+  .bk-table {
+    border: 1px solid #dcdee5;
+  }
 
   .prepend {
     width: 100%;

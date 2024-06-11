@@ -201,10 +201,10 @@ const isShowRenewal = ref(false);
 const isShowHandover = ref(false);
 const isShowRemove = ref(false);
 const isShowSlider = ref(false);
-const sliderTitle = ref('');
+const sliderTitle = ref('批量续期');
 const theme = ref('primary');
 const batchBtnText = ref('确定续期');
-const pagination = ref({ count: 0, limit: 10, current: 1 });
+const pagination = ref({ count: 11, limit: 10, current: 1 });
 const handOverForm = ref({
   name: ''
 })
@@ -422,6 +422,7 @@ function batchConfirm() {
     margin: 16px 0 24px 24px;
 
     .manage-aside {
+      position: relative;
       width: 230px;
       padding: 8px 0 0;
       background: #FFFFFF;

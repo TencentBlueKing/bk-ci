@@ -66,6 +66,17 @@
         </template>
       </bk-popover>
     </div>
+
+    <bk-pagination
+      class="pagination"
+      v-model="current"
+      align="center"
+      small
+      :limit="10"
+      :count="count"
+      :show-limit="false"
+      :show-total-count="false"
+    />
   </div>
   <bk-dialog
     :is-show="isShowhandOverDialog"
@@ -77,7 +88,7 @@
     @confirm="handOverConfirm"
   >
     <template #header>
-      {{ t('移除项目') }}
+      {{ t('移出项目') }}
       <span class="dialog-header"> 移出用户： xxxxxx </span>
     </template>
     <template #default>
@@ -182,6 +193,8 @@ import { ref, defineProps, defineEmits } from 'vue';
 import { Message } from 'bkui-vue';
 
 const { t } = useI18n();
+const current = ref(1);
+const count = ref(100);
 const activeTab = ref('1743602525');
 const isShowhandOverDialog = ref(false);
 const formRef = ref(null);
@@ -438,5 +451,13 @@ function handleRemoveConfirm(params) {
   span {
     color: #63656E;
   }
+}
+
+.pagination{
+  position: absolute;
+  bottom: 16px;
+  padding-top: 16px;
+  width: 100%;
+  border-top: 1px solid #DCDEE5;
 }
 </style>
