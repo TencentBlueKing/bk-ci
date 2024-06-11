@@ -30,7 +30,7 @@ import java.io.IOException
 
 @Suppress("ALL")
 @Component
-class BkRepoClient @Autowired constructor(
+class RemotedevBkRepoClient @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
 
@@ -177,9 +177,13 @@ class BkRepoClient @Autowired constructor(
         return doRequest(request).resolveResponse<Response<String>>()?.data
     }
 
-    private fun getCommonHeaders(userId: String): MutableMap<String, String> {
+    private fun getCommonHeaders(userId: String, isMedia: Boolean = false): MutableMap<String, String> {
         val headers = mutableMapOf<String, String>()
-        headers["Authorization"] = bkrepoDevxHeaderUserAuth ?: ""
+        headers["Authorization"] = if (!isMedia) {
+            bkrepoDevxHeaderUserAuth ?: ""
+        } else {
+            bkrepoMediaHeaderUserAuth
+        }
         headers["X-BKREPO-UID"] = userId
         return headers
     }

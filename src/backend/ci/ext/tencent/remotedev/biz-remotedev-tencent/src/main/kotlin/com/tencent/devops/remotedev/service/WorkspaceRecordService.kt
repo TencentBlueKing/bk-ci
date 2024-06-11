@@ -2,7 +2,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
-import com.tencent.devops.remotedev.service.client.BkRepoClient
+import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -12,7 +12,7 @@ class WorkspaceRecordService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val startAppLinkDao: ProjectStartAppLinkDao,
-    private val bkRepoClient: BkRepoClient
+    private val remotedevBkRepoClient: RemotedevBkRepoClient
 ) {
 
     fun enableRecord(
@@ -39,7 +39,7 @@ class WorkspaceRecordService @Autowired constructor(
 
         return Pair(
             true,
-            bkRepoClient.repoStreamCreate(
+            remotedevBkRepoClient.repoStreamCreate(
                 projectId = projectId,
                 workspaceName = workspaceName,
                 userId = userId
