@@ -33,7 +33,7 @@
                             }]"
                             @click="handleEdit(param.id)"
                         >
-                            <div class="drag-area" @click.stop>
+                            <div v-if="editable" class="drag-area" @click.stop>
                                 <i class="bk-icon icon-grag-fill"></i>
                             </div>
                             <div class="var-con">
