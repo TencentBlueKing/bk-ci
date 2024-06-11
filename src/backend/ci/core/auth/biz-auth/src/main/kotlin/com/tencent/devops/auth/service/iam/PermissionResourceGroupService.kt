@@ -93,5 +93,5 @@ interface PermissionResourceGroupService {
     fun createProjectGroupByGroupCode(
         projectId: String,
         groupCode: String
-    ):Boolean
+    ): Boolean
 }

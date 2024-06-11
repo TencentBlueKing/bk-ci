@@ -389,7 +389,6 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         return true
     }
 
-
     private fun checkDuplicateGroupName(
         projectId: String,
         groupName: String
