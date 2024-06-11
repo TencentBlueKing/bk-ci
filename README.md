@@ -59,6 +59,8 @@ bk-ci提供了流水线、代码检查、代码库、凭证管理、环境管理
 - [BK-JOB](https://github.com/Tencent/bk-job)：蓝鲸作业平台(Job)是一套运维脚本管理系统，具备海量任务并发处理能力。
 - [BK-PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
 - [BK-SOPS](https://github.com/Tencent/bk-sops)：蓝鲸标准运维（SOPS）是通过可视化的图形界面进行任务流程编排和执行的系统，是蓝鲸体系中一款轻量级的调度编排类SaaS产品。
+- [BK-Repo](https://github.com/Tencentblueking/bk-repo)：蓝鲸制品库平台是一套为企业提供各种类型制品包存储、代理、分发、晋级、扫描、依赖包管理的持续交付平台。
+- [BK-Turbo](https://github.com/Tencentblueking/bk-turbo): 蓝鲸编译加速平台为CI场景下提供UE、C/C++等多种语言的编译加速服务能力
 
 ## Contributing
 - 关于 bk-ci 分支管理、issue 以及 pr 规范，请阅读 [Contributing](CONTRIBUTING.md)
