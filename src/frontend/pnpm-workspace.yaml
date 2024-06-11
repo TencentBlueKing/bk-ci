@@ -1,15 +1,6 @@
 packages:
-  - devops-codelib
-  - devops-environment
-  - devops-atomstore
-  - devops-ticket
-  - devops-pipeline
-  - devops-quality
-  - devops-nav
-  - devops-turbo
-  - devops-stream
-  - devops-metrics
-  - devops-manage
-  - devops-permission
+  - "devops-*"
+  - "!devops-codecc"
+  - "!devops-repo"
   - bk-pipeline
   - bk-permission
