@@ -49,7 +49,7 @@ interface OpsToreProjectResource {
 
     @Operation(summary = "更新组件关联初始化项目信息")
     @PUT
-    @Path("/rele/update")
+    @Path("/relevancy/update")
     fun updateStoreInitProject(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
