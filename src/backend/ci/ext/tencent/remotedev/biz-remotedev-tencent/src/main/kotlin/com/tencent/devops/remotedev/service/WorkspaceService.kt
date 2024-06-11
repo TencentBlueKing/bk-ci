@@ -539,17 +539,7 @@ class WorkspaceService @Autowired constructor(
         val startTime = System.currentTimeMillis()
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
-        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, setOf(workspaceName ?:"")).forEach {
-            when (it.type) {
-                WorkspaceShared.AssignType.VIEWER -> {
-                    viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
-                }
 
-                WorkspaceShared.AssignType.OWNER -> {
-                    owners.putIfAbsent(it.workspaceName, it.sharedUser)
-                }
-            }
-        }
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
@@ -564,7 +554,17 @@ class WorkspaceService @Autowired constructor(
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
 
         val workspaceNames = result.map { it["NAME"] as String }.toSet()
+        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, workspaceNames).forEach {
+            when (it.type) {
+                WorkspaceShared.AssignType.VIEWER -> {
+                    viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
+                }
 
+                WorkspaceShared.AssignType.OWNER -> {
+                    owners.putIfAbsent(it.workspaceName, it.sharedUser)
+                }
+            }
+        }
         val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, workspaceNames)
             .associateBy { it.workspaceName }
 

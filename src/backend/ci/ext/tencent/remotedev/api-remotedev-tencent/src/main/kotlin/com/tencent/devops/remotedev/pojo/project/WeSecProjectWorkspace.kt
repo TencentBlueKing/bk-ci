@@ -71,7 +71,7 @@ data class WeSecProjectWorkspace(
     @get:Schema(title = "mac地址")
     val macAddress: String? = null,
     @get:Schema(title = "共享人")
-    val viewers: List<String>? = emptyList(),
+    val viewers: List<String>? = emptyList()
 )
 
 @Schema(title = "组织信息")
