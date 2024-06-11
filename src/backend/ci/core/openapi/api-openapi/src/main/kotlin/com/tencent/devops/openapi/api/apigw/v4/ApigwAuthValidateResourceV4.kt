@@ -48,7 +48,7 @@ interface ApigwAuthValidateResourceV4 {
     ): Result<Boolean>
 
     @GET
-    @Path("/check_user_in_project_level_group")
+    @Path("/check_user_in_project_level_group/{userId}")
     @Operation(
         summary = "检查用户是否在项目级别的用户组中",
         tags = ["v4_app_check_user_in_project_level_group"]
@@ -60,11 +60,11 @@ interface ApigwAuthValidateResourceV4 {
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "用户Id", required = true)
-        userId: String,
         @PathParam("projectId")
         @Parameter(description = "项目ID", required = true)
-        projectId: String
+        projectId: String,
+        @PathParam("userId")
+        @Parameter(description = "用户Id", required = true)
+        userId: String
     ): Result<Boolean>
 }

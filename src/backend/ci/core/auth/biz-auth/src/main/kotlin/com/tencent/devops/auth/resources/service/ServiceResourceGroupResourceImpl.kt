@@ -41,7 +41,7 @@ class ServiceResourceGroupResourceImpl constructor(
         groupAddDTO: GroupAddDTO
     ): Result<Int> {
         return Result(
-            permissionResourceGroupService.createGroup(
+            data = permissionResourceGroupService.createGroup(
                 projectId = projectCode,
                 groupAddDTO = groupAddDTO
             )
