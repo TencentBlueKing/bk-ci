@@ -252,7 +252,8 @@ class RbacPermissionResourceMemberService constructor(
         val members = mutableListOf<String>()
         val nowTimestamp = System.currentTimeMillis() / 1000
         groupMemberInfoList.forEach { memberInfo ->
-            if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) && memberInfo.expiredAt > nowTimestamp) {
+            if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER) &&
+                memberInfo.expiredAt > nowTimestamp) {
                 members.add(memberInfo.id)
             }
         }

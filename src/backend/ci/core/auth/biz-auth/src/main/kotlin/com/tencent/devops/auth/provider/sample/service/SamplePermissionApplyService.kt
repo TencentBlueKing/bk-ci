@@ -46,7 +46,11 @@ class SamplePermissionApplyService : PermissionApplyService {
         return emptyList()
     }
 
-    override fun listGroupsForApply(userId: String, projectId: String, searchGroupInfo: SearchGroupInfo): ManagerRoleGroupVO {
+    override fun listGroupsForApply(
+        userId: String,
+        projectId: String,
+        searchGroupInfo: SearchGroupInfo
+    ): ManagerRoleGroupVO {
         return ManagerRoleGroupVO(count = 0, results = emptyList())
     }
 
