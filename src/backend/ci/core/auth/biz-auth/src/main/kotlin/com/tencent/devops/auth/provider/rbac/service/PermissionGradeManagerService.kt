@@ -33,10 +33,8 @@ import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
