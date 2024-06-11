@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -358,4 +359,19 @@ interface ServiceRemoteDevResource {
         @QueryParam("displayName")
         displayName: String
     ): Result<Boolean>
+
+    @Operation(summary = "检查是否开启录屏并获取推流地址")
+    @GET
+    @Path("/check_workspace_record_enable_address")
+    fun checkWorkspaceEnableAddress(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "appId", required = true)
+        @QueryParam("appId")
+        appId: Long,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<CheckWorkspaceRecordData>
 }

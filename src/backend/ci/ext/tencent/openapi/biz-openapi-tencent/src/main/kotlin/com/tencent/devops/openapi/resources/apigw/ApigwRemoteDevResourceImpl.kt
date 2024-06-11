@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -288,5 +289,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ip = ip,
             displayName = displayName
         )
+    }
+
+    override fun checkWorkspaceEnableAddress(
+        userId: String,
+        appId: Long,
+        ip: String
+    ): Result<CheckWorkspaceRecordData> {
+        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip")
+        return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(userId, appId, ip)
     }
 }

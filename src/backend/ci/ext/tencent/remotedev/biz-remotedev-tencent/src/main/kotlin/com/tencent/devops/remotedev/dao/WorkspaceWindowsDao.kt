@@ -136,4 +136,31 @@ class WorkspaceWindowsDao {
             .and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
             .fetchOne(0, Int::class.java)!!
     }
+
+    fun fetchRecordByProjectIp(
+        dslContext: DSLContext,
+        projectId: String,
+        ip: String
+    ): Pair<String, Boolean>? {
+        val dsl = dslContext.select(
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME,
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD
+        ).from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
+            .fetchAny() ?: return null
+        return Pair(dsl.value1(), dsl.value2())
+    }
+
+    fun updateRecord(
+        dslContext: DSLContext,
+        workspaceName: String,
+        enable: Boolean
+    ) {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            dslContext.update(this).set(ENABLE_RECORD, enable).where(WORKSPACE_NAME.eq(workspaceName)).execute()
+        }
+    }
 }

@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -37,6 +38,7 @@ import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
@@ -70,7 +72,8 @@ class ServiceRemoteDevResourceImpl(
     private val devcloudService: DevcloudService,
     private val whiteListService: WhiteListService,
     private val deliverControl: DeliverControl,
-    private val imageManageService: ImageManageService
+    private val imageManageService: ImageManageService,
+    private val workspaceRecordService: WorkspaceRecordService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -232,11 +235,11 @@ class ServiceRemoteDevResourceImpl(
             }
             AsyncExecute.dispatch(
                 rabbitTemplate, AsyncPipelineEvent(
-                userId = info.userId ?: operator,
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
-                values = newParam
-            )
+                    userId = info.userId ?: operator,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam
+                )
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)
@@ -475,5 +478,18 @@ class ServiceRemoteDevResourceImpl(
 
     override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
         return Result(workspaceService.modifyWorkspaceDisplayName(userId, ip, displayName))
+    }
+
+    override fun checkWorkspaceEnableAddress(
+        userId: String,
+        appId: Long,
+        ip: String
+    ): Result<CheckWorkspaceRecordData> {
+        val (enable, address) = workspaceRecordService.checkRecordAndAddress(
+            appId = appId,
+            ip = ip,
+            userId = userId
+        )
+        return Result(CheckWorkspaceRecordData(enable, address))
     }
 }

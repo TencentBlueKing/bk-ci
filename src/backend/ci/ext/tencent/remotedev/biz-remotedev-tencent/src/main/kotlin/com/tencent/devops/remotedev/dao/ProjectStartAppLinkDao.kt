@@ -47,4 +47,10 @@ class ProjectStartAppLinkDao {
             return dslContext.select(APPID).from(this).where(APPNAME.eq(gameId)).fetchAny(APPID)
         }
     }
+
+    fun getAppName(dslContext: DSLContext, appId: Long): String? {
+        with(TProjectStartAppLink.T_PROJECT_START_APP_LINK) {
+            return dslContext.select(APPNAME).from(this).where(APPID.eq(appId)).fetchAny(APPNAME)
+        }
+    }
 }

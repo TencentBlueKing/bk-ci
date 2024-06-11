@@ -21,6 +21,8 @@ import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoRespData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import com.tencent.devops.remotedev.pojo.gitproxy.RefreshCodeProxyData
+import com.tencent.devops.remotedev.service.client.BkRepoCategory
+import com.tencent.devops.remotedev.service.client.BkRepoClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,7 +31,7 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class GitProxyService @Autowired constructor(
-    private val gitproxyBkRepoClient: GitproxyBkRepoClient,
+    private val bkRepoClient: BkRepoClient,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val codeProxyDao: RemoteDevCodeProxyDao
@@ -56,10 +58,10 @@ class GitProxyService @Autowired constructor(
         }
         // 判断项目是否存在，不存在创建
         if (!ifExistBkRepoProject(userId, data.projectId)) {
-            gitproxyBkRepoClient.createProject(userId, data.projectId)
+            bkRepoClient.createProject(userId, data.projectId)
             redisOperation.set("REDIS_BKREPO_PROJECT:${data.projectId}", "", 10 * 60)
         }
-        val respData = gitproxyBkRepoClient.createRepo(
+        val respData = bkRepoClient.createRepo(
             userId = userId,
             projectId = data.projectId,
             repoName = data.repoName,
@@ -77,7 +79,7 @@ class GitProxyService @Autowired constructor(
         var lfsRespData: CreateRepoRespData? = null
         val enableLfs = data.enableLfsCache == true && data.gitType == ScmType.CODE_TGIT
         if (enableLfs) {
-            lfsRespData = gitproxyBkRepoClient.createRepo(
+            lfsRespData = bkRepoClient.createRepo(
                 userId = userId,
                 projectId = data.projectId,
                 repoName = "$LFS_REPONAME_PREFIX${data.repoName}",
@@ -109,7 +111,7 @@ class GitProxyService @Autowired constructor(
         if (redisOperation.get("REDIS_BKREPO_PROJECT:$projectId") != null) {
             return true
         }
-        if (gitproxyBkRepoClient.existProject(userId, projectId) == true) {
+        if (bkRepoClient.existProject(userId, projectId) == true) {
             redisOperation.set("REDIS_BKREPO_PROJECT:$projectId", "", 10 * 60)
             return true
         }
@@ -181,14 +183,14 @@ class GitProxyService @Autowired constructor(
         val record = codeProxyDao.fetchSingleCodeProxy(dslContext, projectId, repoName)
         // 查不到做保险删除
         if (record == null) {
-            gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
-            gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
+            bkRepoClient.deleteRepo(userId, projectId, repoName)
+            bkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
             return true
         }
-        gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
+        bkRepoClient.deleteRepo(userId, projectId, repoName)
         if (record.enableLfs == true) {
             try {
-                gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
+                bkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
             } catch (e: Exception) {
                 logger.warn("deleteRepo delete lfs repo error", e)
             }
@@ -198,7 +200,7 @@ class GitProxyService @Autowired constructor(
     }
 
     fun refreshCodeProxy(projectId: String) {
-        val proxys = gitproxyBkRepoClient.fetchRepo(
+        val proxys = bkRepoClient.fetchRepo(
             userId = "admin",
             projectId = projectId,
             page = 1,
@@ -206,7 +208,7 @@ class GitProxyService @Autowired constructor(
             gitType = null,
             category = BkRepoCategory.PROXY
         )
-        val lfs = gitproxyBkRepoClient.fetchRepo(
+        val lfs = bkRepoClient.fetchRepo(
             userId = "admin",
             projectId = projectId,
             page = 1,

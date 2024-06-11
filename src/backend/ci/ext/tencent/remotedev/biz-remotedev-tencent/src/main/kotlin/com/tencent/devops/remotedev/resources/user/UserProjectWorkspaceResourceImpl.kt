@@ -47,6 +47,7 @@ import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
@@ -76,7 +77,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService,
     private val xlsxExportService: WorkspaceXlsxExportService,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val workspaceRecordService: WorkspaceRecordService
 ) : UserProjectWorkspaceResource {
     @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
@@ -199,5 +201,15 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun fetchSpec(userId: String, projectId: String?, machineType: String?, page: Int?, pageSize: Int?): Result<Page<WindowsSpecResInfo>> {
         return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
+    }
+
+    override fun enableWorkspaceRecord(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        workspaceRecordService.enableRecord(workspaceName, enable)
+        return Result(true)
     }
 }

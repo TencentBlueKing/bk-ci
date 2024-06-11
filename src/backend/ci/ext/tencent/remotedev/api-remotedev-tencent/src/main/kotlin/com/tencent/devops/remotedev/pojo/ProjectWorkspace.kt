@@ -77,5 +77,7 @@ data class ProjectWorkspace(
     @get:Schema(title = "云桌面对应的mac地址")
     val macAddress: String? = null,
     @get:Schema(title = "工作空间备注")
-    val remark: String? = null
+    val remark: String? = null,
+    @get:Schema(title = "是否开启了录屏")
+    val recordEnabled: Boolean
 ) : IWorkspace

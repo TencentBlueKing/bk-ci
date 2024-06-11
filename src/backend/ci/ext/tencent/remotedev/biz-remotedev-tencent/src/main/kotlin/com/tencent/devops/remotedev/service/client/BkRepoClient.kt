@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.service.gitproxy
+package com.tencent.devops.remotedev.service.client
 
 import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -30,7 +30,7 @@ import java.io.IOException
 
 @Suppress("ALL")
 @Component
-class GitproxyBkRepoClient @Autowired constructor(
+class BkRepoClient @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
 
@@ -39,6 +39,12 @@ class GitproxyBkRepoClient @Autowired constructor(
 
     @Value("\${bkrepo.bkrepoDevxHeaderUserAuth:#{null}}")
     val bkrepoDevxHeaderUserAuth: String? = null
+
+    @Value("\${remoteDev.bkrepoMediaUrl:}")
+    val bkrepoMediaUrl = ""
+
+    @Value("\${remoteDev.bkrepoMediaHeaderUserAuth:}")
+    val bkrepoMediaHeaderUserAuth = ""
 
     fun createRepo(
         userId: String,
@@ -155,6 +161,22 @@ class GitproxyBkRepoClient @Autowired constructor(
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
+    fun repoStreamCreate(
+        projectId: String,
+        workspaceName: String,
+        userId: String
+    ): String? {
+        val request = Request.Builder()
+            .url("$bkrepoMediaUrl/media-server/api/user/stream/create/$projectId/$workspaceName")
+            .headers(getCommonHeaders(userId).toHeaders())
+            .post(
+                objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
+                    .toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull())
+            )
+            .build()
+        return doRequest(request).resolveResponse<Response<String>>()?.data
+    }
+
     private fun getCommonHeaders(userId: String): MutableMap<String, String> {
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = bkrepoDevxHeaderUserAuth ?: ""
@@ -173,7 +195,7 @@ class GitproxyBkRepoClient @Autowired constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
             val responseContent = this.body!!.string()
-            logger.debug("gitproxy request bkrepo {} resp {}", this.request.url, responseContent)
+            logger.debug("remotedev request bkrepo {} resp {}", this.request.url, responseContent)
             if (this.isSuccessful) {
                 return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             }
