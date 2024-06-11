@@ -23,6 +23,7 @@
   "author": "bk",
   "license": "ISC",
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@blueking/babel-preset-bk": "^2.1.0-beta7",
     "@blueking/cli-service-webpack": "0.0.0-beta.73",
     "@blueking/eslint-config-bk": "2.1.0-beta.12",
@@ -41,8 +42,5 @@
   },
   "peerDependencies": {
     "vue": "^3.2.41"
-  },
-  "dependencies": {
-    "@babel/runtime": "^7.15.4"
   }
 }

@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
@@ -66,7 +67,6 @@
     "webpack": "^5.76.1"
   },
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
     "@blueking/login-modal": "1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "axios": "0.28.0",

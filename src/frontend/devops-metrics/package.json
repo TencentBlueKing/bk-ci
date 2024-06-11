@@ -21,7 +21,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
     "@blueking/bkcharts": "3.7.0-beta.2",
     "bkui-vue": "0.0.1-beta.416",
     "dayjs": "^1.11.2",
@@ -31,6 +30,7 @@
     "vue-router": "^4.0.14"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@blueking/eslint-config-bk": "2.1.0-beta.6",
     "@blueking/stylelint-config-bk": "^2.0.0",
     "@vitejs/plugin-vue": "^2.3.1",

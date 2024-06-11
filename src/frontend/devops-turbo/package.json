@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
@@ -51,7 +52,6 @@
     "public:external": "cross-env NODE_ENV=external webpack --mode production"
   },
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
     "@blueking/bkcharts": "^2.0.10",
     "vue": "~2.7.16"
   }

@@ -4,7 +4,6 @@
   "description": "",
   "private": true,
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
     "@blueking/search-select": "0.0.1-beta.2",
     "ace-builds": "^1.4.12",
     "clipboard": "^1.7.1",
@@ -17,6 +16,7 @@
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "^7.14.5",

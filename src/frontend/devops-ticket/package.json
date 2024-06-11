@@ -4,12 +4,12 @@
   "description": "",
   "private": true,
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
     "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@babel/plugin-syntax-jsx": "^7.16.0",
     "@babel/preset-react": "^7.16.0",
     "@vue/babel-preset-jsx": "^1.2.4",

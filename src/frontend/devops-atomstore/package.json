@@ -4,7 +4,6 @@
   "private": true,
   "description": "",
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
     "@blueking/bkcharts": "^2.0.10",
     "clipboard": "^2.0.4",
     "codemirror": "5.61.0",
@@ -14,6 +13,7 @@
     "vue": "~2.7.0"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "^7.14.5",

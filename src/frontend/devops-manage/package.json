@@ -22,8 +22,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
-    "@vue/runtime-core": "^3.4.27",
     "bk-permission": "workspace:bk-permission",
     "bkui-vue": "0.0.1-beta.456",
     "dayjs": "^1.11.2",
@@ -33,6 +31,8 @@
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
+    "@vue/runtime-core": "^3.4.27",
     "@blueking/babel-preset-bk": "^2.1.0-beta7",
     "@blueking/cli-service-webpack": "0.0.0-beta.74",
     "@blueking/eslint-config-bk": "2.1.0-beta.12",

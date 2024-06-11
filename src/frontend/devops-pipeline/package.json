@@ -14,7 +14,6 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@babel/runtime": "^7.15.4",
         "@blueking/log": "2.1.4",
         "@blueking/search-select": "0.0.1-beta.2",
         "@icon-cool/bk-icon-devops": "^0.2.1",
@@ -48,6 +47,7 @@
         "yaml": "^2.3.2"
     },
     "devDependencies": {
+        "@babel/runtime": "^7.15.4",
         "@babel/core": "^7.15.8",
         "@babel/eslint-parser": "^7.15.8",
         "@babel/plugin-proposal-class-properties": "^7.14.5",

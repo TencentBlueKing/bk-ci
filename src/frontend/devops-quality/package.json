@@ -4,13 +4,13 @@
   "description": "",
   "private": true,
   "dependencies": {
-    "@babel/runtime": "^7.15.4",
     "echarts": "^5.3.2",
     "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
