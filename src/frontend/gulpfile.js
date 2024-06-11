@@ -89,7 +89,7 @@ function generatorSvgJs (type) {
 
 function getScopeStr (scope) {
     try {
-        if (!scope) return ''
+        if (!scope) return '-r'
         let scopeArray
         switch (true) {
             case typeof scope === 'string':
@@ -98,8 +98,7 @@ function getScopeStr (scope) {
             default:
                 scopeArray = scope
         }
-        const isMultiple = scopeArray.length > 1
-        return `--scope=devops-${isMultiple ? `{${scopeArray.join(',')}}` : scopeArray.join(',')}`
+        return `--filter=${scopeArray.map(item => `devops-${item}`).join(',')}`
     } catch (e) {
         console.error(e)
         return ''
@@ -128,7 +127,7 @@ task('build', async () => {
         return acc
     }, '')
     console.log(envQueryStr)
-    await execAsync(`lerna run public:master ${scopeStr}`)
+    await execAsync(`pnpm run ${scopeStr} public:${env}`)
 })
 
 task('generate-assets-json', () => {

@@ -22,7 +22,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bk-permission": "^0.0.28",
+    "bk-permission": "workspace:bk-permission",
     "bkui-vue": "0.0.2-beta.121",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
@@ -31,6 +31,8 @@
     "vue-router": "4.1.6"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.15.4",
+    "@vue/runtime-core": "^3.4.27",
     "@blueking/babel-preset-bk": "^2.1.0-beta7",
     "@blueking/cli-service-webpack": "0.0.0-beta.74",
     "@blueking/eslint-config-bk": "2.1.0-beta.12",
@@ -45,6 +47,7 @@
     "postcss-preset-env": "^7.8.2",
     "postcss-simple-vars": "^7.0.0",
     "postcss-url": "^10.1.3",
+    "regenerator-runtime": "^0.14.1",
     "typescript": "^4.8.4"
   }
 }
