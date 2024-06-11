@@ -24,7 +24,7 @@
   "dependencies": {
     "@babel/runtime": "^7.15.4",
     "@vue/runtime-core": "^3.4.27",
-    "bk-permission": "^0.0.28",
+    "bk-permission": "workspace:bk-permission",
     "bkui-vue": "0.0.1-beta.456",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",

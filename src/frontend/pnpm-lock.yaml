@@ -771,8 +771,8 @@ importers:
         specifier: ^3.4.27
         version: 3.4.27
       bk-permission:
-        specifier: ^0.0.28
-        version: 0.0.28(@vue/composition-api@1.7.2(vue@3.4.27(typescript@4.9.5)))
+        specifier: workspace:bk-permission
+        version: link:../bk-permission
       bkui-vue:
         specifier: 0.0.1-beta.456
         version: 0.0.1-beta.456(highlight.js@10.7.3)(vue@3.4.27(typescript@4.9.5))
@@ -923,8 +923,8 @@ importers:
         specifier: 2.5.9-beta.9
         version: 2.5.9-beta.9(vue@2.7.16)
       bk-permission:
-        specifier: ^0.0.28
-        version: 0.0.28(@vue/composition-api@1.7.2(vue@2.7.16))
+        specifier: workspace:bk-permission
+        version: link:../bk-permission
       bluebird:
         specifier: ^3.5.1
         version: 3.7.2
@@ -1210,8 +1210,8 @@ importers:
         specifier: 2.5.9-beta.9
         version: 2.5.9-beta.9(vue@2.7.16)
       bk-permission:
-        specifier: ^0.0.28
-        version: 0.0.28(@vue/composition-api@1.7.2(vue@2.7.16))
+        specifier: workspace:bk-permission
+        version: link:../bk-permission
       bkui-pipeline:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline
@@ -4966,11 +4966,6 @@ packages:
     resolution: {integrity: sha512-Ao/6sBMnvJcw8RnxEdNMq8nFi6Qwjz68a2LMe4x1ovwxiaIwCxynrrCQHqW4PXoDn+fxqd+hIES2dfIJm6ajRw==}
     peerDependencies:
       vue: ^2.6.0
-
-  bk-permission@0.0.28:
-    resolution: {integrity: sha512-Wb+aj0u6ILNal2qeBJ2xxob/F3VIvx4NSJVpACC4EPsaK1HvFDxtjd2GezdVrb4YRA0YDLT3bt2f2INwJASzBw==}
-    peerDependencies:
-      '@vue/composition-api': ^1.0.0
 
   bkui-vue@0.0.1-beta.416:
     resolution: {integrity: sha512-DOc3MsQP6ew89rmTe9dLmUVw3dX8qoByLC4zEWtAsHcMQjtEutcIBuaYXRYoJZnFv+LDF7C8cgVrO18uDyDMdQ==}
@@ -17178,10 +17173,12 @@ snapshots:
   '@vue/composition-api@1.7.2(vue@2.7.16)':
     dependencies:
       vue: 2.7.16
+    optional: true
 
   '@vue/composition-api@1.7.2(vue@3.4.27(typescript@4.9.5))':
     dependencies:
       vue: 3.4.27(typescript@4.9.5)
+    optional: true
 
   '@vue/devtools-api@6.6.1': {}
 
@@ -18157,14 +18154,6 @@ snapshots:
       spark-md5: 3.0.2
       tinycolor2: 1.6.0
       vue: 3.4.27(typescript@3.4.5)
-
-  bk-permission@0.0.28(@vue/composition-api@1.7.2(vue@2.7.16)):
-    dependencies:
-      '@vue/composition-api': 1.7.2(vue@2.7.16)
-
-  bk-permission@0.0.28(@vue/composition-api@1.7.2(vue@3.4.27(typescript@4.9.5))):
-    dependencies:
-      '@vue/composition-api': 1.7.2(vue@3.4.27(typescript@4.9.5))
 
   bkui-vue@0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.27(typescript@4.9.5)):
     dependencies:
