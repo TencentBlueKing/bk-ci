@@ -537,7 +537,19 @@ class WorkspaceService @Autowired constructor(
         )
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
+        val owners = mutableMapOf<String, String>()
+        val viewers = mutableMapOf<String, MutableList<String>>()
+        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, setOf(workspaceName ?:"")).forEach {
+            when (it.type) {
+                WorkspaceShared.AssignType.VIEWER -> {
+                    viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
+                }
 
+                WorkspaceShared.AssignType.OWNER -> {
+                    owners.putIfAbsent(it.workspaceName, it.sharedUser)
+                }
+            }
+        }
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
@@ -618,14 +630,15 @@ class WorkspaceService @Autowired constructor(
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
-                owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
+                owner = owners[name],
                 realOwner = owner,
                 status = WorkspaceStatus.values()[res["STATUS"] as Int],
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
-                macAddress = workspaceWindows[name]?.macAddress
+                macAddress = workspaceWindows[name]?.macAddress,
+                viewers = viewers[name]
             )
         }
 
