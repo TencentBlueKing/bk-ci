@@ -453,8 +453,7 @@ class WorkspaceJoinDao {
 
     fun fetchProjectMachineType(
         dslContext: DSLContext,
-        projectId: String,
-        sumCount: Boolean
+        projectId: String
     ): Set<String> {
         return dslContext.selectDistinct(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE)
             .addResourceJoin(projectId).fetch().map { it["SIZE"].toString() }.toSet()
