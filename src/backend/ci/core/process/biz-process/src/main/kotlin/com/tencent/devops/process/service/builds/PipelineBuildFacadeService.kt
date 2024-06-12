@@ -1949,7 +1949,7 @@ class PipelineBuildFacadeService(
         startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
         archiveFlag: Boolean? = false,
-        debugVersion: Int?
+        customVersion: Int?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1985,11 +1985,20 @@ class PipelineBuildFacadeService(
                 )
             }
             // 如果请求的参数是草稿版本的版本号，则返回调试记录，否则提示不是草稿版本
-            if (debugVersion != null) {
-                val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
-                if (draftVersion?.version != debugVersion) throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_VERSION_IS_NOT_DRAFT,
-                    params = arrayOf(debugVersion.toString())
+            val targetDebugVersion = customVersion?.takeIf {
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId, pipelineId = pipelineId,
+                    version = customVersion, includeDraft = true
+                )?.status == VersionStatus.COMMITTING
+            }
+            if (customVersion != null && targetDebugVersion == null) {
+                return BuildHistoryPage(
+                    page = pageNotNull,
+                    pageSize = limit,
+                    count = 0,
+                    records = emptyList(),
+                    hasDownloadPermission = false,
+                    pipelineVersion = pipelineInfo.version
                 )
             }
 
@@ -2017,7 +2026,7 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 queryDslContext = queryDslContext,
-                debugVersion = debugVersion
+                debugVersion = targetDebugVersion
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -2047,7 +2056,7 @@ class PipelineBuildFacadeService(
                 startUser = startUser,
                 updateTimeDesc = updateTimeDesc,
                 queryDslContext = queryDslContext,
-                debugVersion = debugVersion
+                debugVersion = targetDebugVersion
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)

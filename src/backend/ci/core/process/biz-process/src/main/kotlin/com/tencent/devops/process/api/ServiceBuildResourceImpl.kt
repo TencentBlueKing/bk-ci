@@ -385,7 +385,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildMsg: String?,
         startUser: List<String>?,
         archiveFlag: Boolean?,
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -419,7 +419,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc,
             archiveFlag = archiveFlag,
-            debugVersion = debugVersion
+            customVersion = customVersion
         )
         return Result(result)
     }
