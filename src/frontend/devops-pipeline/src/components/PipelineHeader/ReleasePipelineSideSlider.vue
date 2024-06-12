@@ -455,7 +455,7 @@
                         ...rest
                     } = this.releaseParams
                     const {
-                        data: { version, versionName, versionNum, targetUrl }
+                        data: { yamlInfo, version, versionName, versionNum, targetUrl }
                     } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -491,7 +491,8 @@
                         pipelineAsCodeSettings: {
                             ...(this.pipelineInfo.pipelineAsCodeSettings ?? {}),
                             enable: rest.enablePac
-                        }
+                        },
+                        yamlInfo
                     })
 
                     const tipsI18nKey = this.releaseParams.enablePac

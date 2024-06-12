@@ -1341,7 +1341,7 @@
   "triggerBranch": "Trigger Branch",
   "triggerRepo": "Trigger Repository",
   "noBuildHistory": "No execution history",
-  "noDebugRecords": "No debug records",
+  "noDebugRecords": "There is no debugging record yet. It may be that there is no draft at the moment or the current draft has not been debugged.",
   "buildNow": "Run Now",
   "debugNow": "Debug Now",
   "onlyDraftBuildHistoryTips": "Pipeline has not been released, please release it first and then start execution.",
