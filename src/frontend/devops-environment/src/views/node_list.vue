@@ -421,10 +421,8 @@
         <!-- 重装/安装Agent -->
         <installAgent
             ref="installAgent"
+            v-bind="curNode"
             :task-id.sync="taskId"
-            :inner-ip="installAgentIp"
-            :host-id="installHostId"
-            :os-type="installOsType"
             @install="handleInstallEnd"
         />
     </div>
@@ -569,6 +567,7 @@
                 requestParams: {},
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
                 deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
+                curNode: {},
                 installAgentIp: '',
                 installHostId: 0,
                 installOsType: '',
@@ -1094,17 +1093,13 @@
                     this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
                 } else if (this.deploymentNodes.includes(node.nodeType)) {
-                    this.installAgentIp = node.ip
-                    this.installHostId = node.bkHostId
-                    this.installOsType = node.osType
+                    this.curNode = node
                     this.$refs.installAgent.isShow = true
                 }
             },
 
             handleShowLogDetail (node) {
-                this.installAgentIp = node.ip
-                this.installHostId = node.bkHostId
-                this.installOsType = node.osType
+                this.curNode = node
                 this.taskId = node.taskId
                 this.$refs.installAgent.isShow = true
             },
