@@ -256,7 +256,7 @@
                 let resData
                 try {
                     const { templateSetting } = this
-                    Object.assign(templateSetting, { projectId: this.projectId })
+                    Object.assign(templateSetting, { projectId: this.projectId, successSubscription: undefined, failSubscription: undefined })
                     resData = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}/settings`, templateSetting)
 
                     if (resData && resData.data) {
