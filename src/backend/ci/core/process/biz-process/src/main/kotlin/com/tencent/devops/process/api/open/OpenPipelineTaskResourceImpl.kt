@@ -34,10 +34,10 @@ class OpenPipelineTaskResourceImpl @Autowired constructor(
             if (tStatus == null) {
                 Result(status = -1, message = "Task[$taskId] is not found!")
             } else {
-                Result(BuildStatusInfo(startUser = build.startUser, debug = build.debug, status = tStatus))
+                Result(BuildStatusInfo(startUser = build.startUser, debug = false, status = tStatus))
             }
         } else {
-            Result(BuildStatusInfo(startUser = build.startUser, debug = build.debug, status = build.status))
+            Result(BuildStatusInfo(startUser = build.startUser, debug = false, status = build.status))
         }
     }
 }
