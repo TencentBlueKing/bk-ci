@@ -50,7 +50,6 @@ interface MetricsDataReportService {
         dispatchJobMetricsDataList: List<DispatchJobMetricsData>
     ): Boolean
 
-
     /**
      * 上报Job并发数据
      * @param dispatchJobMetricsData job并发数据上报传输对象
