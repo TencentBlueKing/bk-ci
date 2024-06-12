@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.pipeline.EnvReplacementParser
