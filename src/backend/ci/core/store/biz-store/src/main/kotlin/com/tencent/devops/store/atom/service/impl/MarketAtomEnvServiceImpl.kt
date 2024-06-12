@@ -46,6 +46,7 @@ import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
@@ -88,7 +89,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
     private val storeI18nMessageService: StoreI18nMessageService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
@@ -263,12 +265,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
+        val buildingFlag =
+            projectCode == storeInnerPipelineConfig.innerPipelineProject && atomStatus == AtomStatusEnum.BUILDING.status.toByte()
         val atomStatusList = getAtomStatusList(
             atomStatus = atomStatus,
             version = version,
             normalStatusList = normalStatusList,
             atomCode = atomCode,
-            projectCode = projectCode
+            projectCode = projectCode,
+            queryTestFlag = buildingFlag
         )
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
@@ -277,7 +282,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             version = version,
             atomDefaultFlag = atomDefaultFlag,
-            atomStatusList = atomStatusList
+            atomStatusList = atomStatusList,
+            queryProjectFlag = !buildingFlag
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("[project($projectCode)-plugin($atomCode)]")
@@ -414,7 +420,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         version: String,
         normalStatusList: List<Byte>,
         atomCode: String,
-        projectCode: String
+        projectCode: String,
+        queryTestFlag: Boolean
     ): List<Byte> {
         return if (atomStatus != null) {
             mutableListOf(atomStatus)
@@ -428,7 +435,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                         this.add(AtomStatusEnum.RELEASED.status.toByte())
                     }
                 }
-                val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+                val flag = queryTestFlag ||
+                        storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
                 if (flag) {
                     // 初始化项目或者调试项目有权查处于测试中、审核中的插件
                     this.addAll(
