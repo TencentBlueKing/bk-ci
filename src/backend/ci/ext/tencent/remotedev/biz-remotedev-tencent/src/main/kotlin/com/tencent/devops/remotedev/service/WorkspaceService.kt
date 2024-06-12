@@ -630,7 +630,7 @@ class WorkspaceService @Autowired constructor(
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
-                owner = owners[name],
+                owner = owners[name] ?: res["CREATOR"] as String,
                 realOwner = owner,
                 status = WorkspaceStatus.values()[res["STATUS"] as Int],
                 displayName = res["DISPLAY_NAME"] as String,
