@@ -503,9 +503,12 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int?,
-        statusSet: Set<BuildStatus>?
+        statusSet: Set<BuildStatus>?,
+        debug: Boolean? = false
     ): BuildHistory? {
-        val record = pipelineBuildDao.getBuildInfoByBuildNum(dslContext, projectId, pipelineId, buildNum, statusSet)
+        val record = pipelineBuildDao.getBuildInfoByBuildNum(
+            dslContext, projectId, pipelineId, buildNum, statusSet, debug ?: false
+        )
         return if (record != null) {
             genBuildHistory(record, System.currentTimeMillis())
         } else {

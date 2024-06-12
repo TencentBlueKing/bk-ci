@@ -636,8 +636,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         val history = pipelineBuildFacadeService.getSingleHistoryBuild(
-            projectId, pipelineId,
-            buildNum.toInt(), channelCode ?: ChannelCode.BS
+            projectId = projectId, pipelineId = pipelineId,
+            buildNum = buildNum.toInt(), buildId = null,
+            channelCode = channelCode ?: ChannelCode.BS
         )
         return Result(history)
     }
