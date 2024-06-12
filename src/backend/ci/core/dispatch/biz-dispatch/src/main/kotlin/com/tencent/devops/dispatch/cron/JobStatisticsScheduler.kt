@@ -75,28 +75,6 @@ class JobStatisticsScheduler @Autowired constructor(
         }
     }
 
-    /**
-     * 清理超过7天的job记录，防止一直占用
-     */
-    @Scheduled(cron = "0 0 1 * * ?")
-    fun clearTimeOutJobRecord() {
-        logger.info("start to clear timeout job record")
-        val redisLock = jobQuotaRedisUtils.getTimeoutJobLock()
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                logger.info("<<< Clear Pipeline Quota Start >>>")
-                doClear()
-            } else {
-                logger.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
-            }
-        } catch (e: Throwable) {
-            logger.error("Clear pipeline quota exception:", e)
-        } finally {
-            redisLock.unlock()
-        }
-    }
-
     private fun fetchJobMetricsDataFromRedis(): MutableList<DispatchJobMetricsData> {
         val theDate = LocalDateTime.now().format(dateTimeFormatter)
 
@@ -162,6 +140,28 @@ class JobStatisticsScheduler @Autowired constructor(
             ))
         } catch (e: Exception) {
             logger.error("Save jobStatistics failed.", e)
+        }
+    }
+
+    /**
+     * 清理超过7天的job记录，防止一直占用
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    fun clearTimeOutJobRecord() {
+        logger.info("start to clear timeout job record")
+        val redisLock = jobQuotaRedisUtils.getTimeoutJobLock()
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("<<< Clear Pipeline Quota Start >>>")
+                doClear()
+            } else {
+                logger.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
+            }
+        } catch (e: Throwable) {
+            logger.error("Clear pipeline quota exception:", e)
+        } finally {
+            redisLock.unlock()
         }
     }
 
