@@ -1991,7 +1991,7 @@ class PipelineBuildFacadeService(
                     version = customVersion, includeDraft = true
                 )?.status == VersionStatus.COMMITTING
             }
-            if (customVersion != null && targetDebugVersion == null) {
+            if (customVersion != null && targetDebugVersion != null) {
                 return BuildHistoryPage(
                     page = pageNotNull,
                     pageSize = limit,
