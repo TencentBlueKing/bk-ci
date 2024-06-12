@@ -1984,10 +1984,13 @@ class PipelineBuildFacadeService(
                     permission = AuthPermission.VIEW
                 )
             }
-            // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
-            val targetDebugVersion = debugVersion?.takeIf {
+            // 如果请求的参数是草稿版本的版本号，则返回调试记录，否则提示不是草稿版本
+            if (debugVersion != null) {
                 val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
-                draftVersion?.version == debugVersion
+                if (draftVersion?.version != debugVersion) throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_TOO_LARGE,
+                    params = arrayOf(pipelineCommonSettingConfig.maxModelSize.toString())
+                )
             }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
@@ -2014,7 +2017,7 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 queryDslContext = queryDslContext,
-                debugVersion = targetDebugVersion
+                debugVersion = debugVersion
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
