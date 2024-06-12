@@ -361,7 +361,6 @@ interface ServiceRemoteDevResource {
         displayName: String
     ): Result<Boolean>
 
-
     @Operation(summary = "重装云桌面系统")
     @POST
     @Path("/workspace_rebuild")
