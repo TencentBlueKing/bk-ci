@@ -75,7 +75,6 @@ class ServiceRemoteDevResourceImpl(
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
     private val devcloudService: DevcloudService,
-    private val whiteListService: WhiteListService,
     private val deliverControl: DeliverControl,
     private val imageManageService: ImageManageService,
     private val whiteListService: WhiteListService,
@@ -464,7 +463,7 @@ class ServiceRemoteDevResourceImpl(
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean> {
-        deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
+        deliverControl.assignUser2Workspace(userId, workspaceName, assigns)
         return Result(true)
     }
 

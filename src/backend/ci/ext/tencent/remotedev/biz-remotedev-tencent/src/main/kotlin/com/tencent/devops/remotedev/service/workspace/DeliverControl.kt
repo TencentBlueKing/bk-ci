@@ -61,11 +61,11 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -80,7 +80,6 @@ class DeliverControl @Autowired constructor(
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
     private val httpCallBackService: HttpCallBackService,
-    private val permissionService: PermissionService,
     private val gitProxyTGitService: GitProxyTGitService
 ) {
 
