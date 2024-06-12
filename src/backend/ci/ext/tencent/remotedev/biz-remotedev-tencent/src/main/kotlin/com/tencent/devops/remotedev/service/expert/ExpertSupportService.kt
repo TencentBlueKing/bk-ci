@@ -10,6 +10,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -24,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
@@ -32,6 +34,8 @@ import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,7 +57,9 @@ class ExpertSupportService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val permissionService: PermissionService,
+    private val rabbitTemplate: RabbitTemplate,
+    private val notifyControl: NotifyControl
 ) {
     @Suppress("ComplexMethod")
     fun createSupport(
@@ -364,6 +370,48 @@ class ExpertSupportService @Autowired constructor(
         data: CreateExpertSupportConfigData
     ) {
         expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
+    }
+
+    fun expandDiskCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    ) {
+        val taskInfo = kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class).getTaskInfoByUid(taskId).data!!
+        }.onFailure {
+            logger.warn("expandDiskCallback not find uid $taskId")
+            return
+        }.getOrThrow()
+
+        val owner = permissionService.getWorkspaceOwner(workspaceName)
+        val projectId = workspaceDao.fetchAnyWorkspace(dslContext, null, workspaceName, null, null)?.projectId ?: run {
+            logger.warn("expandDiskCallback workspace is null $workspaceName")
+            return
+        }
+        val cc = kotlin.runCatching {
+            client.get(ServiceProjectResource::class)
+                .listByProjectCodeList(listOf(projectId))
+        }.onFailure {
+            logger.warn("expandDiskCallback get project $projectId info error|${it.message}")
+        }.getOrElse { null }?.data?.map {
+            it.properties?.remotedevManager?.split(";")?.toSet() ?: emptySet()
+        }?.flatten()?.toMutableSet() ?: mutableSetOf()
+        cc.addAll(owner)
+
+        notifyControl.notify4UserAndCCRemoteDevManager(
+            userIds = mutableSetOf(operator),
+            cc = cc,
+            projectId = null,
+            notifyTemplateCode = "REMOTEDEV_EXPAND_DISK_DONE",
+            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+            bodyParams = mutableMapOf(
+                "projectId" to projectId,
+                "operator" to operator,
+                "taskStatus" to (taskInfo.status?.name ?: ""),
+                "taskLogs" to taskInfo.logs.joinToString(";")
+            )
+        )
     }
 
     companion object {

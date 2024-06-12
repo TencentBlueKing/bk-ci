@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,5 +60,14 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         remoteDevService.deleteWorkspace(userId, workspaceName)
         return Result(true)
+    }
+
+    override fun expandDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        mountType: WorkspaceMountType
+    ): Result<ExpandDiskValidateResp> {
+        return Result(remoteDevService.expandDisk(workspaceName, userId, size, mountType))
     }
 }
