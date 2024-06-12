@@ -50,7 +50,11 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
             // 现有用户覆盖定义旧系统变量的，前端无法帮助转换，用户传的仍然是旧变量为key，则用新的Key无法找到，要用旧的id兜底
             // 如果编排中指定为常量，则必须以编排的默认值为准，不支持触发时传参覆盖
             val value = if (param.constant == true) {
+                // 常量需要在启动是强制设为只读
                 param.readOnly = true
+                param.defaultValue
+            } else if (!param.required) {
+                // 没有作为前端可填入参的变量，直接取默认值，不可被覆盖
                 param.defaultValue
             } else {
                 paramValues[key] ?: paramValues[param.id] ?: param.defaultValue
