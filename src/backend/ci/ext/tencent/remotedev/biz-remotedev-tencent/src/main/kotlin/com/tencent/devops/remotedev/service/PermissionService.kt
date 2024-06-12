@@ -187,7 +187,7 @@ class PermissionService @Autowired constructor(
     ): Boolean {
         return kotlin.runCatching {
             client.get(ServiceProjectAuthResource::class).checkUserInProjectLevelGroup(
-                token = checkTokenService.getSystemToken() ?: "",
+                token = checkTokenService.getSystemToken(),
                 projectCode = projectCode,
                 userId = userId
             ).data
