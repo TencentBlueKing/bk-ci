@@ -28,10 +28,8 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.expression.EvaluationResult
-import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
