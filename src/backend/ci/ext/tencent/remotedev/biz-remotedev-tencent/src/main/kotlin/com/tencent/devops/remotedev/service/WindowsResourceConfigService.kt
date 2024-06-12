@@ -39,6 +39,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -56,7 +57,8 @@ class WindowsResourceConfigService @Autowired constructor(
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val client: Client
+    private val client: Client,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
 
     companion object {
@@ -93,6 +95,7 @@ class WindowsResourceConfigService @Autowired constructor(
         }
 
         if (withProjectLimit != null) {
+            val nowSizeCount = workspaceJoinDao.fetchProjectMachineTypeCount(dslContext, withProjectLimit)
             val specSizes = windowsResourceTypeDao.fetchAll(
                 dslContext = dslContext,
                 withUnavailable = false,
@@ -106,13 +109,23 @@ class WindowsResourceConfigService @Autowired constructor(
             ).map { it.size to it.quota }.toMap()
             res.values.forEach { sizeAndCounts ->
                 sizeAndCounts.forEach sizeAndCount@{ (size, allCount) ->
-                    if (allCount == 0 || !specSizes.contains(size)) {
+                    // 不是特殊机型，不进行计算
+                    if (!specSizes.contains(size)) {
                         return@sizeAndCount
                     }
-                    var diff = allCount - (projectSpecQuota[size] ?: 0)
-                    if (diff < 0) {
-                        diff = 0
+                    // 没有库存或者项目下没有配额不能选
+                    val projectCount = projectSpecQuota[size] ?: 0
+                    if (allCount == 0 || (projectCount <= 0)) {
+                        sizeAndCounts[size] = 0
+                        return@sizeAndCount
                     }
+                    // 项目已拥有机器把项目配额占满了也不能选
+                    val diff = projectCount - (nowSizeCount[size] ?: 0)
+                    if (diff <= 0) {
+                        sizeAndCounts[size] = 0
+                        return@sizeAndCount
+                    }
+                    // 有库存的同时有没有占满项目配额就可以选
                     sizeAndCounts[size] = diff
                 }
             }
