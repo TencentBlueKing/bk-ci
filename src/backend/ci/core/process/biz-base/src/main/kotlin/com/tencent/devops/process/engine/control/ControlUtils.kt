@@ -28,8 +28,10 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.expression.EvaluationResult
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -332,7 +334,9 @@ object ControlUtils {
                 // 新增的表达式调用需要去掉兼容老流水线变量
                 val variablesWithOutOld = variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
                 val expressionResult = ExpressionParser.evaluateByMap(
-                    customCondition, variablesWithOutOld, false
+                    expression = EnvReplacementParser.parse(customCondition, variables),
+                    contextMap = variablesWithOutOld,
+                    fetchValue = false
                 )
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
