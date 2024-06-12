@@ -8,18 +8,28 @@
                             :data-vv-scope="`param-${index}`"
                             :disabled="disabled || editValueOnly"
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
-                            v-validate.initial="`required|unique:${paramList.map(p => p.key).join(',')}|max: 50|${snonVarRule}`"
+                            v-validate.initial="keyRules"
                             name="key"
-                            :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
+                            :placeholder="paramKeyPlaceholder"
                             :value="param.key" />
                     </form-field>
                     <div class="bk-form-item">
-                        <vuex-input name="value" :disabled="disabled" :placeholder="isMetadataVar ? $t('view.value') : 'Value'" :value="param.value" :handle-change="(name, value) => handleParamChange(name, value, index)" />
+                        <vuex-input
+                            name="value"
+                            :disabled="disabled"
+                            :placeholder="paramValuePlaceholder"
+                            :value="param.value"
+                            :handle-change="(name, value) => handleParamChange(name, value, index)"
+                        />
                     </div>
                     <i @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus hover-click" v-if="!disabled && !editValueOnly" />
                 </li>
             </template>
-            <a :class="['text-link', 'hover-click', { disabled: disabled }]" v-if="!editValueOnly" @click.stop.prevent="editParam(paramList.length, true)">
+            <a
+                v-if="!editValueOnly"
+                :class="['text-link', 'hover-click', { disabled: disabled }]"
+                @click.stop.prevent="editParam(paramList.length, true)"
+            >
                 <i class="devops-icon icon-plus-circle" />
                 <span>{{ addBtnText || defaultAddBtnText }}</span>
             </a>
@@ -78,6 +88,13 @@
             editValueOnly: {
                 type: Boolean,
                 default: false
+            },
+            upperCased: Boolean,
+            keyPlaceholder: {
+                type: String
+            },
+            valuePlaceholder: {
+                type: String
             }
         },
         data () {
@@ -89,6 +106,17 @@
         computed: {
             snonVarRule () {
                 return !this.isSupportVar ? 'nonVarRule' : ''
+            },
+            keyRules () {
+                return `required|unique:${this.paramList.map(p => p.key).join(',')}|max: 50|${this.snonVarRule}`
+            },
+            paramKeyPlaceholder () {
+                if (this.keyPlaceholder) return this.keyPlaceholder
+                return this.isMetadataVar ? this.$t('view.key') : 'Key'
+            },
+            paramValuePlaceholder () {
+                if (this.valuePlaceholder) return this.valuePlaceholder
+                return this.isMetadataVar ? this.$t('view.value') : 'Value'
             }
         },
         watch: {
@@ -110,8 +138,9 @@
                 if (this.disabled) return
 
                 if (isAdd) {
+                    const paramKey = `${this.isMetadataVar ? 'key' : 'param'}${this.paramList.length + 1}`
                     const param = {
-                        key: `${this.isMetadataVar ? 'key' : 'param'}${this.paramList.length + 1}`,
+                        key: this.upperCased ? paramKey.toUpperCase() : paramKey,
                         value: ''
                     }
                     this.paramList.splice(index + 1, 0, param)

@@ -42,11 +42,11 @@ import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwLogResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @RestResource
 class ApigwLogResourceV4Impl @Autowired constructor(
@@ -86,7 +86,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             debug = debug,
-            jobId = jobId,
+            jobId = if (elementId.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
             archiveFlag = archiveFlag
         )
@@ -128,7 +128,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             tag = tag,
             containerHashId = containerHashId,
             executeCount = executeCount,
-            jobId = jobId,
+            jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
             archiveFlag = archiveFlag
         )
@@ -164,7 +164,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             tag = tag,
             containerHashId = containerHashId,
             executeCount = executeCount,
-            jobId = jobId,
+            jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
             archiveFlag = archiveFlag
         )
@@ -192,7 +192,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!containerHashId.isNullOrBlank()) path.append("&containerHashId=$containerHashId")
-        if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
+        if (!jobId.isNullOrBlank() && tag.isNullOrBlank() && stepId.isNullOrBlank()) path.append("&jobId=$jobId")
         if (!stepId.isNullOrBlank()) path.append("&stepId=$stepId")
         if (archiveFlag != null) path.append("&archiveFlag=$archiveFlag")
         val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)

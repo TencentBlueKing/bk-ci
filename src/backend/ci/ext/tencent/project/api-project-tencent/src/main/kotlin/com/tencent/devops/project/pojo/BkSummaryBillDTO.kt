@@ -34,5 +34,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class BkSummaryBillDTO(
     @get:Schema(title = "数据源名称")
     @JsonProperty(value = "data_source_bills", required = true)
-    val dataSourceBills: BkDataSourceBillsDTO
+    val dataSourceBills: BkDataSourceBillsDTO,
+    @get:Schema(title = "是否覆盖账期内的数据后重新导入")
+    @JsonProperty(value = "is_overwrite", required = true)
+    val overwrite: Boolean
 )

@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -7,6 +8,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
@@ -14,10 +16,10 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -68,15 +70,6 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
         return client.get(ServiceRemoteDevResource::class).getRemotedevProjects(projectId)
-    }
-
-    override fun queryProjectRemoteDevCvm(
-        appCode: String?,
-        apigwType: String?,
-        projectId: String?
-    ): Result<List<RemotedevCvmData>> {
-        logger.info("Get  project cvm")
-        return client.get(ServiceRemoteDevResource::class).queryProjectRemoteDevCvm(projectId)
     }
 
     override fun checkUserCgsPermission(
@@ -244,6 +237,58 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             machineType = machineType,
             count = count,
             available = available
+        )
+    }
+
+    override fun fetchCvmList(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<DevcloudCVMData>?> {
+        logger.info("fetchCvmList $userId|$projectId|$page|$pageSize")
+        return client.get(ServiceRemoteDevResource::class).fetchCvmList(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun assignWorkspaceUsers(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        workspaceName: String,
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean> {
+        logger.info("assignWorkspaceUsers $userId|$projectId|$workspaceName|$assigns")
+        return client.get(ServiceRemoteDevResource::class).assignUser(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            assigns = assigns
+        )
+    }
+
+    override fun queryWorkspaceImageList(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String?
+    ): Result<Map<String, Any>> {
+        logger.info("queryWorkspaceImageList |$projectId|")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceImageList(
+            projectId = projectId
+        )
+    }
+
+    override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
+        logger.info("modifyWorkspaceDisplayName |$userId|$ip|$displayName")
+        return client.get(ServiceRemoteDevResource::class).modifyWorkspaceDisplayName(
+            userId = userId,
+            ip = ip,
+            displayName = displayName
         )
     }
 

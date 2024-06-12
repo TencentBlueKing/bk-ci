@@ -4,7 +4,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
@@ -12,10 +16,10 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -91,21 +95,6 @@ interface ApigwRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
-
-    @Operation(summary = "获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm"])
-    @GET
-    @Path("/project/cvm")
-    fun queryProjectRemoteDevCvm(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam("project_id")
-        projectId: String?
-    ): Result<List<RemotedevCvmData>>
 
     @Operation(summary = "提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
     @GET
@@ -351,6 +340,77 @@ interface ApigwRemoteDevResource {
         @QueryParam("available")
         available: Boolean?
     ): Result<QuotaInApiRes>
+
+    @Operation(summary = "获取指定云研发项目的CVM信息列表", tags = ["v4_app_remotedev_cvm"])
+    @GET
+    @Path("/{projectId}/devcloud/cvmList")
+    fun fetchCvmList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<Page<DevcloudCVMData>?>
+
+    @Operation(summary = "提供给Devcloud分配云桌面拥有者或共享人", tags = ["v4_app_assign_workspace_users"])
+    @POST
+    @Path("/{projectId}/assign/workspace/users")
+    fun assignWorkspaceUsers(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "分配数据", required = true)
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean>
+
+    @Operation(summary = "提供给Devcloud获取云桌面镜像列表", tags = ["v4_app_query_workspace_image_list"])
+    @GET
+    @Path("/workspace/image/list")
+    fun queryWorkspaceImageList(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Map<String, Any>>
+
+    @Operation(summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁", tags = ["v4_app_modify_workspace_display_name"])
+    @POST
+    @Path("/modify/display_name")
+    fun modifyWorkspaceDisplayName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String,
+        @Parameter(description = "别名", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Boolean>
 
     @Operation(summary = "重装云桌面系统", tags = ["v4_app_remotedev_workspace_rebuild"])
     @POST

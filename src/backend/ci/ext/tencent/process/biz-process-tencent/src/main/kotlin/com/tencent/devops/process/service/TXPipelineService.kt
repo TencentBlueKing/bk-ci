@@ -770,7 +770,7 @@ class TXPipelineService @Autowired constructor(
                 )
                 VMBaseOS.LINUX
             } else {
-                when (agentsResult.data!![0].os) {
+                when (agentsResult.data!![0].agent.os) {
                     "MACOS" -> VMBaseOS.MACOS
                     "WINDOWS" -> VMBaseOS.WINDOWS
                     else -> VMBaseOS.LINUX

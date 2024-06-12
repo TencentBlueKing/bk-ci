@@ -249,7 +249,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
 
             else -> {
-                throw IllegalArgumentException("Unknown repo($repo)")
+                null
             }
         }
     }

@@ -80,6 +80,7 @@ class DeliverControl @Autowired constructor(
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
     private val httpCallBackService: HttpCallBackService,
+    private val permissionService: PermissionService,
     private val gitProxyTGitService: GitProxyTGitService
 ) {
 
