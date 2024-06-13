@@ -158,7 +158,6 @@ class SoftwareManageService @Autowired constructor(
         }
     }
 
-
     fun softwareInstallationCompleteCallback(
         type: String,
         workspaceName: String,
