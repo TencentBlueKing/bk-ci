@@ -701,20 +701,10 @@ class PipelineRepositoryService constructor(
                             setting.pipelineName = model.name
                             setting.version = settingVersion
                             if (useSubscriptionSettings != true) {
-                                setting.successSubscription = Subscription(
-                                    types = setOf(),
-                                    groups = emptySet(),
-                                    users = "\${{ci.actor}}",
-                                    content = NotifyTemplateUtils.getCommonShutdownSuccessContent()
-                                )
+                                setting.successSubscription = null
                                 setting.successSubscriptionList = null
-                                setting.failSubscription = Subscription(
-                                    types = setOf(PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX),
-                                    groups = emptySet(),
-                                    users = "\${{ci.actor}}",
-                                    content = NotifyTemplateUtils.getCommonShutdownFailureContent()
-                                )
-                                setting.failSubscriptionList = listOf(setting.failSubscription)
+                                setting.failSubscription = null
+                                setting.failSubscriptionList = newSetting.failSubscriptionList
                             }
                             if (useConcurrencyGroup != true) {
                                 setting.concurrencyGroup = null
