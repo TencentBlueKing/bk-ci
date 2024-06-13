@@ -46,12 +46,11 @@ import com.tencent.devops.process.yaml.v3.models.VariablePropOption
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
 import com.tencent.devops.process.yaml.v3.models.VariableProps
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 @Suppress("ComplexMethod")
-class VariableTransfer @Autowired constructor() {
+class VariableTransfer {
 
     companion object {
         private val logger = LoggerFactory.getLogger(VariableTransfer::class.java)
