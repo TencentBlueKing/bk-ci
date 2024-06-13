@@ -233,7 +233,7 @@ class VariableTransfer {
                         variable.readonly ?: false
                     },
                     valueNotEmpty = variable.props?.required ?: false,
-                    payload =variable.props?.payload
+                    payload = variable.props?.payload
                 )
             )
         }
