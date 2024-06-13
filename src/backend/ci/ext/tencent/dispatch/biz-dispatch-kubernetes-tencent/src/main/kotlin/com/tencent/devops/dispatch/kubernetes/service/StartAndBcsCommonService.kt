@@ -5,6 +5,7 @@ import com.tencent.devops.dispatch.kubernetes.bcs.client.WorkspaceBcsClient
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
@@ -29,9 +30,12 @@ class StartAndBcsCommonService @Autowired constructor(
 ) {
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-        val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid)
+        val task = workspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
+            logger.warn("workspaceTaskCallback|fail with wrong task|$taskStatus")
+            return false
+        }
         workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        if (task?.action == EnvironmentAction.EXPAND_DISK) {
+        if (task.action == EnvironmentAction.EXPAND_DISK) {
             kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class).workspaceExpandDiskCallback(
                     taskId = taskStatus.uid,
@@ -44,7 +48,32 @@ class StartAndBcsCommonService @Autowired constructor(
             }
             return true
         }
-        if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
+        if (task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING) {
+            val result = kotlin.runCatching {
+                client.get(ServiceRemoteDevResource::class)
+                    .createWinWorkspaceByVm(
+                        userId = task.operator,
+                        oldWorkspaceName = task.workspaceName,
+                        projectId = null,
+                        ownerType = null,
+                        uid = taskStatus.uid
+                    ).data!!
+            }.onFailure {
+                logger.warn("workspaceTaskCallback|upgradeVm error ${it.message}", it)
+            }.getOrElse { false }
+            if (result) {
+                workspaceOpHisDao.update(
+                    dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
+                )
+            } else {
+                workspaceOpHisDao.update(
+                    dslContext, task.uid, EnvironmentActionStatus.FAILED
+                )
+                logger.error("workspaceTaskCallback $task error $taskStatus")
+            }
+            return true
+        }
+        if (task.status.needFix() && task.action == EnvironmentAction.CREATE) {
             val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
                 logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
                 return false
