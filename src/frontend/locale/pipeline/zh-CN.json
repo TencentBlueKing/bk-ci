@@ -1356,7 +1356,7 @@
   "triggerBranch": "触发分支",
   "triggerRepo": "触发代码库",
   "noBuildHistory": "暂无执行历史",
-  "noDebugRecords": "暂无调试记录",
+  "noDebugRecords": "暂无调试记录，可能是当前没有草稿或当前草稿没有进行过调试",
   "buildNow": "立即执行",
   "debugNow": "立即调试",
   "onlyDraftBuildHistoryTips": "流水线尚未发布，请先发布，再启动执行。",

@@ -6,8 +6,9 @@
         }]">
             {{ $t("releasePipeline") }}
             <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
-            <span v-bk-overflow-tips class="release-pipeline-new-version">{{ $t("releasePipelineVersion",
-                                                                                [newReleaseVersionName]) }}</span>
+            <span v-bk-overflow-tips class="release-pipeline-new-version">
+                {{ $t("releasePipelineVersion",[newReleaseVersionName]) }}
+            </span>
             <span v-bk-overflow-tips>
                 {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
             </span>
@@ -61,11 +62,20 @@
                             <i class="devops-icon icon-info-circle-shape" v-bk-tooltips="$t('yamlCodeLibDesc')" />
                         </label>
                         <bk-form-item required property="repoHashId">
-                            <bk-select id="yamlCodelib" :disabled="pacEnabled" searchable enable-scroll-load
-                                v-model="releaseParams.repoHashId" :scroll-loading="scrollLoadmoreConf"
-                                :loading="isInitPacRepo" :show-empty="false"
-                                :placeholder="$t('editPage.atomForm.selectTips')" :z-index="2600"
-                                @scroll-end="fetchPacEnableCodelibList(false)" @toggle="refreshPacEnableCodelibList">
+                            <bk-select
+                                id="yamlCodelib"
+                                :disabled="pacEnabled"
+                                searchable
+                                enable-scroll-load
+                                v-model="releaseParams.repoHashId"
+                                :scroll-loading="scrollLoadmoreConf"
+                                :loading="isInitPacRepo"
+                                :show-empty="false"
+                                :placeholder="$t('editPage.atomForm.selectTips')"
+                                :z-index="2600"
+                                @scroll-end="fetchPacEnableCodelibList(false)"
+                                @toggle="refreshPacEnableCodelibList"
+                            >
                                 <template v-if="pacEnableCodelibList.length">
                                     <bk-option v-for="option in pacEnableCodelibList" :key="option.repositoryHashId"
                                         :id="option.repositoryHashId" :name="option.aliasName">
@@ -200,7 +210,7 @@
                     page: 1,
                     pageSize: 10,
                     total: 0,
-                    size: 'small'
+                    size: 'mini'
                 },
                 isInitPacRepo: false,
                 releaseParams: {
@@ -381,8 +391,7 @@
                     if (
                         this.isInitPacRepo
                         || this.scrollLoadmoreConf.isLoading
-                        || (this.scrollLoadmoreConf.total
-                            && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)
+                        || (this.scrollLoadmoreConf.total > 0 && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)
                     ) {
                         return
                     }
@@ -392,6 +401,7 @@
                         this.isInitPacRepo = true
                     } else {
                         this.scrollLoadmoreConf.isLoading = true
+                        this.scrollLoadmoreConf.page += 1
                     }
                     const { projectId } = this.$route.params
                     const { scmType } = this.releaseParams
@@ -404,7 +414,7 @@
                         pageSize: this.scrollLoadmoreConf.pageSize
                     })
                     Object.assign(this.scrollLoadmoreConf, {
-                        total: response.total,
+                        total: response.count,
                         page: response.page,
                         pageSize: response.pageSize
                     })
@@ -445,7 +455,7 @@
                         ...rest
                     } = this.releaseParams
                     const {
-                        data: { version, versionName, versionNum, targetUrl }
+                        data: { yamlInfo, version, versionName, versionNum, targetUrl }
                     } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -477,7 +487,12 @@
                         releaseVersionName: versionName,
                         canDebug: false,
                         canRelease: false,
-                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
+                        pipelineAsCodeSettings: {
+                            ...(this.pipelineInfo.pipelineAsCodeSettings ?? {}),
+                            enable: rest.enablePac
+                        },
+                        yamlInfo
                     })
 
                     const tipsI18nKey = this.releaseParams.enablePac
