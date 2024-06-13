@@ -78,7 +78,8 @@ class TxTemplateNotifyServiceImpl @Autowired constructor() : TemplateNotifyServi
             "publisher" to template.publisher,
             "nameInBody" to template.templateName,
             "templateStatusMsg" to template.templateStatusMsg,
-            "url" to templateDetailBaseUrl + template.templateCode
+            "url" to templateDetailBaseUrl + template.templateCode,
+            "versionDesc" to template.pubDescription
         )
         val receiver: String = template.creator
         val receivers = mutableSetOf(receiver)

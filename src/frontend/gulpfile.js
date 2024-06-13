@@ -46,7 +46,7 @@ async function getAssetsJSON (jsonUrl) {
     try {
         const res = await fetch(jsonUrl, {
             headers: {
-                'X-GATEWAY-TAG': env || ''
+                'X-GATEWAY-TAG': ['dev', 'test', 'stream', 'stream-gray'].includes(env) ? null : env
             }
         })
         const assets = await res.json()

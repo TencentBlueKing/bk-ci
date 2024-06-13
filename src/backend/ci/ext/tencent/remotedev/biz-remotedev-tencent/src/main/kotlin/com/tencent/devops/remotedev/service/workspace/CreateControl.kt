@@ -99,7 +99,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -129,7 +128,6 @@ class CreateControl @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
-    private val rabbitTemplate: RabbitTemplate,
     private val workspaceSharedDao: WorkspaceSharedDao
 ) {
     companion object {
@@ -349,7 +347,7 @@ class CreateControl @Autowired constructor(
         val workspaceNames = workspaceCreate.assignNames.ifEmpty {
             buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(projectId)) } }
         }
-        for (i in 0 until workspaceCreate.count) {
+        repeat(workspaceNames.size) { i ->
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = workspaceNames[i]
             val owner = workspaceCreate.assignOwners.getOrNull(i)
@@ -630,8 +628,10 @@ class CreateControl @Autowired constructor(
                     type = ws.workspaceSystemType
                 )
 
-                // 创建成功后做异步设置
-                workspaceCommon.makeDiskMount(ip, event.userId)
+                // 个人云桌面创建成功后做异步设置，团队项目改到分配时做L盘挂载
+                if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
+                    workspaceCommon.makeDiskMount(ip, event.userId)
+                }
 
                 // 给有cfs的机器绑定权限组
                 tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)
@@ -1028,7 +1028,7 @@ class CreateControl @Autowired constructor(
             buildList { repeat(workspaceCreate.count) { add(generateWorkspaceName(userId)) } }
         }
 
-        windowsGpuCheck(userId, workspaceNames.size)
+        whiteListService.windowsGpuCheck(userId, workspaceNames.size)
         workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
         val resourceCount = startCloudResourceCountCheck(
             type = workspaceCreate.windowsType, zone = workspaceCreate.windowsZone, quotaType = QuotaType.DEVCLOUD
@@ -1128,20 +1128,6 @@ class CreateControl @Autowired constructor(
             remoteDevSettingDao.fetchOneSetting(dslContext, userId)
         }
         return userProjectId
-    }
-
-    private fun windowsGpuCheck(userId: String, count: Int) {
-
-        whiteListService.windowsNumberLimit(
-            userId = userId,
-            value = workspaceDao.countUserWorkspace(
-                dslContext = dslContext,
-                userId = userId,
-                unionShared = false,
-                status = WorkspaceStatus.Types.USING.status(),
-                systemType = WorkspaceSystemType.WINDOWS_GPU
-            ) + count
-        )
     }
 
     private fun startCloudResourceCountCheck(type: String, zone: String, quotaType: QuotaType) =

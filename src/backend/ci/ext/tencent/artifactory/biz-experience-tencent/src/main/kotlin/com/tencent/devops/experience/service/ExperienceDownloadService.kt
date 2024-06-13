@@ -64,6 +64,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -184,7 +185,9 @@ class ExperienceDownloadService @Autowired constructor(
             val tail = ttl?.let { "&ttl=$ttl" } ?: ""
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
                     "/$projectId/$artifactoryType/filePlist" +
-                    "?experienceHashId=$experienceHashId&path=$path&x-devops-project-id=$projectId$tail"
+                    "?experienceHashId=$experienceHashId&path=${
+                        URLEncoder.encode(path, Charsets.UTF_8.toString()).replace("+", "%20")
+                    }&x-devops-project-id=$projectId$tail"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(

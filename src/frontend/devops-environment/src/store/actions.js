@@ -458,6 +458,9 @@ const actions = {
     // 查询agent任务具体日志
     getAgentTaskLog (_, { projectId, jobId, instanceId }) {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_log?instanceId=${instanceId}`)
+    },
+    enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
     }
 }
 

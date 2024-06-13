@@ -106,6 +106,19 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun checkUserInProjectLevelGroup(
+        token: String,
+        userId: String,
+        projectCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionProjectService.checkUserInProjectLevelGroup(
+                userId = userId,
+                projectCode = projectCode
+            )
+        )
+    }
+
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun checkManager(token: String, userId: String, projectId: String): Result<Boolean> {
         val result = permissionProjectService.checkProjectManager(userId, projectId) ||

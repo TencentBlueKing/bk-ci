@@ -178,22 +178,22 @@ class PipelineSettingDao {
                 setting.desc,
                 PipelineRunLockType.toValue(setting.runLockType),
                 setting.pipelineId,
-                setting.successSubscription.users,
-                setting.failSubscription.users,
-                setting.successSubscription.groups.joinToString(","),
-                setting.failSubscription.groups.joinToString(","),
-                setting.successSubscription.types.joinToString(",") { it.name },
-                setting.failSubscription.types.joinToString(",") { it.name },
-                setting.failSubscription.wechatGroupFlag,
-                setting.failSubscription.wechatGroup,
-                setting.failSubscription.wechatGroupMarkdownFlag,
-                setting.successSubscription.wechatGroupFlag,
-                setting.successSubscription.wechatGroup,
-                setting.successSubscription.wechatGroupMarkdownFlag,
-                setting.successSubscription.detailFlag,
-                setting.failSubscription.detailFlag,
-                setting.successSubscription.content,
-                setting.failSubscription.content,
+                setting.successSubscription?.users,
+                setting.failSubscription?.users,
+                setting.successSubscription?.groups?.joinToString(","),
+                setting.failSubscription?.groups?.joinToString(","),
+                setting.successSubscription?.types?.joinToString(",") { it.name },
+                setting.failSubscription?.types?.joinToString(",") { it.name },
+                setting.failSubscription?.wechatGroupFlag ?: false,
+                setting.failSubscription?.wechatGroup ?: "",
+                setting.failSubscription?.wechatGroupMarkdownFlag ?: false,
+                setting.successSubscription?.wechatGroupFlag ?: false,
+                setting.successSubscription?.wechatGroup ?: "",
+                setting.successSubscription?.wechatGroupMarkdownFlag ?: false,
+                setting.successSubscription?.detailFlag,
+                setting.failSubscription?.detailFlag,
+                setting.successSubscription?.content,
+                setting.failSubscription?.content,
                 DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
                 setting.maxQueueSize,
                 isTemplate,
@@ -210,22 +210,22 @@ class PipelineSettingDao {
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
                 .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
-                .set(SUCCESS_RECEIVER, setting.successSubscription.users)
-                .set(FAIL_RECEIVER, setting.failSubscription.users)
-                .set(SUCCESS_GROUP, setting.successSubscription.groups.joinToString(","))
-                .set(FAIL_GROUP, setting.failSubscription.groups.joinToString(","))
-                .set(SUCCESS_TYPE, setting.successSubscription.types.joinToString(",") { it.name })
-                .set(FAIL_TYPE, setting.failSubscription.types.joinToString(",") { it.name })
-                .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription.wechatGroupFlag)
-                .set(FAIL_WECHAT_GROUP, setting.failSubscription.wechatGroup)
-                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription.wechatGroupMarkdownFlag)
-                .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription.wechatGroupFlag)
-                .set(SUCCESS_WECHAT_GROUP, setting.successSubscription.wechatGroup)
-                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription.wechatGroupMarkdownFlag)
-                .set(SUCCESS_DETAIL_FLAG, setting.successSubscription.detailFlag)
-                .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
-                .set(SUCCESS_CONTENT, setting.successSubscription.content)
-                .set(FAIL_CONTENT, setting.failSubscription.content)
+                .set(SUCCESS_RECEIVER, setting.successSubscription?.users)
+                .set(FAIL_RECEIVER, setting.failSubscription?.users)
+                .set(SUCCESS_GROUP, setting.successSubscription?.groups?.joinToString(","))
+                .set(FAIL_GROUP, setting.failSubscription?.groups?.joinToString(","))
+                .set(SUCCESS_TYPE, setting.successSubscription?.types?.joinToString(",") { it.name })
+                .set(FAIL_TYPE, setting.failSubscription?.types?.joinToString(",") { it.name })
+                .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription?.wechatGroupFlag ?: false)
+                .set(FAIL_WECHAT_GROUP, setting.failSubscription?.wechatGroup ?: "")
+                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription?.wechatGroupMarkdownFlag ?: false)
+                .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription?.wechatGroupFlag ?: false)
+                .set(SUCCESS_WECHAT_GROUP, setting.successSubscription?.wechatGroup ?: "")
+                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription?.wechatGroupMarkdownFlag ?: false)
+                .set(SUCCESS_DETAIL_FLAG, setting.successSubscription?.detailFlag)
+                .set(FAIL_DETAIL_FLAG, setting.failSubscription?.detailFlag)
+                .set(SUCCESS_CONTENT, setting.successSubscription?.content)
+                .set(FAIL_CONTENT, setting.failSubscription?.content)
                 .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
@@ -442,8 +442,8 @@ class PipelineSettingDao {
                     users = t.successReceiver ?: "",
                     wechatGroupFlag = t.successWechatGroupFlag ?: false,
                     wechatGroup = t.successWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
-                    detailFlag = t.successDetailFlag,
+                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag ?: false,
+                    detailFlag = t.successDetailFlag ?: false,
                     content = t.successContent ?: ""
                 ).takeIf { successType.isNotEmpty() }
                 var oldFailSubscription = Subscription(
@@ -453,7 +453,7 @@ class PipelineSettingDao {
                     wechatGroupFlag = t.failWechatGroupFlag ?: false,
                     wechatGroup = t.failWechatGroup ?: "",
                     wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
-                    detailFlag = t.failDetailFlag,
+                    detailFlag = t.failDetailFlag ?: false,
                     content = t.failContent ?: ""
                 ).takeIf { failType.isNotEmpty() }
                 // 如果新数组有值，则老数据被替换为新数据的首个元素

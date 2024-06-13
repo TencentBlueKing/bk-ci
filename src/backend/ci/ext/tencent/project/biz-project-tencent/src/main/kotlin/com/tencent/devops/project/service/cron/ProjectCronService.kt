@@ -59,7 +59,7 @@ class ProjectCronService constructor(
     - 若部分管理员为 IEG 的，但项目所属组织架构不属于 IEG，需汇总到邮件中，需人工确认后，可以设置不告警
     - 邮件包括如下信息：项目名称、项目ID、项目所属组织架构、所属组织架构为IEG的管理员、所属组织架构为非IEG的管理员
      * */
-    @Scheduled(cron = "0 0 3 ? * MON")
+    @Scheduled(cron = "0 0 1 ? * MON")
     fun checkProjectOrganizationRegularly() {
         if (!enable) {
             return
@@ -149,8 +149,9 @@ class ProjectCronService constructor(
     }
 
     /**
-     * 定期上报货币化数据
+     * 每个月15号凌晨0点进行上报货币化数据
      * */
+    // @Scheduled(cron = "0 0 0 15 * ?")
     fun reportBillDataRegularly() {
         if (!enable) {
             return
