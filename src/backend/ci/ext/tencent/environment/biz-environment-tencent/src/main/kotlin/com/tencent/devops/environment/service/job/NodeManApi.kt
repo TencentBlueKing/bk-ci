@@ -97,6 +97,20 @@ class NodeManApi {
         }
     }
 
+    fun <T, U : Any> executePostRequestAddHeader(
+        req: T,
+        classOfU: Class<U>,
+        jobId: Int? = null,
+        addHeader: Map<String, String>
+    ): AgentOriginalResult<U> {
+        val (bkAuthorization, url) = getAgentAuthReq(jobId)
+        val headers = getAuthHeaderMap(bkAuthorization)
+        headers.putAll(addHeader)
+        val requestContent = mapper.writeValueAsString(req)
+        logger.info("[${getNodemanOperationName()}]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
+        return getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
+    }
+
     fun <T, U : Any> executePostRequest(req: T, classOfU: Class<U>, jobId: Int? = null): AgentOriginalResult<U> {
         val (bkAuthorization, url) = getAgentAuthReq(jobId)
         val headers = getAuthHeaderMap(bkAuthorization)

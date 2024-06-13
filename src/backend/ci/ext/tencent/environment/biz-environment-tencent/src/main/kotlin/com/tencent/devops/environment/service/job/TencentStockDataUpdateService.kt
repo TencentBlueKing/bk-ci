@@ -85,7 +85,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val cmdbNodeService: CmdbNodeService,
     private val redisOperation: RedisOperation,
     private val queryAgentStatusService: QueryAgentStatusService,
-    private val opService: OpService,
+    private val opService: OpService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentStockDataUpdateService::class.java)
@@ -398,7 +398,7 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     private fun batchUpdateAgent(
         existNodeIdToAgentVersionMap: Map<Long, AgentVersion>,
-        agentUpdateList: List<AgentVersion>,
+        agentUpdateList: List<AgentVersion>
     ) {
         val hostIdToAgentUpdateList = agentUpdateList.associateBy { it.bkHostId }
         val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }

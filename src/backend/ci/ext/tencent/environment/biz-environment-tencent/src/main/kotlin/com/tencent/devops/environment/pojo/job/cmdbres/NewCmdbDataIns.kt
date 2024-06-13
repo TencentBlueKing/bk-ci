@@ -54,7 +54,7 @@ data class NewCmdbDataIns(
         serverId: Long,
         maintainer: String?,
         maintainerBak: String?,
-        osName: String?,
+        osName: String?
     ) : this(
         serverId = serverId,
         maintainer = maintainer,

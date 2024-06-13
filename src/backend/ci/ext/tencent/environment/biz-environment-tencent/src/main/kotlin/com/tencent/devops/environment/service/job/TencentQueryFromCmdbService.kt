@@ -186,7 +186,7 @@ class TencentQueryFromCmdbService {
     private fun <T> queryNewCmdbInfo(
         path: String,
         newCmdbCondition: NewCmdbCondition<T>,
-        vararg newReqColumn: String,
+        vararg newReqColumn: String
     ): List<NewCmdbDataIns> {
         val newCmdbQueryInfoReq = NewCmdbQueryInfoReq(
             resultColumn = newReqColumn.toList(),

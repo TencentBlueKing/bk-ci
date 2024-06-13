@@ -148,6 +148,8 @@ data class AgentService @Autowired constructor(
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
 
+        private val LANGUAGE_HEADER_EN = mapOf("blueking-language" to "en")
+
         private const val GAUGE_NAME_ACTIVE_THREAD_COUNT = "activeThreadCount" // 活跃线程数
         private const val GAUGE_NAME_CORE_THREAD_COUNT = "coreThreadCount" // 核心线程数
         private const val GAUGE_NAME_MAX_THREAD_COUNT = "maxThreadCount" // 最大线程数
@@ -221,8 +223,8 @@ data class AgentService @Autowired constructor(
             replaceHostId = installAgentReq.replaceHostId,
             isInstallLatestPlugins = DEFAULT_NOT_INSTALL_LATEST_PLUGINS
         )
-        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> = nodeManApi.executePostRequest(
-            installAgentRequest, AgentInstallAgentResult::class.java
+        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> = nodeManApi.executePostRequestAddHeader(
+            installAgentRequest, AgentInstallAgentResult::class.java, null, LANGUAGE_HEADER_EN
         )
         val installAgentRes: AgentResult<InstallAgentResult> = AgentResult(
             code = agentInstallAgentRes.code,
@@ -342,7 +344,7 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
-        NodeManApi.setNodemanOperationName("queryAgentTaskStatus")
+        NodeManApi.setNodemanOperationName(::queryAgentTaskStatus.name)
         val queryAgentTaskStatusRequest = AgentQueryAgentTaskStatusReq(
             page = queryAgentTaskStatusReq.page,
             pageSize = queryAgentTaskStatusReq.pageSize

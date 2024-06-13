@@ -166,7 +166,7 @@ class QueryAgentStatusService @Autowired constructor(
     private fun queryAgentStatusFromNodeman(
         queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
-        NodeManApi.setNodemanOperationName("queryAgentStatusFromNodeman")
+        NodeManApi.setNodemanOperationName(::queryAgentStatusFromNodeman.name)
         val queryAgentStatusFromNodemanRequest = AgentQueryAgentStatusFromNodemanReq(
             bkHostId = queryAgentStatusFromNodemanReq.bkHostId,
             conditions = queryAgentStatusFromNodemanReq.conditions?.map {
