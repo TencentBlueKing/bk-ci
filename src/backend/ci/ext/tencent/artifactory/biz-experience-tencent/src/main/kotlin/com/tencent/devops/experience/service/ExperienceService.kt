@@ -109,6 +109,7 @@ import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -1025,7 +1026,8 @@ class ExperienceService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = e.projectId,
                     bundle = e.bundleIdentifier,
-                    platform = e.platform
+                    platform = e.platform,
+                    limit = BATCH_SEND_LIMIT
                 ).map { it.value2() }.toSet().subtract(innerReceivers)
                     .subtract(outerReceivers)
                 // 内部架构
@@ -1084,7 +1086,8 @@ class ExperienceService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = experienceRecord.projectId,
                 bundle = experienceRecord.bundleIdentifier,
-                platform = experienceRecord.platform
+                platform = experienceRecord.platform,
+                limit = BATCH_SEND_LIMIT
             ).map { it.value2() }.toSet().subtract(innerReceivers)
                 .subtract(outerReceivers)
             // 内部架构
@@ -1126,6 +1129,17 @@ class ExperienceService @Autowired constructor(
         outerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord
     ) {
+        if (outerReceivers.size > BATCH_SEND_LIMIT) {
+            logger.warn("sendMessageToOuterReceivers over limit , experienceId:${experienceRecord.id}")
+            client.get(ServiceNotifyResource::class).sendRtxNotify(
+                batchSendLimitMessage(
+                    experienceRecord.experienceName,
+                    "外部人员",
+                    experienceRecord.creator
+                )
+            )
+            return
+        }
         outerReceivers.forEach {
             val appMessage = AppNotifyUtil.makeMessage(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
@@ -1167,6 +1181,17 @@ class ExperienceService @Autowired constructor(
         deptUsers: Set<String>,
         experienceRecord: TExperienceRecord
     ) {
+        if (deptUsers.size > BATCH_SEND_LIMIT) {
+            logger.warn("sendMessageToDeptUsers over limit , experienceId:${experienceRecord.id}")
+            client.get(ServiceNotifyResource::class).sendRtxNotify(
+                batchSendLimitMessage(
+                    experienceRecord.experienceName,
+                    "组织架构人员",
+                    experienceRecord.creator
+                )
+            )
+            return
+        }
         deptUsers.forEach {
             val appMessage = AppNotifyUtil.makeMessage(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
@@ -1190,6 +1215,17 @@ class ExperienceService @Autowired constructor(
         pcUrl: String,
         appUrl: String
     ) {
+        if (innerReceivers.size > BATCH_SEND_LIMIT) {
+            logger.warn("sendMessageToInnerReceivers over limit , experienceId:${experienceRecord.id}")
+            client.get(ServiceNotifyResource::class).sendRtxNotify(
+                batchSendLimitMessage(
+                    experienceRecord.experienceName,
+                    "内部人员",
+                    experienceRecord.creator
+                )
+            )
+            return
+        }
         // 内部邮件
         if (notifyTypeList.contains(NotifyType.EMAIL)) {
             val message = EmailUtil.makeMessage(
@@ -1420,5 +1456,19 @@ class ExperienceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceService::class.java)
+
+        // 发送限制
+        private const val BATCH_SEND_LIMIT = 2000
+        fun batchSendLimitMessage(
+            experienceName: String,
+            type: String,
+            receiver: String
+        ): RtxNotifyMessage {
+            val message = RtxNotifyMessage()
+            message.addAllReceivers(setOf(receiver))
+            message.title = "体验【$experienceName】发送通知给【$type】失败"
+            message.body = "【$type】人数超过了限制, 最大通知人数为 $BATCH_SEND_LIMIT 人"
+            return message
+        }
     }
 }
