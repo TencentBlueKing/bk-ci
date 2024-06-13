@@ -50,7 +50,6 @@ import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -73,8 +72,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl,
-    private val xlsxExportService: WorkspaceXlsxExportService
+    private val deleteControl: DeleteControl
 ) : UserWorkspaceResource {
 
     @AuditEntry(actionId = ActionId.CGS_CREATE)
