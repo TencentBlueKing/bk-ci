@@ -87,6 +87,7 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
+import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -113,12 +114,12 @@ class CreateControl @Autowired constructor(
     private val whiteListService: WhiteListService,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val deliverControl: DeliverControl,
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
     private val notifyControl: NotifyControl,
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
-    private val workspaceSharedDao: WorkspaceSharedDao
+    private val workspaceSharedDao: WorkspaceSharedDao,
+    private val softwareManageService: SoftwareManageService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
@@ -586,7 +587,7 @@ class CreateControl @Autowired constructor(
             }
 
             if (ws.workspaceSystemType.needSafeInitialization()) {
-                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName)
+                softwareManageService.safeInitialization(ws.projectId, event.userId, event.workspaceName)
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
@@ -1003,14 +1004,5 @@ class CreateControl @Autowired constructor(
         }
         return subUserId.replace(Regex("[@_]"), "-") +
             "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
-    }
-
-    // 判断用户定义的镜像是否在默认镜像白名单列表中
-    fun isImageInDefaultList(image: String?, whitelist: Set<String>): Boolean {
-        if (image.isNullOrBlank()) return false
-        whitelist.forEach { cidr ->
-            if (image.contains(cidr)) return true
-        }
-        return false
     }
 }
