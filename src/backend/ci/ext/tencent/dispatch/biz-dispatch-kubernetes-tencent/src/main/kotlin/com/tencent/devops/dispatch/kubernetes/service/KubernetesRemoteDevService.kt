@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.apache.commons.lang3.RandomStringUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -115,6 +116,10 @@ class KubernetesRemoteDevService @Autowired constructor(
         taskId: String,
         type: UpdateEventType
     ): DispatchBuildTaskStatus {
+        TODO("Not yet implemented")
+    }
+
+    override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
         TODO("Not yet implemented")
     }
 

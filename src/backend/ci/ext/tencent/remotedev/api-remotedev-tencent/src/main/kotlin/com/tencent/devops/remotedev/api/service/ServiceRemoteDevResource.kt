@@ -361,6 +361,18 @@ interface ServiceRemoteDevResource {
         displayName: String
     ): Result<Boolean>
 
+    @Operation(summary = "工作空间扩展硬盘回调")
+    @POST
+    @Path("/workspace_expand_disk_callback")
+    fun workspaceExpandDiskCallback(
+        @QueryParam("taskId")
+        taskId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @QueryParam("operator")
+        operator: String
+    )
+
     @Operation(summary = "重装云桌面系统")
     @POST
     @Path("/workspace_rebuild")

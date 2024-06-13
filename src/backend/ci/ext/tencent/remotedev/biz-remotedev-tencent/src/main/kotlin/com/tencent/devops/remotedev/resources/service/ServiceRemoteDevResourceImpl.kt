@@ -489,6 +489,10 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.modifyWorkspaceDisplayName(userId, ip, displayName))
     }
 
+    override fun workspaceExpandDiskCallback(taskId: String, workspaceName: String, operator: String) {
+        expertSupportService.expandDiskCallback(taskId, workspaceName, operator)
+    }
+
     override fun reBuildWorkspace(
         userId: String,
         workspaceName: String,
