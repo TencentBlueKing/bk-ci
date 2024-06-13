@@ -8,9 +8,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Tag(name = "OP_CODE_PROY", description = "OP_CODE_PROY")
 @Path("/op/codeproxy")
@@ -24,14 +22,4 @@ interface OpCodeProxyResource {
     fun tgitlink(
         data: CallbackLinktgitData
     ): Result<Map<Long, Boolean>>
-
-    @POST
-    @Path("/refresh/tGitAcl")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun refreshTGitAcl(
-        @QueryParam("projectId")
-        projectId: String?,
-        @QueryParam("export")
-        export: Boolean?
-    ): Response?
 }

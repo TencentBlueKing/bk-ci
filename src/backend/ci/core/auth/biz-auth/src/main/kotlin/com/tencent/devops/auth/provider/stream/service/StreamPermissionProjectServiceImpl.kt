@@ -68,6 +68,10 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
         return streamPermissionService.isProjectMember(projectCode, userId).first
     }
 
+    override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
+        return true
+    }
+
     override fun checkProjectManager(
         userId: String,
         projectCode: String

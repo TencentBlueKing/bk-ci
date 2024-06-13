@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
-import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
@@ -237,7 +236,7 @@ interface UserPipelineVersionResource {
         @Parameter(description = "每页多少条", required = false, example = "5")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<PipelineVersionWithInfo>>
+    ): Result<Page<PipelineVersionSimple>>
 
     @Operation(summary = "获取指定版本号的流水线编排版本信息")
     @GET
@@ -255,7 +254,7 @@ interface UserPipelineVersionResource {
         @Parameter(description = "跳转定位的版本号", required = false)
         @PathParam("version")
         version: Int
-    ): Result<PipelineVersionWithInfo>
+    ): Result<PipelineVersionSimple>
 
     @Operation(summary = "获取流水线操作日志列表（分页）")
     @GET

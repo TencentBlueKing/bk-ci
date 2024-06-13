@@ -275,6 +275,7 @@ class PipelineResourceDao {
                     yaml = record.yaml,
                     yamlVersion = record.yamlVersion,
                     creator = record.creator ?: "unknown",
+                    updater = null,
                     versionName = versionName,
                     createTime = record.createTime,
                     updateTime = null,
