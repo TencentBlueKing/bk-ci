@@ -441,13 +441,15 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
         pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
             version = result.version,
             versionNum = result.versionNum,
             versionName = result.versionName,
-            targetUrl = targetUrl
+            targetUrl = targetUrl,
+            yamlInfo = yamlInfo
         )
     }
 
