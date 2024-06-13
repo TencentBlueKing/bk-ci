@@ -106,6 +106,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun checkUserInProjectLevelGroup(
         token: String,
         userId: String,
