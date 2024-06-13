@@ -33,7 +33,7 @@ data class NewCmdbCondition<T>(
     @get:Schema(title = "主机ID")
     val serverId: NewCmdbConditionValue<T>? = null,
     @get:Schema(title = "IP地址")
-    val ip: NewCmdbConditionValue<T>? = null,
+    val serverIp: NewCmdbConditionValue<T>? = null,
     @get:Schema(title = "主负责人")
     val maintainer: NewCmdbConditionValue<T>? = null,
     @get:Schema(title = "备份负责人")

@@ -686,7 +686,7 @@ class CmdbNodeService @Autowired constructor(
     ): Map<String, NewCmdbDataIns> {
         val cmdbInfoList = tencentQueryFromCmdbService.queryNewCmdbInfoByBaseCondition(
             newCmdbCondition = NewCmdbCondition(
-                ip = NewCmdbConditionValue(
+                serverIp = NewCmdbConditionValue(
                     operator = CMDB_QUERY_OPERATION_IN,
                     value = nodeIpList.toList()
                 )

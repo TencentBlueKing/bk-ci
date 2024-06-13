@@ -514,7 +514,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         // 3. 请求cmdb，查询serverId，得到：ip - cmdbInfo
         val cmdbInfo = tencentQueryFromCmdbService.queryNewCmdbInfoByBaseCondition(
             newCmdbCondition = NewCmdbCondition(
-                ip = NewCmdbConditionValue(
+                serverIp = NewCmdbConditionValue(
                     operator = CmdbNodeService.CMDB_QUERY_OPERATION_IN,
                     value = nodeIpList.toList()
                 )
