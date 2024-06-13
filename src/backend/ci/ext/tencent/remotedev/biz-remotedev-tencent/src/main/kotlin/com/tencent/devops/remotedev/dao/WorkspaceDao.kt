@@ -710,28 +710,6 @@ class WorkspaceDao {
         }
     }
 
-    fun fetchDailyCgsData(
-        dslContext: DSLContext
-    ): Result<out Record>? {
-        with(TWorkspace.T_WORKSPACE) {
-            return dslContext.select(
-                OWNER_TYPE, DSL.count(ID).`as`("VALUE"),
-                DSL.field("DATE_FORMAT(CURDATE(), '%Y-%m-%d')").`as`("CUR_DATE")
-            ).from(this)
-                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
-                .and(
-                    STATUS.notIn(
-                        WorkspaceStatus.DELETED.ordinal,
-                        WorkspaceStatus.PREPARING.ordinal,
-                        WorkspaceStatus.DELIVERING.ordinal,
-                        WorkspaceStatus.DELIVERING_FAILED.ordinal
-                    )
-                )
-                .groupBy(OWNER_TYPE)
-                .fetch()
-        }
-    }
-
     // 获取正常状态的 workspace ip
     fun fetchProjectIp(
         dslContext: DSLContext,
@@ -747,25 +725,6 @@ class WorkspaceDao {
                         WorkspaceStatus.DELIVERING_FAILED.ordinal
                     )
                 ).fetch().map { it.hostName }.filter { !it.isNullOrBlank() }.toSet()
-        }
-    }
-
-    fun fetchWorkspaceByIp(
-        dslContext: DSLContext,
-        ip: String
-    ): List<TWorkspaceRecord> {
-        with(TWorkspace.T_WORKSPACE) {
-            return dslContext.selectFrom(this)
-                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
-                .and(
-                    STATUS.notIn(
-                        WorkspaceStatus.PREPARING.ordinal,
-                        WorkspaceStatus.DELETED.ordinal,
-                        WorkspaceStatus.DELIVERING_FAILED.ordinal
-                    )
-                )
-                .and(HOST_NAME.like("%.$ip"))
-                .fetch()
         }
     }
 
