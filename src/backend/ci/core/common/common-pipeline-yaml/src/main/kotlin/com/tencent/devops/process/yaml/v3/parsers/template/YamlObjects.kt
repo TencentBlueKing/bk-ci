@@ -134,7 +134,7 @@ object YamlObjects {
                 key = "metadata",
                 map = propsMap
             ),
-            payload = propsMap["glob"]
+            payload = propsMap["payload"]
         )
 
         if (!po.options.isNullOrEmpty() && po.payload != null) {
