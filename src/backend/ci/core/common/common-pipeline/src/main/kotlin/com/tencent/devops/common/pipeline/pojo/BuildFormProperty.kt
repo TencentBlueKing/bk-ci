@@ -37,7 +37,7 @@ data class BuildFormProperty(
     var id: String,
     @get:Schema(title = "元素名称", required = true)
     var name: String? = null,
-    @get:Schema(title = "是否必须（新前端的入参）", required = true)
+    @get:Schema(title = "是否必须（新前端的入参标识）", required = true)
     var required: Boolean,
     @get:Schema(title = "是否为常量", required = true)
     var constant: Boolean? = false,
