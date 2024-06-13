@@ -84,7 +84,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         if (!branch.isNullOrBlank()) {
             startParams[KEY_BRANCH] = branch
         }
-        startParams[ExtServiceImageInfoDTO::imageName.name] = extServiceBaseInfo.extServiceImageInfo.imageName
+        startParams[ExtServiceImageInfoDTO::serviceName.name] = extServiceBaseInfo.extServiceImageInfo.serviceName
         startParams[ExtServiceImageInfoDTO::imageTag.name] = extServiceBaseInfo.extServiceImageInfo.imageTag
         startParams[ExtServiceImageInfoDTO::username.name] = extServiceBaseInfo.extServiceImageInfo.username
         startParams[ExtServiceImageInfoDTO::password.name] = extServiceBaseInfo.extServiceImageInfo.password

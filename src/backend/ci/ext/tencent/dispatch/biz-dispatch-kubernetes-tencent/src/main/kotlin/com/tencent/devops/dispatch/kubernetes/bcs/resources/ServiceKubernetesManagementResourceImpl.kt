@@ -65,10 +65,6 @@ class ServiceKubernetesManagementResourceImpl @Autowired constructor(
         return bcsDeployService.deployApp(userId, deployApp)
     }
 
-    override fun bcsStopApp(userId: String, stopApp: StopApp): Result<Boolean> {
-        return bcsDeployService.stopBcsApp(userId, stopApp)
-    }
-
     override fun stopApp(userId: String, stopApp: StopApp): Result<Boolean> {
         return bcsDeployService.stopApp(userId, stopApp)
     }

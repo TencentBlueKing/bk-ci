@@ -204,7 +204,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
         val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
-            imageName = serviceCode,
+            serviceName = serviceCode,
             imageTag = version,
             repoProjectCode = extServiceImageSecretConfig.imageRepoProject,
             repoName = extServiceImageSecretConfig.imageRepoName,

@@ -83,17 +83,6 @@ interface ServiceKubernetesManagementResource {
         deployApp: DeployApp
     ): Result<Boolean>
 
-    @Operation(summary = "bcs停止部署应用")
-    @Path("/stop/bcs/app")
-    @DELETE
-    fun bcsStopApp(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "停止部署请求对象")
-        stopApp: StopApp
-    ): Result<Boolean>
-
     @Operation(summary = "停止部署应用")
     @Path("/stop/app")
     @DELETE
