@@ -132,7 +132,7 @@ class StartWorkspaceService @Autowired constructor(
         // 获取当前项目下的所有用户做过滤
         // 先使用云桌面做判断
         val projectId = record.first().projectId
-        val currUsers = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId, false)
+        val currUsers = workspaceJoinDao.fetchProjectSharedUser(dslContext, setOf(projectId))
         val subUsers = users.subtract(currUsers)
         if (subUsers.isEmpty()) {
             return true
