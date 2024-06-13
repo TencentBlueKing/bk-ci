@@ -28,6 +28,7 @@
     "babel-loader": "^8.2.2",
     "css-loader": "^6.11.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
+    "babel-preset-peer-bk": "0.0.2",
     "mini-css-extract-plugin": "^2.9.0",
     "postcss": "~8.4.16",
     "postcss-import": "^15.0.0",

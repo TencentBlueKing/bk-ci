@@ -1,11 +1,10 @@
-import http from './fetch';
 import {
-  API_PERFIX,
-  STORE_PERFIX,
-  PROJECT_PERFIX,
   IAM_PERFIX,
   ITSM_PERFIX,
+  PROJECT_PERFIX,
+  STORE_PERFIX
 } from './constants';
+import http from './fetch';
 export default {
   getUser() {
     return http.get(`${PROJECT_PERFIX}/user/users`);
@@ -93,7 +92,7 @@ export default {
   enabledProject(params: any) {
     const { projectId, enable } = params;
     return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}/enable?enabled=${enable}`);
-  };
+  },
 
   /**
    * 取消创建项目
