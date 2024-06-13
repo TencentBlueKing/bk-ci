@@ -254,6 +254,8 @@ class PipelineBuildFacadeService(
                 param.value = if (param.constant == true) {
                     param.readOnly = true
                     param.defaultValue
+                } else if (!param.required) {
+                    param.defaultValue
                 } else if (param.defaultValue is Boolean) {
                     realValue?.toString()?.toBoolean()
                 } else {
@@ -1984,14 +1986,17 @@ class PipelineBuildFacadeService(
                     permission = AuthPermission.VIEW
                 )
             }
-            // 如果请求的参数是草稿版本的版本号，则返回调试记录，否则提示不是草稿版本
-            val targetDebugVersion = customVersion?.takeIf {
-                pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId, pipelineId = pipelineId,
-                    version = customVersion, includeDraft = true
-                )?.status == VersionStatus.COMMITTING
-            }
-            if (customVersion != null && targetDebugVersion != null) {
+            // 如果请求的参数是草稿版本的版本号，则返回调试记录，如果是当前正式版本则返回正式记录
+            // 否则按版本查询返回空数据
+            val customResource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId, pipelineId = pipelineId,
+                version = customVersion, includeDraft = true
+            )
+            val targetDebugVersion = if (customResource?.status == VersionStatus.COMMITTING) {
+                customVersion
+            } else if (customResource?.version == pipelineInfo.version) {
+                null
+            } else {
                 return BuildHistoryPage(
                     page = pageNotNull,
                     pageSize = limit,

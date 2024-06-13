@@ -1162,6 +1162,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkTemplate: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED
     ): DeployPipelineResult {
+        // fix 用户端可能不传入pipelineId和projectId的问题，或者传错的问题
+        setting.pipelineId = pipelineId
+        setting.projectId = projectId
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -1185,7 +1188,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (setting.projectId.isBlank()) {
             setting.projectId = projectId
         }
-        setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
 
         return pipelineResult
     }

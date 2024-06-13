@@ -442,8 +442,8 @@ class PipelineSettingDao {
                     users = t.successReceiver ?: "",
                     wechatGroupFlag = t.successWechatGroupFlag ?: false,
                     wechatGroup = t.successWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
-                    detailFlag = t.successDetailFlag,
+                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag ?: false,
+                    detailFlag = t.successDetailFlag ?: false,
                     content = t.successContent ?: ""
                 ).takeIf { successType.isNotEmpty() }
                 var oldFailSubscription = Subscription(
@@ -453,7 +453,7 @@ class PipelineSettingDao {
                     wechatGroupFlag = t.failWechatGroupFlag ?: false,
                     wechatGroup = t.failWechatGroup ?: "",
                     wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
-                    detailFlag = t.failDetailFlag,
+                    detailFlag = t.failDetailFlag ?: false,
                     content = t.failContent ?: ""
                 ).takeIf { failType.isNotEmpty() }
                 // 如果新数组有值，则老数据被替换为新数据的首个元素
