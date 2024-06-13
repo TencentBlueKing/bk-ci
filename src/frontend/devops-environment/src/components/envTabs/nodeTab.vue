@@ -642,6 +642,9 @@
             handleRowClassName ({ row, rowIndex }) {
                 return row.envEnableNode ? '' : 'useless'
             },
+            handlePageChange (page) {
+                this.pagination.current = page
+            },
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit

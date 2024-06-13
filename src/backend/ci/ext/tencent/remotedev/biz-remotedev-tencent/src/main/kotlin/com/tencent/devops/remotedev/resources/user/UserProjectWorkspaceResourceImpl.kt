@@ -139,7 +139,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean> {
-        deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
+        deliverControl.assignUser2Workspace(userId, workspaceName, assigns)
         return Result(true)
     }
 
@@ -149,19 +149,19 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        startWorkspaceHandler.startWorkspace(userId, projectId, workspaceName)
+        startWorkspaceHandler.startWorkspace(userId, workspaceName)
         return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        stopWorkspaceHandler.stopWorkspace(userId, projectId, workspaceName)
+        stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
         return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.CGS_RESTART)
     override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        restartWorkspaceHandler.restartWorkspace(userId, projectId, workspaceName)
+        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
         return Result(true)
     }
 
@@ -172,7 +172,11 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean> {
-        makeWorkspaceImageHandler.makeWorkspaceImage(userId, projectId, workspaceName, makeImageReq)
+        makeWorkspaceImageHandler.makeWorkspaceImage(
+            userId = userId,
+            workspaceName = workspaceName,
+            makeImageReq = makeImageReq
+        )
         return Result(true)
     }
 
@@ -196,7 +200,11 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         rebuildReq: WorkspaceRebuildReq
     ): Result<Boolean> {
-        rebuildWorkspaceHandler.rebuildWorkspace(userId, projectId, workspaceName, rebuildReq)
+        rebuildWorkspaceHandler.rebuildWorkspace(
+            userId = userId,
+            workspaceName = workspaceName,
+            rebuildReq = rebuildReq
+        )
         return Result(true)
     }
 

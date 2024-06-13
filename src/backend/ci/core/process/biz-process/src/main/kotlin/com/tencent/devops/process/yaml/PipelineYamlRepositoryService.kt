@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -231,6 +232,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
         val ref = GitActionCommon.getRealRef(action = action, branch = branch)
+        val yamlInfo = PipelineYamlVo(
+            repoHashId = repoHashId,
+            filePath = yamlFile.yamlPath
+        )
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
@@ -241,7 +246,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
             description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
-            })
+            }),
+            yamlInfo = yamlInfo
         )
         val pipelineId = deployPipelineResult.pipelineId
         val version = deployPipelineResult.version
@@ -296,7 +302,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
         } ?: LocalDateTime.now()
         // 如果是fork仓库,ref应该加上fork库的namespace
         val ref = GitActionCommon.getRealRef(action = action, branch = branch)
+        val repoHashId = action.data.setting.repoHashId
 
+        val yamlInfo = PipelineYamlVo(
+            repoHashId = repoHashId,
+            filePath = yamlFile.yamlPath
+        )
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
@@ -308,10 +319,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
             description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
-            })
+            }),
+            yamlInfo = yamlInfo
         )
         val version = deployPipelineResult.version
-        val repoHashId = action.data.setting.repoHashId
+
         val webhooks = getWebhooks(
             projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId
         )

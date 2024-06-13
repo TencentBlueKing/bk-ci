@@ -364,7 +364,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 content = draftVersion.yaml ?: "",
                 commitMessage = request.description ?: "update",
                 repoHashId = yamlInfo.repoHashId,
-                scmType = yamlInfo.scmType,
+                scmType = yamlInfo.scmType!!,
                 filePath = filePath,
                 targetAction = targetAction
             )
