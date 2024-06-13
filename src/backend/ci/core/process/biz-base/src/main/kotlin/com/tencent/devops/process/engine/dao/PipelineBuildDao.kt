@@ -468,39 +468,44 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         buildNum: Int?,
-        statusSet: Set<BuildStatus>?
+        statusSet: Set<BuildStatus>?,
+        debug: Boolean
     ): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            val select = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+        return if (debug) {
+            with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                val select = dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(DELETE_TIME.isNull)
 
-            if (!statusSet.isNullOrEmpty()) {
-                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
-            }
+                if (!statusSet.isNullOrEmpty()) {
+                    select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                }
 
-            if (buildNum != null && buildNum > 0) {
-                select.and(BUILD_NUM.eq(buildNum))
-            } else { // 取最新的
-                select.orderBy(BUILD_NUM.desc()).limit(1)
+                if (buildNum != null && buildNum > 0) {
+                    select.and(BUILD_NUM.eq(buildNum))
+                } else { // 取最新的
+                    select.orderBy(BUILD_NUM.desc()).limit(1)
+                }
+                select.fetchOne(debugMapper)
             }
-            select.fetchOne(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            val select = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(DELETE_TIME.isNull)
+        } else {
+            with(T_PIPELINE_BUILD_HISTORY) {
+                val select = dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
 
-            if (!statusSet.isNullOrEmpty()) {
-                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
-            }
+                if (!statusSet.isNullOrEmpty()) {
+                    select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                }
 
-            if (buildNum != null && buildNum > 0) {
-                select.and(BUILD_NUM.eq(buildNum))
-            } else { // 取最新的
-                select.orderBy(BUILD_NUM.desc()).limit(1)
+                if (buildNum != null && buildNum > 0) {
+                    select.and(BUILD_NUM.eq(buildNum))
+                } else { // 取最新的
+                    select.orderBy(BUILD_NUM.desc()).limit(1)
+                }
+                select.fetchOne(mapper)
             }
-            select.fetchOne(debugMapper)
         }
     }
 

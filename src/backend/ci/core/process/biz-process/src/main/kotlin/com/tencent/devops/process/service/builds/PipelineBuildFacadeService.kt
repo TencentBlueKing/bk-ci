@@ -254,6 +254,8 @@ class PipelineBuildFacadeService(
                 param.value = if (param.constant == true) {
                     param.readOnly = true
                     param.defaultValue
+                } else if (!param.required) {
+                    param.defaultValue
                 } else if (param.defaultValue is Boolean) {
                     realValue?.toString()?.toBoolean()
                 } else {
@@ -1949,7 +1951,7 @@ class PipelineBuildFacadeService(
         startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
         archiveFlag: Boolean? = false,
-        debugVersion: Int?
+        customVersion: Int?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1984,10 +1986,25 @@ class PipelineBuildFacadeService(
                     permission = AuthPermission.VIEW
                 )
             }
-            // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
-            val targetDebugVersion = debugVersion?.takeIf {
-                val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
-                draftVersion?.version == debugVersion
+            // 如果请求的参数是草稿版本的版本号，则返回调试记录，如果是当前正式版本则返回正式记录
+            // 否则按版本查询返回空数据
+            val customResource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId, pipelineId = pipelineId,
+                version = customVersion, includeDraft = true
+            )
+            val targetDebugVersion = if (customResource?.status == VersionStatus.COMMITTING) {
+                customVersion
+            } else if (customResource?.version == pipelineInfo.version) {
+                null
+            } else {
+                return BuildHistoryPage(
+                    page = pageNotNull,
+                    pageSize = limit,
+                    count = 0,
+                    records = emptyList(),
+                    hasDownloadPermission = false,
+                    pipelineVersion = pipelineInfo.version
+                )
             }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
@@ -2202,6 +2219,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
+        buildId: String?,
         channelCode: ChannelCode
     ): BuildHistory? {
         val statusSet = mutableSetOf<BuildStatus>()
@@ -2214,11 +2232,15 @@ class PipelineBuildFacadeService(
                 }
             }
         }
+        val buildInfo = buildId?.let {
+            pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
+        }
         val buildHistory = pipelineRuntimeService.getBuildHistoryByBuildNum(
             projectId = projectId,
             pipelineId = pipelineId,
             buildNum = buildNum,
-            statusSet = statusSet
+            statusSet = statusSet,
+            debug = buildInfo?.debug
         )
         logger.info("[$pipelineId]|buildHistory=$buildHistory")
         return buildHistory
@@ -2227,13 +2249,18 @@ class PipelineBuildFacadeService(
     fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
+        buildId: String?,
         channelCode: ChannelCode
     ): BuildHistory? {
+        val buildInfo = buildId?.let {
+            pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
+        }
         val buildHistory = pipelineRuntimeService.getBuildHistoryByBuildNum(
             projectId = projectId,
             pipelineId = pipelineId,
             buildNum = -1,
-            statusSet = setOf(BuildStatus.SUCCEED)
+            statusSet = setOf(BuildStatus.SUCCEED),
+            debug = buildInfo?.debug
         )
         logger.info("[$pipelineId]|buildHistory=$buildHistory")
         return buildHistory

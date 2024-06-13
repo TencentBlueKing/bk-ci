@@ -28,6 +28,7 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 
@@ -103,7 +104,7 @@ object PipelineVersionUtils {
         val newStages = newModel.stages.drop(1)
         val originParams = (originModel.stages.first().containers.first() as TriggerContainer).params
         val newParams = (newModel.stages.first().containers.first() as TriggerContainer).params
-        return if (originStages == newStages && originParams == newParams) {
+        return if (originStages.differ(newStages) && originParams == newParams) {
             currVersion
         } else {
             currVersion + 1
@@ -119,5 +120,27 @@ object PipelineVersionUtils {
         newSetting: PipelineSettingVersion
     ): Int {
         return if (originSetting == newSetting) currVersion else currVersion + 1
+    }
+
+    private fun List<Stage>.differ(other: List<Stage>): Boolean {
+        if (this != other && this.size != other.size) return false
+        this.forEachIndexed { sIndex, thisStage ->
+            val otherStage = other[sIndex]
+            if (thisStage != otherStage && thisStage.containers.size != otherStage.containers.size) {
+                return false
+            }
+            thisStage.containers.forEachIndexed { cIndex, thisContainer ->
+                val otherContainer = otherStage.containers[cIndex]
+                if (thisContainer != otherContainer && thisContainer.elements.size != otherContainer.elements.size) {
+                    return false
+                }
+                thisContainer.elements.forEachIndexed { eIndex, thisElement ->
+                    val otherElement = otherContainer.elements[eIndex]
+                    if (thisElement != otherElement) return false
+                    if (thisElement.additionalOptions != otherElement.additionalOptions) return false
+                }
+            }
+        }
+        return true
     }
 }
