@@ -259,8 +259,6 @@ class PipelineBuildDao {
             if (!statusSet.isNullOrEmpty()) {
                 where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
-            // 增加过滤，对前端屏蔽已删除的构建
-            where.and(DELETE_TIME.isNull)
             where.fetch(debugMapper)
         } else normal
     }
@@ -325,8 +323,6 @@ class PipelineBuildDao {
         } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
-                // 增加过滤，对前端屏蔽已删除的构建
-                .and(DELETE_TIME.isNull)
                 .fetchAny(debugMapper)
         }
     }
@@ -476,8 +472,6 @@ class PipelineBuildDao {
                 val select = dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
-                    .and(DELETE_TIME.isNull)
-
                 if (!statusSet.isNullOrEmpty()) {
                     select.and(STATUS.`in`(statusSet.map { it.ordinal }))
                 }
