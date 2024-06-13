@@ -331,8 +331,6 @@ class WorkspaceJoinDao {
             conditions.add(sql)
         }
 
-
-
         return dslContext.select(checkField)
             .from(TWorkspace.T_WORKSPACE)
             .joinTable(search)
