@@ -122,20 +122,14 @@ class TCloudCfsService @Autowired constructor(
         projectTCloudCfsDao.add(dslContext, projectId, cfsId, region, pgId)
 
         // 将所有这个项目下的ip都添加到权限组
-        val ips = workspaceJoinDao.limitFetchProjectWorkspace(
+        val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
-            null,
-            queryType = QueryType.WEB,
-            search = WorkspaceSearch(
-                projectId = listOf(projectId),
-                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
-                onFuzzyMatch = false
-            )
-        )?.filter { !it.hostName.isNullOrBlank() }?.map {
-            it.hostName?.split(".")?.let { host ->
+            projectId = projectId
+        ).filter { !it.hostIp.isNullOrBlank() }.map {
+            it.hostIp?.split(".")?.let { host ->
                 host.subList(1, host.size).joinToString(separator = ".")
             }!!
-        }?.toSet() ?: return
+        }.toSet()
 
         // 获取下现有的rule过滤
         val rules = try {

@@ -116,12 +116,13 @@ class DispatchWorkspaceDao {
     }
 
     fun deleteWorkspace(
+        dslContext: DSLContext,
         workspaceName: String,
-        dslContext: DSLContext
+        bakWorkspaceName: String?
     ): Int {
         with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             return dslContext.update(this)
-                .set(WORKSPACE_NAME, "$workspaceName [deleted]")
+                .set(WORKSPACE_NAME, bakWorkspaceName ?: "$workspaceName [deleted]")
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .execute()
         }

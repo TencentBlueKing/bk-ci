@@ -308,30 +308,21 @@ class StartCloudRemoteDevService @Autowired constructor(
             return false
         }
         if (task.action == EnvironmentAction.UPGRADE_VM && task.status == EnvironmentActionStatus.PENDING) {
-            if (taskStatus.status == TaskStatusEnum.successed) {
+            val result =  kotlin.runCatching {
+                client.get(ServiceRemoteDevResource::class)
+                    .createWinWorkspaceByVm(
+                        userId = task.operator,
+                        oldWorkspaceName = task.workspaceName,
+                        projectId = null,
+                        ownerType = null,
+                        uid = taskStatus.uid
+                    ).data!!
+            }.onFailure {
+                logger.warn("workspaceTaskCallback|upgradeVm error ${it.message}", it)
+            }.getOrElse { false }
+            if (result) {
                 dispatchWorkspaceOpHisDao.update(
                     dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
-                )
-                val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
-                    logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
-                    return false
-                }
-                kotlin.runCatching {
-                    val result = client.get(ServiceRemoteDevResource::class).upgradeVm(
-                        userId = oldWs.userId,
-                        oldWorkspaceName = oldWs.workspaceName,
-                        uid = taskStatus.uid
-                    ).data
-                    if (result != true) {
-                        logger.warn("workspaceTaskCallback|upgradeVm fail")
-                    }
-                }.onFailure {
-                    logger.warn("workspaceTaskCallback|upgradeVm error ${it.message}", it)
-                }
-                dispatchWorkspaceDao.updateWorkspaceStatus(
-                    workspaceName = task.workspaceName,
-                    status = EnvStatusEnum.running,
-                    dslContext = dslContext
                 )
             } else {
                 dispatchWorkspaceOpHisDao.update(

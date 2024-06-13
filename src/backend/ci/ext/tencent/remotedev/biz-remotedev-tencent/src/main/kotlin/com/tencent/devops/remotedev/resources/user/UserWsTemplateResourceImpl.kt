@@ -31,22 +31,18 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
-import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
-class UserWsTemplateResourceImpl @Autowired constructor(
-    private val workspaceTemplateService: WorkspaceTemplateService
-
-) : UserWsTemplateResource {
+@Deprecated("LINUX 待删除")
+class UserWsTemplateResourceImpl : UserWsTemplateResource {
     companion object {
         val logger = LoggerFactory.getLogger(UserWsTemplateResourceImpl::class.java)!!
     }
 
     override fun getWorkspaceTemplateList(userId: String): Result<List<WorkspaceTemplate>> {
         logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|$userId")
-        return Result(workspaceTemplateService.getWorkspaceTemplateList())
+        return Result(emptyList())
     }
 }

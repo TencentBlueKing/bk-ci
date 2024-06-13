@@ -54,22 +54,18 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
-import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -80,16 +76,12 @@ class StartControl @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val bkTicketServie: BkTicketService,
     private val workspaceCommon: WorkspaceCommon,
-    private val notifyControl: NotifyControl,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -135,12 +127,6 @@ class StartControl @Autowired constructor(
                             userId, workspaceName,
                             workspace.workspaceMountType
                         )
-                    bkTicketServie.updateBkTicket(
-                        userId,
-                        bkTicket,
-                        workspaceInfo.data?.environmentHost,
-                        workspace.workspaceMountType
-                    )
 
                     return WorkspaceResponse(
                         workspaceName = workspaceName,
@@ -184,12 +170,6 @@ class StartControl @Autowired constructor(
                             userId = userId,
                             traceId = bizId,
                             type = UpdateEventType.START,
-                            sshKeys = sshService.getSshPublicKeys4Ws(
-                                workspaceDao.fetchWorkspaceUser(
-                                    dslContext,
-                                    workspaceName
-                                ).toSet()
-                            ),
                             workspaceName = workspace.workspaceName,
                             settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                             bkTicket = bkTicket,
@@ -263,14 +243,11 @@ class StartControl @Autowired constructor(
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
         doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
-        if (event.status) {
-            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
-        }
     }
 
     fun doStartWS(
@@ -328,16 +305,6 @@ class StartControl @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
-            }
-
-            workspaceCommon.updateWorkspaceDetail(
-                workspaceName,
-                workspace.projectId,
-                workspace.workspaceMountType,
-                workspace.ownerType
-            )
-            if (workspace.workspaceSystemType.needHeartbeat()) {
-                redisHeartBeat.refreshHeartbeat(workspaceName)
             }
         } else {
             // 启动失败,记录为EXCEPTION

@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -52,14 +53,12 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -81,11 +80,11 @@ class SleepControl @Autowired constructor(
     private val permissionService: PermissionService,
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
-    private val redisHeartBeat: RedisHeartBeat,
     private val workspaceCommon: WorkspaceCommon,
     private val notifyControl: NotifyControl,
     private val bkBaseService: BKBaseService,
-    private val holidayHelper: HolidayHelper
+    private val holidayHelper: HolidayHelper,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
 
     companion object {
@@ -310,23 +309,22 @@ class SleepControl @Autowired constructor(
         val limitDay = holidayHelper.getLastWorkingDays(7).last()
         val logins = bkBaseService.fetchOnlineIps(limitDay)
         logger.info("autoDeleteWhenSleep7Day|$limitDay|${logins.size}")
-        workspaceDao.fetchWorkspace(
+        workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
             status = WorkspaceStatus.RUNNING,
-            systemType = WorkspaceSystemType.WINDOWS_GPU,
             ownerType = WorkspaceOwnerType.PROJECT
-        )?.parallelStream()?.forEach { workspace ->
+        ).parallelStream().forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay &&
-                workspace.hostName != null && workspace.hostName !in logins
+                workspace.hostIp != null && workspace.hostIp !in logins
             ) {
                 logger.info(
                     "ready to sleep when not login 7 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostIp}"
                 )
                 readySleepWorkspace.add(
-                    "project=${workspace.projectId}, ip=${workspace.hostName}," +
-                            " 原因=超过7天未登陆(最近登陆时间: ${logins[workspace.hostName]}" +
-                            " 早于检测时间 ${limitDay.format(formatter)})"
+                    "project=${workspace.projectId}, ip=${workspace.hostIp}," +
+                        " 原因=超过7天未登陆(最近登陆时间: ${logins[workspace.hostIp]}" +
+                        " 早于检测时间 ${limitDay.format(formatter)})"
                 )
                 if (onSleep) {
                     workspaceOpHistoryDao.createWorkspaceHistory(
@@ -342,8 +340,8 @@ class SleepControl @Autowired constructor(
                         }.onSuccess {
                             logger.info(
                                 "sleep $it when not login 7 day " +
-                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
-                                        "${workspace.hostName}"
+                                    "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                    "${workspace.hostIp}"
                             )
                             if (it) {
                                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
@@ -355,7 +353,7 @@ class SleepControl @Autowired constructor(
                                     notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
                                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                                     bodyParams = mutableMapOf(
-                                        "cgsIp" to (workspace.hostName ?: ""),
+                                        "cgsIp" to (workspace.hostIp ?: ""),
                                         "projectId" to (workspace.projectId),
                                         "userId" to userIds.joinToString()
                                     )
@@ -376,7 +374,7 @@ class SleepControl @Autowired constructor(
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -391,8 +389,6 @@ class SleepControl @Autowired constructor(
             )
         if (workspace.status.checkSleeping()) return
         if (status) {
-            // 清心跳
-            redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(

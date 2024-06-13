@@ -271,9 +271,10 @@ class RemoteDevService @Autowired constructor(
 
     fun deleteWorkspace(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        bakWorkspaceName: String?
     ) {
-        dispatchWorkspaceDao.deleteWorkspace(workspaceName, dslContext)
+        dispatchWorkspaceDao.deleteWorkspace(dslContext, workspaceName, bakWorkspaceName)
     }
 
     fun workspaceTaskCallback(

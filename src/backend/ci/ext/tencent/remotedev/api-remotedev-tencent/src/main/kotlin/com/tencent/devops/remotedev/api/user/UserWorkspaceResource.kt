@@ -334,18 +334,6 @@ interface UserWorkspaceResource {
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<AuthorizeResult>
 
-    @Operation(summary = "工作空间心跳请求")
-    @POST
-    @Path("/heartbeat")
-    fun workspaceHeartbeat(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "执行次数", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
     @Operation(summary = "校验用户操作工作空间权限")
     @GET
     @Path("/checkPermission")
@@ -365,17 +353,6 @@ interface UserWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<Boolean>
-
-    @Operation(summary = "更新容器的BKticket")
-    @POST
-    @Path("/updateBkTicket")
-    fun updateBkTicket(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "bkTicket信息", required = true)
-        bkTicketInfo: BkTicketInfo
     ): Result<Boolean>
 
     @Operation(summary = "更新容器的BKticket")

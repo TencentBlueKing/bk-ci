@@ -95,6 +95,9 @@ interface ServiceRemoteDevResource {
         userId: String,
         @Parameter(description = "工作空间唯一name", required = false)
         @PathParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "bak工作空间唯一name", required = false)
+        @QueryParam("bakWorkspaceName")
+        bakWorkspaceName: String?
     ): Result<Boolean>
 }

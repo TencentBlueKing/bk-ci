@@ -48,8 +48,8 @@ enum class WorkspaceStatus {
     RESTARTING, // 13 重启中
     MAKING_IMAGE, // 14 制作镜像中
     REBUILDING, // 15 重装系统中
-    // TODO: 116140983 需要校验下面的状态判断是否一致
-    UPGRADING; // 16 升级配置中
+    UPGRADING, // 16 升级配置中
+    UNUSED; // 17 未使用，例如升配之后的旧机器
 
     enum class Types {
         USING {
@@ -91,6 +91,10 @@ enum class WorkspaceStatus {
 
     fun workspaceInitializing() = checkDelivering()
 
+    fun checkUpgrading() = this == UPGRADING
+
+    fun checkUnused() = this == UNUSED
+
     fun checkInUse() = !checkDeleted() && !checkException()
     fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING ||
         this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING || this == UPGRADING
@@ -124,5 +128,6 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.MAKING_IMAGE -> "制作镜像中"
         WorkspaceStatus.REBUILDING -> "重装系统中"
         WorkspaceStatus.UPGRADING -> "升级配置中"
+        WorkspaceStatus.UNUSED -> "未使用"
     }
 }

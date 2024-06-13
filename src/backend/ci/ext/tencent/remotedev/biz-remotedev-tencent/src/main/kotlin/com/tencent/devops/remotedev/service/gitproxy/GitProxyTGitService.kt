@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -17,10 +18,11 @@ import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
-import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
-import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
@@ -28,6 +30,10 @@ import com.tencent.devops.remotedev.utils.AsyncUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import java.time.Duration
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -35,10 +41,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.Duration
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
@@ -212,7 +214,16 @@ class GitProxyTGitService @Autowired constructor(
         val result = mutableMapOf<Long, Boolean>()
 
         // 获取项目下正在跑的所有机器IP
-        val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
+        val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+            dslContext = dslContext,
+            projectId = projectId,
+            checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+            notStatus = listOf(
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            )
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
         // 获取项目下正在跑的所有机器的用户
         val users = fetchProjectSpecAclUsers(projectId)
 
@@ -731,7 +742,16 @@ class GitProxyTGitService @Autowired constructor(
         val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
 
         // 关联
-        val ips = workspaceDao.fetchProjectIp(dslContext, info.projectId).map { it.substringAfter(".") }.toSet()
+        val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+            dslContext = dslContext,
+            projectId = info.projectId,
+            checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+            notStatus = listOf(
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            )
+        ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
         val users = fetchProjectSpecAclUsers(info.projectId)
 
         val ok = updateTGitProjectAcl(
@@ -779,7 +799,16 @@ class GitProxyTGitService @Autowired constructor(
                 projects.forEach { projectId ->
                     logger.info("OP|refreshTGitAcl|$projectId start")
                     val users = fetchProjectSpecAclUsers(projectId)
-                    val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
+                    val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+                        notStatus = listOf(
+                            WorkspaceStatus.PREPARING,
+                            WorkspaceStatus.DELETED,
+                            WorkspaceStatus.DELIVERING_FAILED
+                        )
+                    ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
                     fetchProjectTGit(projectId) { repo, token ->
                         val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
                         if (!ok) {
@@ -804,7 +833,16 @@ class GitProxyTGitService @Autowired constructor(
         var offset = 1
         projects.forEach { fProjectId ->
             val users = fetchProjectSpecAclUsers(fProjectId)
-            val ips = workspaceDao.fetchProjectIp(dslContext, fProjectId).map { it.substringAfter(".") }.toSet()
+            val ips = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+                dslContext = dslContext,
+                projectId = fProjectId,
+                checkField = listOf(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP),
+                notStatus = listOf(
+                    WorkspaceStatus.PREPARING,
+                    WorkspaceStatus.DELETED,
+                    WorkspaceStatus.DELIVERING_FAILED
+                )
+            ).filter { !it.hostIp.isNullOrBlank() }.map { it.hostIp!!.substringAfter(".") }.toSet()
             fetchProjectTGit(fProjectId, false) { repo, _ ->
                 val row = sheet.createRow(offset)
                 row.createCell(0).setCellValue(repo.tgitId.toString())

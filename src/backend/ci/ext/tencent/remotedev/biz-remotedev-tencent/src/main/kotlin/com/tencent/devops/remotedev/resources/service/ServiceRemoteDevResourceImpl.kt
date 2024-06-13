@@ -42,13 +42,12 @@ import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
-import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
-import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -83,8 +82,7 @@ class ServiceRemoteDevResourceImpl(
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
-    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
-    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -530,9 +528,5 @@ class ServiceRemoteDevResourceImpl(
             makeImageReq = makeImageReq
         )
         return Result(true)
-    }
-
-    override fun upgradeVm(userId: String, oldWorkspaceName: String, uid: String): Result<Boolean> {
-        return Result(upgradeWorkspaceHandler.upgradeVm(userId, oldWorkspaceName, uid))
     }
 }

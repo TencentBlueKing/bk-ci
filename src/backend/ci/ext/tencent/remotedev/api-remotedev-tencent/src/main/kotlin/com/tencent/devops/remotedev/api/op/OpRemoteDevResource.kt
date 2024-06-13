@@ -57,53 +57,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpRemoteDevResource {
-
-    @Operation(summary = "新增工作空间模板")
-    @POST
-    @Path("/wstemplate/add")
-    fun addWorkspaceTemplate(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "模板信息", required = true)
-        workspaceTemplate: WorkspaceTemplate
-    ): Result<Boolean>
-
-    @Operation(summary = "获取工作空间模板")
-    @GET
-    @Path("/wstemplate/list")
-    fun getWorkspaceTemplateList(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<WorkspaceTemplate>>
-
-    @Operation(summary = "更新工作空间模板")
-    @PUT
-    @Path("/wstemplate/update/template/{wsTemplateId}")
-    fun updateWorkspaceTemplate(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "模板ID", required = true)
-        @PathParam("wsTemplateId")
-        workspaceTemplateId: Long,
-        @Parameter(description = "模板信息", required = true)
-        workspaceTemplate: WorkspaceTemplate
-    ): Result<Boolean>
-
-    @Operation(summary = "删除工作空间模板")
-    @DELETE
-    @Path("/wstemplate/delete/template/{wsTemplateId}")
-    fun deleteWorkspaceTemplate(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "模板信息", required = true)
-        @PathParam("wsTemplateId")
-        wsTemplateId: Long
-    ): Result<Boolean>
-
     @Operation(summary = "计费刷新")
     @POST
     @Path("/init_billing")
@@ -198,35 +151,6 @@ interface OpRemoteDevResource {
         whiteListUser: String
     ): Result<Boolean>
 
-    @Operation(summary = "新增镜像配置")
-    @POST
-    @Path("/image/spec")
-    fun addImageSpec(
-        spec: ImageSpec
-    ): Result<Boolean>
-
-    @Operation(summary = "删除镜像配置")
-    @DELETE
-    @Path("/image/spec")
-    fun deleteImageSpec(
-        @QueryParam("id")
-        id: Int
-    ): Result<Boolean>
-
-    @Operation(summary = "修改镜像配置")
-    @PUT
-    @Path("/image/spec")
-    fun updateImageSpec(
-        @QueryParam("id")
-        id: Int,
-        spec: ImageSpec
-    ): Result<Boolean>
-
-    @Operation(summary = "镜像配置列表")
-    @GET
-    @Path("/image/spec")
-    fun listImageSpec(): Result<List<ImageSpec>?>
-
     @Operation(summary = "休眠工作空间")
     @GET
     @Path("/workspace_stop")
@@ -288,5 +212,14 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         taiUsers: List<String>
+    ): Result<Boolean>
+
+    @Operation(summary = "detail表数据转移")
+    @GET
+    @Path("/detail_dao_transfer_to_windows_dao")
+    fun detailDaoTransferToWindowsDao(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
     ): Result<Boolean>
 }

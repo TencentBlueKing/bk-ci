@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -47,7 +48,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceRecord
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
@@ -57,6 +58,7 @@ import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
@@ -80,7 +82,9 @@ class DeliverControl @Autowired constructor(
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
     private val httpCallBackService: HttpCallBackService,
-    private val gitProxyTGitService: GitProxyTGitService
+    private val gitProxyTGitService: GitProxyTGitService,
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler
 ) {
 
     companion object {
@@ -99,7 +103,7 @@ class DeliverControl @Autowired constructor(
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).lock().use {
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                     params = arrayOf(workspaceName)
@@ -115,17 +119,12 @@ class DeliverControl @Autowired constructor(
                         actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.SAFE_INITIALIZATION)
                     )
                     // todo job接口执行
-                    val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
-                        ?: throw ErrorCodeException(
-                            errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                            params = arrayOf(workspaceName)
-                        )
-                    logger.info("safeInitialization|$userId|$userId|detail|$detail")
+                    logger.info("safeInitialization|$userId|$userId")
                     softwareManageService.installSystemSoftwares(
                         projectId,
                         userId,
-                        regionId = detail.regionId.toString(),
-                        ip = detail.environmentIP,
+                        regionId = workspace.regionId.toString(),
+                        ip = workspace.hostIp ?: "",
                         workspaceName = workspaceName
                     )
                 }
@@ -151,7 +150,8 @@ class DeliverControl @Autowired constructor(
     fun assignUser2Workspace(
         userId: String,
         workspaceName: String,
-        assigns: List<ProjectWorkspaceAssign>
+        assigns: List<ProjectWorkspaceAssign>,
+        checkPermission: Boolean = true
     ) {
         logger.info("assignUser2Workspace|$userId|$workspaceName|$assigns")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -159,7 +159,9 @@ class DeliverControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        permissionService.checkUserManager(userId, workspace.projectId)
+        if (checkPermission) {
+            permissionService.checkUserManager(userId, workspace.projectId)
+        }
         val assign2Owner = assigns.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
@@ -275,7 +277,7 @@ class DeliverControl @Autowired constructor(
             type = type,
             softwareList = softwareList
         )
-        updateWorkspaceStatus(workspaceName) { workspace ->
+        updateWindowsWorkspaceStatus(workspaceName) { workspace ->
             when (workspace.status) {
                 // 交付中安装IOA后
                 WorkspaceStatus.DELIVERING, WorkspaceStatus.DELIVERING_FAILED -> {
@@ -288,6 +290,8 @@ class DeliverControl @Autowired constructor(
                         )
                         workspaceCommon.autoAssignOwner(workspace)
 
+                        upgradeWorkspaceHandler.checkAndUpgradeVm(workspaceName)
+
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
                             cc = mutableSetOf(workspace.createUserId),
@@ -295,7 +299,7 @@ class DeliverControl @Autowired constructor(
                             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                             bodyParams = mutableMapOf(
                                 "workspaceName" to workspace.workspaceName,
-                                "cgsId" to (workspace.hostName ?: workspace.workspaceName),
+                                "cgsId" to (workspace.hostIp ?: workspace.workspaceName),
                                 "projectId" to projectId,
                                 "creator" to workspace.createUserId
                             )
@@ -331,6 +335,7 @@ class DeliverControl @Autowired constructor(
                             WorkspaceStatus.RUNNING.name
                         )
                     )
+                    upgradeWorkspaceHandler.checkAndUpgradeVm(workspaceName)
                     httpCallBackService.asyncTask(
                         WindowsDevCouldCallback(
                             workspaceName,
@@ -341,7 +346,7 @@ class DeliverControl @Autowired constructor(
                     notifyControl.dispatchWebsocketPushEvent(
                         userId = workspace.createUserId,
                         workspaceName = workspace.workspaceName,
-                        workspaceHost = workspace.hostName,
+                        workspaceHost = workspace.hostIp,
                         type = WebSocketActionType.WORKSPACE_CREATE,
                         status = true,
                         action = WorkspaceAction.START,
@@ -361,7 +366,7 @@ class DeliverControl @Autowired constructor(
 
     private fun checkSafeInitSuccess(
         softwareList: SoftwareCallbackRes,
-        ws: WorkspaceRecord
+        ws: WorkspaceRecordWithWindows
     ) {
         if (softwareList.taskStatus == TaskStatusEnum.FAILED) {
             workspaceCommon.updateStatus2DeliveringFailed(
@@ -375,13 +380,13 @@ class DeliverControl @Autowired constructor(
         }
     }
 
-    private fun updateWorkspaceStatus(workspaceName: String, update: (ws: WorkspaceRecord) -> Unit) {
+    private fun updateWindowsWorkspaceStatus(workspaceName: String, update: (ws: WorkspaceRecordWithWindows) -> Unit) {
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).lock().use {
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
                 ?: throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                     params = arrayOf(workspaceName)

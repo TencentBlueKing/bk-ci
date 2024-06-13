@@ -62,11 +62,10 @@ class RemoteDevJobService @Autowired constructor(
     }
 
     fun getOwners(projectId: String): Set<String> {
-        return workspaceDao.fetchWorkspaceWithOwner(
+        return workspaceDao.fetchWorkspaceOwnerInProject(
             dslContext = dslContext,
-            mountType = WorkspaceMountType.START,
-            projectIds = setOf(projectId)
-        )?.map { it["SHARED_USER"] as? String ?: "" }?.filter { it.isNotBlank() }?.toSet() ?: return emptySet()
+            projectId = projectId
+        ).filter { it.isNotBlank() }.toSet()
     }
 
     fun createJob(

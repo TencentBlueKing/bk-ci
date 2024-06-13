@@ -55,7 +55,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
@@ -82,19 +81,14 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
-import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
-import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
-import com.tencent.devops.remotedev.utils.DevfileUtil
-import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -109,18 +103,14 @@ class CreateControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val permissionService: PermissionService,
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
-    private val bkTicketServie: BkTicketService,
     private val whiteListService: WhiteListService,
-    private val commonConfig: RemoteDevCommonConfig,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val deliverControl: DeliverControl,
@@ -132,8 +122,6 @@ class CreateControl @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
-        private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
-        private const val BLANK_TEMPLATE_ID = 1
 
         fun sumResourceVmFree(res: List<ResourceVmRespData>?, zoneShortName: String, size: String): Int? {
             return res?.filter {
@@ -385,7 +373,7 @@ class CreateControl @Autowired constructor(
                 groupName = null,
                 dslContext = dslContext,
                 projectName = projectInfo.projectName,
-                businessLineNmae = projectInfo.businessLineName ?: ""
+                businessLineName = projectInfo.businessLineName ?: ""
             )
 
             // 审计
@@ -403,7 +391,7 @@ class CreateControl @Autowired constructor(
                     userId = creator,
                     traceId = bizId,
                     workspaceName = ws.workspaceName,
-                    devFilePath = ws.devFilePath,
+                    devFilePath = null,
                     devFile = Devfile(
                         zoneId = windowsZone.zoneShortName,
                         machineType = windowsConfig.size,
@@ -478,7 +466,11 @@ class CreateControl @Autowired constructor(
                     count = 1
                 )
             ).first()
-        } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
+        } else throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
+            params = arrayOf(redisCache.get(RedisKeys.REDIS_CLIENT_INSTALL_URL).toString()),
+            defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
+        )
 
         // 审计
         ActionAuditContext.current().addInstanceInfo(
@@ -544,15 +536,10 @@ class CreateControl @Autowired constructor(
     // k8s创建workspace后回调的方法
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent, ws: WorkspaceRecord) {
         if (event.status) {
-            val pathWithNamespace = kotlin.runCatching {
-                GitUtils.getDomainAndRepoName(ws.repositoryUrl!!).second
-            }.getOrNull()
             val opActions = kotlin.runCatching {
                 arrayOf(
                     WorkspaceAction.CREATE to getOpHistoryCreate(
-                        ws.workspaceSystemType,
-                        pathWithNamespace ?: "",
-                        ws.branch ?: ""
+                        ws.workspaceSystemType
                     ),
                     WorkspaceAction.START to workspaceCommon.getOpHistory(OpHistoryCopyWriting.FIRST_START)
                 )
@@ -583,23 +570,10 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            val detail = workspaceCommon.getOrSaveWorkspaceDetail(
-                workspaceName = event.workspaceName,
-                projectId = ws.projectId,
-                mountType = event.mountType,
-                event = event,
-                ownerType = ws.ownerType
+            workspaceCommon.updateWorkspaceWinDetail(
+                ws = ws,
+                workspaceName = event.workspaceName
             )
-
-            if (ws.workspaceSystemType.needHeartbeat()) {
-                redisHeartBeat.refreshHeartbeat(event.workspaceName)
-            }
-
-            if (ws.workspaceSystemType.needUpdateBkTicket()) {
-                kotlin.runCatching {
-                    bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
-                }
-            }
 
             if (ws.workspaceSystemType.checkWindows()) {
                 workspaceWindowsDao.updateWindowsResourceId(
@@ -688,7 +662,7 @@ class CreateControl @Autowired constructor(
         val vmInfo = kotlin.runCatching {
             client.get(ServiceStartCloudResource::class).getWorkspaceInfoByEid(envId).data!!
         }.onFailure {
-            logger.warn("createWinWorkspaceByVm not find uid $uid")
+            logger.warn("createWinWorkspaceByVm not find envId $uid")
             return false
         }.getOrThrow()
 
@@ -702,7 +676,7 @@ class CreateControl @Autowired constructor(
 
         val vm = workspaceCommon.syncStartCloudResourceList().find { it.cgsId == taskInfo.vmCreateResp?.cgsIp }
             ?: kotlin.run {
-                logger.warn("createWinWorkspaceByVm not find ${taskInfo.vmCreateResp?.cgsIp}")
+                logger.warn("createWinWorkspaceByVm not find cgsIp ${taskInfo.vmCreateResp?.cgsIp}")
                 return false
             }
 
@@ -745,9 +719,16 @@ class CreateControl @Autowired constructor(
             zoneId = vm.zoneId.replace(Regex("\\d+"), "")
         )
         if (oldWs != null) {
-            // 直接硬删除记录。新的工作空间会复用原先的name
-            workspaceDao.deleteWorkspace(oldWs.workspaceName, dslContext)
-            client.get(ServiceRemoteDevResource::class).deleteWorkspace(userId, workspaceName)
+            val bakName = "$workspaceName.bak.${LocalDateTime.now()}"
+            if (oldWs.status.checkUpgrading()) {
+                // 备份windows config
+                workspaceWindowsDao.bakWindowsConfig(dslContext, oldWs.workspaceName, bakName)
+                // 备份分享信息
+                workspaceSharedDao.bakWorkspaceShareInfo(dslContext, oldWs.workspaceName, bakName)
+                ws.bakWorkspaceName = bakName
+            }
+            workspaceDao.bakWorkspace(dslContext, oldWs.workspaceName, bakName)
+            client.get(ServiceRemoteDevResource::class).deleteWorkspace(userId, workspaceName, bakName)
         }
         when (checkOwnerType) {
             WorkspaceOwnerType.PROJECT -> {
@@ -767,7 +748,7 @@ class CreateControl @Autowired constructor(
                     groupName = null,
                     dslContext = dslContext,
                     projectName = projectInfo.projectName,
-                    businessLineNmae = projectInfo.businessLineName
+                    businessLineName = projectInfo.businessLineName
                 )
                 if (oldWs?.status?.checkDelivering() == true) {
                     workspaceDao.updateWorkspaceStatus(dslContext, oldWs.workspaceName, WorkspaceStatus.DELETED)
@@ -788,7 +769,7 @@ class CreateControl @Autowired constructor(
                     groupName = userInfo?.groupName,
                     dslContext = dslContext,
                     projectName = ws.projectId ?: "",
-                    businessLineNmae = userInfo?.businessLineName
+                    businessLineName = userInfo?.businessLineName
                 )
             }
         }
@@ -800,7 +781,7 @@ class CreateControl @Autowired constructor(
                 userId = userId,
                 traceId = bizId,
                 workspaceName = ws.workspaceName,
-                devFilePath = ws.devFilePath,
+                devFilePath = null,
                 devFile = Devfile(
                     uid = uid,
                     environmentUid = envId
@@ -842,152 +823,9 @@ class CreateControl @Autowired constructor(
         }
     }
 
-    private fun getOpHistoryCreate(type: WorkspaceSystemType, vararg args: Any) = when (type) {
+    private fun getOpHistoryCreate(type: WorkspaceSystemType) = when (type) {
         WorkspaceSystemType.WINDOWS_GPU -> workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE_WINDOWS)
-        WorkspaceSystemType.LINUX -> workspaceCommon.getOpHistory(OpHistoryCopyWriting.CREATE).format(*args)
-    }
-
-    @Suppress("ComplexMethod")
-    private fun loadWorkspaceWithCode(
-        userId: String,
-        bkTicket: String,
-        projectId: String,
-        workspaceCreate: WorkspaceCreate
-    ): Workspace {
-        val gitTransferService = remoteDevGitTransfer.loadByGitUrl(workspaceCreate.repositoryUrl)
-        val pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second
-        val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
-        val yaml = if (workspaceCreate.useOfficialDevfile != true) {
-            kotlin.runCatching {
-                permissionService.checkOauthIllegal(userId) {
-                    gitTransferService.getFileContent(
-                        userId = userId,
-                        pathWithNamespace = pathWithNamespace,
-                        filePath = workspaceCreate.devFilePath!!,
-                        ref = workspaceCreate.branch
-                    )
-                }
-            }.getOrElse {
-                logger.warn("get yaml failed ${it.message}")
-                if (it is ErrorCodeException) throw it
-                else throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                    params = arrayOf("获取 devfile 异常。")
-                )
-            }
-        } else {
-            // 防止污传,如果是基于BLANK模板创建的则用BLANK作为devFilePath
-            workspaceCreate.devFilePath = if (workspaceCreate.wsTemplateId == BLANK_TEMPLATE_ID) {
-                BLANK_TEMPLATE_YAML_NAME
-            } else null
-            redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
-        }
-
-        if (yaml.isBlank()) {
-            logger.warn(
-                "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
-            )
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                params = arrayOf("devfile 为空，请确认。")
-            )
-        }
-
-        val devfile = DevfileUtil.parseDevfile(yaml).apply {
-            gitEmail = kotlin.runCatching {
-                permissionService.checkOauthIllegal(userId) {
-                    gitTransferService.getUserEmail(
-                        userId = userId
-                    )
-                }
-            }.getOrElse {
-                logger.warn("get user $userId info failed ${it.message}")
-                if (it is ErrorCodeException) throw it
-                else throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
-                    params = arrayOf("get user($userId) info from git failed")
-                )
-            }
-
-            dotfileRepo = remoteDevSettingDao.fetchOneSetting(dslContext, userId).dotfileRepo
-        }
-
-        if (devfile.checkWorkspaceSystemType() == WorkspaceSystemType.WINDOWS_GPU) {
-//            windowsGpuCheck(workspaceCreate, userId)
-            // 取消对windows的支持
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                params = arrayOf("not support WINDOWS_GPU")
-            )
-        }
-
-        val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
-
-        logger.info("createWorkspace|mountType|$mountType")
-        val workspaceName = generateWorkspaceName(userId)
-        val workspace = with(workspaceCreate) {
-            Workspace(
-                workspaceId = null,
-                workspaceName = workspaceName,
-                projectId = projectId,
-                displayName = null,
-                repositoryUrl = repositoryUrl,
-                branch = branch,
-                devFilePath = devFilePath,
-                yaml = yaml,
-                wsTemplateId = wsTemplateId,
-                status = null,
-                lastStatusUpdateTime = null,
-                sleepingTime = null,
-                createUserId = userId,
-                workPath = Constansts.prefixWorkPath.plus(projectName),
-                workspaceFolder = devfile.workspaceFolder ?: "",
-                hostName = "",
-                workspaceMountType = mountType,
-                workspaceSystemType = devfile.checkWorkspaceSystemType(),
-                ownerType = WorkspaceOwnerType.PERSONAL
-            )
-        }
-
-        doPreparing(workspace)
-
-        // 替换部分devfile内容，兼容使用老remoting的情况
-        if (!isImageInDefaultList(
-                devfile.runsOn?.container?.image,
-                redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet()
-            )
-        ) {
-            devfile.runsOn?.container?.image =
-                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-        }
-
-        val bizId = MDC.get(TraceTag.BIZID)
-
-        val gameId = workspaceCommon.getGameIdAndAppId(projectId, workspace.ownerType)
-        // 发送给k8s
-        dispatcher.dispatch(
-            WorkspaceCreateEvent(
-                userId = userId,
-                traceId = bizId,
-                workspaceName = workspace.workspaceName,
-                repositoryUrl = workspace.repositoryUrl ?: "",
-                branch = workspace.branch ?: "",
-                devFilePath = workspace.devFilePath,
-                devFile = devfile,
-                gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
-                settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                bkTicket = bkTicket,
-                projectId = projectId,
-                mountType = mountType,
-                ownerType = workspace.ownerType,
-                appName = gameId.first,
-                gameId = gameId.second
-            )
-        )
-
-        return workspace
+        else -> ""
     }
 
     fun loadWorkspaceWithPersonalWindows(
@@ -1072,7 +910,7 @@ class CreateControl @Autowired constructor(
                     userId = userId,
                     traceId = bizId,
                     workspaceName = workspace.workspaceName,
-                    devFilePath = workspace.devFilePath,
+                    devFilePath = null,
                     devFile = Devfile(
                         zoneId = windowsZone.zoneShortName,
                         machineType = windowsConfig.size,
@@ -1153,7 +991,7 @@ class CreateControl @Autowired constructor(
             groupName = userInfo?.groupName,
             dslContext = dslContext,
             projectName = workspace.projectId ?: "",
-            businessLineNmae = userInfo?.businessLineName
+            businessLineName = userInfo?.businessLineName
         )
     }
 

@@ -51,6 +51,7 @@ interface IWorkspace {
     val memory: Int
     val disk: Int
     var currentLoginUsers: List<String>
+    var bakWorkspaceName: String?
 }
 
 @Schema(title = "工作空间信息")
@@ -93,22 +94,10 @@ data class Workspace(
     override val disk: Int = 100,
     @get:Schema(title = "当前登陆者信息")
     override var currentLoginUsers: List<String> = emptyList(),
+    @get:Schema(title = "备份的workspace name")
+    override var bakWorkspaceName: String? = null,
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
-    @get:Schema(title = "远程开发仓库地址")
-    val repositoryUrl: String? = null,
-    @get:Schema(title = "仓库分支")
-    val branch: String? = null,
-    @get:Schema(title = "devfile配置路径")
-    val devFilePath: String? = null,
-    @get:Schema(title = "devfile 内容")
-    val yaml: String? = null,
-    @get:Schema(title = "工作空间模板ID")
-    val wsTemplateId: Int? = null,
-    @get:Schema(title = "工作空间操作路径")
-    val workPath: String? = null,
-    @get:Schema(title = "工作空间默认打开工程相对路径，默认根目录")
-    val workspaceFolder: String? = null,
     @get:Schema(title = "镜像id")
     val imageId: String = "",
     @get:Schema(title = "工作空间归属")
