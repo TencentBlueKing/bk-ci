@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.DispatchQueueControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
