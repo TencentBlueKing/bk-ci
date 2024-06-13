@@ -232,7 +232,8 @@ class VariableTransfer {
                     readOnly = if (variable.const == true) true else {
                         variable.readonly ?: false
                     },
-                    valueNotEmpty = variable.props?.required ?: false
+                    valueNotEmpty = variable.props?.required ?: false,
+                    payload =variable.props?.payload
                 )
             )
         }
