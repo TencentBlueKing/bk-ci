@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
+import org.slf4j.LoggerFactory
 
 open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibilityTransformer {
 
@@ -53,11 +54,18 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 // 常量需要在启动是强制设为只读
                 param.readOnly = true
                 param.defaultValue
-            } else if (!param.required) {
-                // 没有作为前端可填入参的变量，直接取默认值，不可被覆盖
-                param.defaultValue
+//            } else if (!param.required) {
+//                // TODO #8161 没有作为前端可填入参的变量，直接取默认值，不可被覆盖（实施前仅打印日志）
+//                param.defaultValue
             } else {
-                paramValues[key] ?: paramValues[param.id] ?: param.defaultValue
+                val overrideValue = paramValues[key] ?: paramValues[param.id]
+                if (!param.required && overrideValue != null) {
+                    logger.warn(
+                        "BKSystemErrorMonitor|parseTriggerParam[$key] not required, " +
+                            "overrideValue=$overrideValue, defaultValue=${param.defaultValue}"
+                    )
+                }
+                overrideValue ?: param.defaultValue
             }
             if (param.valueNotEmpty == true && value.toString().isEmpty()) {
                 throw ErrorCodeException(
@@ -77,5 +85,9 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         }
 
         return paramsMap
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(V2BuildParametersCompatibilityTransformer::class.java)
     }
 }

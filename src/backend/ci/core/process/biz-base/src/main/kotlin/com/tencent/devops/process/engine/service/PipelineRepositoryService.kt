@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
@@ -718,14 +719,18 @@ class PipelineRepositoryService constructor(
                             newSetting = setting
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
-                        pipelineSettingDao.saveSetting(transactionContext, newSetting)
-                        pipelineSettingVersionDao.saveSetting(
-                            dslContext = transactionContext,
-                            setting = newSetting,
-                            id = client.get(ServiceAllocIdResource::class)
-                                .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                            version = settingVersion
-                        )
+                        JooqUtils.retryWhenDeadLock {
+                            pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                        }
+                        JooqUtils.retryWhenDeadLock {
+                            pipelineSettingVersionDao.saveSetting(
+                                dslContext = transactionContext,
+                                setting = newSetting,
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                                version = settingVersion
+                            )
+                        }
                     } else {
                         pipelineSettingDao.updateSetting(
                             dslContext = transactionContext,
@@ -734,13 +739,16 @@ class PipelineRepositoryService constructor(
                             name = model.name,
                             desc = model.desc ?: ""
                         )?.let { setting ->
-                            pipelineSettingVersionDao.saveSetting(
-                                dslContext = transactionContext,
-                                setting = setting,
-                                id = client.get(ServiceAllocIdResource::class)
-                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                                version = settingVersion
-                            )
+                            JooqUtils.retryWhenDeadLock {
+                                pipelineSettingVersionDao.saveSetting(
+                                    dslContext = transactionContext,
+                                    setting = setting,
+                                    id = client.get(ServiceAllocIdResource::class)
+                                        .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME)
+                                        .data,
+                                    version = settingVersion
+                                )
+                            }
                             newSetting = setting
                         }
                     }
@@ -1704,19 +1712,23 @@ class PipelineRepositoryService constructor(
                         maxPipelineResNum = old.maxPipelineResNum
                     )
                 }
-                pipelineSettingVersionDao.saveSetting(
-                    dslContext = transactionContext,
-                    setting = setting,
-                    version = version,
-                    isTemplate = isTemplate,
-                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(
-                        PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
-                    ).data
+                JooqUtils.retryWhenDeadLock {
+                    pipelineSettingVersionDao.saveSetting(
+                        dslContext = transactionContext,
+                        setting = setting,
+                        version = version,
+                        isTemplate = isTemplate,
+                        id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+                            PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
+                        ).data
+                    )
+                }
+            }
+            if (versionStatus.isReleasing()) JooqUtils.retryWhenDeadLock {
+                pipelineSettingDao.saveSetting(
+                    transactionContext, setting, isTemplate
                 )
             }
-            if (versionStatus.isReleasing()) pipelineSettingDao.saveSetting(
-                transactionContext, setting, isTemplate
-            ).toString()
         }
 
         return PipelineName(name = setting.pipelineName, oldName = oldName)

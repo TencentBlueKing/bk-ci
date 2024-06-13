@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
@@ -174,7 +175,46 @@ class PipelineYamlVersionUtilsTest {
                                 LinuxScriptElement(
                                     script = "echo 1",
                                     continueNoneZero = true,
-                                    scriptType = BuildScriptType.SHELL
+                                    scriptType = BuildScriptType.SHELL,
+                                    additionalOptions = ElementAdditionalOptions(enable = true)
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val diffModel4 = Model(
+            name = "name1",
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = "stage-1",
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "trigger",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    id = "T-1-1-1",
+                                    name = "t1"
+                                )
+                            )
+                        )
+                    )
+                ),
+                Stage(
+                    id = "stage-2",
+                    containers = listOf(
+                        NormalContainer(),
+                        NormalContainer(
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    script = "echo 1",
+                                    continueNoneZero = true,
+                                    scriptType = BuildScriptType.SHELL,
+                                    additionalOptions = ElementAdditionalOptions(enable = false)
                                 )
                             )
                         )
@@ -212,6 +252,7 @@ class PipelineYamlVersionUtilsTest {
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model, diffModel2))
         assertEquals(version + 1, PipelineVersionUtils.getTriggerVersion(version, model, diffTrigger))
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, diffModel2, diffModel3))
+        assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, diffModel3, diffModel4))
     }
 
     @Test
