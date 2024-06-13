@@ -9,7 +9,6 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceWindowsRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -148,7 +147,7 @@ class WorkspaceWindowsDao {
     fun fetchLastWindowsBak(
         dslContext: DSLContext,
         workspaceName: String
-    ):TWorkspaceWindowsRecord? {
+    ): TWorkspaceWindowsRecord? {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.like("$workspaceName.bak.%"))

@@ -19,7 +19,6 @@ import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.async.AsyncJobEndEvent
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
@@ -36,12 +35,12 @@ import com.tencent.devops.remotedev.pojo.job.KeyMapDataType
 import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Suppress("ALL")
 @Service

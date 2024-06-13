@@ -73,7 +73,7 @@ class WorkspaceJoinDao {
     fun fetchAnyWindowsWorkspace(
         dslContext: DSLContext,
         workspaceName: String,
-        status: WorkspaceStatus? = null,
+        status: WorkspaceStatus? = null
     ): WorkspaceRecordWithWindows? {
         // 目前只有windows，如果后期增加横向扩展即可
         val dsl = genFetchProjectWorkspaceCond(

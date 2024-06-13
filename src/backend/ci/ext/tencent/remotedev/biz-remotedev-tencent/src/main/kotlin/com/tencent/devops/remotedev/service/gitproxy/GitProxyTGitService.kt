@@ -416,7 +416,6 @@ class GitProxyTGitService @Autowired constructor(
             return ok
         }
 
-
         val ips = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
             projectIds = otherProjects,

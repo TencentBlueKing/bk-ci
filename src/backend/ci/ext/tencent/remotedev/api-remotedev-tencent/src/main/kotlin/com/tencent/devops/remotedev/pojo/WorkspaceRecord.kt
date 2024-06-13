@@ -94,7 +94,7 @@ data class WorkspaceRecord(
     @get:Schema(title = "工作空间备注")
     override val remark: String?,
     @get:Schema(title = "备份的workspace name")
-    override var bakWorkspaceName: String? = null,
+    override var bakWorkspaceName: String? = null
 ) : WorkspaceRecordInf
 
 /**

@@ -31,12 +31,12 @@ import com.tencent.devops.model.remotedev.tables.TDailyCgsData
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import org.jooq.Record
 
 @Repository
 class WorkspaceDailyCgsdataDao {
@@ -66,7 +66,6 @@ class WorkspaceDailyCgsdataDao {
         ).execute()
     }
 
-
     fun fetchDailyCgsData(
         dslContext: DSLContext
     ): Result<out Record>? {
@@ -88,5 +87,4 @@ class WorkspaceDailyCgsdataDao {
                 .fetch()
         }
     }
-
 }

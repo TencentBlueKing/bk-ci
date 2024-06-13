@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.pojo.common
 
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 
 enum class QueryType {
     WEB {

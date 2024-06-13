@@ -6,10 +6,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTCloudCfsDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
-import com.tencent.devops.remotedev.pojo.WorkspaceSearch
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
-import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
 import com.tencentcloudapi.cfs.v20190719.CfsClient
 import com.tencentcloudapi.cfs.v20190719.models.CreateCfsRuleRequest
