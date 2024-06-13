@@ -10,7 +10,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -370,6 +372,20 @@ class ExpertSupportService @Autowired constructor(
         data: CreateExpertSupportConfigData
     ) {
         expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
+    }
+
+    fun expandDisk(
+        workspaceName: String,
+        userId: String,
+        size: String
+    ): ExpandDiskValidateResp? {
+        // 暂时定死 mountType
+        return client.get(ServiceRemoteDevResource::class).expandDisk(
+            workspaceName = workspaceName,
+            userId = userId,
+            size = size,
+            mountType = WorkspaceMountType.START
+        ).data
     }
 
     fun expandDiskCallback(
