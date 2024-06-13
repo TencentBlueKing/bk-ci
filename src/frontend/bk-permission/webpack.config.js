@@ -51,9 +51,7 @@ module.exports = (env = {}, argv) => {
                 {
                     test: /\.(svg)(\?inline)?$/,
                     loader: 'svg-inline-loader',
-                    options: {
-                        type: 'asset/inline'
-                    }
+                    type: 'asset/inline'
                 }
                 
             ]
