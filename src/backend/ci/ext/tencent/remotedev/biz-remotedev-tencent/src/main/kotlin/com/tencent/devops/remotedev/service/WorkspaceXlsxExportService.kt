@@ -184,58 +184,10 @@ class WorkspaceXlsxExportService @Autowired constructor(
             .build()
     }
 
-    fun exportProjectWorkspaceListUser(
-        userId: String,
-        page: Int?,
-        pageSize: Int?,
-        search: WorkspaceSearch?
-    ): Response {
-
-        val records = workspaceService.getWorkspaceList(userId, page, pageSize, search).records
-
-        val workbook = SXSSFWorkbook()
-        val sheet = workbook.createSheet("实例管理")
-        // 创建标题
-        val titleRow = sheet.createRow(0)
-        userTitleList.forEachIndexed { index, s ->
-            titleRow.createCell(index).setCellValue(s)
-        }
-        // 创建内容
-        var offset = 1
-        records.forEach { record ->
-            val row = sheet.createRow(offset)
-            row.createCell(0).setCellValue(record.workspaceName)
-            row.createCell(1).setCellValue(record.displayName)
-            row.createCell(2).setCellValue(record.workspaceSystemType.display())
-            row.createCell(3).setCellValue(record.status?.display())
-            row.createCell(4).setCellValue(record.zoneConfig?.zone)
-            row.createCell(5).setCellValue(record.winConfig?.size)
-            row.createCell(6).setCellValue(record.hostName)
-            row.createCell(7).setCellValue(record.owner)
-            offset++
-        }
-        // 调整宽度
-        userTitleList.forEachIndexed { index, _ ->
-            sheet.trackAllColumnsForAutoSizing()
-            sheet.autoSizeColumn(index)
-        }
-
-        return Response.ok(
-            StreamingOutput { output ->
-                workbook.write(output)
-                workbook.dispose()
-            },
-            MediaType.APPLICATION_OCTET_STREAM
-        ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
-            .build()
-    }
-
     companion object {
         private val titleList =
             listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "城市", "创建人", "拥有者", "共享人")
         private val webTitleList =
             listOf("实例 ID", "别名", "内网 IP", "状态", "机型", "地域", "MAC地址", "拥有者", "共享人")
-        private val userTitleList =
-            listOf("实例 ID", "别名", "机器类型", "状态", "地域", "机型", "ip", "拥有者")
     }
 }
