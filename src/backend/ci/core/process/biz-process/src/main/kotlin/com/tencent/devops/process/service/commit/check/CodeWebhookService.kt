@@ -674,7 +674,8 @@ class CodeWebhookService @Autowired constructor(
             commitId = commitId,
             targetBranch = targetBranch,
             context = context,
-            repositoryConfig = repositoryConfig
+            repositoryType = repositoryConfig.repositoryType,
+            repositoryId = repositoryConfig.getRepositoryId()
         ).data
     }
 

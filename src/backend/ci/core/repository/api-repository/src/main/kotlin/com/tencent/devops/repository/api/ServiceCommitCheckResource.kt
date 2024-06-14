@@ -27,17 +27,20 @@
 
 package com.tencent.devops.repository.api
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_COMMIT", description = "提交检查")
@@ -54,8 +57,14 @@ interface ServiceCommitCheckResource {
     @PUT
     @Path("/git/{checkId}")
     fun update(
+        @Parameter(description = "检查ID", required = true)
+        @PathParam("checkId")
         checkId: Long,
+        @Parameter(description = "检查ID", required = true)
+        @QueryParam("buildNum")
         buildNum: Int,
+        @Parameter(description = "github check run id", required = false)
+        @QueryParam("checkRunId")
         checkRunId: Long? = null
     )
 
@@ -63,10 +72,23 @@ interface ServiceCommitCheckResource {
     @GET
     @Path("/pipelines/{pipelineId}/commits/{commitId}")
     fun get(
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
         pipelineId: String,
+        @Parameter(description = "CommitId", required = true)
+        @QueryParam("commitId")
         commitId: String,
+        @Parameter(description = "目标分支", required = false)
+        @QueryParam("targetBranch")
         targetBranch: String?,
+        @Parameter(description = "检查名称", required = true)
+        @QueryParam("context")
         context: String,
-        repositoryConfig: RepositoryConfig
+        @Parameter(description = "代码id（hashId或别名）", required = true)
+        @QueryParam("repositoryId")
+        repositoryId: String,
+        @Parameter(description = "代码库类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType
     ): Result<RepositoryGitCheck?>
 }

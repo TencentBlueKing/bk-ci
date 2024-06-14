@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceCommitCheckResource
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
@@ -48,12 +49,29 @@ class ServiceCommitCheckResourceImpl @Autowired constructor(
         commitId: String,
         targetBranch: String?,
         context: String,
-        repositoryConfig: RepositoryConfig
+        repositoryId: String,
+        repositoryType: RepositoryType
     ): Result<RepositoryGitCheck?> {
         return Result(
             gitCheckService.getGitCheck(
                 pipelineId = pipelineId,
-                repositoryConfig = repositoryConfig,
+                repositoryConfig = when (repositoryType) {
+                    RepositoryType.ID -> {
+                        RepositoryConfig(
+                            repositoryHashId = repositoryId,
+                            repositoryType = RepositoryType.ID,
+                            repositoryName = null
+                        )
+                    }
+
+                    RepositoryType.NAME -> {
+                        RepositoryConfig(
+                            repositoryHashId = null,
+                            repositoryType = RepositoryType.NAME,
+                            repositoryName = repositoryId
+                        )
+                    }
+                },
                 commitId = commitId,
                 targetBranch = targetBranch,
                 context = context
