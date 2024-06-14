@@ -177,7 +177,7 @@ interface ApigwTurboResourceV4 {
         endDate: String?
     ): Response<Boolean>
 
-    @GET
+    @POST
     @Operation(summary = "手动上报项目资源统计数据", tags = ["v4_app_server_resources_upload_manual"])
     @Path("/manualUpload")
     fun triggerManualUpload(
