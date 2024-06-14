@@ -5,6 +5,7 @@ import com.tencent.devops.dispatch.kubernetes.bcs.client.WorkspaceBcsClient
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
@@ -40,7 +41,21 @@ class StartAndBcsCommonService @Autowired constructor(
                 )
             }.onFailure {
                 logger.warn("workspaceTaskCallback|workspaceExpandDiskCallback fail ${it.message}", it)
-                return false
+            }
+            if (task.status == EnvironmentActionStatus.SUCCEEDED) {
+                workspaceOpHisDao.updateStatusByWorkspaceName(
+                    dslContext = dslContext,
+                    workspaceName = task.workspaceName,
+                    status = EnvironmentActionStatus.SUCCEEDED,
+                    fStatus = EnvironmentActionStatus.PENDING
+                )
+            } else {
+                workspaceOpHisDao.update(
+                    dslContext = dslContext,
+                    uid = taskStatus.uid,
+                    status = task.status,
+                    actionMsg = task.actionMsg
+                )
             }
             return true
         }
