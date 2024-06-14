@@ -561,7 +561,7 @@
                     instanceId: this.instanceId
                 })
                 const logList = []
-                this.stepStatus = res.queryAgentTaskLogResult.find(i => i.step === '安装').status
+                this.stepStatus = res.queryAgentTaskLogResult.find(i => ['Install', '安装'].includes(i.step)).status
                 res.queryAgentTaskLogResult.forEach(i => {
                     if (i.log) logList.push(i.log)
                 })
