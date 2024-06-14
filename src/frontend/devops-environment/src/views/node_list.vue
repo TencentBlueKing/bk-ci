@@ -142,7 +142,7 @@
                                 <!-- 责任人已变更 -->
                                 <template
                                     v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                        || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))"
+                                        || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                                 >
                                     <span class="prompt-operator">
                                         <i class="devops-icon icon-exclamation-circle"></i>
@@ -222,7 +222,7 @@
                                         >
                                             <bk-button
                                                 v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))"
+                                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                                                 class="mr5"
                                                 :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
                                                 text
@@ -770,7 +770,6 @@
                     })
                     this.nodeList.splice(0, this.nodeList.length)
                     this.pagination.count = res.count
-
                     res.records.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
                         this.nodeList.push(item)
