@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component
 @Component
 class CodeWebhookListener @Autowired constructor(
     val codeWebhookService: CodeWebhookService
-){
+) {
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
         codeWebhookService.onBuildQueue(event)
     }

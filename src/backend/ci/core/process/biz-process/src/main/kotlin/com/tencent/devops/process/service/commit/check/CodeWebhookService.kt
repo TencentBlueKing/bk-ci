@@ -59,7 +59,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.pojo.mq.commit.check.TGitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.commit.check.GithubCommitCheckEvent
 import com.tencent.devops.process.service.commit.check.git.GitWebhookUnlockService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -271,8 +270,8 @@ class CodeWebhookService @Autowired constructor(
         }
 
         try {
-            val gitCommitCheckInfo = getGitCommitCheckInfo(projectId, pipelineId, buildId, userId)?:return
-            with(gitCommitCheckInfo){
+            val gitCommitCheckInfo = getGitCommitCheckInfo(projectId, pipelineId, buildId, userId) ?: return
+            with(gitCommitCheckInfo) {
                 if (CodeEventType.valueOf(webhookEventType) == CodeEventType.MERGE_REQUEST && targetBranch == null) {
                     logger.warn(
                         "the webhook info miss targetBranch,commit check may not be added," +
@@ -506,7 +505,7 @@ class CodeWebhookService @Autowired constructor(
                 completedAt = completedAt
             )
         } catch (ignored: Exception) {
-            when(ignored){
+            when (ignored) {
                 is RemoteServiceException -> {
                     //:TODO 如果是凭证问题就日志回写凭证失效
                     buildLogPrinter.addLines(
@@ -813,8 +812,8 @@ class CodeWebhookService @Autowired constructor(
             val eventType = CodeEventType.valueOf(webhookEventType)
             val buildUrl = getBuildUrl(projectId, pipelineId, buildId)
             val context = getContext(pipelineName, webhookEventType)
-            when{
-                needAddTGitCommitCheck(codeType, eventType, enableCheck)->{
+            when {
+                needAddTGitCommitCheck(codeType, eventType, enableCheck) -> {
                     scmCheckService.addGitCommitCheck(
                         event = TGitCommitCheckEvent(
                             projectId = projectId,
@@ -840,7 +839,7 @@ class CodeWebhookService @Autowired constructor(
                     )
                 }
 
-                needAddGithubCommitCheck(codeType, eventType)->{
+                needAddGithubCommitCheck(codeType, eventType) -> {
                     scmCheckService.addGithubCheckRuns(
                         projectId = projectId,
                         repositoryConfig = repositoryConfig,

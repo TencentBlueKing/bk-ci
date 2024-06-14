@@ -78,7 +78,7 @@ class GitCheckDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(BUILD_NUMBER, buildNumber)
                 .let {
-                    if (checkRunId!=null){
+                    if (checkRunId != null) {
                         it.set(CHECK_RUN_ID, checkRunId)
                     }
                     it
