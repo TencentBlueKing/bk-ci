@@ -38,13 +38,13 @@ data class Subscription(
     @get:Schema(title = "通知人员", required = false)
     val users: String = "",
     @get:Schema(title = "企业微信群通知开关", required = false)
-    val wechatGroupFlag: Boolean? = false,
+    val wechatGroupFlag: Boolean = false,
     @get:Schema(title = "企业微信群通知群ID", required = false)
     val wechatGroup: String = "",
     @get:Schema(title = "企业微信群通知转为Markdown格式开关", required = false)
-    val wechatGroupMarkdownFlag: Boolean? = false,
+    val wechatGroupMarkdownFlag: Boolean = false,
     @get:Schema(title = "通知的流水线详情连接开关", required = false)
-    val detailFlag: Boolean? = false,
+    val detailFlag: Boolean = false,
     @get:Schema(title = "自定义通知内容", required = false)
     val content: String = ""
 )
