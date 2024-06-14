@@ -1733,14 +1733,14 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): List<BuildInfo> {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
                 .and(DELETE_TIME.isNotNull)
-                .fetch(debugMapper)
+            version?.let { select.and(VERSION.eq(version)) }
+            return select.fetch(debugMapper)
         }
     }
 
@@ -1748,15 +1748,15 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val now = LocalDateTime.now()
-            return dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(DELETE_TIME, now)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
-                .execute()
+            update.let { update.and(VERSION.eq(version)) }
+            return update.execute()
         }
     }
 
