@@ -25,31 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq.commit.check
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.commit.check.CodeWebhookService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * Github PullRequest 检查事件
- */
-@Event(MQ.EXCHANGE_GIT_COMMIT_CHECK_EVENT, MQ.ROUTE_GITHUB_COMMIT_CHECK_EVENT)
-data class GithubCommitCheckEvent(
-    override val projectId: String,
-    override val pipelineId: String,
-    val buildId: String,
-    val repositoryConfig: RepositoryConfig,
-    val commitId: String,
-    val status: String,
-    val startedAt: Long?,
-    val conclusion: String?,
-    val completedAt: Long?,
-    val startTaskId: String? = null,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override val source: String,
-    override val userId: String,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+@RestResource
+class OpPipelineCommitCheckResourceImpl @Autowired constructor(
+    val codeWebhookService: CodeWebhookService
+) : OpPipelineCommitCheckResource {
+
+    override fun unlock(projectId: String, pipelineId: String, buildId: String): Result<Boolean> {
+        logger.info("start unlock git commit check|$projectId|$pipelineId|$buildId")
+        codeWebhookService.unlock(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            userId = "BK_CI"
+        )
+        return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpPipelineCommitCheckResourceImpl::class.java)
+    }
+}

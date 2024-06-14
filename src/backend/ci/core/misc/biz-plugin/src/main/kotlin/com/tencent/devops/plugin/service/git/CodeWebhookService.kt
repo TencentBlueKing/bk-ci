@@ -264,7 +264,7 @@ class CodeWebhookService @Autowired constructor(
             ) {
                 logger.info(
                     "[plugin] check history data not found|$pipelineId|$commitId|$context|" +
-                            "$repositoryType|$webhookTypeStr, skipping."
+                            "$repositoryConfig|$webhookTypeStr, skipping."
                 )
                 return
             }

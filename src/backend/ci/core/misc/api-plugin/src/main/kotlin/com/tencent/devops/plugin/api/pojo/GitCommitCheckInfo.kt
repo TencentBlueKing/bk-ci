@@ -42,5 +42,7 @@ data class GitCommitCheckInfo(
     val webhookType: String,
     val webhookEventType: String,
     val enableCheck: Boolean,
-    val targetBranch: String?
+    val targetBranch: String?,
+    val pipelineName: String = "",
+    val startTaskId: String? = null
 )
