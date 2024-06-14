@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -343,6 +344,22 @@ class RemoteDevJobService @Autowired constructor(
             errMsg = I18nUtil.getCodeLanMessage(REMOTEDEV_PIPELINE_JOB_STATUS_UNKNOWN),
             endTime = LocalDateTime.now()
         )
+    }
+
+    fun fetchJobDetail(jobId: Long): String? {
+        val record = remoteDevJobExecRecordDao.getRecord(dslContext, jobId) ?: return null
+        return when (val param = objectMapper.readValue<JobSchemaParam>(record.jobSchemaParam.data())) {
+            is PipelineParam -> {
+                fetchPipelineJobDetail(param, record.receiptInfo ?: return null)
+            }
+
+            else -> null
+        }
+    }
+
+    private fun fetchPipelineJobDetail(param: PipelineParam, receiptInfo: JSON): String? {
+        val receipt = objectMapper.readValue<PipelineJobReceiptInfo>(receiptInfo.data())
+
     }
 
     companion object {
