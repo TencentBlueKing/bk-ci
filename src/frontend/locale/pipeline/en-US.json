@@ -1161,7 +1161,10 @@
       "paramId": "Option ID Field Name",
       "paramName": "Option NAME Field Name",
       "paramIdTips": "When selected, this ID value is passed to the plugin",
-      "paramNameTips": "Option name as seen by the user on the page"
+      "paramNameTips": "Option name as seen by the user on the page",
+      "remove": "Remove",
+      "removeTitle": "Confirm to delete this variable?",
+      "toTop": "Move to top"
     },
     "enableVersions": "Enable Versioning",
     "editVersions": "Edit Version",
@@ -1350,7 +1353,7 @@
   "triggerBranch": "Trigger Branch",
   "triggerRepo": "Trigger Repository",
   "noBuildHistory": "No execution history",
-  "noDebugRecords": "No debug records",
+  "noDebugRecords": "There is no debugging record yet. It may be that there is no draft at the moment or the current draft has not been debugged.",
   "buildNow": "Run Now",
   "debugNow": "Debug Now",
   "onlyDraftBuildHistoryTips": "Pipeline has not been released, please release it first and then start execution.",

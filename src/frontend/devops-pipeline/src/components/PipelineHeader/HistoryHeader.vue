@@ -95,10 +95,8 @@
                         @click="goExecPreview"
                     >
                         {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
-    
                     </bk-button>
                 </span>
-                
                 <more-actions />
             </template>
         </aside>
@@ -294,7 +292,6 @@
                 this.handleVersionChange(this.releaseVersion)
             },
             handleVersionChange (versionId, version) {
-                console.log('handleVersionChange', versionId, version)
                 let routeType = this.$route.params.type || 'history'
 
                 if (version) {
