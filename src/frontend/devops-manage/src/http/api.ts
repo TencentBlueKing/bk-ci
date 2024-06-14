@@ -5,6 +5,7 @@ import {
   PROJECT_PERFIX,
   IAM_PERFIX,
   ITSM_PERFIX,
+  USER_PERFIX,
 } from './constants';
 export default {
   getUser() {
@@ -88,12 +89,12 @@ export default {
   },
 
   /**
-   * 停用/启用项目 
+   * 停用/启用项目
    */
   enabledProject(params: any) {
     const { projectId, enable } = params;
     return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}/enable?enabled=${enable}`);
-  };
+  },
 
   /**
    * 取消创建项目
@@ -210,12 +211,62 @@ export default {
   async renameGroupName(params: any) {
     const { groupName, groupId, projectCode, resourceType } = params;
     return http.put(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}/rename`, {
-      groupName 
+      groupName
     });
   },
 
   async getResource(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
     return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/getResource`);
-  }
+  },
+
+  /**
+   * 获取项目下全体成员
+   */
+  async getProjectMembers(projectId: string, params?: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.get(`${IAM_PERFIX}/member/${projectId}/listProjectMembers?${query}`);
+  },
+  /**
+   * 获取项目成员有权限的用户组
+   */
+  async getMemberGroupsWithPermissions(params: any, member?: string) {
+    const { projectId, resourceType, offset, limit } = params;
+    return http.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsWithPermissions/${offset}/${limit}?member=${member}`);
+  },
+  /**
+   * 批量续期组成员权限--无需进行审批
+   */
+  async batchRenewal(projectId: string, params?: any) {
+    return http.put(`${IAM_PERFIX}/member/${projectId}/batch/renewal`, params);
+  },
+  /**
+   * 批量移除用户组成员
+   */
+  async batchRemove(projectId: string, params?: any) {
+    return http.DELETE(`${IAM_PERFIX}/member/${projectId}/batch/remove`, params);
+  },
+  /**
+   * 批量交接用户组成员
+   */
+  async batchHandover(projectId: string, params?: any) {
+    return http.DELETE(`${IAM_PERFIX}/member/${projectId}/batch/handover`, params);
+  },
+  /**
+   * 根据组织ID获取成员
+   */
+  async deptUsers(deptId: string) {
+    return http.get(`${USER_PERFIX}/dept/${deptId}/users`);
+  },
+  /**
+   * 一键移除项目用户
+   */
+  async removeMemberFromProject(projectId: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.delete(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject?${query}`);
+  },
 };

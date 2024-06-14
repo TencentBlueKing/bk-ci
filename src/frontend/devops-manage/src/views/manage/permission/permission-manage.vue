@@ -105,7 +105,7 @@
   </bk-dialog>
 </template>
 
-<script setup name="permission-manage">
+<script setup name="PermissionManage">
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';

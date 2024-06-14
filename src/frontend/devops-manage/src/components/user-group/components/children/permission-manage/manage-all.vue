@@ -1,48 +1,40 @@
 <template>
   <bk-loading class="manage" :loading="isLoading">
     <div class="manage-search">
-      <select-group
-        :value="serveValue"
-        :options="serveList"
-        prefix="所属服务"
-        @handle-change="value => handleSearchChange(value, 'serve')"
-      />
-      <select-group
-        :value="resourceValue"
-        :options="resourceList"
-        prefix="资源"
-        @handle-change="value => handleSearchChange(value, 'resource')"
-      />
-      <select-group
-        :value="operateValue"
-        :options="operateList"
-        prefix="操作"
-        @handle-change="value => handleSearchChange(value, 'operate')"
-      />
-      <bk-search-select
-        v-model="searchValue"
-        :data="searchData"
-        unique-select
+      <bk-input
         class="multi-search"
-        placeholder="用户/组织架构/用户组名/用户组 ID/用户组描述"
+        v-model="searchValue"
+        placeholder="请输入用户名"
+        @blur="() => getProjectMembers()"
       />
     </div>
     <div class="manage-article">
       <div class="manage-aside">
-        <manage-aside :member-list="memberList" @handle-click="handleAsideClick" />
+        <manage-aside
+          ref="manageAsideRef"
+          :member-list="memberList"
+          :person-list="personList"
+          :over-table="handOverTable"
+          @handle-click="handleAsideClick"
+          @page-change="handleAsidePageChange"
+          @get-person-list="handleShowPerson"
+          @remove-confirm="handleAsideRemoveConfirm"
+        />
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
-          <bk-button @click="batchRenewal">批量续期</bk-button>
-          <bk-button @click="batchHandover">批量移交</bk-button>
-          <bk-button @click="batchRemove">批量移出</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchRenewal">批量续期</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='USER'">批量移交</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchRemove">批量移出</bk-button>
         </div>
-        <div v-if="1">
+        <div v-if="isPermission">
           <GroupTable
             :is-show-operation="true"
+            :aside-item="asideItem"
             @renewal="handleRenewal"
             @handover="handleHandover"
             @remove="handleRemove"
+            @get-select-list="getSelectList"
           />
         </div>
         <div v-else class="no-permission">
@@ -125,11 +117,17 @@
     <template #default>
       <div class="slider-main">
         <p class="main-desc">
-          已选择<span class="desc-primary"> 3 </span>个用户组
-          <span>；其中<span class="desc-warn"> 1 </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略</span>
+          已选择<span class="desc-primary"> {{ selectList.length }} </span>个用户组
+          <span>；其中
+            <span class="desc-warn"> {{ unableMove.length }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
+          </span>
         </p>
         <div>
-          <GroupTable :is-show-operation="false" :pagination="pagination" />
+          <GroupTable
+            :is-show-operation="false"
+            :pagination="pagination"
+            :aside-item="asideItem"
+          />
         </div>
       </div>
       <div class="slider-footer">
@@ -137,7 +135,7 @@
           <div v-if="sliderTitle === '批量续期'">
             <div class="main-line">
               <p class="main-label">续期对象</p>
-              <span class="main-text">用户： fayewang (王玉菊)</span>
+              <span class="main-text">用户： {{ asideItem.name }}</span>
             </div>
             <div class="main-line">
               <p class="main-label">续期时长</p>
@@ -149,6 +147,7 @@
               <p class="main-label">移交给</p>
               <bk-form
                 ref="formRef"
+                :rules="rules"
                 :model="handOverForm"
               >
                 <bk-form-item
@@ -168,16 +167,18 @@
             <div class="main-line" style="margin-top: 40px;">
               <p class="main-label-remove">
                 确认从以上
-                <sapn class="remove-num">2</sapn>
+                <span class="remove-num">{{ selectList.length }}</span>
                 个用户组中移出
-                <span class="remove-person">fayewang (王玉菊)</span>
+                <span class="remove-person">{{ asideItem.name }}</span>
                 吗？
               </p>
             </div>
           </div>
         </div>
         <div class="footer-btn">
-          <bk-button :theme="theme" @click="batchConfirm">{{ t(batchBtnText) }}</bk-button>
+          <bk-button v-if="batchFlag === 'renewal'" theme="primary" @click="batchConfirm('renewal')">确定续期</bk-button>
+          <bk-button v-if="batchFlag === 'handover'" theme="primary" @click="batchConfirm('handover')">确定移交</bk-button>
+          <bk-button v-if="batchFlag === 'remove'" theme="danger" @click="batchConfirm('remove')">确定移出</bk-button>
           <bk-button @click="batchCancel">取消</bk-button>
         </div>
       </div>
@@ -185,16 +186,20 @@
   </bk-sideslider>
 </template>
 
-<script setup name="manageAll">
+<script setup name="ManageAll">
 import { useI18n } from 'vue-i18n';
-import { ref, watch } from 'vue';
-import SelectGroup from './select-group.vue';
+import { useRoute } from 'vue-router';
+import { Message } from 'bkui-vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import ManageAside from './manage-aside.vue';
 import GroupTable from './group-table.vue';
 import TimeLimit from './time-limit.vue';
+import http from '@/http/api';
 
 const { t } = useI18n();
-
+const route = useRoute();
+const formRef = ref('');
+const projectId = computed(() => route.params?.projectCode);
 const expiredAt = ref();
 const isLoading = ref(false);
 const isShowRenewal = ref(false);
@@ -202,121 +207,95 @@ const isShowHandover = ref(false);
 const isShowRemove = ref(false);
 const isShowSlider = ref(false);
 const sliderTitle = ref('批量续期');
-const theme = ref('primary');
-const batchBtnText = ref('确定续期');
-const pagination = ref({ count: 11, limit: 10, current: 1 });
+const batchFlag = ref();
+const pagination = ref({ limit: 10 });
+const memberPagination = ref({ limit: 10, current: 1 });
 const handOverForm = ref({
-  name: ''
-})
-const serveValue = ref([]);
-const serveList = ref([
-  {
-    value: 'climbing',
-    label: '爬山',
-  },
-  {
-    value: 'running',
-    label: '跑步',
-  },
-]);
-
-const resourceValue = ref([]);
-const resourceList = ref([
-  {
-    value: 'unknow',
-    label: '未知',
-  },
-  {
-    value: 'fitness',
-    label: '健身',
-  },
-]);
-const operateValue = ref([]);
-const operateList = ref([
-  {
-    value: 'bike',
-    label: '骑车',
-  },
-  {
-    value: 'dancing',
-    label: '跳舞',
-  },
-]);
-const searchValue = ref([]);
-const searchData = ref([
-  {
-    name: '实例业务',
-    id: '2',
-    onlyRecommendChildren: true,
-    children: [
-      {
-        name: '王者荣耀',
-        id: '2-1',
-      },
-      {
-        name: '刺激战场',
-        id: '2-2',
-      },
-      {
-        name: '绝地求生',
-        id: '2-3',
-      },
-    ],
-  },
-  {
-    name: 'IP地址',
-    id: '3',
-  },
-  {
-    name: 'testestset',
-    id: '4',
-  },
-]);
-const stateRefs = {
-  serve: serveValue,
-  resource: resourceValue,
-  operate: operateValue,
+  name: '',
+});
+const rules = {
+  name: [
+    { required: true, message: '请输入移交人', trigger: 'blur' },
+  ],
 };
-const memberList = ref([
-  {
-    projectId: 1,
-    bgName: 'IEG互动娱乐事业群',
-    centerName: 'SRE平台研发中心',
-    deptName: '技术运营部',
-    approver: 'v_hejieehe',
-    subjectScopes: [
-      {
-        name: '余姣姣',
-        full_name: 'v_yjjiaoyu',
-        expiredId: 1743602525,
-      },
-      {
-        name: '何福寿',
-        full_name: 'terlinhe',
-        expiredId: 4102444800,
-      },
-    ],
-  },
-]);
+const searchValue = ref('');
+const memberList = ref([]);
+const asideItem = ref();
+const selectList = ref([]);
+const unableMove = ref([]);
+const isPermission = ref(true);
+const personList = ref([]);
+const manageAsideRef = ref(null);
+const handOverTable = ref([]);
 
-watch([serveValue, resourceValue, operateValue, searchValue], () => {
-  // 侦听值的变化，调用接口获取筛选数据
-  console.log(serveValue.value, resourceValue.value, operateValue.value, searchValue.value, '搜索的数据');
+onMounted(() => {
+  getProjectMembers();
 });
 
 /**
- * 搜索事件
- * @param value 搜索值
- * @param target 查询标志
+ * 获取项目下全体成员
  */
-function handleSearchChange(value, target) {
-  stateRefs[target].value = value;
+async function getProjectMembers() {
+  const params = {
+    page: memberPagination.value.current,
+    pageSize: memberPagination.value.limit,
+  };
+
+  if (searchValue.value) {
+    params.userName = searchValue.value;
+  }
+  const res = await http.getProjectMembers(projectId.value, params);
+  // memberList.value = res.records
+  memberList.value = [
+    {
+      id: 12345,
+      name: 'IEG互动娱乐事业群',
+      type: 'DEPARTMENT',
+    }, {
+      id: 2,
+      name: '余姣姣',
+      type: 'USER',
+    }, {
+      id: 3,
+      name: '王五',
+      type: 'USER',
+    },
+    {
+      id: 4,
+      name: 'SRE平台研发中心',
+      type: 'DEPARTMENT',
+    }, {
+      id: 5,
+      name: '张三',
+      type: 'USER',
+    }, {
+      id: 6,
+      name: '李四',
+      type: 'USER',
+    },
+  ];
+}
+/**
+ * aside页码切换
+ */
+async function handleAsidePageChange(current) {
+  if (memberPagination.value.current !== current) {
+    memberPagination.value.current = current;
+    getProjectMembers();
+  }
+}
+/**
+ * 获取表格选择的数据
+ */
+function getSelectList(val) {
+  selectList.value = val;
+  unableMove.value = val.filter(item => item.removeMemberButtonControl);
 }
 /**
  * 人员组织侧边栏点击事件
  */
-function handleAsideClick(id) {
-  console.log(id, '这里根据id展示表格数据');
+function handleAsideClick(item) {
+  asideItem.value = item;
 }
 /**
  * 续期按钮点击
@@ -362,38 +341,122 @@ function handleChangeTime(value) {
  * 批量续期
  */
 function batchRenewal() {
+  if (!selectList.value.length) {
+    Message('请先选择用户组');
+    return;
+  }
   sliderTitle.value = '批量续期';
-  batchBtnText.value = '确定续期';
+  batchFlag.value = 'renewal';
   isShowSlider.value = true;
 }
 /**
  * 批量移交
  */
 function batchHandover() {
+  if (!selectList.value.length) {
+    Message('请先选择用户组');
+    return;
+  }
   sliderTitle.value = '批量移交';
-  batchBtnText.value = '确定移交';
+  batchFlag.value = 'handover';
   isShowSlider.value = true;
 }
 /**
  * 批量移出
  */
 function batchRemove() {
+  if (!selectList.value.length) {
+    Message('请先选择用户组');
+    return;
+  }
   sliderTitle.value = '批量移出';
-  batchBtnText.value = '确定移出';
-  theme.value = 'danger';
+  batchFlag.value = 'remove';
   isShowSlider.value = true;
 }
 /**
  * sideslider 关闭
  */
 function batchCancel() {
+  handOverForm.value.name = '';
+  formRef.value?.clearValidate();
   isShowSlider.value = false;
 }
 /**
- * sideslider 确认
+ *  侧边栏确认事件
  */
-function batchConfirm() {
-  console.log(expiredAt.value, '授权的时间');
+async function batchConfirm(batchFlag) {
+  if (batchFlag === 'renewal') {
+    const params = [{
+      member: asideItem.value.name,
+      groupId: asideItem.value.id,
+      expiredAt: expiredAt.value,
+    }];
+    const res = await http.batchRenewal(projectId.value, params);
+  } else if (batchFlag === 'handover') {
+    const flag = await formRef.value.validate();
+    if (flag) {
+      const params = [{
+        groupId: asideItem.value.id,
+        handoverFrom: asideItem.value.name,
+        handoverTo: handOverForm.value.name,
+      }];
+      const res = await http.batchHandover(projectId.value, params);
+    }
+  } else if (batchFlag === 'remove') {
+    const params = [{
+      groupId: asideItem.value.id,
+      member: asideItem.value.name,
+    }];
+    const res = await http.batchRemove(projectId.value, params);
+  }
+
+  setTimeout(() => {
+    isShowSlider.value = false;
+    handOverForm.value.name = '';
+    formRef.value?.clearValidate();
+  }, 1000);
+}
+/**
+ * 人员列表数据获取
+ */
+async function handleShowPerson(value) {
+  const res = await http.deptUsers(value.id);
+  personList.value = res.map(item => ({ person: item }));
+}
+/**
+ * 移出项目
+ */
+const flag = ref(true);
+async function handleAsideRemoveConfirm(value) {
+  const res = await http.removeMemberFromProject(value.id, {
+    type: value.type,
+    member: value.name,
+  });
+  // 这里根据返回判断移出成功和失败的情况
+  if (flag.value) {
+    manageAsideRef.value?.handOverfail(true);
+    handOverTable.value = [
+      {
+        id: 1,
+        code: 'bkdevops-plugins-test/fayenodejstesa',
+        reason: '指定用户未操作过 OAuth',
+        percent: '',
+      },
+      {
+        id: 2,
+        code: 'bkdevops-plugins-test/fayenodejstesa',
+        reason: '指定用户没有此代码库权限',
+        percent: '',
+      },
+    ];
+    flag.value = false;
+  } else {
+    console.log(handOverTable.value, '移交失败表格数据');
+    Message({
+      theme: 'success',
+      message: `${value.name} 已成功移出本项目。`,
+    });
+  }
 }
 </script>
 

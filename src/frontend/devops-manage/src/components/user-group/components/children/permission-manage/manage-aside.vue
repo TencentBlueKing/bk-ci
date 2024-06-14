@@ -1,66 +1,40 @@
 <template>
-  <div>
-    <div class="group-item">
-      <img src="../../../svg/organization.svg?inline" class="group-icon">
-      <p>{{ memberList[0].bgName }}</p>
+  <div class="aside">
+    <div
+      :class="{'group-active': activeTab == item.id }"
+      class="group-item"
+      v-for="item in memberList"
+      :key="item.id"
+      @click="handleClick(item)"
+    >
+      <span v-if="item.type === 'DEPARTMENT'">
+        <img :src="activeTab === item.id ? organizationActiveIcon : organizationIcon" class="group-icon">
+      </span>
+      <span v-else>
+        <img :src="activeTab === item.id ? userActiveIcon : userIcon" class="group-icon">
+      </span>
+      <p>{{ item.name }}</p>
       <bk-popover
-        transfer
-        offset="15"
-        :distance="0"
         :arrow="false"
-        trigger="click"
         placement="bottom"
         theme="light dot-menu"
-        :popover-delay="[100, 0]"
       >
         <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
         <template #content>
           <div class="menu-content">
             <bk-button
+              v-if="item.type === 'DEPARTMENT'"
               class="btn"
               text
-              @click="handleShowPerson(memberList[0])"
+              @click="handleShowPerson(item)"
             >
               人员列表
             </bk-button>
             <bk-button
               class="btn"
               text
-              @click="handleShowRemove(memberList[0])">
-              移出项目
-            </bk-button>
-          </div>
-        </template>
-      </bk-popover>
-    </div>
-    <div
-      :class="{'group-active': activeTab == item.expiredId }"
-      class="group-item item-hover"
-      v-for="item in memberList[0].subjectScopes"
-      :key="item.expiredId"
-      @click="handleClick(item.expiredId)"
-    >
-      <img v-if="activeTab != item.expiredId" src="../../../svg/user.svg?inline" class="group-icon">
-      <img v-else src="../../../svg/user-active.svg?inline" class="group-icon" />
-      <p>{{ item.full_name }}({{ item.name }})</p>
-      <bk-popover
-        transfer
-        offset="15"
-        :distance="0"
-        :arrow="false"
-        trigger="click"
-        placement="bottom"
-        theme="light dot-menu"
-        :popover-delay="[100, 0]"
-      >
-        <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
-        <template #content>
-          <div class="menu-content">
-            <bk-button
-              class="btn"
-              text
               @click="handleRemoval(item)">
-              {{ t('移出项目') }}
+              移出项目
             </bk-button>
           </div>
         </template>
@@ -71,11 +45,11 @@
       class="pagination"
       v-model="current"
       align="center"
+      :count="pageCount"
       small
-      :limit="10"
-      :count="count"
       :show-limit="false"
       :show-total-count="false"
+      @change="pageChange"
     />
   </div>
   <bk-dialog
@@ -89,7 +63,7 @@
   >
     <template #header>
       {{ t('移出项目') }}
-      <span class="dialog-header"> 移出用户： xxxxxx </span>
+      <span class="dialog-header"> 移出用户： {{ removeUser.name }} </span>
     </template>
     <template #default>
       <div class="dialog">
@@ -123,7 +97,7 @@
           <div class="hand-over-table-group">
             <p class="hand-over-table-item">代码库授权</p>
             <bk-table
-              :data="handOverTable"
+              :data="overTable"
               :border="['outer', 'row']"
               show-overflow-tooltip
             >
@@ -152,7 +126,7 @@
   >
     <template #header>
       人员列表
-      <span class="dialog-header"> 蓝鲸运营组 </span>
+      <span class="dialog-header"> {{ removeUser.name }} </span>
     </template>
     <template #default>
         <bk-table
@@ -167,35 +141,33 @@
   </bk-dialog>
   <bk-dialog
     :width="450"
-    theme="danger"
-    cancel-text="关闭"
-    confirm-text="确定移出"
     header-align="center"
     footer-align="center"
     :is-show="isShowRemoveDialog"
-    @closed="() => isShowRemoveDialog = false"
-    @confirm="handleRemoveConfirm"
   >
     <template #header>
       <h2 class="dialog-header-text"> 确认将组织移出本项目吗？ </h2>
     </template>
     <template #default>
         <p class="remove-text">
-          <span>待移出组织：</span> IEG 互动娱乐事业群/技术运营部/蓝鲸产品中心/蓝鲸运营组
+          <span>待移出组织：</span> {{ removeUser.name }}
         </p>
+    </template>
+    <template #footer>
+      <bk-button theme="danger" @click="handleRemoveConfirm"> 确定移出 </bk-button>
+      <bk-button @click="() => isShowRemoveDialog = false"> 关闭 </bk-button>
     </template>
   </bk-dialog>
 </template>
 
-<script setup>
+<script setup name="ManageAside">
 import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits } from 'vue';
-import { Message } from 'bkui-vue';
+import { ref, defineProps, defineEmits, computed, watch, defineExpose } from 'vue';
 
 const { t } = useI18n();
 const current = ref(1);
-const count = ref(100);
-const activeTab = ref('1743602525');
+const pageCount = ref();
+const activeTab = ref();
 const isShowhandOverDialog = ref(false);
 const formRef = ref(null);
 const handOverDialogLoding = ref(false);
@@ -206,36 +178,57 @@ const isShowRemoveDialog = ref(false);
 const handOverForm = ref({
   name: ''
 })
-const handOverTable = ref([
-  {
-    id: 1,
-    code: "bkdevops-plugins-test/fayenodejstesa",
-    reason: "指定用户未操作过 OAuth",
-    percent: "",
-  },
-  {
-    id: 2,
-    code: "bkdevops-plugins-test/fayenodejstesa",
-    reason: "指定用户没有此代码库权限",
-    percent: "",
-  }
-]);
-const personList = ref([])
-defineProps({
+
+const organizationIcon = computed(() => require('../../../svg/organization.svg?inline'));
+const organizationActiveIcon = computed(() => require('../../../svg/organization-active.svg?inline'));
+const userIcon = computed(() => require('../../../svg/user.svg?inline'));
+const userActiveIcon = computed(() => require('../../../svg/user-active.svg?inline'));
+const removeUser = ref(null);
+
+const props = defineProps({
   memberList: {
     type: Array,
-    required: true,
+    default: () => [],
+  },
+  personList: {
+    type: Array,
+    default: () => [],
+  },
+  overTable: {
+    type: Array,
+    default: () => [],
   }
 });
-const emit = defineEmits(['handleChange']);
+const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm']);
 
-function handleClick(id) {
-  activeTab.value = id;
-  emit('handleClick', id);
+watch(() => props.memberList, (newData) => {
+  activeTab.value = newData[0].id;
+  pageCount.value = newData.length;
+  emit('handleClick', newData[0]);
+});
+
+defineExpose({
+  handOverfail
+});
+
+function handleClick(item) {
+  activeTab.value = item.id;
+  emit('handleClick', item);
 }
-
+function pageChange(current) {
+  emit('pageChange', current);
+}
+/**
+ * 移出项目
+ * @param item 
+ */
 function handleRemoval(item) {
-  isShowhandOverDialog.value = true;
+  if(item.type === "DEPARTMENT") {
+    isShowRemoveDialog.value = true;
+  } else {
+    isShowhandOverDialog.value = true;
+  }
+  removeUser.value = item;
 }
 /**
  *  人员移出项目弹窗关闭
@@ -251,20 +244,8 @@ function handOverConfirm() {
   handOverDialogLoding.value = true;
   formRef.value?.validate().then( isValid => {
     if (isValid) {
-      // 接口判断 是否重置失败
-      setTimeout(()=>{
-        handOverDialogLoding.value = false;
-        if(Math.random() > 0.5){
-          isHandOverfail.value = true;
-          console.log(handOverTable.value,'移出授权人表格数据');
-        }else{
-          Message({
-            theme: 'success',
-            message: 'daisyhong (小芸) 已成功移出本项目。',
-          });
-          handOverDialogLoding.value = false;
-        }
-      },1000)
+      emit('removeConfirm',removeUser.value)
+      handOverDialogLoding.value = false;
     }
   }).catch(()=>{
     
@@ -273,43 +254,32 @@ function handOverConfirm() {
     isHandOverfail.value = false;
   })
 }
+function handOverfail(flag) {
+  isHandOverfail.value = flag;
+}
 /**
  * 人员列表
  */
 function handleShowPerson(item) {
   isShowPersonDialog.value = true;
+  removeUser.value = item;
   personDialogLoading.value = true;
-  setTimeout(()=>{
-    personList.value=[
-      {person:'aaaa'},
-      {person:'bbb'},
-      {person:'ccc'},
-      {person:'ddd'},
-      {person:'aaaa'},
-    ]
-    personDialogLoading.value = false;
-  },1000)
-}
-/**
- * 组织移出项目
- */
-function handleShowRemove(item) {
-  isShowRemoveDialog.value = true;
+  emit('getPersonList',item)
+  personDialogLoading.value = false;
 }
 /**
  * 组织移除项目弹窗确定
  */
-function handleRemoveConfirm(params) {
-  // 调接口
+function handleRemoveConfirm() {
+  emit('removeConfirm',removeUser.value)
   isShowRemoveDialog.value = false;
-  Message({
-    theme: 'success',
-    message: 'IEG 互动娱乐事业群/技术运营部/蓝鲸产品中心/蓝鲸运营组 已成功移出本项目。',
-  });
 }
 </script>
 
 <style lang="scss" scoped>
+.aside {
+  height: calc(100% - 60px);
+}
 .group-item {
   display: flex;
   width: 100%;

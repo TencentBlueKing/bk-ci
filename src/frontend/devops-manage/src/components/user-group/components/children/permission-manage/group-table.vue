@@ -51,6 +51,94 @@
                 <bk-table-column label="操作" v-if="isShowOperation">
                   <template #default="{row}">
                     <div class="operation-btn">
+                      <bk-button
+                        text
+                        theme="primary"
+                        @click="handleRenewal(row)"
+                      >续期</bk-button>
+                      <bk-button
+                        text
+                        theme="primary"
+                        @click="handleHandOver(row)"
+                      >移交</bk-button>
+                      <span
+                        v-bk-tooltips="{
+                          content: row.RemoveMemberButtonControl==='UNIQUE_MANAGER'?
+                            '唯一管理员，不可移出。请添加新的管理员后再移出。':
+                            row.RemoveMemberButtonControl==='TEMPLATE'?
+                            '通过用户组加入，不可直接移出。如需调整，请编辑用户组。':
+                            row.RemoveMemberButtonControl==='UNIQUE_MANAGER'?
+                            '唯一拥有者，不可移出。请添加新的拥有者后再移出。': ''
+                            ,
+                          disabled: row.removeMemberButtonControl!=='OTHER'
+                        }"
+                      >
+                        <bk-button
+                          text
+                          theme="primary"
+                          :disabled="row.removeMemberButtonControl==='OTHER'"
+                          @click="handleRemove(row)"
+                        >移出</bk-button>
+                      </span>
+                    </div>
+                  </template>
+                </bk-table-column>
+              </bk-table>
+            </template>
+          </bk-collapse-panel>
+        </bk-collapse>
+      </div>
+    </div>
+    <div class="manage-content-resource">
+      <p class="project-group">资源级用户组</p>
+      <div class="project-group-table">
+        <bk-collapse>
+          <bk-collapse-panel v-model="activeIndex">
+            <template #header>
+              <p class="group-title" @click="toggleTable">
+                流水线-流水线组
+                <span class="group-num">3</span>
+              </p>
+            </template>
+            <template #content>
+              <bk-table
+                ref="refTable"
+                max-height="464"
+                :fixed-bottom="fixedBottom"
+                :data="projectTable"
+                show-overflow-tooltip
+                :pagination="pagination"
+                @select-all="handleSelectAll"
+                @selection-change="handleSelectionChange"
+              >
+                <template #prepend>
+                  <div v-if="selectList.length" class="prepend">
+                    已选择 {{ selectList.length }} 条数据，
+                    <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
+                    &nbsp; | &nbsp;
+                    <span @click="handleClear">清除选择</span>
+                  </div>
+                </template>
+                <template #fixedBottom v-if="!pagination">
+                  <div class="prepend">
+                    剩余{{ 22 }} 条数据，
+                    <span @click="handleLoadMore"> 加载更多 </span>
+                  </div>
+                </template>
+                <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
+                <bk-table-column label="用户组" prop="groupName">
+                </bk-table-column>
+                <bk-table-column label="用户描述" prop="groupDesc" />
+                <bk-table-column label="有效期" prop="validityPeriod" />
+                <bk-table-column label="加入时间" prop="joinedTime" />
+                <bk-table-column label="加入方式/操作人" prop="operateSource">
+                  <template #default="{row}">
+                    {{ row.operateSource }}/{{ row.operator }}
+                  </template>
+                </bk-table-column>
+                <bk-table-column label="操作" v-if="isShowOperation">
+                  <template #default="{row}">
+                    <div class="operation-btn">
                       <span
                         v-bk-tooltips="{
                           content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
@@ -74,7 +162,7 @@
                           text
                           theme="primary"
                           :disabled="row.removeMemberButtonControl"
-                          @click="handleHandover(row)"
+                          @click="handleHandOver(row)"
                         >移交</bk-button>
                       </span>
                       <span
@@ -99,186 +187,11 @@
         </bk-collapse>
       </div>
     </div>
-    <div class="manage-content-resource">
-      <p class="project-group">资源级用户组</p>
-      <div class="project-group-table">
-        <p class="group-title" @click="toggleTable">
-          流水线-流水线组
-          <span class="group-num">3</span>
-        </p>
-        <transition name="collapse">
-          <div v-if="isTableVisible">
-            <bk-table
-              max-height="464"
-              :data="projectTable"
-              :pagination="pagination"
-              show-overflow-tooltip
-            >
-              <template #prepend>
-                <div v-if="selectList.length" class="prepend">
-                  已选择 {{ selectList.length }} 条数据，
-                  <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
-                  &nbsp; | &nbsp;
-                  <span @click="handleClear">清除选择</span>
-                </div>
-              </template>
-              <template #appendBottom v-if="!pagination">
-                <div class="prepend" @click="handleLoadMore">
-                  剩余{{ 22 }} 条数据，
-                  <span> 加载更多 </span>
-                </div>
-              </template>
-              <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
-              <bk-table-column label="用户组" prop="groupName">
-              </bk-table-column>
-              <bk-table-column label="用户描述" prop="groupDesc" />
-              <bk-table-column label="有效期" prop="validityPeriod" />
-              <bk-table-column label="加入时间" prop="joinedTime" />
-              <bk-table-column label="加入方式/操作人" prop="operateSource">
-                <template #default="{row}">
-                  {{ row.operateSource }}/{{ row.operator }}
-                </template>
-              </bk-table-column>
-              <bk-table-column label="操作" v-if="isShowOperation">
-                <template #default="{row}">
-                  <div class="operation-btn">
-                    <span
-                      v-bk-tooltips="{
-                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
-                        disabled: !row.removeMemberButtonControl
-                      }"
-                    >
-                      <bk-button
-                        text
-                        theme="primary"
-                        :disabled="row.removeMemberButtonControl"
-                        @click="handleRenewal(row)"
-                      >续期</bk-button>
-                    </span>
-                    <span
-                      v-bk-tooltips="{
-                        content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。',
-                        disabled: !row.removeMemberButtonControl
-                      }"
-                    >
-                      <bk-button
-                        text
-                        theme="primary"
-                        :disabled="row.removeMemberButtonControl"
-                        @click="handleHandover(row)"
-                      >移交</bk-button>
-                    </span>
-                    <span
-                      v-bk-tooltips="{
-                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
-                        disabled: !row.removeMemberButtonControl
-                      }"
-                    >
-                      <bk-button
-                        text
-                        theme="primary"
-                        :disabled="row.removeMemberButtonControl"
-                        @click="handleRemove(row)"
-                      >移出</bk-button>
-                    </span>
-                  </div>
-                </template>
-              </bk-table-column>
-            </bk-table>
-          </div>
-        </transition>
-      </div>
-      <div class="project-group-table">
-        <p class="group-title" @click="toggleTable">
-          流水线-流水线组
-          <span class="group-num">3</span>
-        </p>
-        <transition name="collapse">
-          <div v-if="isTableVisible">
-            <bk-table
-              max-height="522"
-              :data="projectTable"
-              show-overflow-tooltip
-            >
-              <template #prepend>
-                <div v-if="selectList.length" class="prepend">
-                  已选择 {{ selectList.length }} 条数据，
-                  <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
-                  &nbsp; | &nbsp;
-                  <span @click="handleClear">清除选择</span>
-                </div>
-              </template>
-              <template #appendBottom v-if="!pagination">
-                <div class="prepend" @click="handleLoadMore">
-                  剩余{{ 22 }} 条数据，
-                  <span> 加载更多 </span>
-                </div>
-              </template>
-              <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
-              <bk-table-column label="用户组" prop="groupName">
-              </bk-table-column>
-              <bk-table-column label="用户描述" prop="groupDesc" />
-              <bk-table-column label="有效期" prop="validityPeriod" />
-              <bk-table-column label="加入时间" prop="joinedTime" />
-              <bk-table-column label="加入方式/操作人" prop="operateSource">
-                <template #default="{row}">
-                  {{ row.operateSource }}/{{ row.operator }}
-                </template>
-              </bk-table-column>
-              <bk-table-column label="操作" v-if="isShowOperation">
-                <template #default="{row}">
-                  <div class="operation-btn">
-                    <span
-                      v-bk-tooltips="{
-                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
-                        disabled: !row.removeMemberButtonControl
-                      }"
-                    >
-                      <bk-button
-                        text
-                        theme="primary"
-                        :disabled="row.removeMemberButtonControl"
-                        @click="handleRenewal(row)"
-                      >续期</bk-button>
-                    </span>
-                    <span
-                      v-bk-tooltips="{
-                        content: '通过用户组加入，不可直接移出。如需调整，请编辑用户组。',
-                        disabled: !row.removeMemberButtonControl
-                      }"
-                    >
-                      <bk-button
-                        text
-                        theme="primary"
-                        :disabled="row.removeMemberButtonControl"
-                        @click="handleHandover(row)"
-                      >移交</bk-button>
-                    </span>
-                    <span
-                      v-bk-tooltips="{
-                        content: '唯一管理员，不可移出。请添加新的管理员后再移出。',
-                        disabled: !row.removeMemberButtonControl
-                      }"
-                    >
-                      <bk-button
-                        text
-                        theme="primary"
-                        :disabled="row.removeMemberButtonControl"
-                        @click="handleRemove(row)"
-                      >移出</bk-button>
-                    </span>
-                  </div>
-                </template>
-              </bk-table-column>
-            </bk-table>
-          </div>
-        </transition>
-      </div>
-    </div>
   </div>
 </template>
 
-<script setup> import { ref, defineProps, defineEmits } from 'vue';
+<script setup name="GroupTable">
+import { ref, defineProps, defineEmits, watch } from 'vue';
 
 const total = ref(0);
 const refTable = ref(null);
@@ -404,8 +317,15 @@ defineProps({
   pagination: {
     type: Object,
   },
+  asideItem: {
+    type: Object,
+  },
 });
-const emit = defineEmits(['renewal', 'handover', 'remove']);
+const emit = defineEmits(['renewal', 'handOver', 'remove', 'getSelectList']);
+
+watch(selectList, (newValue) => {
+  emit('getSelectList', newValue);
+});
 /**
  * 当前页全选事件
  */
@@ -413,7 +333,7 @@ function handleSelectAll(val) {
   selectList.value = [];
   if (val.checked) {
     projectTable.value.forEach((item) => {
-      selectList.value.push(item.groupId);
+      selectList.value.push(item);
     });
   } else {
     selectList.value = [];
@@ -425,10 +345,11 @@ function handleSelectAll(val) {
  */
 function handleSelectionChange(val) {
   if (val.checked) {
-    selectList.value.push(val.row.groupId);
+    selectList.value.push(val.row);
   } else {
-    selectList.value = selectList.value.filter(item => item !== val.row.groupId);
+    selectList.value = selectList.value.filter(item => item !== val.row);
   }
+  emit('getSelectList', selectList.value);
 };
 /**
  * 全量数据选择
@@ -436,7 +357,7 @@ function handleSelectionChange(val) {
 function handleSelectAllData() {
   refTable.value.toggleAllSelection();
   // 调用接口获取全部数据后
-  selectList.value = projectTable.value.map(item => item.groupId);
+  selectList.value = projectTable.value.map(item => item);
 }
 /**
  * 清除选择
@@ -457,8 +378,8 @@ function handleRenewal(row) {
  * 移交按钮点击
  * @param row 行数据
  */
-function handleHandover(row) {
-  emit('handover', row);
+function handleHandOver(row) {
+  emit('handOver', row);
 }
 /**
  * 移出按钮点击
