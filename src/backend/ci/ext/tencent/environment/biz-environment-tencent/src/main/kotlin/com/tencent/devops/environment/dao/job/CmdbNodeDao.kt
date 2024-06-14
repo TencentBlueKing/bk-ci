@@ -530,13 +530,14 @@ class CmdbNodeDao {
     fun getCmdbNodesByNodeIdList(
         dslContext: DSLContext,
         nodeIdList: List<Long>
-    ): Result<Record4<Long, String, String, String>> {
+    ): Result<Record5<Long, String, String, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 NODE_STATUS.`as`(T_NODE_NODE_STATUS),
-                AGENT_VERSION.`as`(T_NODE_AGENT_VERSION)
+                AGENT_VERSION.`as`(T_NODE_AGENT_VERSION),
+                SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_ID.`in`(nodeIdList))

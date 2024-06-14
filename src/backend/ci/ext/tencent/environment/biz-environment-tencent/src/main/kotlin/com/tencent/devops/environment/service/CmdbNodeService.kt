@@ -341,7 +341,7 @@ class CmdbNodeService @Autowired constructor(
 
         // 将该节点添加到CC中
         val queryCCInfoList = addNodeToCCByServerIdMap(serverIdToNodeMap)
-        val queryCCServerIdToCCInfoMap = queryCCInfoList.associateBy { it.svrId }
+        val queryCCServerIdToCCInfoMap = queryCCInfoList.associateBy { it.svrId }.filterKeys { null != it }
 
         // update对应db记录的 NODE_STATUS，并写入 HOST_ID 和 CLOUD_AREA_ID
         val nodeIdList = reImportCmdbNodeInfoList.map { it.nodeId }
