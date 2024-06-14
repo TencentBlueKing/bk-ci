@@ -320,7 +320,6 @@ class CodeWebhookService @Autowired constructor(
             logger.warn("Consume git commit check fail. $event", ignored)
             when (ignored) {
                 is RemoteServiceException -> {
-                    //:TODO 如果是凭证问题就日志回写凭证失效
                     buildLogPrinter.addLines(
                         buildId = event.buildId,
                         logMessages = listOf(
@@ -507,7 +506,6 @@ class CodeWebhookService @Autowired constructor(
         } catch (ignored: Exception) {
             when (ignored) {
                 is RemoteServiceException -> {
-                    //:TODO 如果是凭证问题就日志回写凭证失效
                     buildLogPrinter.addLines(
                         buildId = event.buildId,
                         logMessages = listOf(

@@ -67,6 +67,6 @@ interface ServiceCommitCheckResource {
         commitId: String,
         targetBranch: String?,
         context: String,
-        repositoryConfig: RepositoryConfig,
+        repositoryConfig: RepositoryConfig
     ): Result<RepositoryGitCheck?>
 }
