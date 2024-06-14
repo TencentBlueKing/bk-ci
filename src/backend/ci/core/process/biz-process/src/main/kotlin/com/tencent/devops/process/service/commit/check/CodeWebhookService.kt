@@ -289,7 +289,7 @@ class CodeWebhookService @Autowired constructor(
                         context = context,
                         targetBranch = targetBranch,
                         repositoryConfig = repositoryConfig
-                    ) != null && buildStatus.isFinish()
+                    ) == null && buildStatus.isFinish()
                 ) {
                     logger.info(
                         "[process] check history data not found|$pipelineId|$commitId|$context|" +
