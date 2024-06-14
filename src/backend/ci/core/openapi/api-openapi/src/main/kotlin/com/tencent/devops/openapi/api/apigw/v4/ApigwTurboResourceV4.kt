@@ -174,7 +174,7 @@ interface ApigwTurboResourceV4 {
         startDate: String?,
         @Parameter(description = "截止统计日期")
         @QueryParam("endDate")
-        endDate: String?,
+        endDate: String?
     ): Response<Boolean>
 
     @GET
