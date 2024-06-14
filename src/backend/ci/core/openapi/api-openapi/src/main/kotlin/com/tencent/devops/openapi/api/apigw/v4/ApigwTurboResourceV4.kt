@@ -157,10 +157,7 @@ interface ApigwTurboResourceV4 {
     ): Response<Page<ProjectResourceUsageVO>>
 
     @GET
-    @Operation(
-        summary = "触发项目资源统计上报任务",
-        tags = ["v4_app_server_resources_upload_auto", "v4_user_server_resources_upload_auto"]
-    )
+    @Operation(summary = "触发项目资源统计上报任务", tags = ["v4_app_server_resources_upload_auto"])
     @Path("/triggerAutoUpload/{month}")
     fun triggerAutoUpload(
         @Parameter(description = "用户信息")
@@ -181,10 +178,7 @@ interface ApigwTurboResourceV4 {
     ): Response<Boolean>
 
     @GET
-    @Operation(
-        summary = "手动上报项目资源统计数据",
-        tags = ["v4_app_server_resources_upload_manual", "v4_user_server_resources_upload_manual"]
-    )
+    @Operation(summary = "手动上报项目资源统计数据", tags = ["v4_app_server_resources_upload_manual"])
     @Path("/manualUpload")
     fun triggerManualUpload(
         @Parameter(description = "用户信息")
