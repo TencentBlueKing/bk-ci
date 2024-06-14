@@ -187,7 +187,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         blobId: String,
         defaultBranch: String
     ): Boolean {
-        val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
+        val pipelineYamlVersion = pipelineYamlService.getLatestVersion(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
@@ -196,7 +196,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         return if (pipelineYamlVersion == null) {
             if (defaultBranch != ref) {
-                pipelineYamlService.getLatestVersionByRef(
+                pipelineYamlService.getLatestVersion(
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = filePath,
@@ -382,13 +382,31 @@ class PipelineYamlRepositoryService @Autowired constructor(
             ) ?: return
             // 非默认分支删除yaml,需要将分支版本置为无效
             if (ref != defaultBranch) {
-                pipelineYamlService.updateBranchAction(
+                // 获取当前yaml文件最新的版本
+                val pipelineYamlVersion = pipelineYamlService.getLatestVersion(
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    filePath = yamlFile.yamlPath,
-                    ref = ref,
-                    branchAction = BranchVersionAction.INACTIVE.name
+                    filePath = yamlFile.yamlPath
                 )
+                // 如果yaml文件最新版本与删除文件的版本相同,则关闭pac
+                if (pipelineYamlVersion?.ref == ref) {
+                    disableYamlPipeline(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineYamlInfo.pipelineId,
+                        repoHashId = repoHashId,
+                        filePath = yamlFile.yamlPath,
+                        refreshView = true
+                    )
+                } else {
+                    pipelineYamlService.updateBranchAction(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        filePath = yamlFile.yamlPath,
+                        ref = ref,
+                        branchAction = BranchVersionAction.INACTIVE.name
+                    )
+                }
                 pipelineInfoFacadeService.updateBranchVersion(
                     userId = userId,
                     projectId = projectId,
@@ -406,11 +424,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     )
                 }
             } else {
-                pipelineYamlService.updatePipelineYamlStatus(
+                // 默认分支删除yaml文件,需要将流水线PAC关闭
+                disableYamlPipeline(
+                    userId = userId,
                     projectId = projectId,
+                    pipelineId = pipelineYamlInfo.pipelineId,
                     repoHashId = repoHashId,
-                    filePath = filePath,
-                    status = PipelineYamlStatus.DELETED.name
+                    filePath = pipelineYamlInfo.filePath,
+                    refreshView = true
                 )
             }
         } catch (ignored: Exception) {
@@ -559,17 +580,13 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val yamlPipelines = pipelineYamlService.getAllYamlPipeline(projectId = projectId, repoHashId = repoHashId)
         yamlPipelines.forEach { pipelineYamlInfo ->
             // 解绑yaml关联的流水线
-            pipelineInfoFacadeService.updateYamlPipelineSetting(
+            disableYamlPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineYamlInfo.pipelineId,
-                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false)
-            )
-            pipelineYamlService.deleteYamlPipeline(
-                userId = userId,
-                projectId = projectId,
                 repoHashId = repoHashId,
-                filePath = pipelineYamlInfo.filePath
+                filePath = pipelineYamlInfo.filePath,
+                refreshView = false
             )
         }
         // 删除流水线组
@@ -589,6 +606,42 @@ class PipelineYamlRepositoryService @Autowired constructor(
         }
         // 删除yaml同步记录
         pipelineYamlSyncService.delete(projectId = projectId, repoHashId = repoHashId)
+    }
+
+    /**
+     * @param refreshView 是否刷新流水线组
+     */
+    private fun disableYamlPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        repoHashId: String,
+        filePath: String,
+        refreshView: Boolean
+    ) {
+        // 解绑yaml关联的流水线
+        pipelineInfoFacadeService.updateYamlPipelineSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false)
+        )
+        pipelineYamlService.deleteYamlPipeline(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        )
+        if (refreshView) {
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
+            pipelineViewGroupService.updateGroupAfterPipelineUpdate(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineInfo.pipelineName,
+                creator = userId,
+                userId = userId
+            )
+        }
     }
 
     /**
