@@ -88,7 +88,7 @@ class CodeWebhookListenerConfiguration {
      */
     @Bean
     fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.QUEUE_PIPELINE_BUILD_FINISH_COMMIT_CHECK, true, false)
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
@@ -100,7 +100,7 @@ class CodeWebhookListenerConfiguration {
      * 构建结束的webhook队列--- 并发小
      */
     @Bean
-    fun buildFinishCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK)
+    fun buildFinishCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_COMMIT_CHECK)
 
     @Bean
     fun buildFinishCodeWebhookQueueBind(
