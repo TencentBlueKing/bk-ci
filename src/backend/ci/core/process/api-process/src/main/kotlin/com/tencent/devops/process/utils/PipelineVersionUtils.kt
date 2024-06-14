@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
+@Suppress("ComplexMethod")
 object PipelineVersionUtils {
 
     fun getVersionNameByModel(
