@@ -357,7 +357,7 @@ class PipelineResourceVersionDao {
             }
             // TODO UPDATE_TIME 需要增加索引，有慢查询风险
             return query.orderBy(
-                UPDATE_TIME.desc(), VERSION.desc()
+                UPDATE_TIME.desc(), VERSION_NUM.desc(), VERSION.desc()
             ).limit(limit).offset(offset).fetch(sampleMapper)
         }
     }
