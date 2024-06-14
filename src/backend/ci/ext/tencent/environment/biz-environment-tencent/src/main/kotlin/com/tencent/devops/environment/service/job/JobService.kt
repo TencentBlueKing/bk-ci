@@ -299,7 +299,7 @@ class JobService @Autowired constructor(
         )
         ApigwJobCloudApi.setJobOperationName(::queryJobInstanceLogs.name)
         val jobCloudQueryJobInstanceLogsRes: JobCloudResult<JobCloudQueryJobInstanceLogsResult> =
-            apigwJobCloudApi.executePostRequest(
+            apigwJobCloudApi.executeShortPostRequest(
                 jobCloudQueryJobInstanceLogsReq, JobCloudQueryJobInstanceLogsResult::class.java
             )
         val queryJobInstanceLogsRes: JobResult<QueryJobInstanceLogsResult> = JobResult(

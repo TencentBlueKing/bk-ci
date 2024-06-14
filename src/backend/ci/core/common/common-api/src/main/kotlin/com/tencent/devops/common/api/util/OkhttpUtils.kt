@@ -167,6 +167,13 @@ object OkhttpUtils {
         return doHttp(shortOkHttpClient, request)
     }
 
+    fun doShortPost(url: String, jsonParam: String, headers: Map<String, String> = mapOf()): Response {
+        val builder = getBuilder(url, headers)
+        val body = jsonParam.toRequestBody(jsonMediaType)
+        val request = builder.post(body).build()
+        return doShortHttp(request)
+    }
+
     private fun doCustomClientHttp(customOkHttpClient: OkHttpClient, request: Request): Response {
         return doHttp(customOkHttpClient, request)
     }
