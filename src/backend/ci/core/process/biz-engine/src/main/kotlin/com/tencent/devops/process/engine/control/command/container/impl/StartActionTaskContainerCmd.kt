@@ -424,7 +424,7 @@ class StartActionTaskContainerCmd(
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
             // 打印构建日志--DEBUG级别日志，平时隐藏
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount, tag = taskId,
                 buildId = buildId, containerHashId = containerHashId, message = message.toString(),
                 jobId = null, stepId = stepId
@@ -458,7 +458,10 @@ class StartActionTaskContainerCmd(
     ): Boolean {
 
         if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
+
             return ControlUtils.checkTaskSkip(
+                projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
@@ -475,6 +478,8 @@ class StartActionTaskContainerCmd(
             val it = containerContext.containerTasks[idx]
             if (!VMUtils.isVMTask(it.taskId)) {
                 skip = ControlUtils.checkTaskSkip(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     additionalOptions = it.additionalOptions,
                     containerFinalStatus = containerContext.buildStatus,

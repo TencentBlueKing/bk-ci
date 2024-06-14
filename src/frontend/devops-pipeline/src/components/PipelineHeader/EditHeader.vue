@@ -254,7 +254,10 @@
                                 name: pipelineSetting.pipelineName,
                                 desc: pipelineSetting.desc
                             },
-                            setting: pipelineSetting
+                            setting: Object.assign(pipelineSetting, {
+                                failSubscription: undefined,
+                                successSubscription: undefined
+                            })
                         },
                         yaml: pipelineYaml
                     })

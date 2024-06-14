@@ -794,7 +794,7 @@ open class MarketAtomTask : ITask() {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
-                    if (buildVariables.pipelineAsCodeSettings?.enable == true) env.remove(key)
+                    // if (buildVariables.pipelineAsCodeSettings?.enable == true) env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()

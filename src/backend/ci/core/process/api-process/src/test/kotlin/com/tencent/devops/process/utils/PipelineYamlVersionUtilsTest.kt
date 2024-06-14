@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
@@ -41,6 +43,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
+@Suppress("ALL")
 class PipelineYamlVersionUtilsTest {
 
     @Test
@@ -174,7 +177,46 @@ class PipelineYamlVersionUtilsTest {
                                 LinuxScriptElement(
                                     script = "echo 1",
                                     continueNoneZero = true,
-                                    scriptType = BuildScriptType.SHELL
+                                    scriptType = BuildScriptType.SHELL,
+                                    additionalOptions = ElementAdditionalOptions(enable = true)
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val diffModel4 = Model(
+            name = "name1",
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = "stage-1",
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "trigger",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    id = "T-1-1-1",
+                                    name = "t1"
+                                )
+                            )
+                        )
+                    )
+                ),
+                Stage(
+                    id = "stage-2",
+                    containers = listOf(
+                        NormalContainer(),
+                        NormalContainer(
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    script = "echo 1",
+                                    continueNoneZero = true,
+                                    scriptType = BuildScriptType.SHELL,
+                                    additionalOptions = ElementAdditionalOptions(enable = false)
                                 )
                             )
                         )
@@ -212,6 +254,19 @@ class PipelineYamlVersionUtilsTest {
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model, diffModel2))
         assertEquals(version + 1, PipelineVersionUtils.getTriggerVersion(version, model, diffTrigger))
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, diffModel2, diffModel3))
+        assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, diffModel3, diffModel4))
+    }
+
+    @Test
+    fun testModelStr() {
+        val modelStr1 = "{\"name\":\"插件enable\",\"desc\":\"插件enable\",\"stages\":[{\"containers\":[{\"@type\":\"trigger\",\"id\":\"0\",\"name\":\"trigger\",\"elements\":[{\"@type\":\"manualTrigger\",\"name\":\"手动触发\",\"id\":\"T-1-1-1\",\"canElementSkip\":false,\"useLatestParameters\":false,\"executeCount\":1,\"version\":\"1.*\",\"classType\":\"manualTrigger\",\"elementEnable\":true,\"atomCode\":\"manualTrigger\",\"taskAtom\":\"\"}],\"params\":[],\"containerId\":\"0\",\"containerHashId\":\"c-9658289a5be3436dbc5c96ae4b66f3ec\",\"matrixGroupFlag\":false,\"classType\":\"trigger\",\"containerEnable\":true}],\"id\":\"stage-1\",\"name\":\"stage-1\",\"tag\":[\"28ee946a59f64949a74f3dee40a1bda4\"],\"fastKill\":false,\"finally\":false,\"stageEnable\":true},{\"containers\":[{\"@type\":\"normal\",\"id\":\"1\",\"name\":\"无编译环境\",\"elements\":[{\"@type\":\"marketBuildLess\",\"name\":\"子流水线调用新\",\"id\":\"e-53f57f458b5745c6b1d20a5a20726253\",\"atomCode\":\"SubPipelineExec\",\"version\":\"1.*\",\"data\":{\"input\":{\"projectId\":\"codecc-tool-auto\",\"subPipelineType\":\"ID\",\"subPip\":\"p-3d2d4022cf3e476bb7c060e3634abff4\",\"subPipelineName\":\"\",\"runMode\":\"syn\",\"params\":\"[{\\\"key\\\":\\\"BK_CI_BUILD_MSG\\\",\\\"value\\\":\\\"1\\\",\\\"enable\\\":true},{\\\"key\\\":\\\"CODECC_BKCHECK_MinHeapFreeRatio\\\",\\\"value\\\":\\\"30\\\",\\\"enable\\\":true},{\\\"key\\\":\\\"CODECC_BKCHECK_MaxHeapFreeRatio\\\",\\\"value\\\":\\\"50\\\",\\\"enable\\\":true}]\",\"fieldNamespace\":\"sub_pipeline\"},\"output\":{\"sub_pipeline_buildId\":\"string\",\"sub_pipeline_url\":\"string\"},\"namespace\":\"\"},\"executeCount\":1,\"additionalOptions\":{\"enable\":false,\"continueWhenFailed\":false,\"manualSkip\":false,\"retryWhenFailed\":false,\"retryCount\":1,\"manualRetry\":false,\"timeout\":900,\"timeoutVar\":\"900\",\"runCondition\":\"PRE_TASK_SUCCESS\",\"pauseBeforeExec\":false,\"subscriptionPauseUser\":\"user1\",\"otherTask\":\"\",\"customVariables\":[{\"key\":\"param1\",\"value\":\"\"}],\"customCondition\":\"\",\"enableCustomEnv\":true},\"classType\":\"marketBuildLess\",\"elementEnable\":false,\"taskAtom\":\"\"}],\"enableSkip\":false,\"containerId\":\"1\",\"containerHashId\":\"c-5c8c288bce3c417a80d74e7d578bdab7\",\"maxQueueMinutes\":60,\"maxRunningMinutes\":1440,\"jobControlOption\":{\"enable\":true,\"prepareTimeout\":10,\"timeout\":900,\"timeoutVar\":\"900\",\"runCondition\":\"STAGE_RUNNING\",\"customVariables\":[{\"key\":\"param1\",\"value\":\"\"}],\"customCondition\":\"\",\"dependOnType\":\"ID\",\"dependOnId\":[],\"dependOnName\":\"\",\"continueWhenFailed\":false},\"jobId\":\"job_fLR\",\"matrixGroupFlag\":false,\"classType\":\"normal\",\"containerEnable\":true}],\"id\":\"stage-2\",\"name\":\"stage-1\",\"tag\":[\"28ee946a59f64949a74f3dee40a1bda4\"],\"fastKill\":false,\"finally\":false,\"checkIn\":{\"manualTrigger\":false,\"timeout\":24,\"markdownContent\":false,\"notifyType\":[\"RTX\"]},\"checkOut\":{\"manualTrigger\":false,\"timeout\":24,\"markdownContent\":false,\"notifyType\":[\"RTX\"]},\"stageEnable\":true}],\"labels\":[],\"instanceFromTemplate\":false,\"pipelineCreator\":\"user1\",\"events\":{},\"staticViews\":[],\"latestVersion\":1}\n"
+        val modelStr2 = "{\"name\":\"插件enable\",\"desc\":\"插件enable\",\"stages\":[{\"containers\":[{\"@type\":\"trigger\",\"id\":\"0\",\"name\":\"trigger\",\"elements\":[{\"@type\":\"manualTrigger\",\"name\":\"手动触发\",\"id\":\"T-1-1-1\",\"canElementSkip\":false,\"useLatestParameters\":false,\"executeCount\":1,\"version\":\"1.*\",\"classType\":\"manualTrigger\",\"elementEnable\":true,\"atomCode\":\"manualTrigger\",\"taskAtom\":\"\"}],\"params\":[],\"containerId\":\"0\",\"containerHashId\":\"c-9658289a5be3436dbc5c96ae4b66f3ec\",\"matrixGroupFlag\":false,\"classType\":\"trigger\",\"containerEnable\":true}],\"id\":\"stage-1\",\"name\":\"stage-1\",\"tag\":[\"28ee946a59f64949a74f3dee40a1bda4\"],\"fastKill\":false,\"finally\":false,\"stageEnable\":true},{\"containers\":[{\"@type\":\"normal\",\"id\":\"1\",\"name\":\"无编译环境\",\"elements\":[{\"@type\":\"marketBuildLess\",\"name\":\"子流水线调用新\",\"id\":\"e-53f57f458b5745c6b1d20a5a20726253\",\"atomCode\":\"SubPipelineExec\",\"version\":\"1.*\",\"data\":{\"input\":{\"projectId\":\"codecc-tool-auto\",\"subPipelineType\":\"ID\",\"subPip\":\"p-3d2d4022cf3e476bb7c060e3634abff4\",\"subPipelineName\":\"\",\"runMode\":\"syn\",\"params\":\"[{\\\"key\\\":\\\"BK_CI_BUILD_MSG\\\",\\\"value\\\":\\\"1\\\",\\\"enable\\\":true},{\\\"key\\\":\\\"CODECC_BKCHECK_MinHeapFreeRatio\\\",\\\"value\\\":\\\"30\\\",\\\"enable\\\":true},{\\\"key\\\":\\\"CODECC_BKCHECK_MaxHeapFreeRatio\\\",\\\"value\\\":\\\"50\\\",\\\"enable\\\":true}]\",\"fieldNamespace\":\"sub_pipeline\"},\"output\":{\"sub_pipeline_buildId\":\"string\",\"sub_pipeline_url\":\"string\"},\"namespace\":\"\"},\"executeCount\":1,\"additionalOptions\":{\"enable\":true,\"continueWhenFailed\":false,\"manualSkip\":false,\"retryWhenFailed\":false,\"retryCount\":1,\"manualRetry\":false,\"timeout\":900,\"timeoutVar\":\"900\",\"runCondition\":\"PRE_TASK_SUCCESS\",\"pauseBeforeExec\":false,\"subscriptionPauseUser\":\"user1\",\"otherTask\":\"\",\"customVariables\":[{\"key\":\"param1\",\"value\":\"\"}],\"customCondition\":\"\",\"enableCustomEnv\":true},\"classType\":\"marketBuildLess\",\"elementEnable\":true,\"taskAtom\":\"\"}],\"enableSkip\":false,\"containerId\":\"1\",\"containerHashId\":\"c-5c8c288bce3c417a80d74e7d578bdab7\",\"maxQueueMinutes\":60,\"maxRunningMinutes\":1440,\"jobControlOption\":{\"enable\":true,\"prepareTimeout\":10,\"timeout\":900,\"timeoutVar\":\"900\",\"runCondition\":\"STAGE_RUNNING\",\"customVariables\":[{\"key\":\"param1\",\"value\":\"\"}],\"customCondition\":\"\",\"dependOnType\":\"ID\",\"dependOnId\":[],\"dependOnName\":\"\",\"continueWhenFailed\":false},\"jobId\":\"job_fLR\",\"matrixGroupFlag\":false,\"classType\":\"normal\",\"containerEnable\":true}],\"id\":\"stage-2\",\"name\":\"stage-1\",\"tag\":[\"28ee946a59f64949a74f3dee40a1bda4\"],\"fastKill\":false,\"finally\":false,\"checkIn\":{\"manualTrigger\":false,\"timeout\":24,\"markdownContent\":false,\"notifyType\":[\"RTX\"]},\"checkOut\":{\"manualTrigger\":false,\"timeout\":24,\"markdownContent\":false,\"notifyType\":[\"RTX\"]},\"stageEnable\":true}],\"labels\":[],\"instanceFromTemplate\":false,\"pipelineCreator\":\"user1\",\"events\":{},\"staticViews\":[],\"latestVersion\":2}"
+        val model1 = JsonUtil.to(modelStr1, Model::class.java)
+        val model2 = JsonUtil.to(modelStr2, Model::class.java)
+        println(model1)
+        println(model2)
+        val version = 1
+        assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model1, model2))
     }
 
     @Test
