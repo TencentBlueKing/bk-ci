@@ -706,7 +706,7 @@ class WorkspaceDao {
                     if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
                 }
                 .let { i ->
-                    if (workspaceProperty.labels != null) i.set(REMARK, workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) }) else i
+                    if (workspaceProperty.labels != null) i.set(LABELS, workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) }) else i
                 }
                 .where(NAME.eq(workspaceName))
                 .execute()
