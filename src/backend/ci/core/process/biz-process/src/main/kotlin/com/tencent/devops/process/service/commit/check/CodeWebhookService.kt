@@ -703,7 +703,8 @@ class CodeWebhookService @Autowired constructor(
                 repositoryId = repositoryConfig.repositoryHashId,
                 buildNumber = buildNum,
                 source = ExecuteSource.BKCI,
-                gitCheckId = -1
+                gitCheckId = -1,
+                checkRunId = checkRunId
             )
         )
     }

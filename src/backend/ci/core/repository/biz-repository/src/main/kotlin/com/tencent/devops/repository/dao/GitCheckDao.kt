@@ -51,7 +51,8 @@ class GitCheckDao {
                 UPDATE_TIME,
                 CONTEXT,
                 SOURCE,
-                TARGET_BRANCH
+                TARGET_BRANCH,
+                CHECK_RUN_ID
             ).values(
                 repositoryGitCheck.pipelineId,
                 repositoryGitCheck.buildNumber,
@@ -62,7 +63,8 @@ class GitCheckDao {
                 now,
                 repositoryGitCheck.context,
                 repositoryGitCheck.source.name,
-                repositoryGitCheck.targetBranch
+                repositoryGitCheck.targetBranch,
+                repositoryGitCheck.checkRunId
             ).execute()
         }
     }
