@@ -1476,7 +1476,6 @@ class PipelineRepositoryService constructor(
                     if (deleteName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
                         deleteName = deleteName.substring(0, MAX_LEN_FOR_NAME)
                     }
-                    pipelineResourceVersionDao.clearDraftVersion(transactionContext, projectId, pipelineId)
                     pipelineResourceVersionDao.clearActiveBranchVersion(transactionContext, projectId, pipelineId)
                     pipelineInfoDao.softDelete(
                         dslContext = transactionContext,
