@@ -358,8 +358,55 @@ class PipelineYamlVersionUtilsTest {
             ),
             pipelineCreator = "userId"
         )
+        val model3 = Model(
+            name = "name1",
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = "stage-1",
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "trigger",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    id = "T-1-1-1",
+                                    name = "t1"
+                                )
+                            )
+                        )
+                    )
+                ),
+                Stage(
+                    id = "stage-2",
+                    containers = listOf(
+                        VMBuildContainer(
+                            customEnv = listOf(
+                                NameAndValue("a", "1")
+                            ),
+                            baseOS = VMBaseOS.LINUX
+                        ),
+                        NormalContainer(
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    customEnv = listOf(
+                                        NameAndValue("b", "2")
+                                    ),
+                                    script = "echo 1",
+                                    continueNoneZero = true,
+                                    scriptType = BuildScriptType.SHELL,
+                                    additionalOptions = ElementAdditionalOptions(enable = true)
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
         val version = 1
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model1, model2))
+        assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model1, model3))
     }
     @Test
     fun getSettingVersions() {
