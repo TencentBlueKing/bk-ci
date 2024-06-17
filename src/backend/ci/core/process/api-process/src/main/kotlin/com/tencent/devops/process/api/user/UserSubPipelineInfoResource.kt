@@ -59,6 +59,9 @@ interface UserSubPipelineInfoResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = false, example = "")
         @QueryParam("subPip")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "是否包含常量", required = false, example = "")
+        @QueryParam("includeConst")
+        includeConst: Boolean? = true
     ): Result<List<SubPipelineStartUpInfo>>
 }

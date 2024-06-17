@@ -44,7 +44,8 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
     override fun subpipManualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        includeConst: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
         if (pipelineId.isBlank() || projectId.isBlank()) {
@@ -54,7 +55,8 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         return client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            includeConst = includeConst
         )
     }
 
