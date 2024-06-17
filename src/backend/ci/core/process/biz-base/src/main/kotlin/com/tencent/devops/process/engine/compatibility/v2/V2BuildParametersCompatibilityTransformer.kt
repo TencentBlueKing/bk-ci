@@ -38,6 +38,9 @@ import org.slf4j.LoggerFactory
 open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibilityTransformer {
 
     override fun parseTriggerParam(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
         paramProperties: List<BuildFormProperty>,
         paramValues: Map<String, String>
     ): MutableMap<String, BuildParameters> {
@@ -61,8 +64,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 val overrideValue = paramValues[key] ?: paramValues[param.id]
                 if (!param.required && overrideValue != null) {
                     logger.warn(
-                        "BKSystemErrorMonitor|parseTriggerParam[$key] not required, " +
-                            "overrideValue=$overrideValue, defaultValue=${param.defaultValue}"
+                        "BKSystemErrorMonitor|parseTriggerParam|$userId|$projectId|$pipelineId|[$key] " +
+                            "not required, overrideValue=$overrideValue, defaultValue=${param.defaultValue}"
                     )
                 }
                 overrideValue ?: param.defaultValue
