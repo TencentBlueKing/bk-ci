@@ -27,7 +27,9 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TDailyCgsData
@@ -703,6 +705,9 @@ class WorkspaceDao {
                 .let { i ->
                     if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
                 }
+                .let { i ->
+                    if (workspaceProperty.labels != null) i.set(REMARK, workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) }) else i
+                }
                 .where(NAME.eq(workspaceName))
                 .execute()
         }
@@ -921,7 +926,10 @@ class WorkspaceDao {
                     workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType),
                     workspaceSystemType = WorkspaceSystemType.valueOf(systemType),
                     ownerType = WorkspaceOwnerType.valueOf(ownerType),
-                    remark = remark
+                    remark = remark,
+                    labels = labels?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<String>
+                    }
                 )
             }
         }

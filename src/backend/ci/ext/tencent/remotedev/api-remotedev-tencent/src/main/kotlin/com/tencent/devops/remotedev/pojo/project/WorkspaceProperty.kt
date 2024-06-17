@@ -36,5 +36,7 @@ data class WorkspaceProperty(
     @JsonProperty("display_name")
     val displayName: String?,
     @get:Schema(title = "备注")
-    val remark: String?
+    val remark: String?,
+    @get:Schema(title = "标签")
+    var labels: List<String>?
 )

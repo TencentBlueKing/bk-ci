@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.dao
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
@@ -394,7 +396,10 @@ class WorkspaceJoinDao {
                 workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String),
                 workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
                 ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
-                remark = record["REMARK"] as String?
+                remark = record["REMARK"] as String?,
+                labels = (record["LABELS"] as String).let { self ->
+                    JsonUtil.getObjectMapper().readValue(self) as List<String>
+                }
             )
         }
     }
@@ -440,7 +445,10 @@ class WorkspaceJoinDao {
                 workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
                 ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
                 workSpaceDetail = record["DETAIL"] as String,
-                remark = record["REMARK"] as String?
+                remark = record["REMARK"] as String?,
+                labels = (record["LABELS"] as String).let { self ->
+                    JsonUtil.getObjectMapper().readValue(self) as List<String>
+                }
             )
         }
     }
