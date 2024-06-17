@@ -80,7 +80,9 @@ class BuildLogPrinter(
             doWithCircuitBreaker {
                 genLogPrintPrintResource().addLogMultiLine(
                     buildId = buildId,
-                    logMessages = logMessages
+                    logMessages = logMessages.map {
+                        it.formatMessage()
+                    }
                 )
             }
         } catch (e: CallNotPermittedException) {
@@ -373,6 +375,27 @@ class BuildLogPrinter(
                 action()
             }
         }
+    }
+
+    private fun LogMessage.formatMessage():LogMessage {
+        when (logType) {
+            LogType.WARN -> {
+                LOG_WARN_FLAG
+            }
+
+            LogType.DEBUG -> {
+                LOG_DEBUG_FLAG
+            }
+
+            LogType.ERROR -> {
+                LOG_ERROR_FLAG
+            }
+
+            LogType.LOG -> null
+        }?.let {
+            message = "$it${message.replace("\n", "\n$it")}"
+        }
+        return this
     }
 
     companion object {
