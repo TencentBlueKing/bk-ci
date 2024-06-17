@@ -7,6 +7,7 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
@@ -42,21 +43,16 @@ class StartAndBcsCommonService @Autowired constructor(
             }.onFailure {
                 logger.warn("workspaceTaskCallback|workspaceExpandDiskCallback fail ${it.message}", it)
             }
-            if (task.status == EnvironmentActionStatus.SUCCEEDED) {
-                workspaceOpHisDao.updateStatusByWorkspaceName(
-                    dslContext = dslContext,
-                    workspaceName = task.workspaceName,
-                    status = EnvironmentActionStatus.SUCCEEDED,
-                    fStatus = EnvironmentActionStatus.PENDING
-                )
-            } else {
-                workspaceOpHisDao.update(
-                    dslContext = dslContext,
-                    uid = taskStatus.uid,
-                    status = task.status,
-                    actionMsg = task.actionMsg
-                )
-            }
+            workspaceOpHisDao.update(
+                dslContext = dslContext,
+                uid = task.uid,
+                status = if (taskStatus.status == TaskStatusEnum.successed) {
+                    EnvironmentActionStatus.SUCCEEDED
+                } else {
+                    EnvironmentActionStatus.FAILED
+                },
+                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+            )
             return true
         }
         if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
