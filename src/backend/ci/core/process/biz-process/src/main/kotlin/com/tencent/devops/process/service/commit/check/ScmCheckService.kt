@@ -50,6 +50,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -83,7 +84,7 @@ class ScmCheckService @Autowired constructor(
             val repo = getRepo(projectId, repositoryConfig)
             val (isOauth, token, type) = when (repo) {
                 is CodeGitRepository -> {
-                    val isOauth = repo.credentialId.isEmpty()
+                    val isOauth = repo.authType == RepoAuthType.OAUTH
                     val token = if (isOauth) {
                         getAccessToken(repo.userName).first
                     } else {
