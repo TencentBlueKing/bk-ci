@@ -21,11 +21,11 @@
     export default {
         props: {
             latestBuildNum: {
-                type: Object,
+                type: [String, Number],
                 required: true
             },
             currentBuildNum: {
-                type: Object,
+                type: [String, Number],
                 required: true
             },
             version: {
