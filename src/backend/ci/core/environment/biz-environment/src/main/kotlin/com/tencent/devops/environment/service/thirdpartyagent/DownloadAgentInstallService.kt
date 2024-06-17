@@ -95,7 +95,7 @@ class DownloadAgentInstallService @Autowired constructor(
         val fileName = if (agentRecord.os == OS.WINDOWS.name) {
             if (isWinDownload) {
                 "download_install.ps1"
-            }else{
+            } else {
                 "install.bat"
             }
         } else {
