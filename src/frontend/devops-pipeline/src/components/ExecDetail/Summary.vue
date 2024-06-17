@@ -66,9 +66,24 @@
                             </section>
                         </div>
                     </bk-popover>
-                    <span v-bk-overflow-tips class="pipeline-cur-version-span">
-                        {{execDetail.curVersionName}}
-                    </span>
+                    <bk-popover
+                        placement="top"
+                        max-width="500"
+                    >
+                        <span class="pipeline-cur-version-span">
+                            {{execDetail.curVersionName}}
+                        </span>
+                        <div slot="content">
+                            <p>
+                                <label>{{$t('versionNum')}}：</label>
+                                <span>{{execDetail.curVersionName}}</span>
+                            </p>
+                            <p>
+                                <label>{{$t('versionDesc')}}：</label>
+                                <span>{{curVersionDesc || '--'}}</span>
+                            </p>
+                        </div>
+                    </bk-popover>
                 </div>
             </div>
             <div class="exec-remark-block">
@@ -139,7 +154,8 @@
                 tempRemark: this.execDetail.remark,
                 remark: this.execDetail.remark,
                 isChangeRemark: false,
-                isShowMoreMaterial: false
+                isShowMoreMaterial: false,
+                curVersionDesc: ''
             }
         },
         computed: {
@@ -181,15 +197,36 @@
 
         },
         watch: {
-            execDetail: function (val) {
-                if (val.remark !== this.tempRemark) {
-                    this.tempRemark = val.remark
-                    this.remark = val.remark
-                }
+            execDetail: {
+                handler: function (val) {
+                    if (val.remark !== this.tempRemark) {
+                        this.tempRemark = val.remark
+                        this.remark = val.remark
+                    }
+                    this.updateCurVersionDesc()
+                },
+                immediate: true
             }
         },
         methods: {
-            ...mapActions('pipelines', ['updateBuildRemark']),
+            ...mapActions({
+                fetchVersionDetail: 'atom/getPipelineVersionInfo',
+                updateBuildRemark: 'pipelines/updateBuildRemark'
+            }),
+            async updateCurVersionDesc () {
+                try {
+                    const result = await this.fetchVersionDetail({
+                        version: this.execDetail.curVersion,
+                        ...this.$route.params
+                    })
+                    this.curVersionDesc = result.data.description
+                } catch (error) {
+                    this.$showTips({
+                        message: error.message,
+                        theme: 'error'
+                    })
+                }
+            },
             showRemarkEdit () {
                 this.remarkEditable = true
             },
@@ -267,7 +304,7 @@
     > div {
       display: flex;
       flex-direction: column;
-      
+
       &:first-child {
         margin-left: -16px;
       }
@@ -335,9 +372,10 @@
       align-items: center;
       line-height: 48px;
       .pipeline-cur-version-span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        @include ellipsis();
+        text-decoration: underline;
+        text-decoration-skip-ink: none;
+        cursor: pointer;
       }
 
       .exec-remark {
