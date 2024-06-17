@@ -1755,7 +1755,7 @@ class PipelineBuildDao {
             val update = dslContext.update(this)
                 .set(DELETE_TIME, now)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-            update.let { update.and(VERSION.eq(version)) }
+            version?.let { update.and(VERSION.eq(version)) }
             return update.execute()
         }
     }
