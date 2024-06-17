@@ -481,7 +481,9 @@ class PipelineRuntimeService @Autowired constructor(
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,
-                totalTime = startTime?.let { s -> endTime?.let { e -> e - s } ?: 0 } ?: 0,
+                totalTime = if (startTime != null && endTime != null) {
+                    (endTime!! - startTime!!).takeIf { it > 0 }
+                } else null,
                 executeTime = executeTime,
                 buildParameters = buildParameters,
                 webHookType = webhookType,

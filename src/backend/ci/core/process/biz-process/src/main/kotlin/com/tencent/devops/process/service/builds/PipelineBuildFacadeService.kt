@@ -663,7 +663,10 @@ class PipelineBuildFacadeService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
-            val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, values)
+            val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
+                userId = userId, projectId = projectId, pipelineId = pipelineId,
+                paramProperties = triggerContainer.params, paramValues = values
+            )
             // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
             pipelineYamlFacadeService.buildYamlManualParamMap(
                 userId = userId,
@@ -774,7 +777,10 @@ class PipelineBuildFacadeService(
              */
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
-            val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
+            val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(
+                userId = userId, projectId = projectId, pipelineId = pipelineId,
+                paramProperties = triggerContainer.params, paramValues = parameters
+            )
             parameters.forEach { (key, value) ->
                 if (!paramPamp.containsKey(key)) {
                     paramPamp[key] = BuildParameters(key = key, value = value)

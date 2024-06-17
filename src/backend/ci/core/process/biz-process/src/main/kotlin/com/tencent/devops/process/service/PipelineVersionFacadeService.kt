@@ -436,7 +436,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             staticViewIds = request.staticViews
         )
         // #8164 发布后的流水将调试信息清空为0，重新计数，同时取消该版本的调试记录
-        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId, version).forEach { debug ->
+        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId).forEach { debug ->
             if (!debug.status.isFinish()) {
                 buildLogPrinter.addWarnLine(
                     buildId = debug.buildId, executeCount = debug.executeCount ?: 1,
@@ -450,7 +450,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             }
         }
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
-        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
+        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId)
         val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         return DeployPipelineResult(
             pipelineId = pipelineId,
