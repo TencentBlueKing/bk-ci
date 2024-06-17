@@ -1,4 +1,4 @@
-package com.tencent.devops.environment.dao.thirdPartyAgent
+package com.tencent.devops.environment.dao.thirdpartyagent
 
 import com.tencent.devops.model.environment.tables.TAgentBatchInstallToken
 import com.tencent.devops.model.environment.tables.records.TAgentBatchInstallTokenRecord

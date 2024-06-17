@@ -1,11 +1,13 @@
 package com.tencent.devops.environment.service.thirdpartyagent
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
-import com.tencent.devops.environment.dao.thirdPartyAgent.AgentBatchInstallTokenDao
+import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
+import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -27,7 +29,8 @@ class BatchInstallAgentService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val agentUrlService: AgentUrlService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val downloadAgentInstallService: DownloadAgentInstallService
+    private val downloadAgentInstallService: DownloadAgentInstallService,
+    private val simpleRateLimiter: SimpleRateLimiter
 ) {
     fun genInstallLink(
         projectId: String,
@@ -83,6 +86,13 @@ class BatchInstallAgentService @Autowired constructor(
         val (projectId, userId, errorMsg) = verifyToken(token)
         if (errorMsg != null) {
             throw RuntimeException(errorMsg)
+        }
+
+        // 增加下载限制
+        val lockKey = "lock:tpa:batch:rate:$token"
+        val acquire = simpleRateLimiter.acquire(ImportService.BU_SIZE, lockKey = lockKey)
+        if (!acquire) {
+            throw OperationException("Frequency $lockKey limit: ${ImportService.BU_SIZE}")
         }
 
         // 直接创建新agent
