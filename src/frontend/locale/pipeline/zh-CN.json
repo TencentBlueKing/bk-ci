@@ -1355,7 +1355,7 @@
   "eventType": "事件类型",
   "baseInfo": "基础信息",
   "executeConfig": "执行设置",
-  "customBuildNum": "自定义构建号格式：",
+  "customBuildNum": "自定义构建号格式",
   "parallelSetting": "并发设置",
   "triggerName": "触发器",
   "triggerStatus": "启用状态",

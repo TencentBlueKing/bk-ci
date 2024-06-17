@@ -1352,7 +1352,7 @@
   "eventType": "Event Type",
   "baseInfo": "Basic Information",
   "executeConfig": "Execute Settings",
-  "customBuildNum": "Custom Build Number Format:",
+  "customBuildNum": "Custom Build Number Format",
   "parallelSetting": "Concurrency Settings",
   "triggerName": "Trigger",
   "triggerStatus": "Enable Status",
