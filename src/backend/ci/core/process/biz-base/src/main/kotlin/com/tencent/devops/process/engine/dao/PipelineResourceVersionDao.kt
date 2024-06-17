@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
@@ -309,6 +310,7 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        pipelineInfo: PipelineInfo,
         queryUnknownRelatedFlag: Boolean? = null,
         maxQueryVersion: Int? = null,
         offset: Int,
@@ -356,9 +358,11 @@ class PipelineResourceVersionDao {
                 query.and(VERSION.le(maxQueryVersion))
             }
             // TODO UPDATE_TIME 需要增加索引，有慢查询风险
-            return query.orderBy(
+            val list = query.orderBy(
                 UPDATE_TIME.desc(), VERSION_NUM.desc(), VERSION.desc()
             ).limit(limit).offset(offset).fetch(sampleMapper)
+            list.forEach { if (it.version == pipelineInfo.version) it.latestReleasedFlag = true }
+            return list
         }
     }
 
