@@ -484,11 +484,15 @@
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         version,
                         versionName,
-                        releaseVersion: version,
                         versionNum,
                         baseVersion: version,
                         baseVersionName: versionName,
-                        releaseVersionName: versionName,
+                        ...(!targetAction || targetAction === 'COMMIT_TO_MASTER'
+                            ? {
+                                releaseVersion: version,
+                                releaseVersionName: versionName
+                            }
+                            : {}),
                         canDebug: false,
                         canRelease: false,
                         latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
