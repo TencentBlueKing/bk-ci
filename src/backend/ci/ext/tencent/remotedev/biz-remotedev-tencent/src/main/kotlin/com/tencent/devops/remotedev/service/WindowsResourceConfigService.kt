@@ -65,6 +65,7 @@ class WindowsResourceConfigService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WindowsResourceConfigService::class.java)
     }
 
+    @Suppress("NestedBlockDepth", "ComplexMethod")
     fun allWindowsQuota(
         userId: String,
         searchCustom: Boolean?,
