@@ -59,7 +59,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.pojo.mq.commit.check.TGitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.commit.check.GithubCommitCheckEvent
 import com.tencent.devops.process.service.commit.check.git.GitWebhookUnlockService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
