@@ -680,53 +680,46 @@ class WorkspaceDao {
                 return null
             }
             return WorkspaceRecordWithWindows(
-                workspaceId = record["ID"] as Long? ?: -1,
-                projectId = record["PROJECT_ID"] as String? ?: "NO_CHECK",
-                workspaceName = record["NAME"] as String? ?: "NO_CHECK",
-                displayName = record["DISPLAY_NAME"] as String? ?: "NO_CHECK",
-                usageTime = record["USAGE_TIME"] as Int? ?: -1,
-                sleepingTime = record["SLEEPING_TIME"] as Int? ?: -1,
-                createUserId = record["CREATOR"] as String? ?: "NO_CHECK",
-                creatorBgName = record["CREATOR_BG_NAME"] as String? ?: "NO_CHECK",
-                creatorDeptName = record["CREATOR_DEPT_NAME"] as String? ?: "NO_CHECK",
-                creatorCenterName = record["CREATOR_CENTER_NAME"] as String? ?: "NO_CHECK",
-                creatorGroupName = record["CREATOR_GROUP_NAME"] as String? ?: "NO_CHECK",
-                status = WorkspaceStatus.values()[record["STATUS"] as Int? ?: 1],
-                createTime = record["CREATE_TIME"] as LocalDateTime? ?: LocalDateTime.now(),
-                updateTime = record["UPDATE_TIME"] as LocalDateTime? ?: LocalDateTime.now(),
-                lastStatusUpdateTime = record["LAST_STATUS_UPDATE_TIME"] as LocalDateTime?,
-                workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String? ?: "START"),
-                workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String? ?: "WINDOWS_GPU"),
-                ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String? ?: "PROJECT"),
-                remark = record["REMARK"] as String?,
-                hostIp = record["HOST_IP"] as String?,
-                macAddress = record["MAC_ADDRESS"] as String?,
-                imageId = record["IMAGE_ID"] as String?,
-                zoneId = record["ZONE_ID"] as String?,
-                curLaunchId = record["CUR_LAUNCH_ID"] as Int?,
-                regionId = record["REGION_ID"] as Int?,
-                bakWorkspaceName = record["BAK_NAME"] as String?
+                workspaceId = record.getOrNull("ID") as Long? ?: -1,
+                projectId = record.getOrNull("PROJECT_ID") as String? ?: "NO_CHECK",
+                workspaceName = record.getOrNull("NAME") as String? ?: "NO_CHECK",
+                displayName = record.getOrNull("DISPLAY_NAME") as String? ?: "NO_CHECK",
+                usageTime = record.getOrNull("USAGE_TIME") as Int? ?: -1,
+                sleepingTime = record.getOrNull("SLEEPING_TIME") as Int? ?: -1,
+                createUserId = record.getOrNull("CREATOR") as String? ?: "NO_CHECK",
+                creatorBgName = record.getOrNull("CREATOR_BG_NAME") as String? ?: "NO_CHECK",
+                creatorDeptName = record.getOrNull("CREATOR_DEPT_NAME") as String? ?: "NO_CHECK",
+                creatorCenterName = record.getOrNull("CREATOR_CENTER_NAME") as String? ?: "NO_CHECK",
+                creatorGroupName = record.getOrNull("CREATOR_GROUP_NAME") as String? ?: "NO_CHECK",
+                status = WorkspaceStatus.values()[record.getOrNull("STATUS") as Int? ?: 1],
+                createTime = record.getOrNull("CREATE_TIME") as LocalDateTime? ?: LocalDateTime.now(),
+                updateTime = record.getOrNull("UPDATE_TIME") as LocalDateTime? ?: LocalDateTime.now(),
+                lastStatusUpdateTime = record.getOrNull("LAST_STATUS_UPDATE_TIME") as LocalDateTime?,
+                workspaceMountType = WorkspaceMountType.valueOf(
+                    record.getOrNull("WORKSPACE_MOUNT_TYPE") as String? ?: "START"
+                ),
+                workspaceSystemType = WorkspaceSystemType.valueOf(
+                    record.getOrNull("SYSTEM_TYPE") as String? ?: "WINDOWS_GPU"
+                ),
+                ownerType = WorkspaceOwnerType.valueOf(record.getOrNull("OWNER_TYPE") as String? ?: "PROJECT"),
+                remark = record.getOrNull("REMARK") as String?,
+                hostIp = record.getOrNull("HOST_IP") as String?,
+                macAddress = record.getOrNull("MAC_ADDRESS") as String?,
+                imageId = record.getOrNull("IMAGE_ID") as String?,
+                zoneId = record.getOrNull("ZONE_ID") as String?,
+                curLaunchId = record.getOrNull("CUR_LAUNCH_ID") as Int?,
+                regionId = record.getOrNull("REGION_ID") as Int?,
+                bakWorkspaceName = record.getOrNull("BAK_NAME") as String?
             )
+        }
+
+        private fun Record.getOrNull(name: String): Any? {
+            val index = this.fieldsRow().indexOf(name)
+            if (index < 0) return null
+            return this.get(index)
         }
     }
 
-    // 获取正常状态的 workspace ip
-    fun fetchProjectIp(
-        dslContext: DSLContext,
-        projectIds: Set<String>
-    ): Set<String> {
-        with(TWorkspace.T_WORKSPACE) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.`in`(projectIds))
-                .and(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
-                .and(
-                    STATUS.notIn(
-                        WorkspaceStatus.PREPARING.ordinal,
-                        WorkspaceStatus.DELETED.ordinal,
-                        WorkspaceStatus.DELIVERING_FAILED.ordinal
-                    )
-                ).fetch().map { it.hostName }.filter { !it.isNullOrBlank() }.toSet()
-        }
-    }
 
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
