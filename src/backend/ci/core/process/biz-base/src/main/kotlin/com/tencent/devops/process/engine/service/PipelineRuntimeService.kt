@@ -1485,7 +1485,11 @@ class PipelineRuntimeService @Autowired constructor(
      * 完成认领构建的任务[completeTask]
      * [endBuild]表示最后一步，当前容器要结束
      */
-    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false): PipelineBuildTask? {
+    fun completeClaimBuildTask(
+        completeTask: CompleteTask,
+        endBuild: Boolean = false,
+        endBuildMsg: String? = null
+    ): PipelineBuildTask? {
         val buildTask = pipelineTaskService.getBuildTask(
             projectId = completeTask.projectId,
             buildId = completeTask.buildId,
@@ -1526,7 +1530,7 @@ class PipelineRuntimeService @Autowired constructor(
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     executeCount = buildTask.executeCount,
-                    reason = completeTask.errorMsg
+                    reason = endBuildMsg ?: completeTask.errorMsg
                 )
             )
         }

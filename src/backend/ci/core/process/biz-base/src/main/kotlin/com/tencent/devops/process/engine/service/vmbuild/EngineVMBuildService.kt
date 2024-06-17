@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.vmbuild
 
 import com.tencent.devops.common.api.check.Preconditions
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
@@ -57,6 +58,7 @@ import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE_WHEN_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_VM_START_ALREADY
@@ -85,6 +87,7 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.jmx.elements.JmxElements
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -216,8 +219,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
                         condition = !BuildStatus.parse(c.startVMStatus).isFinish() || retryCount > 0,
-                        exception = OperationException(
-                            I18nUtil.getCodeLanMessage(messageCode = BK_VM_START_ALREADY) + " ${c.startVMStatus}"
+                        exception = ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
+                            params = arrayOf(c.startVMStatus ?: "")
                         )
                     )
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
@@ -900,7 +904,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      * 构建机结束当前Job
      */
-    fun buildEndTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Boolean {
+    fun buildEndTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        buildJobResult: BuildJobResult
+    ): Boolean {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
             containerIdLock.lock()
@@ -919,7 +929,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         userId = task.starter,
                         buildStatus = BuildStatus.SUCCEED
                     ),
-                    endBuild = true
+                    endBuild = true,
+                    endBuildMsg = buildJobResult.message
                 )
                 LOG.info("ENGINE|$buildId|BE_DONE|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
                 buildExtService.endBuild(task)

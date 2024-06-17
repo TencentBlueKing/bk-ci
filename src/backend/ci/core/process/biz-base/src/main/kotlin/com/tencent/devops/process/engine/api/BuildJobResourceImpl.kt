@@ -37,6 +37,7 @@ import com.tencent.devops.engine.api.BuildJobResource
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -99,14 +100,21 @@ class BuildJobResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun jobEnd(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun jobEnd(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        result: BuildJobResult
+    ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(
             vMBuildService.buildEndTask(
                 projectId = projectId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
-                vmName = vmName
+                vmName = vmName,
+                buildJobResult = result
             )
         )
     }
