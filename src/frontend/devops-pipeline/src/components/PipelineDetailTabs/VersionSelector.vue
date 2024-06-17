@@ -240,8 +240,6 @@
                             if (releaseVersion.version > this.pipelineInfo.releaseVersion) {
                                 // HACK: 最新版本变更时，更新当前流水线信息
                                 this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                                    version: releaseVersion.version,
-                                    versionName: releaseVersion.versionName,
                                     releaseVersion: releaseVersion.version,
                                     releaseVersionName: releaseVersion.versionName
                                 })
