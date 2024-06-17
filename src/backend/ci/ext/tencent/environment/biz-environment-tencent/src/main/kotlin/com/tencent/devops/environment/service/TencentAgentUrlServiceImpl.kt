@@ -82,16 +82,19 @@ open class TencentAgentUrlServiceImpl constructor(
     }
 
     override fun genAgentBatchInstallScript(os: OS, zoneName: String?, gateway: String?, token: String): String {
-        val gw = fixGateway(gateway)
+        var gw = fixGateway(gateway)
+        if (!gw.startsWith("http")) {
+            gw = "http://$gw"
+        }
         if (os == OS.WINDOWS) {
             return "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" }; " +
                     "\$response = Invoke-WebRequest " +
-                    "-Uri \"http://$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall\" " +
+                    "-Uri \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall\" " +
                     "-Headers \$headers; " +
                     "\$ps = [System.Text.Encoding]::UTF8.GetString(\$response.Content);Invoke-Expression -Command \$ps"
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
-                "http://$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+                "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
         if (!zoneName.isNullOrBlank()) {
             url += "?zoneName=$zoneName"
         }
