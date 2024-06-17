@@ -61,7 +61,6 @@ import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE_WHEN_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_VM_START_ALREADY
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -103,12 +102,12 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.NotFoundException
 
 @Suppress(
     "LongMethod",
@@ -909,7 +908,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        buildJobResult: BuildJobResult
+        buildJobResult: BuildJobResult? = null
     ): Boolean {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
@@ -930,7 +929,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         buildStatus = BuildStatus.SUCCEED
                     ),
                     endBuild = true,
-                    endBuildMsg = buildJobResult.message
+                    endBuildMsg = buildJobResult?.message
                 )
                 LOG.info("ENGINE|$buildId|BE_DONE|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
                 buildExtService.endBuild(task)

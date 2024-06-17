@@ -105,7 +105,7 @@ class BuildJobResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        result: BuildJobResult
+        result: BuildJobResult?
     ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(

@@ -134,8 +134,8 @@ interface BuildJobResource {
         @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(description = "执行结果", required = true)
-        result: BuildJobResult
+        @Parameter(description = "执行结果", required = false)
+        result: BuildJobResult? = null
     ): Result<Boolean>
 
     @Operation(summary = "Job超时触发")
