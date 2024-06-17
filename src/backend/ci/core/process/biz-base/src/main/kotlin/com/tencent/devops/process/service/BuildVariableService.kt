@@ -40,6 +40,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -51,6 +52,10 @@ class BuildVariableService @Autowired constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val redisOperation: RedisOperation
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildVariableService::class.java)
+    }
 
     /**
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
@@ -277,13 +282,23 @@ class BuildVariableService @Autowired constructor(
             // 加锁防止数据被重复插入
             redisLock.lock()
             watch.start("getVars")
-            val buildVarMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId)
+            val buildVarMap = pipelineBuildVarDao.getBuildVarMap(dslContext, projectId, buildId)
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
             pipelineBuildParameters.forEach {
                 if (!buildVarMap.containsKey(it.key)) {
                     insertBuildParameters.add(it)
                 } else {
+                    // TODO PAC上线后删除, 打印流水线运行时覆盖只读变量,只在第一次运行时输出,重试不输出
+                    if (buildVarMap[PIPELINE_RETRY_COUNT] == null &&
+                        variables[PIPELINE_RETRY_COUNT] == null &&
+                        buildVarMap[it.key]?.readOnly == true
+                    ) {
+                        logger.warn(
+                            "BKSystemErrorMonitor|$projectId|$pipelineId|$buildId|${it.key}| " +
+                                    "build var read-only cannot be modified"
+                        )
+                    }
                     updateBuildParameters.add(it)
                 }
             }
