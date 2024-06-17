@@ -48,6 +48,7 @@ data class GithubCommitCheckEvent(
     val conclusion: String?,
     val completedAt: Long?,
     val startTaskId: String? = null,
+    val targetBranch: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override val source: String,
     override val userId: String,

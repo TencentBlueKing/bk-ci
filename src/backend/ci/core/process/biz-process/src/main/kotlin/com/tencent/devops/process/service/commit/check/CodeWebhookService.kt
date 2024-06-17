@@ -165,7 +165,8 @@ class CodeWebhookService @Autowired constructor(
                                     startedAt = LocalDateTime.now().timestamp(),
                                     conclusion = null,
                                     completedAt = null,
-                                    startTaskId = startTaskId
+                                    startTaskId = startTaskId,
+                                    targetBranch = targetBranch
                                 )
                             )
                         }
@@ -241,7 +242,8 @@ class CodeWebhookService @Autowired constructor(
                                         GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
                                     },
                                     completedAt = LocalDateTime.now().timestamp(),
-                                    userId = event.userId
+                                    userId = event.userId,
+                                    targetBranch = targetBranch
                                 )
                             )
                         }
@@ -505,7 +507,8 @@ class CodeWebhookService @Autowired constructor(
                 status = event.status,
                 startedAt = startedAt,
                 conclusion = event.conclusion,
-                completedAt = completedAt
+                completedAt = completedAt,
+                targetBranch = event.targetBranch
             )
         } catch (ignored: Exception) {
             when (ignored) {
@@ -536,7 +539,8 @@ class CodeWebhookService @Autowired constructor(
         status: String,
         startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: LocalDateTime?
+        completedAt: LocalDateTime?,
+        targetBranch: String?
     ) {
         logger.info(
             "Code web hook add pr check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
