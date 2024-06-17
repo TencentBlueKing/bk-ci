@@ -614,7 +614,7 @@ class CodeWebhookService @Autowired constructor(
                         checkRunId = result.id,
                         context = name,
                         repositoryConfig = repositoryConfig,
-                        targetBranch = null
+                        targetBranch = targetBranch
                     )
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
