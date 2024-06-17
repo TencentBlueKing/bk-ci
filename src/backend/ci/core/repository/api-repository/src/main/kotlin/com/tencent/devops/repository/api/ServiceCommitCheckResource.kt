@@ -73,10 +73,10 @@ interface ServiceCommitCheckResource {
     @Path("/pipelines/{pipelineId}/commits/{commitId}")
     fun get(
         @Parameter(description = "流水线ID", required = true)
-        @QueryParam("pipelineId")
+        @PathParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "CommitId", required = true)
-        @QueryParam("commitId")
+        @PathParam("commitId")
         commitId: String,
         @Parameter(description = "目标分支", required = false)
         @QueryParam("targetBranch")
