@@ -290,15 +290,7 @@ class BuildVariableService @Autowired constructor(
                     insertBuildParameters.add(it)
                 } else {
                     // TODO PAC上线后删除, 打印流水线运行时覆盖只读变量,只在第一次运行时输出,重试不输出
-                    if (buildVarMap[PIPELINE_RETRY_COUNT] == null &&
-                        variables[PIPELINE_RETRY_COUNT] == null &&
-                        buildVarMap[it.key]?.readOnly == true
-                    ) {
-                        logger.warn(
-                            "BKSystemErrorMonitor|$projectId|$pipelineId|$buildId|${it.key}| " +
-                                    "build var read-only cannot be modified"
-                        )
-                    }
+                    printReadOnlyVar(buildVarMap, variables, it, projectId, pipelineId, buildId)
                     updateBuildParameters.add(it)
                 }
             }
@@ -320,6 +312,25 @@ class BuildVariableService @Autowired constructor(
         } finally {
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
+        }
+    }
+
+    private fun printReadOnlyVar(
+        buildVarMap: Map<String, BuildParameters>,
+        variables: Map<String, BuildParameters>,
+        buildParameters: BuildParameters,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        if (buildVarMap[PIPELINE_RETRY_COUNT] == null &&
+            variables[PIPELINE_RETRY_COUNT] == null &&
+            buildVarMap[buildParameters.key]?.readOnly == true
+        ) {
+            logger.warn(
+                "BKSystemErrorMonitor|$projectId|$pipelineId|$buildId|${buildParameters.key}| " +
+                        "build var read-only cannot be modified"
+            )
         }
     }
 
