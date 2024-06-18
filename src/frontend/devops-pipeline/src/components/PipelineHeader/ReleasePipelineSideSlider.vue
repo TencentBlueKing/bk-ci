@@ -668,7 +668,7 @@
                                                             projectId,
                                                             pipelineId,
                                                             type: 'pipeline',
-                                                            version
+                                                            version: this.pipelineInfo?.releaseVersion
                                                         }
                                                     })
                                                 }
