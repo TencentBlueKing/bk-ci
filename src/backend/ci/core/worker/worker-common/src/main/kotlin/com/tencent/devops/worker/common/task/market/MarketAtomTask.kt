@@ -684,7 +684,6 @@ open class MarketAtomTask : ITask() {
         workspace: File,
         inputVariables: Map<String, Any>
     ) {
-        LoggerService.addNormalLine("inputVariables is:${JsonUtil.toJson(inputVariables)}")
         val inputFileFile = File(workspace, inputFile)
         inputFileFile.writeText(JsonUtil.toJson(inputVariables))
     }
