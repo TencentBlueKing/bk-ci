@@ -47,5 +47,5 @@ class BkConfig {
     val bkvisionUrl: String = ""
 
     @Value("\${remoteDev.desktopSdkToken:D1oXVCZnVQ9Vu65eXG5R}")
-    val desktopSdkToken: String = ""
+    val desktopSdkToken: String = "D1oXVCZnVQ9Vu65eXG5R"
 }

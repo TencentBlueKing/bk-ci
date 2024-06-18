@@ -56,17 +56,17 @@ class ServiceRemoteDevResourceImplTest {
             macAddress = ""
         )
         val sign = DesktopTokenSign(
-            fingerprint = "",
-            appId = "",
-            fileName = "",
-            fileVersion = "",
-            fileUpdateTime = "",
-            productName = "",
-            productVersion = "",
-            sha1 = "",
+            fingerprint = "3E919A2223D81E2DD558F29692461351",
+            appId = "appId",
+            fileName = "fileName",
+            fileVersion = "fileVersion",
+            fileUpdateTime = "fileUpdateTime",
+            productName = "productName",
+            productVersion = "productVersion",
+            sha1 = "sha1",
             timestamp = 123,
-            publicKey = "",
-            sign = ""
+            publicKey = "publicKey",
+            sign = "EF988B15567B548C72F290BE01418840DECE8514"
         )
         workspaceTemplate.check(ws, sign, ws.innerIp!!)
     }
