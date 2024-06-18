@@ -141,7 +141,8 @@ class NodeManApi {
                         "Error msg: ${agentResp.message}"
                 )
                 throw RemoteServiceException(
-                    "Execute failed! Error code: ${agentResp.code}, " +
+                    errorCode = agentResp.code,
+                    errorMessage = "Execute failed! Error code: ${agentResp.code}, " +
                         "Error msg: ${agentResp.message}"
                 )
             } else {
