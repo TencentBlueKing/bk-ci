@@ -25,47 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.client
+package com.tencent.devops.dispatch.kubernetes.pojo.base
 
-import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
-import okhttp3.Headers
-import okhttp3.Headers.Companion.toHeaders
-import okhttp3.Request
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import io.swagger.v3.oas.annotations.media.Schema
 
-class KubernetesClientCommon @Autowired constructor(
-    private val commonService: CommonService
-) {
-
-    companion object {
-        private const val TOKEN_KEY = "Devops-Token"
-    }
-
-    @Value("\${kubernetes.token}")
-    val kubernetesToken: String = ""
-
-    @Value("\${kubernetes.apiUrl}")
-    val kubernetesApiUrl: String = ""
-
-    fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(commonService.getProxyUrl(kubernetesApiUrl + url)).headers(headers(headers))
-    }
-
-    fun microBaseRequest(url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(kubernetesApiUrl + url).headers(headers(headers))
-    }
-
-    fun headers(otherHeaders: Map<String, String>? = null): Headers {
-        val result = mutableMapOf<String, String>()
-
-        val headers = mapOf(TOKEN_KEY to kubernetesToken)
-        result.putAll(headers)
-
-        if (!otherHeaders.isNullOrEmpty()) {
-            result.putAll(otherHeaders)
-        }
-
-        return result.toHeaders()
-    }
-}
+@Schema(title = "k8s仓库信息")
+data class KubernetesRepo(
+    @get:Schema(title = "仓库地址", required = true)
+    val registryUrl: String,
+    @get:Schema(title = "用户名", required = true)
+    val username: String,
+    @get:Schema(title = "密码", required = true)
+    val password: String,
+    @get:Schema(title = "邮箱", required = false)
+    val email: String?
+)
