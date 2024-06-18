@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.sensitive
+package com.tencent.devops.store.common.service.impl
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
-@Schema(title = "敏感API申请请求体")
-data class SensitiveApiApplyReq(
-    @get:Schema(title = "api列表", required = true)
-    val apiNameList: List<String>,
-    @get:Schema(title = "申请说明", required = true)
-    val applyDesc: String,
-    @get:Schema(title = "开发语言", required = true)
-    val language: String = ""
-)
+@Primary
+@Service
+class StoreComponentMemberServiceImpl @Autowired constructor(
+    private val storeBaseQueryDao: StoreBaseQueryDao
+) : StoreMemberServiceImpl() {
+
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
+        return storeBaseQueryDao.getLatestComponentByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )?.name ?: ""
+    }
+}

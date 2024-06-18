@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.sensitive
+package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "敏感API申请请求体")
-data class SensitiveApiApplyReq(
-    @get:Schema(title = "api列表", required = true)
-    val apiNameList: List<String>,
-    @get:Schema(title = "申请说明", required = true)
-    val applyDesc: String,
-    @get:Schema(title = "开发语言", required = true)
-    val language: String = ""
+@Schema(title = "更新组件已安装包sha1摘要值请求报文")
+data class InstalledPkgShaContentRequest(
+    @get:Schema(title = "已安装包sha1摘要值", required = true)
+    val installedPkgShaContent: String,
+    @get:Schema(title = "操作系统名称", required = false)
+    val osName: String? = null,
+    @get:Schema(title = "操作系统CPU架构", required = false)
+    val osArch: String? = null
 )

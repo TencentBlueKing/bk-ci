@@ -221,6 +221,25 @@ class StoreBaseQueryDao {
         }
     }
 
+    fun getComponentId(
+        dslContext: DSLContext,
+        storeCode: String,
+        version: String,
+        storeType: StoreTypeEnum
+    ): String? {
+        return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            dslContext.select(ID).from(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun countByCondition(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
