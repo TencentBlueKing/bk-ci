@@ -1259,11 +1259,21 @@ class PipelineRepositoryService constructor(
         includeDraft: Boolean? = false
     ): PipelineResourceVersion? {
         val resource = if (version == null) { // 取最新版，直接从旧版本表读
-            if (includeDraft == true) pipelineResourceVersionDao.getDraftVersionResource(
+            if (includeDraft == true) {
+                pipelineResourceVersionDao.getDraftVersionResource(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ) ?: pipelineResourceDao.getReleaseVersionResource(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+            } else pipelineResourceDao.getReleaseVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
-            ) else null
+            )
         } else {
             pipelineResourceVersionDao.getVersionResource(
                 dslContext = dslContext,
@@ -1272,11 +1282,7 @@ class PipelineRepositoryService constructor(
                 version = version,
                 includeDraft = includeDraft
             )
-        } ?: pipelineResourceDao.getReleaseVersionResource(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
+        }
         // 历史数据兼容：
         // 1 返回时将别名name补全为id
         // 2 填充所有job没有的job id
@@ -1405,7 +1411,7 @@ class PipelineRepositoryService constructor(
             val now = LocalDateTime.now()
             val newDraft = targetVersion.copy(
                 version = latestResource.version + 1,
-                versionNum = releaseResource.version + 1,
+                versionNum = null,
                 pipelineVersion = null,
                 triggerVersion = null,
                 versionName = null,
