@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 
 class ServiceRemoteDevResourceImplTest {
 
-    val bkConfig = BkConfig()
+    private val bkConfig = BkConfig()
     private val workspaceTemplate = ServiceRemoteDevResourceImpl(
         permissionService = mockk(),
         workspaceService = mockk(),
@@ -25,6 +25,15 @@ class ServiceRemoteDevResourceImplTest {
         startWorkspaceService = mockk(),
         rabbitTemplate = mockk(),
         expertSupportService = mockk(),
+        devcloudService = mockk(),
+        deliverControl = mockk(),
+        imageManageService = mockk(),
+        whiteListService = mockk(),
+        rebuildWorkspaceHandler = mockk(),
+        startWorkspaceHandler = mockk(),
+        stopWorkspaceHandler = mockk(),
+        restartWorkspaceHandler = mockk(),
+        makeWorkspaceImageHandler = mockk(),
         bkConfig = bkConfig
     )
 
