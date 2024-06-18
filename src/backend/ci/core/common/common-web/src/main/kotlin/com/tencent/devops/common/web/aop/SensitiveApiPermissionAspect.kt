@@ -81,7 +81,7 @@ class SensitiveApiPermissionAspect constructor(
         val referer = request.getHeader(REFERER)
         var verifyFlag = false
         var storeCode: String? = request.getHeader(AUTH_HEADER_DEVOPS_STORE_CODE)
-        if (referer.contains(PROFILE_DEVX)) {
+        if (referer?.contains(PROFILE_DEVX) == true) {
             verifyFlag = doShaValidateBus(request, storeCode, apiName)
         } else {
             val buildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
