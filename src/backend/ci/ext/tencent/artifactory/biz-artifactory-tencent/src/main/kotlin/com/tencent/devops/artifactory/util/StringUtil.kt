@@ -49,7 +49,7 @@ object StringUtil {
             for (char in url) {
                 if (char == '+') {
                     append("%20")
-                } else if (EXCLUDE_CHARS.indexOf(char) >= 0) {  // 使用indexOf进行更快速的排除检测
+                } else if (EXCLUDE_CHARS.indexOf(char) >= 0) {
                     append(char)
                 } else {
                     append(URLEncoder.encode(char.toString(), Charsets.UTF_8.toString()))
