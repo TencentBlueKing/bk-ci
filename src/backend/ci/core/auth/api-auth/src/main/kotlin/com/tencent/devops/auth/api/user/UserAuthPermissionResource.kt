@@ -70,9 +70,6 @@ interface UserAuthPermissionResource {
     @Path("/{projectId}/users/checkUserInProjectLevelGroup")
     @Operation(summary = "是否该用户在项目级别的组中")
     fun checkUserInProjectLevelGroup(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
         @HeaderParam(AUTH_HEADER_USER_ID)
         @Parameter(description = "用户Id", required = true)
         userId: String,
