@@ -25,15 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class CreateImagePullSecretRequest(
-    @get:Schema(title = "bcs请求路径", required = true)
-    val bcsUrl: String,
-    @get:Schema(title = "请求token", required = true)
-    val token: String,
-    @get:Schema(title = "k8s仓库信息", required = true)
-    val kubernetesRepo: KubernetesRepo
+@Schema(title = "更新组件已安装包sha1摘要值请求报文")
+data class InstalledPkgShaContentRequest(
+    @get:Schema(title = "已安装包sha1摘要值", required = true)
+    val installedPkgShaContent: String,
+    @get:Schema(title = "操作系统名称", required = false)
+    val osName: String? = null,
+    @get:Schema(title = "操作系统CPU架构", required = false)
+    val osArch: String? = null
 )

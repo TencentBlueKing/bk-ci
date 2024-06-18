@@ -21,6 +21,8 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
+import org.jooq.SelectSelectStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 /**
@@ -404,7 +406,25 @@ class WorkspaceJoinDao {
         projectId: String
     ): Set<String> {
         return dslContext.selectDistinct(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE)
-            .from(TWorkspace.T_WORKSPACE)
+            .addResourceJoin(projectId).fetch().map { it["SIZE"].toString() }.toSet()
+    }
+
+    fun fetchProjectMachineTypeCount(
+        dslContext: DSLContext,
+        projectId: String
+    ): Map<String, Int> {
+        return dslContext.select(
+            TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE,
+            DSL.count(TWorkspace.T_WORKSPACE.NAME).`as`("COUNT")
+        ).addResourceJoin(projectId).groupBy(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE).fetch()
+            .map {
+                it.getValue(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE) to
+                        it.get("COUNT").toString().toLong().toInt()
+            }.toMap()
+    }
+
+    private fun SelectSelectStep<*>.addResourceJoin(projectId: String) =
+        this.from(TWorkspace.T_WORKSPACE)
             .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
             .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
             .leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
@@ -420,8 +440,7 @@ class WorkspaceJoinDao {
                     WorkspaceStatus.DELETED.ordinal,
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
-            ).fetch().map { it["SIZE"].toString() }.toSet()
-    }
+            )
 
     fun fetchRunningIp(
         dslContext: DSLContext,

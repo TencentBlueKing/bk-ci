@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -111,10 +112,12 @@ interface UserRemoteDevResource {
         userId: String
     ): Result<List<WindowsResourceZoneConfig>>
 
-    @Operation(summary = "获取所有的WINDOWS 配额")
+    @Operation(summary = "获取项目下所有的WINDOWS 配额")
     @GET
     @Path("/get_all_windows_resource_quota")
     fun allWindowsQuota(
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("searchCustom")

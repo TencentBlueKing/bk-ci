@@ -25,24 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.devx.service
+package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
-@Service("devxMemberService")
-class TxDevxMemberServiceImpl @Autowired constructor(
+@Primary
+@Service
+class StoreComponentMemberServiceImpl @Autowired constructor(
     private val storeBaseQueryDao: StoreBaseQueryDao
 ) : StoreMemberServiceImpl() {
 
-    override fun getStoreName(storeCode: String): String {
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
         return storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeType = StoreTypeEnum.DEVX
+            storeType = storeType
         )?.name ?: ""
     }
 }

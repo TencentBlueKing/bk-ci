@@ -337,7 +337,7 @@
                 <li v-for="artifactory in actifactories" :key="artifactory.name">
                     <p class="build-artifact-name">
                         <i :class="['devops-icon', `icon-${artifactory.icon}`]"></i>
-                        <span :title="artifactory.name" class="artifact-name">
+                        <span :title="artifactory.name" class="artifact-name-span">
                             {{artifactory.name}}
                         </span>
                         <span class="artifact-size">
@@ -1319,6 +1319,9 @@
             grid-gap: 6px;
             grid-auto-flow: column;
             align-items: center;
+            .artifact-name-span {
+                @include ellipsis();
+            }
 
         }
         .artifact-size {
@@ -1328,6 +1331,7 @@
             display: grid;
             grid-gap: 10px;
             grid-auto-flow: column;
+            flex-shrink: 0;
         }
     }
 }

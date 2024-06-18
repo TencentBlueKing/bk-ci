@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
@@ -100,7 +101,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     companion object {
@@ -434,20 +436,30 @@ class PipelineVersionFacadeService @Autowired constructor(
             staticViewIds = request.staticViews
         )
         // #8164 发布后的流水将调试信息清空为0，重新计数，同时取消该版本的调试记录
-        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId, version).forEach {
-            if (!it.status.isFinish()) pipelineBuildFacadeService.serviceShutdown(
-                projectId, pipelineId, it.buildId, pipeline.channelCode
-            )
+        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId).forEach { debug ->
+            if (!debug.status.isFinish()) {
+                buildLogPrinter.addWarnLine(
+                    buildId = debug.buildId, executeCount = debug.executeCount ?: 1,
+                    tag = "", jobId = null, stepId = null,
+                    message = ""
+                )
+                pipelineBuildFacadeService.buildManualShutdown(
+                    userId = projectId, projectId = pipelineId, pipelineId = debug.buildId,
+                    buildId = userId, channelCode = pipeline.channelCode, terminateFlag = true
+                )
+            }
         }
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
-        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
+        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId)
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
             version = result.version,
             versionNum = result.versionNum,
             versionName = result.versionName,
-            targetUrl = targetUrl
+            targetUrl = targetUrl,
+            yamlInfo = yamlInfo
         )
     }
 

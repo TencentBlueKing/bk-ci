@@ -25,18 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.dispatch.kubernetes.bcs.config
 
-import io.swagger.v3.oas.annotations.media.Schema
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@Schema(title = "k8s仓库信息")
-data class KubernetesRepo(
-    @get:Schema(title = "仓库地址", required = true)
-    val registryUrl: String,
-    @get:Schema(title = "用户名", required = true)
-    val username: String,
-    @get:Schema(title = "密码", required = true)
-    val password: String,
-    @get:Schema(title = "邮箱", required = false)
-    val email: String?
-)
+@Component
+class KubernetesConfig {
+
+    @Value("\${store.extService.bcs.secret.image.secretName}")
+    val secretName: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.graySecretName}")
+    val graySecretName: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.registryUrl}")
+    val repoRegistryUrl: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.name}")
+    val repoUsername: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.password}")
+    val repoPassword: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.email}")
+    val repoEmail: String = ""
+
+    @Value("\${store.extService.bcs.namespace.namespaceName}")
+    val namespaceName: String = ""
+
+    @Value("\${store.extService.bcs.namespace.grayNamespaceName}")
+    val grayNamespaceName: String = ""
+}
