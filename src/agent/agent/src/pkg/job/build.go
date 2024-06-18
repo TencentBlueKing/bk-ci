@@ -132,7 +132,7 @@ func DoBuild(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 }
 
-// checkParallelTaskCount 检查当前运行的最大任务数
+// CheckParallelTaskCount checkParallelTaskCount 检查当前运行的最大任务数
 func CheckParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
@@ -348,7 +348,7 @@ func getUnixWorkerStartScriptFile(projectId, buildId, vmSeqId string) string {
 		systemutil.GetWorkDir(), startScriptFilePrefix, projectId, buildId, vmSeqId, startScriptFileSuffix)
 }
 
-// 校验当前是否有正在跑的任务
+// CheckRunningJob 校验当前是否有正在跑的任务
 func CheckRunningJob() bool {
 	if GBuildManager.GetPreInstancesCount() > 0 ||
 		GBuildManager.GetInstanceCount() > 0 ||

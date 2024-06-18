@@ -32,11 +32,11 @@ package telegrafconf
 
 const TelegrafConf = `
 [global_tags]
-  projectId = "###{projectId}###"
-  agentId = "###{agentId}###"
-  agentSecret = "###{agentSecret}###"
-  hostName = "###{hostName}###"
-  hostIp = "###{hostIp}###"
+  projectId = "{{.ProjectId}}"
+  agentId = "{{.AgentId}}"
+  agentSecret = "{{.AgentSecret}}"
+  hostName = "{{.HostName}}"
+  hostIp = "{{.HostIp}}"
 [agent]
   interval = "1m"
   round_interval = true
@@ -51,12 +51,12 @@ const TelegrafConf = `
   logfile = ""
   hostname = ""
   omit_hostname = false
-{{ if eq . "stream" }}
+{{ if eq .ProjectType "stream" }}
 [[outputs.influxdb]]
-  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  urls = ["{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
-  ###{tls_ca}###
+  {{.TlsCa}}
 
 [[inputs.mem]]
 [[inputs.disk]]
@@ -154,16 +154,16 @@ const TelegrafConf = `
 {{ else }}
 
 [[outputs.http]]
-  url = "###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
+  url = "{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
   # timeout = "5s"
   method = "POST"
   data_format = "json"
   [outputs.http.headers]
     Content-Type = "application/json; charset=utf-8"
-    X-DEVOPS-BUILD-TYPE = "###{buildType}###"
-    X-DEVOPS-PROJECT-ID = "###{projectId}###"
-    X-DEVOPS-AGENT-ID = "###{agentId}###"
-    X-DEVOPS-AGENT-SECRET-KEY = "###{agentSecret}###"
+    X-DEVOPS-BUILD-TYPE = "{{.BuildType}}"
+    X-DEVOPS-PROJECT-ID = "{{.ProjectId}}"
+    X-DEVOPS-AGENT-ID = "{{.AgentId}}"
+    X-DEVOPS-AGENT-SECRET-KEY = "{{.AgentSecret}}"
 
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]

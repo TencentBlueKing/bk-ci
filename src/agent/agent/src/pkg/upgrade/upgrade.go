@@ -50,7 +50,7 @@ import (
 
 var JdkVersion = &JdkVersionType{}
 
-// JdkVersion jdk版本信息缓存
+// JdkVersionType jdk版本信息缓存
 type JdkVersionType struct {
 	JdkFileModTime time.Time
 	// 版本信息，原子级的 []string

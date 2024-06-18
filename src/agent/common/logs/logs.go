@@ -43,7 +43,7 @@ func Init(filepath string, isDebug bool, logStd bool) error {
 	return nil
 }
 
-// DebugInit 初始化为debug模式下的log，将日志输出到标准输出流，只是为了单元测试使用
+// UNTestDebugInit DebugInit 初始化为debug模式下的log，将日志输出到标准输出流，只是为了单元测试使用
 func UNTestDebugInit() {
 	logInfo := log.WithFields(log.Fields{})
 	logInfo.Logger.SetFormatter(&MyFormatter{})

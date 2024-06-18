@@ -155,7 +155,7 @@ func main() {
 	}
 }
 
-// 生成器保存分析的状态。 主要用来缓冲 format.Source 的输出。
+// Generator 生成器保存分析的状态。 主要用来缓冲 format.Source 的输出。
 type Generator struct {
 	buf bytes.Buffer // 累计输出
 }
