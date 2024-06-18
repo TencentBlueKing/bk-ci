@@ -25,15 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.api
+package com.tencent.devops.dispatch.kubernetes.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.pojo.DeployApp
 import io.fabric8.kubernetes.api.model.apps.Deployment
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -41,16 +41,15 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "BUILD_BCS", description = "BCS服务")
+@Tag(name = "BUILD_KUBERNETES_MANAGEMENT", description = "Kubernetes-Management服务")
 @Path("/build/bcs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildBcsResource {
+interface BuildKubernetesManagementResource {
 
-    @Operation(summary = "bcs部署应用")
+    @Operation(summary = "部署应用")
     @Path("/deploy/app")
     @POST
     fun bcsDeployApp(
@@ -62,23 +61,17 @@ interface BuildBcsResource {
     ): Result<Boolean>
 
     @Operation(summary = "获取deployment信息")
-    @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
+    @Path("/namespaceNames/{namespaceName}/deployments/{deploymentName}")
     @GET
     fun getBcsDeploymentInfo(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "命名空间名称")
+        @Parameter(description = "namespaceName")
         @PathParam("namespaceName")
         namespaceName: String,
         @Parameter(description = "deployment名称")
         @PathParam("deploymentName")
-        deploymentName: String,
-        @Parameter(description = "bcs请求路径")
-        @QueryParam("bcsUrl")
-        bcsUrl: String,
-        @Parameter(description = "请求token")
-        @QueryParam("token")
-        token: String
-    ): Result<Deployment>
+        deploymentName: String
+    ): Result<Deployment?>
 }

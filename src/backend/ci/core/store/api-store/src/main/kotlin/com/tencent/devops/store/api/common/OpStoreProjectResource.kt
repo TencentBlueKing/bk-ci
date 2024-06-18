@@ -23,58 +23,38 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.api.user
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_PERMISSION", description = "用户-权限-校验")
-@Path("/user/auth/permission")
+@Tag(name = "OP_STORE_PROJECT", description = "OP-组件-项目")
+@Path("/op/store/project")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserAuthPermissionResource {
+interface OpStoreProjectResource {
 
-    @POST
-    @Path("/batch/validate")
-    @Operation(summary = "批量校验用户是否拥有某个资源实例的操作")
-    fun batchValidateUserResourcePermission(
-        @Parameter(description = "用户名", required = true)
+    @Operation(summary = "更新组件关联初始化项目信息")
+    @PUT
+    @Path("/relevancy/update")
+    fun updateStoreInitProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String,
-        @Parameter(description = "权限批量校验实体", required = true)
-        permissionBatchValidateDTO: PermissionBatchValidateDTO
-    ): Result<Map<String, Boolean>>
-
-    @GET
-    @Path("/{projectId}/users/{userId}/checkUserInProjectLevelGroup")
-    @Operation(summary = "是否该用户在项目级别的组中")
-    fun checkUserInProjectLevelGroup(
-        @PathParam("userId")
-        @Parameter(description = "用户Id", required = true)
-        userId: String,
-        @PathParam("projectId")
-        @Parameter(description = "项目ID", required = true)
-        projectId: String
+        @Parameter(description = "组件关联初始化项目信息", required = true)
+        storeProjectInfo: StoreProjectInfo
     ): Result<Boolean>
 }

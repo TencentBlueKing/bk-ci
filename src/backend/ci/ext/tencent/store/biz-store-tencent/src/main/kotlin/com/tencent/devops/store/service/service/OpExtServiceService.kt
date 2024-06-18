@@ -32,11 +32,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.service.dao.ExtServiceDao
-import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
+import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_NOT_DEPLOY
 import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
@@ -47,6 +48,11 @@ import com.tencent.devops.store.pojo.extservice.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.extservice.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.extservice.vo.ExtensionServiceVO
+import com.tencent.devops.store.service.configuration.ExtServiceBcsConfig
+import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
+import com.tencent.devops.store.service.configuration.ExtServiceIngressConfig
+import com.tencent.devops.store.service.dao.ExtServiceDao
+import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
 import java.time.LocalDateTime
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
@@ -62,7 +68,11 @@ class OpExtServiceService @Autowired constructor(
     private val storeMemberService: TxExtServiceMemberImpl,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService,
-    private val extServiceBcsService: ExtServiceBcsService
+    private val extServiceBcsService: ExtServiceBcsService,
+    private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig,
+    private val extServiceBcsConfig: ExtServiceBcsConfig,
+    private val extServiceIngressConfig: ExtServiceIngressConfig,
+    private val client: Client
 ) {
 
     fun queryServiceList(
@@ -374,6 +384,61 @@ class OpExtServiceService @Autowired constructor(
         }
 
         return Result(true)
+    }
+
+    fun migrateService(
+        userId: String,
+        serviceCode: String,
+        checkPermissionFlag: Boolean = true
+    ): Result<Boolean> {
+        logger.info(
+            "migrateService userId: $userId , serviceCode: $serviceCode , checkPermissionFlag: $checkPermissionFlag"
+        )
+        val serviceRecord =
+            extServiceDao.getServiceLatestByCode(dslContext, serviceCode) ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
+            )
+        val status = ExtServiceStatusEnum.getServiceStatus(serviceRecord.serviceStatus.toInt())
+        val version = serviceRecord.version
+        val grayFlag = when {
+            status in listOf(
+                ExtServiceStatusEnum.TESTING.name,
+                ExtServiceStatusEnum.EDIT.name,
+                ExtServiceStatusEnum.AUDITING.name,
+                ExtServiceStatusEnum.AUDIT_REJECT.name
+            ) -> {
+                true
+            }
+            status == ExtServiceStatusEnum.RELEASED.name -> {
+                false
+            }
+
+            else -> {
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = USER_SERVICE_NOT_DEPLOY,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            }
+        }
+        val namespaceName = if (grayFlag) {
+            extServiceBcsNameSpaceConfig.grayNamespaceName
+        } else {
+            extServiceBcsNameSpaceConfig.namespaceName
+        }
+        val deployApp = extServiceBcsService.generateDeployApp(
+            userId = userId,
+            namespaceName = namespaceName,
+            serviceCode = serviceCode,
+            version = version,
+            checkPermissionFlag = checkPermissionFlag
+        )
+        val bcsDeployAppResult = client.get(ServiceKubernetesManagementResource::class).deployApp(
+            userId = userId,
+            deployApp = deployApp
+        )
+        return bcsDeployAppResult
     }
 
     companion object {

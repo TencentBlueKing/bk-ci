@@ -25,15 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.store.common.resources
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreProjectResource
+import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
+import org.springframework.beans.factory.annotation.Autowired
 
-data class CreateImagePullSecretRequest(
-    @get:Schema(title = "bcs请求路径", required = true)
-    val bcsUrl: String,
-    @get:Schema(title = "请求token", required = true)
-    val token: String,
-    @get:Schema(title = "k8s仓库信息", required = true)
-    val kubernetesRepo: KubernetesRepo
-)
+@RestResource
+class OpStoreProjectResourceImpl @Autowired constructor(
+    private val storeProjectService: StoreProjectService
+) : OpStoreProjectResource {
+    override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Result<Boolean> {
+        return Result(storeProjectService.updateStoreInitProject(userId, storeProjectInfo))
+    }
+}
