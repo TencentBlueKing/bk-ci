@@ -47,9 +47,7 @@ object StringUtil {
     fun repoPathUrlEncode(url: String): String {
         return buildString {
             for (char in url) {
-                if (char == '+') {
-                    append("%20")
-                } else if (EXCLUDE_CHARS.indexOf(char) >= 0) {
+                if (EXCLUDE_CHARS.indexOf(char) >= 0) {
                     append(char)
                 } else {
                     append(URLEncoder.encode(char.toString(), Charsets.UTF_8.toString()))
