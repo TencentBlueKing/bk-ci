@@ -25,79 +25,59 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.resources
+package com.tencent.devops.dispatch.kubernetes.bcs.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceBcsResource
-import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
-import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
+import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsDeployService
+import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsQueryService
+import com.tencent.devops.dispatch.kubernetes.client.SecretClient
+import com.tencent.devops.dispatch.kubernetes.pojo.base.KubernetesRepo
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
-import com.tencent.devops.dispatch.service.BcsDeployService
-import com.tencent.devops.dispatch.service.BcsQueryService
-import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceBcsResourceImpl @Autowired constructor(
+class ServiceKubernetesManagementResourceImpl @Autowired constructor(
     private val bcsDeployService: BcsDeployService,
-    private val bcsQueryService: BcsQueryService
-) : ServiceBcsResource {
-
-    override fun createNamespace(
-        namespaceName: String,
-        createBcsNameSpaceRequest: CreateBcsNameSpaceRequest
-    ): Result<Boolean> {
-        BcsClientUtils.createNamespace(
-            bcsUrl = createBcsNameSpaceRequest.bcsUrl,
-            token = createBcsNameSpaceRequest.token,
-            namespaceName = namespaceName,
-            labelInfo = createBcsNameSpaceRequest.kubernetesLabel,
-            limitRangeInfo = createBcsNameSpaceRequest.limitRangeInfo
-        )
-        return Result(true)
-    }
+    private val bcsQueryService: BcsQueryService,
+    private val secretClient: SecretClient
+) : ServiceKubernetesManagementResource {
 
     override fun createImagePullSecretTest(
+        userId: String,
         namespaceName: String,
         secretName: String,
-        createImagePullSecretRequest: CreateImagePullSecretRequest
+        kubernetesRepo: KubernetesRepo
     ): Result<Boolean> {
-        BcsClientUtils.createImagePullSecret(
-            bcsUrl = createImagePullSecretRequest.bcsUrl,
-            token = createImagePullSecretRequest.token,
+        secretClient.createImagePullSecret(
+            userId = userId,
             secretName = secretName,
             namespaceName = namespaceName,
-            kubernetesRepoInfo = createImagePullSecretRequest.kubernetesRepo
+            kubernetesRepoInfo = kubernetesRepo
         )
         return Result(true)
     }
 
-    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
+    override fun deployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
         return bcsDeployService.deployApp(userId, deployApp)
     }
 
-    override fun bcsStopApp(userId: String, stopApp: StopApp): Result<Boolean> {
+    override fun stopApp(userId: String, stopApp: StopApp): Result<Boolean> {
         return bcsDeployService.stopApp(userId, stopApp)
     }
 
-    override fun getBcsDeploymentInfo(
-        namespaceName: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
-    ): Result<Deployment> {
-        return bcsQueryService.getBcsDeploymentInfo("", namespaceName, deploymentName, bcsUrl, token)
+    override fun getDeploymentInfo(userId: String, namespaceName: String, deploymentName: String): Result<Deployment?> {
+        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName)
     }
 
-    override fun getBcsDeploymentInfos(
+    override fun getDeploymentInfos(
+        userId: String,
         namespaceName: String,
-        deploymentNames: String,
-        bcsUrl: String,
-        token: String
+        deploymentNames: String
     ): Result<Map<String, Deployment>> {
-        return bcsQueryService.getBcsDeploymentInfos("", namespaceName, deploymentNames, bcsUrl, token)
+        return bcsQueryService.getBcsDeploymentInfos(userId, namespaceName, deploymentNames)
     }
 }
