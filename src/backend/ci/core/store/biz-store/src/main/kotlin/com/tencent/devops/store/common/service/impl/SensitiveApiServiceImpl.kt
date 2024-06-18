@@ -28,7 +28,10 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_INSTALLED_PKG_SHA_CONTENT
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -36,9 +39,16 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.PageUtil.DEFAULT_PAGE_SIZE
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.SensitiveApiDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.service.SensitiveApiService
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.ApiLevelEnum
+import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiApplyReq
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiApproveReq
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiConfig
@@ -47,13 +57,7 @@ import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiInfo
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiNameInfo
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiSearchDTO
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiUpdateDTO
-import com.tencent.devops.store.pojo.common.enums.ApiLevelEnum
-import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
-import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.SensitiveApiService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -61,13 +65,15 @@ import org.springframework.stereotype.Service
 class SensitiveApiServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val sensitiveApiDao: SensitiveApiDao,
-    private val businessConfigDao: BusinessConfigDao
+    private val businessConfigDao: BusinessConfigDao,
+    private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
+    private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao
 ) : SensitiveApiService {
 
     companion object {
         private const val BUSINESS_CONFIG_FEATURE = "api"
         private const val BUSINESS_CONFIG_VALUE = "sensitiveApi"
-        private val logger = LoggerFactory.getLogger(SensitiveApiServiceImpl::class.java)
     }
 
     override fun unApprovalApiList(
@@ -76,7 +82,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
         storeCode: String,
         language: String
     ): Result<List<SensitiveApiNameInfo>> {
-        val sensitiveApiConfigList = getSensitiveApiConfig()
+        val sensitiveApiConfigList = getSensitiveApiConfig(storeType)
         val approvedApiList = sensitiveApiDao.getApprovedApiNameList(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -89,10 +95,10 @@ class SensitiveApiServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getSensitiveApiConfig(): List<SensitiveApiConfig> {
+    private fun getSensitiveApiConfig(storeType: StoreTypeEnum): List<SensitiveApiConfig> {
         val businessConfigRecord = businessConfigDao.get(
             dslContext = dslContext,
-            business = BusinessEnum.ATOM.name,
+            business = storeType.name,
             feature = BUSINESS_CONFIG_FEATURE,
             businessValue = BUSINESS_CONFIG_VALUE
         ) ?: return emptyList()
@@ -115,7 +121,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
                     params = arrayOf("applyDesc")
                 )
             }
-            val sensitiveApiNameMap = getSensitiveApiConfig().associateBy { it.apiName }
+            val sensitiveApiNameMap = getSensitiveApiConfig(storeType).associateBy { it.apiName }
             val sensitiveApiCreateDTOs =
                 apiNameList.filter { it.isNotBlank() }
                     .filter { sensitiveApiNameMap.containsKey(it) }
@@ -223,10 +229,56 @@ class SensitiveApiServiceImpl @Autowired constructor(
     }
 
     override fun verifyApi(
+        installedPkgShaContent: String?,
+        osName: String?,
+        osArch: String?,
         storeType: StoreTypeEnum,
         storeCode: String,
-        apiName: String
+        apiName: String,
+        version: String?
     ): Result<Boolean> {
+        if (storeType == StoreTypeEnum.DEVX) {
+            if (version.isNullOrBlank()) {
+                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf(KEY_VERSION))
+            }
+            if (installedPkgShaContent.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                    params = arrayOf(AUTH_HEADER_DEVOPS_SHA_CONTENT)
+                )
+            }
+            // 判断请求中的sha1算法摘要值和db中的sha1算法摘要值是否能匹配
+            val storeId = storeBaseQueryDao.getComponentId(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                version = version,
+                storeType = storeType
+            ) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$storeType:$storeCode:$version")
+            )
+            val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+                dslContext = dslContext,
+                storeId = storeId,
+                osName = osName,
+                osArch = osArch
+            )?.getOrNull(0) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$osName:$osArch")
+            )
+            val dbInstalledPkgShaContent = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
+                dslContext = dslContext,
+                envId = baseEnvRecord.id,
+                fieldName = KEY_INSTALLED_PKG_SHA_CONTENT
+            )?.getOrNull(0)?.fieldValue ?: baseEnvRecord.shaContent
+            if (installedPkgShaContent.lowercase() != dbInstalledPkgShaContent) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                    params = arrayOf(AUTH_HEADER_DEVOPS_SHA_CONTENT, "wrong sha1 content")
+                )
+            }
+        }
+        // 判断组件是否有使用该API接口的权限
         val record = sensitiveApiDao.getByApiName(
             dslContext = dslContext,
             storeType = storeType,

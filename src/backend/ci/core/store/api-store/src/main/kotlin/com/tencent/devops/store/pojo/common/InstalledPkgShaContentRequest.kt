@@ -25,24 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.devx.service
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Service("devxMemberService")
-class TxDevxMemberServiceImpl @Autowired constructor(
-    private val storeBaseQueryDao: StoreBaseQueryDao
-) : StoreMemberServiceImpl() {
-
-    override fun getStoreName(storeCode: String): String {
-        return storeBaseQueryDao.getLatestComponentByCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = StoreTypeEnum.DEVX
-        )?.name ?: ""
-    }
-}
+@Schema(title = "更新组件已安装包sha1摘要值请求报文")
+data class InstalledPkgShaContentRequest(
+    @get:Schema(title = "已安装包sha1摘要值", required = true)
+    val installedPkgShaContent: String,
+    @get:Schema(title = "操作系统名称", required = false)
+    val osName: String? = null,
+    @get:Schema(title = "操作系统CPU架构", required = false)
+    val osArch: String? = null
+)
