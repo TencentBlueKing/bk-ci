@@ -68,6 +68,7 @@ import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -191,6 +192,10 @@ open class MarketAtomTask : ITask() {
                 acrossProjectId = acrossInfo?.targetProjectId
             )
         }.toMap()
+        // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
+        if (asCodeEnabled) {
+            variables = PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
+        }
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -679,6 +684,7 @@ open class MarketAtomTask : ITask() {
         workspace: File,
         inputVariables: Map<String, Any>
     ) {
+        LoggerService.addNormalLine("inputVariables is:${JsonUtil.toJson(inputVariables)}")
         val inputFileFile = File(workspace, inputFile)
         inputFileFile.writeText(JsonUtil.toJson(inputVariables))
     }
