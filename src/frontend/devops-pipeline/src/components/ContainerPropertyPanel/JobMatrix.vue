@@ -7,7 +7,15 @@
         <div slot="content" class="bk-form bk-form-vertical" v-if="enableMatrix">
             <template v-for="(obj, key) in optionModel">
                 <form-field :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateJobMatrix" :value="matrixControlOption[key]" :disabled="disabled" v-bind="obj"></component>
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                        :handle-change="handleUpdateJobMatrix"
+                        :value="matrixControlOption[key]"
+                        :disabled="disabled"
+                        v-bind="obj"
+                    />
                 </form-field>
             </template>
         </div>
@@ -57,8 +65,9 @@
             ]),
             handleUpdateJobMatrix (name, value) {
                 this.setPipelineEditing(true)
-                this.updateContainerParams('matrixControlOption',
-                                           Object.assign(this.matrixControlOption || {}, { [name]: value })
+                this.updateContainerParams(
+                    'matrixControlOption',
+                    Object.assign(this.matrixControlOption || {}, { [name]: value })
                 )
                 if (name === 'strategyStr') {
                     this.$validator.validateAll()

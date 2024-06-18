@@ -200,11 +200,11 @@ class TGitPushTriggerHandler(
                 includedBranches = convert(branchName),
                 excludedBranches = convert(excludeBranchName),
                 includedFailedReason = I18Variable(
-                    code = WebhookI18nConstants.SOURCE_BRANCH_NOT_MATCH,
+                    code = WebhookI18nConstants.BRANCH_NOT_MATCH,
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr(),
                 excludedFailedReason = I18Variable(
-                    code = WebhookI18nConstants.SOURCE_BRANCH_IGNORED,
+                    code = WebhookI18nConstants.BRANCH_IGNORED,
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr()
             )

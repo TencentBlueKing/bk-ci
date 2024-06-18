@@ -136,6 +136,9 @@ interface OPProjectResource {
         @Parameter(description = "运营产品ID", required = true)
         @QueryParam(value = "product_id")
         productId: Int?,
+        @Parameter(description = "渠道", required = true)
+        @QueryParam(value = "channelCode")
+        channelCode: String?,
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
 

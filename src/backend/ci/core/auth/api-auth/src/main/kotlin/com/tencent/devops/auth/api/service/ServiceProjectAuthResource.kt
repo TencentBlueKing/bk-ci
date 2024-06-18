@@ -135,6 +135,22 @@ interface ServiceProjectAuthResource {
     ): Result<Boolean>
 
     @GET
+    @Path("/{projectCode}/users/{userId}/checkUserInProjectLevelGroup")
+    @Operation(summary = "是否该用户在项目级别的组中")
+    fun checkUserInProjectLevelGroup(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @PathParam("userId")
+        @Parameter(description = "用户Id", required = true)
+        userId: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String
+    ): Result<Boolean>
+
+    @GET
     @Path("/{projectCode}/users/{userId}/checkProjectManager")
     @Operation(summary = "判断是否是项目管理员")
     fun checkProjectManager(

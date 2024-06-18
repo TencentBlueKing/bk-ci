@@ -29,6 +29,30 @@
                 </form-field>
             </template>
         </template>
+        <form-field v-if="Object.keys(customTriggerControlModel).length && !atomPropsModel?.branchSettings">
+            <accordion show-checkbox :show-content="enableThirdFilter" key="customTriggerControl" :is-version="true">
+                <header class="var-header" style="height: 16px;" slot="header">
+                    <span>
+                        {{ $t('codelib.自定义触发控制') }}
+                        <i class="bk-icon icon-info-circle ml5" v-bk-tooltips="$t('codelib.满足基础过滤条件后，根据第三方接口返回判断是否能够触发')"></i>
+                        <a class="title-link" target="blink" :href="customTriggerDocsLink">{{ $t('codelib.查看使用指引和示例') }}</a>
+                    </span>
+                    <input class="accordion-checkbox" :checked="enableThirdFilter" type="checkbox" @change="toggleEnableThirdFilter" />
+                </header>
+                <div slot="content" class="bk-form bk-form-vertical">
+                    <template v-for="(obj, key) in customTriggerControlModel">
+                        <form-field :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                            <component
+                                :is="obj.component"
+                                :name="key"
+                                :value="element[key]"
+                                v-bind="obj">
+                            </component>
+                        </form-field>
+                    </template>
+                </div>
+            </accordion>
+        </form-field>
     </div>
 </template>
 <script>
@@ -49,7 +73,7 @@
         watch: {
             element: {
                 handler (val) {
-                    if (!this.atomPropsModel?.repositoryType?.list) {
+                    if (!this.atomPropsModel?.branchSettings) {
                         const showName = this.element.repositoryType === 'NAME'
                         this.atomPropsModel.repositoryName.hidden = !showName
                         this.atomPropsModel.repositoryHashId.hidden = showName
@@ -60,7 +84,7 @@
             }
         },
         created () {
-            if (!this.atomPropsModel?.repositoryType?.list) {
+            if (!this.atomPropsModel?.branchSettings) {
                 const { thirdUrl, thirdSecretToken } = this.atomPropsModel
                 if (thirdUrl && thirdSecretToken) {
                     this.customTriggerControlModel.thirdUrl = thirdUrl
@@ -68,6 +92,11 @@
                     this.atomPropsModel.thirdUrl.hidden = true
                     this.atomPropsModel.thirdSecretToken.hidden = true
                 }
+            }
+        },
+        methods: {
+            toggleEnableThirdFilter () {
+                this.enableThirdFilter = !this.enableThirdFilter
             }
         }
     }

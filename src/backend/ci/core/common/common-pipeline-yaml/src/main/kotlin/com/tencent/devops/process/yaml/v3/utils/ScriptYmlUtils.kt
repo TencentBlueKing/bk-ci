@@ -570,7 +570,7 @@ object ScriptYmlUtils {
 
     private fun formatStageLabel(labels: Any?): List<String> {
         if (labels == null) {
-            return emptyList()
+            return listOf(StageLabel.BUILD.id)
         }
 
         val transLabels = anyToListString(labels)
@@ -585,6 +585,9 @@ object ScriptYmlUtils {
                     I18nUtil.getCodeLanMessage(ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL)
                 )
             }
+        }
+        if (newLabels.isEmpty()) {
+            newLabels.add(StageLabel.BUILD.id)
         }
 
         return newLabels

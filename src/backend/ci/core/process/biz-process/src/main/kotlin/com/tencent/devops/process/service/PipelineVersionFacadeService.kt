@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
@@ -100,7 +101,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     companion object {
@@ -289,7 +291,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             create = false,
             versionStatus = VersionStatus.RELEASED,
-            channelCode = pipeline.channelCode
+            channelCode = pipeline.channelCode,
+            yamlInfo = request.yamlInfo
         )
         val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         // 如果不匹配已有状态则报错，需要用户重新刷新页面
@@ -363,7 +366,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 content = draftVersion.yaml ?: "",
                 commitMessage = request.description ?: "update",
                 repoHashId = yamlInfo.repoHashId,
-                scmType = yamlInfo.scmType,
+                scmType = yamlInfo.scmType!!,
                 filePath = filePath,
                 targetAction = targetAction
             )
@@ -398,7 +401,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             model = draftVersion.model,
             projectId = projectId,
             signPipelineId = pipelineId,
-            userId = draftVersion.creator,
+            userId = userId,
             channelCode = pipeline.channelCode,
             create = false,
             updateLastModifyUser = true,
@@ -407,7 +410,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yaml = YamlWithVersion(versionTag = draftVersion.yamlVersion, yamlStr = draftVersion.yaml),
-            baseVersion = draftVersion.baseVersion
+            baseVersion = draftVersion.baseVersion,
+            yamlInfo = request.yamlInfo
         )
         // 添加标签
         pipelineGroupService.addPipelineLabel(
@@ -432,20 +436,30 @@ class PipelineVersionFacadeService @Autowired constructor(
             staticViewIds = request.staticViews
         )
         // #8164 发布后的流水将调试信息清空为0，重新计数，同时取消该版本的调试记录
-        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId, version).forEach {
-            if (!it.status.isFinish()) pipelineBuildFacadeService.serviceShutdown(
-                projectId, pipelineId, it.buildId, pipeline.channelCode
-            )
+        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId).forEach { debug ->
+            if (!debug.status.isFinish()) {
+                buildLogPrinter.addWarnLine(
+                    buildId = debug.buildId, executeCount = debug.executeCount ?: 1,
+                    tag = "", jobId = null, stepId = null,
+                    message = ""
+                )
+                pipelineBuildFacadeService.buildManualShutdown(
+                    userId = projectId, projectId = pipelineId, pipelineId = debug.buildId,
+                    buildId = userId, channelCode = pipeline.channelCode, terminateFlag = true
+                )
+            }
         }
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
-        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
+        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId)
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
             version = result.version,
             versionNum = result.versionNum,
             versionName = result.versionName,
-            targetUrl = targetUrl
+            targetUrl = targetUrl,
+            yamlInfo = yamlInfo
         )
     }
 
@@ -731,7 +745,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 includeDraft = includeDraft
             )
         } else null
-        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+        val (size, pipelines) = repositoryVersionService.listPipelineVersionWithInfo(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -770,6 +784,69 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
     }
 
+    fun listPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        page: Int,
+        pageSize: Int,
+        fromVersion: Int?,
+        includeDraft: Boolean? = true,
+        versionName: String? = null,
+        creator: String? = null,
+        description: String? = null
+    ): Page<PipelineVersionSimple> {
+        var slqLimit: SQLLimit? = null
+        if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+
+        val offset = slqLimit?.offset ?: 0
+        var limit = slqLimit?.limit ?: -1
+        // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
+        val fromResource = if (fromVersion != null && page == 1) {
+            limit -= 1
+            repositoryVersionService.getPipelineVersionSimple(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = fromVersion
+            )
+        } else null
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val (size, pipelines) = repositoryVersionService.listPipelineVersion(
+            pipelineInfo = pipelineInfo,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            includeDraft = includeDraft,
+            excludeVersion = fromVersion,
+            offset = offset,
+            limit = limit
+        )
+        fromResource?.let { pipelines.add(it) }
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = size.toLong(),
+            records = pipelines
+        )
+    }
+
+    fun getPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionSimple {
+        return repositoryVersionService.getPipelineVersionSimple(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
+    }
+
     fun rollbackDraftFromVersion(
         userId: String,
         projectId: String,
@@ -786,6 +863,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             creator = resource.creator,
             createTime = resource.createTime.timestampmilli(),
+            updater = resource.updater,
             updateTime = resource.updateTime?.timestampmilli(),
             version = resource.version,
             versionName = resource.versionName ?: "",

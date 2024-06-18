@@ -51,6 +51,10 @@ class UserCacheService @Autowired constructor(
         return userDao.list(dslContext, userIds).map { getUserDeptDetail(it) }
     }
 
+    fun usernamesByParentIds(parentId: Int): List<String> {
+        return userDao.usernamesByParentId(dslContext, parentId)
+    }
+
     fun getUserDeptDetail(userRecord: TUserRecord?): UserDeptDetail {
         return if (userRecord == null) {
             UserDeptDetail(

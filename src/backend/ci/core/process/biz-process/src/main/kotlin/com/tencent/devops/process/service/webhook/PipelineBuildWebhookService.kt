@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -199,6 +200,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
     }
 
+    @BkTimed
     private fun webhookTriggerPipelineBuild(
         projectId: String,
         pipelineId: String,

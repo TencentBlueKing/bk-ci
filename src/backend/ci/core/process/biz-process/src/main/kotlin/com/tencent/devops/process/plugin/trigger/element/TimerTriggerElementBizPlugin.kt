@@ -27,7 +27,10 @@
 
 package com.tencent.devops.process.plugin.trigger.element
 
+import com.tencent.bkrepo.common.api.exception.NotFoundException
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
@@ -44,6 +47,7 @@ import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -79,7 +83,8 @@ class TimerTriggerElementBizPlugin constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        container: Container
+        container: Container,
+        yamlInfo: PipelineYamlVo?
     ) {
         val crontabExpressions = mutableSetOf<String>()
         val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
@@ -113,7 +118,7 @@ class TimerTriggerElementBizPlugin constructor(
                 crontabExpressions.add(cron)
             }
         }
-        val repo = getRepo(projectId = projectId, element = element)
+        val repo = getRepo(projectId = projectId, element = element, params = params, yamlInfo = yamlInfo)
         // svn仓库分支必填
         if (repo != null && repo.getScmType() == ScmType.CODE_SVN && element.branches.isNullOrEmpty()) {
             throw ErrorCodeException(
@@ -150,22 +155,52 @@ class TimerTriggerElementBizPlugin constructor(
         }
     }
 
-    private fun getRepo(projectId: String, element: TimerTriggerElement): Repository? {
+    private fun getRepo(
+        projectId: String,
+        element: TimerTriggerElement,
+        params: Map<String, String>,
+        yamlInfo: PipelineYamlVo?
+    ): Repository? {
         return when {
+            element.repositoryType == TriggerRepositoryType.SELF -> {
+                if (yamlInfo == null || yamlInfo.repoHashId.isBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_NEED_ENABLE_PAC
+                    )
+                }
+                try {
+                    client.get(ServiceRepositoryResource::class).get(
+                        projectId = projectId,
+                        repositoryId = yamlInfo.repoHashId,
+                        repositoryType = RepositoryType.ID
+                    ).data
+                } catch (ignored: NotFoundException) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_REPO_NOT_FOUND
+                    )
+                }
+            }
+
             !element.repoHashId.isNullOrBlank() || !element.repoName.isNullOrBlank() -> {
                 val repositoryConfig = with(element) {
                     RepositoryConfigUtils.getRepositoryConfig(
                         repoHashId = repoHashId,
                         repoName = repoName,
-                        repoType = repositoryType,
-                        variables = variables
+                        repoType = TriggerRepositoryType.toRepositoryType(repositoryType),
+                        variables = params
                     )
                 }
-                client.get(ServiceRepositoryResource::class).get(
-                    projectId = projectId,
-                    repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                    repositoryType = repositoryConfig.repositoryType
-                ).data
+                try {
+                    client.get(ServiceRepositoryResource::class).get(
+                        projectId = projectId,
+                        repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                        repositoryType = repositoryConfig.repositoryType
+                    ).data
+                } catch (ignored: NotFoundException) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_REPO_NOT_FOUND
+                    )
+                }
             }
             else -> null
         }

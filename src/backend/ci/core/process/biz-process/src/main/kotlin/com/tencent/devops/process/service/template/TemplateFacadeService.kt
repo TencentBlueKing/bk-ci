@@ -57,7 +57,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
@@ -129,6 +128,7 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
+import com.tencent.devops.process.utils.PipelineVersionUtils.differ
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
@@ -149,8 +149,6 @@ import java.text.MessageFormat
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.isAccessible
 
 @Suppress("ALL")
 @Service
@@ -1435,8 +1433,7 @@ class TemplateFacadeService @Autowired constructor(
             container.elements.forEach e@{ element ->
                 v2Container.elements.forEach { v2Element ->
                     if (element.id == v2Element.id) {
-                        val modify = elementModify(element, v2Element)
-                        if (modify) {
+                        if (element.differ(v2Element)) {
                             element.templateModify = true
                             v2Element.templateModify = true
                         }
@@ -1449,42 +1446,6 @@ class TemplateFacadeService @Autowired constructor(
 
     private fun getTemplateModel(templateModelStr: String): Model {
         return objectMapper.readValue(templateModelStr)
-    }
-
-    fun elementModify(e1: Element, e2: Element): Boolean {
-        if (e1::class != e2::class) {
-            return true
-        }
-
-        val v1Properties = e1.javaClass.kotlin.declaredMemberProperties
-        val v2Properties = e2.javaClass.kotlin.declaredMemberProperties
-        if (v1Properties.size != v2Properties.size) {
-            return true
-        }
-
-        val v1Map = v1Properties.associate {
-            it.isAccessible = true
-            it.name to it.get(e1)
-        }
-
-        val v2Map = v2Properties.associate {
-            it.isAccessible = true
-            it.name to it.get(e2)
-        }
-
-        if (v1Map.size != v2Map.size) {
-            return true
-        }
-
-        for ((key, value) in v1Map) {
-            if (!v2Map.containsKey(key)) {
-                return true
-            }
-            if (v2Map[key] != value) {
-                return true
-            }
-        }
-        return false
     }
 
     private fun getContainers(model: Model): Map<String/*ID*/, Container> {
