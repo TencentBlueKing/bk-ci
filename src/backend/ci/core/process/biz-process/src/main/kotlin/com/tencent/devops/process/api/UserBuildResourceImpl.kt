@@ -450,7 +450,7 @@ class UserBuildResourceImpl @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         archiveFlag: Boolean?,
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -479,7 +479,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             archiveFlag = archiveFlag,
-            debugVersion = debugVersion
+            customVersion = customVersion
         )
         if (archiveFlag != true) {
             pipelineRecentUseService.record(userId, projectId, pipelineId)

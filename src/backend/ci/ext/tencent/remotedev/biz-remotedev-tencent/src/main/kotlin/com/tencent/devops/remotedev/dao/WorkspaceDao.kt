@@ -1025,10 +1025,10 @@ class WorkspaceDao {
     // 获取正常状态的 workspace ip
     fun fetchProjectIp(
         dslContext: DSLContext,
-        projectId: String
+        projectIds: Set<String>
     ): Set<String> {
         with(TWorkspace.T_WORKSPACE) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+            return dslContext.selectFrom(this).where(PROJECT_ID.`in`(projectIds))
                 .and(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
                 .and(
                     STATUS.notIn(

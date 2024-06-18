@@ -103,13 +103,16 @@ class ExperiencePushSubscribeDao {
         dslContext: DSLContext,
         projectId: String,
         bundle: String,
-        platform: String
+        platform: String,
+        limit: Int
     ): Result<TExperienceSubscribeRecord> {
         with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundle))
                 .and(PLATFORM.eq(platform))
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit)
                 .fetch()
         }
     }

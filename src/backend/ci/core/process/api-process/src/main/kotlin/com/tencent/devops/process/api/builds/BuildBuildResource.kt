@@ -65,6 +65,9 @@ interface BuildBuildResource {
         @Parameter(description = "流水线buildNum", required = true)
         @PathParam("buildNum")
         buildNum: String,
+        @Parameter(description = "查询方的当前构建ID，用户判断是否为调试记录", required = false)
+        @QueryParam("buildId")
+        buildId: String?,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
@@ -80,6 +83,9 @@ interface BuildBuildResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @Parameter(description = "查询方的当前构建ID，用户判断是否为调试记录", required = false)
+        @QueryParam("buildId")
+        buildId: String?,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?

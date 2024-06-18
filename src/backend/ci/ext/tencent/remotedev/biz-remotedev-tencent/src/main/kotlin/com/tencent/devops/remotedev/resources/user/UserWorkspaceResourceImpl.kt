@@ -50,7 +50,6 @@ import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -59,7 +58,6 @@ import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -74,8 +72,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl,
-    private val xlsxExportService: WorkspaceXlsxExportService
+    private val deleteControl: DeleteControl
 ) : UserWorkspaceResource {
 
     @AuditEntry(actionId = ActionId.CGS_CREATE)
@@ -132,10 +129,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, search))
-    }
-
-    override fun getWorkspaceListXlsx(userId: String, page: Int?, pageSize: Int?, search: WorkspaceSearch): Response {
-        return xlsxExportService.exportProjectWorkspaceListUser(userId, page, pageSize, search)
     }
 
     @AuditEntry(actionId = ActionId.CGS_VIEW)

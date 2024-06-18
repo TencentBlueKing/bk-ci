@@ -538,6 +538,8 @@ class WorkspaceService @Autowired constructor(
         )
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
+        val owners = mutableMapOf<String, String>()
+        val viewers = mutableMapOf<String, MutableList<String>>()
 
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
@@ -553,7 +555,17 @@ class WorkspaceService @Autowired constructor(
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
 
         val workspaceNames = result.map { it["NAME"] as String }.toSet()
+        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, workspaceNames).forEach {
+            when (it.type) {
+                WorkspaceShared.AssignType.VIEWER -> {
+                    viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
+                }
 
+                WorkspaceShared.AssignType.OWNER -> {
+                    owners.putIfAbsent(it.workspaceName, it.sharedUser)
+                }
+            }
+        }
         val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, workspaceNames)
             .associateBy { it.workspaceName }
 
@@ -619,14 +631,15 @@ class WorkspaceService @Autowired constructor(
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
-                owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
+                owner = owners[name] ?: res["CREATOR"] as String,
                 realOwner = owner,
                 status = WorkspaceStatus.values()[res["STATUS"] as Int],
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
-                macAddress = workspaceWindows[name]?.macAddress
+                macAddress = workspaceWindows[name]?.macAddress,
+                viewers = viewers[name]
             )
         }
 

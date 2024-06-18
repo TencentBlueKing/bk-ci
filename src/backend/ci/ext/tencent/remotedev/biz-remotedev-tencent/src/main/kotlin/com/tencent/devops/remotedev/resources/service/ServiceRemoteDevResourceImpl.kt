@@ -18,10 +18,12 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -43,6 +45,11 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
+import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -70,9 +77,14 @@ class ServiceRemoteDevResourceImpl(
     private val rabbitTemplate: RabbitTemplate,
     private val expertSupportService: ExpertSupportService,
     private val devcloudService: DevcloudService,
-    private val whiteListService: WhiteListService,
     private val deliverControl: DeliverControl,
     private val imageManageService: ImageManageService,
+    private val whiteListService: WhiteListService,
+    private val rebuildWorkspaceHandler: RebuildWorkspaceHandler,
+    private val startWorkspaceHandler: StartWorkspaceHandler,
+    private val stopWorkspaceHandler: StopWorkspaceHandler,
+    private val restartWorkspaceHandler: RestartWorkspaceHandler,
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val workspaceRecordService: WorkspaceRecordService
 ) : ServiceRemoteDevResource {
     companion object {
@@ -366,7 +378,7 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type))
+        return Result(windowsResourceConfigService.allWindowsQuota(userId, false, type, null))
     }
 
     override fun updateUsageLimit(
@@ -454,7 +466,7 @@ class ServiceRemoteDevResourceImpl(
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean> {
-        deliverControl.assignUser2Workspace(userId, projectId, workspaceName, assigns)
+        deliverControl.assignUser2Workspace(userId, workspaceName, assigns)
         return Result(true)
     }
 
@@ -478,6 +490,47 @@ class ServiceRemoteDevResourceImpl(
 
     override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
         return Result(workspaceService.modifyWorkspaceDisplayName(userId, ip, displayName))
+    }
+
+    override fun reBuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean> {
+        rebuildWorkspaceHandler.rebuildWorkspace(
+            userId = userId,
+            workspaceName = workspaceName,
+            rebuildReq = rebuildReq
+        )
+        return Result(true)
+    }
+
+    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        startWorkspaceHandler.startWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun restartWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun makeImageByVm(
+        userId: String,
+        workspaceName: String,
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean> {
+        makeWorkspaceImageHandler.makeWorkspaceImage(
+            userId = userId,
+            workspaceName = workspaceName,
+            makeImageReq = makeImageReq
+        )
+        return Result(true)
     }
 
     override fun checkWorkspaceEnableAddress(

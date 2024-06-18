@@ -98,7 +98,7 @@ class AppPipelineResourceImpl @Autowired constructor(
         pageSize: Int?,
         channelCode: ChannelCode?,
         materialBranch: List<String>?,
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<Page<AppPipelineHistory>> {
         return Result(
             appPipelineService.listPipelineHistory(
@@ -110,7 +110,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 channelCode = channelCode ?: ChannelCode.BS,
                 checkPermission = true,
                 materialBranch = materialBranch,
-                debugVersion = debugVersion
+                customVersion = customVersion
             )
         )
     }
