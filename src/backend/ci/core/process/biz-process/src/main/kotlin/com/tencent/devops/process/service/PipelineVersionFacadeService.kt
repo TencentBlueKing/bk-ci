@@ -159,7 +159,24 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             detailInfo = detailInfo
         )
-        val version = draftVersion?.version ?: releaseVersion.version
+        // 配合前端的展示需要，version有以下几种情况的返回值：
+        // 1 发布过且有草稿：version取草稿的版本号
+        // 2 发布过且有分支版本：version取最新正式的版本号
+        // 3 未发布过仅有草稿版本：version取草稿的版本号
+        // 4 未发布过仅有分支版本：version取最新的分支版本号
+        val version = when (detailInfo.latestVersionStatus) {
+            VersionStatus.COMMITTING -> {
+                draftVersion?.version
+            }
+            VersionStatus.BRANCH -> {
+                pipelineRepositoryService.getBranchVersionResource(
+                    projectId, pipelineId, null
+                )?.version
+            }
+            else -> {
+                null
+            }
+        } ?: releaseVersion.version
         val versionName = draftVersion?.versionName ?: releaseVersion.versionName
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
@@ -383,8 +400,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         if (versionStatus.isReleasing()) {
             val existModel = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
-                pipelineId = pipelineId,
-                includeDraft = true
+                pipelineId = pipelineId
             )?.model ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS

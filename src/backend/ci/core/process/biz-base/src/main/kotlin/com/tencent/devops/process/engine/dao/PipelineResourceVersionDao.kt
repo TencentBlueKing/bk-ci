@@ -168,19 +168,19 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        branchName: String
+        branchName: String?
     ): PipelineResourceVersion? {
         // 一定是取最新的分支版本
         with(T_PIPELINE_RESOURCE_VERSION) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(STATUS.eq(VersionStatus.BRANCH.name))
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
-                .and(VERSION_NAME.eq(branchName))
-                .orderBy(VERSION.desc()).limit(1)
+            branchName.let { select.and(VERSION_NAME.eq(branchName)) }
+            return select.orderBy(VERSION.desc()).limit(1)
                 .fetchAny(mapper)
         }
     }
@@ -357,7 +357,6 @@ class PipelineResourceVersionDao {
             maxQueryVersion?.let {
                 query.and(VERSION.le(maxQueryVersion))
             }
-            // TODO UPDATE_TIME 需要增加索引，有慢查询风险
             val list = query.orderBy(
                 UPDATE_TIME.desc(), VERSION_NUM.desc(), VERSION.desc()
             ).limit(limit).offset(offset).fetch(sampleMapper)
