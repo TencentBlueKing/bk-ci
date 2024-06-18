@@ -255,9 +255,6 @@
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionName || '--'
             },
-            baseVersionStatus () {
-                return this.pipelineInfo?.baseVersionStatus
-            },
             pipelineName () {
                 return this.pipelineSetting?.pipelineName
             },
@@ -300,10 +297,13 @@
                     ]
                 }
             },
+            isDraftBaseBranchVersion () {
+                return this.pipelineInfo?.baseVersionStatus === VERSION_STATUS_ENUM.BRANCH
+            },
             targetActionOptions () {
                 return [
                     'COMMIT_TO_MASTER',
-                    this.baseVersionStatus === VERSION_STATUS_ENUM.BRANCH
+                    this.isDraftBaseBranchVersion
                         ? 'PUSH_BRANCH_AND_REQUEST_MERGE'
                         : 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                 ]
@@ -391,6 +391,9 @@
                     if (enablePac) {
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
+                            if (this.isDraftBaseBranchVersion) {
+                                this.releaseParams.targetAction = 'PUSH_BRANCH_AND_REQUEST_MERGE'
+                            }
                         })
                     }
                 } catch (error) {
@@ -523,7 +526,10 @@
                     const tipsArrayLength = this.releaseParams.enablePac ? 2 : 0
                     const isPacMR
                         = this.releaseParams.enablePac
-                            && this.releaseParams.targetAction === 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
+                            && [
+                                'CHECKOUT_BRANCH_AND_REQUEST_MERGE',
+                                'PUSH_BRANCH_AND_REQUEST_MERGE'
+                            ].includes(this.releaseParams.targetAction)
                     const h = this.$createElement
                     const instance = this.$bkInfo({
                         width: 600,
