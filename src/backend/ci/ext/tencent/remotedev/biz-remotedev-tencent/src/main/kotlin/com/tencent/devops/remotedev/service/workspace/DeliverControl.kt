@@ -55,16 +55,17 @@ import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
 import com.tencent.devops.remotedev.service.HttpCallBackService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -74,6 +75,7 @@ class DeliverControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
+    private val permissionService: PermissionService,
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl,
@@ -89,8 +91,7 @@ class DeliverControl @Autowired constructor(
     fun safeInitialization(
         projectId: String,
         userId: String,
-        workspaceName: String,
-        autoAssign: Boolean? = false
+        workspaceName: String
     ) {
         logger.info("$userId start workspace $workspaceName")
         RedisCallLimit(
@@ -125,8 +126,7 @@ class DeliverControl @Autowired constructor(
                         userId,
                         regionId = detail.regionId.toString(),
                         ip = detail.environmentIP,
-                        workspaceName = workspaceName,
-                        autoAssign = autoAssign
+                        workspaceName = workspaceName
                     )
                 }
 
@@ -150,16 +150,16 @@ class DeliverControl @Autowired constructor(
     )
     fun assignUser2Workspace(
         userId: String,
-        projectId: String,
         workspaceName: String,
         assigns: List<ProjectWorkspaceAssign>
     ) {
-        logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
+        logger.info("assignUser2Workspace|$userId|$workspaceName|$assigns")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        permissionService.checkUserManager(userId, workspace.projectId)
         val assign2Owner = assigns.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
@@ -180,7 +180,7 @@ class DeliverControl @Autowired constructor(
                 workspaceCommon.updateHostMonitor(
                     workspaceName = workspaceName,
                     props = workspaceCommon.genWorkspaceCCInfo(
-                        projectId,
+                        workspace.projectId,
                         workspace.displayName.ifBlank { workspaceName },
                         assign2Owner.userId
                     ),
@@ -221,7 +221,7 @@ class DeliverControl @Autowired constructor(
                     workspaceCommon.updateHostMonitor(
                         workspaceName = workspaceName,
                         props = workspaceCommon.genWorkspaceCCInfo(
-                            projectId,
+                            workspace.projectId,
                             workspace.displayName.ifBlank { workspaceName },
                             assign2Owner.userId
                         ),
@@ -256,7 +256,7 @@ class DeliverControl @Autowired constructor(
         }
 
         // 同步tgit proxy
-        gitProxyTGitService.refreshProjectTGitSpecUser(projectId)
+        gitProxyTGitService.refreshProjectTGitSpecUser(workspace.projectId)
     }
 
     fun softwareInstallationCompleteCallback(
@@ -264,7 +264,6 @@ class DeliverControl @Autowired constructor(
         workspaceName: String,
         projectId: String,
         userId: String,
-        autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
         logger.info(
@@ -287,20 +286,8 @@ class DeliverControl @Autowired constructor(
                             newStatus = WorkspaceStatus.DISTRIBUTING,
                             action = WorkspaceAction.CREATE
                         )
-                        if (autoAssign == true) {
-                            assignUser2Workspace(
-                                userId = userId,
-                                projectId = projectId,
-                                workspaceName = workspaceName,
-                                assigns = listOf(
-                                    ProjectWorkspaceAssign(
-                                        userId = userId,
-                                        type = WorkspaceShared.AssignType.OWNER,
-                                        expiration = null
-                                    )
-                                )
-                            )
-                        }
+                        workspaceCommon.autoAssignOwner(workspace)
+
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
                             cc = mutableSetOf(workspace.createUserId),

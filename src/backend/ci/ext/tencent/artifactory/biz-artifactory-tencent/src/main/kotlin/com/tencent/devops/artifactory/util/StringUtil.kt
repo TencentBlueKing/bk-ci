@@ -32,7 +32,7 @@ import java.util.Random
 
 object StringUtil {
     private const val BASE = "abcdefghijklmnopqrstuvwxyz"
-    private val symbolNeedEncode = listOf('#', '【', '】')
+    private val symbolNeedEncode = listOf('#', '【', '】', '+')
 
     fun random(length: Int): String {
         val random = Random()
@@ -43,15 +43,7 @@ object StringUtil {
         return sb.toString()
     }
 
-    fun chineseUrlEncode(url: String): String {
-        var resultURL = ""
-        url.toList().forEach {
-            resultURL += if (it.toString().matches(Regex("[\u4e00-\u9fa5]")) || symbolNeedEncode.contains(it)) {
-                URLEncoder.encode(it.toString(), "UTF-8")
-            } else {
-                it
-            }
-        }
-        return resultURL
+    fun repoPathUrlEncode(url: String): String {
+        return URLEncoder.encode(url, Charsets.UTF_8.toString()).replace("+", "%20")
     }
 }

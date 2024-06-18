@@ -67,6 +67,7 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
@@ -87,7 +88,8 @@ class ManualReviewTaskAtom(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineVariableService: BuildVariableService
+    private val pipelineVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
     @Value("\${esb.appSecret:#{null}}")
@@ -107,11 +109,18 @@ class ManualReviewTaskAtom(
         val taskId = task.taskId
         val projectCode = task.projectId
         val pipelineId = task.pipelineId
-
-        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
-        val reviewDesc = parseVariable(param.desc, runVariables)
-        val notifyTitle = parseVariable(param.notifyTitle, runVariables)
-        val notifyGroup = parseVariable(param.notifyGroup, runVariables)
+        val variables = runVariables.toMutableMap()
+        val contextMap = variables.plus(
+            pipelineContextService.buildContext(
+                projectId = task.projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = task.stageId, containerId = task.containerId, taskId = task.taskId,
+                variables = variables, model = null, executeCount = task.executeCount
+            )
+        )
+        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), contextMap)
+        val reviewDesc = parseVariable(param.desc, contextMap)
+        val notifyTitle = parseVariable(param.notifyTitle, contextMap)
+        val notifyGroup = parseVariable(param.notifyGroup, contextMap)
 
         if (reviewUsers.isBlank()) {
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")

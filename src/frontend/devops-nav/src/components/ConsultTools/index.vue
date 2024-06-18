@@ -29,7 +29,7 @@
              }"
             v-bk-clickoutside="handleHideTabAssistant"
         >
-            <iframe class="help-center-iframe" src="https://yst.woa.com/chat/chatComp?web_key=1715309665_4428_joyuezhang" frameborder="0"></iframe>
+            <iframe class="help-center-iframe" src="https://yst.woa.com/chat/chatComp?web_key=1712831968_6109_v_minghteng" frameborder="0"></iframe>
         </div>
     </div>
 </template>
@@ -135,13 +135,13 @@
     width: 615px;
     height: 640px;
     pointer-events: none;
-    opacity: 0;
-    z-index: 9999;
+    display: none;
+    z-index: 2000;
     background-color: #ecf2fe;
     border: 1px solid rgba(59, 66, 75, .24);
 }
 .fixation-wrap-active {
-    opacity: 1;
+    display: block;
     pointer-events: auto;
 }
 .help-center-iframe {
@@ -151,7 +151,7 @@
     width: 615px;
     height: 640px;
     pointer-events: auto;
-    z-index: 9999;
+    z-index: 2000;
     background-color: #ecf2fe;
     border: 1px solid rgba(59, 66, 75, .24);
 }

@@ -221,4 +221,16 @@ interface OpServiceResource {
         @QueryParam("deptIds")
         deptIds: String
     ): Result<Boolean>
+
+    @Operation(summary = "迁移已部署的扩展服务")
+    @GET
+    @Path("/migrate/serviceCodes/{serviceCode}")
+    fun migrateService(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "扩展服务代码", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String
+    ): Result<Boolean>
 }

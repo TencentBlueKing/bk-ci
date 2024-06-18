@@ -14,7 +14,7 @@ const getters = {
 }
 
 const mutations = {
-    [SET_EXECUTE_PARAMS]: (state, { pipelineId, ...params }) => {
+    [SET_EXECUTE_PARAMS]: (state, { pipelineId, params }) => {
         const oldVal = state.executeParams.get(pipelineId)
         state.executeParams.set(pipelineId, {
             ...oldVal,

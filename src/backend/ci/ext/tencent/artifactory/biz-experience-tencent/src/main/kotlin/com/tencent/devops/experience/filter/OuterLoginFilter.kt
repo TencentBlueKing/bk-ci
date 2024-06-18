@@ -37,20 +37,22 @@ class OuterLoginFilter @Autowired constructor(
                 if (experienceOuterService.isBlackIp(realIp)) {
                     logger.warn("it is black ip , ip:{}", realIp)
                     throw ErrorCodeException(
-                        statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                        statusCode = Response.Status.FORBIDDEN.statusCode,
                         errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED
                     )
                 }
                 // 路径过滤
                 val resourceMethod = resourceInfo!!.resourceMethod
-                if (AnnotationUtils.findAnnotation(resourceMethod, AllowOuter::class.java) == null) {
+                val resourceClass = resourceInfo!!.resourceClass
+                val isExperience = resourceClass.`package`.name.contains("com.tencent.devops.experience")
+                if (isExperience && AnnotationUtils.findAnnotation(resourceMethod, AllowOuter::class.java) == null) {
                     logger.warn(
                         "this method is not allowed by outer , class:{} , method:{}",
                         resourceMethod.declaringClass,
                         resourceMethod.name
                     )
                     throw ErrorCodeException(
-                        statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                        statusCode = Response.Status.FORBIDDEN.statusCode,
                         errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED
                     )
                 }

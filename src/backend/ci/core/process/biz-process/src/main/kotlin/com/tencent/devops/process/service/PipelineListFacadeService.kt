@@ -882,7 +882,8 @@ class PipelineListFacadeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             deleteFlag = true,
-            days = deletedPipelineStoreDays.toLong()
+            days = deletedPipelineStoreDays.toLong(),
+            filterByPipelineName = null
         )
         return PipelineCount(totalCount, myFavoriteCount, myPipelineCount, recycleCount, recentUseCount)
     }
@@ -1599,7 +1600,8 @@ class PipelineListFacadeService @Autowired constructor(
         pageSize: Int?,
         sortType: PipelineSortType,
         channelCode: ChannelCode,
-        collation: PipelineCollation
+        collation: PipelineCollation,
+        filterByPipelineName: String?
     ): PipelineViewPipelinePage<PipelineInfo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
@@ -1612,13 +1614,15 @@ class PipelineListFacadeService @Autowired constructor(
             offset = slqLimit.offset,
             limit = slqLimit.limit,
             sortType = sortType,
-            collation = collation
+            collation = collation,
+            filterByPipelineName = filterByPipelineName
         )
         val count = pipelineInfoDao.countPipeline(
             dslContext = dslContext,
             projectId = projectId,
             deleteFlag = true,
-            days = deletedPipelineStoreDays.toLong()
+            days = deletedPipelineStoreDays.toLong(),
+            filterByPipelineName = filterByPipelineName
         )
         // 加上流水线组
         val pipelineViewNameMap =
@@ -1827,7 +1831,8 @@ class PipelineListFacadeService @Autowired constructor(
             )
         }
         // 获取view信息
-        val pipelineViewNames = pipelineViewGroupService.getViewNameMap(projectId, mutableSetOf(pipelineId)).get(pipelineId)
+        val pipelineViewNames =
+            pipelineViewGroupService.getViewNameMap(projectId, mutableSetOf(pipelineId)).get(pipelineId)
         val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,

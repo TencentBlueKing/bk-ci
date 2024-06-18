@@ -42,5 +42,7 @@ data class DeployPipelineResult(
     @get:Schema(title = "生成版本名称", required = false)
     val versionName: String?,
     @get:Schema(title = "目标链接", required = false)
-    val targetUrl: String? = null
+    val targetUrl: String? = null,
+    @get:Schema(title = "yaml信息", required = false)
+    val yamlInfo: PipelineYamlVo? = null
 )

@@ -28,7 +28,9 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.atom.service.AtomBusHandleService
+import com.tencent.devops.store.constant.StoreMessageCode
 
 class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
@@ -40,8 +42,30 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         }
     }
 
+    override fun checkTarget(target: String): Boolean {
+        if (!target.startsWith("java")) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.JAVA_ATOM_TASK_JSON_TARGET_IS_INVALID
+            )
+        }
+        return true
+    }
+
     override fun handleOsArch(osName: String, osArch: String): String {
         // worker就是通过java取的osArch，故无需转换
         return osArch
+    }
+
+    override fun handleTarget(reqTarget: String?, target: String): String {
+        if (reqTarget.isNullOrBlank()) {
+            return target
+        }
+        val javaPath = reqTarget.substringBefore("-jar").trim()
+        // 获取插件配置的JVM指令
+        val jvmOptions = target.substringAfter("java").substringBefore("-jar").trim()
+        // 获取插件jar包路径
+        val jarPath = reqTarget.substringAfter("-jar").trim()
+
+        return "$javaPath $jvmOptions -jar $jarPath"
     }
 }

@@ -225,6 +225,33 @@ spring:
       - index: 56
         name: T_PIPELINE_DATA_CLEAR
         databaseShardingStrategy: SHARDING
+      - index: 57
+        name: T_PIPELINE_OPERATION_LOG
+        databaseShardingStrategy: SHARDING
+      - index: 58
+        name: T_PIPELINE_YAML_INFO
+        databaseShardingStrategy: SHARDING
+      - index: 59
+        name: T_PIPELINE_YAML_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 60
+        name: T_PIPELINE_YAML_SYNC
+        databaseShardingStrategy: SHARDING
+      - index: 61
+        name: T_PIPELINE_YAML_BRANCH_FILE
+        databaseShardingStrategy: SHARDING
+      - index: 62
+        name: T_PIPELINE_YAML_VIEW
+        databaseShardingStrategy: SHARDING
+      - index: 63
+        name: T_PIPELINE_WEBHOOK_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 64
+        name: T_PIPELINE_TIMER_BRANCH
+        databaseShardingStrategy: SHARDING
+      - index: 65
+        name: T_PIPELINE_BUILD_HISTORY_DEBUG
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
@@ -257,6 +284,7 @@ devopsGateway:
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   fileDevnetGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   fileIdcGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  whiteProxy: __BK_CI_PRIVATE_URL__
 
 # certificate server 配置
 certificate:

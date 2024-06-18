@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.dao.template
 
+import com.tencent.devops.common.api.constant.KEY_INSTANCE_ERROR_INFO
 import com.tencent.devops.common.api.constant.KEY_UPDATED_TIME
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_VERSION_NAME
@@ -277,7 +278,8 @@ class TemplatePipelineDao {
                 TEMPLATE_ID.`as`(KEY_TEMPLATE_ID),
                 VERSION.`as`(KEY_VERSION),
                 VERSION_NAME.`as`(KEY_VERSION_NAME),
-                UPDATED_TIME.`as`(KEY_UPDATED_TIME)
+                UPDATED_TIME.`as`(KEY_UPDATED_TIME),
+                INSTANCE_ERROR_INFO.`as`(KEY_INSTANCE_ERROR_INFO)
             )
                 .from(this)
                 .where(TEMPLATE_ID.eq(templateId))
@@ -397,7 +399,22 @@ class TemplatePipelineDao {
                 .set(BUILD_NO, instance.buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) })
                 .set(PARAM, instance.param?.let { self -> JsonUtil.toJson(self, formatted = false) })
                 .set(UPDATED_TIME, LocalDateTime.now())
+                .setNull(INSTANCE_ERROR_INFO)
                 .where(PIPELINE_ID.eq(instance.pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun updateInstanceErrorInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        errorInfo: String
+    ) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.update(this)
+                .set(INSTANCE_ERROR_INFO, errorInfo)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

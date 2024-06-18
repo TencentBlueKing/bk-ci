@@ -52,11 +52,9 @@ class BcsResourceApi : AbstractBuildResourceApi() {
     fun getBcsDeploymentInfo(
         userId: String,
         namespaceName: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
+        deploymentName: String
     ): Result<Deployment> {
-        val path = "/ms/dispatch/api/build/bcs/namespaces/$namespaceName/deployments/$deploymentName?bcsUrl=$bcsUrl&token=$token"
+        val path = "/ms/dispatch/api/build/bcs/namespaceNames/$namespaceName/deployments/$deploymentName"
         val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
         val request = buildGet(path, headMap)
         val responseContent = request(request, "get deployment info fail")

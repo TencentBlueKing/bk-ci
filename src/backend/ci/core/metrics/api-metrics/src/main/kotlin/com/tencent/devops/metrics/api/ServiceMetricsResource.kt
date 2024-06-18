@@ -33,12 +33,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.vo.MaxJobConcurrencyVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
+import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -104,4 +106,20 @@ interface ServiceMetricsResource {
         @Parameter(description = "查询区间视图", required = true)
         queryIntervalVO: QueryIntervalVO
     ): Result<ComplianceInfoDO?>
+
+    @Operation(summary = "查询项目活跃用户数")
+    @Path("/get_project_active_user_count")
+    @POST
+    fun getProjectActiveUserCount(
+        @Parameter(description = "查询条件", required = false)
+        baseQueryReq: BaseQueryReqVO
+    ): Result<ProjectUserCountV0?>
+
+    @Operation(summary = "获取job最大并发")
+    @Path("/get_max_job_concurrency")
+    @POST
+    fun getMaxJobConcurrency(
+        @Parameter(description = "查询条件", required = false)
+        dispatchJobReq: BaseQueryReqVO
+    ): Result<MaxJobConcurrencyVO?>
 }

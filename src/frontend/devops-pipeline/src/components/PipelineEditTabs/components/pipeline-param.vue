@@ -23,7 +23,8 @@
                 :item-num="group.list.length"
                 :list="group.list"
                 :handle-edit="handleEdit"
-                :handle-delete="handleDelete"
+                :handle-update="handleUpdate"
+                :handle-sort="handleSort"
             />
         </template>
 
@@ -130,10 +131,24 @@
             }
         },
         methods: {
-            handleDelete (paramId) {
+            handleSort (preEleId, newEleId) {
+                // 从原列表找出被拖拽的element
+                const newEle = this.globalParams.find(item => item.id === newEleId)
+                // 从原列表中删除该element
+                const oldIndex = this.globalParams.findIndex(item => item.id === newEleId)
+                this.globalParams.splice(oldIndex, 1)
+                // 把拖拽的element插入到preEleId对应的element后面
+                const preEleIndex = this.globalParams.findIndex(item => item.id === preEleId)
+                this.globalParams.splice(preEleIndex + 1, 0, newEle)
+                this.updateContainerParams('params', [...this.globalParams, ...this.versions])
+            },
+            // toTop为true，表示移到最前, 为false为delete操作
+            handleUpdate (paramId, toTop = false) {
                 if (!this.editable) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
+                const item = this.globalParams.find(item => item.id === paramId)
                 this.globalParams.splice(index, 1)
+                toTop && this.globalParams.unshift(item)
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             handleAdd (type = 'var') {
@@ -149,9 +164,27 @@
                 this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
-            handleSaveVar () {
+            async validParamOptions () {
+                let optionValid = true
+                if ((this.sliderEditItem?.type === 'ENUM' || this.sliderEditItem?.type === 'MULTIPLE') && this.sliderEditItem?.payload?.type !== 'remote') {
+                    // value为空， 则默认等于key
+                    this.sliderEditItem.options?.forEach(item => {
+                        if (!item.value) {
+                            item.value = item.key
+                        }
+                    })
+                    for (const index of this.sliderEditItem?.options?.keys()) {
+                        optionValid = await this.$validator.validate(`option-${index}.*`)
+                        if (!optionValid) return optionValid
+                    }
+                }
+                return optionValid
+            },
+            async handleSaveVar () {
+                // 单选、复选类型， 需要先校验options
+                const optionValid = await this.validParamOptions()
                 this.$validator.validate('pipelineParam.*').then((result) => {
-                    if (result) {
+                    if (result && optionValid) {
                         if (this.editIndex > -1) {
                             this.globalParams[this.editIndex] = this.sliderEditItem
                         } else {

@@ -125,6 +125,8 @@ class CheckConditionalSkipContainerCmd constructor(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = containerContext.variables.plus(contextMap),
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,
@@ -135,7 +137,7 @@ class CheckConditionalSkipContainerCmd constructor(
 
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 buildId = container.buildId,

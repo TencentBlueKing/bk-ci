@@ -457,7 +457,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
         projectExtPermissionService.createUser2Project(
-            createUser = createInfo.createUserId,
+            createUser = createInfo.createUserId!!,
             projectCode = projectId,
             roleName = createInfo.roleName,
             roleId = createInfo.roleId,

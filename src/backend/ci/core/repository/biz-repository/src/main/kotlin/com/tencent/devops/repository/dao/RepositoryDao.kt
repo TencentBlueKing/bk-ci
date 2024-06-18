@@ -545,4 +545,19 @@ class RepositoryDao {
                 .execute()
         }
     }
+
+    fun updateStoreRepoProject(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(PROJECT_ID, projectId)
+                .set(USER_ID, userId)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
 }

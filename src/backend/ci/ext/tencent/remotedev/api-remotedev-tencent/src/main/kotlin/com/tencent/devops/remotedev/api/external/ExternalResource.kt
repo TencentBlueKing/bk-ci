@@ -66,8 +66,6 @@ interface ExternalResource {
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String,
-        @QueryParam("autoAssign")
-        autoAssign: Boolean? = false,
         @Parameter(description = "回调信息", required = true)
         softwareList: SoftwareCallbackRes
     ): Result<Boolean>

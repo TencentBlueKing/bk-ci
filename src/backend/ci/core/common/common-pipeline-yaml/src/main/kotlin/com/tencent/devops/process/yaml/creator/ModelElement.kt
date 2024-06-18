@@ -28,7 +28,6 @@
 package com.tencent.devops.process.yaml.creator
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -75,8 +74,6 @@ class ModelElement @Autowired(required = false) constructor(
                 timeoutVar = timeout.toString(),
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
-                enableCustomEnv = step.env != null,
-                customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
                     IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
@@ -119,8 +116,8 @@ class ModelElement @Autowired(required = false) constructor(
             if (element != null) {
                 // 统一禁用插件的retry属性
                 element.canRetry = false
+                element.customEnv = ModelCommon.getCustomEnv(step.env)
                 elementList.add(element)
-
                 if (element is MarketBuildAtomElement) {
                     ModelCommon.installMarketAtom(
                         client = client,
@@ -188,23 +185,5 @@ class ModelElement @Autowired(required = false) constructor(
 
     protected fun makeServiceElementList(job: Job): MutableList<Element> {
         return mutableListOf()
-    }
-
-    private fun getElementEnv(env: Map<String, Any?>?): List<NameAndValue>? {
-        if (env == null) {
-            return null
-        }
-
-        val nameAndValueList = mutableListOf<NameAndValue>()
-        env.forEach {
-            nameAndValueList.add(
-                NameAndValue(
-                    key = it.key,
-                    value = it.value.toString()
-                )
-            )
-        }
-
-        return nameAndValueList
     }
 }

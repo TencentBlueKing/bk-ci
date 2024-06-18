@@ -25,7 +25,6 @@ data class RemoteDevUpdateEvent(
     var errorMsg: String? = null,
     var workspaceImageInfo: WorkspaceImageInfo? = null,
     val bkTicket: String? = null,
-    val autoAssign: Boolean? = false,
     override var delayMills: Int = 0,
     override var retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

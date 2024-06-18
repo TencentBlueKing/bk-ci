@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -34,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
+import org.json.JSONObject
 
 @Schema(title = "脚本任务（windows环境）", description = WindowsScriptElement.classType)
 data class WindowsScriptElement(
@@ -45,6 +47,8 @@ data class WindowsScriptElement(
     override var status: String? = null,
     @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
+    @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
+    override var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
     @get:Schema(title = "脚本内容", required = true)
@@ -66,7 +70,7 @@ data class WindowsScriptElement(
         return mutableMap
     }
 
-    override fun transferYaml(defaultValue: Map<String, String>?): PreStep = PreStep(
+    override fun transferYaml(defaultValue: JSONObject?): PreStep = PreStep(
         name = name,
         id = stepId,
         // bat插件上的

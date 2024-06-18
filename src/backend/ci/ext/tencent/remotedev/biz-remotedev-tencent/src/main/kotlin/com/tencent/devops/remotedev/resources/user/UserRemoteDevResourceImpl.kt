@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -43,10 +42,8 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
-import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
 
 @RestResource
 @Suppress("ALL")
@@ -55,10 +52,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val workspaceCommon: WorkspaceCommon,
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
-    private val client: Client,
     private val txcService: TxcService
 ) : UserRemoteDevResource {
 
@@ -66,8 +61,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UserRemoteDevResourceImpl::class.java)
     }
 
-    private val executor = Executors.newCachedThreadPool()
-    private val SEPARATOR = System.getProperty("line.separator")
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))
     }
@@ -106,10 +99,16 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun allWindowsQuota(
+        projectId: String,
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(userId, searchCustom, QuotaType.OFFSHORE))
+        return Result(windowsResourceConfigService.allWindowsQuota(
+            userId = userId,
+            searchCustom = searchCustom,
+            quotaType = QuotaType.OFFSHORE,
+            withProjectLimit = projectId
+        ))
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {

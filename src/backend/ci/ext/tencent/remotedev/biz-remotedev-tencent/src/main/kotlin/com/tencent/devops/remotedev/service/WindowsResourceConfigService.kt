@@ -39,6 +39,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -56,17 +57,20 @@ class WindowsResourceConfigService @Autowired constructor(
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val client: Client
+    private val client: Client,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WindowsResourceConfigService::class.java)
     }
 
+    @Suppress("NestedBlockDepth", "ComplexMethod")
     fun allWindowsQuota(
         userId: String,
         searchCustom: Boolean?,
-        quotaType: QuotaType
+        quotaType: QuotaType,
+        withProjectLimit: String?
     ): Map<String, Map<String, Int>> {
         // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
         val res = mutableMapOf<String, MutableMap<String, Int>>()
@@ -84,12 +88,50 @@ class WindowsResourceConfigService @Autowired constructor(
         client.get(ServiceStartCloudResource::class).getResourceVm(
             ResourceVmReq(null, null, quotaType.getInternal())
         ).data?.forEach { resource ->
-                val key = resource.zoneId.replace(Regex("\\d+"), "")
-                val map = res.getOrPut(key) { mutableMapOf() }
-                resource.machineResources?.forEach { mas ->
-                    map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
+            val key = resource.zoneId.replace(Regex("\\d+"), "")
+            val map = res.getOrPut(key) { mutableMapOf() }
+            resource.machineResources?.forEach { mas ->
+                map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
+            }
+        }
+
+        if (withProjectLimit != null) {
+            val nowSizeCount = workspaceJoinDao.fetchProjectMachineTypeCount(dslContext, withProjectLimit)
+            val specSizes = windowsResourceTypeDao.fetchAll(
+                dslContext = dslContext,
+                withUnavailable = false,
+                specModel = true
+            ).map { it.size }.toSet()
+            val projectSpecQuota = windowsSpecResourceDao.fetchSpec(
+                projectId = withProjectLimit,
+                machineType = null,
+                dslContext = dslContext,
+                sqlLimit = PageUtil.convertPageSizeToSQLLimit(1, 1000)
+            ).map { it.size to it.quota }.toMap()
+            res.values.forEach { sizeAndCounts ->
+                sizeAndCounts.forEach sizeAndCount@{ (size, allCount) ->
+                    // 不是特殊机型，不进行计算
+                    if (!specSizes.contains(size)) {
+                        return@sizeAndCount
+                    }
+                    // 没有库存或者项目下没有配额不能选
+                    val projectCount = projectSpecQuota[size] ?: 0
+                    if (allCount == 0 || (projectCount <= 0)) {
+                        sizeAndCounts[size] = 0
+                        return@sizeAndCount
+                    }
+                    // 项目已拥有机器把项目配额占满了也不能选
+                    val diff = projectCount - (nowSizeCount[size] ?: 0)
+                    if (diff <= 0) {
+                        sizeAndCounts[size] = 0
+                        return@sizeAndCount
+                    }
+                    // 有库存的同时有没有占满项目配额就可以选
+                    sizeAndCounts[size] = diff
                 }
             }
+        }
+
         return res
     }
 
@@ -222,6 +264,18 @@ class WindowsResourceConfigService @Autowired constructor(
         return windowsSpecResourceDao.delete(dslContext = dslContext, projectId = projectId, size = size)
     }
 
+    fun updateAndGetAllSpec(
+        projectId: String,
+        machineType: String?,
+        count: Int
+    ): Map<String, Int> {
+        if (count != 0 && machineType != null) {
+            val res = windowsSpecResourceDao.fetchQuota(dslContext, projectId, machineType) ?: 0
+            windowsSpecResourceDao.createOrUpdateSpecRes(dslContext, projectId, machineType, count + res)
+        }
+        return windowsSpecResourceDao.fetchAllQuota(dslContext, projectId)
+    }
+
     fun fetchSpec(
         projectId: String?,
         machineType: String?,
@@ -246,11 +300,11 @@ class WindowsResourceConfigService @Autowired constructor(
     }
 
     // 追加项目的云桌面配额
-    fun addProjectTotalQuota(
+    fun updateAndGetProjectTotalQuota(
         userId: String,
         projectId: String,
         quota: Int
-    ): Boolean {
+    ): Int {
         logger.info("addProjectTotalQuota|projectId|$projectId|quota|$quota")
         // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
         val projectInfo = kotlin.runCatching {
@@ -262,16 +316,21 @@ class WindowsResourceConfigService @Autowired constructor(
         val projectProperties = projectInfo.properties
         if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
             logger.info("addProjectTotalQuota|$projectId|not open remotedev")
-            return false
+            throw RemoteServiceException(
+                "project $projectId not open remotedev", HTTP_400
+            )
         }
         val curQuota = projectProperties.cloudDesktopNum
-        return client.get(OPProjectResource::class).setProjectProperties(
-            userId = userId,
-            projectCode = projectId,
-            properties = projectProperties.copy(
-                cloudDesktopNum = (curQuota + quota)
+        if (quota != 0) {
+            client.get(OPProjectResource::class).setProjectProperties(
+                userId = userId,
+                projectCode = projectId,
+                properties = projectProperties.copy(
+                    cloudDesktopNum = (curQuota + quota)
+                )
             )
-        ).data == true
+        }
+        return curQuota + quota
     }
 
     fun addProjectRemotedevManager(

@@ -482,6 +482,9 @@
                 line-height: 50px;
                 margin-right: 15px;
                 color: $fontLighterColor;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 .devops-icon {
                     fill: currentColor
                 }
