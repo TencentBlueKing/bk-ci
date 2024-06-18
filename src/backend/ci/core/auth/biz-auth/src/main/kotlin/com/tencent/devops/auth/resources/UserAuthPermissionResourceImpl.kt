@@ -29,7 +29,6 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
     }
 
     override fun checkUserInProjectLevelGroup(
-        token: String,
         userId: String,
         projectId: String
     ): Result<Boolean> {
