@@ -50,7 +50,7 @@ object StringUtil {
                 if (EXCLUDE_CHARS.indexOf(char) >= 0) {
                     append(char)
                 } else {
-                    append(URLEncoder.encode(char.toString(), Charsets.UTF_8.toString()))
+                    append(URLEncoder.encode(char.toString(), Charsets.UTF_8.toString()).replace("+", "%20"))
                 }
             }
         }
