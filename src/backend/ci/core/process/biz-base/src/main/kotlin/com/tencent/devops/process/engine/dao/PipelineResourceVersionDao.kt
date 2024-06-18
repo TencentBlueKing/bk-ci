@@ -179,7 +179,7 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
-            branchName.let { select.and(VERSION_NAME.eq(branchName)) }
+            branchName?.let { select.and(VERSION_NAME.eq(branchName)) }
             return select.orderBy(VERSION.desc()).limit(1)
                 .fetchAny(mapper)
         }
