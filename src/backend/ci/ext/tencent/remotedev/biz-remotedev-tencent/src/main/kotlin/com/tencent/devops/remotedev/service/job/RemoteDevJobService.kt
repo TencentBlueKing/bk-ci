@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
 import com.tencent.devops.remotedev.pojo.job.JobActionType
 import com.tencent.devops.remotedev.pojo.job.JobBackendActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobCreateData
+import com.tencent.devops.remotedev.pojo.job.JobDetail
 import com.tencent.devops.remotedev.pojo.job.JobPipelineActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
@@ -37,7 +38,6 @@ import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
 import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
-import org.jooq.JSON
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -346,20 +346,19 @@ class RemoteDevJobService @Autowired constructor(
         )
     }
 
-    fun fetchJobDetail(jobId: Long): String? {
+    fun fetchJobDetail(jobId: Long): JobDetail? {
         val record = remoteDevJobExecRecordDao.getRecord(dslContext, jobId) ?: return null
         return when (val param = objectMapper.readValue<JobSchemaParam>(record.jobSchemaParam.data())) {
             is PipelineParam -> {
-                fetchPipelineJobDetail(param, record.receiptInfo ?: return null)
+                val data = remoteDevActionService.fetchPipelineJobDetail(
+                    param = param,
+                    receiptInfo = record.receiptInfo ?: return null
+                )
+                return JobDetail(JobActionType.PIPELINE, data)
             }
 
             else -> null
         }
-    }
-
-    private fun fetchPipelineJobDetail(param: PipelineParam, receiptInfo: JSON): String? {
-        val receipt = objectMapper.readValue<PipelineJobReceiptInfo>(receiptInfo.data())
-
     }
 
     companion object {
