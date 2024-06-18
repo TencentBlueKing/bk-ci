@@ -35,7 +35,10 @@ class ApigwDeskTopResourceImpl @Autowired constructor(private val client: Client
         storeVersion: String,
         sign: DesktopTokenSignBody
     ): Result<String> {
-        logger.info("$apigwType|$appCode|getToken|sign=$sign|sha1=$sha1|storeCode=$storeCode|storeVersion=$storeVersion")
+        logger.info(
+            "$apigwType|$appCode|getToken|sign=$sign|sha1=$sha1|" +
+                "storeCode=$storeCode|storeVersion=$storeVersion"
+        )
         return client.get(ServiceRemoteDevResource::class).getToken(desktopIP = desktopIP, sign = with(sign) {
             DesktopTokenSign(
                 fingerprint = fingerprint,
