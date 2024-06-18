@@ -28,10 +28,16 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 
+@Suppress("ComplexMethod")
 object PipelineVersionUtils {
 
     fun getVersionNameByModel(
@@ -134,13 +140,57 @@ object PipelineVersionUtils {
                 if (thisContainer != otherContainer && thisContainer.elements.size != otherContainer.elements.size) {
                     return false
                 }
+                if (thisContainer is VMBuildContainer && otherContainer is VMBuildContainer) {
+                    if (thisContainer != otherContainer) return false
+                } else if (thisContainer is NormalContainer && otherContainer is NormalContainer) {
+                    if (thisContainer != otherContainer) return false
+                } else {
+                    return false
+                }
                 thisContainer.elements.forEachIndexed { eIndex, thisElement ->
                     val otherElement = otherContainer.elements[eIndex]
                     if (thisElement != otherElement) return false
                     if (thisElement.additionalOptions != otherElement.additionalOptions) return false
+                    if (thisElement.differ(otherElement)) return false
                 }
             }
         }
         return true
+    }
+
+    fun Element.differ(other: Element): Boolean {
+        if (this::class != other::class) {
+            return true
+        }
+
+        val v1Properties = this.javaClass.kotlin.declaredMemberProperties
+        val v2Properties = other.javaClass.kotlin.declaredMemberProperties
+        if (v1Properties.size != v2Properties.size) {
+            return true
+        }
+
+        val v1Map = v1Properties.associate {
+            it.isAccessible = true
+            it.name to it.get(this)
+        }
+
+        val v2Map = v2Properties.associate {
+            it.isAccessible = true
+            it.name to it.get(other)
+        }
+
+        if (v1Map.size != v2Map.size) {
+            return true
+        }
+
+        for ((key, value) in v1Map) {
+            if (!v2Map.containsKey(key)) {
+                return true
+            }
+            if (v2Map[key] != value) {
+                return true
+            }
+        }
+        return false
     }
 }

@@ -313,11 +313,11 @@ class PipelineYamlService(
     /**
      * 获取当前分支或blob_id对应的最新的版本
      */
-    fun getLatestVersionByRef(
+    fun getLatestVersion(
         projectId: String,
         repoHashId: String,
         filePath: String,
-        ref: String,
+        ref: String? = null,
         blobId: String? = null,
         branchAction: String? = null
     ): PipelineYamlVersion? {

@@ -44,7 +44,6 @@ import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
-import java.util.concurrent.Executors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -65,8 +64,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UserRemoteDevResourceImpl::class.java)
     }
 
-    private val executor = Executors.newCachedThreadPool()
-    private val SEPARATOR = System.getProperty("line.separator")
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))
     }
@@ -105,10 +102,16 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun allWindowsQuota(
+        projectId: String,
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
-        return Result(windowsResourceConfigService.allWindowsQuota(userId, searchCustom, QuotaType.OFFSHORE))
+        return Result(windowsResourceConfigService.allWindowsQuota(
+            userId = userId,
+            searchCustom = searchCustom,
+            quotaType = QuotaType.OFFSHORE,
+            withProjectLimit = projectId
+        ))
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {

@@ -259,8 +259,6 @@ class PipelineBuildDao {
             if (!statusSet.isNullOrEmpty()) {
                 where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
-            // 增加过滤，对前端屏蔽已删除的构建
-            where.and(DELETE_TIME.isNull)
             where.fetch(debugMapper)
         } else normal
     }
@@ -325,8 +323,6 @@ class PipelineBuildDao {
         } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
-                // 增加过滤，对前端屏蔽已删除的构建
-                .and(DELETE_TIME.isNull)
                 .fetchAny(debugMapper)
         }
     }
@@ -476,8 +472,6 @@ class PipelineBuildDao {
                 val select = dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
-                    .and(DELETE_TIME.isNull)
-
                 if (!statusSet.isNullOrEmpty()) {
                     select.and(STATUS.`in`(statusSet.map { it.ordinal }))
                 }
@@ -1739,14 +1733,14 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): List<BuildInfo> {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
                 .and(DELETE_TIME.isNotNull)
-                .fetch(debugMapper)
+            version?.let { select.and(VERSION.eq(version)) }
+            return select.fetch(debugMapper)
         }
     }
 
@@ -1754,15 +1748,15 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val now = LocalDateTime.now()
-            return dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(DELETE_TIME, now)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
-                .execute()
+            version?.let { update.and(VERSION.eq(version)) }
+            return update.execute()
         }
     }
 
