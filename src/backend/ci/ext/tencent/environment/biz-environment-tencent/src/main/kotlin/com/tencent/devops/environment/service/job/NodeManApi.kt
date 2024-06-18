@@ -164,6 +164,13 @@ class NodeManApi {
                     data = operationResult
                 )
             }
+        } catch (remoteServiceException: RemoteServiceException) {
+            logger.warn("Failed to execute the HTTP request. RemoteServiceException:", remoteServiceException)
+//            throw RemoteServiceException(
+//                errorCode = remoteServiceException.errorCode,
+//                errorMessage = remoteServiceException.errorMessage
+//            )
+            throw remoteServiceException
         } catch (exception: Exception) {
             logger.warn("Failed to execute the HTTP request. Exception:", exception)
             throw exception

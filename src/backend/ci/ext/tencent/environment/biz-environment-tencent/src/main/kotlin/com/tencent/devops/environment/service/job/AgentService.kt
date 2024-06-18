@@ -226,24 +226,10 @@ data class AgentService @Autowired constructor(
             replaceHostId = installAgentReq.replaceHostId,
             isInstallLatestPlugins = DEFAULT_NOT_INSTALL_LATEST_PLUGINS
         )
-        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> = try {
+        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> =
             nodeManApi.executePostRequestAddHeader(
                 installAgentRequest, AgentInstallAgentResult::class.java, null, LANGUAGE_HEADER_EN
             )
-        } catch (e: RemoteServiceException) { // 最初未获取到安装命令，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
-            if (NODEMAN_NOT_READY_CODE == e.errorCode) {
-                AgentOriginalResult(
-                    code = NODEMAN_NOT_READY_CODE,
-                    result = false,
-                    message = "Nodeman is not ready.",
-                    errors = null,
-                    data = null
-                )
-            } else {
-                throw e
-            }
-        }
-
         val installAgentRes: AgentResult<InstallAgentResult> = AgentResult(
             code = agentInstallAgentRes.code,
             result = agentInstallAgentRes.result,
@@ -569,10 +555,25 @@ data class AgentService @Autowired constructor(
 
     fun obtainManualInstallationCommand(jobId: Int, hostId: Long): AgentResult<ObtainManualCommandResult> {
         NodeManApi.setNodemanOperationName(::obtainManualInstallationCommand.name)
-        val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> =
+        val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> = try {
             nodeManApi.executeGetRequest(
                 AgentObtainManualCommand::class.java, jobId, hostId
             )
+        } catch (e: RemoteServiceException) { // 最初未获取到安装命令，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
+            if (logger.isDebugEnabled)
+                logger.debug("e.errorCode: ${e.errorCode}, isEq: ${NODEMAN_NOT_READY_CODE == e.errorCode}")
+            if (NODEMAN_NOT_READY_CODE == e.errorCode) {
+                AgentOriginalResult(
+                    code = NODEMAN_NOT_READY_CODE,
+                    result = false,
+                    message = "Nodeman is not ready.",
+                    errors = null,
+                    data = null
+                )
+            } else {
+                throw e
+            }
+        }
         val obtainManualCommandRes: AgentResult<ObtainManualCommandResult> = AgentResult(
             code = agentObtainManualCommandRes.code,
             result = agentObtainManualCommandRes.result,
