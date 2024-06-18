@@ -21,8 +21,10 @@ import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -59,6 +61,7 @@ class ExpertSupportService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
     private val rabbitTemplate: RabbitTemplate,
     private val notifyControl: NotifyControl
@@ -184,6 +187,7 @@ class ExpertSupportService @Autowired constructor(
                 } else {
                     ""
                 }
+
                 "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
                 "requestIp" -> newParam[k] = requestIp ?: ""
 
@@ -380,12 +384,23 @@ class ExpertSupportService @Autowired constructor(
         size: String
     ): ExpandDiskValidateResp? {
         // 暂时定死 mountType
-        return client.get(ServiceRemoteDevResource::class).expandDisk(
+        val data = client.get(ServiceRemoteDevResource::class).expandDisk(
             workspaceName = workspaceName,
             userId = userId,
             size = size,
             mountType = WorkspaceMountType.START
-        ).data
+        ).data ?: return null
+        if (!data.valid) {
+            return data
+        }
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.EXPAND_DISK,
+            actionMessage = size
+        )
+        return data
     }
 
     fun expandDiskCallback(
@@ -401,10 +416,11 @@ class ExpertSupportService @Autowired constructor(
         }.getOrThrow()
 
         val owner = permissionService.getWorkspaceOwner(workspaceName)
-        val projectId = workspaceDao.fetchAnyWorkspace(dslContext, null, workspaceName, null, null)?.projectId ?: run {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, null, workspaceName, null, null) ?: run {
             logger.warn("expandDiskCallback workspace is null $workspaceName")
             return
         }
+        val projectId = workspace.projectId
         val cc = kotlin.runCatching {
             client.get(ServiceProjectResource::class)
                 .listByProjectCodeList(listOf(projectId))
@@ -414,6 +430,12 @@ class ExpertSupportService @Autowired constructor(
             it.properties?.remotedevManager?.split(";")?.toSet() ?: emptySet()
         }?.flatten()?.toMutableSet() ?: mutableSetOf()
         cc.addAll(owner)
+
+        val dSize = workspaceOpHistoryDao.fetchLastOp(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            action = WorkspaceAction.EXPAND_DISK
+        )?.actionMsg ?: ""
 
         notifyControl.notify4UserAndCCRemoteDevManager(
             userIds = mutableSetOf(operator),
@@ -425,7 +447,9 @@ class ExpertSupportService @Autowired constructor(
                 "projectId" to projectId,
                 "operator" to operator,
                 "taskStatus" to (taskInfo.status?.name ?: ""),
-                "taskLogs" to taskInfo.logs.joinToString(";")
+                "taskLogs" to taskInfo.logs.joinToString(";"),
+                "host" to (workspace.hostName ?: ""),
+                "dsize" to dSize
             )
         )
     }
