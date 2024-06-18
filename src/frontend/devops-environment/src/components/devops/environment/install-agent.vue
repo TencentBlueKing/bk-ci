@@ -159,10 +159,10 @@
                             v-model="formData.osType"
                             @change="handleChangeData"
                         >
-                            <bk-radio value="LINUX" class="mr20">Linux</bk-radio>
-                            <bk-radio value="WINDOWS" class="mr20">Windows</bk-radio>
-                            <bk-radio value="AIX" class="mr20">Aix</bk-radio>
-                            <bk-radio value="SOLARIS">Solaris</bk-radio>
+                            <bk-radio value="LINUX" class="mr20" :disabled="isLoading">Linux</bk-radio>
+                            <bk-radio value="WINDOWS" class="mr20" :disabled="isLoading">Windows</bk-radio>
+                            <bk-radio value="AIX" class="mr20" :disabled="isLoading">Aix</bk-radio>
+                            <bk-radio value="SOLARIS" :disabled="isLoading">Solaris</bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item
@@ -172,6 +172,7 @@
                     >
                         <bk-select
                             v-model="formData.installChannelId"
+                            :disabled="isLoading"
                             @change="handleChangeData"
                         >
                             <bk-option v-for="option in channelList"
