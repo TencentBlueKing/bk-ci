@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_AGENT_STATUS_QUERY_EMPTY_JOB_ID
@@ -148,6 +149,8 @@ data class AgentService @Autowired constructor(
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
 
+        const val NODEMAN_NOT_READY_CODE = 3800015
+
         private val LANGUAGE_HEADER_EN = mapOf("blueking-language" to "en")
 
         private const val GAUGE_NAME_ACTIVE_THREAD_COUNT = "activeThreadCount" // 活跃线程数
@@ -223,9 +226,24 @@ data class AgentService @Autowired constructor(
             replaceHostId = installAgentReq.replaceHostId,
             isInstallLatestPlugins = DEFAULT_NOT_INSTALL_LATEST_PLUGINS
         )
-        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> = nodeManApi.executePostRequestAddHeader(
-            installAgentRequest, AgentInstallAgentResult::class.java, null, LANGUAGE_HEADER_EN
-        )
+        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> = try {
+            nodeManApi.executePostRequestAddHeader(
+                installAgentRequest, AgentInstallAgentResult::class.java, null, LANGUAGE_HEADER_EN
+            )
+        } catch (e: RemoteServiceException) { // 最初未获取到安装命令，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
+            if (NODEMAN_NOT_READY_CODE == e.errorCode) {
+                AgentOriginalResult(
+                    code = NODEMAN_NOT_READY_CODE,
+                    result = false,
+                    message = "Nodeman is not ready.",
+                    errors = null,
+                    data = null
+                )
+            } else {
+                throw e
+            }
+        }
+
         val installAgentRes: AgentResult<InstallAgentResult> = AgentResult(
             code = agentInstallAgentRes.code,
             result = agentInstallAgentRes.result,
