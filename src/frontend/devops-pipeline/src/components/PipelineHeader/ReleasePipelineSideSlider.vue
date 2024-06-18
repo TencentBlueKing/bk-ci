@@ -6,8 +6,9 @@
         }]">
             {{ $t("releasePipeline") }}
             <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
-            <span v-bk-overflow-tips class="release-pipeline-new-version">{{ $t("releasePipelineVersion",
-                                                                                [newReleaseVersionName]) }}</span>
+            <span v-bk-overflow-tips class="release-pipeline-new-version">
+                {{ $t("releasePipelineVersion",[newReleaseVersionName]) }}
+            </span>
             <span v-bk-overflow-tips>
                 {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
             </span>
@@ -17,6 +18,10 @@
                 <aside class="release-pipeline-pac-conf-leftside">
                     <label for="enablePac">
                         {{ $t("pacMode") }}
+                        <span
+                            class="devops-icon icon-info-circle"
+                            v-bk-tooltips="pacDesc"
+                        />
                     </label>
                     <bk-switcher
                         :disabled="pacEnabled || isTemplatePipeline"
@@ -57,11 +62,20 @@
                             <i class="devops-icon icon-info-circle-shape" v-bk-tooltips="$t('yamlCodeLibDesc')" />
                         </label>
                         <bk-form-item required property="repoHashId">
-                            <bk-select id="yamlCodelib" :disabled="pacEnabled" searchable enable-scroll-load
-                                v-model="releaseParams.repoHashId" :scroll-loading="scrollLoadmoreConf"
-                                :loading="isInitPacRepo" :show-empty="false"
-                                :placeholder="$t('editPage.atomForm.selectTips')" :z-index="2600"
-                                @scroll-end="fetchPacEnableCodelibList(false)" @toggle="refreshPacEnableCodelibList">
+                            <bk-select
+                                id="yamlCodelib"
+                                :disabled="pacEnabled"
+                                searchable
+                                enable-scroll-load
+                                v-model="releaseParams.repoHashId"
+                                :scroll-loading="scrollLoadmoreConf"
+                                :loading="isInitPacRepo"
+                                :show-empty="false"
+                                :placeholder="$t('editPage.atomForm.selectTips')"
+                                :z-index="2600"
+                                @scroll-end="fetchPacEnableCodelibList(false)"
+                                @toggle="refreshPacEnableCodelibList"
+                            >
                                 <template v-if="pacEnableCodelibList.length">
                                     <bk-option v-for="option in pacEnableCodelibList" :key="option.repositoryHashId"
                                         :id="option.repositoryHashId" :name="option.aliasName">
@@ -98,12 +112,16 @@
                     </header>
 
                     <bk-form-item required :label="$t('versionDesc')" property="description">
-                        <bk-input type="textarea" v-model="releaseParams.description" :placeholder="$t(
-                            releaseParams.enablePac
-                                ? 'commitMsgPlaceholder'
-                                : 'versionDescPlaceholder'
-                        )
-                        " />
+                        <bk-input
+                            type="textarea"
+                            maxlength="512"
+                            v-model="releaseParams.description"
+                            :placeholder="$t(
+                                releaseParams.enablePac
+                                    ? 'commitMsgPlaceholder'
+                                    : 'versionDescPlaceholder'
+                            )
+                            " />
                         <span v-if="releaseParams.enablePac" class="release-pac-version-desc">
                             {{ $t("commitMsgDesc") }}
                         </span>
@@ -196,7 +214,7 @@
                     page: 1,
                     pageSize: 10,
                     total: 0,
-                    size: 'small'
+                    size: 'mini'
                 },
                 isInitPacRepo: false,
                 releaseParams: {
@@ -217,6 +235,12 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
+            pacDesc () {
+                return {
+                    content: this.$t('pacDesc'),
+                    maxWidth: 300
+                }
+            },
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionName || '--'
             },
@@ -371,8 +395,7 @@
                     if (
                         this.isInitPacRepo
                         || this.scrollLoadmoreConf.isLoading
-                        || (this.scrollLoadmoreConf.total
-                            && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)
+                        || (this.scrollLoadmoreConf.total > 0 && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)
                     ) {
                         return
                     }
@@ -382,6 +405,7 @@
                         this.isInitPacRepo = true
                     } else {
                         this.scrollLoadmoreConf.isLoading = true
+                        this.scrollLoadmoreConf.page += 1
                     }
                     const { projectId } = this.$route.params
                     const { scmType } = this.releaseParams
@@ -394,7 +418,7 @@
                         pageSize: this.scrollLoadmoreConf.pageSize
                     })
                     Object.assign(this.scrollLoadmoreConf, {
-                        total: response.total,
+                        total: response.count,
                         page: response.page,
                         pageSize: response.pageSize
                     })
@@ -435,7 +459,7 @@
                         ...rest
                     } = this.releaseParams
                     const {
-                        data: { version, versionName, versionNum, targetUrl }
+                        data: { yamlInfo, version, versionName, versionNum, targetUrl }
                     } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -467,7 +491,12 @@
                         releaseVersionName: versionName,
                         canDebug: false,
                         canRelease: false,
-                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
+                        pipelineAsCodeSettings: {
+                            ...(this.pipelineInfo.pipelineAsCodeSettings ?? {}),
+                            enable: rest.enablePac
+                        },
+                        yamlInfo
                     })
 
                     const tipsI18nKey = this.releaseParams.enablePac
@@ -903,7 +932,7 @@
         color: #3fc06d;
         font-size: 36px;
     }
-    
+
     .part-of-mr {
         position: relative;
         width: 42px;
@@ -931,7 +960,7 @@
             width: 28px;
             height: 28px;
             border-radius: 50%;
-    
+
         }
     }
 
@@ -950,7 +979,7 @@
         line-height: 1.2;
         text-align: center;
     }
-    
+
     .pipeline-release-suc-tips {
         background: #f5f6fa;
         display: flex;

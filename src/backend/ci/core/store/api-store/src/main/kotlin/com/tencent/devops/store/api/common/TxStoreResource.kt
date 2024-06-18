@@ -1,9 +1,9 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
- * BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 is licensed under the MIT license.
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
  * A copy of the MIT License is included in this file.
  *
@@ -25,34 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.resources
+package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.BuildBcsResource
-import com.tencent.devops.dispatch.pojo.DeployApp
-import com.tencent.devops.dispatch.service.BcsDeployService
-import com.tencent.devops.dispatch.service.BcsQueryService
-import io.fabric8.kubernetes.api.model.apps.Deployment
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class BuildBcsResourceImpl @Autowired constructor(
-    private val bcsDeployService: BcsDeployService,
-    private val bcsQueryService: BcsQueryService
-) : BuildBcsResource {
+@Tag(name = "OPEN_STORE", description = "OP-store组件")
+@Path("/op/store")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxStoreResource {
 
-    override fun getBcsDeploymentInfo(
+    @Operation(summary = "更新组件关联初始化项目信息")
+    @PUT
+    @Path("/rele/project/update")
+    fun updateStoreInitProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        namespaceName: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
-    ): Result<Deployment> {
-        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
-    }
-
-    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
-        return bcsDeployService.deployApp(userId, deployApp)
-    }
+        @Parameter(description = "组件关联初始化项目信息", required = true)
+        storeProjectInfo: StoreProjectInfo
+    ): Result<Boolean>
 }

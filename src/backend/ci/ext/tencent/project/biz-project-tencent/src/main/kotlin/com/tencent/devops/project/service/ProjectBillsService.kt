@@ -1,7 +1,10 @@
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
@@ -18,7 +21,6 @@ import com.tencent.devops.project.pojo.BkDataSourceBillsDTO
 import com.tencent.devops.project.pojo.BkSummaryBillDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.BkBillKind
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -37,7 +39,8 @@ class ProjectBillsService constructor(
     val redisOperation: RedisOperation,
     val projectNotifyService: ProjectNotifyService,
     val projectUserService: ProjectUserService,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val objectMapper: ObjectMapper
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -66,6 +69,9 @@ class ProjectBillsService constructor(
 
     @Value("\${bill.key:#{null}}")
     private var billKey: String = ""
+
+    @Value("\${bill.limit:#{null}}")
+    private var billLimit: Int = 30
 
     fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
@@ -99,8 +105,8 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE
             )
-            clearCacheAfterCheck()
             logger.info("Disable inactive projects finished, total: $totalCount|$disabledProjectList|$project2Status")
+            clearCacheAfterCheck()
         }
         return true
     }
@@ -192,8 +198,8 @@ class ProjectBillsService constructor(
                 manager2projectList = manager2projectList.asMap(),
                 templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
             )
-            clearCacheAfterCheck()
             logger.info("check project related product finished, total: $totalCount|$disabledProjectList")
+            clearCacheAfterCheck()
         }
         return true
     }
@@ -333,7 +339,7 @@ class ProjectBillsService constructor(
         projectBillThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
-            val limit = 10
+            val limit = billLimit
             var count = 0
             val yearAndMonthOfReportDate = LocalDate.parse(
                 yearAndMonthOfReportStr + "01", DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -343,12 +349,11 @@ class ProjectBillsService constructor(
             } else {
                 LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue - 1, 15)
             }
-            val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 14)
+            val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 15)
             do {
                 val projects = projectService.listProjectsByCondition(
                     projectConditionDTO = ProjectConditionDTO(
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        channelCode = ProjectChannelCode.BS.name
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
                     ),
                     limit = limit,
                     offset = offset
@@ -357,38 +362,38 @@ class ProjectBillsService constructor(
                 if (projects.isEmpty()) break
                 val bills = mutableListOf<BkBillDTO>()
                 projects.forEach forEach@{
-                    try {
-                        val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
-                        // 若项目不活跃（无人访问），不上报
-                        val projectActiveUserResponse = client.get(ServiceMetricsResource::class)
-                            .getProjectActiveUserCount(
-                                BaseQueryReqVO(
-                                    projectId = it.englishName,
-                                    startTime = startTime.format(DATE_FORMATTER),
-                                    endTime = endTime.format(DATE_FORMATTER)
-                                )
-                            ).data ?: return@forEach
-                        // 不活跃项目不上报
-                        if (projectActiveUserResponse.userCount == 0)
-                            return@forEach
-
-                        val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
+                    val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
+                    // 若项目不活跃（无人访问），不上报
+                    val projectActiveUserResponse = client.get(ServiceMetricsResource::class)
+                        .getProjectActiveUserCount(
                             BaseQueryReqVO(
                                 projectId = it.englishName,
                                 startTime = startTime.format(DATE_FORMATTER),
                                 endTime = endTime.format(DATE_FORMATTER)
                             )
-                        ).data
-                        val billKind2Usage = mapOf(
-                            BkBillKind.DOCKER_VM to (maxJobConcurrency?.dockerVm ?: 0),
-                            BkBillKind.DOCKER_DEVCLOUD to (maxJobConcurrency?.dockerDevcloud ?: 0),
-                            BkBillKind.MACOS_DEVCLOUD to (maxJobConcurrency?.macosDevcloud ?: 0),
-                            BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
-                            BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
-                            BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
-                            BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
+                        ).data ?: return@forEach
+                    // 不活跃项目不上报
+                    if (projectActiveUserResponse.userCount == 0)
+                        return@forEach
+
+                    val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
+                        BaseQueryReqVO(
+                            projectId = it.englishName,
+                            startTime = startTime.format(DATE_FORMATTER),
+                            endTime = endTime.format(DATE_FORMATTER)
                         )
-                        billKind2Usage.forEach { (billKind, usage) ->
+                    ).data
+                    val billKind2Usage = mapOf(
+                        BkBillKind.DOCKER_VM to (maxJobConcurrency?.dockerVm ?: 0),
+                        BkBillKind.DOCKER_DEVCLOUD to (maxJobConcurrency?.dockerDevcloud ?: 0),
+                        BkBillKind.MACOS_DEVCLOUD to (maxJobConcurrency?.macosDevcloud ?: 0),
+                        BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
+                        BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
+                        BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
+                        BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
+                    )
+                    billKind2Usage.forEach { (billKind, usage) ->
+                        if (usage != 0) {
                             val bkBillDTO = BkBillDTO(
                                 costDate = yearAndMonthOfReportStr,
                                 projectId = it.englishName,
@@ -405,21 +410,20 @@ class ProjectBillsService constructor(
                             }
                             bills.add(bkBillDTO)
                         }
-                        val dataSourceBillsDTO = BkDataSourceBillsDTO(
-                            dataSourceName = "蓝盾服务",
-                            bills = bills
-                        )
-                        val summaryBillDTO = BkSummaryBillDTO(
-                            dataSourceBills = dataSourceBillsDTO
-                        )
-                        // 上报数据至saas
-                        reportBillsDataToSaas(summaryBillDTO = summaryBillDTO)
-                        logger.info("report bills data:$summaryBillDTO")
-                        count += 1
-                    } catch (ignore: Exception) {
-                        logger.warn("report bills data failed!${ignore.message}|${it.englishName}")
                     }
+                    count += 1
                 }
+                val dataSourceBillsDTO = BkDataSourceBillsDTO(
+                    dataSourceName = "蓝盾服务",
+                    bills = bills
+                )
+                val summaryBillDTO = BkSummaryBillDTO(
+                    dataSourceBills = dataSourceBillsDTO,
+                    overwrite = true
+                )
+                // 上报数据至saas
+                reportBillsDataToSaas(summaryBillDTO = summaryBillDTO)
+                logger.info("report bills data:$summaryBillDTO")
                 offset += limit
             } while (projects.size == limit)
             logger.info("report bills data total :$count")
@@ -439,9 +443,19 @@ class ProjectBillsService constructor(
                     logger.warn("request bill data failed,response:($it)")
                     throw RemoteServiceException("request failed, response:($it)")
                 }
+                val responseStr = it.body!!.string()
+                val responseDTO = objectMapper.readValue(
+                    responseStr,
+                    object : TypeReference<ResponseDTO<Map<Any, Any>>>() {})
+                if (responseDTO.code != 200L || !responseDTO.result) {
+                    // 请求错误
+                    logger.warn("request failed, message:(${responseDTO.message})")
+                    throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+                }
             }
         } catch (ignore: Exception) {
-            logger.warn("request bill data failed!${ignore.message}")
+            val reportFailedProject = summaryBillDTO.dataSourceBills.bills.map { it.projectId }
+            logger.warn("request bill data failed!${ignore.message}|$reportFailedProject")
         }
     }
 }

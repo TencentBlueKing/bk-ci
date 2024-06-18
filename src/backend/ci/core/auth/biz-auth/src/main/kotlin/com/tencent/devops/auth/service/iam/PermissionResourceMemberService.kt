@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
@@ -19,7 +20,6 @@ interface PermissionResourceMemberService {
 
     @Suppress("LongParameterList")
     fun batchAddResourceGroupMembers(
-        userId: String,
         projectCode: String,
         iamGroupId: Int,
         expiredTime: Long,
@@ -28,7 +28,6 @@ interface PermissionResourceMemberService {
     ): Boolean
 
     fun batchDeleteResourceGroupMembers(
-        userId: String,
         projectCode: String,
         iamGroupId: Int,
         members: List<String>? = emptyList(),
@@ -45,4 +44,27 @@ interface PermissionResourceMemberService {
         resourceType: String,
         resourceCode: String
     )
+
+    fun renewalGroupMember(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
+    ): Boolean
+
+    fun deleteGroupMember(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean
+
+    fun addGroupMember(
+        userId: String,
+        /*user or department or template*/
+        memberType: String,
+        expiredAt: Long,
+        groupId: Int
+    ): Boolean
 }

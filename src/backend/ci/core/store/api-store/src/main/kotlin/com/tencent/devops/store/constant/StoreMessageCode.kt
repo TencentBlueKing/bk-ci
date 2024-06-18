@@ -91,6 +91,8 @@ object StoreMessageCode {
     const val GET_ATOM_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
     // 研发商店：插件配置文件[task.json]config配置格式不正确,{0}
     const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
+    // 研发商店：java插件配置文件[task.json]target配置不正确,java插件的target命令配置需要以java开头
+    const val JAVA_ATOM_TASK_JSON_TARGET_IS_INVALID = "2120041"
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
@@ -125,6 +127,7 @@ object StoreMessageCode {
     const val USER_SERVICE_PROJECT_NOT_PERMISSION = "2120408" // 研发商店：选中调试项目无创建流水线权限
     const val USER_SERVICE_NOT_EXIST = "2120409" // 研发商店：扩展服务不存在{0}
     const val USER_ITEM_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120410" // 研发商店：扩展点下还有可用的扩展服务，不能删除
+    const val USER_SERVICE_NOT_DEPLOY = "2120411" // 研发商店:用户扩展服务未部署
 
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过
     const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120902" // 研发商店：你没有权限将组件安装到项目：{0}

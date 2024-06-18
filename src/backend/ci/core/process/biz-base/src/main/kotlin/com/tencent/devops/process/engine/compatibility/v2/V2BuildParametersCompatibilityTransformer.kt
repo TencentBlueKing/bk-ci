@@ -27,14 +27,20 @@
 
 package com.tencent.devops.process.engine.compatibility.v2
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
+import org.slf4j.LoggerFactory
 
 open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibilityTransformer {
 
     override fun parseTriggerParam(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
         paramProperties: List<BuildFormProperty>,
         paramValues: Map<String, String>
     ): MutableMap<String, BuildParameters> {
@@ -42,16 +48,33 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         val paramsMap = HashMap<String, BuildParameters>(paramProperties.size, 1F)
 
         paramProperties.forEach { param ->
-
             // 通过对现有Model存在的旧变量替换成新变量， 如果已经是新的会为空，直接为it.id
             val key = PipelineVarUtil.oldVarToNewVar(param.id) ?: param.id
 
             // 现有用户覆盖定义旧系统变量的，前端无法帮助转换，用户传的仍然是旧变量为key，则用新的Key无法找到，要用旧的id兜底
             // 如果编排中指定为常量，则必须以编排的默认值为准，不支持触发时传参覆盖
             val value = if (param.constant == true) {
+                // 常量需要在启动是强制设为只读
+                param.readOnly = true
                 param.defaultValue
+//            } else if (!param.required) {
+//                // TODO #8161 没有作为前端可填入参的变量，直接取默认值，不可被覆盖（实施前仅打印日志）
+//                param.defaultValue
             } else {
-                paramValues[key] ?: paramValues[param.id] ?: param.defaultValue
+                val overrideValue = paramValues[key] ?: paramValues[param.id]
+                if (!param.required && overrideValue != null) {
+                    logger.warn(
+                        "BKSystemErrorMonitor|parseTriggerParam|$userId|$projectId|$pipelineId|[$key] " +
+                            "not required, overrideValue=$overrideValue, defaultValue=${param.defaultValue}"
+                    )
+                }
+                overrideValue ?: param.defaultValue
+            }
+            if (param.valueNotEmpty == true && value.toString().isEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY,
+                    params = arrayOf(param.id)
+                )
             }
 
             paramsMap[key] = BuildParameters(
@@ -65,5 +88,9 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         }
 
         return paramsMap
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(V2BuildParametersCompatibilityTransformer::class.java)
     }
 }

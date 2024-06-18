@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
@@ -356,7 +357,12 @@ class PipelineTriggerEventAspect(
 
             reasonDetail != null -> {
                 triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
-                triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                if (reasonDetail is PipelineTriggerFailedMatch) {
+                    triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name)
+                } else {
+                    triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                }
+
                 triggerDetailBuilder.reasonDetail(reasonDetail)
             }
 

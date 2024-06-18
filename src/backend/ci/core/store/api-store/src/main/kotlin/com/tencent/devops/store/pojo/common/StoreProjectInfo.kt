@@ -25,24 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.devx.service
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Service("devxMemberService")
-class TxDevxMemberServiceImpl @Autowired constructor(
-    private val storeBaseQueryDao: StoreBaseQueryDao
-) : StoreMemberServiceImpl() {
-
-    override fun getStoreName(storeCode: String): String {
-        return storeBaseQueryDao.getLatestComponentByCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = StoreTypeEnum.DEVX
-        )?.name ?: ""
-    }
-}
+@Schema(title = "组件关联初始化项目信息")
+data class StoreProjectInfo(
+    @get:Schema(title = "组件负责人", required = true)
+    val userId: String,
+    @get:Schema(title = "组件代码", required = true)
+    val storeCode: String,
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum
+)

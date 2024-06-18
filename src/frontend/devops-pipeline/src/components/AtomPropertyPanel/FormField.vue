@@ -156,7 +156,6 @@
     .desc-link {
         color: #3c96ff;
     }
-
     .bottom-border-divider {
         height: 1px;
         width: 100%;

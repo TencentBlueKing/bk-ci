@@ -248,7 +248,7 @@
                 {{ $t('codelib.关闭 PAC 模式') }}
             </span>
             <span class="close-confirm-tips">
-                <p>{{ $t('codelib.检测到默认分支仍存在ci 文件目录，关闭 PAC 模式后该目录下的文件修改将') }}</p>
+                <p>{{ $t('codelib.检测到默认分支仍存在ci 文件目录。') }}</p>
                 <p>
                     {{ $t('codelib.请先将目录') }}
                     <span>{{ $t('codelib.改名或删除') }}</span>

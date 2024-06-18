@@ -25,33 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.dispatch.kubernetes.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.util.BcsClientUtils
+import com.tencent.devops.dispatch.kubernetes.client.DeploymentClient
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BcsQueryService @Autowired constructor() {
+class BcsQueryService @Autowired constructor(private val deploymentClient: DeploymentClient) {
 
     private val logger = LoggerFactory.getLogger(BcsQueryService::class.java)
 
     fun getBcsDeploymentInfo(
         userId: String,
         namespaceName: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
-    ): Result<Deployment> {
-        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName," +
-                "deploymentName is: $deploymentName")
-        logger.info("getBcsDeploymentInfo bcsUrl is: $bcsUrl,token is: $token")
-        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
-        val deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName)
-            .withName(deploymentName).get()
+        deploymentName: String
+    ): Result<Deployment?> {
+        logger.info("getBcsDeploymentInfo userId is: $userId , deploymentName is: $deploymentName")
+        val deployment = deploymentClient.getDeploymentByName(userId, namespaceName, deploymentName).data
         logger.info("getBcsDeploymentInfo deployment is: $deployment")
         return Result(deployment)
     }
@@ -59,19 +53,14 @@ class BcsQueryService @Autowired constructor() {
     fun getBcsDeploymentInfos(
         userId: String,
         namespaceName: String,
-        deploymentNames: String,
-        bcsUrl: String,
-        token: String
+        deploymentNames: String
     ): Result<Map<String, Deployment>> {
-        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName," +
-                "deploymentNames is: $deploymentNames")
-        logger.info("getBcsDeploymentInfo bcsUrl is: $bcsUrl,token is: $token")
-        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
+        logger.info("getBcsDeploymentInfo userId is: $userId,deploymentNames is: $deploymentNames")
         val deploymentNameList = deploymentNames.split(",")
         val deploymentMap = mutableMapOf<String, Deployment>()
-        deploymentNameList.forEach {
-            val deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(it).get()
-            deploymentMap[it] = deployment
+        deploymentNameList.forEach { name ->
+            val deployment = deploymentClient.getDeploymentByName(userId, namespaceName, name).data
+            deployment?.let { deploymentMap[name] = it }
         }
         return Result(deploymentMap)
     }

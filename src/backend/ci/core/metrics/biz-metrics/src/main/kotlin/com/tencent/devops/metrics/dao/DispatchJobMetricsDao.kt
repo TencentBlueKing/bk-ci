@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.MaxJobConcurrencyVO
@@ -40,28 +41,22 @@ import org.springframework.stereotype.Repository
 @Repository
 class DispatchJobMetricsDao {
 
-    fun batchSaveDispatchJobMetrics(
+    fun saveDispatchJobMetrics(
         dslContext: DSLContext,
-        dispatchJobMetricsData: List<DispatchJobMetricsData>
+        jobMetricsData: DispatchJobMetricsData
     ) {
         with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
-            dispatchJobMetricsData.forEach { jobMetricsData ->
-                try {
-                    dslContext.insertInto(this)
-                        .set(ID, jobMetricsData.id)
-                        .set(PROJECT_ID, jobMetricsData.projectId)
-                        .set(PRODUCT_ID, jobMetricsData.productId)
-                        .set(THE_DATE, jobMetricsData.theDate)
-                        .set(JOB_TYPE, jobMetricsData.jobType)
-                        .set(CHANNEL_CODE, jobMetricsData.channelCode)
-                        .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
-                        .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
-                        .set(CHANNEL_CODE, jobMetricsData.channelCode)
-                        .execute()
-                } catch (e: Exception) {
-                    logger.error("Save dispatchJobMetrics error.", e)
-                }
-            }
+            dslContext.insertInto(this)
+                .set(ID, jobMetricsData.id)
+                .set(PROJECT_ID, jobMetricsData.projectId)
+                .set(PRODUCT_ID, jobMetricsData.productId)
+                .set(THE_DATE, jobMetricsData.theDate)
+                .set(JOB_TYPE, jobMetricsData.jobType)
+                .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
+                .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
+                .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                .execute()
         }
     }
 
@@ -124,6 +119,7 @@ class DispatchJobMetricsDao {
                 ).`as`("第三方构建机最大并发")
             ).from(subQuery)
                 .groupBy(subQuery.field("PROJECT_ID", String::class.java))
+                .skipCheck()
                 .fetchAny()?.let {
                     MaxJobConcurrencyVO(
                         projectId = it.value1(),

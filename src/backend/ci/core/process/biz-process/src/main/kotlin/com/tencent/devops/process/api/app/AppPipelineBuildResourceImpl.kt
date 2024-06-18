@@ -198,7 +198,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId, pageSize)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -226,7 +226,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            debugVersion = debugVersion
+            customVersion = customVersion
         )
         return Result(result)
     }
