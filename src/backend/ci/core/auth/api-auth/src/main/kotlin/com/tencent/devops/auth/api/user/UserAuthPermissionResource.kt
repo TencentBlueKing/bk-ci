@@ -67,10 +67,10 @@ interface UserAuthPermissionResource {
     ): Result<Map<String, Boolean>>
 
     @GET
-    @Path("/{projectId}/users/checkUserInProjectLevelGroup")
+    @Path("/{projectId}/users/{userId}/checkUserInProjectLevelGroup")
     @Operation(summary = "是否该用户在项目级别的组中")
     fun checkUserInProjectLevelGroup(
-        @HeaderParam(AUTH_HEADER_USER_ID)
+        @PathParam("userId")
         @Parameter(description = "用户Id", required = true)
         userId: String,
         @PathParam("projectId")
