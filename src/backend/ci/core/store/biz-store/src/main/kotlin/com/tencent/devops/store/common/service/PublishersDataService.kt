@@ -28,9 +28,9 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.PublisherInfo
-import com.tencent.devops.store.pojo.common.PublishersRequest
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.publication.PublisherInfo
+import com.tencent.devops.store.pojo.common.publication.PublishersRequest
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface PublishersDataService {

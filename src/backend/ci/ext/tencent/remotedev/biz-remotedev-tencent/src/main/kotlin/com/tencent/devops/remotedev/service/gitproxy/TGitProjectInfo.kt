@@ -37,7 +37,13 @@ enum class TGitProjectType {
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TGitAclConfig(
     @JsonProperty("allow_ips")
-    val allowIps: String
+    val allowIps: String,
+    @JsonProperty("allow_users")
+    val allowUsers: String?,
+    @JsonProperty("spec_allow_ips")
+    val specAllowIps: String?,
+    @JsonProperty("spec_hit_users")
+    val specHitUsers: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -57,3 +63,15 @@ data class TGitSvnAuth(
 data class TGitSvnAuthUser(
     val username: String?
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TGitGroupInfo(
+    val id: Long,
+    @JsonProperty("full_path")
+    val fullPath: String
+)
+
+enum class TGitNamespaceKind(val text: String) {
+    GROUP("Group"),
+    USER("User")
+}

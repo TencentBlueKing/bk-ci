@@ -102,25 +102,25 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import CodeLibDetail from '../components/CodeLibDetail'
-    import CodeLibDialog from '../components/CodeLibDialog'
-    import CodeLibTable from '../components/CodeLibTable'
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import layout from '../components/layout'
-    import {
-        CODE_REPOSITORY_CACHE,
-        CODE_REPOSITORY_SEARCH_VAL,
-        codelibTypes,
-        getCodelibConfig,
-        isGit,
-        isGitLab,
-        isGithub,
-        isP4,
-        isSvn,
-        isTGit
-    } from '../config/'
-    import { getOffset } from '../utils/'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+import CodeLibDetail from '../components/CodeLibDetail'
+import CodeLibDialog from '../components/CodeLibDialog'
+import CodeLibTable from '../components/CodeLibTable'
+import LinkCodeLib from '../components/LinkCodeLib'
+import layout from '../components/layout'
+import {
+    CODE_REPOSITORY_CACHE,
+    CODE_REPOSITORY_SEARCH_VAL,
+    codelibTypes,
+    getCodelibConfig,
+    isGit,
+    isGitLab,
+    isGithub,
+    isP4,
+    isSvn,
+    isTGit
+} from '../config/'
+import { getOffset } from '../utils/'
+import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         name: 'codelib-list',
@@ -186,6 +186,9 @@
             },
             userId () {
                 return this.$route.query.userId || ''
+            },
+            resetType () {
+                return this.$route.query.resetType || ''
             }
         },
 
@@ -215,7 +218,6 @@
             this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             this.init()
             this.projectList = this.$store.state.projectList
-
             this.refreshCodelibList()
             if (
                 this.$route.hash.includes('popupGit')
@@ -229,6 +231,18 @@
                         : 'tgit'
                 this.createCodelib(type, true)
                 this.checkOAuth({ projectId: this.projectId, type })
+                const query = { ...this.$route.query }
+                delete query.userId
+                delete query.resetType
+                this.$router.push({
+                    query
+                })
+            } else if (!this.resetType && this.userId) {
+                const query = { ...this.$route.query }
+                delete query.userId
+                this.$router.push({
+                    query
+                })
             }
         },
 

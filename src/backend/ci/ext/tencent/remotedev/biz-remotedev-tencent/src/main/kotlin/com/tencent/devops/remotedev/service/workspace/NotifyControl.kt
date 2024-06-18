@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.service.workspace
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
@@ -58,16 +59,21 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
+import com.tencent.devops.remotedev.pojo.start.StartMessageDataType
+import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.nio.charset.StandardCharsets
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.util.Base64
 
 @Service
 @Suppress("LongMethod")
@@ -80,7 +86,9 @@ class NotifyControl @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val taiClient: TaiClient,
     private val notifyDao: ProjectNotifyDao,
-    private val sharedDao: WorkspaceSharedDao
+    private val sharedDao: WorkspaceSharedDao,
+    private val startWorkspaceService: StartWorkspaceService,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -103,6 +111,9 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面处于待分配超过3天的自动回收，并邮件提醒	*/
         const val NOT_ASSIGN_AUTO_DELETE_NOTIFY = "NOT_ASSIGN_AUTO_DELETE_NOTIFY"
+
+        /*云桌面处于待分配没有超过3天的邮件提醒	*/
+        const val NOT_ASSIGN_AUTO_NOTIFY = "NOT_ASSIGN_AUTO_NOTIFY"
 
         /*云桌面通知-关机超过7天时自动销毁*/
         const val SLEEP_7_DAY_AUTO_DELETE_NOTIFY = "SLEEP_7_DAY_AUTO_DELETE_NOTIFY"
@@ -131,7 +142,8 @@ class NotifyControl @Autowired constructor(
 
     fun notifyWorkspaceInfo(
         userId: String,
-        notifyData: WorkspaceNotifyData
+        notifyData: WorkspaceNotifyData,
+        enableSendDesktop: Boolean
     ) {
         val workspace = workspaceDao.fetchNotifyWorkspaces(
             dslContext = dslContext,
@@ -144,13 +156,15 @@ class NotifyControl @Autowired constructor(
             params = arrayOf(notifyData.ip?.joinToString(";") ?: "")
         )
 
+        val messageContent = "${notifyData.title}: ${notifyData.desc}"
+
         // 分发到WS
         workspace.forEach { ws ->
             dispatchWebsocketPushEvent(
                 userId = ADMIN_NAME,
                 workspaceName = ws["NAME"] as String,
                 workspaceHost = null,
-                errorMsg = "${notifyData.title}\n${notifyData.desc}",
+                errorMsg = messageContent,
                 type = WebSocketActionType.WORKSPACE_NOTIFY,
                 status = true,
                 action = WorkspaceAction.NOTIFY,
@@ -161,6 +175,38 @@ class NotifyControl @Autowired constructor(
             )
         }
         notifyDao.add(dslContext, userId, notifyData)
+
+        // 发送消息给云桌面
+        if (!enableSendDesktop) {
+            return
+        }
+
+        val userList = if (!notifyData.owner.isNullOrEmpty()) {
+            notifyData.owner!!.toSet()
+        } else {
+            workspaceSharedDao.fetchWorkspaceOwner(
+                dslContext = dslContext,
+                workspaceNames = workspace.map { it["NAME"] as String }.toSet().ifEmpty { return }
+            )
+        }
+
+        val now = LocalDateTime.now()
+        startWorkspaceService.sendMessage(
+            operator = userId,
+            userIdList = userList,
+            dataType = StartMessageDataType.MARQUEE,
+            data = Base64.getEncoder().encodeToString(messageContent.toByteArray(StandardCharsets.UTF_8)),
+            messageStartTime = now.timestampmilli(),
+            messageEndTime = now.plusDays(1).with(LocalTime.MIDNIGHT).timestampmilli()
+        )
+
+        // 发送邮件
+        notify4User(
+            userIds = userList.toMutableSet(),
+            notifyTemplateCode = "REMOTEDEV_NOTIFY",
+            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+            bodyParams = mutableMapOf("title" to notifyData.title, "body" to (notifyData.desc ?: ""))
+        )
     }
 
     fun notify4RemoteDevManager(
@@ -186,7 +232,7 @@ class NotifyControl @Autowired constructor(
         )
     }
 
-    fun notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+    fun notify4UserAndCCRemoteDevManagerAndCCShareUser(
         userIds: MutableSet<String>,
         workspaceName: String,
         cc: MutableSet<String>,
@@ -198,9 +244,9 @@ class NotifyControl @Autowired constructor(
         val shareUser = sharedDao.fetchWorkspaceSharedInfo(
             dslContext = dslContext,
             workspaceName = workspaceName,
-            assignType = WorkspaceShared.AssignType.OWNER
+            assignType = WorkspaceShared.AssignType.VIEWER
         )
-        cc.addAll(shareUser.map { it.operator })
+        cc.addAll(shareUser.map { it.sharedUser })
         notify4UserAndCCRemoteDevManager(
             userIds = userIds,
             cc = cc,
@@ -249,9 +295,11 @@ class NotifyControl @Autowired constructor(
         val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
         val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
             .mapValues {
-                if (it.value.first.isNotBlank()) {
-                    "${it.value.first}@${it.value.second}"
-                } else it.key
+                if ((it.value["USER_NAME"] as String).isNotBlank()) {
+                    "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}"
+                } else {
+                    it.key
+                }
             }.values.plus(
                 userIds.filter { !it.contains("@tai") }
             )
@@ -263,9 +311,9 @@ class NotifyControl @Autowired constructor(
                 TaiUserInfoRequest(usernames = taiUserNames)
             ).associateBy({
                 it.username
-            }, { user ->
+                }, { user ->
                 user.accountEmail
-            })
+                })
             val receivers = userIds.map { taiInfos[it] ?: it }
             logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
             sendNotifyMessageTemplateRequest(
@@ -322,9 +370,9 @@ class NotifyControl @Autowired constructor(
     }
 
     /*
-    * 通知给系统运维人员
-    * 方式是固定企微群
-    */
+     * 通知给系统运维人员
+     * 方式是固定企微群
+     */
     fun notify4SystemAdministrator(
         notifyTemplateCode: String,
         bodyParams: Map<String, String>

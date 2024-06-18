@@ -31,6 +31,7 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -53,7 +54,15 @@ data class TimerTriggerElement(
     @get:Schema(title = "高级定时表达式", required = false)
     val advanceExpression: List<String>? = null,
     @get:Schema(title = "源代码未更新则不触发构建", required = false)
-    val noScm: Boolean? = false
+    val noScm: Boolean? = false,
+    @get:Schema(title = "指定代码库分支", required = false)
+    val branches: List<String>? = null,
+    @get:Schema(title = "代码库类型", required = false)
+    val repositoryType: TriggerRepositoryType? = null,
+    @get:Schema(title = "代码库HashId", required = false)
+    val repoHashId: String? = null,
+    @get:Schema(title = "指定代码库别名", required = false)
+    val repoName: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"
@@ -124,5 +133,11 @@ data class TimerTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    fun enableRepoConfig(): Boolean {
+        return repositoryType == TriggerRepositoryType.SELF ||
+                repositoryType == TriggerRepositoryType.ID && !repoHashId.isNullOrBlank() ||
+                repositoryType == TriggerRepositoryType.NAME && !repoName.isNullOrBlank()
     }
 }

@@ -320,7 +320,7 @@ class PreBuildService @Autowired constructor(
             maxQueueMinutes = 60,
             maxRunningMinutes = 900,
             buildEnv = job.job.pool?.env,
-            customBuildEnv = null,
+            customEnv = null,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
             thirdPartyWorkspace = null,
@@ -421,8 +421,10 @@ class PreBuildService @Autowired constructor(
             buildId = buildId,
             debug = debugLog,
             tag = null,
+            containerHashId = null,
+            executeCount = null,
             jobId = null,
-            executeCount = null
+            stepId = null
         ).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot {
@@ -456,8 +458,10 @@ class PreBuildService @Autowired constructor(
             start = start,
             debug = debugLog,
             tag = null,
+            containerHashId = null,
+            executeCount = null,
             jobId = null,
-            executeCount = null
+            stepId = null
         ).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot {

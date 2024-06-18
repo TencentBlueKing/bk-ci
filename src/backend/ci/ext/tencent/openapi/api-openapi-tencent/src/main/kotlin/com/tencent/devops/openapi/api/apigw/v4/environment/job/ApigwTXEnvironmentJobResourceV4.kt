@@ -152,7 +152,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "批量查询日志的请求信息", required = true)
-        queryLogsReq: QueryJobInstanceLogsReq
+        queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
 
     @Operation(summary = "创建帐号的Job接口", tags = ["v4_app_job_create_account"])
@@ -330,6 +330,15 @@ interface ApigwTXEnvironmentJobResourceV4 {
     @POST
     @Path("/stock_data_update/add_stock_node_to_cc")
     fun addStockNodeToCC(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+    )
+
+    @Operation(summary = "给存量部署节点写入机器server_id", tags = ["v4_app_job_write_server_id"])
+    @POST
+    @Path("/stock_data_update/write_server_id")
+    fun writeServerId(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE

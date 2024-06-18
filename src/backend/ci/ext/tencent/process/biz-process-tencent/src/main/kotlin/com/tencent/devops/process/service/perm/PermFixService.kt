@@ -66,8 +66,7 @@ class PermFixService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    userId = admin,
-                    updateVersion = false
+                    userId = admin
                 )
                 LOG.warn("BKSystemErrorMonitor|BAD_USER|$userId|$projectId|$pipelineId|$admin")
             } else {

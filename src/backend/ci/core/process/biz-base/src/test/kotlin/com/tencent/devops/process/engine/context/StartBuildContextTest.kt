@@ -116,10 +116,14 @@ class StartBuildContextTest : TestBase() {
             pipelineId = pipelineId,
             buildId = buildId,
             resourceVersion = version,
+            versionName = null,
             realStartParamKeys = emptyList(),
+            modelStr = "",
             pipelineParamMap = pipelineParamMap,
             currentBuildNo = null,
-            triggerReviewers = null
+            triggerReviewers = null,
+            debug = true,
+            yamlVersion = "v3.0"
         )
     }
 

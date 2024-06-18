@@ -133,8 +133,10 @@ class JinGangService @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "</a>】",
                 tag = data.elementId,
-                jobId = "",
-                executeCount = 1
+                containerHashId = "",
+                executeCount = 1,
+                jobId = null,
+                stepId = null
             )
         } else {
             jinGangAppDao.updateTask(

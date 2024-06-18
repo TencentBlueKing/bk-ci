@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.startcloud.resource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.bcs.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
@@ -46,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class StartCloudServiceResourceImpl @Autowired constructor(
     private val startCloudInterfaceService: StartCloudInterfaceService,
+    private val workspaceBcsClient: WorkspaceBcsClient,
     private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) : ServiceStartCloudResource {
 
@@ -86,7 +88,7 @@ class StartCloudServiceResourceImpl @Autowired constructor(
     }
 
     override fun getResourceVm(data: ResourceVmReq): Result<List<ResourceVmRespData>?> {
-        return Result(workspaceStartCloudClient.getResourceVm(data))
+        return Result(workspaceBcsClient.startGetResourceVm(data))
     }
 
     override fun getWorkspaceInfoByEid(eid: String): Result<WorkspaceInfo> {
@@ -98,6 +100,6 @@ class StartCloudServiceResourceImpl @Autowired constructor(
     }
 
     override fun getVmStandardImages(): Result<List<StandardVmImage>?> {
-        return Result(workspaceStartCloudClient.getVmStandardImages())
+        return Result(workspaceBcsClient.startGetVmStandardImages())
     }
 }

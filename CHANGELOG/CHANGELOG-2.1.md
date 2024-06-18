@@ -1,4 +1,13 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.3](#v213)
+   - [Changelog since v2.1.2](#changelog-since-v212)
+
+- [v2.1.2](#v212)
+   - [Changelog since v2.1.1](#changelog-since-v211)
+
+- [v2.1.1](#v211)
+   - [Changelog since v2.1.0](#changelog-since-v210)
+
 - [v2.1.0](#v210)
    - [Changelog since v2.0.0](#changelog-since-v200)
 
@@ -25,6 +34,21 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.3
+## Changelog since v2.1.2
+#### 新增
+- [新增] 登录失效弹窗规范修改 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8125)
+
+#### 修复
+- [修复] 开源社区，项目管理界面 开源版权限需放开 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10382)
+# v2.1.2
+## Changelog since v2.1.1
+#### 修复
+- [修复] [社区]上架失败&流水线执行页面白屏问题[v2.1.0+] [链接](http://github.com/TencentBlueKing/bk-ci/issues/10357)
+# v2.1.1
+## Changelog since v2.1.0
+#### 修复
+- [修复] 2.1版本process服务启动失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10271)
 # v2.1.0
 ## Changelog since v2.0.0
 #### 新增

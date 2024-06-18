@@ -3,7 +3,7 @@
         <header class="header-wrapper">
             <bk-breadcrumb separator=">">
                 <bk-breadcrumb-item :to="{ path: '/console/environment' }">{{ $t('environment.environmentManage') }}</bk-breadcrumb-item>
-                <bk-breadcrumb-item>{{ stepInstanceData.name }}</bk-breadcrumb-item>
+                <bk-breadcrumb-item v-bk-overflow-tips>{{ stepInstanceData.name }}</bk-breadcrumb-item>
             </bk-breadcrumb>
             <div class="status-box" :class="statusStyleMap[checkStatus(stepInstanceData.status)]">
                 <div class="status">
@@ -215,7 +215,7 @@
             ipList () {
                 if (this.stepResultGroupList.length) {
                     const activeItem = this.stepResultGroupList[this.activeGroupIndex].hostResultList[0] || {}
-                    if (!this.activeHostId) {
+                    if (!this.activeIp && activeItem) {
                         this.activeHostId = activeItem.bkHostId
                         this.activeIp = activeItem.ip
                         this.activeBkCloudId = activeItem.bkCloudId
@@ -405,11 +405,17 @@
         height: 50px;
         padding-left: 24px;
         padding-right: 24px;
-        position: fixed;
+        position: relative;
         left: 0;
         right: 0;
-        top: 50px;
         z-index: 500;
+        .bk-breadcrumb-item {
+            max-width: 300px !important;
+            display: block;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
     }
     .status-box {
         position: absolute;
@@ -476,7 +482,6 @@
     }
     .task-step-detail {
         width: 100%;
-        margin-top: 50px;
         .step-info-header {
             background: #f5f6fa;
             display: flex;

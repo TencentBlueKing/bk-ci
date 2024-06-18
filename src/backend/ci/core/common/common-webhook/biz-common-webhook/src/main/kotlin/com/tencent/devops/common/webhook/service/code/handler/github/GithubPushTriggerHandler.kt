@@ -33,10 +33,12 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
@@ -212,7 +214,7 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
             )
         )
         // 兼容stream变量
-        startParams[PIPELINE_GIT_REPO_URL] = event.repository.url
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
         startParams[PIPELINE_GIT_REF] = event.ref
         startParams[CI_BRANCH] = getBranchName(event)
         startParams[PIPELINE_GIT_EVENT] = if (event.deleted) {
@@ -230,7 +232,8 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
             else -> TGitPushActionType.PUSH_FILE.value
         }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.url}/commit/${event.commits.firstOrNull()?.id}"
-
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commits.firstOrNull()?.message ?: ""
+        startParams[PIPELINE_GIT_SHA_SHORT] = GitUtils.getShortSha(event.after)
         return startParams
     }
 }

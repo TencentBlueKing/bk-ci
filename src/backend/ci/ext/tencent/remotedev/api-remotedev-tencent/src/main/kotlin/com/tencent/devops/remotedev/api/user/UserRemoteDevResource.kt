@@ -27,10 +27,10 @@
 
 package com.tencent.devops.remotedev.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -38,7 +38,6 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
 import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
@@ -47,8 +46,6 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_WORKSPACE", description = "用户-工作空间,apiType:内网传user，离岸传desktop")
@@ -76,21 +73,6 @@ interface UserRemoteDevResource {
         @Parameter(description = "工作空间描述", required = false)
         remoteDevSettings: RemoteDevSettings
     ): Result<Boolean>
-
-    @Operation(summary = "BK-GPT")
-    @POST
-    @Path("/bkGPT")
-    fun bkGPT(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam("X-DEVOPS-BK-TICKET")
-        bkTicket: String,
-        @Context
-        headers: HttpHeaders,
-        data: BKGPT
-    ): ChunkedOutput<String>
 
     @Operation(summary = "watermark")
     @POST
@@ -145,10 +127,12 @@ interface UserRemoteDevResource {
         userId: String
     ): Result<List<WindowsResourceZoneConfig>>
 
-    @Operation(summary = "获取所有的WINDOWS 配额")
+    @Operation(summary = "获取项目下所有的WINDOWS 配额")
     @GET
     @Path("/get_all_windows_resource_quota")
     fun allWindowsQuota(
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("searchCustom")

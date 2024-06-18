@@ -770,7 +770,7 @@ class TXPipelineService @Autowired constructor(
                 )
                 VMBaseOS.LINUX
             } else {
-                when (agentsResult.data!![0].os) {
+                when (agentsResult.data!![0].agent.os) {
                     "MACOS" -> VMBaseOS.MACOS
                     "WINDOWS" -> VMBaseOS.WINDOWS
                     else -> VMBaseOS.LINUX
@@ -1178,7 +1178,8 @@ class TXPipelineService @Autowired constructor(
                 params = arrayOf(userId, projectId)
             )
         )
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw CustomException(
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?.model ?: throw CustomException(
             Response.Status.BAD_REQUEST,
             MessageUtil.getMessageByLocale(
                 messageCode = ERROR_PIPELINE_NOT_EXISTS,

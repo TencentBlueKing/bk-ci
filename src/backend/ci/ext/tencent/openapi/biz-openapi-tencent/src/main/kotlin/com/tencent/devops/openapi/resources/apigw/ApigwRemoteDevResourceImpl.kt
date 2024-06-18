@@ -1,18 +1,27 @@
 package com.tencent.devops.openapi.resources.apigw
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -61,15 +70,6 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
         return client.get(ServiceRemoteDevResource::class).getRemotedevProjects(projectId)
-    }
-
-    override fun queryProjectRemoteDevCvm(
-        appCode: String?,
-        apigwType: String?,
-        projectId: String?
-    ): Result<List<RemotedevCvmData>> {
-        logger.info("Get  project cvm")
-        return client.get(ServiceRemoteDevResource::class).queryProjectRemoteDevCvm(projectId)
     }
 
     override fun checkUserCgsPermission(
@@ -178,5 +178,150 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
         logger.info("getPersonalWorkspace $userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).getPersonalWorkspace(userId, workspaceName)
+    }
+
+    override fun createProjectWorkspace(
+        userId: String,
+        projectId: String,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        logger.info("createProjectWorkspace $userId|$projectId|$data")
+        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(userId, projectId, data)
+    }
+
+    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
+    }
+
+    override fun getProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?> {
+        logger.info("getProjectWorkspace $userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(userId, projectId, workspaceName)
+    }
+
+    override fun getExpertSupRecords(userId: String, workspaceName: String): Result<SupRecordDataResp> {
+        logger.info("getExpertSupRecords $userId|$workspaceName")
+        val records = client.get(ServiceRemoteDevResource::class).fetchExpertSupRecord(
+            userId = userId,
+            workspaceName = workspaceName,
+            createLaterTimestamp = LocalDateTime.now().minusDays(30).timestamp()
+        ).data ?: emptyList()
+        return Result(
+            SupRecordDataResp(
+                count = records.size,
+                records = records
+            )
+        )
+    }
+
+    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+        logger.info("getWindowsQuota $userId|$type")
+        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type)
+    }
+
+    override fun updateUsageLimit(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        count: Int,
+        available: Boolean?
+    ): Result<QuotaInApiRes> {
+        logger.info("updateUsageLimit $userId|$projectId|$count|$available")
+        return client.get(ServiceRemoteDevResource::class).updateUsageLimit(
+            userId = userId,
+            projectId = projectId,
+            machineType = machineType,
+            count = count,
+            available = available
+        )
+    }
+
+    override fun fetchCvmList(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<DevcloudCVMData>?> {
+        logger.info("fetchCvmList $userId|$projectId|$page|$pageSize")
+        return client.get(ServiceRemoteDevResource::class).fetchCvmList(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun assignWorkspaceUsers(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        workspaceName: String,
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean> {
+        logger.info("assignWorkspaceUsers $userId|$projectId|$workspaceName|$assigns")
+        return client.get(ServiceRemoteDevResource::class).assignUser(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            assigns = assigns
+        )
+    }
+
+    override fun queryWorkspaceImageList(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String?
+    ): Result<Map<String, Any>> {
+        logger.info("queryWorkspaceImageList |$projectId|")
+        return client.get(ServiceRemoteDevResource::class).getWorkspaceImageList(
+            projectId = projectId
+        )
+    }
+
+    override fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Result<Boolean> {
+        logger.info("modifyWorkspaceDisplayName |$userId|$ip|$displayName")
+        return client.get(ServiceRemoteDevResource::class).modifyWorkspaceDisplayName(
+            userId = userId,
+            ip = ip,
+            displayName = displayName
+        )
+    }
+
+    override fun reBuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean> {
+        logger.info("reBuildWorkspace $userId|$userId|$workspaceName|$rebuildReq")
+        return client.get(ServiceRemoteDevResource::class).reBuildWorkspace(userId, workspaceName, rebuildReq)
+    }
+
+    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("startWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).startWorkspace(userId, workspaceName)
+    }
+
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("stopWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).stopWorkspace(userId, workspaceName)
+    }
+
+    override fun restartWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("restartWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).restartWorkspace(userId, workspaceName)
+    }
+
+    override fun makeImageByVm(
+        userId: String,
+        workspaceName: String,
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean> {
+        logger.info("makeImageByVm $userId|$workspaceName|$makeImageReq")
+        return client.get(ServiceRemoteDevResource::class).makeImageByVm(userId, workspaceName, makeImageReq)
     }
 }

@@ -22,8 +22,4 @@ class OpCodeProxyResourceImpl @Autowired constructor(
             )
         )
     }
-
-    override fun refreshTGitAcl(projectId: String?) {
-        gitProxyTGitService.refreshTGitAcl(projectId)
-    }
 }

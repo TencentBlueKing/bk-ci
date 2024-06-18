@@ -168,11 +168,11 @@
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Qrcode from './Qrcode.vue'
-    import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
 
     @Component({
         components: {
@@ -357,7 +357,7 @@
                 })
             }
             
-            if (project.routerTag !== oldProject.routerTag) {
+            if (!oldProject.routerTag || project.routerTag !== oldProject.routerTag) {
                 this.goHomeById(id, true)
             }
         }
@@ -399,7 +399,7 @@
         }
 
         handleChangeLang (item) {
-            this.$setLocale(item.id).then(() => {
+            this.$setLocale(item.id, true).then(() => {
                 location.reload()
             })
         }

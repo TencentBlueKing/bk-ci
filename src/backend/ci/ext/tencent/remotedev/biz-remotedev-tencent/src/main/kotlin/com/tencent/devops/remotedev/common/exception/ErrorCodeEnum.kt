@@ -79,17 +79,17 @@ enum class ErrorCodeEnum(
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132014",
-        formatErrorMessage = "The workspace has error , please contact O2000."
+        formatErrorMessage = "The workspace has error , please  try again later or contact O2000."
     ),
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
         errorCode = "2132015",
-        formatErrorMessage = "The errored workspace has been restored to [{0}], please try again."
+        formatErrorMessage = "The errored workspace has been restored to [{0}], please try again later."
     ),
     WORKSPACE_NOT_RUNNING(
         errorType = ErrorType.USER,
         errorCode = "2132016",
-        formatErrorMessage = "Workspace [{0}] is not currently running."
+        formatErrorMessage = "Workspace [{0}] is not currently running,please try again later or contact O2000."
     ),
     CHECK_USER_TICKET_FAIL(
         errorType = ErrorType.USER,
@@ -216,6 +216,21 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.SYSTEM,
         errorCode = "2132041",
         formatErrorMessage = "do remotedev job error {1}"
+    ),
+    REQ_TGIT_API_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132042",
+        formatErrorMessage = "request tgit api {0} error {1}"
+    ),
+    REMOTEDEV_CLIENT_IP_DUPLICATE_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132043",
+        formatErrorMessage = "client ip {0} request error: duplicate ip"
+    ),
+    REMOTEDEV_CLIENT_IP_NO_PERM_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132044",
+        formatErrorMessage = "client ip {0} request error: ip no permission to perform the operation {1}"
     );
 
     fun getErrorMessage(): String {

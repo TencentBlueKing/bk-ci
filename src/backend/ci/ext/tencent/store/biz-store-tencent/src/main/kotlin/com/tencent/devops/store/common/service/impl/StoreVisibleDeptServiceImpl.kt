@@ -36,10 +36,8 @@ import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
@@ -202,36 +200,6 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeCode = storeCode,
             deptIdList = deptIdIntList,
-            storeType = storeType.type.toByte()
-        )
-        return Result(true)
-    }
-
-    /**
-     * 审核可见范围
-     */
-    override fun approveVisibleDept(
-        userId: String,
-        storeCode: String,
-        visibleApproveReq: VisibleApproveReq,
-        storeType: StoreTypeEnum
-    ): Result<Boolean> {
-        val deptIdIntList = visibleApproveReq.deptIdList
-        logger.info("approveVisible userId:$userId,storeCode:$storeCode,deptIds:$deptIdIntList,storeType:$storeType")
-        val status =
-            if (visibleApproveReq.result == PASS) {
-                DeptStatusEnum.APPROVED.status.toByte()
-            } else {
-                DeptStatusEnum.REJECT.status.toByte()
-            }
-
-        storeDeptRelDao.batchUpdate(
-            dslContext = dslContext,
-            userId = userId,
-            storeCode = storeCode,
-            deptIdList = deptIdIntList,
-            status = status,
-            comment = visibleApproveReq.message,
             storeType = storeType.type.toByte()
         )
         return Result(true)

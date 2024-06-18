@@ -5,16 +5,26 @@ const locale = i18n.locale
 const messages = i18n.messages[locale]
 const message = messages.copySuc
 
-function copyTxt (value) {
-    const input = document.createElement('input')
-    document.body.appendChild(input)
-    input.setAttribute('value', value)
-    input.select()
-    if (document.execCommand('copy')) {
-        document.execCommand('copy')
-        bkMessage({ theme: 'success', message })
+async function copyTxt (value) {
+    try {
+        if (navigator.clipboard.writeText) {
+            const res = await navigator.clipboard.writeText(value)
+            console.log(res, 'cpy')
+            bkMessage({ theme: 'success', message })
+        } else {
+            const input = document.createElement('input')
+            document.body.appendChild(input)
+            input.setAttribute('value', value)
+            input.select()
+            if (document.execCommand('copy')) {
+                document.execCommand('copy')
+                bkMessage({ theme: 'success', message })
+            }
+            document.body.removeChild(input)
+        }
+    } catch (error) {
+        console.log(error)
     }
-    document.body.removeChild(input)
 }
 
 export default {
@@ -26,7 +36,7 @@ export default {
 
     render (h, ctx) {
         const props = ctx.props || {}
-        const value = props.value || ''
+        const value = props.value ?? ''
         const style = {
             cursor: 'pointer'
         }

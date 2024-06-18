@@ -38,7 +38,9 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.constant.ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -93,6 +95,16 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             permission = AuthPermission.EDIT
         )
         val setting = txStreamBasicSettingService.getStreamConf(gitProjectId)
+
+        if (enabled) {
+            val enabledCheck = client.get(ServiceProjectResource::class).get(projectId).data?.productId != null
+            if (!enabledCheck) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PROJECT_NOT_RELATED_PRODUCT
+                )
+            }
+        }
+
         val result = if (setting == null) {
             txStreamBasicSettingService.initStreamConf(
                 userId = userId,

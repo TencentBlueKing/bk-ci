@@ -35,10 +35,14 @@ import com.tencent.devops.dispatch.kubernetes.bcs.client.BcsJobClient
 import com.tencent.devops.dispatch.kubernetes.bcs.client.BcsTaskClient
 import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsContainerService
 import com.tencent.devops.dispatch.kubernetes.bcs.service.BcsJobService
+import com.tencent.devops.dispatch.kubernetes.client.DeploymentClient
+import com.tencent.devops.dispatch.kubernetes.client.IngressClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesClientCommon
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
+import com.tencent.devops.dispatch.kubernetes.client.SecretClient
+import com.tencent.devops.dispatch.kubernetes.client.ServiceClient
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.service.CoreCommonService
@@ -165,4 +169,36 @@ class KubernetesBeanConfiguration {
     fun bcsJobService(
         bcsJobClient: BcsJobClient
     ) = BcsJobService(bcsJobClient)
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "kubernetes", name = ["enable"], havingValue = "true")
+    fun deploymentClient(
+        objectMapper: ObjectMapper,
+        clientCommon: KubernetesClientCommon
+    ) = DeploymentClient(objectMapper, clientCommon)
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "kubernetes", name = ["enable"], havingValue = "true")
+    fun ingressClient(
+        objectMapper: ObjectMapper,
+        clientCommon: KubernetesClientCommon
+    ) = IngressClient(objectMapper, clientCommon)
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "kubernetes", name = ["enable"], havingValue = "true")
+    fun secretClient(
+        objectMapper: ObjectMapper,
+        clientCommon: KubernetesClientCommon
+    ) = SecretClient(objectMapper, clientCommon)
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "kubernetes", name = ["enable"], havingValue = "true")
+    fun serviceClient(
+        objectMapper: ObjectMapper,
+        clientCommon: KubernetesClientCommon
+    ) = ServiceClient(objectMapper, clientCommon)
 }

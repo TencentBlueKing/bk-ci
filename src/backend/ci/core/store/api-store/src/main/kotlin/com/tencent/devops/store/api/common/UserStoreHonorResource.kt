@@ -32,10 +32,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
-import com.tencent.devops.store.pojo.common.HonorInfo
-import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
-import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
+import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation

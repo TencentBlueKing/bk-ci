@@ -63,10 +63,8 @@
         }
     }
     .curl-url {
-        font-weight: bold;
-        color: #c7c7c7;
-        background: #373636;
-        border-radius: 5px;
+        color: #63656E;
+        background: #F5F7FA;
         padding: 10px;
         word-break: break-word;
     }

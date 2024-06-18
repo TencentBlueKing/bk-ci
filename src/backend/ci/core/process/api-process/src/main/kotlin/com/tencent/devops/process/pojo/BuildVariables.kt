@@ -47,7 +47,7 @@ data class BuildVariables(
     @get:Schema(title = "pipeline id", required = true)
     val pipelineId: String,
     @get:Schema(title = "参数集合（已完成上下文转换）", required = true)
-    val variables: Map<String, String>,
+    var variables: Map<String, String>,
     @get:Schema(title = "系统环境变量", required = false)
     val buildEnvs: List<BuildEnv>,
     @get:Schema(title = "container的编排ID（同seq）", required = false)
@@ -57,7 +57,7 @@ data class BuildVariables(
     @get:Schema(title = "container用户自定义ID", required = false)
     val jobId: String?,
     @get:Schema(title = "参数类型集合（用于打印时区分敏感信息，建议不要作为传参使用）", required = false)
-    val variablesWithType: List<BuildParameters>,
+    var variablesWithType: List<BuildParameters>,
     @get:Schema(title = "Job超时时间（毫秒）", required = true)
     var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
     @get:Schema(title = "容器类型", required = false)

@@ -85,14 +85,15 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            userId = userId,
             artifactoryType = artifactoryType,
             path = subPath,
             ttl = ttl,
-            crossPipineId = null,
             crossProjectId = null,
+            crossPipineId = null,
             crossBuildNo = null,
-            region = finalRegion,
-            userId = userId
+            crossBuildId = null,
+            region = finalRegion
         )
     }
 

@@ -71,7 +71,13 @@ config = {
         user = "__INFLUXDB_USERNAME__",
         password = "__INFLUXDB_PASSWORD__"
     },
-    itlogin = { port = "__BKCI_ITLOGIN_PORT__", host = "__BKCI_ITLOGIN_HOST__" },
+    itlogin = {
+        port = "__BKCI_ITLOGIN_PORT__",
+        host = "__BKCI_ITLOGIN_HOST__",
+        aseKey = "__BKCI_ITLOGIN_AES_KEY__",
+        paasId = "__BKCI_ITLOGIN_PAAS_ID__",
+        token = "__BKCI_ITLOGIN_TOKEN__"
+    },
     bkrepo = {
         domain = "__BKREPO_HOST__",
         user = "__BKREPO_USER__",
@@ -112,7 +118,8 @@ config = {
         loginFqdn = "__BK_CI_DEVX_LOGIN_FQDN__"
     },
     auth_token = "__BK_CI_AUTH_TOKEN__",
-    tof_token = "__BK_CI_TOF_TOKEN__"
+    tof_token = "__BK_CI_TOF_TOKEN__",
+    double_check = true
 }
 
 -- 特殊域名

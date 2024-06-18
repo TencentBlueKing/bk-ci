@@ -31,14 +31,14 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchWorkspaceRecord
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Repository
 class DispatchWorkspaceDao {
@@ -120,7 +120,8 @@ class DispatchWorkspaceDao {
         dslContext: DSLContext
     ): Int {
         with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
-            return dslContext.delete(this)
+            return dslContext.update(this)
+                .set(WORKSPACE_NAME, "$workspaceName [deleted]")
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .execute()
         }

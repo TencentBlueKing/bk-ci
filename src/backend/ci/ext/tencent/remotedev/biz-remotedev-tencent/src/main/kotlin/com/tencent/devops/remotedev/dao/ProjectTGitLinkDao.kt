@@ -129,4 +129,18 @@ class ProjectTGitLinkDao {
             ).execute()
         }
     }
+
+    fun fetchByTGitId(
+        dslContext: DSLContext,
+        tgitId: Long,
+        notProjectId: String?
+    ): List<TProjectTgitIdLinkRecord> {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            val dsl = dslContext.selectFrom(this).where(TGIT_ID.eq(tgitId))
+            if (!notProjectId.isNullOrBlank()) {
+                dsl.and(PROJECT_ID.ne(notProjectId))
+            }
+            return dsl.fetch()
+        }
+    }
 }

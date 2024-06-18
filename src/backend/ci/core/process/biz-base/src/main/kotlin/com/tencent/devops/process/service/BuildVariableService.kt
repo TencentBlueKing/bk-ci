@@ -72,7 +72,9 @@ class BuildVariableService @Autowired constructor(
      */
     fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
         return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
-            val word = PipelineVarUtil.oldVarToNewVar(templateWord) ?: templateWord
+            val word = PipelineVarUtil.oldVarToNewVar(templateWord)
+                ?: PipelineVarUtil.fetchVarName(templateWord)
+                ?: templateWord
             val templateValByType = pipelineBuildVarDao.getVarsWithType(
                 dslContext = commonDslContext,
                 projectId = projectId,
@@ -91,12 +93,19 @@ class BuildVariableService @Autowired constructor(
     fun getAllVariable(
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        keys: Set<String>? = null
     ): Map<String, String> {
-        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId) == true) {
-            pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId)
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = keys
+        )
+        return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, null) == true) {
+            dataMap
         } else {
-            PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
+            PipelineVarUtil.mixOldVarAndNewVar(dataMap)
         }
     }
 
@@ -110,7 +119,8 @@ class BuildVariableService @Autowired constructor(
         buildId: String,
         varName: String,
         varValue: Any,
-        readOnly: Boolean? = null
+        readOnly: Boolean? = null,
+        rewriteReadOnly: Boolean? = null
     ) {
         val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
         saveVariable(
@@ -120,7 +130,8 @@ class BuildVariableService @Autowired constructor(
             buildId = buildId,
             name = realVarName,
             value = varValue,
-            readOnly = readOnly
+            readOnly = readOnly,
+            rewriteReadOnly = rewriteReadOnly
         )
     }
 
@@ -178,12 +189,13 @@ class BuildVariableService @Autowired constructor(
         pipelineId: String,
         name: String,
         value: Any,
-        readOnly: Boolean? = null
+        readOnly: Boolean? = null,
+        rewriteReadOnly: Boolean? = null
     ) {
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
-            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, name)
+            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, setOf(name))
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
                     dslContext = dslContext,
@@ -200,7 +212,8 @@ class BuildVariableService @Autowired constructor(
                     projectId = projectId,
                     buildId = buildId,
                     name = name,
-                    value = value
+                    value = value,
+                    rewriteReadOnly = rewriteReadOnly
                 )
             }
         } finally {

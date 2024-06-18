@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板列表")
@@ -63,5 +64,27 @@ data class OptionalTemplate(
     @get:Schema(title = "模版logo", required = true)
     val logoUrl: String,
     @get:Schema(title = "阶段集合", required = true)
-    val stages: List<Stage>
+    val stages: List<Stage>,
+    @get:Schema(title = "克隆模板设置项是否存在", required = false)
+    val cloneTemplateSettingExist: CloneTemplateSettingExist? = null
 )
+
+@Schema(title = "克隆模板设置")
+data class CloneTemplateSettingExist(
+    val notifySettingExist: Boolean,
+    val concurrencySettingExist: Boolean,
+    val labelSettingExist: Boolean
+) {
+    companion object {
+        fun fromSetting(setting: PipelineSetting?, pipelinesWithLabels: Set<String>?): CloneTemplateSettingExist {
+            if (setting == null) {
+                return CloneTemplateSettingExist(false, false, false)
+            }
+            return CloneTemplateSettingExist(
+                notifySettingExist = !setting.notifySettingIsNull(),
+                concurrencySettingExist = !setting.concurrencySettingIsNull(),
+                labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false
+            )
+        }
+    }
+}

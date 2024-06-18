@@ -40,9 +40,9 @@ import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.StoreHonorDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
 import com.tencent.devops.store.pojo.common.CREATE_TIME
-import com.tencent.devops.store.pojo.common.HonorInfo
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.STORE_CREATE_TIME
 import com.tencent.devops.store.pojo.common.STORE_CREATOR
@@ -54,8 +54,8 @@ import com.tencent.devops.store.pojo.common.STORE_MODIFIER
 import com.tencent.devops.store.pojo.common.STORE_NAME
 import com.tencent.devops.store.pojo.common.STORE_TYPE
 import com.tencent.devops.store.pojo.common.STORE_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
-import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
+import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreHonorService
 import java.time.LocalDateTime

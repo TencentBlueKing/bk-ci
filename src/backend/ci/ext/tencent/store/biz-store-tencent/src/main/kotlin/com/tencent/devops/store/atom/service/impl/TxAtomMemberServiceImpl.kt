@@ -29,12 +29,10 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.common.service.TxStoreGitRepositoryService
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
-@Primary
 @Service
 class TxAtomMemberServiceImpl @Autowired constructor(
     private val storeGitRepositoryService: TxStoreGitRepositoryService

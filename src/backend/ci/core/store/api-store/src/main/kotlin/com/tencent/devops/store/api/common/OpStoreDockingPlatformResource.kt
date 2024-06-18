@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformInfo
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter

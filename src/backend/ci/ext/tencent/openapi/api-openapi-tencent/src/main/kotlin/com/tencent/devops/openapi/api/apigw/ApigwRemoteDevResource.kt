@@ -4,14 +4,23 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -20,6 +29,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -85,21 +95,6 @@ interface ApigwRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
-
-    @Operation(summary = "获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm"])
-    @GET
-    @Path("/project/cvm")
-    fun queryProjectRemoteDevCvm(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "项目ID", required = false)
-        @QueryParam("project_id")
-        projectId: String?
-    ): Result<List<RemotedevCvmData>>
 
     @Operation(summary = "提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
     @GET
@@ -222,7 +217,7 @@ interface ApigwRemoteDevResource {
         taiUser: String
     ): Result<List<WeSecProjectWorkspace>>
 
-    @Operation(summary = "创建windows工作空间", tags = ["v4_app_remotedev_win_create"])
+    @Operation(summary = "创建windows工作空间-个人", tags = ["v4_app_remotedev_win_prosonal_create"])
     @POST
     @Path("/personal_win_workspace")
     fun createPersonalWorkspace(
@@ -233,7 +228,7 @@ interface ApigwRemoteDevResource {
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
 
-    @Operation(summary = "删除windows工作空间", tags = ["v4_app_remotedev_win_delete"])
+    @Operation(summary = "删除windows工作空间-个人", tags = ["v4_app_remotedev_win_prosonal_delete"])
     @DELETE
     @Path("/personal_win_workspace")
     fun deletePersonalWorkspace(
@@ -245,7 +240,7 @@ interface ApigwRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @Operation(summary = "获取windows工作空间", tags = ["v4_app_remotedev_win_detail"])
+    @Operation(summary = "获取windows工作空间-个人", tags = ["v4_app_remotedev_win_prosonal_detail"])
     @GET
     @Path("/personal_win_workspace")
     fun getPersonalWorkspace(
@@ -256,4 +251,228 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "创建windows工作空间-项目", tags = ["v4_app_remotedev_win_project_create"])
+    @POST
+    @Path("/project_win_workspace")
+    fun createProjectWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "创建内容", required = true)
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean>
+
+    @Operation(summary = "删除windows工作空间-项目", tags = ["v4_app_remotedev_win_project_delete"])
+    @DELETE
+    @Path("/project_win_workspace")
+    fun deleteProjectWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间-项目", tags = ["v4_app_remotedev_win_project_detail"])
+    @GET
+    @Path("/project_win_workspace")
+    fun getProjectWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "获取一个月内工作空间申请的专家协助单据", tags = ["v4_app_remotedev_expertsup_records"])
+    @GET
+    @Path("/expertsup/records")
+    fun getExpertSupRecords(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<SupRecordDataResp>
+
+    @Operation(summary = "获取windows空闲资源数据", tags = ["v4_app_remotedev_win_quota"])
+    @GET
+    @Path("/get_all_windows_resource_quota")
+    fun getWindowsQuota(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "获取类型", required = true)
+        @QueryParam("type")
+        type: QuotaType
+    ): Result<Map<String, Map<String, Int>>>
+
+    @Operation(summary = "更新项目/个人在使用云桌面上的配额", tags = ["v4_app_remotedev_usage_limit"])
+    @PUT
+    @Path("/update_usage_limit")
+    fun updateUsageLimit(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "机型", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
+        @Parameter(description = "配额增量(可负，可零，可正)", required = true)
+        @QueryParam("count")
+        count: Int,
+        @Parameter(description = "返回可用配额", required = false)
+        @QueryParam("available")
+        available: Boolean?
+    ): Result<QuotaInApiRes>
+
+    @Operation(summary = "获取指定云研发项目的CVM信息列表", tags = ["v4_app_remotedev_cvm"])
+    @GET
+    @Path("/{projectId}/devcloud/cvmList")
+    fun fetchCvmList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<Page<DevcloudCVMData>?>
+
+    @Operation(summary = "提供给Devcloud分配云桌面拥有者或共享人", tags = ["v4_app_assign_workspace_users"])
+    @POST
+    @Path("/{projectId}/assign/workspace/users")
+    fun assignWorkspaceUsers(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "分配数据", required = true)
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean>
+
+    @Operation(summary = "提供给Devcloud获取云桌面镜像列表", tags = ["v4_app_query_workspace_image_list"])
+    @GET
+    @Path("/workspace/image/list")
+    fun queryWorkspaceImageList(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Map<String, Any>>
+
+    @Operation(summary = "提供给BCS机型置换时修改旧机器的名称，以备销毁", tags = ["v4_app_modify_workspace_display_name"])
+    @POST
+    @Path("/modify/display_name")
+    fun modifyWorkspaceDisplayName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String,
+        @Parameter(description = "别名", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "重装云桌面系统", tags = ["v4_app_remotedev_workspace_rebuild"])
+    @POST
+    @Path("/workspace_rebuild")
+    fun reBuildWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean>
+
+    @Operation(summary = "云桌面开机", tags = ["v4_app_remotedev_workspace_start"])
+    @POST
+    @Path("/workspace_start")
+    fun startWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "云桌面关机", tags = ["v4_app_remotedev_workspace_stop"])
+    @POST
+    @Path("/workspace_stop")
+    fun stopWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "云桌面重启", tags = ["v4_app_remotedev_workspace_restart"])
+    @POST
+    @Path("/workspace_restart")
+    fun restartWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "根据已存在的云桌面制作镜像", tags = ["v4_app_remotedev_image_make"])
+    @POST
+    @Path("/make_vm_image")
+    fun makeImageByVm(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "请求报文", required = true)
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean>
 }

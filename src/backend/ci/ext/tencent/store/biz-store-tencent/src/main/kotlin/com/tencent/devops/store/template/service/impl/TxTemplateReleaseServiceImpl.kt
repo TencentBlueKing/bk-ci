@@ -41,9 +41,9 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.service.TemplateVisibleDeptService
 import com.tencent.devops.store.template.service.TxTemplateReleaseService

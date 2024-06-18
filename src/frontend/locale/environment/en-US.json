@@ -419,5 +419,9 @@
     "请填写密码": "Please enter password",
     "关键字": "Keywords",
     "端口": "Port",
-    "请填写端口": "Please enter port."
+    "请填写端口": "Please enter port.",
+    "启用": "Enable",
+    "停用": "Disable",
+    "启用成功": "Enable successful",
+    "停用成功": "Disable successful"
 }

@@ -214,7 +214,7 @@ class DeleteControl @Autowired constructor(
             val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).ifEmpty {
                 listOf(workspace.createUserId)
             }
-            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+            notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                 userIds = userIds.toMutableSet(),
                 workspaceName = workspace.workspaceName,
                 cc = mutableSetOf(workspace.createUserId),
@@ -438,7 +438,8 @@ class DeleteControl @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.DISTRIBUTING,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 if (workspace.projectId in whiteListProject) {
@@ -517,7 +518,8 @@ class DeleteControl @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.STOPPED,
-            systemType = WorkspaceSystemType.WINDOWS_GPU
+            systemType = WorkspaceSystemType.WINDOWS_GPU,
+            ownerType = WorkspaceOwnerType.PROJECT
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 if (workspace.projectId in whiteListProject) {
@@ -555,7 +557,7 @@ class DeleteControl @Autowired constructor(
                         )
                         if (it) {
                             val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                                 userIds = userIds.toMutableSet(),
                                 workspaceName = workspace.workspaceName,
                                 cc = mutableSetOf(workspace.createUserId),

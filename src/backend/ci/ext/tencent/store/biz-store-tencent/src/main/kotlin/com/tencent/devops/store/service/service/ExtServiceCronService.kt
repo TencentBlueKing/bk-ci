@@ -27,19 +27,20 @@
 
 package com.tencent.devops.store.service.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.api.ServiceBcsResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceKubernetesManagementResource
 import com.tencent.devops.store.common.dao.StoreReleaseDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
+import com.tencent.devops.store.pojo.extservice.QueryServiceFeatureParam
+import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.service.configuration.ExtServiceBcsConfig
 import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.extservice.QueryServiceFeatureParam
-import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -86,17 +87,17 @@ class ExtServiceCronService @Autowired constructor(
                     pageSize = 20,
                     timeDescFlag = false
                 )
-                if (serviceRecords == null || serviceRecords.isEmpty()) {
+                if (serviceRecords.isNullOrEmpty()) {
                     return
                 }
                 val serviceCodes = serviceRecords.map { it.serviceCode }.toSet().joinToString(",")
                 // 批量获取扩展服务部署信息
-                val serviceDeploymentMap = client.get(ServiceBcsResource::class).getBcsDeploymentInfos(
-                    namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
-                    deploymentNames = serviceCodes,
-                    bcsUrl = extServiceBcsConfig.masterUrl,
-                    token = extServiceBcsConfig.token
-                ).data
+                val serviceDeploymentMap =
+                    client.get(ServiceKubernetesManagementResource::class).getDeploymentInfos(
+                        userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                        namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                        deploymentNames = serviceCodes
+                    ).data
                 logger.info("serviceDeploymentMap:$serviceDeploymentMap")
                 if (serviceDeploymentMap == null) {
                     return

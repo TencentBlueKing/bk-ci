@@ -30,16 +30,16 @@ package com.tencent.devops.store.template.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.UserTemplateClassifyResource
-import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.ClassifyService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserTemplateClassifyResourceImpl @Autowired constructor(private val classfiyService: ClassifyService) :
+class UserTemplateClassifyResourceImpl @Autowired constructor(private val classifyService: ClassifyService) :
     UserTemplateClassifyResource {
 
     override fun getAllTemplateClassifys(): Result<List<Classify>> {
-        return classfiyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte())
+        return classifyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte())
     }
 }

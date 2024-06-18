@@ -33,16 +33,15 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.extservice.dto.EditInfoDTO
 import com.tencent.devops.store.pojo.extservice.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.extservice.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.extservice.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.extservice.vo.ExtensionServiceVO
 import com.tencent.devops.store.pojo.extservice.vo.ServiceVersionVO
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -184,20 +183,6 @@ interface OpServiceResource {
         serviceOffline: ServiceOfflineDTO
     ): Result<Boolean>
 
-    @Operation(summary = "审核可见范围")
-    @PUT
-    @Path("/{serviceCode}/visible/approve/")
-    fun approveVisibleDept(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "扩展标识", required = true)
-        @PathParam("serviceCode")
-        serviceCode: String,
-        @Parameter(description = "可见范围审核请求报文", required = true)
-        visibleApproveReq: VisibleApproveReq
-    ): Result<Boolean>
-
     @Operation(summary = "删除扩展服务")
     @DELETE
     @Path("/serviceIds/{serviceId}")
@@ -235,5 +220,17 @@ interface OpServiceResource {
         @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("deptIds")
         deptIds: String
+    ): Result<Boolean>
+
+    @Operation(summary = "迁移已部署的扩展服务")
+    @GET
+    @Path("/migrate/serviceCodes/{serviceCode}")
+    fun migrateService(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "扩展服务代码", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String
     ): Result<Boolean>
 }

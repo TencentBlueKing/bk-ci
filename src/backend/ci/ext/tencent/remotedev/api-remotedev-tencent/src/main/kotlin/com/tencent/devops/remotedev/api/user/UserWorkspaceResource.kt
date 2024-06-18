@@ -61,7 +61,6 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Tag(name = "USER_WORKSPACE", description = "用户-工作空间")
 @Path("/{apiType:user|desktop}/workspaces")
@@ -116,22 +115,6 @@ interface UserWorkspaceResource {
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<Workspace>>
-
-    @Operation(summary = "获取用户工作空间列表-导出xlsx")
-    @POST
-    @Path("/search_export")
-    fun getWorkspaceListXlsx(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "6666")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        search: WorkspaceSearch
-    ): Response
 
     @Operation(summary = "删除工作空间")
     @DELETE

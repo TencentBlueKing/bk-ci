@@ -36,7 +36,7 @@ class WorkspaceWindowsDao {
 
     fun batchFetchWorkspaceWindowsInfo(
         dslContext: DSLContext,
-        workspaceNames: List<String>
+        workspaceNames: Set<String>
     ): Result<TWorkspaceWindowsRecord> {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch()
@@ -75,9 +75,10 @@ class WorkspaceWindowsDao {
     ): Int {
         return dslContext.fetchCount(
             dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
-                .from(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .from(TWorkspace.T_WORKSPACE)
+                .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                 .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
-                .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                 .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
         )
@@ -90,7 +91,9 @@ class WorkspaceWindowsDao {
     ): Int {
         return dslContext.fetchCount(
             dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
-                .from(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .from(TWorkspace.T_WORKSPACE)
+                .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                 .where(TWorkspace.T_WORKSPACE.CREATOR.eq(user))
                 .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                 .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
@@ -99,13 +102,12 @@ class WorkspaceWindowsDao {
                 .skipCheck()
                 .unionAll(
                     dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
-                        .from(
-                            TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED,
-                            TWorkspaceWindows.T_WORKSPACE_WINDOWS
-                        )
+                        .from(TWorkspace.T_WORKSPACE)
+                        .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+                        .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+                        .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                        .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                         .where(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(user))
-                        .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
-                        .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
                         .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
                         .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                         .and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
@@ -124,12 +126,13 @@ class WorkspaceWindowsDao {
         size: String
     ): Int {
         return dslContext.selectCount()
-            .from(TWorkspaceWindows.T_WORKSPACE_WINDOWS, TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
-            .where(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME.`in`(workspaceNames))
-            .and(
+            .from(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+            .leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
+            .on(
                 TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.cast(Long::class.java)
                     .eq(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID)
             )
+            .where(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME.`in`(workspaceNames))
             .and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
             .fetchOne(0, Int::class.java)!!
     }
