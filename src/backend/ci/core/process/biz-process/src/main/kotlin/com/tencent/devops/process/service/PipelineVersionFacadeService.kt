@@ -159,6 +159,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             detailInfo = detailInfo
         )
+        val released = detailInfo.latestVersionStatus?.isNotReleased() != true
+        var versionName = releaseVersion.versionName?.takeIf { released }
         // 配合前端的展示需要，version有以下几种情况的返回值：
         // 1 发布过且有草稿：version取草稿的版本号
         // 2 发布过且有分支版本：version取最新正式的版本号
@@ -169,16 +171,16 @@ class PipelineVersionFacadeService @Autowired constructor(
                 draftVersion?.version
             }
             VersionStatus.BRANCH -> {
-                pipelineRepositoryService.getBranchVersionResource(
+                val branchVersion = pipelineRepositoryService.getBranchVersionResource(
                     projectId, pipelineId, null
-                )?.version
+                )
+                versionName = branchVersion?.versionName
+                branchVersion?.version
             }
             else -> {
                 null
             }
         } ?: releaseVersion.version
-        val released = detailInfo.latestVersionStatus?.isNotReleased() != true
-        val versionName = releaseVersion.versionName?.takeIf { released }
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
             projectId = projectId,
@@ -205,7 +207,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             permissions = permissions,
             version = version,
             versionName = versionName,
-            // 前端要求缺省一个当前能用的版本，用于进入页面的默认展示
+            // 前端需要缺省当前能用的版本，用于进入页面的默认展示，但没有发布过就不提供releaseVersionName
             releaseVersion = releaseVersion.version.takeIf { released } ?: version,
             releaseVersionName = releaseVersion.versionName?.takeIf { released },
             baseVersion = baseVersion,

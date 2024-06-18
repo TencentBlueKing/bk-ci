@@ -492,10 +492,10 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
-        // 代码库触发支持仅有分支版本的情况
-        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+        // 代码库触发支持仅有分支版本的情况，如果仅有草稿不需要在这里拦截
+//        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
+//            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+//        )
         val version = webhookCommit.version ?: pipelineInfo.version
         checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
