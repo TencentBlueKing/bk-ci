@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ManageHeader from '@/components/manage-header.vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   useRouter,
@@ -51,6 +51,9 @@ const initActiveTab = () => {
 onMounted(() => {
   initActiveTab();
 });
+
+watch(route, initActiveTab, { immediate: true });
+
 </script>
 
 <template>

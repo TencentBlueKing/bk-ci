@@ -1,11 +1,12 @@
 <template>
   <bk-loading class="manage" :loading="isLoading">
     <div class="manage-search">
-      <bk-input
-        class="multi-search"
+      <bk-search-select
         v-model="searchValue"
-        placeholder="请输入用户名"
-        @blur="() => getProjectMembers()"
+        :data="searchData"
+        unique-select
+        class="multi-search"
+        placeholder="用户/组织架构"
       />
     </div>
     <div class="manage-article">
@@ -28,31 +29,17 @@
           <bk-button :disabled="!isPermission" @click="batchRemove">批量移出</bk-button>
         </div>
         <div v-if="isPermission">
-          <GroupTable
+          <GroupTab
             :is-show-operation="true"
+            :project-table="projectTable"
+            :source-list="sourceList"
             :aside-item="asideItem"
-            @renewal="handleRenewal"
-            @handover="handleHandover"
-            @remove="handleRemove"
-            @get-select-list="getSelectList"
+            :selected-data="selectedData"
+            @collapse-click="collapseClick"
           />
         </div>
         <div v-else class="no-permission">
-          <bk-exception
-            class="exception-wrap-item exception-part"
-            type="empty"
-            scene="part"
-            description="该用户暂无项目权限"
-            :class="{'exception-gray': isGray}"
-          >
-            <p class="empty-text">
-              由于该用户仍有部分授权未移交，未能自动移出项目；如有需要，可前往「
-              <bk-button text theme="primary">
-                授权管理
-              </bk-button>
-              」处理
-            </p>
-          </bk-exception>
+          <no-permission />
         </div>
       </div>
     </div>
@@ -67,19 +54,58 @@
     @confirm="handleRenewalConfirm"
   >
     <template #header>
-      人员列表
-      <span class="dialog-header"> 蓝鲸运营组 </span>
+      续期
+      <span class="dialog-header"> {{asideItem.name}} </span>
     </template>
     <template #default>
-      <p class="remove-text">
+      <p class="renewal-text">
         <span>用户组名：</span> 开发人员
       </p>
-      <p class="remove-text">
-        <span class="is-required">授权期限</span>
+      <p class="renewal-text">
+        <span class="required">授权期限</span>
         <TimeLimit @change-time="handleChangeTime" />
       </p>
-      <p class="remove-text">
+      <p class="renewal-text">
         <span>到期时间：</span> 已过期
+      </p>
+    </template>
+  </bk-dialog>
+  <bk-dialog
+    :width="640"
+    theme="danger"
+    confirm-text="移交"
+    class="handover-dialog"
+    :is-show="isShowHandover"
+    @closed="() => isShowHandover = false"
+    @confirm="handleHandoverConfirm"
+  >
+    <template #header>
+      移交
+      <span class="dialog-header"> {{asideItem.name}} </span>
+    </template>
+    <template #default>
+      <p class="handover-text">
+        <span>用户组名：</span> 开发人员
+      </p>
+      <p class="handover-text">
+        <bk-form
+          ref="formRef"
+          :rules="rules"
+          label-width="100"
+          :model="handOverForm"
+        >
+          <bk-form-item
+            required
+            property="name"
+            label="移交给"
+          >
+            <bk-input
+              v-model="handOverForm.name"
+              placeholder="请输入"
+              clearable
+            />
+          </bk-form-item>
+        </bk-form>
       </p>
     </template>
   </bk-dialog>
@@ -100,7 +126,7 @@
     </template>
     <template #default>
       <p class="remove-text">
-        <span>待移出用户：</span> fayewang (王玉菊)
+        <span>待移出用户：</span> {{asideItem.name}}
       </p>
       <p class="remove-text">
         <span>所在用户组：</span> 开发人员
@@ -117,13 +143,16 @@
     <template #default>
       <div class="slider-main">
         <p class="main-desc">
-          已选择<span class="desc-primary"> {{ selectList.length }} </span>个用户组
+          已选择<span class="desc-primary"> {{ selectedLength }} </span>个用户组
           <span>；其中
-            <span class="desc-warn"> {{ unableMove.length }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
+            <span class="desc-warn"> {{ unableMoveLength }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
           </span>
         </p>
         <div>
-          <GroupTable
+          <!-- 这个要有分页的点击事件 -->
+          <GroupTab
+            :project-table="selectProjectlist"
+            :source-list="selectSourceList"
             :is-show-operation="false"
             :pagination="pagination"
             :aside-item="asideItem"
@@ -167,7 +196,7 @@
             <div class="main-line" style="margin-top: 40px;">
               <p class="main-label-remove">
                 确认从以上
-                <span class="remove-num">{{ selectList.length }}</span>
+                <span class="remove-num">{{ selectedLength }}</span>
                 个用户组中移出
                 <span class="remove-person">{{ asideItem.name }}</span>
                 吗？
@@ -190,11 +219,12 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { Message } from 'bkui-vue';
-import { ref, onMounted, computed, nextTick } from 'vue';
+import { ref, onMounted, computed, watch, reactive,provide } from 'vue';
 import ManageAside from './manage-aside.vue';
-import GroupTable from './group-table.vue';
+import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
 import http from '@/http/api';
+import NoPermission from '../no-enable-permission/no-permission.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -208,7 +238,7 @@ const isShowRemove = ref(false);
 const isShowSlider = ref(false);
 const sliderTitle = ref('批量续期');
 const batchFlag = ref();
-const pagination = ref({ limit: 10 });
+const pagination = ref({ limit: 10, current: 1 });
 const memberPagination = ref({ limit: 10, current: 1 });
 const handOverForm = ref({
   name: '',
@@ -218,17 +248,230 @@ const rules = {
     { required: true, message: '请输入移交人', trigger: 'blur' },
   ],
 };
-const searchValue = ref('');
+const searchValue = ref([]);
+const searchData = ref([
+  {
+    name: '用户',
+    id: 1,
+  },
+  {
+    name: '组织架构',
+    id: 2,
+    onlyRecommendChildren: true,
+    children: [
+      {
+        name: '王者荣耀',
+        id: '2-1',
+      },
+      {
+        name: '刺激战场',
+        id: '2-2',
+      },
+      {
+        name: '绝地求生',
+        id: '2-3',
+      },
+    ],
+  },
+]);
 const memberList = ref([]);
 const asideItem = ref();
-const selectList = ref([]);
-const unableMove = ref([]);
+const unableMoveLength = ref();
 const isPermission = ref(true);
 const personList = ref([]);
 const manageAsideRef = ref(null);
 const handOverTable = ref([]);
+const userName = ref('');
+const projectTable = ref([{
+  groupId: 1,
+  groupName: '11',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'UNIQUE_MANAGER',
+},
+{
+  groupId: 2,
+  groupName: '22',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'OTHER',
+}, {
+  groupId: 3,
+  groupName: '33',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'OTHER',
+},
+{
+  groupId: 4,
+  groupName: '44',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'OTHER',
+}, {
+  groupId: 5,
+  groupName: '55',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'OTHER',
+},
+{
+  groupId: 6,
+  groupName: '66',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'OTHER',
+}, {
+  groupId: 7,
+  groupName: '77',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'OTHER',
+},
+{
+  groupId: 8,
+  groupName: '88',
+  groupDesc: 'kjkjkjk',
+  validityPeriod: '0505',
+  joinedTime: '08-18',
+  operateSource: '加入组',
+  operator: '张三',
+  removeMemberButtonControl: 'OTHER',
+}]);
+const sourceList = ref([
+  {
+    id: 2,
+    groupItem: '流水线 (Pipiline) - 流水线组',
+    number: 3,
+    activeFlag: true,
+    tableData: [{
+      groupId: 1,
+      groupName: '11',
+      groupDesc: 'kjkjkjk',
+      validityPeriod: '0505',
+      joinedTime: '08-18',
+      operateSource: '加入组',
+      operator: '张三',
+      removeMemberButtonControl: 'TEMPLATE',
+    },
+    {
+      groupId: 2,
+      groupName: '12',
+      groupDesc: 'kjkjkjk',
+      validityPeriod: '0505',
+      joinedTime: '08-18',
+      operateSource: '加入组',
+      operator: '张三',
+      removeMemberButtonControl: 'OTHER',
+    }],
+  },
+  {
+    id: 3,
+    groupItem: '流水线 (Pipiline)',
+    number: 3,
+    tableData: [{
+      groupId: 1,
+      groupName: '21',
+      groupDesc: 'kjkjkjk',
+      validityPeriod: '0505',
+      joinedTime: '08-18',
+      operateSource: '加入组',
+      operator: '张三',
+      removeMemberButtonControl: 'UNIQUE_MANAGER',
+    },
+    {
+      groupId: 2,
+      groupName: '22',
+      groupDesc: 'kjkjkjk',
+      validityPeriod: '0505',
+      joinedTime: '08-18',
+      operateSource: '加入组',
+      operator: '张三',
+      removeMemberButtonControl: 'OTHER',
+    },
+    {
+      groupId: 2,
+      groupName: '23',
+      groupDesc: 'kjkjkjk',
+      validityPeriod: '0505',
+      joinedTime: '08-18',
+      operateSource: '加入组',
+      operator: '张三',
+      removeMemberButtonControl: 'OTHER',
+    }],
+  },
+]);
+const selectedData = reactive({});
+const selectedLength = computed(() => Object.keys(selectedData).length);
+const selectProjectlist = ref([]);
+const selectSourceList = ref([]);
+const collapseList = ref([
+  {
+    id: 1,
+    groupItem: '项目（project）',
+    number: 3,
+    type: 'project',
+  },
+  {
+    id: 2,
+    groupItem: '流水线 (Pipiline) - 流水线组',
+    number: 0,
+    type: 'source',
+  },
+  {
+    id: 3,
+    groupItem: '流水线 (Pipiline)',
+    number: 4,
+    type: 'source',
+  },
+]);
+
+/**
+ * 表格方法
+ */
+const handlers = {
+  handleRenewal,
+  handleHandOver,
+  handleRemove,
+  getSelectList,
+  handleLoadMore,
+  handleSelectAllData,
+  handleClear
+};
+provide('handlers', handlers);
 
 onMounted(() => {
+  getProjectMembers();
+});
+
+watch(searchValue, (nv) => {
+  userName.value = '';
+  nv.forEach((val) => {
+    if (val.id === 1) {
+      userName.value = val?.values[0]?.name;
+    };
+  });
   getProjectMembers();
 });
 
@@ -241,8 +484,8 @@ async function getProjectMembers() {
     pageSize: memberPagination.value.limit,
   };
 
-  if (searchValue.value) {
-    params.userName = searchValue.value;
+  if (userName.value) {
+    params.userName = userName.value;
   }
   const res = await http.getProjectMembers(projectId.value, params);
   // memberList.value = res.records
@@ -276,7 +519,7 @@ async function getProjectMembers() {
   ];
 }
 /**
- * aside页码切换
+ * 人员组织侧边栏页码切换
  */
 async function handleAsidePageChange(current) {
   if (memberPagination.value.current !== current) {
@@ -285,17 +528,79 @@ async function handleAsidePageChange(current) {
   }
 }
 /**
- * 获取表格选择的数据
- */
-function getSelectList(val) {
-  selectList.value = val;
-  unableMove.value = val.filter(item => item.removeMemberButtonControl);
-}
-/**
  * 人员组织侧边栏点击事件
  */
 function handleAsideClick(item) {
+  // 调用接口，获取侧边表格数据和折叠面板数据，格式化表格数据 projectTable和sourceList和collapseList
   asideItem.value = item;
+}
+/**
+ * 获取表格选择的数据
+ */
+function getSelectList(val, groupId) {
+  const newSelectedData = val.isAll ? val.data : val.row;
+  if (val.checked) {
+    const oldSelectedData = selectedData[groupId] || [];
+    selectedData[groupId] = oldSelectedData.concat(newSelectedData);
+  } else {
+    if (val.isAll) {
+      delete selectedData[groupId];
+    } else {
+      selectedData[groupId] = selectedData[groupId].filter(item => item !== val.row);
+      selectedData[groupId].length === 0 && delete selectedData[groupId];
+    }
+  }
+  unableMoveLength.value = countNonOtherObjects(selectedData);
+  console.log('表格选择的数据', selectedData);
+}
+/**
+ * 找出无法移出数据
+ */
+function countNonOtherObjects(data) {
+  return Object.values(data)
+    .flat()
+    .filter(item => item.removeMemberButtonControl !== 'OTHER')
+    .length;
+}
+/**
+ * 获取选中的资源级用户组数据
+ */
+function getSourceList() {
+  selectProjectlist.value = selectedData['1'];
+  selectSourceList.value = Object.entries(selectedData)
+    .filter(([key]) => key != '1')
+    .map(([key, tableData]) => ({
+      id: key,
+      number: tableData.length,
+      activeFlag: true,
+      tableData,
+    }));
+}
+/**
+ * 折叠面板调用接口获取表格数据
+ */
+function collapseClick(id) {
+  // 折叠面板调用接口获取表格数据
+  console.log('折叠面板', id)
+}
+/**
+ * 加载更多
+ */
+function handleLoadMore(groupId) {
+  console.log('加载更多', groupId);
+}
+/**
+ * 全量数据选择
+ */
+function handleSelectAllData(groupId) {
+  console.log('全量数据选择', groupId);
+  // 调用接口 获取selectedData[groupId]数据
+}
+/**
+ * 清除选择
+ */
+function handleClear(groupId) {
+  delete selectedData[groupId];
 }
 /**
  * 续期按钮点击
@@ -305,17 +610,10 @@ function handleRenewal(row) {
   isShowRenewal.value = true;
 }
 /**
- * 续期弹窗提交事件
- */
-function handleRenewalConfirm() {
-  console.log(expiredAt.value, '授权期限');
-  isShowRenewal.value = false;
-};
-/**
  * 移交按钮点击
  * @param row 行数据
  */
-function handleHandover(row) {
+function handleHandOver(row) {
   isShowHandover.value = true;
 }
 /**
@@ -326,9 +624,24 @@ function handleRemove(row) {
   isShowRemove.value = true;
 }
 /**
+ * 续期弹窗提交事件
+ */
+function handleRenewalConfirm() {
+  console.log(expiredAt.value, '授权期限');
+  isShowRenewal.value = false;
+};
+/**
+ * 移交弹窗提交事件
+ */
+function handleHandoverConfirm() {
+  console.log(handOverForm.value,'移交数据');
+  isShowHandover.value = false;
+};
+/**
  * 移出弹窗提交事件
  */
 function handleRemoveConfirm() {
+  console.log(asideItem,'移出的数据');
   isShowRemove.value = false;
 }
 /**
@@ -341,37 +654,40 @@ function handleChangeTime(value) {
  * 批量续期
  */
 function batchRenewal() {
-  if (!selectList.value.length) {
+  if (!selectedLength.value) {
     Message('请先选择用户组');
     return;
   }
   sliderTitle.value = '批量续期';
   batchFlag.value = 'renewal';
   isShowSlider.value = true;
+  getSourceList();
 }
 /**
  * 批量移交
  */
 function batchHandover() {
-  if (!selectList.value.length) {
+  if (!selectedLength.value) {
     Message('请先选择用户组');
     return;
   }
   sliderTitle.value = '批量移交';
   batchFlag.value = 'handover';
   isShowSlider.value = true;
+  getSourceList();
 }
 /**
  * 批量移出
  */
 function batchRemove() {
-  if (!selectList.value.length) {
+  if (!selectedLength.value) {
     Message('请先选择用户组');
     return;
   }
   sliderTitle.value = '批量移出';
   batchFlag.value = 'remove';
   isShowSlider.value = true;
+  getSourceList();
 }
 /**
  * sideslider 关闭
@@ -460,7 +776,7 @@ async function handleAsideRemoveConfirm(value) {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .manage {
   width: 100%;
   height: 100%;
@@ -520,23 +836,36 @@ async function handleAsideRemoveConfirm(value) {
   }
 }
 
+.dialog-header-common {
+  display: inline-block;
+  padding-left: 17px;
+  margin-left: 17px;
+  border-left: 1px solid #C4C6CC;
+  font-family: MicrosoftYaHei;
+  font-size: 12px;
+  color: #63656E;
+  letter-spacing: 0;
+}
+
+.dialog-text-common {
+  font-family: MicrosoftYaHei;
+  font-size: 12px;
+  color: #313238;
+  line-height: 20px;
+}
+
 .renewal-dialog {
 
   .dialog-header {
-    display: inline-block;
-    padding-left: 17px;
-    margin-left: 17px;
-    border-left: 1px solid #C4C6CC;
-    font-family: MicrosoftYaHei;
-    font-size: 12px;
-    color: #63656E;
-    letter-spacing: 0;
+    .dialog-header-common();
   }
 
-  .is-required {
+  .required {
     position: relative;
+    margin-right: 16px;
   }
-  .is-required:after {
+
+  .required:after {
     position: absolute;
     top: 0;
     width: 14px;
@@ -545,18 +874,45 @@ async function handleAsideRemoveConfirm(value) {
     content: "*";
   }
 
-  .remove-text {
-    margin: 12px 0;
+  .renewal-text {
+    display: flex;
+    margin: 24px 0 0 40px;
+    .dialog-text-common();
 
     span {
       display: inline-block;
-      min-width: 68px;
-      padding-right: 14px;
+      text-align: right;
+      color: #63656E;
+    }
+  }
+}
+
+.handover-dialog{
+
+  .dialog-header {
+    .dialog-header-common();
+  }
+
+  .handover-text {
+    margin: 12px 0;
+    .dialog-text-common();
+
+    span {
+      display: inline-block;
+      width: 100px;
+      text-align: right;
+      color: #63656E;
+    }
+
+    ::v-deep .bk-form-label {
+      font-size: 12px;
+      color: #63656E;
     }
   }
 }
 
 .remove-dialog {
+
   .dialog-header {
     font-family: MicrosoftYaHei;
     font-size: 20px;
@@ -564,43 +920,23 @@ async function handleAsideRemoveConfirm(value) {
     letter-spacing: 0;
   }
 
-}
+  .remove-text {
+    display: flex;
+    margin: 12px 0;
+    .dialog-text-common();
 
-.dialog-header-text {
-  font-family: MicrosoftYaHei;
-  font-size: 20px;
-  color: #313238;
-  font-weight: 600;
-}
-
-.remove-text {
-  display: flex;
-  font-family: MicrosoftYaHei;
-  font-size: 12px;
-  color: #313238;
-  line-height: 20px;
-
-  span {
-    color: #63656E;
+    span {
+      color: #63656E;
+    }
   }
 }
 
 .no-permission {
   width: calc(100% - 24px);
   height: calc(100% - 42px);
+  padding-top: 120px;
   background-color: #fff;
   box-shadow: 0 2px 4px 0 #1919290d;
-
-  ::v-deep .bk-exception-part .bk-exception-img {
-    width: 220px;
-    margin-top: 120px;
-
-  }
-  .empty-text {
-    color: #979ba5;
-    font-size: 12px;
-    line-height: 20px;
-  }
 }
 
 .slider{
