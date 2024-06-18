@@ -177,7 +177,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 null
             }
         } ?: releaseVersion.version
-        val versionName = draftVersion?.versionName ?: releaseVersion.versionName
+        val released = detailInfo.latestVersionStatus?.isNotReleased() != true
+        val versionName = releaseVersion.versionName?.takeIf { released }
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
             projectId = projectId,
@@ -204,8 +205,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             permissions = permissions,
             version = version,
             versionName = versionName,
-            releaseVersion = releaseVersion.version,
-            releaseVersionName = releaseVersion.versionName,
+            // 前端要求缺省一个当前能用的版本，用于进入页面的默认展示
+            releaseVersion = releaseVersion.version.takeIf { released } ?: version,
+            releaseVersionName = releaseVersion.versionName?.takeIf { released },
             baseVersion = baseVersion,
             baseVersionStatus = baseVersionStatus,
             baseVersionName = baseVersionName,

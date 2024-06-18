@@ -61,9 +61,9 @@ data class PipelineDetail(
     val baseVersionStatus: VersionStatus?,
     @get:Schema(title = "基准版本的版本名称")
     val baseVersionName: String?,
-    @get:Schema(title = "草稿或最新的发布版本")
+    @get:Schema(title = "最新的发布版本，如果为空则说明没有过发布版本")
     val releaseVersion: Int?,
-    @get:Schema(title = "草稿或最新的发布版本名称")
+    @get:Schema(title = "最新的发布版本名称，如果为空则说明没有过发布版本")
     val releaseVersionName: String?,
     @get:Schema(title = "是否有编辑权限")
     val hasPermission: Boolean,
