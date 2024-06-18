@@ -169,9 +169,6 @@
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
             },
-            releaseVersionName () {
-                return this.pipelineInfo?.releaseVersionName
-            },
             projectId () {
                 return this.$route.params.projectId
             },
