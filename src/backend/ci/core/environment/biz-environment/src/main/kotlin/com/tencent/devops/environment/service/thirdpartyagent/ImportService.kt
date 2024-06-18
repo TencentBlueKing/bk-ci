@@ -75,7 +75,7 @@ class ImportService @Autowired constructor(
 ) {
 
     companion object {
-        private const val BU_SIZE = 100
+        const val BU_SIZE = 100
         private val LOG = LoggerFactory.getLogger(ImportService::class.java)
         private val badStatus = setOf(AgentStatus.IMPORT_EXCEPTION.status, AgentStatus.UN_IMPORT.status)
     }

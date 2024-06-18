@@ -431,7 +431,7 @@ class StartActionTaskContainerCmd(
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
             // 打印构建日志--DEBUG级别日志，平时隐藏
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount, tag = taskId,
                 buildId = buildId, containerHashId = containerHashId, message = message.toString(),
                 jobId = null, stepId = stepId

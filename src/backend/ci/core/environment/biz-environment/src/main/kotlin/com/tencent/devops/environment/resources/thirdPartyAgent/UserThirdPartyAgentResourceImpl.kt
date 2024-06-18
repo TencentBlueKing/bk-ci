@@ -47,6 +47,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatus
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
+import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -56,7 +57,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val slaveGatewayService: SlaveGatewayService,
     private val importService: ImportService,
-    private val agentMetricService: AgentMetricService
+    private val agentMetricService: AgentMetricService,
+    private val batchInstallAgentService: BatchInstallAgentService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
         return Result(true)
@@ -71,6 +73,24 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         return Result(thirdPartyAgentService.generateAgent(userId, projectId, os, zoneName))
+    }
+
+    override fun generateBatchInstallLink(
+        userId: String,
+        projectId: String,
+        os: OS,
+        zoneName: String?
+    ): Result<String> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(
+            batchInstallAgentService.genInstallLink(
+                projectId = projectId,
+                userId = userId,
+                os = os,
+                zoneName = zoneName
+            )
+        )
     }
 
     override fun getGateway(

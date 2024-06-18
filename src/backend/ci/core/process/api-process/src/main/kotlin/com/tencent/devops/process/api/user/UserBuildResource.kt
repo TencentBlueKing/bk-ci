@@ -462,7 +462,7 @@ interface UserBuildResource {
         archiveFlag: Boolean? = false,
         @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
         @QueryParam("version")
-        debugVersion: Int? = null
+        customVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "修改流水线备注")
