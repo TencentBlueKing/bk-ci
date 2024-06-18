@@ -356,10 +356,6 @@ class CreateControl @Autowired constructor(
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
                 ownerType = WorkspaceOwnerType.PROJECT,
-                gpu = windowsConfig.gpu,
-                cpu = windowsConfig.cpu,
-                memory = windowsConfig.memory,
-                disk = windowsConfig.workspaceDisk(),
                 winConfigId = windowsConfig.id?.toInt(),
                 imageId = workspaceCreate.imageId,
                 zoneId = windowsZone.zoneShortName
@@ -712,10 +708,6 @@ class CreateControl @Autowired constructor(
             workspaceMountType = mountType,
             workspaceSystemType = systemType,
             ownerType = checkOwnerType,
-            gpu = windowsConfig.gpu,
-            cpu = windowsConfig.cpu,
-            memory = windowsConfig.memory,
-            disk = windowsConfig.workspaceDisk(),
             winConfigId = windowsConfig.id?.toInt(),
             zoneId = vm.zoneId.replace(Regex("\\d+"), "")
         )
@@ -892,10 +884,6 @@ class CreateControl @Autowired constructor(
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
                 ownerType = WorkspaceOwnerType.PERSONAL,
-                gpu = windowsConfig.gpu,
-                cpu = windowsConfig.cpu,
-                memory = windowsConfig.memory,
-                disk = windowsConfig.workspaceDisk(),
                 winConfigId = windowsConfig.id?.toInt(),
                 imageId = workspaceCreate.imageId,
                 zoneId = windowsZone.zoneShortName

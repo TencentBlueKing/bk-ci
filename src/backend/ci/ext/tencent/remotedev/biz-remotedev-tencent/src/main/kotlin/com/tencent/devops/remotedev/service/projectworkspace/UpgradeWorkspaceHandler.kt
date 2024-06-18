@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -192,6 +193,18 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             },
             checkPermission = false
         )
+        // 别名等信息同步
+        val old = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = bakWorkspaceName)
+        if (old != null) {
+            workspaceDao.modifyWorkspaceProperty(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                workspaceProperty = WorkspaceProperty(
+                    old.displayName, old.remark
+                )
+            )
+        }
+
         // 删除旧云桌面
         deleteControl.deleteWorkspace4System(ws.createUserId, bakWorkspaceName)
     }

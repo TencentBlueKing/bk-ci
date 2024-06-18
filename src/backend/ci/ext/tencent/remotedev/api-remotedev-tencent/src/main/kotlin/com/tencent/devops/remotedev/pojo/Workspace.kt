@@ -46,10 +46,6 @@ interface IWorkspace {
     val workspaceMountType: WorkspaceMountType
     val workspaceSystemType: WorkspaceSystemType
     val winConfig: WindowsResourceTypeConfig?
-    val gpu: Int
-    val cpu: Int
-    val memory: Int
-    val disk: Int
     var currentLoginUsers: List<String>
     var bakWorkspaceName: String?
 }
@@ -88,10 +84,6 @@ data class Workspace(
     override val workspaceSystemType: WorkspaceSystemType,
     @get:Schema(title = "windows 资源配置")
     override val winConfig: WindowsResourceTypeConfig? = null,
-    override val gpu: Int = 0,
-    override val cpu: Int = 8,
-    override val memory: Int = 32,
-    override val disk: Int = 100,
     @get:Schema(title = "当前登陆者信息")
     override var currentLoginUsers: List<String> = emptyList(),
     @get:Schema(title = "备份的workspace name")
