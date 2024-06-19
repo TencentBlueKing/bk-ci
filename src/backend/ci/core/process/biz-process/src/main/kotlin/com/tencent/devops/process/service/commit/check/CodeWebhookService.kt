@@ -487,15 +487,11 @@ class CodeWebhookService @Autowired constructor(
         logger.info("Consume github pr event($event)")
 
         try {
-            val startedAt = if (event.startedAt != null) {
-                LocalDateTime.ofInstant(Instant.ofEpochSecond(event.startedAt!!), ZoneId.systemDefault())
-            } else {
-                null
+            val startedAt = event.startedAt?.let {
+                LocalDateTime.ofInstant(Instant.ofEpochSecond(it), ZoneId.systemDefault())
             }
-            val completedAt = if (event.completedAt != null) {
-                LocalDateTime.ofInstant(Instant.ofEpochSecond(event.completedAt!!), ZoneId.systemDefault())
-            } else {
-                null
+            val completedAt = event.completedAt?.let {
+                LocalDateTime.ofInstant(Instant.ofEpochSecond(it), ZoneId.systemDefault())
             }
             addGithubPullRequestCheck(
                 userId = event.userId,
@@ -855,7 +851,7 @@ class CodeWebhookService @Autowired constructor(
                         commitId = commitId,
                         detailUrl = buildUrl,
                         externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
-                        status = BuildStatus.SUCCEED.statusName,
+                        status = GITHUB_CHECK_RUNS_STATUS_COMPLETED,
                         startedAt = null,
                         conclusion = GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS,
                         completedAt = LocalDateTime.now().atZone(ZoneId.systemDefault())?.format(
