@@ -50,8 +50,8 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys
 import java.net.URLEncoder
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -194,12 +194,12 @@ class PermissionService @Autowired constructor(
         }.getOrNull() ?: false
     }
 
-    private fun initRedisUser(params: UserOnePassword): String {
-        val key = UUIDUtil.generate()
+    private fun initRedisUser(params: UserOnePassword, expiredInSecond: Long?): String {
+        val key = Base64.getEncoder().encodeToString(UUIDUtil.generate().toByteArray())
         redisOperation.set(
             key = REDIS_KEY + key,
             value = JsonUtil.toJson(params, false),
-            expiredInSecond = redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull() ?: EXPIRED_SECOND
+            expiredInSecond = expiredInSecond ?: EXPIRED_SECOND
         )
         return key
     }
@@ -213,11 +213,11 @@ class PermissionService @Autowired constructor(
         return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
     }
 
-    fun init1Password(userId: String, workspaceName: String): String {
+    fun init1Password(userId: String, workspaceName: String, projectId: String?, expiredInSecond: Long?): String {
         val key = initRedisUser(
             UserOnePassword(
-                userId, workspaceName
-            )
+                userId, workspaceName, projectId
+            ), expiredInSecond
         )
         logger.info("start init1Password|$userId|$workspaceName|$key")
         return URLEncoder.encode(key, "UTF-8")

@@ -25,12 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.remotedev.pojo
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    PIPELINE_API_ACCESS_LIMIT, // 限制流水线接口访问权限
-    API_NO_AUTH_CHECK, // 接口免权限校验
-    API_OPEN_TOKEN_CHECK // open接口token校验
-}
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "云桌面获取token签名")
+data class DesktopTokenSign(
+    @get:Schema(title = "指纹（约定为md5(mac_addr+token)）")
+    val fingerprint: String,
+    @get:Schema(title = "应用id")
+    val appId: String,
+    @get:Schema(title = "原始文件名")
+    val fileName: String,
+    @get:Schema(title = "文件版本")
+    val fileVersion: String,
+    @get:Schema(title = "修改日期")
+    val fileUpdateTime: String,
+    @get:Schema(title = "产品名称")
+    val productName: String,
+    @get:Schema(title = "产品版本")
+    val productVersion: String,
+    @get:Schema(title = "sha1")
+    val sha1: String,
+    @get:Schema(title = "产品名称")
+    val timestamp: Long,
+    @get:Schema(title = "公钥")
+    val publicKey: String,
+    @get:Schema(title = "签名")
+    val sign: String
+)
