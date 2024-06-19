@@ -44,7 +44,7 @@
                         }
                     }"
                     @click="handleShowResetDialog">
-                    <logo class="mr10" name="refresh" size="20" />
+                    <logo class="mr10" name="refresh" size="14" />
                     {{ $t('delegation.resetAuthorization') }}
                 </span>
             </div>
