@@ -3,7 +3,7 @@
         <section class="content-warpper">
             <header class="header">
                 <logo class="mr5" name="help-document-fill" size="20" />
-                {{ $t('delegation.delegationPermission') }}
+                {{ $t('delegationPermission') }}
             </header>
             <div class="content">
                 <p>{{ $t('delegation.tips1') }}</p>
