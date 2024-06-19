@@ -119,13 +119,22 @@ class NodeManApi {
         return getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
     }
 
-    fun <T, U> executeGetRequest(classOfT: Class<T>, jobId: Int? = null, vararg args: U): AgentOriginalResult<T> {
+    fun <T, U> executeGetRequest(
+        shortGetTag: Boolean = false,
+        classOfT: Class<T>,
+        jobId: Int? = null,
+        vararg args: U
+    ): AgentOriginalResult<T> {
         val operationName = getNodemanOperationName()
         val (bkAuthorization, url) = getAgentAuthReq(jobId)
         val headers = getAuthHeaderMap(bkAuthorization)
         val urlWithSuffix = url + String.format(suffix[operationName] ?: "", *args)
         logger.info("[$operationName]GET url: $urlWithSuffix")
-        return getResultFromRes(OkhttpUtils.doGet(urlWithSuffix, headers), classOfT)
+        return if (!shortGetTag) {
+            getResultFromRes(OkhttpUtils.doGet(urlWithSuffix, headers), classOfT)
+        } else {
+            getResultFromRes(OkhttpUtils.doShortGet(urlWithSuffix, headers), classOfT)
+        }
     }
 
     private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): AgentOriginalResult<T> {
@@ -165,14 +174,12 @@ class NodeManApi {
                 )
             }
         } catch (remoteServiceException: RemoteServiceException) {
-            logger.warn("Failed to execute the HTTP request. RemoteServiceException:", remoteServiceException)
-//            throw RemoteServiceException(
-//                errorCode = remoteServiceException.errorCode,
-//                errorMessage = remoteServiceException.errorMessage
-//            )
+            logger.warn(
+                "Failed to execute the HTTP request. [$operationName]RemoteServiceException:", remoteServiceException
+            )
             throw remoteServiceException
         } catch (exception: Exception) {
-            logger.warn("Failed to execute the HTTP request. Exception:", exception)
+            logger.warn("Failed to execute the HTTP request. [$operationName]Exception:", exception)
             throw exception
         }
     }

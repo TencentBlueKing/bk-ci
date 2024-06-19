@@ -155,6 +155,10 @@ object OkhttpUtils {
         return doHttp(okHttpClient, request)
     }
 
+    fun doShortGet(url: String, headers: Map<String, String> = mapOf()): Response {
+        return doGet(shortOkHttpClient, url, headers)
+    }
+
     fun doLongGet(url: String, headers: Map<String, String> = mapOf()): Response {
         return doGet(longHttpClient, url, headers)
     }

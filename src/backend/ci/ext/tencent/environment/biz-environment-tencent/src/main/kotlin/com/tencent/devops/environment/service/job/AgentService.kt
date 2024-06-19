@@ -149,7 +149,8 @@ data class AgentService @Autowired constructor(
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
 
-        const val NODEMAN_NOT_READY_CODE = 3800015
+        const val NODEMAN_COMMAND_NOT_READY_CODE = 3800015
+        const val NODEMAN_LOG_NOT_READY_CODE = 3800007
 
         private val LANGUAGE_HEADER_EN = mapOf("blueking-language" to "en")
 
@@ -448,10 +449,28 @@ data class AgentService @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         NodeManApi.setNodemanOperationName(::queryAgentTaskLog.name)
-        val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> =
+        val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> = try {
             nodeManApi.executeGetRequest(
-                Array<AgentQueryAgentTaskLog>::class.java, jobId, instanceId
+                shortGetTag = true,
+                classOfT = Array<AgentQueryAgentTaskLog>::class.java,
+                jobId = jobId,
+                args = arrayOf(instanceId)
             )
+        } catch (e: RemoteServiceException) { // 最初未获取到日志，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
+            if (logger.isDebugEnabled)
+                logger.debug("e.errorCode: ${e.errorCode}, isEq: ${NODEMAN_LOG_NOT_READY_CODE == e.errorCode}")
+            if (NODEMAN_LOG_NOT_READY_CODE == e.errorCode) {
+                AgentOriginalResult(
+                    code = NODEMAN_LOG_NOT_READY_CODE,
+                    result = false,
+                    message = "Nodeman log is not ready.",
+                    errors = null,
+                    data = null
+                )
+            } else {
+                throw e
+            }
+        }
         val queryAgentTaskLogRes: AgentResult<QueryAgentTaskLogResult> = AgentResult(
             code = agentQueryAgentTaskLogRes.code,
             result = agentQueryAgentTaskLogRes.result,
@@ -530,7 +549,10 @@ data class AgentService @Autowired constructor(
         NodeManApi.setNodemanOperationName(::queryAgentInstallChannel.name)
         val agentQueryAgentInsChannelRes: AgentOriginalResult<Array<AgentInstallAgentChannel>> =
             nodeManApi.executeGetRequest(
-                Array<AgentInstallAgentChannel>::class.java, DEFAULT_PLACE_HOLDER, withHidden
+                shortGetTag = false,
+                classOfT = Array<AgentInstallAgentChannel>::class.java,
+                jobId = DEFAULT_PLACE_HOLDER,
+                args = arrayOf(withHidden)
             )
         val queryAgentInsChannelRes: AgentResult<QueryAgentInstallChannelResult> = AgentResult(
             code = agentQueryAgentInsChannelRes.code,
@@ -557,16 +579,19 @@ data class AgentService @Autowired constructor(
         NodeManApi.setNodemanOperationName(::obtainManualInstallationCommand.name)
         val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> = try {
             nodeManApi.executeGetRequest(
-                AgentObtainManualCommand::class.java, jobId, hostId
+                shortGetTag = false,
+                classOfT = AgentObtainManualCommand::class.java,
+                jobId = jobId,
+                args = arrayOf(hostId)
             )
         } catch (e: RemoteServiceException) { // 最初未获取到安装命令，节点管理抛出的"订阅任务未准备好"异常，该情况可重试，后台不抛出异常
             if (logger.isDebugEnabled)
-                logger.debug("e.errorCode: ${e.errorCode}, isEq: ${NODEMAN_NOT_READY_CODE == e.errorCode}")
-            if (NODEMAN_NOT_READY_CODE == e.errorCode) {
+                logger.debug("e.errorCode: ${e.errorCode}, isEq: ${NODEMAN_COMMAND_NOT_READY_CODE == e.errorCode}")
+            if (NODEMAN_COMMAND_NOT_READY_CODE == e.errorCode) {
                 AgentOriginalResult(
-                    code = NODEMAN_NOT_READY_CODE,
+                    code = NODEMAN_COMMAND_NOT_READY_CODE,
                     result = false,
-                    message = "Nodeman is not ready.",
+                    message = "Nodeman command is not ready.",
                     errors = null,
                     data = null
                 )
@@ -610,7 +635,12 @@ data class AgentService @Autowired constructor(
     fun getApList(): AgentResult<ApResult> {
         NodeManApi.setNodemanOperationName(::getApList.name)
         val agentGetApListRes: AgentOriginalResult<Array<AgentApInfo>> =
-            nodeManApi.executeGetRequest(Array<AgentApInfo>::class.java, null, null)
+            nodeManApi.executeGetRequest(
+                shortGetTag = false,
+                classOfT = Array<AgentApInfo>::class.java,
+                jobId = null,
+                null
+            )
         val getApListRes: AgentResult<ApResult> = AgentResult(
             code = agentGetApListRes.code,
             result = agentGetApListRes.result,
@@ -672,7 +702,12 @@ data class AgentService @Autowired constructor(
     fun getCloudList(): AgentResult<CloudResult> {
         NodeManApi.setNodemanOperationName(::getCloudList.name)
         val agentGetCloudListRes: AgentOriginalResult<Array<AgentCloudInfo>> =
-            nodeManApi.executeGetRequest(Array<AgentCloudInfo>::class.java, null, null)
+            nodeManApi.executeGetRequest(
+                shortGetTag = false,
+                classOfT = Array<AgentCloudInfo>::class.java,
+                jobId = null,
+                null
+            )
         val getCloudListRes: AgentResult<CloudResult> = AgentResult(
             code = agentGetCloudListRes.code,
             result = agentGetCloudListRes.result,
