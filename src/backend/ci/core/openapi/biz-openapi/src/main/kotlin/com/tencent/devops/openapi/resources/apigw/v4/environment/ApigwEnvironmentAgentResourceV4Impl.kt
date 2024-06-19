@@ -34,10 +34,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentAgentResourceV4
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode
@@ -131,6 +133,44 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
             pipelineId = pipelineId,
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
+        )
+    }
+
+    override fun fetchAgentEnv(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashIds: Set<String>?,
+        agentHashIds: Set<String>?
+    ): Result<Map<String, List<EnvVar>>> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|fetchAgentEnv|$projectId|$nodeHashIds|$agentHashIds")
+        return client.get(ServiceThirdPartyAgentResource::class).fetchAgentEnv(
+            userId = userId,
+            projectId = projectId,
+            nodeHashIds = nodeHashIds,
+            agentHashIds = agentHashIds
+        )
+    }
+
+    override fun batchUpdateEnv(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashIds: Set<String>?,
+        agentHashIds: Set<String>?,
+        type: ThirdPartAgentUpdateType?,
+        data: List<EnvVar>
+    ): Result<Boolean> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|batchUpdateEnv|$projectId|$nodeHashIds|$agentHashIds")
+        return client.get(ServiceThirdPartyAgentResource::class).batchUpdateEnv(
+            userId = userId,
+            projectId = projectId,
+            nodeHashIds = nodeHashIds,
+            agentHashIds = agentHashIds,
+            type = type,
+            data = data
         )
     }
 

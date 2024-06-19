@@ -33,9 +33,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -43,6 +45,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -166,4 +169,57 @@ interface ApigwEnvironmentAgentResourceV4 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
+
+    @Operation(summary = "批量查询Agent环境变量")
+    @GET
+    @Path("/fetch_agent_env")
+    fun fetchAgentEnv(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Node Hash ID列表,和 agentHashIds 选其一即可", required = false)
+        @QueryParam("nodeHashIds")
+        nodeHashIds: Set<String>?,
+        @Parameter(description = "agent Hash ID列表,和 nodeHashIds 选其一即可", required = false)
+        @QueryParam("agentHashIds")
+        agentHashIds: Set<String>?
+    ): Result<Map<String, List<EnvVar>>>
+
+    @Operation(summary = "批量修改Agent环境变量")
+    @POST
+    @Path("/batch_update_agent_env")
+    fun batchUpdateEnv(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Node Hash ID,和 agentHashId 选其一即可", required = false)
+        @QueryParam("nodeHashIds")
+        nodeHashIds: Set<String>?,
+        @Parameter(description = "agent Hash ID,和 nodeHashId 选其一即可", required = false)
+        @QueryParam("agentHashIds")
+        agentHashIds: Set<String>?,
+        @Parameter(description = "修改方式,支持3种输入(ADD,REMOVE,UPDATE),默认为UPDATE", required = false)
+        @QueryParam("status")
+        type: ThirdPartAgentUpdateType?,
+        @Parameter(description = "环境变量", required = false)
+        data: List<EnvVar>
+    ): Result<Boolean>
 }

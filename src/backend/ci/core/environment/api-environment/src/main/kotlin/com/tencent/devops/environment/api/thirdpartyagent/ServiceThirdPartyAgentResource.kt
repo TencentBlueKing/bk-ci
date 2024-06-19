@@ -40,11 +40,13 @@ import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -416,4 +418,45 @@ interface ServiceThirdPartyAgentResource {
         @PathParam("envName")
         envName: String
     ): Result<Pair<Long?, List<EnvNodeAgent>>>
+
+    @Operation(summary = "批量查询Agent环境变量")
+    @GET
+    @Path("/projects/{projectId}/env")
+    fun fetchAgentEnv(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Node Hash ID,和 agentHashId 选其一即可", required = false)
+        @QueryParam("nodeHashIds")
+        nodeHashIds: Set<String>?,
+        @Parameter(description = "agent Hash ID,和 nodeHashId 选其一即可", required = false)
+        @QueryParam("agentHashIds")
+        agentHashIds: Set<String>?
+    ): Result<Map<String, List<EnvVar>>>
+
+    @Operation(summary = "批量修改Agent环境变量")
+    @POST
+    @Path("/projects/{projectId}/batch_update_env")
+    fun batchUpdateEnv(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Node Hash ID,和 agentHashId 选其一即可", required = false)
+        @QueryParam("nodeHashIds")
+        nodeHashIds: Set<String>?,
+        @Parameter(description = "agent Hash ID,和 nodeHashId 选其一即可", required = false)
+        @QueryParam("agentHashIds")
+        agentHashIds: Set<String>?,
+        @Parameter(description = "修改方式,支持3种输入(ADD,REMOVE,UPDATE),默认为UPDATE", required = false)
+        @QueryParam("status")
+        type: ThirdPartAgentUpdateType?,
+        @Parameter(description = "环境变量", required = false)
+        data: List<EnvVar>
+    ): Result<Boolean>
 }
