@@ -148,24 +148,26 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                                 params = listOf()
                             ).toJsonStr()
                         )
-                    ).doFilter(response) || PathFilterFactory.newPathFilter(
-                        // 针对超大提交事件的兜底判断
-                        PathFilterConfig(
-                            pathFilterType = pathFilterType,
-                            pipelineId = pipelineId,
-                            triggerOnPath = event.paths,
-                            excludedPaths = emptyList(),
-                            includedPaths = getIncludePaths(projectRelativePath),
-                            includedFailedReason = I18Variable(
-                                code = WebhookI18nConstants.PATH_NOT_MATCH,
-                                params = listOf()
-                            ).toJsonStr(),
-                            excludedFailedReason = I18Variable(
-                                code = WebhookI18nConstants.PATH_IGNORED,
-                                params = listOf()
-                            ).toJsonStr()
-                        )
-                    ).doFilter(response)
+                    ).doFilter(response) || event.needMatchPathsField {
+                        PathFilterFactory.newPathFilter(
+                            // 针对超大提交事件的兜底判断
+                            PathFilterConfig(
+                                pathFilterType = pathFilterType,
+                                pipelineId = pipelineId,
+                                triggerOnPath = event.paths,
+                                excludedPaths = emptyList(),
+                                includedPaths = getIncludePaths(projectRelativePath),
+                                includedFailedReason = I18Variable(
+                                    code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                    params = listOf()
+                                ).toJsonStr(),
+                                excludedFailedReason = I18Variable(
+                                    code = WebhookI18nConstants.PATH_IGNORED,
+                                    params = listOf()
+                                ).toJsonStr()
+                            )
+                        ).doFilter(response)
+                    }
                 }
             }
             return listOf(projectNameFilter, userFilter, pathFilter)
@@ -210,5 +212,18 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         startParams[BK_REPO_SVN_WEBHOOK_USERNAME] = event.userName
         startParams[BK_REPO_SVN_WEBHOOK_COMMIT_TIME] = event.commitTime ?: 0L
         return startParams
+    }
+
+    fun SvnCommitEvent.needMatchPathsField(filter: () -> Boolean): Boolean {
+        // 超过则存在变更记录丢失
+        if ((totalFilesCount ?: 0) < FILES_COUNT_MAX) {
+            return false
+        }
+        return filter.invoke()
+    }
+
+    companion object {
+        // 文件变更列表上线，
+        const val FILES_COUNT_MAX = 999
     }
 }
