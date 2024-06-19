@@ -31,11 +31,17 @@
         <div v-if="isPermission">
           <GroupTab
             :is-show-operation="true"
-            :project-table="projectTable"
-            :source-list="sourceList"
             :aside-item="asideItem"
-            :selected-data="selectedData"
-            @collapse-click="collapseClick"
+            :source-list="groupTableStore.sourceList"
+            :selected-data="groupTableStore.selectedData"
+            @collapse-click="groupTableStore.collapseClick"
+            @handle-renewal="groupTableStore.handleRenewal"
+            @handle-hand-over="groupTableStore.handleHandOver"
+            @handle-remove="groupTableStore.handleRemove"
+            @get-select-list="groupTableStore.getSelectList"
+            @handle-select-all-data="groupTableStore.handleSelectAllData"
+            @handle-load-more="groupTableStore.handleLoadMore"
+            @handle-clear="groupTableStore.handleClear"
           />
         </div>
         <div v-else class="no-permission">
@@ -49,8 +55,8 @@
     theme="danger"
     confirm-text="提交"
     class="renewal-dialog"
-    :is-show="isShowRenewal"
-    @closed="() => isShowRenewal = false"
+    :is-show="groupTableStore.isShowRenewal"
+    @closed="() => groupTableStore.isShowRenewal = false"
     @confirm="handleRenewalConfirm"
   >
     <template #header>
@@ -75,8 +81,8 @@
     theme="danger"
     confirm-text="移交"
     class="handover-dialog"
-    :is-show="isShowHandover"
-    @closed="() => isShowHandover = false"
+    :is-show="groupTableStore.isShowHandover"
+    @closed="() => groupTableStore.isShowHandover = false"
     @confirm="handleHandoverConfirm"
   >
     <template #header>
@@ -117,8 +123,8 @@
     header-align="center"
     footer-align="center"
     class="remove-dialog"
-    :is-show="isShowRemove"
-    @closed="() => isShowRemove = false"
+    :is-show="groupTableStore.isShowRemove"
+    @closed="() => groupTableStore.isShowRemove = false"
     @confirm="handleRemoveConfirm"
   >
     <template #header>
@@ -145,16 +151,16 @@
         <p class="main-desc">
           已选择<span class="desc-primary"> {{ selectedLength }} </span>个用户组
           <span>；其中
-            <span class="desc-warn"> {{ unableMoveLength }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
+            <span class="desc-warn"> {{ groupTableStore.unableMoveLength }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
           </span>
         </p>
         <div>
           <!-- 这个要有分页的点击事件 -->
           <GroupTab
-            :project-table="selectProjectlist"
-            :source-list="selectSourceList"
+            :project-table="groupTableStore.selectProjectlist"
+            :source-list="groupTableStore.selectSourceList"
             :is-show-operation="false"
-            :pagination="pagination"
+            :pagination="groupTableStore.pagination"
             :aside-item="asideItem"
           />
         </div>
@@ -219,12 +225,13 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { Message } from 'bkui-vue';
-import { ref, onMounted, computed, watch, reactive,provide } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import ManageAside from './manage-aside.vue';
 import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
 import http from '@/http/api';
 import NoPermission from '../no-enable-permission/no-permission.vue';
+import userGroupTable from "@/store/userGroupTable";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -232,13 +239,9 @@ const formRef = ref('');
 const projectId = computed(() => route.params?.projectCode);
 const expiredAt = ref();
 const isLoading = ref(false);
-const isShowRenewal = ref(false);
-const isShowHandover = ref(false);
-const isShowRemove = ref(false);
 const isShowSlider = ref(false);
 const sliderTitle = ref('批量续期');
 const batchFlag = ref();
-const pagination = ref({ limit: 10, current: 1 });
 const memberPagination = ref({ limit: 10, current: 1 });
 const handOverForm = ref({
   name: '',
@@ -276,190 +279,13 @@ const searchData = ref([
 ]);
 const memberList = ref([]);
 const asideItem = ref();
-const unableMoveLength = ref();
 const isPermission = ref(true);
 const personList = ref([]);
 const manageAsideRef = ref(null);
 const handOverTable = ref([]);
 const userName = ref('');
-const projectTable = ref([{
-  groupId: 1,
-  groupName: '11',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'UNIQUE_MANAGER',
-},
-{
-  groupId: 2,
-  groupName: '22',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'OTHER',
-}, {
-  groupId: 3,
-  groupName: '33',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'OTHER',
-},
-{
-  groupId: 4,
-  groupName: '44',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'OTHER',
-}, {
-  groupId: 5,
-  groupName: '55',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'OTHER',
-},
-{
-  groupId: 6,
-  groupName: '66',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'OTHER',
-}, {
-  groupId: 7,
-  groupName: '77',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'OTHER',
-},
-{
-  groupId: 8,
-  groupName: '88',
-  groupDesc: 'kjkjkjk',
-  validityPeriod: '0505',
-  joinedTime: '08-18',
-  operateSource: '加入组',
-  operator: '张三',
-  removeMemberButtonControl: 'OTHER',
-}]);
-const sourceList = ref([
-  {
-    id: 2,
-    groupItem: '流水线 (Pipiline) - 流水线组',
-    number: 3,
-    activeFlag: true,
-    tableData: [{
-      groupId: 1,
-      groupName: '11',
-      groupDesc: 'kjkjkjk',
-      validityPeriod: '0505',
-      joinedTime: '08-18',
-      operateSource: '加入组',
-      operator: '张三',
-      removeMemberButtonControl: 'TEMPLATE',
-    },
-    {
-      groupId: 2,
-      groupName: '12',
-      groupDesc: 'kjkjkjk',
-      validityPeriod: '0505',
-      joinedTime: '08-18',
-      operateSource: '加入组',
-      operator: '张三',
-      removeMemberButtonControl: 'OTHER',
-    }],
-  },
-  {
-    id: 3,
-    groupItem: '流水线 (Pipiline)',
-    number: 3,
-    tableData: [{
-      groupId: 1,
-      groupName: '21',
-      groupDesc: 'kjkjkjk',
-      validityPeriod: '0505',
-      joinedTime: '08-18',
-      operateSource: '加入组',
-      operator: '张三',
-      removeMemberButtonControl: 'UNIQUE_MANAGER',
-    },
-    {
-      groupId: 2,
-      groupName: '22',
-      groupDesc: 'kjkjkjk',
-      validityPeriod: '0505',
-      joinedTime: '08-18',
-      operateSource: '加入组',
-      operator: '张三',
-      removeMemberButtonControl: 'OTHER',
-    },
-    {
-      groupId: 2,
-      groupName: '23',
-      groupDesc: 'kjkjkjk',
-      validityPeriod: '0505',
-      joinedTime: '08-18',
-      operateSource: '加入组',
-      operator: '张三',
-      removeMemberButtonControl: 'OTHER',
-    }],
-  },
-]);
-const selectedData = reactive({});
-const selectedLength = computed(() => Object.keys(selectedData).length);
-const selectProjectlist = ref([]);
-const selectSourceList = ref([]);
-const collapseList = ref([
-  {
-    id: 1,
-    groupItem: '项目（project）',
-    number: 3,
-    type: 'project',
-  },
-  {
-    id: 2,
-    groupItem: '流水线 (Pipiline) - 流水线组',
-    number: 0,
-    type: 'source',
-  },
-  {
-    id: 3,
-    groupItem: '流水线 (Pipiline)',
-    number: 4,
-    type: 'source',
-  },
-]);
-
-/**
- * 表格方法
- */
-const handlers = {
-  handleRenewal,
-  handleHandOver,
-  handleRemove,
-  getSelectList,
-  handleLoadMore,
-  handleSelectAllData,
-  handleClear
-};
-provide('handlers', handlers);
+const selectedLength = computed(() => Object.keys(groupTableStore.selectedData).length);
+const groupTableStore = userGroupTable();
 
 onMounted(() => {
   getProjectMembers();
@@ -535,114 +361,25 @@ function handleAsideClick(item) {
   asideItem.value = item;
 }
 /**
- * 获取表格选择的数据
- */
-function getSelectList(val, groupId) {
-  const newSelectedData = val.isAll ? val.data : val.row;
-  if (val.checked) {
-    const oldSelectedData = selectedData[groupId] || [];
-    selectedData[groupId] = oldSelectedData.concat(newSelectedData);
-  } else {
-    if (val.isAll) {
-      delete selectedData[groupId];
-    } else {
-      selectedData[groupId] = selectedData[groupId].filter(item => item !== val.row);
-      selectedData[groupId].length === 0 && delete selectedData[groupId];
-    }
-  }
-  unableMoveLength.value = countNonOtherObjects(selectedData);
-  console.log('表格选择的数据', selectedData);
-}
-/**
- * 找出无法移出数据
- */
-function countNonOtherObjects(data) {
-  return Object.values(data)
-    .flat()
-    .filter(item => item.removeMemberButtonControl !== 'OTHER')
-    .length;
-}
-/**
- * 获取选中的资源级用户组数据
- */
-function getSourceList() {
-  selectProjectlist.value = selectedData['1'];
-  selectSourceList.value = Object.entries(selectedData)
-    .filter(([key]) => key != '1')
-    .map(([key, tableData]) => ({
-      id: key,
-      number: tableData.length,
-      activeFlag: true,
-      tableData,
-    }));
-}
-/**
- * 折叠面板调用接口获取表格数据
- */
-function collapseClick(id) {
-  // 折叠面板调用接口获取表格数据
-  console.log('折叠面板', id)
-}
-/**
- * 加载更多
- */
-function handleLoadMore(groupId) {
-  console.log('加载更多', groupId);
-}
-/**
- * 全量数据选择
- */
-function handleSelectAllData(groupId) {
-  console.log('全量数据选择', groupId);
-  // 调用接口 获取selectedData[groupId]数据
-}
-/**
- * 清除选择
- */
-function handleClear(groupId) {
-  delete selectedData[groupId];
-}
-/**
- * 续期按钮点击
- * @param row 行数据
- */
-function handleRenewal(row) {
-  isShowRenewal.value = true;
-}
-/**
- * 移交按钮点击
- * @param row 行数据
- */
-function handleHandOver(row) {
-  isShowHandover.value = true;
-}
-/**
- * 移出按钮点击
- * @param row 行数据
- */
-function handleRemove(row) {
-  isShowRemove.value = true;
-}
-/**
  * 续期弹窗提交事件
  */
 function handleRenewalConfirm() {
   console.log(expiredAt.value, '授权期限');
-  isShowRenewal.value = false;
+  groupTableStore.isShowRenewal = false;
 };
 /**
  * 移交弹窗提交事件
  */
 function handleHandoverConfirm() {
   console.log(handOverForm.value,'移交数据');
-  isShowHandover.value = false;
+  groupTableStore.isShowHandover = false;
 };
 /**
  * 移出弹窗提交事件
  */
 function handleRemoveConfirm() {
-  console.log(asideItem,'移出的数据');
-  isShowRemove.value = false;
+  console.log(asideItem.value,'移出的数据');
+  groupTableStore.isShowRemove = false;
 }
 /**
  * 授权期限选择
@@ -661,7 +398,7 @@ function batchRenewal() {
   sliderTitle.value = '批量续期';
   batchFlag.value = 'renewal';
   isShowSlider.value = true;
-  getSourceList();
+  groupTableStore.getSourceList();
 }
 /**
  * 批量移交
@@ -674,7 +411,7 @@ function batchHandover() {
   sliderTitle.value = '批量移交';
   batchFlag.value = 'handover';
   isShowSlider.value = true;
-  getSourceList();
+  groupTableStore.getSourceList();
 }
 /**
  * 批量移出
@@ -687,7 +424,7 @@ function batchRemove() {
   sliderTitle.value = '批量移出';
   batchFlag.value = 'remove';
   isShowSlider.value = true;
-  getSourceList();
+  groupTableStore.getSourceList();
 }
 /**
  * sideslider 关闭
@@ -740,7 +477,7 @@ async function handleShowPerson(value) {
   personList.value = res.map(item => ({ person: item }));
 }
 /**
- * 移出项目
+ * 组织移出项目
  */
 const flag = ref(true);
 async function handleAsideRemoveConfirm(value) {

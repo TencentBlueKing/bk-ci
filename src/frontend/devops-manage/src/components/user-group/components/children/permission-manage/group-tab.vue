@@ -1,37 +1,45 @@
 <template>
   <div>
-    <div class="manage-content-project" v-if="projectTable.length">
+    <div class="manage-content-project" >
       <p class="project-group">项目级用户组</p>
       <div class="project-group-table">
         <bk-collapse-panel v-model="activeFlag">
           <template #header>
             <p class="group-title">
               <i class="permission-icon permission-icon-down-shape"></i>
-              项目（project）
-              <span class="group-num">11</span>
+              {{ projectTable.groupItem }}
+              <span class="group-num">{{projectTable.groupTotal}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
               :is-show-operation="isShowOperation"
-              :data="projectTable"
-              :group-id="1"
+              :data="projectTable.tableData"
+              :group-id="projectTable.id"
+              :group-total="projectTable.groupTotal"
               :pagination="pagination"
-              :selected-data="selectedData"
+              :selected-data="groupTableStore.selectedData"
+              @handle-renewal="groupTableStore.handleRenewal"
+              @handle-hand-over="groupTableStore.handleHandOver"
+              @handle-remove="groupTableStore.handleRemove"
+              @get-select-list="groupTableStore.getSelectList"
+              @handle-select-all-data="groupTableStore.handleSelectAllData"
+              @handle-load-more="groupTableStore.handleLoadMore"
+              @handle-clear="groupTableStore.handleClear"
             />
           </template>
         </bk-collapse-panel>
       </div>
     </div>
-    <div class="manage-content-resource" v-if="sourceList.length">
+    <div class="manage-content-resource" v-if="sourceTable.length">
       <p class="project-group">资源级用户组</p>
-      <div class="project-group-table" v-for="item in sourceList" :key="item.id">
+      <div class="project-group-table" v-for="item in sourceTable" :key="item.id">
         <bk-collapse-panel v-model="item.activeFlag" :item-click="collapseClick" :name="item.groupItem">
           <template #header>
             <p class="group-title">
               <i class="permission-icon permission-icon-down-shape"></i>
               {{item.groupItem}}
-              <span class="group-num">{{item.number}}</span>
+              <span class="group-num">{{item.groupTotal}}</span>
             </p>
           </template>
           <template #content>
@@ -39,8 +47,16 @@
               :is-show-operation="isShowOperation"
               :data="item.tableData"
               :group-id="item.id"
+              :group-total="item.groupTotal"
               :pagination="pagination"
-              :selected-data="selectedData"
+              :selected-data="groupTableStore.selectedData"
+              @handle-renewal="groupTableStore.handleRenewal"
+              @handle-hand-over="groupTableStore.handleHandOver"
+              @handle-remove="groupTableStore.handleRemove"
+              @get-select-list="groupTableStore.getSelectList"
+              @handle-select-all-data="groupTableStore.handleSelectAllData"
+              @handle-load-more="groupTableStore.handleLoadMore"
+              @handle-clear="groupTableStore.handleClear"
             />
           </template>
         </bk-collapse-panel>
@@ -50,12 +66,16 @@
 </template>
 
 <script setup name="GroupTab">
-import { ref, defineProps, defineEmits, watch } from 'vue';
+import { ref, defineProps, defineEmits, computed } from 'vue';
+import userGroupTable from "@/store/userGroupTable";
 import TabTable from './tab-table.vue';
 
 const activeFlag =  ref(true);
+const groupTableStore = userGroupTable();
+const projectTable = computed(() => props.sourceList[0]);
+const sourceTable= computed(() => props.sourceList.slice(1));
 
-defineProps({
+const props = defineProps({
   isShowOperation: {
     type: Boolean,
     default: true,
@@ -63,16 +83,10 @@ defineProps({
   pagination: {
     type: Object,
   },
-  projectTable: {
-    type: Array,
-    default: () => [],
-  },
+
   sourceList: {
     type: Array,
     default: () => [],
-  },
-  selectedData: {
-    type: Object,
   },
 });
 const emit = defineEmits(['collapseClick']);

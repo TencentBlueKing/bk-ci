@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ManageHeader from '@/components/manage-header.vue';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   useRouter,
@@ -33,7 +33,7 @@ const manageTabs = ref([
   // },
 ]);
 
-const routeName = route.name;
+const routeName = computed(()=>route.name);
 const { projectCode } = route.params;
 const projectList = window.parent?.vuexStore?.state?.projectList;
 const projectName = projectList?.find(project => project.projectCode === projectCode)?.projectName || projectCode;
@@ -45,7 +45,7 @@ const handleChangeTab = (manageTab: any) => {
   });
 };
 const initActiveTab = () => {
-  const tab = manageTabs.value.find(tab => tab.name === routeName);
+  const tab = manageTabs.value.find(tab => tab.name === routeName.value);
   activeTab.value = tab?.title || t('项目信息');
 };
 onMounted(() => {

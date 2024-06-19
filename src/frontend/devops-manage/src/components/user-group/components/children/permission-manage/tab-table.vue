@@ -11,7 +11,6 @@
     @selection-change="handleSelectionChange"
   >
     <template #prepend>
-      
       <div v-if="isShowOperation && selectedData[groupId]" class="prepend">
         已选择 {{ selectedData[groupId].length }} 条数据，
         <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
@@ -76,7 +75,7 @@
 </template>
 
 <script setup name="TabTable">
-import { ref, defineProps, defineEmits, computed, inject } from 'vue';
+import { ref, defineProps, defineEmits, computed } from 'vue';
 
 const total = ref(0);
 const fixedBottom = {
@@ -84,6 +83,8 @@ const fixedBottom = {
   height: 42,
 };
 const refTable = ref(null);
+const groupId = computed(() => props.groupId);
+const groupTotal = computed(() => props.groupTotal);
 
 const props = defineProps({
   isShowOperation: {
@@ -98,83 +99,85 @@ const props = defineProps({
     type: Array,
   },
   groupId: {
-    type: Number
+    type: Number,
+  },
+  groupTotal: {
+    type: Number,
   },
   selectedData: {
     type: Object,
   },
 });
-const groupId = computed(() => props.groupId);
-const handlers = inject('handlers');
+const emit = defineEmits([
+  'handleRenewal',
+  'handleHandOver',
+  'handleRemove',
+  'getSelectList',
+  'handleLoadMore',
+  'handleSelectAllData',
+  'handleClear',
+])
+const isCurrentAll = ref(false);
 /**
  * 当前页全选事件
  */
 function handleSelectAll(val) {
-  if (handlers) {
-    handlers.getSelectList( Object.assign(val, {isAll:true}), groupId.value);
-  }
+  isCurrentAll.value = true;
+  emit('getSelectList', Object.assign(val, {isAll:true}), groupId.value);
 }
 /**
  * 多选事件
  * @param val
  */
 function handleSelectionChange(val) {
-  if (handlers) {
-    handlers.getSelectList( val, groupId.value);
-  }
+  isCurrentAll.value = false;
+  emit('getSelectList', val, groupId.value);
 };
 /**
  * 全量数据选择
  */
 function handleSelectAllData() {
-  refTable.value.toggleAllSelection();
-  if (handlers) {
-    handlers.handleSelectAllData(groupId.value);
+  const selectLength = refTable.value.getSelection().length
+  // 这里的10是该用户组表格数据total
+  if(!isCurrentAll.value && selectLength != 10) {
+    refTable.value.toggleAllSelection();
   }
+  console.log(refTable.value.getSelection().length);
+  emit('handleSelectAllData', groupId.value)
 }
 /**
  * 清除选择
  */
 function handleClear() {
   refTable.value.clearSelection();
-  if (handlers) {
-    handlers.handleClear(groupId.value);
-  }
+  emit('handleClear', groupId.value);
 }
 /**
  * 续期按钮点击
  * @param row 行数据
  */
 function handleRenewal(row) {
-  if (handlers) {
-    handlers.handleRenewal(row);
-  }
+  emit('handleRenewal', row);
 }
 /**
  * 移交按钮点击
  * @param row 行数据
  */
 function handleHandOver(row) {
-  if (handlers) {
-    handlers.handleHandOver(row);
-  }
+  emit('handleHandOver', row);
 }
 /**
  * 移出按钮点击
  * @param row 行数据
  */
 function handleRemove(row) {
-  if (handlers) {
-    handlers.handleRemove(row);
-  }
+  emit('handleRemove', row);
 }
 /**
  * 加载更多
  */
 function handleLoadMore() {
-  if (handlers) {
-    handlers.handleLoadMore(groupId.value);
-  }
+  emit('handleLoadMore',groupId.value);
 }
 
 </script>
