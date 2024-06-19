@@ -22,6 +22,7 @@
                             :key="option.key"
                             :id="option.key"
                             :name="option.key"
+                            :disabled="parameters.find(i => i.key === option.key)"
                         />
                     </bk-select>
                     <span class="input-seg">=</span>
