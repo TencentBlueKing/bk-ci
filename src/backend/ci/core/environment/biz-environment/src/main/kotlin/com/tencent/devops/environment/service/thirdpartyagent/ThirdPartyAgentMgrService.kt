@@ -284,7 +284,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         thirdPartyAgentDao.saveAgentEnvs(
             dslContext = dslContext,
-            agentId = agentRecord.id,
+            agentIds = setOf(agentRecord.id),
             envStr = objectMapper.writeValueAsString(envs)
         )
     }
