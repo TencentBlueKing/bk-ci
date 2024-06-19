@@ -46,8 +46,9 @@ import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -285,33 +286,31 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun fetchAgentEnv(
         userId: String,
         projectId: String,
-        nodeHashIds: Set<String>?,
-        agentHashIds: Set<String>?
+        data: BatchFetchAgentData
     ): Result<Map<String, List<EnvVar>>> {
-        return Result(agentService.fetchAgentEnv(
-            userId = userId,
-            projectId = projectId,
-            nodeHashIds = nodeHashIds,
-            agentHashIds = agentHashIds
-        ))
+        return Result(
+            agentService.fetchAgentEnv(
+                userId = userId,
+                projectId = projectId,
+                nodeHashIds = data.nodeHashIds,
+                agentHashIds = data.agentHashIds
+            )
+        )
     }
 
     override fun batchUpdateEnv(
         userId: String,
         projectId: String,
-        nodeHashIds: Set<String>?,
-        agentHashIds: Set<String>?,
-        type: ThirdPartAgentUpdateType?,
-        data: List<EnvVar>
+        data: BatchUpdateAgentEnvVar
     ): Result<Boolean> {
         return Result(
             agentService.batchUpdateAgentEnv(
                 userId = userId,
                 projectId = projectId,
-                nodeHashIds = nodeHashIds,
-                agentHashIds = agentHashIds,
-                type = type,
-                data = data
+                nodeHashIds = data.nodeHashIds,
+                agentHashIds = data.agentHashIds,
+                type = data.type,
+                data = data.envVars
             )
         )
     }

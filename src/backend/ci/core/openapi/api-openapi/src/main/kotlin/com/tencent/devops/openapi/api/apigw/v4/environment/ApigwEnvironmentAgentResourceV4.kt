@@ -37,7 +37,8 @@ import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -170,8 +171,11 @@ interface ApigwEnvironmentAgentResourceV4 {
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
 
-    @Operation(summary = "批量查询Agent环境变量")
-    @GET
+    @Operation(
+        summary = "批量查询Agent环境变量",
+        tags = ["v4_user_node_third_part_agent_envvar", "v4_app_node_third_part_agent_envvar"]
+    )
+    @POST
     @Path("/fetch_agent_env")
     fun fetchAgentEnv(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -186,15 +190,14 @@ interface ApigwEnvironmentAgentResourceV4 {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "Node Hash ID列表,和 agentHashIds 选其一即可", required = false)
-        @QueryParam("nodeHashIds")
-        nodeHashIds: Set<String>?,
-        @Parameter(description = "agent Hash ID列表,和 nodeHashIds 选其一即可", required = false)
-        @QueryParam("agentHashIds")
-        agentHashIds: Set<String>?
+        @Parameter(description = "查询数据", required = true)
+        data: BatchFetchAgentData
     ): Result<Map<String, List<EnvVar>>>
 
-    @Operation(summary = "批量修改Agent环境变量")
+    @Operation(
+        summary = "批量修改Agent环境变量",
+        tags = ["v4_user_node_third_part_agent_update_envvar", "v4_app_node_third_part_agent_update_envvar"]
+    )
     @POST
     @Path("/batch_update_agent_env")
     fun batchUpdateEnv(
@@ -210,16 +213,7 @@ interface ApigwEnvironmentAgentResourceV4 {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "Node Hash ID,和 agentHashId 选其一即可", required = false)
-        @QueryParam("nodeHashIds")
-        nodeHashIds: Set<String>?,
-        @Parameter(description = "agent Hash ID,和 nodeHashId 选其一即可", required = false)
-        @QueryParam("agentHashIds")
-        agentHashIds: Set<String>?,
-        @Parameter(description = "修改方式,支持3种输入(ADD,REMOVE,UPDATE),默认为UPDATE", required = false)
-        @QueryParam("status")
-        type: ThirdPartAgentUpdateType?,
-        @Parameter(description = "环境变量", required = false)
-        data: List<EnvVar>
+        @Parameter(description = "修改数据", required = true)
+        data: BatchUpdateAgentEnvVar
     ): Result<Boolean>
 }

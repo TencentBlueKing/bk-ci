@@ -45,8 +45,9 @@ import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -420,7 +421,7 @@ interface ServiceThirdPartyAgentResource {
     ): Result<Pair<Long?, List<EnvNodeAgent>>>
 
     @Operation(summary = "批量查询Agent环境变量")
-    @GET
+    @POST
     @Path("/projects/{projectId}/env")
     fun fetchAgentEnv(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -429,12 +430,8 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "Node Hash ID,和 agentHashId 选其一即可", required = false)
-        @QueryParam("nodeHashIds")
-        nodeHashIds: Set<String>?,
-        @Parameter(description = "agent Hash ID,和 nodeHashId 选其一即可", required = false)
-        @QueryParam("agentHashIds")
-        agentHashIds: Set<String>?
+        @Parameter(description = "查询数据", required = true)
+        data: BatchFetchAgentData
     ): Result<Map<String, List<EnvVar>>>
 
     @Operation(summary = "批量修改Agent环境变量")
@@ -447,16 +444,7 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "Node Hash ID,和 agentHashId 选其一即可", required = false)
-        @QueryParam("nodeHashIds")
-        nodeHashIds: Set<String>?,
-        @Parameter(description = "agent Hash ID,和 nodeHashId 选其一即可", required = false)
-        @QueryParam("agentHashIds")
-        agentHashIds: Set<String>?,
-        @Parameter(description = "修改方式,支持3种输入(ADD,REMOVE,UPDATE),默认为UPDATE", required = false)
-        @QueryParam("status")
-        type: ThirdPartAgentUpdateType?,
-        @Parameter(description = "环境变量", required = false)
-        data: List<EnvVar>
+        @Parameter(description = "修改数据", required = true)
+        data: BatchUpdateAgentEnvVar
     ): Result<Boolean>
 }
