@@ -8,18 +8,15 @@
     "ace-builds": "^1.4.12",
     "clipboard": "^1.7.1",
     "echarts": "^5.3.2",
+    "js-base64": "^3.7.2",
     "lodash": "^4.17.21",
     "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",
     "vue-file-upload": "^0.1.12",
-    "vuex-class": "^0.3.0",
-    "lodash": "^4.17.21",
-    "ace-builds": "^1.4.12",
-    "@blueking/search-select": "0.0.1-beta.2"
+    "vuex-class": "^0.3.0"
   },
   "devDependencies": {
-    "@babel/runtime": "^7.15.4",
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
@@ -36,6 +33,7 @@
     "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
     "@babel/preset-react": "^7.16.0",
+    "@babel/runtime": "^7.15.4",
     "@vue/babel-preset-jsx": "^1.2.4",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",

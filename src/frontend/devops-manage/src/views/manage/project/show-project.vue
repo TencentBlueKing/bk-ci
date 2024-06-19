@@ -6,18 +6,17 @@ RESOURCE_TYPE,
 handleProjectManageNoPermission,
 } from '@/utils/permission.js';
 import {
-onMounted,
-} from '@vue/runtime-core';
-import {
 InfoBox,
 Message,
-Popover,
+Popover
 } from 'bkui-vue';
 import {
+onMounted,
 ref,
 watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
+
 import {
 useRoute,
 useRouter,

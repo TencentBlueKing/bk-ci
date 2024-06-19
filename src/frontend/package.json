@@ -29,7 +29,6 @@
     "svg-sprite-loader": "^6.0.9",
     "typescript": "3.4.5",
     "vue-eslint-parser": "^9.0.2",
-    "vue-loader": "^15.10.0",
     "webpack": "^5.76.1",
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.10.0",

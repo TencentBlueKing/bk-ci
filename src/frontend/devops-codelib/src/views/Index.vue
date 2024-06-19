@@ -102,25 +102,25 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-import CodeLibDetail from '../components/CodeLibDetail'
-import CodeLibDialog from '../components/CodeLibDialog'
-import CodeLibTable from '../components/CodeLibTable'
-import LinkCodeLib from '../components/LinkCodeLib'
-import layout from '../components/layout'
-import {
-    CODE_REPOSITORY_CACHE,
-    CODE_REPOSITORY_SEARCH_VAL,
-    codelibTypes,
-    getCodelibConfig,
-    isGit,
-    isGitLab,
-    isGithub,
-    isP4,
-    isSvn,
-    isTGit
-} from '../config/'
-import { getOffset } from '../utils/'
-import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+    import CodeLibDetail from '../components/CodeLibDetail'
+    import CodeLibDialog from '../components/CodeLibDialog'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
+    import layout from '../components/layout'
+    import {
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
+        codelibTypes,
+        getCodelibConfig,
+        isGit,
+        isGitLab,
+        isGithub,
+        isP4,
+        isSvn,
+        isTGit
+    } from '../config/'
+    import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         name: 'codelib-list',
