@@ -6,6 +6,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import java.util.concurrent.TimeUnit
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit
 class ServiceResourceMemberResourceImpl constructor(
     private val permissionResourceMemberService: PermissionResourceMemberService
 ) : ServiceResourceMemberResource {
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getResourceGroupMembers(
         token: String,
         projectCode: String,
@@ -31,6 +34,7 @@ class ServiceResourceMemberResourceImpl constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getResourceGroupAndMembers(
         token: String,
         projectCode: String,
@@ -46,6 +50,7 @@ class ServiceResourceMemberResourceImpl constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun batchAddResourceGroupMembers(
         token: String,
         projectCode: String,
@@ -70,6 +75,7 @@ class ServiceResourceMemberResourceImpl constructor(
         }
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun batchDeleteResourceGroupMembers(
         token: String,
         projectCode: String,
