@@ -42,7 +42,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.DAY -> {
                 gal.add(Calendar.DAY_OF_WEEK, -1)
                 "SELECT minute2, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 100656_cgs_report_game_all " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute2 " +
@@ -53,7 +53,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.WEEK -> {
                 gal.add(Calendar.WEEK_OF_MONTH, -1)
                 "SELECT minute10, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 100656_cgs_report_game_all " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute10 " +
@@ -64,7 +64,7 @@ class BKBaseService @Autowired constructor(
             else -> {
                 gal.add(Calendar.HOUR_OF_DAY, -1)
                 "SELECT minute1, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 100656_cgs_report_game_all " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute1 " +
@@ -160,7 +160,7 @@ class BKBaseService @Autowired constructor(
         result: MutableMap<String, Int> = mutableMapOf()
     ): Map<String, Int> {
         val sql = "select zone_id,inner_ip,count(distinct thedate) as cnt " +
-            "from 100656_ads_desktop_daily_activity_res " +
+            "from 100656_ads_desktop_daily_activity_res.hdfs " +
             "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
             "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
 
@@ -191,7 +191,7 @@ class BKBaseService @Autowired constructor(
         result: MutableMap<String, Int> = mutableMapOf()
     ): Map<String, Int> {
         val sql = "select zone_id,inner_ip,sum(activity_minus_cnt) as cnt " +
-            "from 100656_ads_desktop_daily_activity_res " +
+            "from 100656_ads_desktop_daily_activity_res.hdfs " +
             "where thedate > '${date.format(theDateFormat)}' " +
             "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
 
