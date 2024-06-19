@@ -1542,5 +1542,24 @@
   "eventID": "Event ID",
   "runningSteps": "Running steps: ",
   "completeness": "Completeness: ",
-  "pacDesc": "Pipeline as Code mode, referred to as PAC mode. After enabling and submitting the pipeline file to the code base, you can maintain the pipeline by maintaining the code base file."
+  "pacDesc": "Pipeline as Code mode, referred to as PAC mode. After enabling and submitting the pipeline file to the code base, you can maintain the pipeline by maintaining the code base file.",
+  "delegation": {
+    "delegationPermission": "Delegation Authority",
+    "tips1": "The following scenarios will use the proxy holder's permissions:",
+    "tips2": "1. In scenarios such as code repository triggers, scheduled triggers, sub-pipeline triggers, and remote triggers (when the trigger person is not specified), the platform will check whether the proxy holder has {0} permissions; if not, the trigger will fail.",
+    "tips3": "2. During pipeline execution, the proxy holder will be assigned to the built-in variable {0}, and some plugins will check this data to verify whether the corresponding system/function operation permissions are available; for example, whether the command execution permission under the corresponding business of the job platform is available.",
+    "tips4": "Before authorizing the proxy holder, please clarify the functions and operation scope of the pipeline to avoid unauthorized access.",
+    "tips5": "The proxy holder defaults to the pipeline creator; if you need to change it, please have the {0} reset it here.",
+    "newOperator": "new person in charge",
+    "pipelineExecPermission": "Pipeline Execution Permission",
+    "proxyHolderForExecutionPermissions": "Proxy Holder for Execution Permissions:",
+    "resetAuthorization": "Reset Authorization",
+    "confirmReset": "Confirm reset authorization?",
+    "yourPermission": "your permissions",
+    "resetAuthTips1": "After the reset, code repository triggers, scheduled triggers, and sub-pipeline triggers will use {0} to execute the pipeline.",
+    "resetAuthTips2": "Please confirm if authorization is possible.",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "resetSuc": "Reset successful"
+}
 }
