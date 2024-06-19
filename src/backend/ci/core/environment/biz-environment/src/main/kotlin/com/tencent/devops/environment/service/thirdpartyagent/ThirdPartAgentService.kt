@@ -66,7 +66,7 @@ class ThirdPartAgentService @Autowired constructor(
             val idMap = agentHashIds.associateBy { HashUtil.decodeIdToLong(it) }
             val agents = agentDao.getAgentByAgentIds(dslContext, idMap.keys, projectId)
             agents.forEach { agent ->
-                res[idMap[agent.id] ?: return@forEach] = if (agent.agentEnvs.isBlank()) {
+                res[idMap[agent.id] ?: return@forEach] = if (agent.agentEnvs.isNullOrBlank()) {
                     emptyList()
                 } else {
                     objectMapper.readValue<List<EnvVar>>(agent.agentEnvs)
@@ -76,7 +76,7 @@ class ThirdPartAgentService @Autowired constructor(
             val idMap = nodeHashIds!!.associateBy { HashUtil.decodeIdToLong(it) }
             val agents = agentDao.getAgentsByNodeIds(dslContext, idMap.keys, projectId)
             agents.forEach { agent ->
-                res[idMap[agent.nodeId] ?: return@forEach] = if (agent.agentEnvs.isBlank()) {
+                res[idMap[agent.nodeId] ?: return@forEach] = if (agent.agentEnvs.isNullOrBlank()) {
                     emptyList()
                 } else {
                     objectMapper.readValue<List<EnvVar>>(agent.agentEnvs)
@@ -115,8 +115,11 @@ class ThirdPartAgentService @Autowired constructor(
                     val lock = ThirdAgentUpdateEnvLock(redisOperation, projectId, agentId)
                     try {
                         lock.lock()
-                        val oldEnvsMap =
+                        val oldEnvsMap = if (agent.agentEnvs.isNullOrBlank()) {
+                            mutableMapOf()
+                        } else {
                             objectMapper.readValue<List<EnvVar>>(agent.agentEnvs).associateBy { it.name }.toMutableMap()
+                        }
                         val newEnvsMap = data.associateBy { it.name }.toMutableMap()
                         val envs = if (type == ThirdPartAgentUpdateType.ADD) {
                             oldEnvsMap.putAll(newEnvsMap)
@@ -132,7 +135,6 @@ class ThirdPartAgentService @Autowired constructor(
                             agentIds = agents.map { it.id }.toSet(),
                             envStr = objectMapper.writeValueAsString(envs)
                         )
-
                         return true
                     } finally {
                         lock.unlock()
@@ -146,13 +148,11 @@ class ThirdPartAgentService @Autowired constructor(
                     agentIds = agents.map { it.id }.toSet(),
                     envStr = objectMapper.writeValueAsString(data)
                 )
-
                 return true
             }
 
             else -> return false
         }
-
         return true
     }
 }
