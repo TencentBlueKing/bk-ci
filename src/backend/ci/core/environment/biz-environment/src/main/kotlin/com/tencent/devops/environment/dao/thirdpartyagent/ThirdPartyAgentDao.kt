@@ -239,6 +239,21 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun batchUpdateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        ids: Set<Long>,
+        status: AgentStatus
+    ): Int {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.update(this)
+                .set(STATUS, status.status)
+                .where(ID.`in`(ids))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
     fun updateAgentVersion(
         dslContext: DSLContext,
         id: Long,
