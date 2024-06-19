@@ -1258,6 +1258,7 @@ class PipelineRepositoryService constructor(
         version: Int? = null,
         includeDraft: Boolean? = false
     ): PipelineResourceVersion? {
+        // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
             if (includeDraft == true) pipelineResourceVersionDao.getDraftVersionResource(
                 dslContext = dslContext,
@@ -1272,7 +1273,7 @@ class PipelineRepositoryService constructor(
                 version = version,
                 includeDraft = includeDraft
             )
-        } ?: pipelineResourceDao.getReleaseVersionResource( // TODO 取不到则直接从旧版本表读，待下架
+        } ?: pipelineResourceDao.getReleaseVersionResource(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
