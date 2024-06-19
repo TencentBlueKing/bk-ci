@@ -167,18 +167,12 @@
             this.resetHistoryFilterCondition()
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()
-            this.setPipeline(null)
-            this.setPipelineWithoutTrigger(null)
-            this.setPipelineYaml('')
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             ...mapActions('atom', [
                 'selectPipelineVersion',
-                'setPipeline',
-                'setPipelineYaml',
-                'resetAtomModalMap',
-                'setPipelineWithoutTrigger'
+                'resetAtomModalMap'
             ]),
             getNavComponent (type) {
                 switch (type) {

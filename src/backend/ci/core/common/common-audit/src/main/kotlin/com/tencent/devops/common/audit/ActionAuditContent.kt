@@ -94,6 +94,7 @@ object ActionAuditContent {
     const val CGS_DELETE_CONTENT = "delete workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_SHARE_CONTENT = "share workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_EDIT_CONTENT = "edit workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val CGS_TOKEN_GENERATE_CONTENT = "generate workspace 1password $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_UPGRADE_VM = "upgrade workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 云桌面镜像

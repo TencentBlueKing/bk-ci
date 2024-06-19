@@ -25,12 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.store.api.common
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    PIPELINE_API_ACCESS_LIMIT, // 限制流水线接口访问权限
-    API_NO_AUTH_CHECK, // 接口免权限校验
-    API_OPEN_TOKEN_CHECK // open接口token校验
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Tag(name = "OP_STORE_PROJECT", description = "OP-组件-项目")
+@Path("/op/store/project")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreProjectResource {
+
+    @Operation(summary = "更新组件关联初始化项目信息")
+    @PUT
+    @Path("/relevancy/update")
+    fun updateStoreInitProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件关联初始化项目信息", required = true)
+        storeProjectInfo: StoreProjectInfo
+    ): Result<Boolean>
 }

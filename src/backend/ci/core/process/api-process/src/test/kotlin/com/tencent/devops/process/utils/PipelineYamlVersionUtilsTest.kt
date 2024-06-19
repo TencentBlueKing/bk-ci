@@ -35,7 +35,9 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -408,6 +410,99 @@ class PipelineYamlVersionUtilsTest {
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model1, model2))
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model1, model3))
     }
+
+    @Test
+    fun testRunConditionDiffer() {
+        val model1 = Model(
+            name = "name1",
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = "stage-1",
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "trigger",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    id = "T-1-1-1",
+                                    name = "t1"
+                                )
+                            )
+                        )
+                    )
+                ),
+                Stage(
+                    id = "stage-2",
+                    containers = listOf(
+                        VMBuildContainer(
+                            baseOS = VMBaseOS.LINUX
+                        ),
+                        NormalContainer(
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    script = "echo 1",
+                                    continueNoneZero = true,
+                                    scriptType = BuildScriptType.SHELL,
+                                    additionalOptions = ElementAdditionalOptions(enable = true)
+                                )
+                            )
+                        )
+                    ),
+                    stageControlOption = StageControlOption(
+                        runCondition = StageRunCondition.AFTER_LAST_FINISHED
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val model2 = Model(
+            name = "name1",
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = "stage-1",
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "trigger",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    id = "T-1-1-1",
+                                    name = "t1"
+                                )
+                            )
+                        )
+                    )
+                ),
+                Stage(
+                    id = "stage-2",
+                    containers = listOf(
+                        VMBuildContainer(
+                            baseOS = VMBaseOS.LINUX
+                        ),
+                        NormalContainer(
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    script = "echo 1",
+                                    continueNoneZero = true,
+                                    scriptType = BuildScriptType.SHELL,
+                                    additionalOptions = ElementAdditionalOptions(enable = true)
+                                )
+                            )
+                        )
+                    ),
+                    stageControlOption = StageControlOption(
+                        runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val version = 1
+        assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, model1, model2))
+    }
+
     @Test
     fun getSettingVersions() {
         val setting = PipelineSettingVersion(

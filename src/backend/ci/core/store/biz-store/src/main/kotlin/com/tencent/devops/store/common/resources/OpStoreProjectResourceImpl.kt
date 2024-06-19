@@ -25,12 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.store.common.resources
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    PIPELINE_API_ACCESS_LIMIT, // 限制流水线接口访问权限
-    API_NO_AUTH_CHECK, // 接口免权限校验
-    API_OPEN_TOKEN_CHECK // open接口token校验
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreProjectResource
+import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpStoreProjectResourceImpl @Autowired constructor(
+    private val storeProjectService: StoreProjectService
+) : OpStoreProjectResource {
+    override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Result<Boolean> {
+        return Result(storeProjectService.updateStoreInitProject(userId, storeProjectInfo))
+    }
 }

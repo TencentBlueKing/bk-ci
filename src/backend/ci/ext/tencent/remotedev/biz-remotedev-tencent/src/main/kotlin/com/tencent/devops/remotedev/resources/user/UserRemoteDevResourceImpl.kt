@@ -41,6 +41,8 @@ import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +56,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
-    private val txcService: TxcService
+    private val txcService: TxcService,
+    private val redisCache: RedisCacheService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -104,7 +107,14 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
-        return Result(permissionService.init1Password(userId, workspaceName))
+        return Result(
+            permissionService.init1Password(
+                userId = userId,
+                workspaceName = workspaceName,
+                projectId = null,
+                expiredInSecond = redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull()
+            )
+        )
     }
 
     override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {

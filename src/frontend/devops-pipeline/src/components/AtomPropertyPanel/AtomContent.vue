@@ -572,7 +572,8 @@
             handleFetchAtomModal (atomCode, version) {
                 const { getAtomModal, fetchAtomModal } = this
                 const atomModal = getAtomModal({ atomCode, version })
-                const queryOfflineFlag = !this.editable
+                // const queryOfflineFlag = !this.editable
+                const queryOfflineFlag = true // TODO: 临时放开，后续需要优化
                 if (!atomModal && atomCode) { // 获取插件详情
                     fetchAtomModal({
                         projectCode: this.projectId,
