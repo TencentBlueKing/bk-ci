@@ -312,7 +312,10 @@
                 commandStep: {},
                 isManualCommand: false,
                 editorId: '',
-                stepStatus: ''
+                stepStatus: '',
+                timeoutIdTask1: null,
+                timeoutIdTask2: null,
+                timeoutIdTask3: null
             }
         },
         computed: {
@@ -352,6 +355,7 @@
                         this.$emit('install')
                     }
                     this.handleCancel()
+                    this.clearTimeoutTasks()
                 }
             },
             'formData.osType' (val) {
@@ -413,6 +417,15 @@
                 })
             },
 
+            clearTimeoutTasks () {
+                clearTimeout(this.timeoutIdTask1)
+                clearTimeout(this.timeoutIdTask2)
+                clearTimeout(this.timeoutIdTask3)
+                this.timeoutIdTask1 = null
+                this.timeoutIdTask2 = null
+                this.timeoutIdTask3 = null
+            },
+
             handleConFirm () {
                 this.$refs.form.validate().then(async () => {
                     try {
@@ -460,7 +473,7 @@
                             this.$nextTick(() => {
                                 this.initEditor('executeScriptLog1')
                             })
-                            setTimeout(async () => {
+                            this.timeoutIdTask1 = setTimeout(async () => {
                                 await this.fetchInstallAgentStatus()
                                 await this.fetchInstallAgentTaskLog()
                             }, 5000)
@@ -478,20 +491,24 @@
 
             async fetchInstallCommand () {
                 this.isLoading = true
-                const res = await this.$store.dispatch('environment/fetchInstallCommand', {
-                    projectId: this.projectId,
-                    jobId: this.jobId,
-                    hostId: this.bkHostId
-                })
-                this.commandStatus = res.status
-                this.commandStep = res || {}
-                if (['PENDING'].includes(this.commandStatus)) {
-                    setTimeout(async () => {
-                        this.fetchInstallCommand()
-                    }, 5000)
-                } else {
-                    this.isEditing = false
-                    this.isManualCommand = true
+                try {
+                    const res = await this.$store.dispatch('environment/fetchInstallCommand', {
+                        projectId: this.projectId,
+                        jobId: this.jobId,
+                        hostId: this.bkHostId
+                    })
+                    this.commandStatus = res.status
+                    this.commandStep = res || {}
+                    if (['PENDING'].includes(this.commandStatus)) {
+                        this.timeoutIdTask2 = setTimeout(async () => {
+                            this.fetchInstallCommand()
+                        }, 5000)
+                    } else {
+                        this.isEditing = false
+                        this.isManualCommand = true
+                        this.isLoading = false
+                    }
+                } catch (e) {
                     this.isLoading = false
                 }
             },
@@ -545,7 +562,7 @@
                 })
                 this.editorId = this.isManualCommand ? 'executeScriptLog2' : 'executeScriptLog1'
                 if (['PENDING', 'RUNNING'].includes(this.installStatus)) {
-                    setTimeout(async () => {
+                    this.timeoutIdTask3 = setTimeout(async () => {
                         await this.fetchInstallAgentStatus()
                         await this.fetchInstallAgentTaskLog()
                     }, 5000)
