@@ -46,6 +46,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterRespon
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
@@ -215,15 +216,17 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
     }
 
     fun SvnCommitEvent.needMatchPathsField(filter: () -> Boolean): Boolean {
-        // 超过则存在变更记录丢失
+        // 超过上限则存在变更记录丢失
         if ((totalFilesCount ?: 0) < FILES_COUNT_MAX) {
             return false
         }
+        logger.info("File change information exceeds the limit|$totalFilesCount")
         return filter.invoke()
     }
 
     companion object {
-        // 文件变更列表上线，
+        // 文件变更列表上限
         const val FILES_COUNT_MAX = 999
+        private val logger = LoggerFactory.getLogger(SvnCommitTriggerHandler::class.java)
     }
 }
