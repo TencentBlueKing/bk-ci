@@ -42,7 +42,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.DAY -> {
                 gal.add(Calendar.DAY_OF_WEEK, -1)
                 "SELECT minute2, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 100656_cgs_report_game_all " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute2 " +
@@ -53,7 +53,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.WEEK -> {
                 gal.add(Calendar.WEEK_OF_MONTH, -1)
                 "SELECT minute10, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 100656_cgs_report_game_all " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute10 " +
@@ -64,7 +64,7 @@ class BKBaseService @Autowired constructor(
             else -> {
                 gal.add(Calendar.HOUR_OF_DAY, -1)
                 "SELECT minute1, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 100656_cgs_report_game_all " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute1 " +
@@ -160,7 +160,7 @@ class BKBaseService @Autowired constructor(
         result: MutableMap<String, Int> = mutableMapOf()
     ): Map<String, Int> {
         val sql = "select zone_id,inner_ip,count(distinct thedate) as cnt " +
-            "from 100656_ads_desktop_daily_activity_res " +
+            "from 100656_ads_desktop_daily_activity_res.hdfs " +
             "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
             "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
 
@@ -191,7 +191,7 @@ class BKBaseService @Autowired constructor(
         result: MutableMap<String, Int> = mutableMapOf()
     ): Map<String, Int> {
         val sql = "select zone_id,inner_ip,sum(activity_minus_cnt) as cnt " +
-            "from 100656_ads_desktop_daily_activity_res " +
+            "from 100656_ads_desktop_daily_activity_res.hdfs " +
             "where thedate > '${date.format(theDateFormat)}' " +
             "group by inner_ip,zone_id order by inner_ip LIMIT $limit OFFSET $offset"
 
@@ -256,8 +256,8 @@ class BKBaseService @Autowired constructor(
         offset: Int = 0,
         result: MutableMap<String, String> = mutableMapOf()
     ): Map<String, String> {
-        val sql = "SELECT node_id, MAX(dtEventTime) " +
-            "FROM 100656_cgs_report_game_all " +
+        val sql = "SELECT node_id, MAX(dtEventTime) as Maxtime " +
+            "FROM 100656_cgs_report_game_all.hdfs " +
             "WHERE thedate >= '${date.format(theDateFormat)}' " +
             "GROUP BY node_id order by node_id LIMIT $limit OFFSET $offset"
 
@@ -265,7 +265,7 @@ class BKBaseService @Autowired constructor(
 
         try {
             resp.data?.list?.forEach { l ->
-                result.put(l["node_id"] as String, l["_col1"] as String)
+                result.put(l["node_id"] as String, l["Maxtime"] as String)
             } ?: return result
             if (resp.data.list.size == limit) {
                 fetchOnlineIps(
@@ -283,8 +283,8 @@ class BKBaseService @Autowired constructor(
     fun fetchLastOnline(
         nodeIds: Set<String>
     ): Map<String, String> {
-        val sql = "SELECT node_id, MAX(dtEventTime) " +
-            "FROM 100656_cgs_report_game_all " +
+        val sql = "SELECT node_id, MAX(dtEventTime) as Maxtime " +
+            "FROM 100656_cgs_report_game_all.hdfs " +
             "WHERE where node_id in (${
                 nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
             }) " +
@@ -326,7 +326,7 @@ class BKBaseService @Autowired constructor(
         val result = mutableMapOf<String, String>()
         try {
             resp.data?.list?.forEach { l ->
-                result[l["node_id"] as String] = l["_col1"] as String
+                result[l["node_id"] as String] = l["Maxtime"] as String
             } ?: return result
         } catch (e: Exception) {
             logger.error("fetchLastOnline parse data error", e)
