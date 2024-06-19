@@ -42,6 +42,7 @@ import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.ProjectNameFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
@@ -124,28 +125,49 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                 ).toJsonStr()
             )
             val projectRelativePath = WebhookUtils.getRelativePath(repository.url)
-            val pathFilter = PathFilterFactory.newPathFilter(
-                PathFilterConfig(
-                    pathFilterType = pathFilterType,
-                    pipelineId = pipelineId,
-                    triggerOnPath = event.files.map { it.file },
-                    excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
-                        WebhookUtils.getFullPath(
-                            projectRelativePath = projectRelativePath,
-                            relativeSubPath = path
+            val pathFilter = object : WebhookFilter {
+                override fun doFilter(response: WebhookFilterResponse): Boolean {
+                    return PathFilterFactory.newPathFilter(
+                        PathFilterConfig(
+                            pathFilterType = pathFilterType,
+                            pipelineId = pipelineId,
+                            triggerOnPath = event.files.map { it.file },
+                            excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
+                                WebhookUtils.getFullPath(
+                                    projectRelativePath = projectRelativePath,
+                                    relativeSubPath = path
+                                )
+                            },
+                            includedPaths = getIncludePaths(projectRelativePath),
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
-                    },
-                    includedPaths = getIncludePaths(projectRelativePath),
-                    includedFailedReason = I18Variable(
-                        code = WebhookI18nConstants.PATH_NOT_MATCH,
-                        params = listOf()
-                    ).toJsonStr(),
-                    excludedFailedReason = I18Variable(
-                        code = WebhookI18nConstants.PATH_IGNORED,
-                        params = listOf()
-                    ).toJsonStr()
-                )
-            )
+                    ).doFilter(response) || PathFilterFactory.newPathFilter(
+                        // 针对超大提交事件的兜底判断
+                        PathFilterConfig(
+                            pathFilterType = pathFilterType,
+                            pipelineId = pipelineId,
+                            triggerOnPath = event.paths,
+                            excludedPaths = emptyList(),
+                            includedPaths = getIncludePaths(projectRelativePath),
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
+                        )
+                    ).doFilter(response)
+                }
+            }
             return listOf(projectNameFilter, userFilter, pathFilter)
         }
     }
