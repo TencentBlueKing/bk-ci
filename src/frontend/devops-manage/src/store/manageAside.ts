@@ -32,7 +32,7 @@ export default defineStore('manageAside', () => {
   function handleAsideClick(item) {
     // 调用接口，获取侧边表格数据和折叠面板数
     asideItem.value = item;
-    groupTableStore.fetchuserGroupList(item.id);
+    groupTableStore.fetchUserGroupList(item.id);
   }
   /**
    * 人员组织侧边栏页码切换
@@ -90,6 +90,7 @@ export default defineStore('manageAside', () => {
           theme: 'success',
           message: `${value.name} 已成功移出本项目。`,
         });
+        manageAsideRef.handOverClose();
       }
     }
   }

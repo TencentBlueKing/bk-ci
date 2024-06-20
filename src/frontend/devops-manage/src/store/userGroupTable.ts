@@ -1,6 +1,6 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 
 export interface GroupTableType {
   groupId: number;
@@ -70,11 +70,14 @@ export default defineStore('userGroupTable', () => {
   const selectedData = reactive<SelectedDataType>({});
   const selectProjectlist = ref<GroupTableType[]>([]);
   const selectSourceList = ref<SourceType[]>([]);
+  const selectedRow = ref<GroupTableType | null>(null);
+  const selectedTableGroupId = ref('');
+  const selectedLength = computed(() => Object.keys(selectedData).length);
 
   /**
    * 获取sourceList（需处理数据），collapseList
    */
-  async function fetchuserGroupList(groupId: string) {
+  async function fetchUserGroupList(groupId: string) {
     sourceList.value = []
     try {
       isLoading.value = true;
@@ -237,22 +240,28 @@ export default defineStore('userGroupTable', () => {
    * 续期按钮点击
    * @param row 行数据
    */
-  function handleRenewal(row: GroupTableType) {
+  function handleRenewal(row: GroupTableType, groupId: string) {
+    selectedRow.value = row;
     isShowRenewal.value = true;
+    selectedTableGroupId.value = groupId;
   }
   /**
    * 移交按钮点击
    * @param row 行数据
    */
-  function handleHandOver(row: GroupTableType) {
+  function handleHandOver(row: GroupTableType, groupId: string, index) {
+    selectedRow.value = row;
     isShowHandover.value = true;
+    selectedTableGroupId.value = groupId;
   }
   /**
    * 移出按钮点击
    * @param row 行数据
    */
-  function handleRemove(row: GroupTableType) {
+  function handleRemove(row: GroupTableType, groupId: string) {
+    selectedRow.value = row;
     isShowRemove.value = true;
+    selectedTableGroupId.value = groupId;
   }
   /**
    * 获取表格选择的数据
@@ -263,8 +272,8 @@ export default defineStore('userGroupTable', () => {
         const newSelectedData = !selectedData[groupId] ? [] : selectedData[groupId]
         selectedData[groupId] = newSelectedData.concat(rowData.row);
       } else {
-        !selectedData[groupId].length && handleClear(groupId);
         selectedData[groupId] = selectedData[groupId].filter(item => item !== rowData.row);
+        !selectedData[groupId].length && handleClear(groupId);
       }
     } else {
       rowData.checked ? (selectedData[groupId] = rowData.data) : handleClear(groupId);
@@ -331,9 +340,12 @@ export default defineStore('userGroupTable', () => {
     isShowRemove,
     selectedData,
     unableMoveLength,
+    selectedLength,
     selectProjectlist,
     selectSourceList,
-    fetchuserGroupList,
+    selectedRow,
+    selectedTableGroupId,
+    fetchUserGroupList,
     handleRenewal,
     handleHandOver,
     handleRemove,

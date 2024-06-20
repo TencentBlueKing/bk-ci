@@ -211,7 +211,8 @@ watch(() => props.memberList, (newData) => {
 });
 
 defineExpose({
-  handOverfail
+  handOverfail,
+  handOverClose,
 });
 
 function handleClick(item) {

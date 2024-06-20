@@ -14,35 +14,35 @@
         <manage-aside
           ref="manageAsideRef"
           :project-id="projectId"
-          :member-list="manageAsideStore.memberList"
-          :person-list="manageAsideStore.personList"
-          :over-table="manageAsideStore.overTable"
-          @handle-click="manageAsideStore.handleAsideClick"
-          @page-change="manageAsideStore.handleAsidePageChange"
-          @get-person-list="manageAsideStore.handleShowPerson"
-          @remove-confirm="handleAsideRemoveConfirm"
+          :member-list="memberList"
+          :person-list="personList"
+          :over-table="overTable"
+          @handle-click="handleAsideClick"
+          @page-change="handleAsidePageChange"
+          @get-person-list="handleShowPerson"
+          @remove-confirm="asideRemoveConfirm"
         />
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
           <bk-button :disabled="!isPermission" @click="batchRenewal">批量续期</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="manageAsideStore.asideItem?.type==='USER'">批量移交</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='USER'">批量移交</bk-button>
           <bk-button :disabled="!isPermission" @click="batchRemove">批量移出</bk-button>
         </div>
         <div v-if="isPermission" class="group-tab">
           <GroupTab
             :is-show-operation="true"
-            :aside-item="manageAsideStore.asideItem"
-            :source-list="groupTableStore.sourceList"
-            :selected-data="groupTableStore.selectedData"
-            @collapse-click="groupTableStore.collapseClick"
-            @handle-renewal="groupTableStore.handleRenewal"
-            @handle-hand-over="groupTableStore.handleHandOver"
-            @handle-remove="groupTableStore.handleRemove"
-            @get-select-list="groupTableStore.getSelectList"
-            @handle-select-all-data="groupTableStore.handleSelectAllData"
-            @handle-load-more="groupTableStore.handleLoadMore"
-            @handle-clear="groupTableStore.handleClear"
+            :aside-item="asideItem"
+            :source-list="sourceList"
+            :selected-data="selectedData"
+            @collapse-click="collapseClick"
+            @handle-renewal="handleRenewal"
+            @handle-hand-over="handleHandOver"
+            @handle-remove="handleRemove"
+            @get-select-list="getSelectList"
+            @handle-select-all-data="handleSelectAllData"
+            @handle-load-more="handleLoadMore"
+            @handle-clear="handleClear"
           />
         </div>
         <div v-else class="no-permission">
@@ -56,13 +56,13 @@
     theme="danger"
     confirm-text="提交"
     class="renewal-dialog"
-    :is-show="groupTableStore.isShowRenewal"
-    @closed="() => groupTableStore.isShowRenewal = false"
+    :is-show="isShowRenewal"
+    @closed="() => isShowRenewal = false"
     @confirm="handleRenewalConfirm"
   >
     <template #header>
       续期
-      <span class="dialog-header"> {{manageAsideStore.asideItem.name}} </span>
+      <span class="dialog-header"> {{asideItem.name}} </span>
     </template>
     <template #default>
       <p class="renewal-text">
@@ -70,7 +70,7 @@
       </p>
       <p class="renewal-text">
         <span class="required">授权期限</span>
-        <TimeLimit @change-time="handleChangeTime" />
+        <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
       </p>
       <p class="renewal-text">
         <span>到期时间：</span> 已过期
@@ -82,13 +82,13 @@
     theme="danger"
     confirm-text="移交"
     class="handover-dialog"
-    :is-show="groupTableStore.isShowHandover"
-    @closed="() => groupTableStore.isShowHandover = false"
+    :is-show="isShowHandover"
+    @closed="() => isShowHandover = false"
     @confirm="handleHandoverConfirm"
   >
     <template #header>
       移交
-      <span class="dialog-header"> {{manageAsideStore.asideItem.name}} </span>
+      <span class="dialog-header"> {{asideItem.name}} </span>
     </template>
     <template #default>
       <p class="handover-text">
@@ -124,8 +124,8 @@
     header-align="center"
     footer-align="center"
     class="remove-dialog"
-    :is-show="groupTableStore.isShowRemove"
-    @closed="() => groupTableStore.isShowRemove = false"
+    :is-show="isShowRemove"
+    @closed="() => isShowRemove = false"
     @confirm="handleRemoveConfirm"
   >
     <template #header>
@@ -133,7 +133,7 @@
     </template>
     <template #default>
       <p class="remove-text">
-        <span>待移出用户：</span> {{manageAsideStore.asideItem.name}}
+        <span>待移出用户：</span> {{asideItem.name}}
       </p>
       <p class="remove-text">
         <span>所在用户组：</span> 开发人员
@@ -152,17 +152,17 @@
         <p class="main-desc">
           已选择<span class="desc-primary"> {{ selectedLength }} </span>个用户组
           <span>；其中
-            <span class="desc-warn"> {{ groupTableStore.unableMoveLength }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
+            <span class="desc-warn"> {{ unableMoveLength }} </span>个用户组<span class="desc-warn">无法移出</span>，本次操作将忽略
           </span>
         </p>
         <div>
           <!-- 这个要有分页的点击事件 -->
           <GroupTab
-            :project-table="groupTableStore.selectProjectlist"
-            :source-list="groupTableStore.selectSourceList"
+            :project-table="selectProjectlist"
+            :source-list="selectSourceList"
             :is-show-operation="false"
-            :pagination="groupTableStore.pagination"
-            :aside-item="manageAsideStore.asideItem"
+            :pagination="pagination"
+            :aside-item="asideItem"
           />
         </div>
       </div>
@@ -171,11 +171,11 @@
           <div v-if="sliderTitle === '批量续期'">
             <div class="main-line">
               <p class="main-label">续期对象</p>
-              <span class="main-text">用户： {{ manageAsideStore.asideItem.name }}</span>
+              <span class="main-text">用户： {{ asideItem.name }}</span>
             </div>
             <div class="main-line">
               <p class="main-label">续期时长</p>
-              <TimeLimit @change-time="handleChangeTime" />
+              <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
             </div>
           </div>
           <div v-if="sliderTitle === '批量移交'">
@@ -205,7 +205,7 @@
                 确认从以上
                 <span class="remove-num">{{ selectedLength }}</span>
                 个用户组中移出
-                <span class="remove-person">{{ manageAsideStore.asideItem.name }}</span>
+                <span class="remove-person">{{ asideItem.name }}</span>
                 吗？
               </p>
             </div>
@@ -234,10 +234,12 @@ import http from '@/http/api';
 import NoPermission from '../no-enable-permission/no-permission.vue';
 import userGroupTable from "@/store/userGroupTable";
 import useManageAside from "@/store/manageAside";
+import { storeToRefs } from 'pinia';
 
 const { t } = useI18n();
 const route = useRoute();
 const formRef = ref('');
+const renewalRef = ref(null);
 const projectId = computed(() => route.params?.projectCode);
 const expiredAt = ref();
 const isLoading = ref(false);
@@ -280,12 +282,51 @@ const searchData = ref([
 ]);
 const isPermission = ref(true);
 const manageAsideRef = ref(null);
-const selectedLength = computed(() => Object.keys(groupTableStore.selectedData).length);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
 
+const {
+  pagination,
+  sourceList,
+  isShowRenewal,
+  isShowHandover,
+  isShowRemove,
+  selectedData,
+  selectedLength,
+  unableMoveLength,
+  selectProjectlist,
+  selectSourceList,
+  selectedRow,
+  selectedTableGroupId,
+} = storeToRefs(groupTableStore);
+const {
+  handleRenewal,
+  handleHandOver,
+  handleRemove,
+  getSelectList,
+  getSourceList,
+  handleLoadMore,
+  handleSelectAllData,
+  handleClear,
+  collapseClick,
+} = groupTableStore;
+
+const {
+  asideItem,
+  memberList,
+  personList,
+  overTable,
+} = storeToRefs(manageAsideStore);
+const { 
+  handleAsideClick,
+  handleAsidePageChange,
+  handleShowPerson,
+  handleAsideRemoveConfirm,
+  getProjectMembers,
+} = manageAsideStore;
+
 onMounted(() => {
-  manageAsideStore.getProjectMembers(projectId.value);
+  getProjectMembers(projectId.value);
 });
 
 watch(searchValue, (nv) => {
@@ -295,13 +336,21 @@ watch(searchValue, (nv) => {
       manageAsideStore.userName = val?.values[0]?.name;
     };
   });
-  manageAsideStore.getProjectMembers(projectId.value);
+  getProjectMembers(projectId.value);
 });
 /**
  * 续期弹窗提交事件
  */
 function handleRenewalConfirm() {
-  console.log(expiredAt.value, '授权期限');
+  console.log(expiredAt.value, '授权期限', selectedRow.value, selectedTableGroupId.value);
+
+  const itemNew = sourceList.value.find(group => group.id === selectedTableGroupId.value).tableData.find(item => item.groupId === selectedRow.value.groupId)
+  if(itemNew){
+    // expiredAt.value需要处理下
+    itemNew.joinedTime = expiredAt.value
+  }
+
+  renewalRef.value.initTime();
   groupTableStore.isShowRenewal = false;
 };
 /**
@@ -315,7 +364,7 @@ function handleHandoverConfirm() {
  * 移出弹窗提交事件
  */
 function handleRemoveConfirm() {
-  console.log(manageAsideStore.asideItem,'移出的数据');
+  console.log(asideItem,'移出的数据');
   groupTableStore.isShowRemove = false;
 }
 /**
@@ -328,40 +377,40 @@ function handleChangeTime(value) {
  * 批量续期
  */
 function batchRenewal() {
-  if (!selectedLength.value) {
+  if (!groupTableStore.selectedLength) {
     Message('请先选择用户组');
     return;
   }
   sliderTitle.value = '批量续期';
   batchFlag.value = 'renewal';
   isShowSlider.value = true;
-  groupTableStore.getSourceList();
+  getSourceList();
 }
 /**
  * 批量移交
  */
 function batchHandover() {
-  if (!selectedLength.value) {
+  if (!groupTableStore.selectedLength) {
     Message('请先选择用户组');
     return;
   }
   sliderTitle.value = '批量移交';
   batchFlag.value = 'handover';
   isShowSlider.value = true;
-  groupTableStore.getSourceList();
+  getSourceList();
 }
 /**
  * 批量移出
  */
 function batchRemove() {
-  if (!selectedLength.value) {
+  if (!groupTableStore.selectedLength) {
     Message('请先选择用户组');
     return;
   }
   sliderTitle.value = '批量移出';
   batchFlag.value = 'remove';
   isShowSlider.value = true;
-  groupTableStore.getSourceList();
+  getSourceList();
 }
 /**
  * sideslider 关闭
@@ -377,25 +426,26 @@ function batchCancel() {
 async function batchConfirm(batchFlag) {
   if (batchFlag === 'renewal') {
     const params = [{
-      member: manageAsideStore.asideItem.name,
-      groupId: manageAsideStore.asideItem.id,
+      member: asideItem.name,
+      groupId: asideItem.id,
       expiredAt: expiredAt.value,
     }];
     const res = await http.batchRenewal(projectId.value, params);
+    renewalRef.value.initTime(); 
   } else if (batchFlag === 'handover') {
     const flag = await formRef.value.validate();
     if (flag) {
       const params = [{
-        groupId: manageAsideStore.asideItem.id,
-        handoverFrom: manageAsideStore.asideItem.name,
+        groupId: asideItem.id,
+        handoverFrom: asideItem.name,
         handoverTo: handOverForm.value.name,
       }];
       const res = await http.batchHandover(projectId.value, params);
     }
   } else if (batchFlag === 'remove') {
     const params = [{
-      groupId: manageAsideStore.asideItem.id,
-      member: manageAsideStore.asideItem.name,
+      groupId: asideItem.id,
+      member: asideItem.name,
     }];
     const res = await http.batchRemove(projectId.value, params);
   }
@@ -407,8 +457,8 @@ async function batchConfirm(batchFlag) {
   }, 1000);
 }
 
-function handleAsideRemoveConfirm(value) {
-  manageAsideStore.handleAsideRemoveConfirm(value, manageAsideRef.value);
+function asideRemoveConfirm(value) {
+  handleAsideRemoveConfirm(value, manageAsideRef.value);
 }
 </script>
 

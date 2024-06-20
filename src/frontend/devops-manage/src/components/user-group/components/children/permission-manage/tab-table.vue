@@ -40,7 +40,7 @@
       </template>
     </bk-table-column>
     <bk-table-column label="操作" v-if="isShowOperation">
-      <template #default="{row}">
+      <template #default="{row, index}">
         <div class="operation-btn">
           <bk-button
             text
@@ -51,7 +51,7 @@
             text
             theme="primary"
             style="margin:0 8px"
-            @click="handleHandOver(row)"
+            @click="handleHandOver(row, index)"
           >移交</bk-button>
           <span
             v-bk-tooltips="{
@@ -159,21 +159,21 @@ function handleClear() {
  * @param row 行数据
  */
 function handleRenewal(row) {
-  emit('handleRenewal', row);
+  emit('handleRenewal', row, groupId.value);
 }
 /**
  * 移交按钮点击
  * @param row 行数据
  */
-function handleHandOver(row) {
-  emit('handleHandOver', row);
+function handleHandOver(row, index) {
+  emit('handleHandOver', row, groupId.value, index);
 }
 /**
  * 移出按钮点击
  * @param row 行数据
  */
 function handleRemove(row) {
-  emit('handleRemove', row);
+  emit('handleRemove', row, groupId.value);
 }
 /**
  * 加载更多

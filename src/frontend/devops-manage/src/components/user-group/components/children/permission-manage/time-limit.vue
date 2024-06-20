@@ -39,7 +39,7 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n';
-import { ref, defineProps, defineEmits, onMounted, nextTick } from 'vue';
+import { ref, defineExpose, defineEmits, onMounted, nextTick } from 'vue';
 
 const { t } = useI18n();
 const emit = defineEmits(['changeTime']);
@@ -52,10 +52,17 @@ const timeFilters = ref({
   15552000: t('6个月'),
   31104000: t('12个月'),
 });
+defineExpose({
+  initTime,
+});
 
 onMounted(()=>{
   emit('changeTime', currentActive.value)
 })
+
+function initTime(){
+  currentActive.value = 2592000;
+}
 /**
  * 传入的值与当前时间戳秒数相加
  * @param value 传入的值

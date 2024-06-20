@@ -18,14 +18,14 @@
               :group-id="projectTable.id"
               :group-total="projectTable.groupTotal"
               :pagination="pagination"
-              :selected-data="groupTableStore.selectedData"
-              @handle-renewal="groupTableStore.handleRenewal"
-              @handle-hand-over="groupTableStore.handleHandOver"
-              @handle-remove="groupTableStore.handleRemove"
-              @get-select-list="groupTableStore.getSelectList"
-              @handle-select-all-data="groupTableStore.handleSelectAllData"
-              @handle-load-more="groupTableStore.handleLoadMore"
-              @handle-clear="groupTableStore.handleClear"
+              :selected-data="selectedData"
+              @handle-renewal="handleRenewal"
+              @handle-hand-over="handleHandOver"
+              @handle-remove="handleRemove"
+              @get-select-list="getSelectList"
+              @handle-select-all-data="handleSelectAllData"
+              @handle-load-more="handleLoadMore"
+              @handle-clear="handleClear"
             />
           </template>
         </bk-collapse-panel>
@@ -49,14 +49,14 @@
               :group-id="item.id"
               :group-total="item.groupTotal"
               :pagination="pagination"
-              :selected-data="groupTableStore.selectedData"
-              @handle-renewal="groupTableStore.handleRenewal"
-              @handle-hand-over="groupTableStore.handleHandOver"
-              @handle-remove="groupTableStore.handleRemove"
-              @get-select-list="groupTableStore.getSelectList"
-              @handle-select-all-data="groupTableStore.handleSelectAllData"
-              @handle-load-more="groupTableStore.handleLoadMore"
-              @handle-clear="groupTableStore.handleClear"
+              :selected-data="selectedData"
+              @handle-renewal="handleRenewal"
+              @handle-hand-over="handleHandOver"
+              @handle-remove="handleRemove"
+              @get-select-list="getSelectList"
+              @handle-select-all-data="handleSelectAllData"
+              @handle-load-more="handleLoadMore"
+              @handle-clear="handleClear"
             />
           </template>
         </bk-collapse-panel>
@@ -75,6 +75,17 @@ const groupTableStore = userGroupTable();
 const projectTable = computed(() => props.sourceList[0]);
 const sourceTable= computed(() => props.sourceList.slice(1));
 
+const {
+  handleRenewal,
+  handleHandOver,
+  handleRemove,
+  getSelectList,
+  handleLoadMore,
+  handleSelectAllData,
+  handleClear,
+} = groupTableStore;
+
+
 const props = defineProps({
   isShowOperation: {
     type: Boolean,
@@ -83,7 +94,10 @@ const props = defineProps({
   pagination: {
     type: Object,
   },
-
+  selectedData: {
+    type: Array,
+    default: () => [],
+  },
   sourceList: {
     type: Array,
     default: () => [],
