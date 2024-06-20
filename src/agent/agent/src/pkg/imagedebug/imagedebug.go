@@ -174,7 +174,7 @@ func CreateDebugContainer(
 	// 先判断本地是否存在已经运行的容器
 	containerId, ok, err := checkLoclRunningContainer(ctx, cli, debugInfo.BuildId, debugInfo.VmSeqId)
 	if err != nil {
-		return errors.Wrapf(err, "check local running container error")
+		return errors.Wrap(err, "check local running container error")
 	}
 	if ok {
 		imageDebugLogs.Infof("use local exist container %s", containerId)
@@ -506,7 +506,7 @@ func CreateExecServer(
 	if len(errChan) > 0 {
 		err = <-errChan
 		imageDebugLogs.WithError(err).Error("start exec server error")
-		return errors.Wrapf(err, "start exec server error")
+		return errors.Wrap(err, "start exec server error")
 	}
 
 	exec, err := backend.CreateExecNoHttp(&WebSocketConfig{

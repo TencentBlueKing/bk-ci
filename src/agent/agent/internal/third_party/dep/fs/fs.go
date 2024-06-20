@@ -69,12 +69,12 @@ func renameByCopy(src, dst string) error {
 	if dir, _ := IsDir(src); dir {
 		cerr = CopyDir(src, dst)
 		if cerr != nil {
-			cerr = errors.Wrapf(cerr, "copying directory failed")
+			cerr = errors.Wrap(cerr, "copying directory failed")
 		}
 	} else {
 		cerr = copyFile(src, dst)
 		if cerr != nil {
-			cerr = errors.Wrapf(cerr, "copying file failed")
+			cerr = errors.Wrap(cerr, "copying file failed")
 		}
 	}
 
@@ -141,13 +141,13 @@ func CopyDir(src, dst string) error {
 
 		if entry.IsDir() {
 			if err = CopyDir(srcPath, dstPath); err != nil {
-				return errors.Wrapf(err, "copying directory failed")
+				return errors.Wrap(err, "copying directory failed")
 			}
 		} else {
 			// This will include symlinks, which is what we want when
 			// copying things.
 			if err = copyFile(srcPath, dstPath); err != nil {
-				return errors.Wrapf(err, "copying file failed")
+				return errors.Wrap(err, "copying file failed")
 			}
 		}
 	}
@@ -161,7 +161,7 @@ func CopyDir(src, dst string) error {
 // of the source file. The file mode will be copied from the source.
 func copyFile(src, dst string) (err error) {
 	if sym, err := IsSymlink(src); err != nil {
-		return errors.Wrapf(err, "symlink check failed")
+		return errors.Wrap(err, "symlink check failed")
 	} else if sym {
 		if err := cloneSymlink(src, dst); err != nil {
 			if runtime.GOOS == "windows" {

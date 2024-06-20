@@ -125,7 +125,7 @@ func InstallAgent() error {
 
 	err := fileutil.SetExecutable(startCmd)
 	if err != nil {
-		return errors.Wrapf(err, "chmod install script failed")
+		return errors.Wrap(err, "chmod install script failed")
 	}
 
 	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
