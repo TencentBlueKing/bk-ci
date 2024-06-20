@@ -464,9 +464,9 @@
                             this.$nextTick(() => {
                                 this.initEditor('executeScriptLog2')
                             })
-                            await this.fetchInstallCommand()
                             await this.fetchInstallAgentStatus()
                             await this.fetchInstallAgentTaskLog()
+                            await this.fetchInstallCommand()
                         } else {
                             this.isEditing = false
                             this.isLoading = false
