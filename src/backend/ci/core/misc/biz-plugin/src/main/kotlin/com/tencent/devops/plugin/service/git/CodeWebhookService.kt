@@ -86,8 +86,7 @@ class CodeWebhookService @Autowired constructor(
     private val pluginGithubCheckDao: PluginGithubCheckDao,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val scmCheckService: ScmCheckService,
-    private val gitWebhookUnlockService: GitWebhookUnlockService
+    private val scmCheckService: ScmCheckService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
@@ -389,10 +388,6 @@ class CodeWebhookService @Autowired constructor(
                         pipelineName = pipelineName,
                         description = description
                     )
-                    // mr锁定并且状态为pending时才需要解锁hook锁
-                    if (block && state == GIT_COMMIT_CHECK_STATE_PENDING) {
-                        gitWebhookUnlockService.addUnlockHookLockEvent(projectId, variables)
-                    }
                     return
                 }
             }
