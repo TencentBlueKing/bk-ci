@@ -138,11 +138,9 @@ function handleSelectionChange(val) {
  */
 function handleSelectAllData() {
   const selectLength = refTable.value.getSelection().length
-  // 这里的10是该用户组表格数据total
-  if(!isCurrentAll.value && selectLength != 10) {
+  if(!isCurrentAll.value && selectLength != groupTotal.value) {
     refTable.value.toggleAllSelection();
   }
-  console.log(refTable.value.getSelection().length);
   emit('handleSelectAllData', groupId.value)
 }
 /**

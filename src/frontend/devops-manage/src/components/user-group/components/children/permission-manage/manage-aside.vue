@@ -197,6 +197,9 @@ const props = defineProps({
   overTable: {
     type: Array,
     default: () => [],
+  },
+  projectId: {
+    type: String,
   }
 });
 const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm']);
@@ -216,7 +219,7 @@ function handleClick(item) {
   emit('handleClick', item);
 }
 function pageChange(current) {
-  emit('pageChange', current);
+  emit('pageChange', current, projectId.value);
 }
 /**
  * 移出项目

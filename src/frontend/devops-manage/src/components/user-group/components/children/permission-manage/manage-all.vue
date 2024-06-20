@@ -13,25 +13,26 @@
       <div class="manage-aside">
         <manage-aside
           ref="manageAsideRef"
-          :member-list="memberList"
-          :person-list="personList"
-          :over-table="handOverTable"
-          @handle-click="handleAsideClick"
-          @page-change="handleAsidePageChange"
-          @get-person-list="handleShowPerson"
+          :project-id="projectId"
+          :member-list="manageAsideStore.memberList"
+          :person-list="manageAsideStore.personList"
+          :over-table="manageAsideStore.overTable"
+          @handle-click="manageAsideStore.handleAsideClick"
+          @page-change="manageAsideStore.handleAsidePageChange"
+          @get-person-list="manageAsideStore.handleShowPerson"
           @remove-confirm="handleAsideRemoveConfirm"
         />
       </div>
       <div class="manage-content">
         <div class="manage-content-btn">
           <bk-button :disabled="!isPermission" @click="batchRenewal">批量续期</bk-button>
-          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="asideItem?.type==='USER'">批量移交</bk-button>
+          <bk-button :disabled="!isPermission" @click="batchHandover" v-if="manageAsideStore.asideItem?.type==='USER'">批量移交</bk-button>
           <bk-button :disabled="!isPermission" @click="batchRemove">批量移出</bk-button>
         </div>
-        <div v-if="isPermission">
+        <div v-if="isPermission" class="group-tab">
           <GroupTab
             :is-show-operation="true"
-            :aside-item="asideItem"
+            :aside-item="manageAsideStore.asideItem"
             :source-list="groupTableStore.sourceList"
             :selected-data="groupTableStore.selectedData"
             @collapse-click="groupTableStore.collapseClick"
@@ -61,7 +62,7 @@
   >
     <template #header>
       续期
-      <span class="dialog-header"> {{asideItem.name}} </span>
+      <span class="dialog-header"> {{manageAsideStore.asideItem.name}} </span>
     </template>
     <template #default>
       <p class="renewal-text">
@@ -87,7 +88,7 @@
   >
     <template #header>
       移交
-      <span class="dialog-header"> {{asideItem.name}} </span>
+      <span class="dialog-header"> {{manageAsideStore.asideItem.name}} </span>
     </template>
     <template #default>
       <p class="handover-text">
@@ -132,7 +133,7 @@
     </template>
     <template #default>
       <p class="remove-text">
-        <span>待移出用户：</span> {{asideItem.name}}
+        <span>待移出用户：</span> {{manageAsideStore.asideItem.name}}
       </p>
       <p class="remove-text">
         <span>所在用户组：</span> 开发人员
@@ -161,7 +162,7 @@
             :source-list="groupTableStore.selectSourceList"
             :is-show-operation="false"
             :pagination="groupTableStore.pagination"
-            :aside-item="asideItem"
+            :aside-item="manageAsideStore.asideItem"
           />
         </div>
       </div>
@@ -170,7 +171,7 @@
           <div v-if="sliderTitle === '批量续期'">
             <div class="main-line">
               <p class="main-label">续期对象</p>
-              <span class="main-text">用户： {{ asideItem.name }}</span>
+              <span class="main-text">用户： {{ manageAsideStore.asideItem.name }}</span>
             </div>
             <div class="main-line">
               <p class="main-label">续期时长</p>
@@ -204,7 +205,7 @@
                 确认从以上
                 <span class="remove-num">{{ selectedLength }}</span>
                 个用户组中移出
-                <span class="remove-person">{{ asideItem.name }}</span>
+                <span class="remove-person">{{ manageAsideStore.asideItem.name }}</span>
                 吗？
               </p>
             </div>
@@ -232,6 +233,7 @@ import TimeLimit from './time-limit.vue';
 import http from '@/http/api';
 import NoPermission from '../no-enable-permission/no-permission.vue';
 import userGroupTable from "@/store/userGroupTable";
+import useManageAside from "@/store/manageAside";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -242,7 +244,6 @@ const isLoading = ref(false);
 const isShowSlider = ref(false);
 const sliderTitle = ref('批量续期');
 const batchFlag = ref();
-const memberPagination = ref({ limit: 10, current: 1 });
 const handOverForm = ref({
   name: '',
 });
@@ -277,89 +278,25 @@ const searchData = ref([
     ],
   },
 ]);
-const memberList = ref([]);
-const asideItem = ref();
 const isPermission = ref(true);
-const personList = ref([]);
 const manageAsideRef = ref(null);
-const handOverTable = ref([]);
-const userName = ref('');
 const selectedLength = computed(() => Object.keys(groupTableStore.selectedData).length);
 const groupTableStore = userGroupTable();
+const manageAsideStore = useManageAside();
 
 onMounted(() => {
-  getProjectMembers();
+  manageAsideStore.getProjectMembers(projectId.value);
 });
 
 watch(searchValue, (nv) => {
-  userName.value = '';
+  manageAsideStore.userName = '';
   nv.forEach((val) => {
     if (val.id === 1) {
-      userName.value = val?.values[0]?.name;
+      manageAsideStore.userName = val?.values[0]?.name;
     };
   });
-  getProjectMembers();
+  manageAsideStore.getProjectMembers(projectId.value);
 });
-
-/**
- * 获取项目下全体成员
- */
-async function getProjectMembers() {
-  const params = {
-    page: memberPagination.value.current,
-    pageSize: memberPagination.value.limit,
-  };
-
-  if (userName.value) {
-    params.userName = userName.value;
-  }
-  const res = await http.getProjectMembers(projectId.value, params);
-  // memberList.value = res.records
-  memberList.value = [
-    {
-      id: 12345,
-      name: 'IEG互动娱乐事业群',
-      type: 'DEPARTMENT',
-    }, {
-      id: 2,
-      name: '余姣姣',
-      type: 'USER',
-    }, {
-      id: 3,
-      name: '王五',
-      type: 'USER',
-    },
-    {
-      id: 4,
-      name: 'SRE平台研发中心',
-      type: 'DEPARTMENT',
-    }, {
-      id: 5,
-      name: '张三',
-      type: 'USER',
-    }, {
-      id: 6,
-      name: '李四',
-      type: 'USER',
-    },
-  ];
-}
-/**
- * 人员组织侧边栏页码切换
- */
-async function handleAsidePageChange(current) {
-  if (memberPagination.value.current !== current) {
-    memberPagination.value.current = current;
-    getProjectMembers();
-  }
-}
-/**
- * 人员组织侧边栏点击事件
- */
-function handleAsideClick(item) {
-  // 调用接口，获取侧边表格数据和折叠面板数据，格式化表格数据 projectTable和sourceList和collapseList
-  asideItem.value = item;
-}
 /**
  * 续期弹窗提交事件
  */
@@ -378,7 +315,7 @@ function handleHandoverConfirm() {
  * 移出弹窗提交事件
  */
 function handleRemoveConfirm() {
-  console.log(asideItem.value,'移出的数据');
+  console.log(manageAsideStore.asideItem,'移出的数据');
   groupTableStore.isShowRemove = false;
 }
 /**
@@ -440,8 +377,8 @@ function batchCancel() {
 async function batchConfirm(batchFlag) {
   if (batchFlag === 'renewal') {
     const params = [{
-      member: asideItem.value.name,
-      groupId: asideItem.value.id,
+      member: manageAsideStore.asideItem.name,
+      groupId: manageAsideStore.asideItem.id,
       expiredAt: expiredAt.value,
     }];
     const res = await http.batchRenewal(projectId.value, params);
@@ -449,16 +386,16 @@ async function batchConfirm(batchFlag) {
     const flag = await formRef.value.validate();
     if (flag) {
       const params = [{
-        groupId: asideItem.value.id,
-        handoverFrom: asideItem.value.name,
+        groupId: manageAsideStore.asideItem.id,
+        handoverFrom: manageAsideStore.asideItem.name,
         handoverTo: handOverForm.value.name,
       }];
       const res = await http.batchHandover(projectId.value, params);
     }
   } else if (batchFlag === 'remove') {
     const params = [{
-      groupId: asideItem.value.id,
-      member: asideItem.value.name,
+      groupId: manageAsideStore.asideItem.id,
+      member: manageAsideStore.asideItem.name,
     }];
     const res = await http.batchRemove(projectId.value, params);
   }
@@ -469,47 +406,9 @@ async function batchConfirm(batchFlag) {
     formRef.value?.clearValidate();
   }, 1000);
 }
-/**
- * 人员列表数据获取
- */
-async function handleShowPerson(value) {
-  const res = await http.deptUsers(value.id);
-  personList.value = res.map(item => ({ person: item }));
-}
-/**
- * 组织移出项目
- */
-const flag = ref(true);
-async function handleAsideRemoveConfirm(value) {
-  const res = await http.removeMemberFromProject(value.id, {
-    type: value.type,
-    member: value.name,
-  });
-  // 这里根据返回判断移出成功和失败的情况
-  if (flag.value) {
-    manageAsideRef.value?.handOverfail(true);
-    handOverTable.value = [
-      {
-        id: 1,
-        code: 'bkdevops-plugins-test/fayenodejstesa',
-        reason: '指定用户未操作过 OAuth',
-        percent: '',
-      },
-      {
-        id: 2,
-        code: 'bkdevops-plugins-test/fayenodejstesa',
-        reason: '指定用户没有此代码库权限',
-        percent: '',
-      },
-    ];
-    flag.value = false;
-  } else {
-    console.log(handOverTable.value, '移交失败表格数据');
-    Message({
-      theme: 'success',
-      message: `${value.name} 已成功移出本项目。`,
-    });
-  }
+
+function handleAsideRemoveConfirm(value) {
+  manageAsideStore.handleAsideRemoveConfirm(value, manageAsideRef.value);
 }
 </script>
 
@@ -568,6 +467,11 @@ async function handleAsideRemoveConfirm(value) {
         .bk-button {
           margin-right: 8px
         }
+      }
+
+      .group-tab {
+        width: 100%;
+        height: 100%;
       }
     }
   }

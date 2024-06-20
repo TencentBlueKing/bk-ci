@@ -37,155 +37,10 @@ interface CollapseListType {
 }
 
 export default defineStore('userGroupTable', () => {
-  const isLoading = ref(false);
+  const isLoading = ref(true);
   const pagination = ref({ limit: 10, current: 1 });
 
-  const sourceList = ref<SourceType[]>([
-    {
-      id: 1,
-      groupItem: '项目（project）',
-      groupTotal: 10,
-      activeFlag: true,
-      tableData: [{
-        groupId: 1,
-        groupName: '11',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'UNIQUE_MANAGER',
-      },
-      {
-        groupId: 2,
-        groupName: '22',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      }, {
-        groupId: 3,
-        groupName: '33',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      },
-      {
-        groupId: 4,
-        groupName: '44',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      }, {
-        groupId: 5,
-        groupName: '55',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      },
-      {
-        groupId: 6,
-        groupName: '66',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      }, {
-        groupId: 7,
-        groupName: '77',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      },
-      {
-        groupId: 8,
-        groupName: '88',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      }]
-    },
-    {
-      id: 2,
-      groupItem: '流水线 (Pipiline) - 流水线组',
-      groupTotal: 3,
-      activeFlag: true,
-      tableData: [{
-        groupId: 1,
-        groupName: '11',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'TEMPLATE',
-      },
-      {
-        groupId: 2,
-        groupName: '12',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      }],
-    },
-    {
-      id: 3,
-      groupItem: '流水线 (Pipiline)',
-      groupTotal: 3,
-      tableData: [{
-        groupId: 1,
-        groupName: '21',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'UNIQUE_MANAGER',
-      },
-      {
-        groupId: 2,
-        groupName: '22',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      },
-      {
-        groupId: 2,
-        groupName: '23',
-        groupDesc: 'kjkjkjk',
-        validityPeriod: '0505',
-        joinedTime: '08-18',
-        operateSource: '加入组',
-        operator: '张三',
-        removeMemberButtonControl: 'OTHER',
-      }],
-    },
-  ]);
+  const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([
     {
       id: 1,
@@ -219,15 +74,163 @@ export default defineStore('userGroupTable', () => {
   /**
    * 获取sourceList（需处理数据），collapseList
    */
-  async function fetchMemberManageList(storeCode: string) {
+  async function fetchuserGroupList(groupId: string) {
+    sourceList.value = []
     try {
       isLoading.value = true;
-      // const res = await http.getMemberManageList(storeCode);
+      setTimeout(() => {
+        sourceList.value = [
+          {
+            id: 1,
+            groupItem: '项目（project）',
+            groupTotal: 10,
+            activeFlag: true,
+            tableData: [{
+              groupId: 1,
+              groupName: '11',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'UNIQUE_MANAGER',
+            },
+            {
+              groupId: 2,
+              groupName: '22',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            }, {
+              groupId: 3,
+              groupName: '33',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            },
+            {
+              groupId: 4,
+              groupName: '44',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            }, {
+              groupId: 5,
+              groupName: '55',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            },
+            {
+              groupId: 6,
+              groupName: '66',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            }, {
+              groupId: 7,
+              groupName: '77',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            },
+            {
+              groupId: 8,
+              groupName: '88',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            }]
+          },
+          {
+            id: 2,
+            groupItem: '流水线 (Pipiline) - 流水线组',
+            groupTotal: 3,
+            activeFlag: true,
+            tableData: [{
+              groupId: 1,
+              groupName: '11',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'TEMPLATE',
+            },
+            {
+              groupId: 2,
+              groupName: '12',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            }],
+          },
+          {
+            id: 3,
+            groupItem: '流水线 (Pipiline)',
+            groupTotal: 3,
+            tableData: [{
+              groupId: 1,
+              groupName: '21',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'UNIQUE_MANAGER',
+            },
+            {
+              groupId: 2,
+              groupName: '22',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            },
+            {
+              groupId: 2,
+              groupName: '23',
+              groupDesc: 'kjkjkjk',
+              validityPeriod: '0505',
+              joinedTime: '08-18',
+              operateSource: '加入组',
+              operator: '张三',
+              removeMemberButtonControl: 'OTHER',
+            }],
+          },
+        ]
+        isLoading.value = false;
+      }, 1000)
+      // const res = await http.getMemberManageList(groupId);
       // memberManageList.value = res;
     } catch (error: any) {
       console.log(error);
-    } finally {
-      isLoading.value = false;
     }
   }
   /**
@@ -330,6 +333,7 @@ export default defineStore('userGroupTable', () => {
     unableMoveLength,
     selectProjectlist,
     selectSourceList,
+    fetchuserGroupList,
     handleRenewal,
     handleHandOver,
     handleRemove,
