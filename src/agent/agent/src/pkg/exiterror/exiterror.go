@@ -80,7 +80,7 @@ func CheckOsIoError(path string, err error) {
 }
 
 // 避免不必要的错杀，信号错误最少连续持续 10 次以上才能杀掉
-var jdkSignFlag atomic.Int32 = atomic.Int32{}
+var jdkSignFlag = atomic.Int32{}
 
 func CheckSignalJdkError(err error) {
 	if err == nil {
@@ -110,7 +110,7 @@ func CheckSignalJdkError(err error) {
 	}
 }
 
-var workerSignFlag atomic.Int32 = atomic.Int32{}
+var workerSignFlag = atomic.Int32{}
 
 func CheckSignalWorkerError(err error) {
 	if err == nil {
