@@ -438,8 +438,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 processRelatedPlatformDataClearService.cleanBuildData(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    buildIds = cleanBuilds,
-                    platformDataClearEnum = PlatformDataClearEnum.CLEAR_PIPELINE_REPOSITORY_BUILD_DATA
+                    buildIds = cleanBuilds
                 )
             }
         }
