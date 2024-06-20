@@ -48,6 +48,7 @@ import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -117,15 +118,6 @@ import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.RetryUtils.doRetryHttp
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import org.springframework.util.FileSystemUtils
-import org.springframework.util.StringUtils
 import java.io.File
 import java.net.HttpRetryException
 import java.net.URLDecoder
@@ -136,6 +128,15 @@ import java.util.Base64
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+import org.springframework.util.FileSystemUtils
+import org.springframework.util.StringUtils
 
 @Suppress("ALL")
 @Service
@@ -247,7 +248,7 @@ class GitService @Autowired constructor(
         val url = (
             "${gitConfig.gitApiUrl}/projects?access_token=$accessToken" +
                 "&page=$pageNotNull&per_page=$pageSizeNotNull"
-        )
+            )
             .addParams(
                 mapOf(
                     "search" to search,
@@ -908,7 +909,7 @@ class GitService @Autowired constructor(
         try {
             val url = StringBuilder(
                 "$gitCIUrl/api/v3/projects/" +
-                "${URLEncoder.encode(gitProjectId, "UTF-8")}/repository/tree"
+                    "${URLEncoder.encode(gitProjectId, "UTF-8")}/repository/tree"
             )
             setToken(tokenType, url, token)
             with(url) {
@@ -1048,11 +1049,13 @@ class GitService @Autowired constructor(
                             "$projectFileUrl(${response.code}): ${response.message}"
                     )
                 }
-                val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg =
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_FILE_CANNOT_EXCEED,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ))
+                val body = response.stringLimit(
+                    readLimit = MAX_FILE_SIZE, errorMsg =
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_FILE_CANNOT_EXCEED,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                )
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)
                 return String(Base64.getDecoder().decode(fileInfo.content))
             }
@@ -1414,7 +1417,8 @@ class GitService @Autowired constructor(
             logger.info("getGitUserInfo response>> $data")
             if (!it.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
-                language = I18nUtil.getLanguage(userId))
+                language = I18nUtil.getLanguage(userId)
+            )
             if (!StringUtils.isEmpty(data)) {
                 val dataMap = JsonUtil.toMap(data)
                 val message = dataMap["message"]
@@ -1444,7 +1448,8 @@ class GitService @Autowired constructor(
                 )
                 return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             }
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
         }
@@ -1489,7 +1494,8 @@ class GitService @Autowired constructor(
                     val result: Result<String?> =
                         I18nUtil.generateResponseDataObject(
                             messageCode = GIT_REPO_PEM_FAIL,
-                            language = I18nUtil.getLanguage(userId))
+                            language = I18nUtil.getLanguage(userId)
+                        )
                     // 把工蜂的错误提示抛出去
                     Result(result.status, "${result.message}（git error:$message）")
                 }
@@ -1521,7 +1527,8 @@ class GitService @Autowired constructor(
             logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
             if (!it.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
             return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
         }
     }
@@ -1622,7 +1629,8 @@ class GitService @Autowired constructor(
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(repoName),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         }
         val projectId = gitProjectInfo.id // 获取工蜂项目ID
         val url = StringBuilder("${gitConfig.gitApiUrl}/groups/$groupCode/projects/$projectId")
@@ -1743,7 +1751,7 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .get()
             .build()
-        return RetryUtils.retryFun("getMrChangeInfo") {
+        return HttpRetryUtils.retry(retryPeriodMills = 2000) {
             RetryUtils.doRetryHttp(request).use {
                 if (!it.isSuccessful) {
                     throw CustomException(
@@ -1799,10 +1807,11 @@ class GitService @Autowired constructor(
         response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
         com.tencent.devops.common.service.utils.RetryUtils.execute(
             action = object : com.tencent.devops.common.service.utils.RetryUtils.Action<Unit> {
-            override fun execute() {
-                OkhttpUtils.downloadFile(url.toString(), response)
-            }
-        }, retryTime = 5, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
+                override fun execute() {
+                    OkhttpUtils.downloadFile(url.toString(), response)
+                }
+            }, retryTime = 5, retryPeriodMills = SLEEP_MILLS_FOR_RETRY
+        )
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
@@ -1832,11 +1841,13 @@ class GitService @Autowired constructor(
                 )
             }
         } catch (e: ScmException) {
-            throw ScmException(message =
-            MessageUtil.getMessageByLocale(
-                messageCode = INCORRECT_GIT_TOKEN,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            ), scmType = ScmType.CODE_GIT.name)
+            throw ScmException(
+                message =
+                MessageUtil.getMessageByLocale(
+                    messageCode = INCORRECT_GIT_TOKEN,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ), scmType = ScmType.CODE_GIT.name
+            )
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
@@ -1963,7 +1974,8 @@ class GitService @Autowired constructor(
                 if (!it.isSuccessful) {
                     I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.SYSTEM_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 } else {
                     try {
                         Result(JsonUtil.to(data, GitCommit::class.java))
@@ -2005,15 +2017,17 @@ class GitService @Autowired constructor(
                 if (!it.isSuccessful) {
                     I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.SYSTEM_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 } else {
                     try {
                         Result(JsonUtil.to(data, object : TypeReference<List<GitDiff>>() {}))
                     } catch (e: Exception) {
                         logger.warn("getCommitDiff error: ${e.message}", e)
                         I18nUtil.generateResponseDataObject(
-                        messageCode = CommonMessageCode.SYSTEM_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                            messageCode = CommonMessageCode.SYSTEM_ERROR,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        )
                     }
                 }
             }
