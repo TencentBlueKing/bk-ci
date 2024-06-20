@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -55,7 +56,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val deleteControl: DeleteControl,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) {
 
     @ActionAuditRecord(
@@ -114,9 +116,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     projectId = workspace.projectId,
                     ownerType = WorkspaceOwnerType.PROJECT
                 )
-                workspaceCommon.createCheckSpecLimit(rebuildReq.machineType, workspace.projectId, workspaceNames)
+                windowsResourceConfigService.createCheckSpecLimit(rebuildReq.machineType, workspace.projectId, workspaceNames)
             }
-            workspaceCommon.createCheckWhenWinNotAlready(
+            windowsResourceConfigService.createCheckWhenWinNotAlready(
                 zoneId = checkNotNull(workspace.zoneId),
                 winConfigId = checkNotNull(workspace.winConfigId),
                 newNum = 1,

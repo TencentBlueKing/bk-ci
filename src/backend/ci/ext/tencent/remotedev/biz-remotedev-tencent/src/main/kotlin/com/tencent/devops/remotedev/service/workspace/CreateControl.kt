@@ -196,7 +196,7 @@ class CreateControl @Autowired constructor(
             )
         }
         // 检查是否有特殊机型的配额限制
-        workspaceCommon.createCheckSpecLimit(workspaceCreate.windowsType, projectInfo.englishName, workspaceNames)
+        windowsResourceConfigService.createCheckSpecLimit(workspaceCreate.windowsType, projectInfo.englishName, workspaceNames)
 
         // 自定义镜像检查是否有相对的显卡
         // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡

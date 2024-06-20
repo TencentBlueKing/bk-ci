@@ -48,7 +48,6 @@ import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
-import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceDailyCgsdataDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -79,7 +78,6 @@ import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
-import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.CreateControl.Companion.sumResourceVmFree
@@ -126,9 +124,7 @@ class WorkspaceCommon @Autowired constructor(
     private val config: RemoteDevCommonConfig,
     private val rabbitTemplate: RabbitTemplate,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao,
-    private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val windowsSpecResourceDao: WindowsSpecResourceDao
+    private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao
 ) {
 
     companion object {
@@ -766,76 +762,6 @@ class WorkspaceCommon @Autowired constructor(
             remotedevProjectService.migrateOldData(projectId)
             checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
         }
-    }
-
-    fun createCheckSpecLimit(
-        windowsType: String,
-        projectId: String,
-        workspaceNames: Set<String>
-    ) {
-        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
-        if (windowsType.trim() in allSpecSize) {
-            val specQuota = windowsSpecResourceDao.fetchQuota(
-                dslContext = dslContext,
-                projectId = projectId,
-                size = windowsType.trim()
-            )
-            if (specQuota != null) {
-                val count = workspaceWindowsDao.fetchUsedSizeCount(
-                    dslContext = dslContext,
-                    workspaceNames = workspaceNames,
-                    size = windowsType.trim()
-                )
-                if (count >= specQuota) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                        params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
-                    )
-                }
-            } else {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(windowsType.trim(), "0", "0")
-                )
-            }
-        }
-    }
-
-    fun createCheckWhenWinNotAlready(
-        zoneId: String,
-        winConfigId: Int,
-        newNum: Int,
-        ownerType: WorkspaceOwnerType
-    ) {
-        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(winConfigId.toString())
-            )
-
-        if (windowsConfig.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(windowsConfig.size)
-            )
-        }
-        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(zoneId)
-            )
-        if (windowsZone.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(zoneId)
-            )
-        }
-        createCheckWhenWinNotAlready(
-            windowsZone = windowsZone,
-            windowsConfig = windowsConfig,
-            newNum = newNum,
-            quotaType = QuotaType.parse(ownerType)
-        )
     }
 
     fun createCheckWhenWinNotAlready(
