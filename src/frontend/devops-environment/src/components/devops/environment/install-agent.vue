@@ -480,10 +480,7 @@
                         }
                         this.$emit('install')
                     } catch (e) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: e.message || e
-                        })
+                        console.error(e)
                         this.isLoading = false
                     }
                 })
