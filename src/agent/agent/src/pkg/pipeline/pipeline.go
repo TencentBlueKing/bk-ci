@@ -118,14 +118,14 @@ func runCommandPipeline(pipeline *CommandPipeline, lines []string) (err error) {
 	err = os.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
-		return errors.Wrapf(err, "write pipeline script file failed")
+		return errors.Wrap(err, "write pipeline script file failed")
 	}
 	defer os.Remove(scriptFile)
 
 	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
-		return errors.Wrapf(err, "run pipeline failed")
+		return errors.Wrap(err, "run pipeline failed")
 	}
 	_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
 	return nil
@@ -148,7 +148,7 @@ func runCommandPipelineWindows(pipeline *CommandPipeline, lines []string) error 
 	err := os.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
-		return errors.Wrapf(err, "write pipeline script file failed")
+		return errors.Wrap(err, "write pipeline script file failed")
 	}
 	defer os.Remove(scriptFile)
 

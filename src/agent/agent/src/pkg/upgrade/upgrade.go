@@ -165,7 +165,7 @@ func SyncJdkVersion() error {
 			JdkVersion.SetVersion([]string{})
 			return nil
 		}
-		return errors.Wrapf(err, "agent check jdk dir error")
+		return errors.Wrap(err, "agent check jdk dir error")
 	}
 	nowModTime := stat.ModTime()
 
@@ -216,7 +216,7 @@ func SyncDockerInitFileMd5() error {
 			DockerFileMd5.Md5 = ""
 			return nil
 		}
-		return errors.Wrapf(err, "agent check docker init file error")
+		return errors.Wrap(err, "agent check docker init file error")
 	}
 	nowModTime := stat.ModTime()
 
@@ -248,7 +248,7 @@ func getJdkVersion() ([]string, error) {
 	if err != nil {
 		logs.WithError(err).Error("agent get jdk version failed")
 		exitcode.CheckSignalJdkError(err)
-		return nil, errors.Wrapf(err, "agent get jdk version failed")
+		return nil, errors.Wrap(err, "agent get jdk version failed")
 	}
 	var jdkV []string
 	if jdkVersion != nil {

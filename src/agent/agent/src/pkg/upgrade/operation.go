@@ -196,14 +196,14 @@ func DoUpgradeJdk() error {
 		true,
 	)
 	if err != nil {
-		return errors.Wrapf(err, "upgrade jdk copy new jdk file error")
+		return errors.Wrap(err, "upgrade jdk copy new jdk file error")
 	}
 
 	// 解压缩为一个新文件取代旧文件路径
 	jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
 	err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
 	if err != nil {
-		return errors.Wrapf(err, "upgrade jdk unzip error")
+		return errors.Wrap(err, "upgrade jdk unzip error")
 	}
 
 	// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程

@@ -166,11 +166,11 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 	var content = new(bytes.Buffer)
 	tmpl, err := template.New("tmpl").Parse(telegrafconf.TelegrafConf)
 	if err != nil {
-		return nil, errors.Wrapf(err, "parse telegraf config template err")
+		return nil, errors.Wrap(err, "parse telegraf config template err")
 	}
 	err = tmpl.Execute(content, templateData)
 	if err != nil {
-		return nil, errors.Wrapf(err, "execute telegraf config template err")
+		return nil, errors.Wrap(err, "execute telegraf config template err")
 	}
 
 	return content, nil

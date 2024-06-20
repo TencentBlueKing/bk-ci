@@ -183,7 +183,7 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 
 	err := fileutil.SetExecutable(agentPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "chmod agent file failed")
+		return nil, errors.Wrap(err, "chmod agent file failed")
 	}
 
 	// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
@@ -196,7 +196,7 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 		if stdErr != nil {
 			stdErr.Close()
 		}
-		return nil, errors.Wrapf(err, "start agent failed")
+		return nil, errors.Wrap(err, "start agent failed")
 	}
 
 	go func() {

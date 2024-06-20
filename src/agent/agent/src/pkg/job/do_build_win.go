@@ -178,7 +178,7 @@ func StartProcessCmd(command string, args []string, workDir string, envMap map[s
 	err := ucommand.SetUser(cmd, runUser)
 	if err != nil {
 		logs.Error("set user failed: ", err.Error())
-		return nil, errors.Wrapf(err, "Please check [devops.slave.user] in the {agent_dir}/.agent.properties")
+		return nil, errors.Wrap(err, "Please check [devops.slave.user] in the {agent_dir}/.agent.properties")
 	}
 
 	logs.Info("cmd.Path: ", cmd.Path)
