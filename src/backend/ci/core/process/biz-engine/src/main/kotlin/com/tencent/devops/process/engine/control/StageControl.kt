@@ -98,6 +98,7 @@ class StageControl @Autowired constructor(
                 stageIdLock.lock()
                 watcher.start("execute")
                 execute(watcher = watcher)
+                watcher.start("finish")
             } finally {
                 stageIdLock.unlock()
                 watcher.stop()
@@ -129,6 +130,10 @@ class StageControl @Autowired constructor(
                         return // 不再往下运行
                     }
                 }
+            if (actionType.isEnd()) {
+                LOG.warn("ENGINE|$buildId|$source|END_STAGE|$stageId|${buildInfo.status}")
+                return
+            }
         }
 
         val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
@@ -139,7 +144,7 @@ class StageControl @Autowired constructor(
             containsMatrix = false
         )
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
-        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
+        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, buildInfo)
         // #10082 过滤Agent复用互斥的endJob信息
         val mutexJobs = containers.filter {
             it.controlOption.agentReuseMutex?.endJob == true &&
@@ -157,7 +162,8 @@ class StageControl @Autowired constructor(
             pipelineAsCodeEnabled = pipelineAsCodeEnabled,
             executeCount = executeCount,
             previousStageStatus = addPreviousStageStatus(stage),
-            agentReuseMutexEndJob = mutexJobs
+            agentReuseMutexEndJob = mutexJobs,
+            debug = buildInfo.debug
         )
         watcher.stop()
 

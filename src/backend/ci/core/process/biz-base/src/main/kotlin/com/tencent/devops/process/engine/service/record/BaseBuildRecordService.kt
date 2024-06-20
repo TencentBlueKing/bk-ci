@@ -53,9 +53,11 @@ import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.PipelineElementService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -76,8 +78,9 @@ open class BaseBuildRecordService(
     private val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineResVersionDao: PipelineResVersionDao
+    private val pipelineResourceDao: PipelineResourceDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
+    private val pipelineElementService: PipelineElementService
 ) {
 
     protected fun update(
@@ -156,16 +159,25 @@ open class BaseBuildRecordService(
         fixedExecuteCount: Int,
         buildRecordModel: BuildRecordModel,
         executeCount: Int?,
-        queryDslContext: DSLContext? = null
+        queryDslContext: DSLContext? = null,
+        debug: Boolean? = false
     ): Model? {
         val watcher = Watcher(id = "getRecordModel#$buildId")
         watcher.start("getVersionModelString")
-        val resourceStr = pipelineResVersionDao.getVersionModelString(
-            dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        ) ?: pipelineResDao.getVersionModelString(
+        val resourceStr = if (debug == true) {
+            pipelineBuildDao.getDebugResourceStr(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                buildId = buildId
+            )
+        } else {
+            pipelineResourceVersionDao.getVersionModelString(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        } ?: pipelineResourceDao.getVersionModelString(
             dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -178,6 +190,9 @@ open class BaseBuildRecordService(
         return try {
             watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
+            fullModel.stages.forEach {
+                PipelineUtils.transformUserIllegalReviewParams(it.checkIn?.reviewParams)
+            }
             val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,

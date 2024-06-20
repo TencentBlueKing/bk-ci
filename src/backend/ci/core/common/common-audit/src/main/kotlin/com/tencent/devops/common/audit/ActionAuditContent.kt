@@ -94,6 +94,7 @@ object ActionAuditContent {
     const val CGS_DELETE_CONTENT = "delete workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_SHARE_CONTENT = "share workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_EDIT_CONTENT = "edit workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val CGS_TOKEN_GENERATE_CONTENT = "generate workspace 1password $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 云桌面镜像
     const val IMAGE_LIST_CONTENT = "list workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -116,6 +117,7 @@ object ActionAuditContent {
     const val ENVIRONMENT_OF_SHARE_DELETE_CONTENT = "delete share environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENVIRONMENT_LIST_CONTENT = "list environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENVIRONMENT_USE_CONTENT = "use environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_ENABLE_OR_DISABLE_NODE = "{{$PROJECT_ENABLE_OR_DISABLE_TEMPLATE}} env node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 环境节点
     const val ENV_NODE_CREATE_CONTENT = "create environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -147,7 +149,7 @@ object ActionAuditContent {
     const val EXPERIENCE_TASK_CREATE_CONTENT = "create experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_TASK_VIEW_CONTENT = "get experience task info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_TASK_EDIT_CONTENT = "modify experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val EXPERIENCE_TASK_DELETE_CONTENT = "delete experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_TASK_DELETE_CONTENT = "online/offline experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_CREATE_CONTENT = "create experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_VIEW_CONTENT = "get experience group info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_EDIT_CONTENT = "modify experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

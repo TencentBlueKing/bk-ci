@@ -30,10 +30,10 @@ package com.tencent.devops.project.dao
 import com.tencent.devops.model.project.tables.TUser
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -121,6 +121,33 @@ class UserDao {
             userDeptDetail.businessLineId?.let { baseStep.set(BUSINESS_LINE_ID, it.toLong()) }
             userDeptDetail.businessLineName?.let { baseStep.set(BUSINESS_LINE_NAME, it) }
             baseStep.where(USER_ID.eq(userDeptDetail.userId)).execute()
+        }
+    }
+
+    fun convertToUserDeptDetail(userRecord: TUserRecord): UserDeptDetail {
+        return UserDeptDetail(
+            bgName = userRecord.bgName,
+            bgId = userRecord.bgId?.toString() ?: "",
+            centerName = userRecord.centerName,
+            centerId = userRecord.centerId?.toString() ?: "",
+            deptName = userRecord.deptName,
+            deptId = userRecord.deptId?.toString() ?: "",
+            groupName = userRecord.groupName ?: "",
+            groupId = userRecord.groypId?.toString() ?: "",
+            businessLineId = userRecord.businessLineId?.toString(),
+            businessLineName = userRecord.businessLineName
+        )
+    }
+
+    fun usernamesByParentId(dslContext: DSLContext, parentId: Int): List<String> {
+        with(TUser.T_USER) {
+            return dslContext.select(USER_ID)
+                .from(this)
+                .where(BG_ID.eq(parentId))
+                .or(DEPT_ID.eq(parentId))
+                .or(CENTER_ID.eq(parentId))
+                .or(GROYP_ID.eq(parentId))
+                .fetch(0, String::class.java)
         }
     }
 }

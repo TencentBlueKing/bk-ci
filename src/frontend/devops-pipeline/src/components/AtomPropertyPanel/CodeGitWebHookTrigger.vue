@@ -1,18 +1,37 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
-            <form-field v-if="!obj.hidden && rely(obj, element)" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                <component
-                    :is="obj.component"
-                    :name="key"
-                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
-                    :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
-                    :value="element[key]"
-                    v-bind="obj">
-                </component>
-            </form-field>
+            <template v-if="obj.type === 'group'">
+                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :handle-change="handleMethods" :key="key" v-bind="obj">
+                    <template v-for="(i, index) in obj.children">
+                        <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
+                            <component
+                                :is="i.component"
+                                :name="i.key"
+                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(i.component) }, i.rule, { required: !!i.required })"
+                                :handle-change="i.key === 'eventType' ? handleBlockEnable : handleMethods"
+                                :value="element[i.key] || atomPropsModel[key]?.children[index]?.default"
+                                v-bind="i">
+                            </component>
+                        </form-field>
+                    </template>
+                </form-field-group>
+            </template>
+            <template v-else>
+                <form-field v-if="!obj.hidden && rely(obj, element)" :key="key" v-bind="obj" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                        :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
+                        :value="element[key]"
+                        :element="element"
+                        v-bind="obj">
+                    </component>
+                </form-field>
+            </template>
         </template>
-        <form-field v-if="Object.keys(customTriggerControlModel).length">
+        <form-field v-if="Object.keys(customTriggerControlModel).length && !atomPropsModel?.branchSettings">
             <accordion show-checkbox :show-content="enableThirdFilter" key="customTriggerControl" :is-version="true">
                 <header class="var-header" style="height: 16px;" slot="header">
                     <span>
@@ -70,51 +89,65 @@
             }
         },
         created () {
-            this.enableThirdFilter = this.element.enableThirdFilter || false
-            this.customTriggerControlModel = {}
-            const { thirdUrl, thirdSecretToken } = this.atomPropsModel
-            if (thirdUrl && thirdSecretToken) {
-                this.customTriggerControlModel.thirdUrl = thirdUrl
-                this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
-                this.atomPropsModel.thirdUrl.hidden = true
-                this.atomPropsModel.thirdSecretToken.hidden = true
-            }
-            if (this.element.eventType === 'MERGE_REQUEST') {
-                this.atomPropsModel.webhookQueue.hidden = false
-            } else {
-                this.atomPropsModel.block.hidden = true
-                this.atomPropsModel.webhookQueue.hidden = true
-            }
-            if (!this.element.repositoryType) {
-                this.handleUpdateElement('repositoryType', 'ID')
-            }
-            this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
-        },
-        methods: {
-            handleBlockEnable (name, value) {
-                if (value === 'MERGE_REQUEST') {
-                    this.atomPropsModel.block.hidden = false
+            if (!this.atomPropsModel?.branchSettings) {
+                this.enableThirdFilter = this.element.enableThirdFilter || false
+                this.customTriggerControlModel = {}
+                const { thirdUrl, thirdSecretToken } = this.atomPropsModel
+                if (thirdUrl && thirdSecretToken) {
+                    this.customTriggerControlModel.thirdUrl = thirdUrl
+                    this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
+                    this.atomPropsModel.thirdUrl.hidden = true
+                    this.atomPropsModel.thirdSecretToken.hidden = true
+                }
+                if (this.element.eventType === 'MERGE_REQUEST') {
                     this.atomPropsModel.webhookQueue.hidden = false
                 } else {
                     this.atomPropsModel.block.hidden = true
                     this.atomPropsModel.webhookQueue.hidden = true
                 }
+                if (!this.element.repositoryType) {
+                    this.handleUpdateElement('repositoryType', 'ID')
+                }
+                this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
+            }
+        },
+        methods: {
+            handleBlockEnable (name, value) {
+                if (!this.atomPropsModel?.branchSettings) {
+                    if (value === 'MERGE_REQUEST') {
+                        this.atomPropsModel.block.hidden = false
+                        this.atomPropsModel.webhookQueue.hidden = false
+                    } else {
+                        this.atomPropsModel.block.hidden = true
+                        this.atomPropsModel.webhookQueue.hidden = true
+                    }
+                }
                 this.handleUpdateElement(name, value)
             },
             handleMethods (name, value) {
-                if (name === 'repositoryType') {
-                    this.handleChooseCodelibType(name, value)
-                } else {
+                // 兼容逻辑，后续该需求上线后可删除
+                if (this.atomPropsModel?.branchSettings) {
                     this.handleUpdateElement(name, value)
+                } else {
+                    if (name === 'repositoryType') {
+                        this.handleChooseCodelibType(name, value)
+                    } else {
+                        this.handleUpdateElement(name, value)
+                    }
                 }
             },
             handleChooseCodelibType (name, value) {
-                if (value === 'ID') {
-                    this.atomPropsModel.repositoryHashId.hidden = false
-                    this.atomPropsModel.repositoryName.hidden = true
-                } else if (value === 'NAME') {
-                    this.atomPropsModel.repositoryHashId.hidden = true
-                    this.atomPropsModel.repositoryName.hidden = false
+                if (!this.atomPropsModel?.branchSettings) {
+                    if (value === 'ID') {
+                        this.atomPropsModel.repositoryHashId.hidden = false
+                        this.atomPropsModel.repositoryName.hidden = true
+                    } else if (value === 'NAME') {
+                        this.atomPropsModel.repositoryHashId.hidden = true
+                        this.atomPropsModel.repositoryName.hidden = false
+                    } else if (value === 'SELF') {
+                        this.atomPropsModel.repositoryHashId.hidden = true
+                        this.atomPropsModel.repositoryName.hidden = true
+                    }
                 }
                 this.handleUpdateElement(name, value)
             },

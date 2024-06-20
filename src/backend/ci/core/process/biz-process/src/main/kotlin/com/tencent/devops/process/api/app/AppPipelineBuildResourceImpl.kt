@@ -113,7 +113,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             elementId = elementId,
             params = params,
             channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            stepId = null
         )
         return Result(true)
     }
@@ -196,9 +197,10 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        customVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
-        checkParam(userId, projectId, pipelineId)
+        checkParam(userId, projectId, pipelineId, pageSize)
         val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -223,7 +225,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             remark = remark,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            customVersion = customVersion
         )
         return Result(result)
     }
@@ -257,7 +260,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
     override fun manualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        version: Int?
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
 
@@ -268,6 +272,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 channelCode = channelCode
             )
         )
@@ -278,7 +283,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>
+        values: Map<String, String>,
+        version: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
 
@@ -292,6 +298,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 startType = StartType.MANUAL,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 values = values.filter { it.key != "buildNo" },
                 channelCode = channelCode,
                 buildNo = buildNo
@@ -354,7 +361,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         )
     }
 
-    private fun checkParam(userId: String, projectId: String, pipelineId: String) {
+    private fun checkParam(userId: String, projectId: String, pipelineId: String, pageSize: Int? = null) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -363,6 +370,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
+        }
+        if (pageSize != null && pageSize > 1000) {
+            throw ParamBlankException("PageSize could not be greater than 1000")
         }
     }
 }

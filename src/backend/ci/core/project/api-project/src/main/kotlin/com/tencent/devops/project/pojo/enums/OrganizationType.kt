@@ -47,8 +47,16 @@ enum class OrganizationType(val typeId: Int) {
             return typeId == center.typeId || typeId == group.typeId
         }
 
+        fun isBusinessLine(typeId: Int): Boolean {
+            return typeId == businessLine.typeId
+        }
+
         fun isDept(typeId: Int): Boolean {
             return typeId == dept.typeId
+        }
+
+        fun isCenter(typeId: Int): Boolean {
+            return typeId == center.typeId
         }
 
         fun isGroup(typeId: Int): Boolean {

@@ -1,13 +1,12 @@
 <template>
-    <aside class="pipeline-group-aside"
-    >
+    <aside class="pipeline-group-aside">
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
                 <div :class="{
                     'pipeline-group-item': true,
                     active: $route.params.viewId === sumView.id
                 }" @click="switchViewId(sumView.id)">
-                    <logo class="pipeline-group-item-icon" size="12" :name="sumView.icon" />
+                    <logo class="pipeline-group-item-icon" size="14" :name="sumView.icon" />
                     <span class="pipeline-group-item-name">
                         {{$t(sumView.name)}}
                     </span>
@@ -59,7 +58,8 @@
                             :key="item.id"
                             @click="switchViewId(item.id)"
                         >
-                            <logo v-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
+                            <i v-if="item.pac" class="pipeline-group-item-icon devops-icon icon-pac" />
+                            <logo v-else-if="item.icon" size="14" class="pipeline-group-item-icon" :name="item.icon" />
                             <bk-input
                                 v-if="item.id === editingGroupId"
                                 v-bk-focus="1"
@@ -92,9 +92,12 @@
                 </template>
             </article>
         </div>
-        <footer :class="['recycle-pipeline-group-footer', {
-            active: $route.params.viewId === DELETED_VIEW_ID
-        }]" @click="goRecycleBin">
+        <footer
+            :class="['recycle-pipeline-group-footer', {
+                active: $route.params.viewId === DELETED_VIEW_ID
+            }]"
+            @click="goRecycleBin"
+        >
             <logo class="pipeline-group-item-icon" name="delete" size="16"></logo>
             <span>{{$t('restore.recycleBin')}}</span>
         </footer>
@@ -110,7 +113,7 @@
         >
             <bk-form ref="newPipelineGroupForm" :label-width="200" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
-                    <bk-input v-model.trim="newPipelineGroup.name" :placeholder="$t('groupNamePlaceholder')" />
+                    <bk-input v-model.trim="newPipelineGroup.name" :maxlength="32" :placeholder="$t('groupNamePlaceholder')" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
                     <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">
@@ -142,18 +145,18 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import {
-        DELETED_VIEW_ID,
-        UNCLASSIFIED_PIPELINE_VIEW_ID,
-        CACHE_PIPELINE_GROUP_NAV_STATUS
-    } from '@/store/constants'
-    import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import {
+        CACHE_PIPELINE_GROUP_NAV_STATUS,
+        DELETED_VIEW_ID,
+        UNCLASSIFIED_PIPELINE_VIEW_ID
+    } from '@/store/constants'
+    import {
         PROJECT_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { cacheViewId } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             Logo,
@@ -198,7 +201,7 @@
                         switch (true) {
                             case val.length === 0:
                                 return this.$t('groupNameNotAllowEmpty')
-                            case val.length > 16:
+                            case val.length > 32:
                                 return this.$t('groupNameTooLong')
                             default:
                                 return this.$t('pipelineGroupRepeatTips', [val])
@@ -283,7 +286,7 @@
                 'requestGroupPipelineCount'
             ]),
             checkGroupNameValid (name) {
-                const valid = this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected && name.length <= 16 && name.length > 0
+                const valid = this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected && name.length <= 32 && name.length > 0
                 this.isValidGroupName = valid
                 return valid
             },
@@ -300,7 +303,7 @@
                 if (this.fixedGroupIdSet.has(group.id)) return []
                 const hasPermission = !group.projected || this.isManage
                 return [
-                    ...(hasPermission
+                    ...(hasPermission && !group.pac
                         ? [
                             {
                                 text: this.$t('rename'),
@@ -338,13 +341,12 @@
                             ]
                             : []
                     ),
-                    
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,
                         handler: () => this.stickTop(group)
                     },
-                    ...(hasPermission
+                    ...(hasPermission && !group.pac
                         ? [
                             {
                                 text: this.$t('delete'),
@@ -477,7 +479,6 @@
 
                     cacheViewId(this.$route.params.projectId, viewId)
                     this.$router.push({
-                        name: 'PipelineManageList',
                         params: {
                             ...this.$route.params,
                             viewId
@@ -534,7 +535,6 @@
         width: 0px;
         background: white;
         padding: 0;
-        border-right: 1px solid #DCDEE5;
         transition: width 0.2s linear;
         width: 100%;
         height: 100%;
@@ -593,7 +593,7 @@
                 border-bottom: 1px solid #DCDEE5;
             }
         }
-        
+
         .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;
@@ -603,6 +603,10 @@
             cursor: pointer;
             font-size: 14px;
             width: 100%;
+            flex-shrink: 0;
+            &.expended {
+                width: 100%;
+            }
             &:hover,
             &.active {
                 color: $primaryColor;

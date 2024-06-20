@@ -106,7 +106,7 @@ interface UserStreamProjectResource {
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String
-    ): Result<ProjectVO>
+    ): Result<ProjectVO?>
 
     @Operation(summary = "更新项目组织架构和归属")
     @PUT

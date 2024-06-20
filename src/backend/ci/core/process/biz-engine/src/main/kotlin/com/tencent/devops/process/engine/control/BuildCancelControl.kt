@@ -334,14 +334,17 @@ class BuildCancelControl @Autowired constructor(
                     buildId = buildId,
                     message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
                     tag = VMUtils.genStartVMTaskId(container.id!!),
-                    jobId = container.containerHashId,
-                    executeCount = executeCount
+                    containerHashId = container.containerHashId,
+                    executeCount = executeCount,
+                    jobId = container.jobId,
+                    stepId = VMUtils.genStartVMTaskId(container.id!!)
                 )
                 buildLogPrinter.stopLog(
                     buildId = buildId,
                     tag = VMUtils.genStartVMTaskId(container.id!!),
-                    jobId = container.containerHashId,
-                    executeCount = executeCount
+                    containerHashId = container.containerHashId,
+                    executeCount = executeCount,
+                    jobId = container.jobId
                 )
             }
         } finally {

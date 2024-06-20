@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -55,6 +56,9 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
+import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
@@ -88,6 +92,7 @@ import org.springframework.stereotype.Service
 class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineElementService: PipelineElementService,
     private val projectCacheService: ProjectCacheService,
@@ -119,13 +124,16 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         isMobile: Boolean,
         model: Model,
+        yamlVersion: String?,
         signPipelineVersion: Int? = null, // 指定的版本
         frequencyLimit: Boolean = true,
         buildNo: Int? = null,
         startValues: Map<String, String>? = null,
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        debug: Boolean? = false,
+        versionName: String? = null
     ): BuildId {
 
         var acquire = false
@@ -138,7 +146,21 @@ class PipelineBuildService(
             )
         }
 
-        val setting = pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        val setting = if (debug == true) {
+            pipelineRepositoryService.getDraftVersionResource(
+                pipeline.projectId, pipeline.pipelineId
+            )?.settingVersion?.let {
+                pipelineSettingVersionService.getPipelineSetting(
+                    userId = userId,
+                    projectId = pipeline.projectId,
+                    pipelineId = pipeline.pipelineId,
+                    detailInfo = null,
+                    version = it
+                )
+            }
+        } else {
+            pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        }
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
@@ -157,7 +179,7 @@ class PipelineBuildService(
 
             // 如果指定了版本号，则设置指定的版本号
             pipeline.version = signPipelineVersion ?: pipeline.version
-
+            val originModelStr = JsonUtil.toJson(model, formatted = false)
             // 只有新构建才需要填充Post插件与质量红线插件
             if (!pipelineParamMap.containsKey(PIPELINE_RETRY_BUILD_ID)) {
                 pipelineElementService.fillElementWhenNewBuild(
@@ -189,13 +211,17 @@ class PipelineBuildService(
                 pipelineId = pipeline.pipelineId,
                 buildId = buildId,
                 resourceVersion = pipeline.version,
+                modelStr = originModelStr,
                 pipelineSetting = setting,
                 currentBuildNo = buildNo,
                 triggerReviewers = triggerReviewers,
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
-                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
+                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id },
+                debug = debug ?: false,
+                versionName = versionName,
+                yamlVersion = yamlVersion
             )
 
             val interceptResult = pipelineInterceptorChain.filter(
@@ -238,7 +264,8 @@ class PipelineBuildService(
         pipeline: PipelineInfo,
         projectVO: ProjectVO?,
         channelCode: ChannelCode,
-        isMobile: Boolean
+        isMobile: Boolean,
+        debug: Boolean? = false
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -283,7 +310,7 @@ class PipelineBuildService(
 //        }
 //        pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
 
-        pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
+        if (debug != true) pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
             key = PIPELINE_BUILD_MSG,
             value = BuildMsgUtils.getBuildMsg(
                 buildMsg = startValues?.get(PIPELINE_BUILD_MSG)
@@ -329,7 +356,28 @@ class PipelineBuildService(
             ),
             readOnly = true
         )
-
+        // 自定义触发源材料信息
+        startValues?.get(BK_CI_MATERIAL_ID)?.let {
+            pipelineParamMap[BK_CI_MATERIAL_ID] = BuildParameters(
+                key = BK_CI_MATERIAL_ID,
+                value = it,
+                readOnly = true
+            )
+        }
+        startValues?.get(BK_CI_MATERIAL_NAME)?.let {
+            pipelineParamMap[BK_CI_MATERIAL_NAME] = BuildParameters(
+                key = BK_CI_MATERIAL_NAME,
+                value = it,
+                readOnly = true
+            )
+        }
+        startValues?.get(BK_CI_MATERIAL_URL)?.let {
+            pipelineParamMap[BK_CI_MATERIAL_URL] = BuildParameters(
+                key = BK_CI_MATERIAL_URL,
+                value = it,
+                readOnly = true
+            )
+        }
         // 链路
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrBlank()) { // 保存链路信息

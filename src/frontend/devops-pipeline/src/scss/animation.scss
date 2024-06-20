@@ -63,3 +63,10 @@ $animations: './animation/animations';
 // zoomLeft
 // zoomRight
 // zoomUp
+
+@keyframes hourglassSpin {
+    100% {
+        -webkit-transform: rotate(180deg);
+        transform: rotate(180deg);
+    }
+}

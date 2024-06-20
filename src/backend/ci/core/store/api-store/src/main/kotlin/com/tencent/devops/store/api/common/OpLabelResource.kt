@@ -28,8 +28,8 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.LabelRequest
+import com.tencent.devops.store.pojo.common.label.Label
+import com.tencent.devops.store.pojo.common.label.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation

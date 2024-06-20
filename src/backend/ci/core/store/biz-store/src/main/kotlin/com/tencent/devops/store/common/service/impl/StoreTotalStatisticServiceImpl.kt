@@ -42,9 +42,9 @@ import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.StoreStatistic
-import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
-import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.statistic.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreDailyStatisticService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import org.jooq.DSLContext
 import org.jooq.Record4
-import org.jooq.Record7
+import org.jooq.Record8
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -338,7 +338,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     private fun generateStoreStatistic(
-        record: Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>?,
+        record: Record8<Int, Int, BigDecimal, Int, Int, String, Boolean, BigDecimal>?,
         successRate: Double? = null
     ): StoreStatistic {
         return StoreStatistic(
@@ -348,7 +348,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             pipelineCnt = record?.value4() ?: 0,
             recentExecuteNum = record?.value5() ?: 0,
             successRate = successRate,
-            hotFlag = record?.get(KEY_HOT_FLAG) as? Boolean ?: false
+            hotFlag = record?.get(KEY_HOT_FLAG) as? Boolean ?: false,
+            recentActiveDuration = record?.value8()?.toDouble()
         )
     }
 
@@ -380,9 +381,13 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             endTime = endTime
         )
         var totalExecuteNum = 0
+        var totalActiveDuration = 0.0
         dailyStatisticList?.forEach { dailyStatistic ->
             totalExecuteNum += dailyStatistic.dailySuccessNum
             totalExecuteNum += dailyStatistic.dailyFailNum
+            dailyStatistic.dailyActiveDuration?.let {
+                totalActiveDuration += it
+            }
         }
         val statisticTotal = storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
         val percentileValue =
@@ -397,7 +402,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 score = score?.toInt(),
                 scoreAverage = scoreAverage,
                 recentExecuteNum = totalExecuteNum,
-                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() }
+                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
+                recentActiveDuration = totalActiveDuration
             )
         } else {
             storeStatisticTotalDao.initStatisticData(
@@ -409,7 +415,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 score = score?.toInt(),
                 scoreAverage = scoreAverage,
                 recentExecuteNum = totalExecuteNum,
-                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() }
+                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
+                recentActiveDuration = totalActiveDuration
             )
         }
     }

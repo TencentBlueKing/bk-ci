@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.1
+**文档版本：** 1.0.2
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
@@ -190,6 +190,7 @@
 |  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境 ID  |
 |  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点 ID  |
 |  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  4   | ENABLE_NODE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否启用节点  |
 
 **表名：** <a>T_ENV_SHARE_PROJECT</a>
 
@@ -242,6 +243,12 @@
 |  23   | NODE_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 节点哈希 ID  |
 |  24   | PIPELINE_REF_COUNT |   int   | 10 |   0    |    N     |  N   |   0    | 流水线 Job 引用数  |
 |  25   | LAST_BUILD_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 最近构建时间  |
+|  26   | HOST_ID |   bigint   | 20 |   0    |    Y     |  N   |       | CC 的 host_id  |
+|  27   | CLOUD_AREA_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 云区域 id，公司内为 0  |
+|  28   | AGENT_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | agent 版本  |
+|  29   | OS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 从 CC 中查到的 os 类型  |
+|  30   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器 id  |
+|  31   | SYSTEM_UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 系统任务更新数据时间  |
 
 **表名：** <a>T_PROJECT_CONFIG</a>
 

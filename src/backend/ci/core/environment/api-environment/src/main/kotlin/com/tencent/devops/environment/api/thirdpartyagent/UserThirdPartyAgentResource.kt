@@ -92,6 +92,24 @@ interface UserThirdPartyAgentResource {
         zoneName: String?
     ): Result<ThirdPartyAgentLink>
 
+    @Operation(summary = "生成批量安装链接")
+    @GET
+    @Path("/projects/{projectId}/os/{os}/generateBatchInstallLink")
+    fun generateBatchInstallLink(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作系统", required = true)
+        @PathParam("os")
+        os: OS,
+        @Parameter(description = "网关地域", required = false)
+        @QueryParam("zoneName")
+        zoneName: String?
+    ): Result<String>
+
     @Operation(summary = "获取网关列表")
     @GET
     @Path("/projects/{projectId}/os/{os}/gateway")

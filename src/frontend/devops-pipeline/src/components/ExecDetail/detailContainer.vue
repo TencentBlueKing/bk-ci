@@ -105,7 +105,7 @@
                 overflow: hidden;
             }
             .log-head {
-                background-color: rgb(37, 41, 53);
+                background-color: #2E2E2E;
                 line-height: 48px;
                 padding: 5px 20px;
                 border-bottom: 1px solid;
@@ -126,7 +126,7 @@
                 }
             }
             &.black-theme {
-                background: #1e1e1e;
+                background: #1A1A1A;
             }
             &.white-theme {
                 background: #fff;

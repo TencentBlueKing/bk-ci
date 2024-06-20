@@ -8,7 +8,7 @@
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
 
-    @Component()
+    @Component
     export default class DevopsContainer extends Vue {
     }
 </script>
