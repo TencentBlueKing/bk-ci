@@ -101,16 +101,20 @@ class RebuildWorkspaceHandler @Autowired constructor(
     )
     fun rebuildWorkspace(
         userId: String,
-        projectId: String,
         workspaceName: String,
         rebuildReq: WorkspaceRebuildReq
     ): WorkspaceResponse {
         logger.info("$userId rebuild project workspace $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
-                projectId = projectId
-            ) && !permissionService.hasUserManager(userId, projectId)
+                projectId = workspace.projectId
+            ) && !permissionService.hasUserManager(userId, workspace.projectId)
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
@@ -118,11 +122,6 @@ class RebuildWorkspaceHandler @Autowired constructor(
             )
         }
 
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -164,6 +163,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -179,7 +179,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
                     mountType = WorkspaceMountType.START,
-                    imageCosFile = rebuildReq.imageCosFile
+                    imageCosFile = rebuildReq.imageCosFile,
+                    gameId = gameId.first
                 )
             )
 
@@ -194,7 +195,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
                 ownerType = WorkspaceOwnerType.PROJECT,
-                projectId = projectId
+                projectId = workspace.projectId
             )
 
             return WorkspaceResponse(
@@ -241,8 +242,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 deliverControl.safeInitialization(
                     projectId = workspace.projectId,
                     userId = event.userId,
-                    workspaceName = event.workspaceName,
-                    autoAssign = event.autoAssign
+                    workspaceName = event.workspaceName
                 )
             }
         } else {

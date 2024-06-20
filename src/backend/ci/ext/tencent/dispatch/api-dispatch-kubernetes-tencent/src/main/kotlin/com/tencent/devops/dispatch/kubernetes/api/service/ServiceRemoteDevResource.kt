@@ -33,10 +33,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -84,4 +85,16 @@ interface ServiceRemoteDevResource {
         @DefaultValue("DEVCLOUD")
         mountType: WorkspaceMountType
     ): Result<WorkspaceInfo>
+
+    @Operation(summary = "清理该workspace的数据,用户做数据清理")
+    @DELETE
+    @Path("/workspaces/{workspaceName}")
+    fun deleteWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间唯一name", required = false)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

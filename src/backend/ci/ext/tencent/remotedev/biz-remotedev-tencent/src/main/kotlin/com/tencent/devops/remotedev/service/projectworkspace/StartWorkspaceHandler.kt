@@ -102,14 +102,14 @@ class StartWorkspaceHandler @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CGS_START_CONTENT
     )
-    fun startWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
+    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start project workspace $workspaceName")
-        permissionService.checkUserManager(userId, projectId)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        permissionService.checkUserManager(userId, workspace.projectId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -151,6 +151,7 @@ class StartWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -165,7 +166,8 @@ class StartWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    gameId = gameId.first
                 )
             )
 
@@ -180,7 +182,7 @@ class StartWorkspaceHandler @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
                 ownerType = WorkspaceOwnerType.PROJECT,
-                projectId = projectId
+                projectId = workspace.projectId
             )
 
             return WorkspaceResponse(

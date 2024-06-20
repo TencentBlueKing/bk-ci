@@ -68,6 +68,7 @@ import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -92,6 +93,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_GET_OUTPU
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.CIKeywordsService
@@ -172,10 +174,10 @@ open class MarketAtomTask : ITask() {
         val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
         buildTask.elementVersion = atomData.version
         if (!atomTmpSpace.exists() && !atomTmpSpace.mkdirs()) {
-            atomEnvResult.data ?: throw TaskExecuteException(
+            throw TaskExecuteException(
                 errorMsg = "create directory fail! please check ${atomTmpSpace.absolutePath}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 
@@ -184,13 +186,15 @@ open class MarketAtomTask : ITask() {
         // 将Job传入的流水线变量先进行凭据替换
         // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
-        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).let { vars ->
-            vars.map {
-                it.key to it.value.parseCredentialValue(
-                    context = buildTask.buildVariable,
-                    acrossProjectId = acrossInfo?.targetProjectId
-                )
-            }.toMap()
+        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).map {
+            it.key to it.value.parseCredentialValue(
+                context = buildTask.buildVariable,
+                acrossProjectId = acrossInfo?.targetProjectId
+            )
+        }.toMap()
+        // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
+        if (asCodeEnabled) {
+            variables = PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
         }
 
         // 解析输入输出字段模板
@@ -341,7 +345,8 @@ open class MarketAtomTask : ITask() {
                             workspace = workspace,
                             errorMessage = errorMessage,
                             jobId = buildVariables.jobId,
-                            stepId = buildTask.stepId
+                            stepId = buildTask.stepId,
+                            taskId = buildTask.taskId
                         )
                     }
                     OSType.LINUX, OSType.MAC_OS -> {
@@ -357,7 +362,8 @@ open class MarketAtomTask : ITask() {
                             runtimeVariables = runtimeVariables,
                             errorMessage = errorMessage,
                             jobId = buildVariables.jobId,
-                            stepId = buildTask.stepId
+                            stepId = buildTask.stepId,
+                            taskId = buildTask.taskId
                         )
                     }
                     else -> {
@@ -372,25 +378,25 @@ open class MarketAtomTask : ITask() {
                 )
             }
         } catch (e: Throwable) {
-            error = e
+            error = TaskExecuteExceptionDecorator.decorate(e)
         } finally {
             output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
             atomData.finishKillFlag?.let { addFinishKillFlag(it) }
             if (error != null) {
-                val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
-                defaultMessage.append(error.toString())
-                error.stackTrace.forEach {
-                    with(it) {
-                        defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
-                    }
-                }
                 throw if (error is TaskExecuteException) {
                     error
-                } else TaskExecuteException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
-                    errorMsg = defaultMessage.toString()
-                )
+                } else {
+                    val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
+                    defaultMessage.append(error.toString())
+                    error.stackTrace.forEach {
+                        with(it) { defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)") }
+                    }
+                    TaskExecuteException(
+                        errorType = ErrorType.SYSTEM,
+                        errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                        errorMsg = defaultMessage.toString()
+                    )
+                }
             }
         }
     }
@@ -519,7 +525,6 @@ open class MarketAtomTask : ITask() {
     private fun getAtomSensitiveConfMap(atomCode: String): Map<String, MutableMap<String, String>> {
         // 查询插件的敏感信息
         val atomSensitiveConfResult = atomApi.getAtomSensitiveConf(atomCode)
-        logger.info("atomCode is:$atomCode ,atomSensitiveConfResult is:$atomSensitiveConfResult")
         val atomSensitiveConfList = atomSensitiveConfResult.data
         val atomSensitiveConfMap = mutableMapOf<String, String>()
         atomSensitiveConfList?.forEach {
@@ -679,7 +684,6 @@ open class MarketAtomTask : ITask() {
         workspace: File,
         inputVariables: Map<String, Any>
     ) {
-//        logger.info("runtimeVariables is:$runtimeVariables") // 有敏感信息
         val inputFileFile = File(workspace, inputFile)
         inputFileFile.writeText(JsonUtil.toJson(inputVariables))
     }
@@ -708,8 +712,10 @@ open class MarketAtomTask : ITask() {
             try {
                 isPlatformCodeRegistered = storeApi.isPlatformCodeRegistered(platformCode).data ?: false
             } catch (e: RemoteServiceException) {
-                logger.warn("Failed to verify the error code information of the atom " +
-                        "docking platformm $platformCode | ${e.errorMessage}")
+                logger.warn(
+                    "Failed to verify the error code information of the atom " +
+                        "docking platformm $platformCode | ${e.errorMessage}"
+                )
             }
             if (isPlatformCodeRegistered) {
                 addPlatformCode(platformCode)
@@ -719,8 +725,10 @@ open class MarketAtomTask : ITask() {
                     addPlatformErrorCode(platformErrorCode)
                 }
             } else {
-                logger.warn("PlatformCode:$platformCode has not been registered and failed to enter " +
-                        "the library. Please contact Devops-helper to register first")
+                logger.warn(
+                    "PlatformCode:$platformCode has not been registered and failed to enter " +
+                        "the library. Please contact Devops-helper to register first"
+                )
             }
         }
         val success: Boolean
@@ -790,7 +798,7 @@ open class MarketAtomTask : ITask() {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
-                    if (buildVariables.pipelineAsCodeSettings?.enable == true) env.remove(key)
+                    // if (buildVariables.pipelineAsCodeSettings?.enable == true) env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
@@ -838,7 +846,7 @@ open class MarketAtomTask : ITask() {
                     )
                 }
             } else {
-                if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {
+                if (!atomResult.qualityData.isNullOrEmpty()) {
                     logger.warn("qualityData is not empty, but type is ${atomResult.type}, expected 'quality' !")
                 }
             }
@@ -1043,12 +1051,8 @@ open class MarketAtomTask : ITask() {
             return atomExecuteFile
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)
-            LoggerService.addErrorLine("download plugin execute file fail: ${t.message}")
-            throw TaskExecuteException(
-                errorMsg = "download plugin execute file fail",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
-            )
+            LoggerService.addErrorLine("download plugin execute file fail: $t")
+            throw TaskExecuteExceptionDecorator.decorate(t)
         }
     }
 

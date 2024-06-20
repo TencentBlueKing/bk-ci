@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
     `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
     `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
+    `ZONE_ID` varchar(32) default '' null comment '地域id',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),
@@ -124,6 +125,9 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
     `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户ID',
     `USER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '用户中文名',
     `COMPANY_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '公司名称',
+    `PHONE` varchar(64) NOT NULL DEFAULT '' COMMENT '电话',
+    `PHONE_COUNTRY_CODE` varchar(16) NOT NULL DEFAULT '' COMMENT '电话区号',
+    `EMAIL` varchar(128) NOT NULL DEFAULT '' COMMENT '邮箱',
     `DEFAULT_SHELL` varchar(10) NOT NULL DEFAULT '' COMMENT '默认shell: zsh | bash',
     `BASIC_SETTING` mediumtext NOT NULL COMMENT '客户端使用，后台只管存的信息',
     `GIT_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接git',
@@ -584,5 +588,50 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_LOGIN` (
 	`LAST_LOGIN_TIME` datetime NOT NULL,
     PRIMARY KEY (`PROJECT_ID`, `WORKSPACE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_JOB_SCHEMA` (
+	`JOB_ID` varchar(64) NOT NULL,
+	`JOB_NAME` varchar(64) NOT NULL,
+	`JOB_SCHEMA` json NOT NULL,
+	`JOB_TYPE` varchar(32) NOT NULL COMMENT '任务类型,如一次性或者周期任务',
+    `JOB_ACTION_TYPE` varchar(32) NOT NULL COMMENT '任务执行类型,如后台或者流水线',
+	`JOB_ACTION_EXTRA_PARAM` json NOT NULL COMMENT '任务的额外参数，随着tion变更不同类型，比如job执行流水线时需要的参数',
+	PRIMARY KEY (`JOB_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_JOB_EXEC_RECORD` (
+	`ID` bigint(20) auto_increment NOT NULL,
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+	`NAME` varchar(256) NOT NULL,
+	`CREATE_TIME` timestamp NOT NULL COMMENT '创建时间',
+	`END_TIME` timestamp NULL COMMENT '结束时间',
+	`CREATOR` varchar(32) NOT NULL COMMENT '用户',
+	`STATUS` varchar(32) NOT NULL,
+    `ERROR_MSG` varchar(256) NULL COMMENT '执行失败时错误日志',
+    `JOB_SCHEMA_ID` varchar(64) NOT NULL,
+    `JOB_SCHEMA_PARAM` json NOT NULL,
+    `RECEIPT_INFO` json NULL COMMENT '调用一些异步任务时的回执信息，用来追踪状态',
+    PRIMARY KEY (`ID`),
+    KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CRON_JOB` (
+	`ID` bigint(20) auto_increment NOT NULL,
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+	`JOB_NAME` varchar(256) NOT NULL,
+	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '更新时间',
+	`CREATOR` varchar(32) NOT NULL COMMENT '创建人',
+	`CRON_EXP` varchar(16) NOT NULL,
+	`LAST_RUN_TIME` timestamp NULL COMMENT '上一次运行时间',
+	`UPDATER` varchar(32) NOT NULL COMMENT '更新人',
+	`RUN_TIMES` bigint(20) NOT NULL DEFAULT 0 COMMENT '运行次数',
+    `JOB_SCHEMA_ID` varchar(64) NOT NULL,
+    `JOB_SCHEMA_PARAM` json NOT NULL,
+    `ENABLE` bit(1) NOT NULL, 
+    PRIMARY KEY (`ID`),
+    KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.store.api.common.OpenStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -48,7 +50,8 @@ class OpenStoreResourceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : OpenStoreResource {
 
-    override fun validateProjectAtomPermission(
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun validateProjectComponentPermission(
         token: String,
         projectCode: String,
         storeCode: String,
@@ -72,7 +75,7 @@ class OpenStoreResourceImpl @Autowired constructor(
                 storeProjectService.isInstalledByProject(
                     projectCode = projectCode,
                     storeCode = storeCode,
-                    storeType = StoreTypeEnum.ATOM.type.toByte()
+                    storeType = storeType.type.toByte()
                 )
         )
     }

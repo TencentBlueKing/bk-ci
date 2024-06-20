@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -50,7 +50,7 @@ interface OpenStoreResource {
     @GET
     @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/permission/validate")
     @Operation(summary = "校验项目是否有使用该组件的权限")
-    fun validateProjectAtomPermission(
+    fun validateProjectComponentPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,

@@ -6,6 +6,7 @@ import com.tencent.devops.common.archive.pojo.QueryData
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CgsQueryReq(
+    val contentProviderName: String,
     val appName: String,
     val query: QueryData?,
     val page: Page?

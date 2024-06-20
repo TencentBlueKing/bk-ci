@@ -149,12 +149,18 @@
             :title="projectDialogTitle"
         />
         <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
+
+        <RemindAssociateOperationalDialog
+            :is-show="showOperationalDialog"
+            @to-associate="handleToAssociate"
+            @check-associate="handleCheckAssociate"
+        />
     </div>
 </template>
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Component } from 'vue-property-decorator'
+    import { Component, Watch } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { isAbsoluteUrl, urlJoin } from '../../utils/util'
@@ -162,6 +168,7 @@
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
@@ -176,7 +183,8 @@
             ApplyProjectDialog,
             Logo,
             DevopsSelect,
-            LocaleSwitcher
+            LocaleSwitcher,
+            RemindAssociateOperationalDialog
         }
     })
     export default class Header extends Vue {
@@ -190,10 +198,12 @@
 
         @Action toggleProjectDialog
         @Action togglePopupShow
+        @Action remindUserOfRelatedProduct
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
         isAbsoluteUrl = isAbsoluteUrl
+        showOperationalDialog: boolean = false
 
         langs: Array<any> = [
             {
@@ -259,7 +269,13 @@
             projectDropdown: any
         }
 
+        @Watch('projectId')
+        changeProjectId () {
+            this.checkRemindUserOfRelatedProduct()
+        }
+
         created () {
+            this.checkRemindUserOfRelatedProduct()
             eventBus.$on('show-project-menu', () => {
                 const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
                 if (ele) {
@@ -341,7 +357,7 @@
                 })
             }
             
-            if (project.routerTag !== oldProject.routerTag) {
+            if (!oldProject.routerTag || project.routerTag !== oldProject.routerTag) {
                 this.goHomeById(id, true)
             }
         }
@@ -383,7 +399,7 @@
         }
 
         handleChangeLang (item) {
-            this.$setLocale(item.id).then(() => {
+            this.$setLocale(item.id, true).then(() => {
                 location.reload()
             })
         }
@@ -394,6 +410,23 @@
 
         handleHide () {
             this.togglePopupShow(false)
+        }
+
+        checkRemindUserOfRelatedProduct () {
+            if (this.$route.name === 'manage' || !this.projectId) return
+            this.remindUserOfRelatedProduct({
+                projectId: this.projectId
+            }).then(res => {
+                this.showOperationalDialog = res
+            })
+        }
+
+        handleToAssociate () {
+            this.to(`/console/manage/${this.projectId}/edit`)
+        }
+
+        handleCheckAssociate () {
+            this.checkRemindUserOfRelatedProduct()
         }
     }
 </script>

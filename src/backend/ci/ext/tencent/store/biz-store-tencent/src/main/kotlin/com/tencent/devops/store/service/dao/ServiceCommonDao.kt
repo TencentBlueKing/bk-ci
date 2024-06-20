@@ -160,10 +160,22 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
                 storeCode = serviceRecord.serviceCode,
                 storeName = serviceRecord.serviceName,
                 version = serviceRecord.version,
-                publicFlag = publicFlag
+                publicFlag = publicFlag,
+                classifyId = serviceRecord.classifyId,
+                publisher = serviceRecord.publisher,
+                storeType = StoreTypeEnum.SERVICE
             )
         } else {
             null
+        }
+    }
+
+    override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
+        return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
+            dslContext.select(REPOSITORY_HASH_ID)
+                .from(this)
+                .where(SERVICE_CODE.eq(storeCode))
+                .fetchAny()?.into(String::class.java)
         }
     }
 }

@@ -43,4 +43,5 @@ dependencies {
     api(project(":core:common:common-kafka"))
     api("org.json:json")
     api("org.apache.commons:commons-exec")
+    api(project(":core:auth:api-auth"))
 }

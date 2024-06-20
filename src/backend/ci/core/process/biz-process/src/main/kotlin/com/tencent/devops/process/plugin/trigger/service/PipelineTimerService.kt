@@ -35,11 +35,13 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.process.tables.records.TPipelineTimerBranchRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
 import com.tencent.devops.process.constant.ProcessMessageCode.ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
 import com.tencent.devops.process.engine.pojo.PipelineTimer
+import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerBranchDao
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerDao
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import org.jooq.DSLContext
@@ -55,6 +57,7 @@ import org.springframework.stereotype.Service
 open class PipelineTimerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTimerDao: PipelineTimerDao,
+    private val pipelineTimerBranchDao: PipelineTimerBranchDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
@@ -67,10 +70,24 @@ open class PipelineTimerService @Autowired constructor(
         pipelineId: String,
         userId: String,
         crontabExpressions: Set<String>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        repoHashId: String?,
+        branchs: Set<String>?,
+        noScm: Boolean?
     ): Result<Boolean> {
         val crontabJson = JsonUtil.toJson(crontabExpressions, formatted = false)
-        return if (0 < pipelineTimerDao.save(dslContext, projectId, pipelineId, userId, crontabJson, channelCode)) {
+        return if (0 < pipelineTimerDao.save(
+                dslContext,
+                projectId,
+                pipelineId,
+                userId,
+                crontabJson,
+                channelCode,
+                repoHashId,
+                branchs?.let { JsonUtil.toJson(it) },
+                noScm
+            )
+        ) {
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(
                     source = "saveTimer",
@@ -96,7 +113,8 @@ open class PipelineTimerService @Autowired constructor(
                 ERROR_SAVE_PIPELINE_TIMER.toInt(),
                 MessageUtil.getMessageByLocale(
                     ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL,
-                    I18nUtil.getLanguage(userId))
+                    I18nUtil.getLanguage(userId)
+                )
             )
         }
     }
@@ -135,23 +153,29 @@ open class PipelineTimerService @Autowired constructor(
     }
 
     private fun convert(timerRecord: TPipelineTimerRecord): PipelineTimer? {
-        return PipelineTimer(
-            projectId = timerRecord.projectId,
-            pipelineId = timerRecord.pipelineId,
-            startUser = timerRecord.creator,
-            crontabExpressions = try {
-                JsonUtil.to(timerRecord.crontab, object : TypeReference<List<String>>() {})
-            } catch (ignored: Throwable) {
-                listOf(timerRecord.crontab)
-            },
-            channelCode = try {
-                ChannelCode.valueOf(timerRecord.channel)
-            } catch (e: IllegalArgumentException) {
-                logger.warn("Unkown channel code", e)
-                return null
-            }
-
-        )
+        with(timerRecord) {
+            return PipelineTimer(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                startUser = creator,
+                crontabExpressions = try {
+                    JsonUtil.to(crontab, object : TypeReference<List<String>>() {})
+                } catch (ignored: Throwable) {
+                    listOf(crontab)
+                },
+                channelCode = try {
+                    ChannelCode.valueOf(channel)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("Unkown channel code", e)
+                    return null
+                },
+                repoHashId = repoHashId,
+                branchs = branchs?.let {
+                    JsonUtil.to(it, object : TypeReference<List<String>>() {})
+                },
+                noScm = noScm
+            )
+        }
     }
 
     open fun list(start: Int, limit: Int): Result<Collection<PipelineTimer>> {
@@ -164,5 +188,48 @@ open class PipelineTimerService @Autowired constructor(
             timerList.add(convert(record) ?: return@forEach)
         }
         return Result(timerList)
+    }
+
+    fun saveTimerBranch(
+        projectId: String,
+        pipelineId: String,
+        repoHashId: String,
+        branch: String,
+        revision: String
+    ) {
+        pipelineTimerBranchDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repoHashId = repoHashId,
+            branch = branch,
+            revision = revision
+        )
+    }
+
+    fun getTimerBranch(
+        projectId: String,
+        pipelineId: String,
+        repoHashId: String,
+        branch: String
+    ): TPipelineTimerBranchRecord? {
+        return pipelineTimerBranchDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repoHashId = repoHashId,
+            branch = branch
+        )
+    }
+
+    fun deleteTimerBranch(
+        projectId: String,
+        pipelineId: String
+    ) {
+        pipelineTimerBranchDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 }

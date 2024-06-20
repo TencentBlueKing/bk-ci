@@ -34,8 +34,8 @@ import com.tencent.devops.model.store.tables.TStoreDockingPlatform
 import com.tencent.devops.model.store.tables.TStoreDockingPlatformErrorCode
 import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformErrorCodeRecord
 import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformRecord
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformInfo
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result

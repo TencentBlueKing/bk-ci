@@ -139,6 +139,10 @@ allprojects {
                 entry("swagger-core")
                 entry("swagger-models")
             }
+            // worker需要依赖
+            dependency("org.jvnet.winp:winp:${Versions.Winp}")
+            dependency("net.java.dev.jna:jna:${Versions.Jna}")
+            dependency("org.jenkins-ci:version-number:${Versions.JenkinsVersionNumber}")
         }
     }
 
@@ -155,6 +159,7 @@ allprojects {
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
+        it.exclude("org.bouncycastle", "bcpkix-jdk15on")
         it.exclude("io.swagger") // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
         it.exclude("org.bouncycastle", "bcpkix-jdk15on")
     }

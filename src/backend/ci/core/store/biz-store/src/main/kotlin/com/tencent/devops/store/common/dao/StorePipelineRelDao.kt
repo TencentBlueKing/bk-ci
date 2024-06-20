@@ -34,16 +34,19 @@ import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StorePipelineRelDao {
 
+    @Suppress("LongParameterList")
     fun add(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
         pipelineId: String,
-        busType: StorePipelineBusTypeEnum = StorePipelineBusTypeEnum.BUILD
+        busType: StorePipelineBusTypeEnum = StorePipelineBusTypeEnum.BUILD,
+        projectCode: String = ""
     ) {
         with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
             dslContext.insertInto(
@@ -51,6 +54,7 @@ class StorePipelineRelDao {
                 ID,
                 STORE_CODE,
                 STORE_TYPE,
+                PROJECT_CODE,
                 PIPELINE_ID,
                 BUS_TYPE
             )
@@ -58,6 +62,7 @@ class StorePipelineRelDao {
                     UUIDUtil.generate(),
                     storeCode,
                     storeType.type.toByte(),
+                    projectCode,
                     pipelineId,
                     busType.name
                 ).execute()
@@ -92,6 +97,28 @@ class StorePipelineRelDao {
             dslContext.deleteFrom(this)
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
+
+    fun updateStorePipelineProject(
+        dslContext: DSLContext,
+        pipelineId: String,
+        projectCode: String
+    ) {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            dslContext.update(this)
+                .set(PROJECT_CODE, projectCode)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun deleteStorePipelineRelById(dslContext: DSLContext, id: String) {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(id))
                 .execute()
         }
     }

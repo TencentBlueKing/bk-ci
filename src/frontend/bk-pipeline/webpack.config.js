@@ -1,5 +1,5 @@
 const path = require('path')
-// const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const { VueLoaderPlugin } = require('vue-loader')
 
 module.exports = (env = {}, argv) => {
@@ -27,6 +27,12 @@ module.exports = (env = {}, argv) => {
                 commonjs2: 'vue',
                 amd: 'vue',
                 root: 'Vue'
+            },
+            '@tencent/bk-magic-vue': {
+                commonjs: '@tencent/bk-magic-vue',
+                commonjs2: '@tencent/bk-magic-vue',
+                amd: '@tencent/bk-magic-vue',
+                root: 'bkMagicVue'
             }
         },
         module: {
@@ -60,6 +66,7 @@ module.exports = (env = {}, argv) => {
             ]
         },
         plugins: [
+            // new BundleAnalyzerPlugin(),
             new VueLoaderPlugin()
             // new MiniCssExtractPlugin({
             //     filename: 'bk-pipeline.css',

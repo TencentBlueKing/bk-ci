@@ -26,7 +26,8 @@ import org.jooq.Record
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
-import org.jooq.impl.TableImpl
+import org.jooq.SelectSelectStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -64,12 +65,12 @@ class WorkspaceJoinDao {
             // 没有包含其他表的条件
             if (search.onlyNeedCheckWorkspace()) {
                 val dsl = (
-                    genFetchProjectWorkspaceCond(
-                        dslContext = dslContext,
-                        queryType = queryType,
-                        search = search
-                    ) as SelectConditionStep<TWorkspaceRecord>
-                    ).orderBy(CREATE_TIME.desc(), ID.desc())
+                        genFetchProjectWorkspaceCond(
+                            dslContext = dslContext,
+                            queryType = queryType,
+                            search = search
+                        ) as SelectConditionStep<TWorkspaceRecord>
+                        ).orderBy(CREATE_TIME.desc(), ID.desc())
                 if (limit != null) {
                     dsl.limit(limit.limit).offset(limit.offset)
                 }
@@ -112,14 +113,6 @@ class WorkspaceJoinDao {
     ): SelectConditionStep<*> {
         val conditions = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
-//            projectId?.let {
-//                if (queryType == QueryType.OP) {
-//                    conditions.add(PROJECT_ID.like("%$it%"))
-//                } else {
-//                    conditions.add(PROJECT_ID.eq(it))
-//                }
-//            }
-
             search.projectId?.ifEmpty { null }?.let { projects ->
                 /*仅op支持项目通过模糊查询*/
                 if (search.onFuzzyMatch && queryType == QueryType.OP) {
@@ -129,13 +122,6 @@ class WorkspaceJoinDao {
                 }
             }
 
-//            workspaceName?.let {
-//                if (queryType == QueryType.OP) {
-//                    conditions.add(NAME.like("%$it%"))
-//                } else {
-//                    conditions.add(NAME.eq(it))
-//                }
-//            }
             search.workspaceName?.ifEmpty { null }?.let { names ->
                 if (search.onFuzzyMatch) {
                     conditions.add(NAME.likeRegex(names.joinToString("|")))
@@ -152,20 +138,12 @@ class WorkspaceJoinDao {
                 }
             }
 
-//            if (status != null) {
-//                conditions.add(STATUS.eq(status.ordinal))
-//            } else {
-//                conditions.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-//            }
             search.status?.ifEmpty { null }?.let { status ->
                 conditions.add(STATUS.`in`(status.map { it.ordinal }))
             } ?: kotlin.run {
                 conditions.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
             }
 
-//            if (systemType != null) {
-//                conditions.add(SYSTEM_TYPE.eq(systemType.name))
-//            }
             search.workspaceSystemType?.ifEmpty { null }?.let { types ->
                 if (search.onFuzzyMatch) {
                     conditions.add(SYSTEM_TYPE.likeRegex(types.joinToString("|") { it.name }))
@@ -174,13 +152,17 @@ class WorkspaceJoinDao {
                 }
             }
 
+            search.workspaceOwnerType?.ifEmpty { null }?.let { types ->
+                if (search.onFuzzyMatch) {
+                    conditions.add(OWNER_TYPE.likeRegex(types.joinToString("|") { it.name }))
+                } else {
+                    conditions.add(OWNER_TYPE.`in`(types.map { it.name }))
+                }
+            }
+
             queryType.ownerType()?.let {
                 conditions.add(OWNER_TYPE.eq(it.name))
             }
-
-//            if (queryType == QueryType.WEB) {
-//                conditions.add(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
-//            }
         }
 
         // 没有连表查询的条件
@@ -188,10 +170,6 @@ class WorkspaceJoinDao {
             return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
         }
 
-//        // 没有连表查询的条件
-//        if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null && expertSupId == null) {
-//            return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
-//        }
         if (!search.ips.isNullOrEmpty()) {
             val j = JooqUtils.jsonExtract(
                 t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
@@ -217,75 +195,6 @@ class WorkspaceJoinDao {
             val condition = j.likeRegex(search.zoneShortName?.joinToString("|"))
             conditions.add(condition)
         }
-
-//        // ip 和 zoneId 的查询
-//        if (!ips.isNullOrEmpty() || zoneId != null) {
-//            // 先查询他俩都存在的情况，都存在可以直接拼接查询
-//            if (!ips.isNullOrEmpty() && zoneId != null) {
-//                val comIps = mutableSetOf<String>()
-//                ips.forEach { ip ->
-//                    comIps.add("$zoneId.$ip")
-//                }
-//                var comIpsCond = JooqUtils.jsonExtract(
-//                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                    t2 = "\$.hostIP",
-//                    lower = false,
-//                    removeDoubleQuotes = true
-//                ).eq(comIps.first())
-//                comIps.drop(1).forEach { comIp ->
-//                    comIpsCond = comIpsCond.or(
-//                        JooqUtils.jsonExtract(
-//                            t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                            t2 = "\$.hostIP",
-//                            lower = false,
-//                            removeDoubleQuotes = true
-//                        ).eq(comIp)
-//                    )
-//                }
-//                conditions.add(comIpsCond)
-//            } else if (!ips.isNullOrEmpty() && zoneId == null) {
-//                // 存在 ips 但不存在 zoneId
-//                var ipsCond = JooqUtils.jsonExtract(
-//                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                    t2 = "\$.hostIP",
-//                    lower = false,
-//                    removeDoubleQuotes = true
-//                ).like("%${ips.first()}") as Condition
-//                ips.drop(1).forEach { ip ->
-//                    ipsCond = ipsCond.or(
-//                        JooqUtils.jsonExtract(
-//                            t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                            t2 = "\$.hostIP",
-//                            lower = false,
-//                            removeDoubleQuotes = true
-//                        ).like("%$ip")
-//                    )
-//                }
-//                conditions.add(ipsCond)
-//            } else {
-//                // 只存在 zoneId
-//                val zoneCond = JooqUtils.jsonExtract(
-//                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                    t2 = "\$.hostIP",
-//                    lower = false,
-//                    removeDoubleQuotes = true
-//                ).like("$zoneId%")
-//                conditions.add(zoneCond)
-//            }
-//        }
-
-//        // owner 条件查询
-//        if (owner != null) {
-//            val sql = (
-//                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-//                        .and(TWorkspace.T_WORKSPACE.CREATOR.like("%$owner%"))
-//                    )
-//                .or(
-//                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-//                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.like("%$owner%"))
-//                )
-//            conditions.add(sql)
-//        }
 
         // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
@@ -344,11 +253,6 @@ class WorkspaceJoinDao {
         }
 
         // machineType 条件查询
-//        if (machineType != null) {
-//            conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(machineType))
-//        }
-
-        // machineType 条件查询
         search.size?.ifEmpty { null }?.let { type ->
             conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.`in`(type))
         }
@@ -363,11 +267,6 @@ class WorkspaceJoinDao {
         }
 
         // expertSup
-//        if (expertSupId != null) {
-//            conditions.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.ID.eq(expertSupId))
-//        }
-
-        // expertSup
         search.expertSupId?.ifEmpty { null }?.let { ids ->
             val sql = if (search.onFuzzyMatch) {
                 TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.ID.likeRegex(ids.joinToString("|"))
@@ -377,16 +276,7 @@ class WorkspaceJoinDao {
             conditions.add(sql)
         }
 
-        // 添加连表查询条件以及获得连表
-//        val tables = joinTablesAndItems(
-//            conditions = conditions,
-//            search = search
-//        )
-
         val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
-//        if (!ips.isNullOrEmpty() || zoneId != null) {
-//            fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
-//        }
 
         if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
             fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
@@ -428,89 +318,41 @@ class WorkspaceJoinDao {
         return this
     }
 
-    private fun joinTablesAndItems(
-        conditions: MutableList<Condition>,
-        search: WorkspaceSearch
-    ): List<TableImpl<*>> {
-        var offset = 0
-        val result = mutableListOf<TableImpl<*>>()
-        result.add(TWorkspace.T_WORKSPACE)
-//        if (!ips.isNullOrEmpty() || zoneId != null) {
-//            result.add(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-//            offset++
-//        }
-        if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
-            result.add(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-            offset++
-        }
-//        if (owner != null) {
-//            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-//            offset++
-//        }
-//        if (!search.owner.isNullOrEmpty() || !search.viewers.isNullOrEmpty()) {
-//            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-//            offset++
-//        }
-
-//        if (machineType != null) {
-//            result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-//            result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
-//            offset++
-//            conditions.add(
-//                offset,
-//                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
-//                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
-//                )
-//            )
-//            offset++
-//        }
-        if (!search.size.isNullOrEmpty()) {
-            result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-            result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
-            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
-            offset++
-            conditions.add(
-                offset,
-                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
-                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
-                )
-            )
-            offset++
-        }
-//        if (expertSupId != null) {
-//            result.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT)
-//            conditions.add(
-//                offset,
-//                TWorkspace.T_WORKSPACE.NAME.eq(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.WORKSPACE_NAME)
-//            )
-//        }
-        if (!search.expertSupId.isNullOrEmpty()) {
-            result.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT)
-            conditions.add(
-                offset,
-                TWorkspace.T_WORKSPACE.NAME.eq(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.WORKSPACE_NAME)
-            )
-        }
-
-        return result
-    }
-
     fun fetchProjectFromUser(
         dslContext: DSLContext,
         userId: String
     ): Set<String> {
         return dslContext.select(TWorkspace.T_WORKSPACE.PROJECT_ID)
-            .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
-            .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-            .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .where(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
             .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
             .fetch().distinct()
             .map { it[TWorkspace.T_WORKSPACE.PROJECT_ID.name] as String? ?: "" }
+            .filter { it.isNotBlank() }
+            .toSet()
+    }
+
+    // 获取正常状态的 workspace 的用户
+    fun fetchProjectSharedUser(
+        dslContext: DSLContext,
+        projectIds: Set<String>
+    ): Set<String> {
+        val dsl = dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
+            .from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.`in`(projectIds))
+            .and(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            )
+        return dsl.fetch().distinct()
+            .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] ?: "" }
             .filter { it.isNotBlank() }
             .toSet()
     }
@@ -603,6 +445,80 @@ class WorkspaceJoinDao {
                 remark = record["REMARK"] as String?
             )
         }
+    }
+
+    fun fetchProjectMachineType(
+        dslContext: DSLContext,
+        projectId: String
+    ): Set<String> {
+        return dslContext.selectDistinct(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE)
+            .addResourceJoin(projectId).fetch().map { it["SIZE"].toString() }.toSet()
+    }
+
+    fun fetchProjectMachineTypeCount(
+        dslContext: DSLContext,
+        projectId: String
+    ): Map<String, Int> {
+        return dslContext.select(
+            TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE,
+            DSL.count(TWorkspace.T_WORKSPACE.NAME).`as`("COUNT")
+        ).addResourceJoin(projectId).groupBy(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE).fetch()
+            .map {
+                it.getValue(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE) to
+                        it.get("COUNT").toString().toLong().toInt()
+            }.toMap()
+    }
+
+    private fun SelectSelectStep<*>.addResourceJoin(projectId: String) =
+        this.from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+            .leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
+            .on(
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
+                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
+                )
+            )
+            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .and(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            )
+
+    fun fetchRunningIp(
+        dslContext: DSLContext,
+        projectId: String,
+        size: String?,
+        owners: Set<String>?
+    ): Set<String> {
+        val dsl = dslContext.select(TWorkspace.T_WORKSPACE.HOST_NAME).from(TWorkspace.T_WORKSPACE)
+        if (!size.isNullOrEmpty()) {
+            dsl.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+            dsl.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
+                .on(
+                    TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
+                        TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
+                    )
+                )
+        }
+        if (!owners.isNullOrEmpty()) {
+            dsl.leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+                .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
+        }
+        val stepDsl = dsl.where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .and(TWorkspace.T_WORKSPACE.STATUS.eq(WorkspaceStatus.RUNNING.ordinal))
+        if (!size.isNullOrBlank()) {
+            stepDsl.and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
+        }
+        if (!owners.isNullOrEmpty()) {
+            stepDsl.and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+                .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+        }
+        return stepDsl.fetch().map { it["HOST_NAME"] as String }.toSet()
     }
 
     companion object {

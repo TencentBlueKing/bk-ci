@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -16,7 +16,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectWithPermission
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.SendEmailForProjectByConditionDTO
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
@@ -44,15 +44,14 @@ class ProjectNotifyService constructor(
     companion object {
         private val projectNotifyThreadPool = Executors.newFixedThreadPool(10)
         private val logger = LoggerFactory.getLogger(ProjectNotifyService::class.java)
-        private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE =
-            "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
-        private const val NOTIFY_USER_TO_PROJECT_INFO_CHANGE =
-            "NOTIFY_USER_TO_PROJECT_INFO_CHANGE"
+        private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE = "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
+        private const val PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE = "PROJECT_ACTIVITY_CHECK_TEMPLATE_CODE"
+        private const val NOTIFY_USER_TO_PROJECT_INFO_CHANGE = "NOTIFY_USER_TO_PROJECT_INFO_CHANGE"
 
         private const val PROJECT_INFO_CHANGE_TABLE_HEADER = """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
         private const val PROJECT_INFO_CHANGE_TABLE_CONTENT_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
-        private const val PROJECT_ORGANIZATION_VERIFY_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center ; max-widtd:300px;word-wrap: break-word; white-space: normal;">%s</td></tr>"""
-        private const val VERIFY_PROJECT_MANAGER_ORGANIZATION_BG = "verify_project_manager_organization_bg"
+        private const val PROJECT_ORGANIZATION_VERIFY_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center ; max-width:300px;word-wrap: break-word; white-space: normal;">%s</td></tr>"""
+        private const val VERIFY_PROJECT_MANAGER_ORGANIZATION_BG = "send_email_for_verify_project_organization"
         private const val PROJECT_NOTIFY_USER = "project_notify_user"
         private const val IS_SEND_EMAIL_FLAG = "is_send_email_flag"
     }
@@ -95,13 +94,14 @@ class ProjectNotifyService constructor(
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE
             do {
-                val projectInfos = projectService.listMigrateProjects(
-                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                val projectInfos = projectService.listProjectsByCondition(
+                    projectConditionDTO = ProjectConditionDTO(
                         bgId = sendEmailForProjectByConditionDTO.bgId,
                         deptId = sendEmailForProjectByConditionDTO.deptId,
                         centerId = sendEmailForProjectByConditionDTO.centerId,
                         relatedProduct = false,
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                        enabled = true
                     ),
                     limit = limit,
                     offset = offset
@@ -162,13 +162,14 @@ class ProjectNotifyService constructor(
         var count = 0
         val projectIds = mutableListOf<String>()
         do {
-            val projectInfos = projectService.listMigrateProjects(
-                migrateProjectConditionDTO = MigrateProjectConditionDTO(
+            val projectInfos = projectService.listProjectsByCondition(
+                projectConditionDTO = ProjectConditionDTO(
                     bgId = sendEmailForProjectByConditionDTO.bgId,
                     deptId = sendEmailForProjectByConditionDTO.deptId,
                     centerId = sendEmailForProjectByConditionDTO.centerId,
                     relatedProduct = false,
-                    routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                    routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                    enabled = true
                 ),
                 limit = limit,
                 offset = offset
@@ -220,7 +221,7 @@ class ProjectNotifyService constructor(
      * */
     fun sendEmailForProjectOrganizationChange(): Boolean {
         logger.info("send email for project organization change")
-        val title = "项目监控-项目所属组织架构变更情况"
+        val title = "项目监控-%s个项目所属组织架构发生变更"
         var table = String.format(
             PROJECT_INFO_CHANGE_TABLE_HEADER,
             "项目名称", "项目ID", "所属组织架构-变更前", "所属组织架构-变更后", "操作人", "操作时间"
@@ -240,7 +241,7 @@ class ProjectNotifyService constructor(
             )
         }
         val bodyParams = mapOf(
-            "title" to title,
+            "title" to String.format(title, projectInfos.size),
             "table" to table
         )
         sendEmail(
@@ -259,7 +260,7 @@ class ProjectNotifyService constructor(
      * */
     fun sendEmailForProjectProductChange(): Boolean {
         logger.info("send email for project product change")
-        val title = "项目监控-项目所属OBS运营产品变更情况"
+        val title = "项目监控-%s个项目所属OBS运营产品发生变更"
         var table = String.format(
             PROJECT_INFO_CHANGE_TABLE_HEADER,
             "项目名称", "项目ID", "所属运营产品-变更前", "所属运营产品-变更后", "操作人", "操作时间"
@@ -283,7 +284,7 @@ class ProjectNotifyService constructor(
             )
         }
         val bodyParams = mapOf(
-            "title" to title,
+            "title" to String.format(title, projectInfos.size),
             "table" to table
         )
         sendEmail(
@@ -321,9 +322,10 @@ class ProjectNotifyService constructor(
                 val projectID2ManagerBelongVerifyBgId = mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg为校验的verifyBgId*/>()
                 val projectID2ManagerNotBelongVerifyBgId = mutableMapOf<String/*项目ID*/, List<String>/*管理员所属Bg不为校验的verifyBgId*/>()
                 do {
-                    val projectInfos = projectService.listMigrateProjects(
-                        migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                            routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                    val projectInfos = projectService.listProjectsByCondition(
+                        projectConditionDTO = ProjectConditionDTO(
+                            routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                            enabled = true
                         ),
                         limit = limit,
                         offset = offset
@@ -353,7 +355,7 @@ class ProjectNotifyService constructor(
     }
 
     private fun processProjectInfos(
-        projectInfos: List<ProjectWithPermission>,
+        projectInfos: List<ProjectByConditionDTO>,
         verifyBgId: Long,
         wrongOrganizationalProjectList: MutableList<String>,
         projectID2ManagerBelongVerifyBgId: MutableMap<String, List<String>>,
@@ -388,7 +390,7 @@ class ProjectNotifyService constructor(
         }
     }
 
-    private fun getManagerDeptInfos(projectInfo: ProjectWithPermission): MutableList<UserDeptDetail>? {
+    private fun getManagerDeptInfos(projectInfo: ProjectByConditionDTO): MutableList<UserDeptDetail>? {
         val projectId = projectInfo.englishName
         val managerWithDeptDetail = projectId2ManagerWithDeptDetail.getIfPresent(projectId)
         if (managerWithDeptDetail != null)
@@ -411,7 +413,7 @@ class ProjectNotifyService constructor(
     }
 
     private fun processManagerBgSame(
-        projectInfo: ProjectWithPermission,
+        projectInfo: ProjectByConditionDTO,
         managerBgIds: List<String>,
         verifyBgId: Long,
         wrongOrganizationalProjectList: MutableList<String>
@@ -425,7 +427,7 @@ class ProjectNotifyService constructor(
     }
 
     private fun processManagerBgNotSame(
-        projectInfo: ProjectWithPermission,
+        projectInfo: ProjectByConditionDTO,
         managerDeptInfos: MutableList<UserDeptDetail>,
         managerBgIds: List<String>,
         verifyBgId: Long,
@@ -466,7 +468,7 @@ class ProjectNotifyService constructor(
         val bgName = tofService.getDeptInfo(id = verifyBgId.toInt()).name
 
         if (wrongOrganizationalProjectList.isNotEmpty()) {
-            val title1 = "项目监控-全部管理员为$bgName，但项目所属组织架构不属于${bgName}告警"
+            val title1 = "项目监控-%s个项目全部管理员为$bgName，但项目所属组织架构不属于$bgName"
             var table1 = String.format(
                 PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
                 "项目名称", "项目ID", "项目所属组织架构", "创建人", "管理员"
@@ -485,7 +487,7 @@ class ProjectNotifyService constructor(
             }
 
             val bodyParams1 = mapOf(
-                "title" to title1,
+                "title" to String.format(title1, wrongOrganizationalProjectList.size),
                 "table" to table1
             )
             sendEmail(
@@ -495,24 +497,25 @@ class ProjectNotifyService constructor(
             )
         }
         if (projectID2ManagerBelongVerifyBgId.isNotEmpty()) {
-            val title2 = "项目监控-部分管理员为$bgName，但项目所属组织架构不属于${bgName}告警"
+            val title2 = "项目监控-%s个项目部分管理员为$bgName，但项目所属组织架构不属于$bgName"
             var table2 = String.format(
                 PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
                 "项目名称", "项目ID", "项目所属组织架构", "所属组织架构为${bgName}的管理员", "所属组织架构为非${bgName}的管理员"
             )
-            projectID2ManagerBelongVerifyBgId.forEach { (projectCode, managers) ->
+            projectID2ManagerBelongVerifyBgId.forEach forEach@{ (projectCode, managers) ->
                 val projectInfo = projectService.getByEnglishName(projectCode) ?: return@forEach
                 table2 = table2.plus(
                     String.format(
                         PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
                         projectInfo.projectName, projectInfo.englishName,
-                        getOrganizationStr(projectInfo), projectID2ManagerBelongVerifyBgId[projectCode]!!.joinToString(","),
-                        projectID2ManagerNotBelongVerifyBgId[projectCode]!!.joinToString(",")
+                        getOrganizationStr(projectInfo),
+                        projectID2ManagerBelongVerifyBgId[projectCode]?.joinToString(",") ?: "",
+                        projectID2ManagerNotBelongVerifyBgId[projectCode]?.joinToString(",") ?: ""
                     )
                 )
             }
             val bodyParams2 = mapOf(
-                "title" to title2,
+                "title" to String.format(title2, projectID2ManagerBelongVerifyBgId.size),
                 "table" to table2
             )
             sendEmail(
@@ -523,9 +526,10 @@ class ProjectNotifyService constructor(
         }
     }
 
-    fun sendEmailsForCheckInactiveProjects(
+    fun sendEmailsForCheckProjects(
         manager2projectList: Map<String, List<ProjectVO>>,
-        project2Status: Map<String, ProjectRelateOBSProductStatusEnum>
+        project2Status: Map<String, ProjectRelateOBSProductStatusEnum>,
+        templateCode: String
     ) {
         if (project2Status.isEmpty())
             return
@@ -563,7 +567,7 @@ class ProjectNotifyService constructor(
             sendEmail(
                 bodyParams = bodyParams,
                 receives = mutableSetOf(manager),
-                templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
+                templateCode = templateCode
             )
         }
     }

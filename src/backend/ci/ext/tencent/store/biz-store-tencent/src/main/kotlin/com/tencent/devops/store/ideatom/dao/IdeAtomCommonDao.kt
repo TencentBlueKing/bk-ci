@@ -33,6 +33,7 @@ import com.tencent.devops.model.store.tables.TIdeAtomFeature
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -128,10 +129,17 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
                 storeCode = atomRecord.atomCode,
                 storeName = atomRecord.atomName,
                 version = atomRecord.version,
-                publicFlag = publicFlag
+                publicFlag = publicFlag,
+                classifyId = atomRecord.classifyId,
+                publisher = atomRecord.publisher,
+                storeType = StoreTypeEnum.IDE_ATOM
             )
         } else {
             null
         }
+    }
+
+    override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
+        return null
     }
 }

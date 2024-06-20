@@ -27,7 +27,7 @@
                 </template>
                 
                 <template>
-                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThridSlave">
+                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThirdSlave">
                         <i class="devops-icon icon-plus-circle"></i>
                         <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                     </div>
@@ -40,9 +40,20 @@
                     :is-error="hasError"
                     :required="required"
                     class="env-alias-area-item"
-                    :label="isAgentEnv ? $t('editPage.environment') : ''"
+                    :label="(isAgentEnv && !isReuseJob) ? $t('editPage.environment') : ''"
                 >
+                    <selector
+                        v-if="isReuseJob"
+                        name="value"
+                        :disabled="disabled"
+                        :handle-change="handleSelect"
+                        :list="reuseJobList"
+                        :value="value"
+                        :toggle-visible="toggleAgentList"
+                    >
+                    </selector>
                     <devops-select
+                        v-else
                         name="value"
                         :disabled="disabled"
                         :is-loading="isLoading"
@@ -52,9 +63,10 @@
                         @blur="handleBlur"
                         :value="value"
                     />
+                    
                 </form-field>
                 <form-field
-                    v-if="isAgentEnv"
+                    v-if="isAgentEnv && !isReuseJob"
                     :required="false"
                     class="env-alias-area-item"
                     :label="$t('editPage.envProjectId')"
@@ -76,12 +88,12 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import Selector from '@/components/atomFormField/Selector'
     import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import Selector from '@/components/atomFormField/Selector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'container-node-selector',
@@ -133,14 +145,28 @@
                 type: Function,
                 default: () => () => {}
             },
-            addThridSlave: {
+            addThirdSlave: {
                 type: Function,
                 default: () => () => {}
             },
             hasError: {
                 type: Boolean
             },
-            required: Boolean
+            required: Boolean,
+            pipeline: {
+                type: Object,
+                default: () => () => {}
+            },
+            stageIndex: {
+                type: Number
+            },
+            containerIndex: {
+                type: Number
+            },
+            stage: {
+                type: Object,
+                default: () => () => {}
+            }
         },
         data () {
             return {
@@ -171,6 +197,9 @@
             showAgentById () {
                 return this.showAgentType && this.agentType === 'ID'
             },
+            isReuseJob () {
+                return this.agentType === 'REUSE_JOB_ID'
+            },
             isAgentEnv () {
                 return this.buildResourceType === 'THIRD_PARTY_AGENT_ENV'
             },
@@ -178,12 +207,35 @@
                 return this.isAgentId
                     ? [
                         { label: this.$t('editPage.selectSlave'), value: 'ID' },
-                        { label: this.$t('editPage.inputSlave'), value: 'NAME' }
+                        { label: this.$t('editPage.inputSlave'), value: 'NAME' },
+                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID', tips: this.$t('editPage.locksSlaveTips') }
                     ]
                     : [
                         { label: this.$t('editPage.selectEnv'), value: 'ID' },
-                        { label: this.$t('editPage.inputEnv'), value: 'NAME' }
+                        { label: this.$t('editPage.inputEnv'), value: 'NAME' },
+                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID', tips: this.$t('editPage.locksSlaveTips') }
                     ]
+            },
+            reuseJobList () {
+                if (!this.pipeline) return []
+                const list = []
+                const curJobId = this.stage.containers[this.containerIndex]?.jobId || ''
+                const isTrigger = this.pipeline?.stages[0]?.isTrigger
+                this.pipeline.stages && this.pipeline.stages.forEach((stage, index) => {
+                    if ((!isTrigger || index !== 0) && index <= this.stageIndex) {
+                        stage && stage.containers.forEach((container, containerIndex) => {
+                            list.push(
+                                {
+                                    id: container.jobId || Math.random(),
+                                    name: `Job${index + 1}-${containerIndex + 1}${!container.jobId ? ' (该job未设置Job ID)' : ' (Job ID: ' + container.jobId + ')'} `,
+                                    disabled: !container.jobId
+                                }
+                            )
+                        })
+                    }
+                })
+
+                return list.filter(i => i.id !== curJobId)
             }
         },
         watch: {

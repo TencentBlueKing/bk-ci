@@ -71,10 +71,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.atom.dao.AtomApproveRelDao
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
@@ -83,46 +79,14 @@ import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
-import com.tencent.devops.store.common.dao.StoreBuildInfoDao
-import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
-import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.pojo.atom.AtomDevLanguage
-import com.tencent.devops.store.pojo.atom.AtomOutput
-import com.tencent.devops.store.pojo.atom.AtomPostInfo
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
-import com.tencent.devops.store.pojo.atom.AtomPostResp
-import com.tencent.devops.store.pojo.atom.AtomVersion
-import com.tencent.devops.store.pojo.atom.AtomVersionListItem
-import com.tencent.devops.store.pojo.atom.GetRelyAtom
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.store.pojo.atom.MarketAtomResp
-import com.tencent.devops.store.pojo.atom.MarketMainItem
-import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
-import com.tencent.devops.store.pojo.atom.MyAtomResp
-import com.tencent.devops.store.pojo.atom.MyAtomRespItem
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
-import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
-import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
-import com.tencent.devops.store.pojo.common.HOTTEST
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
-import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
-import com.tencent.devops.store.pojo.common.LATEST
-import com.tencent.devops.store.pojo.common.MarketItem
-import com.tencent.devops.store.pojo.common.StoreDailyStatistic
-import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.common.dao.StoreBuildInfoDao
+import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
+import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -133,19 +97,57 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.service.StoreWebsocketService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
+import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomOutput
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomPostResp
+import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomResp
+import com.tencent.devops.store.pojo.atom.MyAtomResp
+import com.tencent.devops.store.pojo.atom.MyAtomRespItem
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
+import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
+import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
+import com.tencent.devops.store.pojo.common.LATEST
+import com.tencent.devops.store.pojo.common.MarketItem
+import com.tencent.devops.store.pojo.common.MarketMainItem
+import com.tencent.devops.store.pojo.common.MarketMainItemLabel
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -336,11 +338,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     val atomIndexInfos = atomIndexInfosMap[atomCode]
                     val members = memberData?.get(atomCode)
                     val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
-                    val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
+                    val flag = storeCommonService.generateInstallFlag(
+                        defaultFlag = defaultFlag,
                         members = members,
                         userId = userId,
                         visibleList = visibleList,
-                        userDeptList = userDeptList)
+                        userDeptList = userDeptList
+                    )
                     val classifyId = it[tAtom.CLASSIFY_ID] as String
                     var logoUrl = it[tAtom.LOGO_URL]
                     logoUrl = logoUrl?.let {
@@ -591,7 +595,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
         processingAtomRecords?.forEach { processingAtomRecord ->
             if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank() ||
-                processingAtomRecord.branchTestFlag) {
+                processingAtomRecord.branchTestFlag
+            ) {
                 return@forEach
             }
             if (processingVersionInfoMap == null) {
@@ -937,10 +942,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         return storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = installAtomReq.projectCode,
             storeId = atom.id,
-            storeCode = atom.atomCode,
-            storeType = StoreTypeEnum.ATOM,
+            installStoreReq = InstallStoreReq(
+                projectCodes = installAtomReq.projectCode,
+                storeCode = atom.atomCode,
+                storeType = StoreTypeEnum.ATOM
+            ),
             publicFlag = atom.defaultFlag,
             channelCode = channelCode
         )
@@ -1064,7 +1071,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                messageCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -1219,6 +1226,23 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return result
     }
 
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, Any> {
+        val atomInfo = atomDao.getPipelineAtom(dslContext, atom.atomCode, atom.version) ?: return emptyMap()
+        val res = mutableMapOf<String, Any>()
+        val props: Map<String, Any> = jacksonObjectMapper().readValue(atomInfo.props)
+        if (null != props["input"]) {
+            val input = props["input"] as Map<*, *>
+            input.forEach { inputIt ->
+                val paramKey = inputIt.key.toString()
+                val paramValueMap = inputIt.value as Map<*, *>
+                if (paramValueMap["default"] != null) {
+                    res[paramKey] = paramValueMap["default"]!!
+                }
+            }
+        }
+        return res
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuilder()
@@ -1357,7 +1381,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
-                        "true".equals(paramValueMap["required"].toString(), true)
+                    "true".equals(paramValueMap["required"].toString(), true)
                 val defaultValue = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
@@ -1411,8 +1435,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             "atom-checkbox" -> sb.append("boolean")
                             "key-value-normal" -> sb.append(
                                 "\n    - key: string" +
-                                "\n      value: string"
+                                    "\n      value: string"
                             )
+
                             else -> sb.append("string")
                         }
                         sb.append("\r\n")

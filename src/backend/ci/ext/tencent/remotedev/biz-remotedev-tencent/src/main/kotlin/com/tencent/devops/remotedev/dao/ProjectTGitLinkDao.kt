@@ -2,9 +2,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TProjectTgitIdLink
-import com.tencent.devops.model.remotedev.tables.TProjectTgitLink
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
-import com.tencent.devops.model.remotedev.tables.records.TProjectTgitLinkRecord
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import org.jooq.DSLContext
@@ -105,19 +103,6 @@ class ProjectTGitLinkDao {
         }
     }
 
-    fun fetchOld(
-        dslContext: DSLContext,
-        projectId: String?
-    ): List<TProjectTgitLinkRecord> {
-        with(TProjectTgitLink.T_PROJECT_TGIT_LINK) {
-            val dsl = dslContext.selectFrom(this)
-            if (!projectId.isNullOrBlank()) {
-                dsl.where(PROJECT_ID.eq(projectId))
-            }
-            return dsl.skipCheck().fetch()
-        }
-    }
-
     fun updateUrl(
         dslContext: DSLContext,
         projectId: String,
@@ -142,6 +127,20 @@ class ProjectTGitLinkDao {
                         .and(TGIT_ID.eq(it))
                 }
             ).execute()
+        }
+    }
+
+    fun fetchByTGitId(
+        dslContext: DSLContext,
+        tgitId: Long,
+        notProjectId: String?
+    ): List<TProjectTgitIdLinkRecord> {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            val dsl = dslContext.selectFrom(this).where(TGIT_ID.eq(tgitId))
+            if (!notProjectId.isNullOrBlank()) {
+                dsl.and(PROJECT_ID.ne(notProjectId))
+            }
+            return dsl.fetch()
         }
     }
 }

@@ -215,7 +215,7 @@ class WorkspaceCheckJob @Autowired constructor(
     /**
      * 每天10点触发，执行云桌面专项空闲工作空间检测
      */
-    @Scheduled(cron = "0 0 10 * * ?")
+//    @Scheduled(cron = "0 0 10 * * ?")
     fun projectWinJob() {
         logger.info("=========>> projectWinJob <<=========")
 
@@ -306,6 +306,12 @@ class WorkspaceCheckJob @Autowired constructor(
                     workspaceService.notifyWhenNotActiveIn14Days()
                 }.onFailure {
                     logger.warn("notifyWhenNotActiveIn14Days fail ${it.message}", it)
+                }
+                // 云桌面处于待分配没有超过3天的邮件提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWhenNotAssign()
+                }.onFailure {
+                    logger.warn("notifyWhenNotAssign fail ${it.message}", it)
                 }
             }
         } catch (e: Throwable) {

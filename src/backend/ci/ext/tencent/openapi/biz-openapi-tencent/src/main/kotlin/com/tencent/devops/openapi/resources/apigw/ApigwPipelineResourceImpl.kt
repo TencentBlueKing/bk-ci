@@ -89,7 +89,7 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         channelCode: ChannelCode?
     ): Result<Boolean> {
         logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId with model: $pipeline")
-        return client.get(ServicePipelineResource::class).edit(
+        return client.get(ServicePipelineResource::class).editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -126,7 +126,8 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            checkFlag = true
         )
     }
 

@@ -117,7 +117,7 @@ class StartControl @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
         // 启动云桌面时增加一个判断是否项目成员，避免成员已经剔除了还可以打开。
-        permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
+        permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -161,7 +161,6 @@ class StartControl @Autowired constructor(
                 }
 
                 else -> {
-                    permissionService.checkUserCreate(userId, true)
                     /*处理异常的情况*/
                     workspaceCommon.checkAndFixExceptionWS(
                         status = workspace.status,
@@ -177,6 +176,7 @@ class StartControl @Autowired constructor(
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+                    val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
                     dispatcher.dispatch(
                         WorkspaceOperateEvent(
                             userId = userId,
@@ -191,7 +191,8 @@ class StartControl @Autowired constructor(
                             workspaceName = workspace.workspaceName,
                             settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                             bkTicket = bkTicket,
-                            mountType = workspace.workspaceMountType
+                            mountType = workspace.workspaceMountType,
+                            gameId = gameId.first
                         )
                     )
 
@@ -329,7 +330,9 @@ class StartControl @Autowired constructor(
 
             workspaceCommon.updateWorkspaceDetail(
                 workspaceName,
-                workspace.workspaceMountType
+                workspace.projectId,
+                workspace.workspaceMountType,
+                workspace.ownerType
             )
             if (workspace.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(workspaceName)

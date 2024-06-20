@@ -109,18 +109,17 @@ class MakeWorkspaceImageHandler @Autowired constructor(
     )
     fun makeWorkspaceImage(
         userId: String,
-        projectId: String,
         workspaceName: String,
         makeImageReq: MakeWorkspaceImageReq
     ): WorkspaceResponse {
         logger.info("$userId make image ${makeImageReq.imageName} workspace $workspaceName")
-        permissionService.checkUserManager(userId, projectId)
-
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        permissionService.checkUserManager(userId, workspace.projectId)
+
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -166,7 +165,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             val imageId = "img_${RandomStringUtils.randomAlphabetic(8)}"
             // 新增镜像信息
             imageManageDao.createWorkspaceImage(
-                projectId = projectId,
+                projectId = workspace.projectId,
                 imageId = imageId,
                 imageName = makeImageReq.imageName,
                 userId = userId,
@@ -174,6 +173,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 dslContext = dslContext
             )
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -190,7 +190,8 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     bkTicket = "",
                     cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp ?: "",
                     imageId = imageId,
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    gameId = gameId.first
                 )
             )
 
@@ -205,7 +206,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
                 ownerType = WorkspaceOwnerType.PROJECT,
-                projectId = projectId
+                projectId = workspace.projectId
             )
 
             return WorkspaceResponse(

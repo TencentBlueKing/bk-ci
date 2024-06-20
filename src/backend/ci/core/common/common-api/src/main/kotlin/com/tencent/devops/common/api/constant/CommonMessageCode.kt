@@ -174,8 +174,16 @@ object CommonMessageCode {
     const val ERROR_INTERFACE_RETRY_NUM_EXCEEDED = "2100123" // 接口连续重试次数超过{0}次，请稍后再试
     const val ERROR_PIPELINE_API_ACCESS_NO_PERMISSION = "2100124" // 流水线[{0}]没有接口[{1}]的访问权限
     const val TEMPLATE_PLUGIN_NOT_ALLOWED_USE = "2100125" // 模板中插件【{0}】的【{1}】版本的状态是【{2}】，不允许使用
+    const val ADD_MR_FAIL = "2100126" // 添加MR失败
+
+    // 互转使用
+    const val ELEMENT_UPDATE_WRONG_PATH = "2100127" // 更新插件的标注位置有误
+    const val ELEMENT_NOT_SUPPORT_TRANSFER = "2100128" // 如下插件在 Code 方式下已不支持，请修改后再切换: \n[{0}]
+    const val DISPATCH_NOT_SUPPORT_TRANSFER = "2100129" // 如下构建环境在 Code 方式下不支持转换，请修改后再切换: \n[{0}]
+    const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
     const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
     const val GIT_INVALID_PRIVATE_KEY_OR_PASSWORD = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
+    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
 
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
@@ -235,6 +243,8 @@ object CommonMessageCode {
     const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook" // 查询WEBHOOK
     const val OPERATION_ADD_COMMIT_CHECK = "bkOperationAddCommitCheck" // 添加COMMIT CHECK
     const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment" // 添加MR COMMENT
+    const val OPERATION_LIST_MR = "bkOperationListMr" // 添加MR
+    const val OPERATION_ADD_MR = "bkOperationAddMr" // 添加MR
     const val OPERATION_COMMIT = "bkOperationCommit" // 拉提交记录
     const val OPERATION_COMMIT_DIFF = "bkOperationCommitDiff" // 查询commit变化
     const val OPERATION_UNLOCK_HOOK_LOCK = "bkOperationUnlockHookLock" // 解锁hook锁

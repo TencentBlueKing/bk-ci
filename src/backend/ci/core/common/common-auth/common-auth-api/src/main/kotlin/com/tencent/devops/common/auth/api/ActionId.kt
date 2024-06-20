@@ -62,6 +62,7 @@ object ActionId {
     const val CGS_DELETE = "cgs_delete"
     const val CGS_SHARE = "cgs_share"
     const val CGS_EDIT = "cgs_edit"
+    const val CGS_TOKEN_GENERATE = "cgs_token_generate"
 
     // 镜像
     const val IMAGE_LIST = "image_list"

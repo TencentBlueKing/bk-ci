@@ -68,7 +68,11 @@ class BuildArchiveGetTask : ITask() {
         val taskParams = buildTask.params ?: mapOf()
         val pipelineId = taskParams["pipelineId"] ?: throw ParamBlankException("pipelineId is null")
         val buildNo = if (taskParams["buildNo"].isNullOrBlank()) "-1" else taskParams["buildNo"]!!
-        val buildId = getBuildId(pipelineId, buildVariables, buildNo).id
+        val buildId = if (pipelineId == buildVariables.pipelineId && buildNo == "-1") {
+            buildVariables.buildId
+        } else {
+            getBuildId(pipelineId, buildVariables, buildNo).id
+        }
         val destPath = File(workspace, taskParams["destPath"] ?: ".")
         val srcPaths = taskParams["srcPaths"] ?: throw ParamBlankException("srcPaths can not be null")
         val notFoundContinue = taskParams["notFoundContinue"] ?: "false"
@@ -136,7 +140,8 @@ class BuildArchiveGetTask : ITask() {
             projectId = buildVariables.projectId,
             pipelineId = pipelineId,
             buildNum = buildNo,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            buildId = buildVariables.buildId
         ).data ?: throw TaskExecuteException(
             errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
             errorType = ErrorType.USER,

@@ -69,7 +69,6 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 class RestartWorkspaceHandler @Autowired constructor(
@@ -84,8 +83,6 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl
 ) {
-    private val executor = Executors.newCachedThreadPool()
-
     companion object {
         private val logger = LoggerFactory.getLogger(RestartWorkspaceHandler::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
@@ -102,13 +99,18 @@ class RestartWorkspaceHandler @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CGS_RESTART_CONTENT
     )
-    fun restartWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
+    fun restartWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId restart project workspace $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
-                projectId = projectId
-            ) && !permissionService.hasUserManager(userId, projectId)
+                projectId = workspace.projectId
+            ) && !permissionService.hasUserManager(userId, workspace.projectId)
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
@@ -116,11 +118,6 @@ class RestartWorkspaceHandler @Autowired constructor(
             )
         }
 
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -162,6 +159,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
             )
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -176,7 +174,8 @@ class RestartWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    gameId = gameId.first
                 )
             )
 
@@ -191,7 +190,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
                 ownerType = WorkspaceOwnerType.PROJECT,
-                projectId = projectId
+                projectId = workspace.projectId
             )
 
             return WorkspaceResponse(
@@ -246,10 +245,8 @@ class RestartWorkspaceHandler @Autowired constructor(
             }
             // 重装成功后做异步设置(L盘挂载)
             val ip = event.environmentIp?.substringAfter(".")
-            ip?.let { it ->
-                executor.execute {
-                    workspaceCommon.makeDiskMount(it, event.userId)
-                }
+            ip?.let {
+                workspaceCommon.makeDiskMount(it, event.userId)
             }
         } else {
             // 启动失败,记录为EXCEPTION

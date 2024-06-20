@@ -1,0 +1,327 @@
+{
+  "model" : {
+    "name" : "checkout-code",
+    "desc" : "",
+    "stages" : [ {
+      "containers" : [ {
+        "@type" : "trigger",
+        "id" : "0",
+        "name" : "",
+        "elements" : [ {
+          "@type" : "manualTrigger",
+          "name" : "手动触发",
+          "id" : "T-1-1-1",
+          "canElementSkip" : false,
+          "useLatestParameters" : false,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "manualTrigger",
+          "atomCode" : "manualTrigger",
+          "elementEnable" : true,
+          "taskAtom" : ""
+        }, {
+          "@type" : "codeGitWebHookTrigger",
+          "name" : "Git事件触发",
+          "branchName" : "*",
+          "pathFilterType" : "NamePrefixFilter",
+          "eventType" : "PUSH",
+          "repositoryType" : "NAME",
+          "repositoryName" : "test/before",
+          "webhookQueue" : false,
+          "enableCheck" : true,
+          "enableThirdFilter" : false,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeGitWebHookTrigger",
+          "atomCode" : "codeGitWebHookTrigger",
+          "elementEnable" : true,
+          "taskAtom" : ""
+        }, {
+          "@type" : "codeGitWebHookTrigger",
+          "name" : "Git事件触发",
+          "pathFilterType" : "NamePrefixFilter",
+          "eventType" : "TAG_PUSH",
+          "repositoryType" : "NAME",
+          "repositoryName" : "test/before",
+          "tagName" : "*",
+          "webhookQueue" : false,
+          "enableCheck" : true,
+          "enableThirdFilter" : false,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeGitWebHookTrigger",
+          "atomCode" : "codeGitWebHookTrigger",
+          "elementEnable" : true,
+          "taskAtom" : ""
+        }, {
+          "@type" : "codeGitWebHookTrigger",
+          "name" : "Git事件触发",
+          "branchName" : "*",
+          "pathFilterType" : "NamePrefixFilter",
+          "eventType" : "MERGE_REQUEST",
+          "repositoryType" : "NAME",
+          "repositoryName" : "test/before",
+          "enableThirdFilter" : false,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeGitWebHookTrigger",
+          "atomCode" : "codeGitWebHookTrigger",
+          "elementEnable" : true,
+          "taskAtom" : ""
+        } ],
+        "params" : [ ],
+        "matrixGroupFlag" : false,
+        "classType" : "trigger",
+        "containerEnable" : true
+      } ],
+      "id" : "stage-1",
+      "name" : "stage-1",
+      "fastKill" : false,
+      "finally" : false,
+      "stageEnable" : true
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "name" : "job1",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "checkout",
+          "id" : "e-d08f0dc4bffa471f96378d169e1f2e4d",
+          "atomCode" : "checkout",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "repositoryType" : "SELF"
+            }
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "elementEnable" : true,
+          "taskAtom" : ""
+        }, {
+          "@type" : "marketBuild",
+          "name" : "run",
+          "id" : "e-7d9c047e69d24d2cadac3c76ef37abd7",
+          "atomCode" : "run",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "script" : "echo \"hello world\"\necho \"hello world\"\n",
+              "charsetType" : "DEFAULT"
+            }
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "elementEnable" : true,
+          "taskAtom" : ""
+        }, {
+          "@type" : "marketBuild",
+          "name" : "run",
+          "id" : "e-d96e74619bec4b129e12648747a3c998",
+          "atomCode" : "run",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "script" : "echo \"hello world\"\n",
+              "charsetType" : "DEFAULT"
+            }
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "elementEnable" : true,
+          "taskAtom" : ""
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "customBuildEnv" : { },
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "0",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "NAME",
+          "dependOnName" : "",
+          "continueWhenFailed" : false
+        },
+        "jobId" : "job_qsR",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild",
+        "containerEnable" : true
+      } ],
+      "id" : "stage-2",
+      "name" : "stage_1",
+      "tag" : [ ],
+      "fastKill" : false,
+      "finally" : false,
+      "stageControlOption" : {
+        "enable" : true,
+        "runCondition" : "AFTER_LAST_FINISHED",
+        "customVariables" : [ ],
+        "manualTrigger" : false
+      },
+      "stageEnable" : true
+    } ],
+    "labels" : [ ],
+    "instanceFromTemplate" : false,
+    "pipelineCreator" : "",
+    "events" : { },
+    "staticViews" : [ ],
+    "latestVersion" : 1
+  },
+  "setting" : {
+    "projectId" : "",
+    "pipelineId" : "",
+    "pipelineName" : "checkout-code",
+    "version" : 1,
+    "desc" : "",
+    "labels" : [ ],
+    "labelNames" : [ ],
+    "successSubscription" : {
+      "types" : [ ],
+      "groups" : [ ],
+      "users" : "",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : ""
+    },
+    "failSubscription" : {
+      "types" : [ ],
+      "groups" : [ ],
+      "users" : "",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : ""
+    },
+    "successSubscriptionList" : [ ],
+    "failSubscriptionList" : [ ],
+    "runLockType" : "MULTIPLE",
+    "waitQueueTimeMinute" : 480,
+    "maxQueueSize" : 10,
+    "concurrencyGroup" : "${{ci.pipeline_id}}",
+    "concurrencyCancelInProgress" : false,
+    "maxConRunningQueueSize" : 200,
+    "maxPipelineResNum" : 50,
+    "cleanVariablesWhenRetry" : false
+  }
+}

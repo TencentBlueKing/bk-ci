@@ -49,6 +49,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
@@ -99,6 +100,8 @@ object WebhookUtils {
     private const val MAX_VARIABLE_COUNT = 32
     // p4自定义触发器插件版本号
     const val CUSTOM_P4_TRIGGER_VERSION = 2
+    // GitAction触发器插件版本号
+    const val ACTION_GIT_TRIGGER_VERSION = 2
 
     private val logger = LoggerFactory.getLogger(WebhookUtils::class.java)
 
@@ -221,6 +224,7 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo?.title ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo?.assignee?.username ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = mrInfo?.milestone?.id ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_BASE_COMMIT] = mrInfo?.baseCommit ?: ""
@@ -277,6 +281,7 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
             pullRequest.requestedReviewers.joinToString(",") { it.login } ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = pullRequest.milestone?.id ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = pullRequest.milestone?.dueOn ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = pullRequest.labels.joinToString(",") ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_BASE_COMMIT] = pullRequest.base.sha ?: ""
@@ -332,6 +337,10 @@ object WebhookUtils {
 
     fun isCustomP4TriggerVersion(version: String?): Boolean {
         return getMajorVersion(version) >= CUSTOM_P4_TRIGGER_VERSION
+    }
+
+    fun isActionGitTriggerVersion(version: String?): Boolean {
+        return getMajorVersion(version) >= ACTION_GIT_TRIGGER_VERSION
     }
 
     /**

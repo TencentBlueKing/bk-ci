@@ -76,9 +76,13 @@ class DownloadAgentInstallService @Autowired constructor(
     @Value("\${environment.certFilePath:#{null}}")
     private val certFilePath: String? = null
 
-    fun downloadInstallScript(agentId: String): Response {
+    fun downloadInstallScript(agentId: String, isWinDownload: Boolean): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
+
+        if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
+            throw RuntimeException("Agent already installed. Please obtain the install url again")
+        }
 
         /**
          * agent_url
@@ -89,11 +93,15 @@ class DownloadAgentInstallService @Autowired constructor(
          * gateWay
          */
         val fileName = if (agentRecord.os == OS.WINDOWS.name) {
-            "install.bat"
+            if (isWinDownload) {
+                "download_install.ps1"
+            } else {
+                "install.bat"
+            }
         } else {
             "install.sh"
         }
-        val scriptFile = File(agentPackage, "script/${agentRecord.os.toLowerCase()}/$fileName")
+        val scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/$fileName")
 
         if (!scriptFile.exists()) {
             logger.warn("The install script file(${scriptFile.absolutePath}) is not exist")

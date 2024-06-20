@@ -1,0 +1,436 @@
+version: v2.0
+name: all job
+on:
+  push:
+    branches:
+    - master
+    branches-ignore:
+    - 排除以下目标分支
+    paths:
+    - 监听以下路径：
+    paths-ignore:
+    - 排除以下路径：
+    users:
+    - yongyiduan
+    users-ignore:
+    - yongyiduan
+    path-filter-type: NamePrefixFilter
+  schedules:
+    enable: false
+    cron: 0 0 0 ? * 3
+  manual: enabled
+  remote: disabled
+variables:
+  字符串:
+    value: value
+  文本框:
+    value: 文本框
+    props:
+      type: vuex-textarea
+  布尔值:
+    value: "true"
+    props:
+      type: boolean
+  单选框:
+    value: 1
+    props:
+      type: selector
+      options:
+        - id: 1
+          label: 1
+        - id: 2
+          label: 2
+        - id: 3
+          label: 3
+  复选框:
+    value: "1,2"
+    props:
+      type: checkbox
+      options:
+        - id: 1
+          label: 1
+        - id: 2
+          label: 2
+        - id: 3
+          label: 3
+  代码库:
+    value: lockiechen/obb-demo
+    props:
+      type: code_lib
+      scmType: git
+  git分支或tag:
+    value: ""
+    props:
+      type: git_ref
+      repoHashId: jRME
+  构建资源:
+    value: ""
+    props:
+      type: container_type
+      containerType:
+        buildType: DOCKER
+        os: LINUX
+  版本仓库过滤器:
+    value: ""
+    props:
+      type: artifactory
+      glob: '*'
+  子流水线:
+    value: test123
+    props:
+      type: sub_pipeline
+  文件:
+    value: ""
+    props:
+      type: custom_file
+stages:
+- name: win
+  label:
+  - Build
+  jobs:
+    job_daZ:
+      name: Windows-私有单构建机
+      runs-on:
+        self-hosted: true
+        pool-name: ydpzneyp
+        pool-type: AGENT_ID
+        workspace: 工作空间
+      steps:
+      - name: Batch Script
+        env:
+          param1: ""
+        run: echo 1
+        shell: cmd
+    job_nT0:
+      name: Windows-私有构建机群
+      runs-on:
+        self-hosted: true
+        pool-name: dpenqqym
+        pool-type: ENV_ID
+        agent-selector:
+        - windows
+        workspace: 工作空间
+      steps:
+      - name: Batch Script
+        env:
+          param1: ""
+        run: echo 1
+        shell: cmd
+    job_W7R:
+      name: Windows-云
+      runs-on:
+        pool-name: windows-2016
+      steps:
+      - name: Batch Script
+        env:
+          param1: ""
+        run: echo 1
+        shell: cmd
+  check-in:
+    reviews:
+      flows:
+      - name: 人工审核
+        reviewers:
+        - yongyiduan
+      variables:
+        人工审核参数:
+          label: 中文名
+          type: INPUT
+          default: ""
+          values: []
+          description: 描述
+      description: 审核说明：
+    timeout-hours: 24
+- name: mac
+  label:
+  - Build
+  jobs:
+    job_fQc:
+      name: MacOS-公共构建机
+      runs-on:
+        pool-name: macos-BigSur11.4
+        xcode: 13.2.1
+      steps:
+      - name: Bash
+        env:
+          param1: ""
+        run: echo 1
+        shell: bash
+    job_LaA:
+      name: MacOS-私有构建机
+      runs-on:
+        self-hosted: true
+        pool-name: zmoxbbqp
+        pool-type: AGENT_ID
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        env:
+          param1: ""
+        run: echo 1
+        shell: bash
+    job_kLT:
+      name: MacOS-私有构建机群
+      runs-on:
+        self-hosted: true
+        pool-name: rqmakgrm
+        pool-type: ENV_ID
+        agent-selector:
+        - macos
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        env:
+          param1: ""
+        run: echo 1
+        shell: bash
+- name: linux
+  label:
+  - Build
+  jobs:
+    job_rTM:
+      name: Linux-docker
+      runs-on:
+        pool-name: docker
+        container:
+          image: tlinux3_ci:2.*
+          imageType: THIRD
+          credentials: royalhuang_up
+        needs:
+          golang: 1.20.4
+      steps:
+      - name: Bash
+        env:
+          param1: ""
+        run: echo 1
+        shell: bash
+    job_B1j:
+      name: Linux-私有构建机
+      runs-on:
+        self-hosted: true
+        pool-name: xpvwazlm
+        pool-type: AGENT_ID
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        env:
+          param1: ""
+        run: echo 1
+        shell: bash
+    job_QxG:
+      name: Linux-私有构建机群
+      runs-on:
+        self-hosted: true
+        pool-name: njmkyaom
+        pool-type: ENV_ID
+        agent-selector:
+        - linux
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        env:
+          param1: ""
+        run: echo 1
+        shell: bash
+      depend-on:
+      - job_rTM
+    job__JE:
+      name: Linux-矩阵
+      mutex:
+        label: a
+        queue-enable: true
+      runs-on:
+        pool-name: docker
+        container:
+          image: tlinux3_ci:2.*
+          imageType: BKSTORE
+      steps:
+      - name: Bash
+        env:
+          param1: ""
+        run: echo 1
+        shell: bash
+      strategy:
+        matrix:
+          os:
+          - docker
+          - macos-10.15
+        fast-kill: true
+        max-parallel: 5
+- name: stage-5
+  label:
+  - Build
+  jobs:
+    job_i4Z:
+      name: 无编译环境
+      runs-on:
+        pool-name: agentless
+      steps:
+      - name: Python脚本执行
+        uses: pythonscriptrun@8.*
+        with:
+          pythonVersion: 0
+          optionType: online
+          scriptCode: 1
+          scriptPath: ""
+        env:
+          param1: ""
+finally:
+  job_s5r:
+    name: Linux-插件测试
+    runs-on:
+      pool-name: docker
+      container:
+        image: tlinux3_ci:2.*
+        imageType: BKSTORE
+    steps:
+    - checkout: https://git.code.oa.com/XXX/XXX.git
+      name: Checkout
+      with:
+        repositoryType: ID
+        repositoryHashId: 6DOdE
+        repositoryName: ""
+        repositoryUrl: ""
+        authType: TICKET
+        persistCredentials: true
+        pullType: BRANCH
+        refName: master
+        localPath: ""
+        strategy: REVERT_UPDATE
+        fetchDepth: ""
+        fetchOnlyCurrentRef: false
+        enableFetchRefSpec: false
+        fetchRefSpec: ""
+        enablePartialClone: false
+        includePath: ""
+        excludePath: ""
+        cachePath: ""
+        enableGitLfs: true
+        enableGitLfsClean: false
+        lfsConcurrentTransfers: ""
+        enableSubmodule: true
+        submodulePath: ""
+        enableSubmoduleRemote: false
+        enableSubmoduleRecursive: true
+        submoduleJobs: ""
+        submoduleDepth: ""
+        enableVirtualMergeBranch: true
+        enableGitClean: true
+        enableGitCleanIgnore: true
+        enableGitCleanNested: false
+        autoCrlf: "false"
+        enableTrace: false
+      env:
+        param1: ""
+    - name: Bash
+      if: ALWAYS_UNLESS_CANCELLED
+      continue-on-error: true
+      retry-times: 4
+      env:
+        param1: ""
+      run: echo 1
+      shell: bash
+    - name: 腾讯代码分析(官方-代码分析工作组)
+      uses: CodeccCheckAtomDebug@4.*
+      with:
+        beAutoLang: false
+        languages:
+        - KOTLIN
+        checkerSetType: normal
+        tools:
+        - CLOC
+        - DUPC
+        - WOODPECKER_SENSITIVE
+        - DETEKT
+        asyncTask: false
+        asyncTaskId: ""
+        goPath: ""
+        bkcheckDebug: false
+        bkcheckCustomMacros: []
+        bk_atom_del_hook_url: ""
+        bk_atom_del_hook_url_method: DELETE
+        scriptType: SHELL
+        script: |-
+          # Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷
+          # 请使用依赖的构建工具如maven/cmake等写一个编译脚本build.sh
+          # 确保build.sh能够编译代码
+          # cd path/to/build.sh
+          # sh build.sh
+        languageRuleSetMap:
+          SWIFT_RULE: []
+          KOTLIN_RULE:
+          - codecc_default_kotlin
+          - standard_kotlin
+        C_CPP_RULE: []
+        checkerSetEnvType: prod
+        multiPipelineMark: ""
+        rtxReceiverType: 1
+        rtxReceiverList: []
+        botWebhookUrl: ""
+        botRemindRange: 2
+        botRemindSeverity: 7
+        botRemaindTools: []
+        emailReceiverType: 1
+        emailReceiverList: []
+        emailCCReceiverList: []
+        instantReportStatus: 2
+        reportDate: []
+        reportTime: ""
+        reportTools: []
+        toolScanType: 1
+        diffBranch: ""
+        byFile: false
+        mrCommentEnable: true
+        prohibitIgnore: false
+        transferAuthorList: []
+        path: []
+        customPath: []
+        scanTestSource: false
+        openScanPrj: false
+        openScanFilterEnable: false
+        issueSystem: TAPD
+        issueSubSystem: ""
+        issueResolvers: []
+        issueReceivers: []
+        issueFindByVersion: ""
+        maxIssue: 1000
+        issueAutoCommit: false
+        issueTools: []
+        issueSeverities: []
+        SWIFT_RULE: []
+        SWIFT_TOOL:
+        - toolList:
+          - CLOC
+          - WOODPECKER_SENSITIVE
+          - IP_CHECK
+          - CCN
+        KOTLIN_RULE:
+        - codecc_default_kotlin
+        - standard_kotlin
+        KOTLIN_TOOL:
+        - toolList:
+          - CLOC
+          - DUPC
+          - WOODPECKER_SENSITIVE
+          - DETEKT
+        - toolList:
+          - DETEKT
+      env:
+        param1: ""
+notices:
+- type: email
+  receivers:
+  - "${BK_CI_START_USER_NAME}"
+  - yongyiduan
+  - royalhuang
+  content: "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行成功，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。"
+  if: SUCCESS
+  chat-id:
+  - ""
+- type: email
+  receivers:
+  - "${BK_CI_START_USER_NAME}"
+  content: "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。"
+  if: FAILURE
+  chat-id:
+  - ""

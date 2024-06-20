@@ -50,6 +50,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
@@ -84,10 +85,10 @@ import com.tencent.devops.process.yaml.v2.models.stage.StageLabel
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.process.yaml.v2.parameter.ParametersType
-import com.tencent.devops.process.yaml.v2.stageCheck.Flow
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
-import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
+import com.tencent.devops.process.yaml.v2.check.Flow
+import com.tencent.devops.process.yaml.v2.check.PreStageCheck
+import com.tencent.devops.process.yaml.v2.check.StageCheck
+import com.tencent.devops.process.yaml.v2.check.StageReviews
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
@@ -95,7 +96,7 @@ import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 
-@Suppress("MaximumLineLength", "ComplexCondition")
+@Suppress("MaximumLineLength", "ComplexCondition", "ComplexMethod")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
@@ -116,9 +117,9 @@ object ScriptYmlUtils {
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
-        val yamlNormal = formatYamlCustom(yamlStr)
+//        val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
-        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
+        return TransferMapper.formatYaml(yamlStr)
     }
 
     fun parseVersion(yamlStr: String?): YmlVersion? {
@@ -223,8 +224,8 @@ object ScriptYmlUtils {
             val startString = line.trim().replace("\\s".toRegex(), "")
             if (startString.startsWith("if:") || startString.startsWith("-if:")) {
                 val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
-                val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
-                    .removeSuffix("\"")
+                val condition = line.removePrefix(ifPrefix).trim()
+                    .removeSurrounding("\"")
 
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()

@@ -46,7 +46,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -149,22 +149,22 @@ class RbacPermissionMigrateService constructor(
 
     override fun allToRbacAuth(): Boolean {
         logger.info("start to migrate all project")
-        toRbacAuthByCondition(MigrateProjectConditionDTO())
+        toRbacAuthByCondition(ProjectConditionDTO())
         return true
     }
 
     override fun toRbacAuthByCondition(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
     ): Boolean {
-        logger.info("start to migrate project by condition|$migrateProjectConditionDTO")
+        logger.info("start to migrate project by condition|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         toRbacExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE / 2
             do {
-                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
-                    migrateProjectConditionDTO = migrateProjectConditionDTO,
+                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO,
                     limit = limit,
                     offset = offset
                 ).data ?: break
@@ -270,9 +270,10 @@ class RbacPermissionMigrateService constructor(
             val limit = PageUtil.MAX_PAGE_SIZE
             var count = 0
             do {
-                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
-                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = ProjectConditionDTO(
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
+                        enabled = true
                     ),
                     limit = limit,
                     offset = offset
@@ -604,15 +605,17 @@ class RbacPermissionMigrateService constructor(
         )
     }
 
-    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+    override fun autoRenewal(projectConditionDTO: ProjectConditionDTO): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
         toRbacExecutorService.submit {
             MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE / 2
             do {
-                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
-                    migrateProjectConditionDTO = migrateProjectConditionDTO,
+                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO.copy(
+                        enabled = true
+                    ),
                     limit = limit,
                     offset = offset
                 ).data ?: break

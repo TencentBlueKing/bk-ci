@@ -66,13 +66,18 @@ data class WeSecProjectWorkspace(
     val currentLoginUsers: Set<String>?,
     @get:Schema(title = "机型")
     @JsonProperty("machine_type")
-    val machineType: String? = null
+    val machineType: String? = null,
+    @JsonProperty("mac_address")
+    @get:Schema(title = "mac地址")
+    val macAddress: String? = null,
+    @get:Schema(title = "共享人")
+    val viewers: List<String>? = emptyList()
 )
 
 @Schema(title = "组织信息")
 data class DepartmentsInfo(
-    @get:Schema(title = "组织名称")
-    val deptName: String?,
     @get:Schema(title = "组织ID")
-    val deptId: String?
+    val deptId: String?,
+    @get:Schema(title = "组织名称")
+    val deptName: String?
 )

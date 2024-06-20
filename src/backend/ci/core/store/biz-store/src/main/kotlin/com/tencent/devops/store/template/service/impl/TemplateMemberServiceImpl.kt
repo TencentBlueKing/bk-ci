@@ -29,6 +29,7 @@ package com.tencent.devops.store.template.service.impl
 
 import com.tencent.devops.store.template.dao.MarketTemplateDao
 import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -38,7 +39,7 @@ class TemplateMemberServiceImpl : StoreMemberServiceImpl() {
     @Autowired
     private lateinit var marketTemplateDao: MarketTemplateDao
 
-    override fun getStoreName(storeCode: String): String {
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
         return marketTemplateDao.getLatestTemplateByCode(dslContext, storeCode)?.templateName ?: ""
     }
 }

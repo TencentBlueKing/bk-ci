@@ -36,6 +36,7 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.trigger.WebhookTriggerService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
@@ -52,7 +53,8 @@ class WebhookRequestService(
     private val webhookEventFactory: WebhookEventFactory,
     private val webhookTriggerService: WebhookTriggerService,
     private val dslContext: DSLContext,
-    private val pipelineTriggerEventDao: PipelineTriggerEventDao
+    private val pipelineTriggerEventDao: PipelineTriggerEventDao,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) {
 
     companion object {
@@ -95,6 +97,12 @@ class WebhookRequestService(
         webhookTriggerService.trigger(
             scmType = scmType,
             matcher = matcher,
+            requestId = requestId,
+            eventTime = eventTime
+        )
+        pipelineYamlFacadeService.trigger(
+            eventObject = event,
+            scmType = scmType,
             requestId = requestId,
             eventTime = eventTime
         )
