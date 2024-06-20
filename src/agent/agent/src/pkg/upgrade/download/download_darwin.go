@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
+	"errors"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/pkg/errors"
 )
 
 func getServerFileArch() string {

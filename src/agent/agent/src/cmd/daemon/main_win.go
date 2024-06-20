@@ -167,9 +167,9 @@ func watch() {
 		_, err = cmd.Process.Wait()
 		if err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
-				if exiterr.ExitCode() == constant.DAEMON_EXIT_CODE {
-					logs.Warnf("exit code %d daemon exit", constant.DAEMON_EXIT_CODE)
-					systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
+				if exiterr.ExitCode() == constant.DaemonExitCode {
+					logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
+					systemutil.ExitProcess(constant.DaemonExitCode)
 				}
 			}
 			logs.Error("agent process error", err)

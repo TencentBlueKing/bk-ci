@@ -30,6 +30,8 @@ package upgrader
 import (
 	"errors"
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"os"
 	"strconv"
 	"time"
@@ -199,32 +201,27 @@ func StartDaemon() error {
 	return nil
 }
 
-func StopAgent() error {
-	logs.Info("start stop agent")
-
-	workDir := systemutil.GetWorkDir()
-	startCmd := workDir + "/" + config.GetStopScript()
-	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
-	if err != nil {
-		logs.Error("run stop script failed: ", err.Error())
-		logs.Error("output: ", string(output))
-		return errors.New("run stop script failed")
-	}
-	logs.Info("output: ", string(output))
-	return nil
-}
-
 func replaceAgentFile(fileName string) error {
 	logs.Info("replace agent file: ", fileName)
 	src := systemutil.GetUpgradeDir() + "/" + fileName
 	dst := systemutil.GetWorkDir() + "/" + fileName
-	if _, err := fileutil.CopyFile(src, dst, true); err != nil {
-		logs.Warn(fmt.Sprintf("copy file %s to %s failed: %s", src, dst, err))
-		return err
+
+	// 查询 dst 的状态，如果没有的话使用预设权限\
+	perm := constant.CommonFileModePerm
+	if stat, err := os.Stat(dst); err != nil {
+		logs.WithError(err).Warnf("replaceAgentFile %s stat error", dst)
+	} else if stat != nil {
+		perm = stat.Mode()
 	}
-	if err := fileutil.SetExecutable(dst); err != nil {
-		logs.Warn(fmt.Sprintf("chmod %s file failed: %s", dst, err))
-		return err
+
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("replaceAgentFile open %s error %w", src, err)
 	}
+
+	if err := innerFileUtil.AtomicWriteFile(dst, srcFile, perm); err != nil {
+		return fmt.Errorf("replaceAgentFile AtomicWriteFile %s error %w", dst, err)
+	}
+
 	return nil
 }

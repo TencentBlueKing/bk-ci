@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
+	"errors"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 )
 

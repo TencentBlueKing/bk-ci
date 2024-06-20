@@ -11,6 +11,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
+	"errors"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
@@ -23,7 +24,6 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
@@ -174,7 +174,7 @@ func CreateDebugContainer(
 	// 先判断本地是否存在已经运行的容器
 	containerId, ok, err := checkLoclRunningContainer(ctx, cli, debugInfo.BuildId, debugInfo.VmSeqId)
 	if err != nil {
-		return errors.Wrap(err, "check local running container error")
+		return fmt.Errorf("check local running container error %w", err)
 	}
 	if ok {
 		imageDebugLogs.Infof("use local exist container %s", containerId)
@@ -415,7 +415,7 @@ func parseContainerMounts(debugInfo *api.ImageDebug) ([]mount.Mount, error) {
 	}
 	err := systemutil.MkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
-		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
+		return nil, fmt.Errorf("create local data dir %s error %w", dataDir, err)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
@@ -427,7 +427,7 @@ func parseContainerMounts(debugInfo *api.ImageDebug) ([]mount.Mount, error) {
 	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.BuildId, debugInfo.VmSeqId)
 	err = systemutil.MkDir(logsDir)
 	if err != nil && !os.IsExist(err) {
-		return nil, errors.Wrapf(err, "create local logs dir %s error", logsDir)
+		return nil, fmt.Errorf("create local logs dir %s error %w", logsDir, err)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
@@ -506,7 +506,7 @@ func CreateExecServer(
 	if len(errChan) > 0 {
 		err = <-errChan
 		imageDebugLogs.WithError(err).Error("start exec server error")
-		return errors.Wrap(err, "start exec server error")
+		return fmt.Errorf("start exec server error %w", err)
 	}
 
 	exec, err := backend.CreateExecNoHttp(&WebSocketConfig{

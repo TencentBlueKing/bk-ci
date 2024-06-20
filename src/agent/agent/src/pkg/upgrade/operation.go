@@ -28,6 +28,7 @@
 package upgrade
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -55,7 +56,7 @@ func UninstallAgent() {
 		// 错误了也不退出，最少也要干掉daemon
 	}
 	logs.Warn("agent process exiting")
-	systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
+	systemutil.ExitProcess(constant.DaemonExitCode)
 }
 
 // runUninstallUpgrader 卸载的区分开，方便进行退出处理
@@ -82,7 +83,7 @@ func runUninstallUpgrader(action string) error {
 	logs.Info("agentUpgrade|start uninstall process success, pid: ", pid)
 
 	logs.Warn("agentUpgrade|agent uninstall process exiting")
-	systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
+	systemutil.ExitProcess(constant.DaemonExitCode)
 	return nil
 }
 
@@ -196,14 +197,14 @@ func DoUpgradeJdk() error {
 		true,
 	)
 	if err != nil {
-		return errors.Wrap(err, "upgrade jdk copy new jdk file error")
+		return fmt.Errorf("upgrade jdk copy new jdk file error %w", err)
 	}
 
 	// 解压缩为一个新文件取代旧文件路径
 	jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
 	err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
 	if err != nil {
-		return errors.Wrap(err, "upgrade jdk unzip error")
+		return fmt.Errorf("upgrade jdk unzip error %w", err)
 	}
 
 	// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程

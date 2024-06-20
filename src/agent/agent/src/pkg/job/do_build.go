@@ -64,7 +64,7 @@ func doBuild(
 		return err
 	}
 
-	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true") ||
+	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true") ||
 		(systemutil.IsMacos() && runtime.GOARCH == "arm64")
 	if enableExitGroup {
 		logs.Infof("%s enable exit group", buildInfo.BuildId)

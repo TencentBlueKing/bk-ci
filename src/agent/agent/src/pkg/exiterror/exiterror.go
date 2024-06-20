@@ -47,7 +47,7 @@ func Exit(exitError *ExitErrorType) {
 	if exitError != nil {
 		logs.Errorf("ExitError|%s|%s", exitError.ErrorEnum, exitError.Message)
 	}
-	os.Exit(constant.DAEMON_EXIT_CODE)
+	os.Exit(constant.DaemonExitCode)
 }
 
 func WriteFileWithCheck(name string, data []byte, perm os.FileMode) error {

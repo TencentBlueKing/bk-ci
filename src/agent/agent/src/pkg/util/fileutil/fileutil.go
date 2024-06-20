@@ -25,18 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package constant
+package fileutil
 
-import "os"
-
-const (
-	DaemonExitCode = 88
-
-	// DevopsAgentEnableNewConsole 如果设为true 则windows启动进程时使用 newConsole
-	DevopsAgentEnableNewConsole = "DEVOPS_AGENT_ENABLE_NEW_CONSOLE"
-	// DevopsAgentEnableExitGroup 启动Agent杀掉构建进程组的兜底逻辑
-	DevopsAgentEnableExitGroup = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
-
-	// CommonFileModePerm 公共文件权限
-	CommonFileModePerm os.FileMode = 0644
+import (
+	"github.com/TencentBlueKing/bk-ci/agent/internal/third_party/dep/fs"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"io"
+	"os"
+	"path/filepath"
 )
+
+func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {
+	tempFile, err := os.CreateTemp(filepath.Split(filename))
+	if err != nil {
+		exitcode.CheckOsIoError(filename, err)
+		return err
+	}
+	tempName := tempFile.Name()
+
+	if _, err := io.Copy(tempFile, reader); err != nil {
+		tempFile.Close() // return value is ignored as we are already on error path
+		exitcode.CheckOsIoError(filename, err)
+		return err
+	}
+
+	if err := tempFile.Close(); err != nil {
+		return err
+	}
+
+	if err := systemutil.Chmod(tempName, mode); err != nil {
+		return err
+	}
+
+	return fs.RenameWithFallback(tempName, filename)
+}

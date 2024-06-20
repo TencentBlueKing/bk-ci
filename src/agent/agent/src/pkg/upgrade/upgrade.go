@@ -28,6 +28,7 @@
 package upgrade
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"sync/atomic"
@@ -37,8 +38,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
-
-	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -166,7 +165,7 @@ func SyncJdkVersion() error {
 			JdkVersion.SetVersion([]string{})
 			return nil
 		}
-		return errors.Wrap(err, "agent check jdk dir error")
+		return fmt.Errorf("agent check jdk dir error %w", err)
 	}
 	nowModTime := stat.ModTime()
 
@@ -217,7 +216,7 @@ func SyncDockerInitFileMd5() error {
 			DockerFileMd5.Md5 = ""
 			return nil
 		}
-		return errors.Wrap(err, "agent check docker init file error")
+		return fmt.Errorf("agent check docker init file error %w", err)
 	}
 	nowModTime := stat.ModTime()
 
@@ -225,7 +224,7 @@ func SyncDockerInitFileMd5() error {
 		DockerFileMd5.Md5, err = fileutil.GetFileMd5(filePath)
 		if err != nil {
 			DockerFileMd5.Md5 = ""
-			return errors.Wrapf(err, "agent get docker init file %s md5 error", filePath)
+			return fmt.Errorf("agent get docker init file %s md5 error %w", filePath, err)
 		}
 		DockerFileMd5.FileModTime = nowModTime
 		return nil
@@ -238,7 +237,7 @@ func SyncDockerInitFileMd5() error {
 	DockerFileMd5.Md5, err = fileutil.GetFileMd5(filePath)
 	if err != nil {
 		DockerFileMd5.Md5 = ""
-		return errors.Wrapf(err, "agent get docker init file %s md5 error", filePath)
+		return fmt.Errorf("agent get docker init file %s md5 error %w", filePath, err)
 	}
 	DockerFileMd5.FileModTime = nowModTime
 	return nil
@@ -249,7 +248,7 @@ func getJdkVersion() ([]string, error) {
 	if err != nil {
 		logs.Error("agent get jdk version failed: ", err.Error())
 		exitcode.CheckSignalJdkError(err)
-		return nil, errors.Wrap(err, "agent get jdk version failed")
+		return nil, fmt.Errorf("agent get jdk version failed %w", err)
 	}
 	var jdkV []string
 	if jdkVersion != nil {

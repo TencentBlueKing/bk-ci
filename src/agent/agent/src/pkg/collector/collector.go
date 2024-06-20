@@ -36,8 +36,6 @@ import (
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector/telegrafConf"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
-	"github.com/pkg/errors"
-
 	"github.com/influxdata/telegraf/logger"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -167,11 +165,11 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 	var content = new(bytes.Buffer)
 	tmpl, err := template.New("tmpl").Parse(telegrafconf.TelegrafConf)
 	if err != nil {
-		return nil, errors.Wrap(err, "parse telegraf config template err")
+		return nil, fmt.Errorf("parse telegraf config template err %w", err)
 	}
 	err = tmpl.Execute(content, templateData)
 	if err != nil {
-		return nil, errors.Wrap(err, "execute telegraf config template err")
+		return nil, fmt.Errorf("execute telegraf config template err %w", err)
 	}
 
 	return content, nil

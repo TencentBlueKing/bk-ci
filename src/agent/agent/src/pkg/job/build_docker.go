@@ -52,7 +52,6 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
 )
 
 // buildDockerManager docker构建机构建对象管理
@@ -499,7 +498,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	}
 	err := systemutil.MkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
-		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
+		return nil, fmt.Errorf("create local data dir %s error %w", dataDir, err)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
@@ -511,7 +510,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
 	err = systemutil.MkDir(logsDir)
 	if err != nil && !os.IsExist(err) {
-		return nil, errors.Wrapf(err, "create local logs dir %s error", logsDir)
+		return nil, fmt.Errorf("create local logs dir %s error %w", logsDir, err)
 	}
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,

@@ -32,7 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package fs
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -41,7 +42,7 @@ import (
 )
 
 // fs contains a copy of a few functions from dep tool code to avoid a dependency on golang/dep.
-// This code is copied from https://github.com/golang/dep/blob/a5440af88cd9b4507810256f8845a297936868a2/internal/fs/fs.go
+// This code is copied from https://github.com/golang/dep/blob/master/internal/fs/fs.go
 // No changes to the code were made other than removing some unused functions
 
 // RenameWithFallback attempts to rename a file or directory, but falls back to
@@ -50,7 +51,7 @@ import (
 func RenameWithFallback(src, dst string) error {
 	_, err := os.Stat(src)
 	if err != nil {
-		return errors.Wrapf(err, "cannot stat %s", src)
+		return fmt.Errorf("cannot stat %s error %w", src, err)
 	}
 
 	err = os.Rename(src, dst)
@@ -68,20 +69,20 @@ func renameByCopy(src, dst string) error {
 	if dir, _ := IsDir(src); dir {
 		cerr = CopyDir(src, dst)
 		if cerr != nil {
-			cerr = errors.Wrap(cerr, "copying directory failed")
+			cerr = fmt.Errorf("copying directory failed %w", cerr)
 		}
 	} else {
 		cerr = copyFile(src, dst)
 		if cerr != nil {
-			cerr = errors.Wrap(cerr, "copying file failed")
+			cerr = fmt.Errorf("copying file failed %w", cerr)
 		}
 	}
 
 	if cerr != nil {
-		return errors.Wrapf(cerr, "rename fallback failed: cannot rename %s to %s", src, dst)
+		return fmt.Errorf("rename fallback failed: cannot rename %s to %s %w", src, dst, cerr)
 	}
 
-	return errors.Wrapf(os.RemoveAll(src), "cannot delete %s", src)
+	return fmt.Errorf("cannot delete %s %w", src, os.RemoveAll(src))
 }
 
 // IsDir determines is the path given is a directory or not.
@@ -91,7 +92,7 @@ func IsDir(name string) (bool, error) {
 		return false, err
 	}
 	if !fi.IsDir() {
-		return false, errors.Errorf("%q is not a directory", name)
+		return false, fmt.Errorf("%q is not a directory", name)
 	}
 	return true, nil
 }
@@ -126,12 +127,12 @@ func CopyDir(src, dst string) error {
 	}
 
 	if err = os.MkdirAll(dst, fi.Mode()); err != nil {
-		return errors.Wrapf(err, "cannot mkdir %s", dst)
+		return fmt.Errorf("cannot mkdir %s %w", dst, err)
 	}
 
 	entries, err := os.ReadDir(src)
 	if err != nil {
-		return errors.Wrapf(err, "cannot read directory %s", dst)
+		return fmt.Errorf("cannot read directory %s %w", dst, err)
 	}
 
 	for _, entry := range entries {
@@ -140,13 +141,13 @@ func CopyDir(src, dst string) error {
 
 		if entry.IsDir() {
 			if err = CopyDir(srcPath, dstPath); err != nil {
-				return errors.Wrap(err, "copying directory failed")
+				return fmt.Errorf("copying directory failed %w", err)
 			}
 		} else {
 			// This will include symlinks, which is what we want when
 			// copying things.
 			if err = copyFile(srcPath, dstPath); err != nil {
-				return errors.Wrap(err, "copying file failed")
+				return fmt.Errorf("copying file failed %w", err)
 			}
 		}
 	}
@@ -160,7 +161,7 @@ func CopyDir(src, dst string) error {
 // of the source file. The file mode will be copied from the source.
 func copyFile(src, dst string) (err error) {
 	if sym, err := IsSymlink(src); err != nil {
-		return errors.Wrap(err, "symlink check failed")
+		return fmt.Errorf("symlink check failed %w", err)
 	} else if sym {
 		if err := cloneSymlink(src, dst); err != nil {
 			if runtime.GOOS == "windows" {

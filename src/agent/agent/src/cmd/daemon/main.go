@@ -201,9 +201,9 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 	go func() {
 		if err := cmd.Wait(); err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
-				if exiterr.ExitCode() == constant.DAEMON_EXIT_CODE {
-					logs.Warnf("exit code %d daemon exit", constant.DAEMON_EXIT_CODE)
-					systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
+				if exiterr.ExitCode() == constant.DaemonExitCode {
+					logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
+					systemutil.ExitProcess(constant.DaemonExitCode)
 				}
 			}
 			logs.Error("agent process error", err)
