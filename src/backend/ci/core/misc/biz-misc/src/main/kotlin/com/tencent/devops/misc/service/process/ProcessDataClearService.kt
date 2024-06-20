@@ -90,8 +90,7 @@ class ProcessDataClearService @Autowired constructor(
         }
         processRelatedPlatformDataClearService.cleanBuildData(
             projectId = projectId,
-            pipelineId = pipelineId,
-            platformDataClearEnum = PlatformDataClearEnum.CLEAR_PIPELINE_REPOSITORY_BUILD_DATA
+            pipelineId = pipelineId
         )
     }
 
