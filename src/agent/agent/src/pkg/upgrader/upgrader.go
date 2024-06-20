@@ -28,10 +28,10 @@
 package upgrader
 
 import (
-	"errors"
 	"fmt"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
+	"github.com/pkg/errors"
 	"os"
 	"strconv"
 	"time"
@@ -58,7 +58,7 @@ func DoUpgradeAgent() error {
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 	err := totalLock.Lock()
 	if err = totalLock.Lock(); err != nil {
-		logs.Error("get total lock failed, exit", err.Error())
+		logs.WithError(err).Error("get total lock failed, exit")
 		return errors.New("get total lock failed")
 	}
 	defer func() { totalLock.Unlock() }()
@@ -93,18 +93,18 @@ func DoUpgradeAgent() error {
 	if agentChange {
 		err = replaceAgentFile(config.GetClienAgentFile())
 		if err != nil {
-			logs.Error("replace agent file failed: ", err.Error())
+			logs.WithError(err).Error("replace agent file failed")
 		}
 	}
 
 	if daemonChange {
 		err = replaceAgentFile(config.GetClientDaemonFile()) // #4686 如果windows下daemon进程仍然存在，则会替换失败
 		if err != nil {
-			logs.Error("replace daemon file failed: ", err.Error())
+			logs.WithError(err).Error("replace daemon file failed")
 		}
 		if systemutil.IsLinux() { // #4686 如上，上面仅停止Linux的devopsDaemon进程，则也只重启动Linux的
 			if startErr := StartDaemon(); startErr != nil {
-				logs.Error("start daemon failed: ", startErr.Error())
+				logs.WithError(startErr).Error("start daemon failed")
 				return startErr
 			}
 			logs.Info("agent start done")
@@ -144,7 +144,7 @@ func tryKillAgentProcess(processName string) {
 func DoUninstallAgent() error {
 	err := UninstallAgent()
 	if err != nil {
-		logs.Error("uninstall agent failed: ", err.Error())
+		logs.WithError(err).Error("uninstall agent failed")
 		return errors.New("uninstall agent failed")
 	}
 	return nil
@@ -188,7 +188,7 @@ func StartDaemon() error {
 	startCmd := workDir + "/" + config.GetClientDaemonFile()
 
 	if err := fileutil.SetExecutable(startCmd); err != nil {
-		logs.Warn(fmt.Errorf("chmod daemon file failed: %v", err))
+		logs.WithError(err).Warn("chmod daemon file failed")
 		return err
 	}
 
@@ -216,11 +216,11 @@ func replaceAgentFile(fileName string) error {
 
 	srcFile, err := os.Open(src)
 	if err != nil {
-		return fmt.Errorf("replaceAgentFile open %s error %w", src, err)
+		return errors.Wrapf(err, "replaceAgentFile open %s error", src)
 	}
 
 	if err := innerFileUtil.AtomicWriteFile(dst, srcFile, perm); err != nil {
-		return fmt.Errorf("replaceAgentFile AtomicWriteFile %s error %w", dst, err)
+		return errors.Wrapf(err, "replaceAgentFile AtomicWriteFile %s error", dst)
 	}
 
 	return nil

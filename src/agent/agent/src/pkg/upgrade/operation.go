@@ -28,7 +28,6 @@
 package upgrade
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -36,7 +35,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -68,7 +67,7 @@ func runUninstallUpgrader(action string) error {
 	if !systemutil.IsWindows() {
 		err := systemutil.Chmod(scripPath, 0777)
 		if err != nil {
-			logs.Error("agentUpgrade|chmod failed: ", err.Error())
+			logs.WithError(err).Error("agentUpgrade|chmod failed")
 			return errors.New("chmod failed: ")
 		}
 	}
@@ -77,7 +76,7 @@ func runUninstallUpgrader(action string) error {
 
 	pid, err := command.StartProcess(scripPath, args, systemutil.GetWorkDir(), nil, "")
 	if err != nil {
-		logs.Error("agentUpgrade|run uninstall upgrader failed: ", err.Error())
+		logs.WithError(err).Error("agentUpgrade|run uninstall upgrader failed")
 		return errors.New("run uninstall upgrader failed")
 	}
 	logs.Info("agentUpgrade|start uninstall process success, pid: ", pid)
@@ -96,7 +95,7 @@ func runUpgrader(action string) error {
 	if !systemutil.IsWindows() {
 		err := systemutil.Chmod(scripPath, 0777)
 		if err != nil {
-			logs.Error("agentUpgrade|chmod failed: ", err.Error())
+			logs.WithError(err).Error("agentUpgrade|chmod failed")
 			return errors.New("chmod failed: ")
 		}
 	}
@@ -108,7 +107,7 @@ func runUpgrader(action string) error {
 
 	pid, err := command.StartProcess(scripPath, args, systemutil.GetWorkDir(), nil, "")
 	if err != nil {
-		logs.Error("agentUpgrade|run upgrader failed: ", err.Error())
+		logs.WithError(err).Error("agentUpgrade|run upgrader failed")
 		return errors.New("run upgrader failed")
 	}
 	logs.Info("agentUpgrade|start process success, pid: ", pid)
@@ -142,7 +141,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 			systemutil.GetWorkDir()+"/"+config.WorkAgentFile,
 			true)
 		if err != nil {
-			logs.Error("agentUpgrade|replace work agent file failed: ", err.Error())
+			logs.WithError(err).Error("agentUpgrade|replace work agent file failed")
 			return errors.New("replace work agent file failed")
 		}
 		logs.Info("agentUpgrade|replace agent file done")
@@ -169,12 +168,12 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 			config.GetDockerInitFilePath(),
 			true)
 		if err != nil {
-			logs.Error("agentUpgrade|replace work docker init file failed: ", err.Error())
+			logs.WithError(err).Error("agentUpgrade|replace work docker init file failed")
 			return errors.New("replace work docker init file failed")
 		}
 		// 授予文件可执行权限，每次升级后赋予权限可以减少直接在启动时赋予的并发赋予的情况
 		if err = systemutil.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
-			logs.Error("agentUpgrade|chmod work docker init file failed: ", err.Error())
+			logs.WithError(err).Error("agentUpgrade|chmod work docker init file failed")
 			return errors.New("chmod work docker init file failed")
 		}
 
@@ -197,21 +196,21 @@ func DoUpgradeJdk() error {
 		true,
 	)
 	if err != nil {
-		return fmt.Errorf("upgrade jdk copy new jdk file error %w", err)
+		return errors.Wrapf(err, "upgrade jdk copy new jdk file error")
 	}
 
 	// 解压缩为一个新文件取代旧文件路径
 	jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
 	err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
 	if err != nil {
-		return fmt.Errorf("upgrade jdk unzip error %w", err)
+		return errors.Wrapf(err, "upgrade jdk unzip error")
 	}
 
 	// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
 	go func() {
 		files, err := os.ReadDir(workDir)
 		if err != nil {
-			logs.Error("agentUpgrade|upgrade jdk remove old jdk file error", err)
+			logs.WithError(err).Error("agentUpgrade|upgrade jdk remove old jdk file error")
 			return
 		}
 		for _, file := range files {
@@ -219,7 +218,7 @@ func DoUpgradeJdk() error {
 				file.Name() != jdkTmpName {
 				err = os.RemoveAll(workDir + "/" + file.Name())
 				if err != nil {
-					logs.Error("agentUpgrade|upgrade jdk remove old jdk file error", err)
+					logs.WithError(err).Error("agentUpgrade|upgrade jdk remove old jdk file error")
 				}
 			}
 		}

@@ -2,6 +2,7 @@ package job_docker
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"runtime"
@@ -282,7 +283,7 @@ func compareRandomizedStrings(a, b, c, d string) error {
 	if a == d && b == c {
 		return nil
 	}
-	return fmt.Errorf("strings don't match")
+	return errors.New("strings don't match")
 }
 
 // Simple parse with MacAddress validation

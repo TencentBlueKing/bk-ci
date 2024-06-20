@@ -1,8 +1,8 @@
 package exitcode
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"sync/atomic"

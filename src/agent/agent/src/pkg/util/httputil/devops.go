@@ -29,9 +29,9 @@ package httputil
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"os"

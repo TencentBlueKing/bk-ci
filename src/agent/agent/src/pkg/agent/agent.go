@@ -102,7 +102,7 @@ func doAsk() {
 	}
 
 	if err != nil {
-		logs.Error("ask request failed: ", err.Error())
+		logs.WithErrorNoStack(err).Error("ask request failed")
 		return
 	}
 	if result.IsNotOk() {
@@ -122,7 +122,7 @@ func doAsk() {
 	resp := new(api.AskResp)
 	err = util.ParseJsonToData(result.Data, &resp)
 	if err != nil {
-		logs.Error("parse ask resp failed: ", err.Error())
+		logs.WithErrorNoStack(err).Error("parse ask resp failed")
 		return
 	}
 

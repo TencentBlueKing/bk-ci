@@ -28,8 +28,8 @@
 package command
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 
@@ -87,7 +87,7 @@ func StartProcess(command string, args []string, workDir string, envMap map[stri
 
 	err := SetUser(cmd, runUser)
 	if err != nil {
-		logs.Error("set user failed: ", err.Error())
+		logs.WithError(err).Error("set user failed")
 		return -1, errors.New(
 			fmt.Sprintf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error()))
 	}

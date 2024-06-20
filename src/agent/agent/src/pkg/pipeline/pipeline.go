@@ -36,7 +36,7 @@ import (
 	"os"
 	"strings"
 
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -118,14 +118,14 @@ func runCommandPipeline(pipeline *CommandPipeline, lines []string) (err error) {
 	err = os.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
-		return fmt.Errorf("write pipeline script file failed %w", err)
+		return errors.Wrapf(err, "write pipeline script file failed")
 	}
 	defer os.Remove(scriptFile)
 
 	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
-		return fmt.Errorf("run pipeline failed %w", err)
+		return errors.Wrapf(err, "run pipeline failed")
 	}
 	_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
 	return nil
@@ -148,14 +148,14 @@ func runCommandPipelineWindows(pipeline *CommandPipeline, lines []string) error 
 	err := os.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
-		return fmt.Errorf("write pipeline script file failed %w", err)
+		return errors.Wrapf(err, "write pipeline script file failed")
 	}
 	defer os.Remove(scriptFile)
 
 	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
-		return fmt.Errorf("run pipeline failed %w", err)
+		return errors.Wrapf(err, "run pipeline failed")
 	}
 	_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
 

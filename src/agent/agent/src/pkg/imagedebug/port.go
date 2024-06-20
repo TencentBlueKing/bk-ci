@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"errors"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/pkg/errors"
 )
 
 const (

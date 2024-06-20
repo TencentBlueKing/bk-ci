@@ -15,7 +15,6 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
-	"errors"
 	"github.com/docker/cli/cli/compose/loader"
 	"github.com/docker/cli/opts"
 	"github.com/docker/docker/api/types/container"
@@ -24,6 +23,7 @@ import (
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/go-connections/nat"
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 )
 
@@ -477,22 +477,22 @@ func parse(flags *pflag.FlagSet, copts *containerOptions, serverOS string) (*Con
 
 	pidMode := container.PidMode(copts.pidMode)
 	if !pidMode.Valid() {
-		return nil, fmt.Errorf("--pid: invalid PID mode")
+		return nil, errors.New("--pid: invalid PID mode")
 	}
 
 	utsMode := container.UTSMode(copts.utsMode)
 	if !utsMode.Valid() {
-		return nil, fmt.Errorf("--uts: invalid UTS mode")
+		return nil, errors.New("--uts: invalid UTS mode")
 	}
 
 	usernsMode := container.UsernsMode(copts.usernsMode)
 	if !usernsMode.Valid() {
-		return nil, fmt.Errorf("--userns: invalid USER mode")
+		return nil, errors.New("--userns: invalid USER mode")
 	}
 
 	cgroupnsMode := container.CgroupnsMode(copts.cgroupnsMode)
 	if !cgroupnsMode.Valid() {
-		return nil, fmt.Errorf("--cgroupns: invalid CGROUP mode")
+		return nil, errors.New("--cgroupns: invalid CGROUP mode")
 	}
 
 	restartPolicy, err := opts.ParseRestartPolicy(copts.restartPolicy)
@@ -526,7 +526,7 @@ func parse(flags *pflag.FlagSet, copts *containerOptions, serverOS string) (*Con
 		copts.healthRetries != 0
 	if copts.noHealthcheck {
 		if haveHealthSettings {
-			return nil, fmt.Errorf("--no-healthcheck conflicts with --health-* options")
+			return nil, errors.New("--no-healthcheck conflicts with --health-* options")
 		}
 		healthConfig = &container.HealthConfig{Test: strslice.StrSlice{"NONE"}}
 	} else if haveHealthSettings {
@@ -535,16 +535,16 @@ func parse(flags *pflag.FlagSet, copts *containerOptions, serverOS string) (*Con
 			probe = []string{"CMD-SHELL", copts.healthCmd}
 		}
 		if copts.healthInterval < 0 {
-			return nil, fmt.Errorf("--health-interval cannot be negative")
+			return nil, errors.New("--health-interval cannot be negative")
 		}
 		if copts.healthTimeout < 0 {
-			return nil, fmt.Errorf("--health-timeout cannot be negative")
+			return nil, errors.New("--health-timeout cannot be negative")
 		}
 		if copts.healthRetries < 0 {
-			return nil, fmt.Errorf("--health-retries cannot be negative")
+			return nil, errors.New("--health-retries cannot be negative")
 		}
 		if copts.healthStartPeriod < 0 {
-			return nil, fmt.Errorf("--health-start-period cannot be negative")
+			return nil, errors.New("--health-start-period cannot be negative")
 		}
 
 		healthConfig = &container.HealthConfig{
@@ -660,7 +660,7 @@ func parse(flags *pflag.FlagSet, copts *containerOptions, serverOS string) (*Con
 	}
 
 	if copts.autoRemove && !hostConfig.RestartPolicy.IsNone() {
-		return nil, fmt.Errorf("Conflicting options: --restart and --rm")
+		return nil, errors.New("Conflicting options: --restart and --rm")
 	}
 
 	// only set this value if the user provided the flag, else it should default to nil
@@ -848,11 +848,11 @@ func parseSecurityOpts(securityOpts []string) ([]string, error) {
 		if k == "seccomp" && v != "unconfined" {
 			f, err := os.ReadFile(v)
 			if err != nil {
-				return securityOpts, fmt.Errorf("opening seccomp profile (%s) failed: %v", v, err)
+				return securityOpts, errors.Wrapf(err, "opening seccomp profile (%s) failed", v)
 			}
 			b := bytes.NewBuffer(nil)
 			if err := json.Compact(b, f); err != nil {
-				return securityOpts, fmt.Errorf("compacting json for seccomp profile (%s) failed: %v", v, err)
+				return securityOpts, errors.Wrapf(err, "compacting json for seccomp profile (%s) failed", v)
 			}
 			securityOpts[key] = fmt.Sprintf("seccomp=%s", b.Bytes())
 		}
@@ -886,7 +886,7 @@ func parseStorageOpts(storageOpts []string) (map[string]string, error) {
 	for _, option := range storageOpts {
 		k, v, ok := strings.Cut(option, "=")
 		if !ok {
-			return nil, fmt.Errorf("invalid storage option")
+			return nil, errors.New("invalid storage option")
 		}
 		m[k] = v
 	}
@@ -1045,5 +1045,5 @@ func validateAttach(val string) (string, error) {
 			return s, nil
 		}
 	}
-	return val, fmt.Errorf("valid streams are STDIN, STDOUT and STDERR")
+	return val, errors.New("valid streams are STDIN, STDOUT and STDERR")
 }

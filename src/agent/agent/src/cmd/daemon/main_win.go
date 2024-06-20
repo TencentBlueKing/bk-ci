@@ -112,13 +112,13 @@ func main() {
 	sys := service.ChosenSystem()
 	daemonService, err := sys.New(daemonProgram, serviceConfig)
 	if err != nil {
-		logs.Error("Init service error: ", err.Error())
+		logs.WithError(err).Error("Init service error")
 		systemutil.ExitProcess(1)
 	}
 
 	err = daemonService.Run()
 	if err != nil {
-		logs.Error("run agent program error: ", err.Error())
+		logs.WithError(err).Error("run agent program error")
 	}
 }
 
@@ -134,21 +134,21 @@ func watch() {
 		// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
 		stdErr, errstd := cmd.StderrPipe()
 		if errstd != nil {
-			logs.Error("get agent stderr pipe error", errstd)
+			logs.WithError(errstd).Error("get agent stderr pipe error")
 		} else {
 			defer stdErr.Close()
 		}
 
 		logs.Info("start devops agent")
 		if !fileutil.Exists(agentPath) {
-			logs.Error("agent file: ", agentPath, " not exists")
+			logs.Errorf("agent file: %s not exists", agentPath)
 			logs.Info("restart after 30 seconds")
 			time.Sleep(30 * time.Second)
 		}
 
 		err := fileutil.SetExecutable(agentPath)
 		if err != nil {
-			logs.Error("chmod failed, err: ", err.Error())
+			logs.WithError(err).Error("chmod failed, err")
 			logs.Info("restart after 30 seconds")
 			time.Sleep(30 * time.Second)
 			continue
@@ -156,7 +156,7 @@ func watch() {
 
 		err = cmd.Start()
 		if err != nil {
-			logs.Error("agent start failed, err: ", err.Error())
+			logs.WithError(err).Error("agent start failed, err")
 			logs.Info("restart after 30 seconds")
 			time.Sleep(30 * time.Second)
 			continue
@@ -172,13 +172,13 @@ func watch() {
 					systemutil.ExitProcess(constant.DaemonExitCode)
 				}
 			}
-			logs.Error("agent process error", err)
+			logs.WithError(err).Error("agent process error")
 			if errstd != nil {
 				return
 			}
 			out, err := io.ReadAll(stdErr)
 			if err != nil {
-				logs.Error("read agent stderr out error", err)
+				logs.WithError(err).Error("read agent stderr out error")
 				return
 			}
 			logs.Error("agent process error out", string(out))

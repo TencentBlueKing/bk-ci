@@ -30,8 +30,8 @@ package job
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/fs"
 	"os"
 	"strings"
@@ -69,7 +69,7 @@ func AgentStartup() (agentStatus string, err error) {
 // parseAgentStatusResult 解析状态信息
 func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (agentStatus string, err error) {
 	if resultErr != nil {
-		logs.Error("parse agent status error: ", resultErr.Error())
+		logs.WithErrorNoStack(resultErr).Error("parse agent status error")
 		return "", errors.New("parse agent status error")
 	}
 	if result.IsNotOk() {
@@ -128,7 +128,7 @@ func DoBuild(buildInfo *api.ThirdPartyBuildInfo) {
 
 	err := runBuild(buildInfo)
 	if err != nil {
-		logs.Error("start build failed: ", err.Error())
+		logs.WithError(err).Error("start build failed")
 	}
 }
 
@@ -261,7 +261,7 @@ func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 	}
 	result, err := api.WorkerBuildFinish(buildInfo)
 	if err != nil {
-		logs.Error("send worker build finish failed: ", err.Error())
+		logs.WithErrorNoStack(err).Error("send worker build finish failed")
 	}
 	if result.IsNotOk() {
 		logs.Error("send worker build finish failed: ", result.Message)

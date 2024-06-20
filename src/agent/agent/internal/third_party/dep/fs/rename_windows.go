@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package fs
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"syscall"
 )
@@ -61,7 +61,7 @@ func renameFallback(err error, src, dst string) error {
 		// 0x11 (ERROR_NOT_SAME_DEVICE) is the windows error.
 		// See https://msdn.microsoft.com/en-us/library/cc231199.aspx
 		if ok && noerr != 0x11 {
-			return fmt.Errorf("link error: cannot rename %s to %s %w", src, dst, terr)
+			return errors.Wrapf(terr, "link error: cannot rename %s to %s %w", src, dst)
 		}
 	}
 

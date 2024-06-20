@@ -31,6 +31,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"text/template"
 	"time"
 
@@ -165,11 +166,11 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 	var content = new(bytes.Buffer)
 	tmpl, err := template.New("tmpl").Parse(telegrafconf.TelegrafConf)
 	if err != nil {
-		return nil, fmt.Errorf("parse telegraf config template err %w", err)
+		return nil, errors.Wrapf(err, "parse telegraf config template err")
 	}
 	err = tmpl.Execute(content, templateData)
 	if err != nil {
-		return nil, fmt.Errorf("execute telegraf config template err %w", err)
+		return nil, errors.Wrapf(err, "execute telegraf config template err")
 	}
 
 	return content, nil

@@ -32,8 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package fs
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -51,7 +51,7 @@ import (
 func RenameWithFallback(src, dst string) error {
 	_, err := os.Stat(src)
 	if err != nil {
-		return fmt.Errorf("cannot stat %s error %w", src, err)
+		return errors.Wrapf(err, "cannot stat %s error", src)
 	}
 
 	err = os.Rename(src, dst)
@@ -69,20 +69,20 @@ func renameByCopy(src, dst string) error {
 	if dir, _ := IsDir(src); dir {
 		cerr = CopyDir(src, dst)
 		if cerr != nil {
-			cerr = fmt.Errorf("copying directory failed %w", cerr)
+			cerr = errors.Wrapf(cerr, "copying directory failed")
 		}
 	} else {
 		cerr = copyFile(src, dst)
 		if cerr != nil {
-			cerr = fmt.Errorf("copying file failed %w", cerr)
+			cerr = errors.Wrapf(cerr, "copying file failed")
 		}
 	}
 
 	if cerr != nil {
-		return fmt.Errorf("rename fallback failed: cannot rename %s to %s %w", src, dst, cerr)
+		return errors.Wrapf(cerr, "rename fallback failed: cannot rename %s to %s", src, dst)
 	}
 
-	return fmt.Errorf("cannot delete %s %w", src, os.RemoveAll(src))
+	return errors.Wrapf(os.RemoveAll(src), "cannot delete %s", src)
 }
 
 // IsDir determines is the path given is a directory or not.
@@ -127,12 +127,12 @@ func CopyDir(src, dst string) error {
 	}
 
 	if err = os.MkdirAll(dst, fi.Mode()); err != nil {
-		return fmt.Errorf("cannot mkdir %s %w", dst, err)
+		return errors.Wrapf(err, "cannot mkdir %s", dst)
 	}
 
 	entries, err := os.ReadDir(src)
 	if err != nil {
-		return fmt.Errorf("cannot read directory %s %w", dst, err)
+		return errors.Wrapf(err, "cannot read directory %s", dst)
 	}
 
 	for _, entry := range entries {
@@ -141,13 +141,13 @@ func CopyDir(src, dst string) error {
 
 		if entry.IsDir() {
 			if err = CopyDir(srcPath, dstPath); err != nil {
-				return fmt.Errorf("copying directory failed %w", err)
+				return errors.Wrapf(err, "copying directory failed")
 			}
 		} else {
 			// This will include symlinks, which is what we want when
 			// copying things.
 			if err = copyFile(srcPath, dstPath); err != nil {
-				return fmt.Errorf("copying file failed %w", err)
+				return errors.Wrapf(err, "copying file failed")
 			}
 		}
 	}
@@ -161,7 +161,7 @@ func CopyDir(src, dst string) error {
 // of the source file. The file mode will be copied from the source.
 func copyFile(src, dst string) (err error) {
 	if sym, err := IsSymlink(src); err != nil {
-		return fmt.Errorf("symlink check failed %w", err)
+		return errors.Wrapf(err, "symlink check failed")
 	} else if sym {
 		if err := cloneSymlink(src, dst); err != nil {
 			if runtime.GOOS == "windows" {

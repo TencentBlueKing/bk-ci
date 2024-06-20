@@ -31,8 +31,8 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -134,7 +134,7 @@ func Init(isDebug bool) {
 	IsDebug = isDebug
 	err := LoadAgentConfig()
 	if err != nil {
-		logs.Error("load agent config err: ", err)
+		logs.WithError(err).Error("load agent config err")
 		systemutil.ExitProcess(1)
 	}
 	initCert()
@@ -182,7 +182,7 @@ func DetectAgentVersionByDir(workDir string) string {
 		}
 		err := fileutil.SetExecutable(agentExecutable)
 		if err != nil {
-			logs.Warn(fmt.Errorf("chmod agent file failed: %v", err))
+			logs.WithError(err).Warn("chmod agent file failed")
 			return ""
 		}
 	}
