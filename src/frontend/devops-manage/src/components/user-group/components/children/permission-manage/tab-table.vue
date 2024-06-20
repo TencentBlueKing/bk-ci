@@ -25,7 +25,11 @@
       </div>
     </template>
     <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
-    <bk-table-column label="用户组" prop="groupName">
+    <bk-table-column label="用户组" prop="groupName" style="position: relative;">
+      <template #default="{row}">
+        {{ row.groupName }}
+        <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">唯一管理员无法移出</div>
+      </template>
     </bk-table-column>
     <bk-table-column label="用户描述" prop="groupDesc" />
     <bk-table-column label="有效期" prop="validityPeriod" />
@@ -197,5 +201,18 @@ function handleLoadMore() {
     line-height: 20px;
     cursor: pointer;
   }
+}
+.overlay{
+  position: absolute;
+  left: 0;
+  backdrop-filter: blur(0.5px);
+  transform: translateY(-42px);
+  width: 100%;
+  height: 42px;
+  background: rgba(255,229,180, .6);
+  font-family: MicrosoftYaHei;
+  font-size: 12px;
+  color: #63656E;
+  text-align: center;
 }
 </style>

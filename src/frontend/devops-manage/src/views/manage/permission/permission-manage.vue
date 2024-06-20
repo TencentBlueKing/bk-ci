@@ -136,7 +136,7 @@ const formRef = ref(null);
 const refTable = ref(null);
 const selectList = ref([]);
 const searchValue = ref([]);
-const isLoading = ref(false);
+const isLoading = ref(true);
 const isShowDialog = ref(false);
 const dialogLoading = ref(false);
 const isResetFailure = ref(false);
@@ -217,45 +217,49 @@ onMounted(() => {
  * 获取列表数据
  */
 function getTableList(){
- // 调用接口获取表格数据
- tableData.value =[
-    {
-      id: 1,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:0"
-    },
-    {
-      id: 2,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:1"
-    },
-    {
-      id: 3,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:2"
-    },{
-      id: 1,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:0"
-    },
-    {
-      id: 2,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:1"
-    },
-    {
-      id: 3,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:2"
-    },
- ]
- total.value = tableData.value.length;
+  isLoading.value = true
+  setTimeout(()=>{
+   // 调用接口获取表格数据
+   tableData.value =[
+      {
+        id: 1,
+        "code": "bkdevops-plugins-test/fayenodejstesa",
+        "percent": "OAUTH@  daisyhong",
+        "create_time": "2018-05-25 15:02:0"
+      },
+      {
+        id: 2,
+        "code": "bkdevops-plugins-test/fayenodejstesa",
+        "percent": "OAUTH@  daisyhong",
+        "create_time": "2018-05-25 15:02:1"
+      },
+      {
+        id: 3,
+        "code": "bkdevops-plugins-test/fayenodejstesa",
+        "percent": "OAUTH@  daisyhong",
+        "create_time": "2018-05-25 15:02:2"
+      },{
+        id: 1,
+        "code": "bkdevops-plugins-test/fayenodejstesa",
+        "percent": "OAUTH@  daisyhong",
+        "create_time": "2018-05-25 15:02:0"
+      },
+      {
+        id: 2,
+        "code": "bkdevops-plugins-test/fayenodejstesa",
+        "percent": "OAUTH@  daisyhong",
+        "create_time": "2018-05-25 15:02:1"
+      },
+      {
+        id: 3,
+        "code": "bkdevops-plugins-test/fayenodejstesa",
+        "percent": "OAUTH@  daisyhong",
+        "create_time": "2018-05-25 15:02:2"
+      },
+   ]
+   total.value = tableData.value.length;
+   isLoading.value = false
+ },1000)
 }
 /**
  * aside点击事件
@@ -264,11 +268,7 @@ function handleAsideClick(params, index) {
   activeIndex.value = index;
   activeNav.value = params.label;
   // 模拟
-  isLoading.value = true
-  setTimeout(()=>{
-    getTableList();
-    isLoading.value = false
-  },2000)
+  getTableList();
 };
 /**
  * 批量重置

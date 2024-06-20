@@ -141,7 +141,7 @@ export default defineStore('userGroupTable', () => {
               joinedTime: '08-18',
               operateSource: '加入组',
               operator: '张三',
-              removeMemberButtonControl: 'OTHER',
+              removeMemberButtonControl: 'TEMPLATE',
             }, {
               groupId: 7,
               groupName: '77',
