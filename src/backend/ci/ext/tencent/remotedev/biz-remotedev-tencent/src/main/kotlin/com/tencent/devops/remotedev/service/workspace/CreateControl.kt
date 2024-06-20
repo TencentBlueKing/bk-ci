@@ -199,36 +199,11 @@ class CreateControl @Autowired constructor(
             )
         }
         // 检查是否有特殊机型的配额限制
-        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
-        if (workspaceCreate.windowsType.trim() in allSpecSize) {
-            val specQuota = windowsSpecResourceDao.fetchQuota(
-                dslContext = dslContext,
-                projectId = projectInfo.englishName,
-                size = workspaceCreate.windowsType.trim()
-            )
-            if (specQuota != null) {
-                val count = workspaceWindowsDao.fetchUsedSizeCount(
-                    dslContext = dslContext,
-                    workspaceNames = workspaceNames,
-                    size = workspaceCreate.windowsType.trim()
-                )
-                if (count >= specQuota) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                        params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
-                    )
-                }
-            } else {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(workspaceCreate.windowsType.trim(), "0", "0")
-                )
-            }
-        }
+        createCheckSpecLimit(workspaceCreate.windowsType, projectInfo.englishName, workspaceNames)
 
         // 自定义镜像检查是否有相对的显卡
         // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡
-        var newNum = 0
+        val newNum: Int
         if (workspaceCreate.imageCosFile.isBlank()) {
             val resourceCount = startCloudResourceCountCheck(
                 workspaceCreate.windowsType, workspaceCreate.windowsZone, QuotaType.OFFSHORE
@@ -266,6 +241,76 @@ class CreateControl @Autowired constructor(
             projectInfo = projectInfo,
             windowsZone = windowsZone,
             cgsId = cgsId
+        )
+    }
+
+    fun createCheckSpecLimit(
+        windowsType: String,
+        projectId: String,
+        workspaceNames: Set<String>
+    ) {
+        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
+        if (windowsType.trim() in allSpecSize) {
+            val specQuota = windowsSpecResourceDao.fetchQuota(
+                dslContext = dslContext,
+                projectId = projectId,
+                size = windowsType.trim()
+            )
+            if (specQuota != null) {
+                val count = workspaceWindowsDao.fetchUsedSizeCount(
+                    dslContext = dslContext,
+                    workspaceNames = workspaceNames,
+                    size = windowsType.trim()
+                )
+                if (count >= specQuota) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                        params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
+                    )
+                }
+            } else {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                    params = arrayOf(windowsType.trim(), "0", "0")
+                )
+            }
+        }
+    }
+
+    fun createCheckWhenWinNotAlready(
+        zoneId: String,
+        winConfigId: Int,
+        newNum: Int,
+        ownerType: WorkspaceOwnerType
+    ) {
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(winConfigId.toString())
+            )
+
+        if (windowsConfig.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(windowsConfig.size)
+            )
+        }
+        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(zoneId)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(zoneId)
+            )
+        }
+        createCheckWhenWinNotAlready(
+            windowsZone = windowsZone,
+            windowsConfig = windowsConfig,
+            newNum = newNum,
+            quotaType = QuotaType.parse(ownerType)
         )
     }
 

@@ -13,6 +13,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -25,11 +26,13 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -53,7 +56,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val dispatcher: RemoteDevDispatcher,
     private val deleteControl: DeleteControl,
-    private val workspaceSharedDao: WorkspaceSharedDao
+    private val workspaceSharedDao: WorkspaceSharedDao,
+    private val createControl: CreateControl,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
 
     @ActionAuditRecord(
@@ -73,7 +78,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
         workspaceName: String,
         rebuildReq: WorkspaceUpgradeReq
     ): WorkspaceResponse {
-        logger.info("$userId upgrade project $projectId workspace $workspaceName")
+        logger.info("$userId upgrade project $projectId workspace $workspaceName|$rebuildReq")
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
@@ -86,7 +91,7 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             )
         }
 
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
@@ -106,6 +111,20 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     )
                 )
             }
+            if (workspace.ownerType == WorkspaceOwnerType.PROJECT) {
+                val workspaceNames = workspaceDao.fetchUserWorkspaceName(
+                    dslContext = dslContext,
+                    projectId = workspace.projectId,
+                    ownerType = WorkspaceOwnerType.PROJECT
+                )
+                createControl.createCheckSpecLimit(rebuildReq.machineType, workspace.projectId, workspaceNames)
+            }
+            createControl.createCheckWhenWinNotAlready(
+                zoneId = checkNotNull(workspace.zoneId),
+                winConfigId = checkNotNull(workspace.winConfigId),
+                newNum = 1,
+                ownerType = workspace.ownerType
+            )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,

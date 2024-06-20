@@ -280,7 +280,7 @@ class WorkspaceCommon @Autowired constructor(
      * workspace 正在变更状态时，不能新建任务去执行。但如果超过 60s 便不做该限制。 以免因下游某服务节点故障状态未闭环回传导致问题。
      * 如果已经销毁，直接返回false
      */
-    fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
+    fun notOk2doNextAction(workspace: WorkspaceRecordInf): Boolean {
         return (
             workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
                 workspace.lastStatusUpdateTime ?: LocalDateTime.now(),

@@ -52,6 +52,7 @@ import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.Result
+import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -672,41 +673,50 @@ class WorkspaceDao {
                 return null
             }
             return WorkspaceRecordWithWindows(
-                workspaceId = record.getOrNull("ID") as Long? ?: -1,
-                projectId = record.getOrNull("PROJECT_ID") as String? ?: "NO_CHECK",
-                workspaceName = record.getOrNull("NAME") as String? ?: "NO_CHECK",
-                displayName = record.getOrNull("DISPLAY_NAME") as String? ?: "NO_CHECK",
-                usageTime = record.getOrNull("USAGE_TIME") as Int? ?: -1,
-                sleepingTime = record.getOrNull("SLEEPING_TIME") as Int? ?: -1,
-                createUserId = record.getOrNull("CREATOR") as String? ?: "NO_CHECK",
-                creatorBgName = record.getOrNull("CREATOR_BG_NAME") as String? ?: "NO_CHECK",
-                creatorDeptName = record.getOrNull("CREATOR_DEPT_NAME") as String? ?: "NO_CHECK",
-                creatorCenterName = record.getOrNull("CREATOR_CENTER_NAME") as String? ?: "NO_CHECK",
-                creatorGroupName = record.getOrNull("CREATOR_GROUP_NAME") as String? ?: "NO_CHECK",
-                status = WorkspaceStatus.values()[record.getOrNull("STATUS") as Int? ?: 1],
-                createTime = record.getOrNull("CREATE_TIME") as LocalDateTime? ?: LocalDateTime.now(),
-                updateTime = record.getOrNull("UPDATE_TIME") as LocalDateTime? ?: LocalDateTime.now(),
-                lastStatusUpdateTime = record.getOrNull("LAST_STATUS_UPDATE_TIME") as LocalDateTime?,
+                workspaceId = record.getOrNull(TWorkspace.T_WORKSPACE.ID) as Long? ?: -1,
+                projectId = record.getOrNull(TWorkspace.T_WORKSPACE.PROJECT_ID) as String? ?: "NO_CHECK",
+                workspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.NAME) as String? ?: "NO_CHECK",
+                displayName = record.getOrNull(TWorkspace.T_WORKSPACE.DISPLAY_NAME) as String? ?: "NO_CHECK",
+                usageTime = record.getOrNull(TWorkspace.T_WORKSPACE.USAGE_TIME) as Int? ?: -1,
+                sleepingTime = record.getOrNull(TWorkspace.T_WORKSPACE.SLEEPING_TIME) as Int? ?: -1,
+                createUserId = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR) as String? ?: "NO_CHECK",
+                creatorBgName = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR_BG_NAME) as String? ?: "NO_CHECK",
+                creatorDeptName = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR_DEPT_NAME) as String?
+                    ?: "NO_CHECK",
+                creatorCenterName = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR_CENTER_NAME) as String?
+                    ?: "NO_CHECK",
+                creatorGroupName = record.getOrNull(TWorkspace.T_WORKSPACE.CREATOR_GROUP_NAME) as String?
+                    ?: "NO_CHECK",
+                status = WorkspaceStatus.values()[
+                    record.getOrNull(TWorkspace.T_WORKSPACE.STATUS) as Int? ?: 1],
+                createTime = record.getOrNull(TWorkspace.T_WORKSPACE.CREATE_TIME) as LocalDateTime?
+                    ?: LocalDateTime.now(),
+                updateTime = record.getOrNull(TWorkspace.T_WORKSPACE.UPDATE_TIME) as LocalDateTime?
+                    ?: LocalDateTime.now(),
+                lastStatusUpdateTime = record.getOrNull(TWorkspace.T_WORKSPACE.LAST_STATUS_UPDATE_TIME) as LocalDateTime?,
                 workspaceMountType = WorkspaceMountType.valueOf(
-                    record.getOrNull("WORKSPACE_MOUNT_TYPE") as String? ?: "START"
+                    record.getOrNull(TWorkspace.T_WORKSPACE.WORKSPACE_MOUNT_TYPE) as String? ?: "START"
                 ),
                 workspaceSystemType = WorkspaceSystemType.valueOf(
-                    record.getOrNull("SYSTEM_TYPE") as String? ?: "WINDOWS_GPU"
+                    record.getOrNull(TWorkspace.T_WORKSPACE.SYSTEM_TYPE) as String? ?: "WINDOWS_GPU"
                 ),
-                ownerType = WorkspaceOwnerType.valueOf(record.getOrNull("OWNER_TYPE") as String? ?: "PROJECT"),
-                remark = record.getOrNull("REMARK") as String?,
-                hostIp = record.getOrNull("HOST_IP") as String?,
-                macAddress = record.getOrNull("MAC_ADDRESS") as String?,
-                imageId = record.getOrNull("IMAGE_ID") as String?,
-                zoneId = record.getOrNull("ZONE_ID") as String?,
-                curLaunchId = record.getOrNull("CUR_LAUNCH_ID") as Int?,
-                regionId = record.getOrNull("REGION_ID") as Int?,
-                bakWorkspaceName = record.getOrNull("BAK_NAME") as String?
+                ownerType = WorkspaceOwnerType.valueOf(
+                    record.getOrNull(TWorkspace.T_WORKSPACE.OWNER_TYPE) as String? ?: "PROJECT"
+                ),
+                remark = record.getOrNull(TWorkspace.T_WORKSPACE.REMARK) as String?,
+                hostIp = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP) as String?,
+                macAddress = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.MAC_ADDRESS) as String?,
+                imageId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.IMAGE_ID) as String?,
+                zoneId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ZONE_ID) as String?,
+                winConfigId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID) as Int?,
+                curLaunchId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.CUR_LAUNCH_ID) as Int?,
+                regionId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.REGION_ID) as Int?,
+                bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?
             )
         }
 
-        private fun Record.getOrNull(name: String): Any? {
-            val index = this.fieldsRow().indexOf(name)
+        private fun Record.getOrNull(name: TableField<*, *>): Any? {
+            val index = this.fieldsRow().indexOf(name.name)
             if (index < 0) return null
             return this.get(index)
         }

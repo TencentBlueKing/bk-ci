@@ -149,6 +149,8 @@ data class WorkspaceRecordWithWindows(
     val imageId: String?,
     @get:Schema(title = "地域ID，比如:NJ")
     val zoneId: String?,
+    @get:Schema(title = "机型配置ID，比如:1")
+    val winConfigId: Int?,
     @get:Schema(title = "计费区域Id")
     val curLaunchId: Int?,
     @get:Schema(title = "云区域Id")
