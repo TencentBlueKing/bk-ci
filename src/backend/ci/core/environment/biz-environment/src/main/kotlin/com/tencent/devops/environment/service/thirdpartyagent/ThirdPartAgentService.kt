@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service
 /**
  * 对第三方构建机一些自身数据操作
  */
+@Suppress("NestedBlockDepth")
 @Service
 class ThirdPartAgentService @Autowired constructor(
     private val objectMapper: ObjectMapper,
