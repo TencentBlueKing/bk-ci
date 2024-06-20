@@ -178,7 +178,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 branchVersion?.version
             }
             else -> {
-                null
+                draftVersion?.version
             }
         } ?: releaseVersion.version
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
