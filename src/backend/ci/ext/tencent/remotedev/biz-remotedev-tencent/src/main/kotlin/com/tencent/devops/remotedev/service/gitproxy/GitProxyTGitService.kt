@@ -461,7 +461,7 @@ class GitProxyTGitService @Autowired constructor(
                     return@fetchProjectTGit
                 }
 
-                val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
+                val ips = config.allowIps?.split(";")?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
                 if (remove) {
                     ips.remove(ip)
                 } else {
@@ -640,7 +640,7 @@ class GitProxyTGitService @Autowired constructor(
                 logger.error("updateTGitProjectAcl $tGitProjectId get acl config null")
                 return false
             }
-            val oldIps = config.allowIps.split(";").filter { it.isNotBlank() }.toSet()
+            val oldIps = config.allowIps?.split(";")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
             val oldSpecUsers = config.specHitUsers?.split(";")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
             return doUpdateTGitProjectAcl(
                 token = token,
@@ -761,6 +761,7 @@ class GitProxyTGitService @Autowired constructor(
      */
     @Scheduled(cron = "0 50 9 * * ?")
     fun dailyUserAuthDoCheck() {
+        logger.info("dailyUserAuthDoCheck start")
         val res = projectTGitLinkDao.fetchAll(dslContext)
         val recordData = mutableMapOf<String, MutableList<TProjectTgitIdLinkRecord>>()
         res.forEach {
@@ -795,7 +796,7 @@ class GitProxyTGitService @Autowired constructor(
             logger.warn("dailyUserAuthDoCheck|$projectCodes listByProjectCode null")
             return
         }
-        logger.debug("dailyUserAuthDoCheck|$projectCodes")
+        logger.info("dailyUserAuthDoCheck|$projectCodes")
 
         result.forEach { (userId, projectAndIds) ->
             projectAndIds.forEach project@{ (projectId, idAndUrls) ->
@@ -835,7 +836,6 @@ class GitProxyTGitService @Autowired constructor(
         if (records.isEmpty()) {
             return
         }
-
         var page = 1
         val pageSize = 100
         while (true) {
