@@ -107,7 +107,11 @@ class ApigwJobCloudApi {
         }
     }
 
-    fun <T : JobCloudPermission, U : Any> executePostRequest(jobCloud: T, classOfU: Class<U>): JobCloudResult<U> {
+    fun <T : JobCloudPermission, U : Any> executePostRequest(
+        shortPostTag: Boolean = false,
+        jobCloud: T,
+        classOfU: Class<U>
+    ): JobCloudResult<U> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
@@ -117,26 +121,12 @@ class ApigwJobCloudApi {
             "[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
                 "body: ${logWithLengthLimit(requestContent)}"
         )
-        return getResultFromRes(
-            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers),
-            classOfU
-        )
-    }
-
-    fun <T : JobCloudPermission, U : Any> executeShortPostRequest(jobCloud: T, classOfU: Class<U>): JobCloudResult<U> {
-        val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
-        jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
-        jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
-        val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
-        val requestContent = mapper.writeValueAsString(jobCloud)
-        logger.info(
-            "[${getJobOperationName()}]SHORT POST url: ${jobCloudAuthenticationReq.url}, " +
-                "body: ${logWithLengthLimit(requestContent)}"
-        )
-        return getResultFromRes(
-            OkhttpUtils.doShortPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers),
-            classOfU
-        )
+        val resp = if (!shortPostTag) {
+            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
+        } else {
+            OkhttpUtils.doShortPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
+        }
+        return getResultFromRes(resp, classOfU)
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, vararg args: U): JobCloudResult<T> {

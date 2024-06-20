@@ -159,7 +159,9 @@ class JobService @Autowired constructor(
         ApigwJobCloudApi.setJobOperationName(::executeScript.name)
 
         val jobCloudScriptExecuteRes: JobCloudResult<JobCloudScriptExecuteResult> = apigwJobCloudApi.executePostRequest(
-            jobCloudScriptExecuteReq, JobCloudScriptExecuteResult::class.java
+            shortPostTag = false,
+            jobCloud = jobCloudScriptExecuteReq,
+            classOfU = JobCloudScriptExecuteResult::class.java
         )
         val scriptExecuteRes: JobResult<ScriptExecuteResult> = JobResult(
             code = jobCloudScriptExecuteRes.code,
@@ -242,7 +244,9 @@ class JobService @Autowired constructor(
 
         val jobCloudFileDistributeRes: JobCloudResult<JobCloudFileDistributeResult> =
             apigwJobCloudApi.executePostRequest(
-                jobCloudFileDistributeReq, JobCloudFileDistributeResult::class.java
+                shortPostTag = false,
+                jobCloud = jobCloudFileDistributeReq,
+                classOfU = JobCloudFileDistributeResult::class.java
             )
         val fileDistributeRes: JobResult<FileDistributeResult> = JobResult(
             code = jobCloudFileDistributeRes.code,
@@ -268,7 +272,9 @@ class JobService @Autowired constructor(
         ApigwJobCloudApi.setJobOperationName(::terminateTask.name)
 
         val jobCloudTaskTerminateRes: JobCloudResult<JobCloudTaskTerminateResult> = apigwJobCloudApi.executePostRequest(
-            jobCloudTaskTerminateReq, JobCloudTaskTerminateResult::class.java
+            shortPostTag = false,
+            jobCloud = jobCloudTaskTerminateReq,
+            classOfU = JobCloudTaskTerminateResult::class.java
         )
         val taskTerminateRes: JobResult<TaskTerminateResult> = JobResult(
             code = jobCloudTaskTerminateRes.code,
@@ -299,8 +305,10 @@ class JobService @Autowired constructor(
         )
         ApigwJobCloudApi.setJobOperationName(::queryJobInstanceLogs.name)
         val jobCloudQueryJobInstanceLogsRes: JobCloudResult<JobCloudQueryJobInstanceLogsResult> =
-            apigwJobCloudApi.executeShortPostRequest(
-                jobCloudQueryJobInstanceLogsReq, JobCloudQueryJobInstanceLogsResult::class.java
+            apigwJobCloudApi.executePostRequest(
+                shortPostTag = true,
+                jobCloud = jobCloudQueryJobInstanceLogsReq,
+                classOfU = JobCloudQueryJobInstanceLogsResult::class.java
             )
         val queryJobInstanceLogsRes: JobResult<QueryJobInstanceLogsResult> = JobResult(
             code = jobCloudQueryJobInstanceLogsRes.code,
@@ -372,7 +380,9 @@ class JobService @Autowired constructor(
         ApigwJobCloudApi.setJobOperationName(::createAccount.name)
 
         val jobCloudCreateAccountRes: JobCloudResult<JobCloudCreateAccountResult> = apigwJobCloudApi.executePostRequest(
-            jobCloudCreateAccountReq, JobCloudCreateAccountResult::class.java
+            shortPostTag = false,
+            jobCloud = jobCloudCreateAccountReq,
+            classOfU = JobCloudCreateAccountResult::class.java
         )
         val createAccountRes: JobResult<CreateAccountResult> = JobResult(
             code = jobCloudCreateAccountRes.code,
@@ -409,7 +419,9 @@ class JobService @Autowired constructor(
         ApigwJobCloudApi.setJobOperationName(::deleteAccount.name)
 
         val jobCloudDeleteAccountRes: JobCloudResult<JobCloudDeleteAccountResult> = apigwJobCloudApi.executePostRequest(
-            jobCloudDeleteAccountReq, JobCloudDeleteAccountResult::class.java
+            shortPostTag = false,
+            jobCloud = jobCloudDeleteAccountReq,
+            classOfU = JobCloudDeleteAccountResult::class.java
         )
         val deleteAccountRes: JobResult<DeleteAccountResult> = JobResult(
             code = jobCloudDeleteAccountRes.code,
@@ -743,7 +755,9 @@ class JobService @Autowired constructor(
         )
         val jobCloudOperateStepInstanceRes: JobCloudResult<JobCloudOperateStepInstanceResult> =
             apigwJobCloudApi.executePostRequest(
-                jobCloudOperateStepInstanceReq, JobCloudOperateStepInstanceResult::class.java
+                shortPostTag = false,
+                jobCloud = jobCloudOperateStepInstanceReq,
+                classOfU = JobCloudOperateStepInstanceResult::class.java
             )
         val operateStepInstanceRes: JobResult<OperateStepInstanceResult> = JobResult(
             code = jobCloudOperateStepInstanceRes.code,
@@ -770,7 +784,9 @@ class JobService @Autowired constructor(
         )
         val agentQueryAgentStatusFromJobRes: JobCloudResult<JobCloudQueryAgentStatusFromJobResult> =
             apigwJobCloudApi.executePostRequest(
-                queryAgentStatusFromJobRequest, JobCloudQueryAgentStatusFromJobResult::class.java
+                shortPostTag = false,
+                jobCloud = queryAgentStatusFromJobRequest,
+                classOfU = JobCloudQueryAgentStatusFromJobResult::class.java
             )
         val queryAgentStatusFromJobRes: JobResult<QueryAgentStatusFromJobResult> = JobResult(
             code = agentQueryAgentStatusFromJobRes.code,
