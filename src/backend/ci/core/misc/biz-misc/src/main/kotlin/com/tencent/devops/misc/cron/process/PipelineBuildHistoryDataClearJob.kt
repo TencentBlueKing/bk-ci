@@ -30,7 +30,6 @@ package com.tencent.devops.misc.cron.process
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.config.MiscBuildDataClearConfig
-import com.tencent.devops.misc.pojo.PlatformDataClearEnum
 import com.tencent.devops.misc.pojo.project.ProjectDataClearConfig
 import com.tencent.devops.misc.service.artifactory.ArtifactoryDataClearService
 import com.tencent.devops.misc.service.dispatch.DispatchDataClearService
