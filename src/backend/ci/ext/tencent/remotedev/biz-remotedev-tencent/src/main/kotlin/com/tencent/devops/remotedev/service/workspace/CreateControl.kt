@@ -47,7 +47,6 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -57,7 +56,6 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
-import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -114,7 +112,6 @@ class CreateControl @Autowired constructor(
     private val whiteListService: WhiteListService,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val windowsSpecResourceDao: WindowsSpecResourceDao,
     private val notifyControl: NotifyControl,
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
@@ -199,7 +196,7 @@ class CreateControl @Autowired constructor(
             )
         }
         // 检查是否有特殊机型的配额限制
-        createCheckSpecLimit(workspaceCreate.windowsType, projectInfo.englishName, workspaceNames)
+        workspaceCommon.createCheckSpecLimit(workspaceCreate.windowsType, projectInfo.englishName, workspaceNames)
 
         // 自定义镜像检查是否有相对的显卡
         // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡
@@ -226,7 +223,7 @@ class CreateControl @Autowired constructor(
             newNum = workspaceCreate.count
         }
 
-        createCheckWhenWinNotAlready(
+        workspaceCommon.createCheckWhenWinNotAlready(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = newNum,
@@ -242,127 +239,6 @@ class CreateControl @Autowired constructor(
             windowsZone = windowsZone,
             cgsId = cgsId
         )
-    }
-
-    fun createCheckSpecLimit(
-        windowsType: String,
-        projectId: String,
-        workspaceNames: Set<String>
-    ) {
-        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
-        if (windowsType.trim() in allSpecSize) {
-            val specQuota = windowsSpecResourceDao.fetchQuota(
-                dslContext = dslContext,
-                projectId = projectId,
-                size = windowsType.trim()
-            )
-            if (specQuota != null) {
-                val count = workspaceWindowsDao.fetchUsedSizeCount(
-                    dslContext = dslContext,
-                    workspaceNames = workspaceNames,
-                    size = windowsType.trim()
-                )
-                if (count >= specQuota) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                        params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
-                    )
-                }
-            } else {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(windowsType.trim(), "0", "0")
-                )
-            }
-        }
-    }
-
-    fun createCheckWhenWinNotAlready(
-        zoneId: String,
-        winConfigId: Int,
-        newNum: Int,
-        ownerType: WorkspaceOwnerType
-    ) {
-        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(winConfigId.toString())
-            )
-
-        if (windowsConfig.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(windowsConfig.size)
-            )
-        }
-        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(zoneId)
-            )
-        if (windowsZone.available == false) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(zoneId)
-            )
-        }
-        createCheckWhenWinNotAlready(
-            windowsZone = windowsZone,
-            windowsConfig = windowsConfig,
-            newNum = newNum,
-            quotaType = QuotaType.parse(ownerType)
-        )
-    }
-
-    private fun createCheckWhenWinNotAlready(
-        windowsZone: WindowsResourceZoneConfig,
-        windowsConfig: WindowsResourceTypeConfig,
-        newNum: Int,
-        quotaType: QuotaType
-    ) {
-        val data = kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getResourceVm(
-                ResourceVmReq(
-                    zoneId = windowsZone.zoneShortName,
-                    machineType = windowsConfig.size,
-                    internal = quotaType.getInternal()
-                )
-            ).data
-        }.getOrElse {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-                params = arrayOf(
-                    windowsZone.zone,
-                    windowsConfig.size,
-                    "unkown",
-                    newNum.toString()
-                )
-            )
-        }
-        val free = sumResourceVmFree(
-            res = data,
-            zoneShortName = windowsZone.zoneShortName,
-            size = windowsConfig.size
-        ) ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-            params = arrayOf(
-                windowsZone.zone,
-                windowsConfig.size,
-                "0",
-                newNum.toString()
-            )
-        )
-        if (free < newNum) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-                params = arrayOf(
-                    windowsZone.zone,
-                    windowsConfig.size,
-                    free.toString(),
-                    newNum.toString()
-                )
-            )
-        }
     }
 
     private fun doCreateWorkspace(
@@ -910,7 +786,7 @@ class CreateControl @Autowired constructor(
             type = workspaceCreate.windowsType, zone = workspaceCreate.windowsZone, quotaType = QuotaType.DEVCLOUD
         )
         if (cgsId == null && workspaceNames.size - resourceCount > 0) {
-            createCheckWhenWinNotAlready(
+            workspaceCommon.createCheckWhenWinNotAlready(
                 windowsZone = windowsZone,
                 windowsConfig = windowsConfig,
                 newNum = workspaceNames.size - resourceCount,

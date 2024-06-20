@@ -26,13 +26,11 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
-import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -57,7 +55,6 @@ class UpgradeWorkspaceHandler @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val deleteControl: DeleteControl,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val createControl: CreateControl,
     private val workspaceJoinDao: WorkspaceJoinDao
 ) {
 
@@ -117,9 +114,9 @@ class UpgradeWorkspaceHandler @Autowired constructor(
                     projectId = workspace.projectId,
                     ownerType = WorkspaceOwnerType.PROJECT
                 )
-                createControl.createCheckSpecLimit(rebuildReq.machineType, workspace.projectId, workspaceNames)
+                workspaceCommon.createCheckSpecLimit(rebuildReq.machineType, workspace.projectId, workspaceNames)
             }
-            createControl.createCheckWhenWinNotAlready(
+            workspaceCommon.createCheckWhenWinNotAlready(
                 zoneId = checkNotNull(workspace.zoneId),
                 winConfigId = checkNotNull(workspace.winConfigId),
                 newNum = 1,

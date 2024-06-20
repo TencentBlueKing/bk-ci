@@ -39,6 +39,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -47,6 +48,7 @@ import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceDailyCgsdataDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -58,6 +60,8 @@ import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -68,14 +72,17 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.CreateControl.Companion.sumResourceVmFree
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import java.time.Duration
 import java.time.LocalDateTime
@@ -119,7 +126,9 @@ class WorkspaceCommon @Autowired constructor(
     private val config: RemoteDevCommonConfig,
     private val rabbitTemplate: RabbitTemplate,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao
+    private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao,
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val windowsSpecResourceDao: WindowsSpecResourceDao
 ) {
 
     companion object {
@@ -756,6 +765,127 @@ class WorkspaceCommon @Autowired constructor(
         return projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it } ?: kotlin.run {
             remotedevProjectService.migrateOldData(projectId)
             checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
+        }
+    }
+
+    fun createCheckSpecLimit(
+        windowsType: String,
+        projectId: String,
+        workspaceNames: Set<String>
+    ) {
+        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
+        if (windowsType.trim() in allSpecSize) {
+            val specQuota = windowsSpecResourceDao.fetchQuota(
+                dslContext = dslContext,
+                projectId = projectId,
+                size = windowsType.trim()
+            )
+            if (specQuota != null) {
+                val count = workspaceWindowsDao.fetchUsedSizeCount(
+                    dslContext = dslContext,
+                    workspaceNames = workspaceNames,
+                    size = windowsType.trim()
+                )
+                if (count >= specQuota) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                        params = arrayOf(windowsType.trim(), specQuota.toString(), count.toString())
+                    )
+                }
+            } else {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                    params = arrayOf(windowsType.trim(), "0", "0")
+                )
+            }
+        }
+    }
+
+    fun createCheckWhenWinNotAlready(
+        zoneId: String,
+        winConfigId: Int,
+        newNum: Int,
+        ownerType: WorkspaceOwnerType
+    ) {
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(winConfigId)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(winConfigId.toString())
+            )
+
+        if (windowsConfig.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(windowsConfig.size)
+            )
+        }
+        val windowsZone = windowsResourceConfigService.getZoneConfig(zoneId)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(zoneId)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(zoneId)
+            )
+        }
+        createCheckWhenWinNotAlready(
+            windowsZone = windowsZone,
+            windowsConfig = windowsConfig,
+            newNum = newNum,
+            quotaType = QuotaType.parse(ownerType)
+        )
+    }
+
+    fun createCheckWhenWinNotAlready(
+        windowsZone: WindowsResourceZoneConfig,
+        windowsConfig: WindowsResourceTypeConfig,
+        newNum: Int,
+        quotaType: QuotaType
+    ) {
+        val data = kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class).getResourceVm(
+                ResourceVmReq(
+                    zoneId = windowsZone.zoneShortName,
+                    machineType = windowsConfig.size,
+                    internal = quotaType.getInternal()
+                )
+            ).data
+        }.getOrElse {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "unkown",
+                    newNum.toString()
+                )
+            )
+        }
+        val free = sumResourceVmFree(
+            res = data,
+            zoneShortName = windowsZone.zoneShortName,
+            size = windowsConfig.size
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+            params = arrayOf(
+                windowsZone.zone,
+                windowsConfig.size,
+                "0",
+                newNum.toString()
+            )
+        )
+        if (free < newNum) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    free.toString(),
+                    newNum.toString()
+                )
+            )
         }
     }
 }
