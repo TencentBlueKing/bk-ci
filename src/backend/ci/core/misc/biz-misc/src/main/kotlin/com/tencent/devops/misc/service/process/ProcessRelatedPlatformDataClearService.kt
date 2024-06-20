@@ -27,8 +27,6 @@
 
 package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.misc.pojo.PlatformDataClearEnum
-
 interface ProcessRelatedPlatformDataClearService {
 
     /**
@@ -36,8 +34,12 @@ interface ProcessRelatedPlatformDataClearService {
      */
     fun cleanBuildData(
         projectId: String,
-        pipelineId: String? = null,
-        buildIds: List<String>? = null,
-        platformDataClearEnum: PlatformDataClearEnum
+        pipelineId: String,
+        buildIds: List<String>? = null
     )
+
+    /**
+     * 清理制品库仓库数据
+     */
+    fun cleanProjectRepositoryData(projectId: String)
 }
