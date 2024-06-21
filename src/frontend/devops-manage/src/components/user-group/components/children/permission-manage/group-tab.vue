@@ -26,6 +26,8 @@
               @handle-select-all-data="handleSelectAllData"
               @handle-load-more="handleLoadMore"
               @handle-clear="handleClear"
+              @page-limit-change="pageLimitChange"
+              @page-value-change="pageValueChange"
             />
           </template>
         </bk-collapse-panel>
@@ -57,6 +59,8 @@
               @handle-select-all-data="handleSelectAllData"
               @handle-load-more="handleLoadMore"
               @handle-clear="handleClear"
+              @page-limit-change="pageLimitChange"
+              @page-value-change="pageValueChange"
             />
           </template>
         </bk-collapse-panel>
@@ -84,7 +88,6 @@ const {
   handleSelectAllData,
   handleClear,
 } = groupTableStore;
-
 
 const props = defineProps({
   isShowOperation: {

@@ -57,7 +57,7 @@
     confirm-text="提交"
     class="renewal-dialog"
     :is-show="isShowRenewal"
-    @closed="() => isShowRenewal = false"
+    @closed="handleRenewalClosed"
     @confirm="handleRenewalConfirm"
   >
     <template #header>
@@ -83,7 +83,7 @@
     confirm-text="移交"
     class="handover-dialog"
     :is-show="isShowHandover"
-    @closed="() => isShowHandover = false"
+    @closed="handleHandoverClosed"
     @confirm="handleHandoverConfirm"
   >
     <template #header>
@@ -144,8 +144,10 @@
   <bk-sideslider
     v-model:isShow="isShowSlider"
     :title="sliderTitle"
+    :quick-close="false"
     ext-cls="slider"
     width="960"
+    @hidden="batchCancel"
   >
     <template #default>
       <div class="slider-main">
@@ -158,11 +160,12 @@
         <div>
           <!-- 这个要有分页的点击事件 -->
           <GroupTab
-            :project-table="selectProjectlist"
             :source-list="selectSourceList"
             :is-show-operation="false"
             :pagination="pagination"
             :aside-item="asideItem"
+            @page-limit-change="pageLimitChange"
+            @page-value-change="pageValueChange"
           />
         </div>
       </div>
@@ -226,7 +229,7 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { Message } from 'bkui-vue';
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import ManageAside from './manage-aside.vue';
 import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
@@ -294,10 +297,7 @@ const {
   selectedData,
   selectedLength,
   unableMoveLength,
-  selectProjectlist,
   selectSourceList,
-  selectedRow,
-  selectedTableGroupId,
 } = storeToRefs(groupTableStore);
 const {
   handleRenewal,
@@ -309,6 +309,10 @@ const {
   handleSelectAllData,
   handleClear,
   collapseClick,
+  handleRemoveRow,
+  handleUpDateRow,
+  pageLimitChange,
+  pageValueChange,
 } = groupTableStore;
 
 const {
@@ -342,30 +346,45 @@ watch(searchValue, (nv) => {
  * 续期弹窗提交事件
  */
 function handleRenewalConfirm() {
-  console.log(expiredAt.value, '授权期限', selectedRow.value, selectedTableGroupId.value);
-
-  const itemNew = sourceList.value.find(group => group.id === selectedTableGroupId.value).tableData.find(item => item.groupId === selectedRow.value.groupId)
-  if(itemNew){
-    // expiredAt.value需要处理下
-    itemNew.joinedTime = expiredAt.value
-  }
-
+  console.log(expiredAt.value, '授权期限');
+  // expiredAt 需要处理下
+  handleUpDateRow(expiredAt.value);
   renewalRef.value.initTime();
-  groupTableStore.isShowRenewal = false;
+  isShowRenewal.value = false;
 };
+/**
+ * 续期弹窗关闭
+ */
+function handleRenewalClosed() {
+  renewalRef.value.initTime();
+  isShowRenewal.value = false;
+}
 /**
  * 移交弹窗提交事件
  */
-function handleHandoverConfirm() {
-  console.log(handOverForm.value,'移交数据');
-  groupTableStore.isShowHandover = false;
+async function handleHandoverConfirm() {
+  console.log(handOverForm.value, '移交数据');
+  const isValidate = await formRef.value.validate();
+  if(!isValidate) return;
+  handleRemoveRow();
+  handOverForm.value.name = '';
+  isShowHandover.value = false;
 };
+/**
+ * 移交弹窗关闭
+ */
+ function handleHandoverClosed() {
+   handOverForm.value.name = '';
+   formRef.value?.clearValidate();
+   isShowHandover.value = false;
+}
 /**
  * 移出弹窗提交事件
  */
 function handleRemoveConfirm() {
   console.log(asideItem,'移出的数据');
-  groupTableStore.isShowRemove = false;
+  handleRemoveRow();
+  isShowRemove.value = false;
 }
 /**
  * 授权期限选择
@@ -377,7 +396,7 @@ function handleChangeTime(value) {
  * 批量续期
  */
 function batchRenewal() {
-  if (!groupTableStore.selectedLength) {
+  if (!selectedLength.value) {
     Message('请先选择用户组');
     return;
   }
@@ -390,7 +409,7 @@ function batchRenewal() {
  * 批量移交
  */
 function batchHandover() {
-  if (!groupTableStore.selectedLength) {
+  if (!selectedLength.value) {
     Message('请先选择用户组');
     return;
   }
@@ -403,7 +422,7 @@ function batchHandover() {
  * 批量移出
  */
 function batchRemove() {
-  if (!groupTableStore.selectedLength) {
+  if (!selectedLength.value) {
     Message('请先选择用户组');
     return;
   }
@@ -416,8 +435,10 @@ function batchRemove() {
  * sideslider 关闭
  */
 function batchCancel() {
-  handOverForm.value.name = '';
-  formRef.value?.clearValidate();
+  if(formRef.value){
+    handOverForm.value.name = '';
+    formRef.value.clearValidate();
+  }
   isShowSlider.value = false;
 }
 /**
@@ -426,34 +447,34 @@ function batchCancel() {
 async function batchConfirm(batchFlag) {
   if (batchFlag === 'renewal') {
     const params = [{
-      member: asideItem.name,
-      groupId: asideItem.id,
+      member: asideItem.value.name,
+      groupId: asideItem.value.id,
       expiredAt: expiredAt.value,
     }];
+    console.log(params,'参数',asideItem.value);
     const res = await http.batchRenewal(projectId.value, params);
     renewalRef.value.initTime(); 
   } else if (batchFlag === 'handover') {
     const flag = await formRef.value.validate();
     if (flag) {
       const params = [{
-        groupId: asideItem.id,
-        handoverFrom: asideItem.name,
+        groupId: asideItem.value.id,
+        handoverFrom: asideItem.value.name,
         handoverTo: handOverForm.value.name,
       }];
       const res = await http.batchHandover(projectId.value, params);
     }
+    handOverForm.value.name = '';
   } else if (batchFlag === 'remove') {
     const params = [{
-      groupId: asideItem.id,
-      member: asideItem.name,
+      groupId: asideItem.value.id,
+      member: asideItem.value.name,
     }];
     const res = await http.batchRemove(projectId.value, params);
   }
 
   setTimeout(() => {
     isShowSlider.value = false;
-    handOverForm.value.name = '';
-    formRef.value?.clearValidate();
   }, 1000);
 }
 

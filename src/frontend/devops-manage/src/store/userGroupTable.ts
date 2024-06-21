@@ -38,7 +38,7 @@ interface CollapseListType {
 
 export default defineStore('userGroupTable', () => {
   const isLoading = ref(true);
-  const pagination = ref({ limit: 10, current: 1 });
+  const pagination = ref({ limit: 10, current: 1, count: 0 });
 
   const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([
@@ -68,17 +68,30 @@ export default defineStore('userGroupTable', () => {
 
   const unableMoveLength = ref();
   const selectedData = reactive<SelectedDataType>({});
-  const selectProjectlist = ref<GroupTableType[]>([]);
   const selectSourceList = ref<SourceType[]>([]);
   const selectedRow = ref<GroupTableType | null>(null);
+  const rowIndex = ref<number>();
   const selectedTableGroupId = ref('');
   const selectedLength = computed(() => Object.keys(selectedData).length);
 
   /**
+   * 初始化数据
+   */
+  function initData() {
+    selectedRow.value = null;
+    rowIndex.value = undefined;
+    selectedTableGroupId.value = '';
+    sourceList.value = [];
+    selectSourceList.value = [];
+    Object.keys(selectedData).forEach(key => {
+      delete selectedData[key];
+    });
+  }
+  /**
    * 获取sourceList（需处理数据），collapseList
    */
   async function fetchUserGroupList(groupId: string) {
-    sourceList.value = []
+    initData();
     try {
       isLoading.value = true;
       setTimeout(() => {
@@ -242,8 +255,8 @@ export default defineStore('userGroupTable', () => {
    */
   function handleRenewal(row: GroupTableType, groupId: string) {
     selectedRow.value = row;
-    isShowRenewal.value = true;
     selectedTableGroupId.value = groupId;
+    isShowRenewal.value = true;
   }
   /**
    * 移交按钮点击
@@ -251,17 +264,39 @@ export default defineStore('userGroupTable', () => {
    */
   function handleHandOver(row: GroupTableType, groupId: string, index) {
     selectedRow.value = row;
-    isShowHandover.value = true;
+    rowIndex.value = index;
     selectedTableGroupId.value = groupId;
+    isShowHandover.value = true;
   }
   /**
    * 移出按钮点击
    * @param row 行数据
    */
-  function handleRemove(row: GroupTableType, groupId: string) {
+  function handleRemove(row: GroupTableType, groupId: string, index) {
     selectedRow.value = row;
-    isShowRemove.value = true;
+    rowIndex.value = index;
     selectedTableGroupId.value = groupId;
+    isShowRemove.value = true;
+  }
+  /**
+   * 更新表格行数据
+   * @param expiredAt 续期时间
+   */
+  function handleUpDateRow(expiredAt) {
+    const activeTableRow = sourceList.value.find(group => group.id === selectedTableGroupId.value)?.tableData.find(item => item.groupId === selectedRow.value?.groupId)
+    if (activeTableRow) {
+      activeTableRow.joinedTime = expiredAt
+    }
+  }
+  /**
+   * 删除行数据
+   */
+  function handleRemoveRow() {
+    const activeTableData = sourceList.value.find(group => group.id === selectedTableGroupId.value);
+    if (activeTableData) {
+      activeTableData.tableData.splice(rowIndex.value, 1);
+      activeTableData.tableData = [...activeTableData.tableData];
+    }
   }
   /**
    * 获取表格选择的数据
@@ -314,7 +349,9 @@ export default defineStore('userGroupTable', () => {
    */
   function handleSelectAllData(groupId: string) {
     console.log('全量数据选择', groupId);
-    // 调用接口 获取selectedData[groupId]数据
+    // 不需调用接口获取selectedData[groupId]数据
+    pagination.value.count = 20;
+
   }
   /**
    * 清除选择
@@ -330,6 +367,15 @@ export default defineStore('userGroupTable', () => {
     console.log('折叠面板', id)
   }
 
+  function pageLimitChange(limit, groupId) {
+    pagination.value.limit = limit;
+    // 调用获取表格数据的接口
+  }
+  function pageValueChange(value, groupId) {
+    pagination.value.current = value;
+    // 调用获取表格数据的接口
+  }
+
   return {
     isLoading,
     pagination,
@@ -341,10 +387,7 @@ export default defineStore('userGroupTable', () => {
     selectedData,
     unableMoveLength,
     selectedLength,
-    selectProjectlist,
     selectSourceList,
-    selectedRow,
-    selectedTableGroupId,
     fetchUserGroupList,
     handleRenewal,
     handleHandOver,
@@ -355,5 +398,9 @@ export default defineStore('userGroupTable', () => {
     handleSelectAllData,
     handleClear,
     collapseClick,
+    handleRemoveRow,
+    handleUpDateRow,
+    pageLimitChange,
+    pageValueChange,
   };
 });

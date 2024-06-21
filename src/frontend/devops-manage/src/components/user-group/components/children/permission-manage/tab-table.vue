@@ -7,13 +7,16 @@
     :data="data"
     show-overflow-tooltip
     :pagination="pagination"
+    remote-pagination
     @select-all="handleSelectAll"
     @selection-change="handleSelectionChange"
+    @page-limit-change="pageLimitChange"
+    @page-value-change="pageValueChange"
   >
     <template #prepend>
       <div v-if="isShowOperation && selectedData[groupId]" class="prepend">
         已选择 {{ selectedData[groupId].length }} 条数据，
-        <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span>
+        <span @click="handleSelectAllData"> 选择全量数据 {{ groupTotal }} 条 </span>
         &nbsp; | &nbsp;
         <span @click="handleClear">清除选择</span>
       </div>
@@ -69,7 +72,7 @@
               text
               theme="primary"
               :disabled="row.removeMemberButtonControl!='OTHER'"
-              @click="handleRemove(row)"
+              @click="handleRemove(row, index)"
             >移出</bk-button>
           </span>
         </div>
@@ -81,7 +84,6 @@
 <script setup name="TabTable">
 import { ref, defineProps, defineEmits, computed } from 'vue';
 
-const total = ref(0);
 const fixedBottom = {
   position: 'relative',
   height: 42,
@@ -120,6 +122,8 @@ const emit = defineEmits([
   'handleLoadMore',
   'handleSelectAllData',
   'handleClear',
+  'pageLimitChange',
+  'pageValueChange',
 ])
 const isCurrentAll = ref(false);
 /**
@@ -172,14 +176,21 @@ function handleHandOver(row, index) {
  * 移出按钮点击
  * @param row 行数据
  */
-function handleRemove(row) {
-  emit('handleRemove', row, groupId.value);
+function handleRemove(row, index) {
+  emit('handleRemove', row, groupId.value, index);
 }
 /**
  * 加载更多
  */
 function handleLoadMore() {
   emit('handleLoadMore',groupId.value);
+}
+
+function pageLimitChange(limit) {
+  emit('pageLimitChange',limit, groupId.value);
+}
+function pageValueChange(value) {
+  emit('pageValueChange',value, groupId.value);
 }
 
 </script>
