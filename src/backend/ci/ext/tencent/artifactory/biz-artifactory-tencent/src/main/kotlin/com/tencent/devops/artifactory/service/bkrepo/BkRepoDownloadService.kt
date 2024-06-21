@@ -44,7 +44,6 @@ import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
-import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.exception.CustomException
@@ -76,6 +75,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.net.URLEncoder
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
@@ -255,9 +255,12 @@ open class BkRepoDownloadService @Autowired constructor(
             "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
                     "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
         )
-        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
+        val normalizedPath = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
         val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
-                "$artifactoryType/filePlist?path=${StringUtil.repoPathUrlEncode(normalizedPath)}" +
+                "$artifactoryType/filePlist?path=$normalizedPath" +
                 "&x-devops-project-id=$projectId"
         // 审计
         audit(

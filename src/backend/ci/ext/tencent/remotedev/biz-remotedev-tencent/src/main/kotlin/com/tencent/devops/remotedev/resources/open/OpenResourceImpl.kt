@@ -25,12 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.remotedev.resources.open
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    PIPELINE_API_ACCESS_LIMIT, // 限制流水线接口访问权限
-    API_NO_AUTH_CHECK, // 接口免权限校验
-    API_OPEN_TOKEN_CHECK // open接口token校验
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.remotedev.api.open.OpenResource
+import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.service.PermissionService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpenResourceImpl @Autowired constructor(
+    private val permissionService: PermissionService
+) : OpenResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpenResourceImpl::class.java)
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun desktopTokenCheck(token: String, dToken: String): Result<UserOnePassword> {
+        logger.info("Checking desktop token $dToken")
+        return Result(permissionService.checkAndGetUser1Password(dToken))
+    }
 }

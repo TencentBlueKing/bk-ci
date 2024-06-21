@@ -30,10 +30,8 @@ package com.tencent.devops.common.environment.agent.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_AGENT_STATUS
 import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_LIST
 import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_NODE
-import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_QUERY_GSE_AGENT_STATUS
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -61,73 +59,6 @@ class EsbAgentClient {
     companion object {
         private val logger = LoggerFactory.getLogger(EsbAgentClient::class.java)
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
-        private const val DEFAULT_SYTEM_USER = "devops"
-    }
-
-    fun getAgentStatus(
-        userId: String,
-        ips: Collection<String>
-    ): Map<String, Boolean> {
-        if (ips.isEmpty()) return mapOf()
-
-        val url = "http://open.oa.com/component/compapi/gse/get_agent_status/"
-
-        val requestData = mapOf(
-            "app_code" to appCode,
-            "app_secret" to appSecret,
-            "operator" to userId,
-            "company_id" to 0,
-            "ip_infos" to ips.map { mapOf("ip" to it, "plat_id" to 0) }
-        )
-
-        val requestBody = ObjectMapper().writeValueAsString(requestData)
-        logger.info("POST url: $url")
-        logger.info("requestBody: $requestBody")
-
-        val request = Request.Builder().url(url).post(requestBody.toRequestBody(JSON)).build()
-        OkhttpUtils.doHttp(request).use { response ->
-            try {
-                val responseBody = response.body?.string()
-                logger.info("responseBody: $responseBody")
-
-                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
-                if (responseData["result"] == false) {
-                    val msg = responseData["msg"]
-                    logger.error("get user cmdb nodes failed: $msg")
-                    throw CustomException(
-                        Response.Status.INTERNAL_SERVER_ERROR,
-                        I18nUtil.getCodeLanMessage(messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS)
-                    )
-                }
-
-                val ipInfoMap = (responseData["data"] as Map<String, *>)["data"] as Map<String, *>
-                val resultMap = mutableMapOf<String, Boolean>()
-                ips.forEach {
-                    val ipInfo = ipInfoMap["0:$it"]
-                    if (ipInfo != null) {
-                        resultMap[it] = (ipInfo as Map<String, *>)["exist"] == 1
-                    } else {
-                        resultMap[it] = false
-                    }
-                }
-                for (ip in ips) {
-                    val ipInfo = ipInfoMap["0:$ip"]
-                    if (ipInfo != null) {
-                        resultMap[ip] = (ipInfo as Map<String, *>)["exist"] == 1
-                    } else {
-                        resultMap[ip] = false
-                    }
-                }
-                return resultMap
-            } catch (e: Exception) {
-                logger.error("get agent status failed", e)
-                throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = FAILED_TO_GET_AGENT_STATUS
-                    )
-                )
-            }
-        }
     }
 
     fun getCmdbNodeByIps(userId: String, ips: List<String>): CmdbServerPage {
@@ -235,31 +166,7 @@ class EsbAgentClient {
         offset: Int,
         limit: Int
     ): CmdbServerPage {
-        val cmdbServerPage = getUserCmdbNodeByOperator(userId, bakOperator, ips, offset, limit)
-        val cmdbNodes = cmdbServerPage.nodes
-
-        // 根据 gseAgent 状态重新设置IP
-        val displayIp2IpsMap =
-            cmdbNodes.map { it.displayIp }.associate { Pair(it, it.split(";")) }
-        val allInnerIp = mutableSetOf<String>()
-
-        displayIp2IpsMap.forEach {
-            allInnerIp.addAll(it.value)
-        }
-
-        val ipStatusMap = getAgentStatus(DEFAULT_SYTEM_USER, allInnerIp)
-        cmdbNodes.forEach { node ->
-            val ipList = displayIp2IpsMap[node.displayIp]
-            ipList!!.forEach lit@{ ip ->
-                if (ipStatusMap[ip] == true) {
-                    node.ip = ip
-                    node.agentStatus = true
-                    return@lit
-                }
-            }
-        }
-
-        return cmdbServerPage
+        return getUserCmdbNodeByOperator(userId, bakOperator, ips, offset, limit)
     }
 
     fun getUserCmdbNodeByOperator(

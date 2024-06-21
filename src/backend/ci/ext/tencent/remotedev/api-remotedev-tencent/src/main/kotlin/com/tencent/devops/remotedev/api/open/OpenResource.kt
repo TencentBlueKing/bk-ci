@@ -25,12 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.remotedev.api.open
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    PIPELINE_API_ACCESS_LIMIT, // 限制流水线接口访问权限
-    API_NO_AUTH_CHECK, // 接口免权限校验
-    API_OPEN_TOKEN_CHECK // open接口token校验
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.UserOnePassword
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Tag(name = "OPEN_REMOTE_DEV", description = "Open-remoteDev")
+@Path("/open/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpenResource {
+    @Operation(summary = "校验token")
+    @GET
+    @Path("/desktop_token_check")
+    fun desktopTokenCheck(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @QueryParam("dToken")
+        @Parameter(description = "dToken", required = false)
+        dToken: String
+    ): Result<UserOnePassword>
 }

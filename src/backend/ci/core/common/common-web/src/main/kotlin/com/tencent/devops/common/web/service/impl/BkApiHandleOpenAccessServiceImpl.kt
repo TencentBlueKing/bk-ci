@@ -25,56 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.filter
+package com.tencent.devops.common.web.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.service.BkApiHandleService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-import javax.servlet.Filter
-import javax.servlet.FilterChain
-import javax.servlet.FilterConfig
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
-@Component
-class TokenCheckFilter @Autowired constructor(
-    val clientTokenService: ClientTokenService
-) : Filter {
-    override fun destroy() = Unit
-
-    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
-        if (request == null || chain == null) {
-            return
-        }
-        val httpServletRequest = request as HttpServletRequest
-        val token = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
-
-        val pathInfo = httpServletRequest.pathInfo ?: return chain.doFilter(request, response)
-
-        if (!pathInfo.contains("/open/")) {
-            return chain.doFilter(request, response)
-        }
-
-        // TODO: 配置化, 用于一些信任的第三方调用过来的特殊请求
-        if (pathInfo.contains("open/auth/resource/projects") ||
-            pathInfo.contains("open/auth/resource/instances/list")) {
-            return chain.doFilter(request, response)
-        }
-
-        if (token != clientTokenService.getSystemToken()) {
-            logger.warn("auth token fail: $token")
-            throw TokenForbiddenException("token check fail")
-        }
-        chain.doFilter(request, response)
-    }
-
-    override fun init(filterConfig: FilterConfig?) = Unit
+class BkApiHandleOpenAccessServiceImpl : BkApiHandleService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TokenCheckFilter::class.java)
+        private val logger = LoggerFactory.getLogger(BkApiHandleOpenAccessServiceImpl::class.java)
+    }
+
+    override fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>) {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return
+        val request = attributes.request
+        val token = request.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        val tokenService: ClientTokenService = SpringContextUtil.getBean(ClientTokenService::class.java)
+        if (token != tokenService.getSystemToken()) {
+            logger.warn("auth token fail: $token, url: ${request.requestURI}")
+            throw TokenForbiddenException("token check fail")
+        }
     }
 }

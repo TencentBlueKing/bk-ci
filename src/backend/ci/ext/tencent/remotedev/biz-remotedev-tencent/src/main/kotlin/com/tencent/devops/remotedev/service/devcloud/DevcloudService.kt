@@ -55,7 +55,7 @@ class DevcloudService {
                     "APPID" to devcloudAppId,
                     "USERID" to userId,
                     "RANDOM" to random,
-                    "TIMESTP" to (System.currentTimeMillis() / 1000).toString(),
+                    "TIMESTP" to timestamp,
                     "ENCKEY" to md5Hash
                 ).toHeaders()
             )
