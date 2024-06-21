@@ -144,6 +144,9 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         projectId: String,
         data: BatchFetchAgentData
     ): Result<Map<String, List<EnvVar>>> {
+        if ((data.agentHashIds?.size ?: 0) > 100 || (data.nodeHashIds?.size ?: 0) > 100) {
+            return Result(status = 1, message = "once max search node size 100", emptyMap())
+        }
         logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|fetchAgentEnv|$projectId|$data")
         return client.get(ServiceThirdPartyAgentResource::class).fetchAgentEnv(
             userId = userId,
@@ -159,6 +162,9 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         projectId: String,
         data: BatchUpdateAgentEnvVar
     ): Result<Boolean> {
+        if ((data.agentHashIds?.size ?: 0) > 100 || (data.nodeHashIds?.size ?: 0) > 100) {
+            return Result(status = 1, message = "once max update node size 100", false)
+        }
         logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|batchUpdateEnv|$projectId|$data")
         return client.get(ServiceThirdPartyAgentResource::class).batchUpdateEnv(
             userId = userId,
