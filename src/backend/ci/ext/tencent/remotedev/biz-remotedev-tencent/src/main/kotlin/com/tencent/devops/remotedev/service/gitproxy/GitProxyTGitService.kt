@@ -796,7 +796,7 @@ class GitProxyTGitService @Autowired constructor(
             logger.warn("dailyUserAuthDoCheck|$projectCodes listByProjectCode null")
             return
         }
-        logger.info("dailyUserAuthDoCheck|$projectCodes")
+        logger.info("dailyUserAuthDoCheck|$result")
 
         result.forEach { (userId, projectAndIds) ->
             projectAndIds.forEach project@{ (projectId, idAndUrls) ->
