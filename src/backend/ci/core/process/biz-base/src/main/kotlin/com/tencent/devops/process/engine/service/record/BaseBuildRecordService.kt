@@ -50,6 +50,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -68,6 +69,7 @@ import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "ComplexMethod")
 open class BaseBuildRecordService(
@@ -149,6 +151,51 @@ open class BaseBuildRecordService(
             LogUtils.printCostTimeWE(watcher)
         }
         return
+    }
+
+    fun getRecordModel(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        buildId: String,
+        executeCount: Int? = null,
+        queryDslContext: DSLContext? = null,
+        debug: Boolean? = false
+    ): Model? {
+        val fixedExecuteCount = if (executeCount == null) {
+            val buildInfo = pipelineBuildDao.getBuildInfo(
+                dslContext = queryDslContext ?: dslContext, projectId = projectId, buildId = buildId
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+            buildInfo.executeCount ?: 1
+        } else {
+            executeCount
+        }
+        val buildRecordModel = buildRecordModelDao.getRecord(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = fixedExecuteCount
+        )
+        return if (buildRecordModel != null) {
+            getRecordModel(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                buildId = buildId,
+                fixedExecuteCount = fixedExecuteCount,
+                buildRecordModel = buildRecordModel,
+                executeCount = executeCount,
+                queryDslContext = queryDslContext,
+                debug = debug
+            )
+        } else {
+            null
+        }
     }
 
     fun getRecordModel(
