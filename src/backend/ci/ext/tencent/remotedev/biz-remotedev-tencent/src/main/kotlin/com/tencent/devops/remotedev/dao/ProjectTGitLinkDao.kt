@@ -91,15 +91,10 @@ class ProjectTGitLinkDao {
 
     fun fetch(
         dslContext: DSLContext,
-        projectId: String,
-        status: TGitRepoStatus? = null
+        projectId: String
     ): List<TProjectTgitIdLinkRecord> {
         with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
-            val dsl = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
-            if (status != null) {
-                dsl.and(STATUS.eq(status.name))
-            }
-            return dsl.fetch()
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
         }
     }
 
