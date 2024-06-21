@@ -252,7 +252,7 @@ class CodeWebhookService @Autowired constructor(
             val context = getContext(pipelineName = buildInfo.pipelineName, eventType = webhookEventTypeStr)
             // 结束状态没有历史信息的话，则在process服务进行commit check回写
             if (
-                existCheckRecord(
+                !existCheckRecord(
                     pipelineId = pipelineId,
                     commitId = commitId!!,
                     context = context,
