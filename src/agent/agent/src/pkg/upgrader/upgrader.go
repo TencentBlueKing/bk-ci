@@ -97,8 +97,9 @@ func DoUpgradeAgent() error {
 		}
 	}
 
-	if daemonChange {
-		err = replaceAgentFile(config.GetClientDaemonFile()) // #4686 如果windows下daemon进程仍然存在，则会替换失败
+	// widows daemon 没有关所以肯定会替换失败，不走这里的逻辑了
+	if !systemutil.IsWindows() && daemonChange {
+		err = replaceAgentFile(config.GetClientDaemonFile())
 		if err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
 		}
