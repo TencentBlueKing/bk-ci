@@ -153,6 +153,7 @@ data class AgentService @Autowired constructor(
         const val NODEMAN_LOG_NOT_READY_CODE = 3800007
 
         private val LANGUAGE_HEADER_EN = mapOf("blueking-language" to "en")
+        private const val DEFAULT_LANGUAGE_TYPE_CN = "zh_CN"
 
         private const val GAUGE_NAME_ACTIVE_THREAD_COUNT = "activeThreadCount" // 活跃线程数
         private const val GAUGE_NAME_CORE_THREAD_COUNT = "coreThreadCount" // 核心线程数
@@ -182,7 +183,11 @@ data class AgentService @Autowired constructor(
             checkAgentStatusExecutor.maximumPoolSize.toDouble()
     }
 
-    fun installAgent(keyFile: InputStream?, installAgentReqString: String): AgentResult<InstallAgentResult> {
+    fun installAgent(
+        userId: String,
+        keyFile: InputStream?,
+        installAgentReqString: String
+    ): AgentResult<InstallAgentResult> {
         NodeManApi.setNodemanOperationName(::installAgent.name)
         val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentReqString)
         val hostIdToqueryCCResDataMap = tencentQueryFromCCService.queryCCFindHostBizRelations(
@@ -228,9 +233,13 @@ data class AgentService @Autowired constructor(
             isInstallLatestPlugins = DEFAULT_NOT_INSTALL_LATEST_PLUGINS
         )
         val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> =
-            nodeManApi.executePostRequestAddHeader(
-                installAgentRequest, AgentInstallAgentResult::class.java, null, LANGUAGE_HEADER_EN
-            )
+            if (DEFAULT_LANGUAGE_TYPE_CN == I18nUtil.getLanguage(userId)) {
+                nodeManApi.executePostRequest(installAgentRequest, AgentInstallAgentResult::class.java, null)
+            } else {
+                nodeManApi.executePostRequest(
+                    installAgentRequest, AgentInstallAgentResult::class.java, null, LANGUAGE_HEADER_EN
+                )
+            }
         val installAgentRes: AgentResult<InstallAgentResult> = AgentResult(
             code = agentInstallAgentRes.code,
             result = agentInstallAgentRes.result,

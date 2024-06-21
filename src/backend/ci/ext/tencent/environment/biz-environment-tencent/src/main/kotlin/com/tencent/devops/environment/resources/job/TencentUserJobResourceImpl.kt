@@ -109,7 +109,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         installAgentReq: String
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return agentService.installAgent(keyFile, installAgentReq)
+        return agentService.installAgent(userId, keyFile, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(
