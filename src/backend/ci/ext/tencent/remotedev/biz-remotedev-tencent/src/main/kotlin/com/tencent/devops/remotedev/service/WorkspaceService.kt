@@ -516,7 +516,7 @@ class WorkspaceService @Autowired constructor(
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
                     remark = it.remark,
-                    recordEnabled = allWindows[it.workspaceName]?.enableRecord ?: false
+                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank()
                 )
             )
         }

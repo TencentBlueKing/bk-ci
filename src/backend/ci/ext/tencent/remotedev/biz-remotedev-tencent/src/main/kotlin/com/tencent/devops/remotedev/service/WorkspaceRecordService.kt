@@ -17,9 +17,13 @@ class WorkspaceRecordService @Autowired constructor(
 
     fun enableRecord(
         workspaceName: String,
-        enable: Boolean
+        enableUser: String?
     ) {
-        workspaceWindowsDao.updateRecord(dslContext = dslContext, workspaceName = workspaceName, enable = enable)
+        workspaceWindowsDao.updateRecord(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            enableUser = enableUser
+        )
     }
 
     /**
@@ -27,13 +31,12 @@ class WorkspaceRecordService @Autowired constructor(
      */
     fun checkRecordAndAddress(
         appId: Long,
-        ip: String,
-        userId: String
+        ip: String
     ): Pair<Boolean, String?> {
         val projectId = startAppLinkDao.getAppName(dslContext, appId) ?: return Pair(false, null)
-        val (workspaceName, enable) = workspaceWindowsDao.fetchRecordByProjectIp(dslContext, projectId, ip)
+        val (workspaceName, enableUser) = workspaceWindowsDao.fetchRecordByProjectIp(dslContext, projectId, ip)
             ?: return Pair(false, null)
-        if (!enable) {
+        if (enableUser.isNullOrBlank()) {
             return Pair(false, null)
         }
 
@@ -42,7 +45,7 @@ class WorkspaceRecordService @Autowired constructor(
             remotedevBkRepoClient.repoStreamCreate(
                 projectId = projectId,
                 workspaceName = workspaceName,
-                userId = userId
+                userId = enableUser
             )
         )
     }

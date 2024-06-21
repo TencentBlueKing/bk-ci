@@ -540,8 +540,7 @@ class ServiceRemoteDevResourceImpl(
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
             appId = appId,
-            ip = ip,
-            userId = userId
+            ip = ip
         )
         return Result(CheckWorkspaceRecordData(enable, address))
     }

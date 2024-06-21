@@ -223,7 +223,15 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         enable: Boolean
     ): Result<Boolean> {
-        workspaceRecordService.enableRecord(workspaceName, enable)
+        permissionService.checkUserManager(userId, projectId)
+        workspaceRecordService.enableRecord(
+            workspaceName = workspaceName,
+            enableUser = if (enable) {
+                userId
+            } else {
+                null
+            }
+        )
         return Result(true)
     }
 }

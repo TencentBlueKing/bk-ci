@@ -141,10 +141,10 @@ class WorkspaceWindowsDao {
         dslContext: DSLContext,
         projectId: String,
         ip: String
-    ): Pair<String, Boolean>? {
+    ): Pair<String, String?>? {
         val dsl = dslContext.select(
             TWorkspace.T_WORKSPACE.NAME,
-            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD
+            TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER
         ).from(TWorkspace.T_WORKSPACE)
             .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
             .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
@@ -162,10 +162,11 @@ class WorkspaceWindowsDao {
     fun updateRecord(
         dslContext: DSLContext,
         workspaceName: String,
-        enable: Boolean
+        enableUser: String?
     ) {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
-            dslContext.update(this).set(ENABLE_RECORD, enable).where(WORKSPACE_NAME.eq(workspaceName)).execute()
+            dslContext.update(this).set(ENABLE_RECORD_USER, enableUser)
+                .where(WORKSPACE_NAME.eq(workspaceName)).execute()
         }
     }
 }
