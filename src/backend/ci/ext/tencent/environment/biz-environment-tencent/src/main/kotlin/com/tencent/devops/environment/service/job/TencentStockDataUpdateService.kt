@@ -51,7 +51,6 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_OPERATOR
 import com.tencent.devops.environment.constant.T_NODE_OS_NAME
 import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
-import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
@@ -62,7 +61,6 @@ import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbCondition
 import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbConditionValue
 import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbDataIns
-import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.environment.service.CmdbNodeService
 import com.tencent.devops.environment.utils.ComputeTimeUtils
@@ -84,8 +82,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val tencentQueryFromCCService: TencentQueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val redisOperation: RedisOperation,
-    private val queryAgentStatusService: QueryAgentStatusService,
-    private val opService: OpService
+    private val queryAgentStatusService: QueryAgentStatusService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentStockDataUpdateService::class.java)
@@ -339,12 +336,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 val cmdbNodesRecords = cmdbNodeDao.getCmdbNodes(dslContext, page, DEFAULT_PAGE_SIZE)
-                val existNodeIdToAgentVersionMap = cmdbNodesRecords.filter {
-                    val opInfo = opService.operateOpProject(
-                        "", OpOperateReq(2, listOf(it[T_NODE_PROJECT_ID] as String))
-                    ).projGrayStatus?.get(0)
-                    it[T_NODE_PROJECT_ID] as String == opInfo?.englishName && true == opInfo.projGrayStatus
-                }.associate {
+                val existNodeIdToAgentVersionMap = cmdbNodesRecords.associate {
                     it[T_NODE_NODE_ID] as Long to
                         AgentVersion(
                             serverId = it[T_NODE_SERVER_ID] as? Long,

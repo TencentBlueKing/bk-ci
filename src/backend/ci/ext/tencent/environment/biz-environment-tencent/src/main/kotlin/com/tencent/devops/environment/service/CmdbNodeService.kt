@@ -82,8 +82,6 @@ import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizDa
 import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbCondition
 import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbConditionValue
 import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbDataIns
-import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
-import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
 import com.tencent.devops.environment.service.job.TencentQueryFromCCService
 import com.tencent.devops.environment.service.job.TencentQueryFromCmdbService
@@ -110,8 +108,7 @@ class CmdbNodeService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
     private val tencentQueryFromCCService: TencentQueryFromCCService,
-    private val queryAgentStatusService: QueryAgentStatusService,
-    private val opService: OpService
+    private val queryAgentStatusService: QueryAgentStatusService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
@@ -264,8 +261,6 @@ class CmdbNodeService @Autowired constructor(
                 AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId, serverId = it?.svrId)
             }
         )?.associateBy { it.ip }
-        val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
-        val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
         val unsuccessfullyImportedNodesIpList = mutableListOf<String>()
         val updateNodeInfo = nodeRecords.filter {
             val importNodesStatus = queryCCIpToCCInfoMap.containsKey(it[T_NODE_NODE_IP] as String)
@@ -286,9 +281,7 @@ class CmdbNodeService @Autowired constructor(
                 cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
                 serverId = nodeIdToCCInfoMap[nodeId]?.svrId,
                 osType = nodeIdToCCInfoMap[nodeId]?.osType,
-                agentVersion = if (grayTag)
-                    ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.version
-                else null,
+                agentVersion = ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.version,
                 lastModifyTime = LocalDateTime.now()
             )
         }
@@ -355,8 +348,6 @@ class CmdbNodeService @Autowired constructor(
                 AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId, serverId = it?.svrId)
             }
         )?.associateBy { it.serverId }
-        val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
-        val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
         val unsuccessfullyImportedNodesIpList = mutableListOf<String>()
         val updateNodeInfo = nodeRecords.filter {
             val importNodesStatus = queryCCServerIdToCCInfoMap.containsKey(it[T_NODE_SERVER_ID] as Long)
@@ -378,9 +369,7 @@ class CmdbNodeService @Autowired constructor(
                 cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
                 serverId = serverId,
                 osType = nodeIdToCCInfoMap[nodeId]?.osType,
-                agentVersion = if (grayTag)
-                    serverIdToAgentVersionInfoMap?.get(serverId)?.version
-                else null,
+                agentVersion = serverIdToAgentVersionInfoMap?.get(serverId)?.version,
                 lastModifyTime = LocalDateTime.now()
             )
         }
@@ -476,8 +465,6 @@ class CmdbNodeService @Autowired constructor(
             importNodesStatus
         }.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
-            val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
-            val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
             val nodeIp = cmdbNode.innerServerIpv4?.get(0)?.ip ?: ""
             CreateNodeModel(
                 nodeStringId = "",
@@ -494,7 +481,7 @@ class CmdbNodeService @Autowired constructor(
                 osName = cmdbNode.osName,
                 operator = cmdbNode.maintainer,
                 bakOperator = cmdbNode.maintainerBak,
-                agentVersion = if (grayTag) ipToAgentVersionMap?.get(nodeIp)?.version else null,
+                agentVersion = ipToAgentVersionMap?.get(nodeIp)?.version,
                 hostId = queryCCIpToCCInfoMap[nodeIp]?.bkHostId,
                 cloudAreaId = queryCCIpToCCInfoMap[nodeIp]?.bkCloudId?.toLong(),
                 osType = queryCCIpToCCInfoMap[nodeIp]?.osType,
@@ -597,8 +584,6 @@ class CmdbNodeService @Autowired constructor(
             importNodesStatus
         }.map {
             val cmdbNode = cmdbServerIdToNodeMap[it]!!
-            val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
-            val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
             val ccInfo = queryCCServerIdToCCInfoMap[cmdbNode.serverId]
             CreateNodeModel(
                 nodeStringId = "",
@@ -615,7 +600,7 @@ class CmdbNodeService @Autowired constructor(
                 osName = cmdbNode.osName,
                 operator = cmdbNode.maintainer,
                 bakOperator = cmdbNode.maintainerBak,
-                agentVersion = if (grayTag) serverIdToAgentVersionMap?.get(cmdbNode.serverId)?.version else null,
+                agentVersion = serverIdToAgentVersionMap?.get(cmdbNode.serverId)?.version,
                 hostId = ccInfo?.bkHostId,
                 cloudAreaId = ccInfo?.bkCloudId?.toLong(),
                 osType = ccInfo?.osType,
