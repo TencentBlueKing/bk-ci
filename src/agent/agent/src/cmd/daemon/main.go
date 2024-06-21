@@ -32,6 +32,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"os/exec"
@@ -120,7 +121,7 @@ func watch(isDebug bool) {
 		select {
 		case <-checkTimeTicker.C:
 			if err := totalLock.Lock(); err != nil {
-				logs.Errorf("failed to get agent lock: %v", err)
+				logs.WithError(err).Error("failed to get agent lock")
 				continue
 			}
 
@@ -139,12 +140,12 @@ func doCheckAndLaunchAgent(isDebug bool) {
 		defer func() {
 			err = agentLock.Unlock()
 			if err != nil {
-				logs.Error("try to unlock agent.lock failed", err)
+				logs.WithError(err).Error("try to unlock agent.lock failed")
 			}
 		}()
 	}
 	if err != nil {
-		logs.Errorf("try to get agent.lock failed: %v", err)
+		logs.WithError(err).Error("try to get agent.lock failed")
 		return
 	}
 	if !locked {
@@ -155,7 +156,7 @@ func doCheckAndLaunchAgent(isDebug bool) {
 
 	process, err := launch(workDir+"/"+config.AgentFileClientLinux, isDebug)
 	if err != nil {
-		logs.Errorf("launch agent failed: %v", err)
+		logs.WithError(err).Error("launch agent failed")
 		return
 	}
 	if process == nil {
@@ -182,38 +183,38 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 
 	err := fileutil.SetExecutable(agentPath)
 	if err != nil {
-		return nil, fmt.Errorf("chmod agent file failed: %v", err)
+		return nil, errors.Wrap(err, "chmod agent file failed")
 	}
 
 	// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
 	stdErr, errstd := cmd.StderrPipe()
 	if errstd != nil {
-		logs.Error("get agent stderr pipe error", errstd)
+		logs.WithError(errstd).Error("get agent stderr pipe error")
 	}
 
 	if err = cmd.Start(); err != nil {
 		if stdErr != nil {
 			stdErr.Close()
 		}
-		return nil, fmt.Errorf("start agent failed: %v", err)
+		return nil, errors.Wrap(err, "start agent failed")
 	}
 
 	go func() {
 		if err := cmd.Wait(); err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
-				if exiterr.ExitCode() == constant.DAEMON_EXIT_CODE {
-					logs.Warnf("exit code %d daemon exit", constant.DAEMON_EXIT_CODE)
-					systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
+				if exiterr.ExitCode() == constant.DaemonExitCode {
+					logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
+					systemutil.ExitProcess(constant.DaemonExitCode)
 				}
 			}
-			logs.Error("agent process error", err)
+			logs.WithError(err).Error("agent process error")
 			if errstd != nil {
 				return
 			}
 			defer stdErr.Close()
 			out, err := io.ReadAll(stdErr)
 			if err != nil {
-				logs.Error("read agent stderr out error", err)
+				logs.WithError(err).Error("read agent stderr out error")
 				return
 			}
 			logs.Error("agent process error out", string(out))

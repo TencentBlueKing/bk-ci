@@ -32,6 +32,7 @@ package job
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"runtime"
@@ -64,7 +65,7 @@ func doBuild(
 		return err
 	}
 
-	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true") ||
+	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true") ||
 		(systemutil.IsMacos() && runtime.GOARCH == "arm64")
 	if enableExitGroup {
 		logs.Infof("%s enable exit group", buildInfo.BuildId)
@@ -251,7 +252,7 @@ func StartProcessCmd(
 	err := ucommand.SetUser(cmd, runUser)
 	if err != nil {
 		logs.Error("set user failed: ", err.Error())
-		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
+		return nil, errors.Wrap(err, "Please check [devops.slave.user] in the {agent_dir}/.agent.properties")
 	}
 
 	logs.Info("cmd.Path: ", cmd.Path)

@@ -31,8 +31,8 @@
 package command
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"os/exec"
 	"os/user"
 	"strconv"
@@ -77,7 +77,7 @@ func SetUser(cmd *exec.Cmd, runUser string) error {
 
 	rUser, err := user.Lookup(runUser)
 	if err != nil {
-		logs.Error("user lookup failed, user: -", runUser, "-, error: ", err.Error())
+		logs.WithError(err).Error("user lookup failed, user: -", runUser, "-, error")
 		return errors.New("user lookup failed, user: " + runUser)
 	}
 	uid, _ := strconv.Atoi(rUser.Uid)

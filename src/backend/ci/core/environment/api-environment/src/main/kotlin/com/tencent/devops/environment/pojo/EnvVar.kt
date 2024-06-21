@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.pojo
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境变量")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class EnvVar(
     @get:Schema(title = "变量名", required = true)
     val name: String,

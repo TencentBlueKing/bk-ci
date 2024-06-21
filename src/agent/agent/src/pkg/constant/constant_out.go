@@ -33,11 +33,5 @@ package constant
 // 用来放一些常量，可能内外部不一致
 
 const (
-	DockerDataDir    = "/data/devops/workspace"
-	DAEMON_EXIT_CODE = 88
-
-	// DEVOPS_AGENT_ENABLE_NEW_CONSOLE 如果设为true 则windows启动进程时使用 newConsole
-	DEVOPS_AGENT_ENABLE_NEW_CONSOLE = "DEVOPS_AGENT_ENABLE_NEW_CONSOLE"
-	// DEVOPS_AGENT_ENABLE_EXIT_GROUP 启动Agent杀掉构建进程组的兜底逻辑
-	DEVOPS_AGENT_ENABLE_EXIT_GROUP = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
+	DockerDataDir = "/data/devops/workspace"
 )

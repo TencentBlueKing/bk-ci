@@ -32,6 +32,7 @@ package job
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"syscall"
@@ -56,7 +57,7 @@ func doBuild(
 ) error {
 	var err error
 	var exitGroup process.ProcessExitGroup
-	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true")
+	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")
 	if enableExitGroup {
 		logs.Info("DEVOPS_AGENT_ENABLE_EXIT_GROUP enable")
 		exitGroup, err = process.NewProcessExitGroup()
@@ -151,7 +152,7 @@ const createNewConsole = 0x00000010
 func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
 	cmd := exec.Command(command)
 
-	if config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_NEW_CONSOLE, "true") {
+	if config.FetchEnvAndCheck(constant.DevopsAgentEnableNewConsole, "true") {
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			CreationFlags:    createNewConsole,
 			NoInheritHandles: true,
@@ -177,7 +178,7 @@ func StartProcessCmd(command string, args []string, workDir string, envMap map[s
 	err := ucommand.SetUser(cmd, runUser)
 	if err != nil {
 		logs.Error("set user failed: ", err.Error())
-		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
+		return nil, errors.Wrap(err, "Please check [devops.slave.user] in the {agent_dir}/.agent.properties")
 	}
 
 	logs.Info("cmd.Path: ", cmd.Path)

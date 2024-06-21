@@ -31,6 +31,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"go/format"
 	"os"
 	"path/filepath"
@@ -148,7 +149,7 @@ func main() {
 	src := g.format()
 	// 写入到 translation.go 文件中
 	outputName := filepath.Join(workDir, "translation", "translation.go")
-	err = os.WriteFile(outputName, src, 0644)
+	err = os.WriteFile(outputName, src, constant.CommonFileModePerm)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "writing output: %s", err)
 		exit()

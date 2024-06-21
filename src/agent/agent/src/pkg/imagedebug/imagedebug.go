@@ -227,7 +227,7 @@ func CreateDebugContainer(
 			RegistryAuth: auth,
 		})
 		if err != nil {
-			imageDebugLogs.Errorf("pull new image %s error %s", imageName, err.Error())
+			imageDebugLogs.WithError(err).Errorf("pull new image %s error", imageName)
 			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
 		}
 		defer reader.Close()
