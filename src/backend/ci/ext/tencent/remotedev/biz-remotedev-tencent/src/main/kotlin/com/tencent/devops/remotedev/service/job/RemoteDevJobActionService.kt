@@ -119,6 +119,7 @@ class RemoteDevJobActionService @Autowired constructor(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     fun fetchPipelineJobDetail(param: PipelineParam, receiptInfo: JSON): JobPipelineDetail? {
         val receipt = objectMapper.readValue<PipelineJobReceiptInfo>(receiptInfo.data())
         val detail = JobPipelineDetail(null)
