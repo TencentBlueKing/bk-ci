@@ -372,10 +372,10 @@
                     this.isEditing = false
                     this.jobId = val
                     await this.fetchInstallAgentStatus()
-                    await this.fetchInstallAgentTaskLog()
                     if (this.isManualCommand) {
                         await this.fetchInstallCommand()
                     }
+                    await this.fetchInstallAgentTaskLog()
                 }
             }
         },
@@ -465,8 +465,8 @@
                                 this.initEditor('executeScriptLog2')
                             })
                             await this.fetchInstallAgentStatus()
-                            await this.fetchInstallAgentTaskLog()
                             await this.fetchInstallCommand()
+                            await this.fetchInstallAgentTaskLog()
                         } else {
                             this.isEditing = false
                             this.isLoading = false
@@ -507,6 +507,11 @@
                         this.isLoading = false
                     }
                 } catch (e) {
+                    if (e.status === 3800015) {
+                        this.timeoutIdTask2 = setTimeout(async () => {
+                            this.fetchInstallCommand()
+                        }, 5000)
+                    }
                     this.isLoading = false
                 }
             },
