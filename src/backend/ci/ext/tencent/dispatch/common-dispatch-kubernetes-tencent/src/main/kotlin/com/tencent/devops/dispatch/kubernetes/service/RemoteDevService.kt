@@ -454,7 +454,12 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun expandDisk(workspaceName: String, userId: String, size: String, mountType: WorkspaceMountType): ExpandDiskValidateResp {
+    fun expandDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        mountType: WorkspaceMountType
+    ): ExpandDiskValidateResp {
         return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
     }
 }
