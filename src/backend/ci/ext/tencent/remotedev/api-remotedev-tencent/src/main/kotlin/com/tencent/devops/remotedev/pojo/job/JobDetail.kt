@@ -38,5 +38,9 @@ data class JobPipelineSopJobIpData(
     @get:Schema(title = "失败时机器具体错误码")
     val errorCode: Int?,
     @get:Schema(title = "失败时机器具体失败日志")
-    val log: String?
+    val log: String?,
+    @get:Schema(title = "开始时间")
+    val startTime: Long,
+    @get:Schema(title = "结束时间")
+    val endTime: Long
 )
