@@ -458,11 +458,6 @@ data class AgentService @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         NodeManApi.setNodemanOperationName(::queryAgentTaskLog.name)
-        // test前端报错测试
-        throw RemoteServiceException(
-            errorCode = 3800007,
-            errorMessage = "Nodeman log is not ready."
-        )
         val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> = try {
             nodeManApi.executeGetRequest(
                 shortGetTag = true,
@@ -591,11 +586,6 @@ data class AgentService @Autowired constructor(
 
     fun obtainManualInstallationCommand(jobId: Int, hostId: Long): AgentResult<ObtainManualCommandResult> {
         NodeManApi.setNodemanOperationName(::obtainManualInstallationCommand.name)
-        // test前端报错测试
-        throw RemoteServiceException(
-            errorCode = 3800015,
-            errorMessage = "Nodeman command is not ready."
-        )
         val agentObtainManualCommandRes: AgentOriginalResult<AgentObtainManualCommand> = try {
             nodeManApi.executeGetRequest(
                 shortGetTag = false,
