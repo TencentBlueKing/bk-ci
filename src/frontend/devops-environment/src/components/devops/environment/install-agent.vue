@@ -487,6 +487,7 @@
             },
 
             async fetchInstallCommand () {
+                if (!this.jobId) return
                 this.isLoading = true
                 try {
                     const res = await this.$store.dispatch('environment/fetchInstallCommand', {
