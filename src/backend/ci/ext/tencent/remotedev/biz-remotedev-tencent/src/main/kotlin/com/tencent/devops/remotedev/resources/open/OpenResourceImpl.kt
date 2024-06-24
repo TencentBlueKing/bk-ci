@@ -25,15 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.remotedev.resources.open
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.remotedev.api.open.OpenResource
+import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.service.PermissionService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-data class CreateImagePullSecretRequest(
-    @get:Schema(title = "bcs请求路径", required = true)
-    val bcsUrl: String,
-    @get:Schema(title = "请求token", required = true)
-    val token: String,
-    @get:Schema(title = "k8s仓库信息", required = true)
-    val kubernetesRepo: KubernetesRepo
-)
+@RestResource
+class OpenResourceImpl @Autowired constructor(
+    private val permissionService: PermissionService
+) : OpenResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpenResourceImpl::class.java)
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun desktopTokenCheck(token: String, dToken: String): Result<UserOnePassword> {
+        logger.info("Checking desktop token $dToken")
+        return Result(permissionService.checkAndGetUser1Password(dToken))
+    }
+}

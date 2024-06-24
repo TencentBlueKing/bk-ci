@@ -85,7 +85,7 @@ class StorePipelineBuildRelDao {
         }
     }
 
-    fun deleteStorePipelineBuildRelByPiplineId(dslContext: DSLContext, pipelineId: String) {
+    fun deleteStorePipelineBuildRelByPipelineId(dslContext: DSLContext, pipelineId: String) {
         with(TStorePipelineBuildRel.T_STORE_PIPELINE_BUILD_REL) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))

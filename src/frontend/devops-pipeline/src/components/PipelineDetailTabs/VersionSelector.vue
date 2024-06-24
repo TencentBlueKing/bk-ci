@@ -83,6 +83,7 @@
     import Logo from '@/components/Logo'
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
     export default {
@@ -235,6 +236,14 @@
                         })
                         if (page === 1) {
                             this.versionList = versions
+                            const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
+                            if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
+                                // HACK: 最新版本变更时，更新当前流水线信息
+                                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                                    releaseVersion: releaseVersion.version,
+                                    releaseVersionName: releaseVersion.versionName
+                                })
+                            }
                         } else {
                             this.versionList.push(...versions)
                         }

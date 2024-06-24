@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
@@ -100,7 +101,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     companion object {
@@ -157,8 +159,28 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             detailInfo = detailInfo
         )
-        val version = draftVersion?.version ?: releaseVersion.version
-        val versionName = draftVersion?.versionName ?: releaseVersion.versionName
+        val released = detailInfo.latestVersionStatus?.isNotReleased() != true
+        var versionName = releaseVersion.versionName?.takeIf { released }
+        // 配合前端的展示需要，version有以下几种情况的返回值：
+        // 1 发布过且有草稿：version取草稿的版本号
+        // 2 发布过且有分支版本：version取最新正式的版本号
+        // 3 未发布过仅有草稿版本：version取草稿的版本号
+        // 4 未发布过仅有分支版本：version取最新的分支版本号
+        val version = when (detailInfo.latestVersionStatus) {
+            VersionStatus.COMMITTING -> {
+                draftVersion?.version
+            }
+            VersionStatus.BRANCH -> {
+                val branchVersion = pipelineRepositoryService.getBranchVersionResource(
+                    projectId, pipelineId, null
+                )
+                versionName = branchVersion?.versionName
+                branchVersion?.version
+            }
+            else -> {
+                draftVersion?.version
+            }
+        } ?: releaseVersion.version
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
             projectId = projectId,
@@ -185,8 +207,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             permissions = permissions,
             version = version,
             versionName = versionName,
-            releaseVersion = releaseVersion.version,
-            releaseVersionName = releaseVersion.versionName,
+            // 前端需要缺省当前能用的版本，用于进入页面的默认展示，但没有发布过就不提供releaseVersionName
+            releaseVersion = releaseVersion.version.takeIf { released } ?: version,
+            releaseVersionName = releaseVersion.versionName?.takeIf { released },
             baseVersion = baseVersion,
             baseVersionStatus = baseVersionStatus,
             baseVersionName = baseVersionName,
@@ -381,8 +404,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         if (versionStatus.isReleasing()) {
             val existModel = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
-                pipelineId = pipelineId,
-                includeDraft = true
+                pipelineId = pipelineId
             )?.model ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -434,20 +456,30 @@ class PipelineVersionFacadeService @Autowired constructor(
             staticViewIds = request.staticViews
         )
         // #8164 发布后的流水将调试信息清空为0，重新计数，同时取消该版本的调试记录
-        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId, version).forEach {
-            if (!it.status.isFinish()) pipelineBuildFacadeService.serviceShutdown(
-                projectId, pipelineId, it.buildId, pipeline.channelCode
-            )
+        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId).forEach { debug ->
+            if (!debug.status.isFinish()) {
+                buildLogPrinter.addWarnLine(
+                    buildId = debug.buildId, executeCount = debug.executeCount ?: 1,
+                    tag = "", jobId = null, stepId = null,
+                    message = ""
+                )
+                pipelineBuildFacadeService.buildManualShutdown(
+                    userId = projectId, projectId = pipelineId, pipelineId = debug.buildId,
+                    buildId = userId, channelCode = pipeline.channelCode, terminateFlag = true
+                )
+            }
         }
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
-        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
+        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId)
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
             version = result.version,
             versionNum = result.versionNum,
             versionName = result.versionName,
-            targetUrl = targetUrl
+            targetUrl = targetUrl,
+            yamlInfo = yamlInfo
         )
     }
 

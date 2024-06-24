@@ -60,7 +60,7 @@
                 {{ operateName }}
             </RollbackEntry>
             <bk-button
-                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === pipelineInfo?.releaseVersion"
+                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion"
                 theme="primary"
                 outline
                 v-perm="{
@@ -95,10 +95,8 @@
                         @click="goExecPreview"
                     >
                         {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
-    
                     </bk-button>
                 </span>
-                
                 <more-actions />
             </template>
         </aside>
@@ -166,13 +164,10 @@
                 return this.isReleaseVersion || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
-                return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo.releaseVersion
+                return this.$route.params.version ? parseInt(this.$route.params.version) : this.releaseVersion
             },
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
-            },
-            releaseVersionName () {
-                return this.pipelineInfo?.releaseVersionName
             },
             projectId () {
                 return this.$route.params.projectId
@@ -227,8 +222,8 @@
                     name: 'pipelinesEdit'
                 })
             }
-            if (this.pipelineInfo.releaseVersion !== this.currentVersion) {
-                this.handleVersionChange(this.pipelineInfo.releaseVersion)
+            if (this.releaseVersion !== this.currentVersion) {
+                this.handleVersionChange(this.releaseVersion)
             } else {
                 this.init()
             }
@@ -291,7 +286,6 @@
                 this.handleVersionChange(this.releaseVersion)
             },
             handleVersionChange (versionId, version) {
-                console.log('handleVersionChange', versionId, version)
                 let routeType = this.$route.params.type || 'history'
 
                 if (version) {

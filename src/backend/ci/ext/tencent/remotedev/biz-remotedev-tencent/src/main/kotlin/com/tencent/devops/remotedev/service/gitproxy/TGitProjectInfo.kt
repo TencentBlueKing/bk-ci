@@ -37,7 +37,13 @@ enum class TGitProjectType {
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TGitAclConfig(
     @JsonProperty("allow_ips")
-    val allowIps: String
+    val allowIps: String?,
+    @JsonProperty("allow_users")
+    val allowUsers: String?,
+    @JsonProperty("spec_allow_ips")
+    val specAllowIps: String?,
+    @JsonProperty("spec_hit_users")
+    val specHitUsers: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -201,13 +201,13 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         logger.info("service[$serviceCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
         val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
-        val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
         val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
         val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
-            imageName = imageName,
+            serviceName = serviceCode,
             imageTag = version,
-            repoAddr = repoAddr,
+            repoProjectCode = extServiceImageSecretConfig.imageRepoProject,
+            repoName = extServiceImageSecretConfig.imageRepoName,
             username = username,
             password = password
         )
@@ -283,7 +283,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["serviceCode"] = serviceCode
             startParams["version"] = serviceRecord.version
-            startParams["imageName"] = imageName
+            startParams["serviceName"] = serviceCode
             startParams["imageTag"] = version
             startParams["extServiceDeployInfo"] = JsonUtil.toJson(deployApp)
             startParams["script"] = script
@@ -291,6 +291,12 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             startParams["repoAddr"] = repoAddr
             startParams["username"] = username
             startParams["password"] = password
+            extServiceImageInfo.repoName?.let {
+                startParams["repoName"] = it
+            }
+            extServiceImageInfo.repoProjectCode?.let {
+                startParams["repoProjectCode"] = it
+            }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM

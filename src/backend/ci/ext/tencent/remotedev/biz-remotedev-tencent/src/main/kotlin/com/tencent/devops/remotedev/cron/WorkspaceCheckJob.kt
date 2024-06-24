@@ -215,7 +215,7 @@ class WorkspaceCheckJob @Autowired constructor(
     /**
      * 每天10点触发，执行云桌面专项空闲工作空间检测
      */
-    @Scheduled(cron = "0 0 10 * * ?")
+//    @Scheduled(cron = "0 0 10 * * ?")
     fun projectWinJob() {
         logger.info("=========>> projectWinJob <<=========")
 

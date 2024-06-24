@@ -535,17 +535,6 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TCLOUD_CFS` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
--- Table structure for T_PROJECT_TGIT_LINK 蓝盾项目和工蜂关联表
--- ----------------------------
-CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
-	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
-    `URL` varchar(255) NOT NULL COMMENT '工蜂url地址',
-    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
-    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
-	PRIMARY KEY (`PROJECT_ID`, `URL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ----------------------------
 -- Table structure for T_WORKSPACE_NOTIFY
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_NOTIFY` (
@@ -570,6 +559,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_ID_LINK`(
     `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
     `GIT_TYPE` varchar(16) NOT NULL COMMENT 'GIT仓库类型SVN或者GIT',
     `URL` varchar(255) NULL COMMENT '工蜂url地址',
+    `CREATE_TIME` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `UPDATE_TIME` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间'
 	PRIMARY KEY (`PROJECT_ID`, `TGIT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -24,11 +25,9 @@ import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
-import com.tencent.devops.remotedev.utils.AsyncUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -36,9 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
@@ -212,9 +208,9 @@ class GitProxyTGitService @Autowired constructor(
         val result = mutableMapOf<Long, Boolean>()
 
         // 获取项目下正在跑的所有机器IP
-        val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
+        val ips = workspaceDao.fetchProjectIp(dslContext, setOf(projectId)).map { it.substringAfter(".") }.toSet()
         // 获取项目下正在跑的所有机器的用户
-        val users = fetchProjectSpecAclUsers(projectId)
+        val users = fetchProjectSpecAclUsers(setOf(projectId))
 
         // 获取关联的工蜂仓库
         val repoMap = projectTGitLinkDao.fetch(dslContext, projectId).associate {
@@ -229,11 +225,11 @@ class GitProxyTGitService @Autowired constructor(
                 return@forEach
             }
 
-            val ok = updateTGitProjectAcl(
+            val ok = incUpdateTGitProjectAcl(
                 token = token.accessToken,
-                tGitProjectId = repoId.toString(),
+                tGitProjectId = repoId,
                 ips = ips,
-                users = users
+                specUsers = users
             )
             result[repoId] = ok
             projectTGitLinkDao.add(
@@ -393,13 +389,37 @@ class GitProxyTGitService @Autowired constructor(
             }
         }
 
-        val ok = updateTGitProjectAcl(
-            token = token.accessToken,
-            tGitProjectId = repoId.toString(),
-            ips = emptySet(),
-            users = emptySet()
-        )
+        // 取消关联时如果当前项目是最后一个关联的项目，那么就直接清空
+        // 如果还剩余其他关联项目，那么就拿其他关联项目取并集更新
+        val otherProjects = projectTGitLinkDao.fetchByTGitId(
+            dslContext = dslContext,
+            tgitId = repoId,
+            notProjectId = projectId
+        ).map { it.projectId }.toSet()
+        if (otherProjects.isEmpty()) {
+            val ok = deleteTGitProjectAcl(
+                token = token.accessToken,
+                tGitProjectId = repoId.toString()
+            )
+            if (ok) {
+                projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
+            }
+            return ok
+        }
 
+        val ips = workspaceDao.fetchProjectIp(
+            dslContext = dslContext,
+            projectIds = otherProjects
+        ).map { it.substringAfter(".") }.toSet()
+        val users = fetchProjectSpecAclUsers(otherProjects)
+
+        val ok = incUpdateTGitProjectAcl(
+            token = token.accessToken,
+            tGitProjectId = repoId,
+            ips = ips,
+            specUsers = users,
+            rewrite = true
+        )
         if (ok) {
             projectTGitLinkDao.deleteUrl(dslContext, projectId, repoId)
         }
@@ -422,68 +442,40 @@ class GitProxyTGitService @Autowired constructor(
         )
     }
 
+    // 因为IP的唯一性，所以它还是可以单独进行增减分配
     fun doAddOrRemoveAclIp(
         projectId: String,
         ip: String,
         remove: Boolean
     ) {
         fetchProjectTGit(projectId) { repo, token ->
-            val config = offshoreTGitApiClient.getProjectAcl(
-                accessToken = token,
-                projectId = repo.tgitId.toString()
-            )
-            if (config == null) {
-                logger.warn("addOrRemoveAclIp|get $projectId|${repo.projectId} acl config error")
-                return@fetchProjectTGit
+            val lock = updateTGitLock(repo.tgitId)
+            try {
+                lock.lock()
+                val config = offshoreTGitApiClient.getProjectAcl(
+                    accessToken = token,
+                    projectId = repo.tgitId.toString()
+                )
+                if (config == null) {
+                    logger.warn("addOrRemoveAclIp|get $projectId|${repo.projectId} acl config error")
+                    return@fetchProjectTGit
+                }
+
+                val ips = config.allowIps?.split(";")?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
+                if (remove) {
+                    ips.remove(ip)
+                } else {
+                    ips.add(ip)
+                }
+                doUpdateIps(
+                    token = token,
+                    tGitProjectId = repo.tgitId.toString(),
+                    ips = ips
+                )
+            } finally {
+                lock.unlock()
             }
-
-            val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
-            if (remove) {
-                ips.remove(ip)
-            } else {
-                ips.add(ip)
-            }
-            updateTGitProjectAcl(
-                token = token,
-                tGitProjectId = repo.tgitId.toString(),
-                ips = ips,
-                users = null
-            )
         }
-    }
-
-    private val publicIpsCache: LoadingCache<String, String> = Caffeine.newBuilder()
-        .maximumSize(5)
-        .expireAfterWrite(Duration.ofHours(1))
-        .build { key -> redisOperation.get(key, isDistinguishCluster = false) ?: "" }
-
-    // 默认规则组仅放云桌面 IP, 并清空用户白名单
-    // 分配了云桌面的用户都加到特定访问人群名单
-    // 特殊规则组 IP 加上云桌面 IP 及所有公网 IP（过渡期，后续会移除公网 IP）
-    private fun updateTGitProjectAcl(
-        token: String,
-        tGitProjectId: String,
-        ips: Set<String>,
-        users: Set<String>?
-    ): Boolean {
-        val ipOk = offshoreTGitApiClient.updateProjectAclIp(token, tGitProjectId, ips)
-        val userOk = offshoreTGitApiClient.updateProjectAclUser(token, tGitProjectId, emptySet())
-        val specUserOk = if (users != null) {
-            offshoreTGitApiClient.updateProjectAclSpecUser(token, tGitProjectId, users)
-        } else {
-            true
-        }
-
-        val specIpOk = offshoreTGitApiClient.updateProjectAclSpecIps(
-            accessToken = token,
-            projectId = tGitProjectId,
-            ips = ips.plus(
-                publicIpsCache.get(REDIS_REMOTEDEV_PUBLIC_IPS)?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                    ?: emptySet()
-            )
-        )
-
-        return ipOk && userOk && specUserOk && specIpOk
     }
 
     // 被分配的用户是工作空间下的一个子集，所以无法根据单个工作空间的人员变更得知整个项目的人员变更
@@ -493,177 +485,30 @@ class GitProxyTGitService @Autowired constructor(
         AsyncExecute.dispatch(rabbitTemplate, AsyncTGitAclUser(projectId))
     }
 
+    // 如果一个项目只绑定了一个tGit那么直接使用这个项目的所有的人，否则需要计算所有项目的所有的人
     fun doRefreshProjectTGitSpecUser(
         projectId: String
     ) {
-        // 获取项目下正在跑的所有机器的用户
-        val users = fetchProjectSpecAclUsers(projectId)
+        // 获取所有关联项目下正在跑的所有机器的用户
+        val usersMap = mutableMapOf<String, Set<String>>()
         fetchProjectTGit(projectId) { repo, token ->
-            offshoreTGitApiClient.updateProjectAclSpecUser(token, repo.tgitId.toString(), users)
-        }
-    }
-
-    private fun fetchProjectSpecAclUsers(projectId: String): Set<String> {
-        return workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId, false)
-            .filter { it.endsWith("@tai") }.map { it.removeSuffix("@tai") }.toSet()
-    }
-
-    private fun fetchProjectTGit(
-        projectId: String,
-        needToken: Boolean = true,
-        run: (repo: TProjectTgitIdLinkRecord, token: String) -> Unit
-    ) {
-        val tokenMap = mutableMapOf<String, String>()
-        projectTGitLinkDao.fetch(dslContext, projectId)
-            .filter { it.status == TGitRepoStatus.AVAILABLE.name }
-            .forEach { repo ->
-                val token = if (needToken) {
-                    if (tokenMap[repo.oauthUser] != null) {
-                        tokenMap[repo.oauthUser]
-                    } else {
-                        val newToken = client.get(ServiceOauthResource::class).tGitGet(repo.oauthUser).data
-                        if (newToken == null) {
-                            logger.warn("fetchProjectTGit|get $projectId|${repo.oauthUser} token is null")
-                            return@forEach
-                        }
-                        tokenMap[repo.oauthUser] = newToken.accessToken
-                        newToken.accessToken
-                    }
-                } else {
-                    ""
-                }
-
-                run(repo, token!!)
-            }
-    }
-
-    /**
-     * 检查关联的TGit仓库的管理员的权限是否过期
-     */
-    @Scheduled(cron = "0 50 9 * * ?")
-    fun dailyUserAuthDoCheck() {
-        val res = projectTGitLinkDao.fetchAll(dslContext)
-        val recordData = mutableMapOf<String, MutableList<TProjectTgitIdLinkRecord>>()
-        res.forEach {
-            if (recordData[it.oauthUser] == null) {
-                recordData[it.oauthUser] = mutableListOf(it)
+            val tGitProjects =
+                projectTGitLinkDao.fetchByTGitId(dslContext, repo.tgitId, null).map { it.projectId }.sorted().toSet()
+            val mapKey = tGitProjects.joinToString(";")
+            val specUsers = if (usersMap.containsKey(mapKey)) {
+                usersMap[mapKey]
             } else {
-                recordData[it.oauthUser]?.add(it)
+                val tSpecUsers = fetchProjectSpecAclUsers(tGitProjects)
+                usersMap[mapKey] = tSpecUsers
+                tSpecUsers
             }
-        }
-
-        val result = mutableMapOf<String, MutableMap<String, MutableMap<Long, String>>>()
-        recordData.forEach { (userId, records) ->
-            val svnRecords =
-                records.filter { it.gitType == TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
-            val gitRecords =
-                records.filter { it.gitType != TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
-
-            val token = client.get(ServiceOauthResource::class).tGitGet(userId).data
-            if (token == null) {
-                logger.warn("TGitLinkAuthCheck|get $userId token is null")
-                return@forEach
-            }
-
-            filterNoAuthTGitProject(gitRecords, token, result, userId, TGitProjectType.GIT)
-            filterNoAuthTGitProject(svnRecords, token, result, userId, TGitProjectType.SVN)
-        }
-
-        val projectCodes = result.values.flatMap { it.keys }.toSet()
-        val projects = client.get(ServiceProjectResource::class)
-            .listByProjectCode(projectCodes).data?.associateBy { it.projectCode }
-        if (projects.isNullOrEmpty()) {
-            logger.warn("dailyUserAuthDoCheck|$projectCodes listByProjectCode null")
-            return
-        }
-        logger.debug("dailyUserAuthDoCheck|$projectCodes")
-
-        result.forEach { (userId, projectAndIds) ->
-            projectAndIds.forEach project@{ (projectId, idAndUrls) ->
-                val project = projects[projectId]
-                if (project == null) {
-                    logger.warn("dailyUserAuthDoCheck|$projectId is null")
-                    return@project
-                }
-                projectTGitLinkDao.batchUpdateStatus(dslContext, projectId, idAndUrls.keys, TGitRepoStatus.ABNORMAL)
-                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-                    SendNotifyMessageTemplateRequest(
-                        templateCode = tGitConfig.expiredPermTmpCode,
-                        receivers = mutableSetOf(userId),
-                        notifyType = mutableSetOf(NotifyType.EMAIL.name),
-                        bodyParams = mapOf(
-                            "userId" to userId,
-                            "urls" to idAndUrls.keys.joinToString(separator = "\n"),
-                            "projectId" to projectId,
-                            "projectName" to project.projectName
-                        ),
-                        cc = project.properties?.remotedevManager
-                            ?.split(";")?.filter { it.isNotBlank() }
-                            ?.toMutableSet()
-                    )
-                )
-            }
-        }
-    }
-
-    private fun filterNoAuthTGitProject(
-        records: MutableMap<Long, TProjectTgitIdLinkRecord>,
-        token: GitToken,
-        result: MutableMap<String, MutableMap<String, MutableMap<Long, String>>>,
-        userId: String,
-        type: TGitProjectType
-    ) {
-        if (records.isEmpty()) {
-            return
-        }
-
-        var page = 1
-        val pageSize = 100
-        while (true) {
-            val projects = offshoreTGitApiClient.getProjectList(
-                accessToken = token.accessToken,
-                page = page,
-                pageSize = pageSize,
-                search = null,
-                minAccessLevel = GitAccessLevelEnum.MASTER,
-                type = type
+            incUpdateTGitProjectAcl(
+                token = token,
+                tGitProjectId = repo.tgitId,
+                ips = null,
+                specUsers = specUsers,
+                rewrite = true
             )
-            projects.forEach projects@{ project ->
-                if (project.id in records.keys) {
-                    // url发生变化时更新url
-                    if ((records[project.id] != null) &&
-                        !(project.httpsUrlToRepo ?: project.httpUrlToRepo).isNullOrBlank() &&
-                        (project.httpsUrlToRepo ?: project.httpUrlToRepo) != records[project.id]?.url
-                    ) {
-                        projectTGitLinkDao.updateUrl(
-                            dslContext = dslContext,
-                            projectId = records[project.id]!!.projectId,
-                            tgitId = project.id,
-                            url = (project.httpsUrlToRepo ?: project.httpUrlToRepo)!!.removeHttpPrefix()
-                        )
-                    }
-                    records.remove(project.id)
-                }
-            }
-
-            if (projects.size < 100) {
-                break
-            }
-            page++
-        }
-
-        val gitResult = if (result[userId] == null) {
-            result[userId] = mutableMapOf()
-            result[userId]!!
-        } else {
-            result[userId]!!
-        }
-        records.values.forEach { record ->
-            if (gitResult[record.projectId] == null) {
-                gitResult[record.projectId] = mutableMapOf(record.tgitId to record.url)
-            } else {
-                gitResult[record.projectId]?.set(record.tgitId, record.url)
-            }
         }
     }
 
@@ -731,14 +576,15 @@ class GitProxyTGitService @Autowired constructor(
         val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
 
         // 关联
-        val ips = workspaceDao.fetchProjectIp(dslContext, info.projectId).map { it.substringAfter(".") }.toSet()
-        val users = fetchProjectSpecAclUsers(info.projectId)
+        val ips = workspaceDao.fetchProjectIp(dslContext, setOf(info.projectId)).map { it.substringAfter(".") }.toSet()
+        val users = fetchProjectSpecAclUsers(setOf(info.projectId))
 
-        val ok = updateTGitProjectAcl(
+        val ok = incUpdateTGitProjectAcl(
             token = token.accessToken,
-            tGitProjectId = data.id.toString(),
+            tGitProjectId = data.id,
             ips = ips,
-            users = users
+            specUsers = users,
+            rewrite = true
         )
 
         val url = data.httpsUrlToRepo ?: data.httpUrlToRepo ?: ""
@@ -764,87 +610,294 @@ class GitProxyTGitService @Autowired constructor(
         return ok
     }
 
-    private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
+    private val publicIpsCache: LoadingCache<String, String> = Caffeine.newBuilder()
+        .maximumSize(5)
+        .expireAfterWrite(Duration.ofHours(1))
+        .build { key -> redisOperation.get(key, isDistinguishCluster = false) ?: "" }
 
-    fun refreshTGitAcl(projectId: String?, export: Boolean?): Response? {
-        logger.info("OP|refreshTGitAcl|start refreshTGitAcl")
-        val projects = if (projectId.isNullOrBlank()) {
-            projectTGitLinkDao.fetchAll(dslContext).map { it.projectId }.toSet()
-        } else {
-            setOf(projectId)
+    // 增量更新
+    // 默认规则组仅放云桌面 IP, 并清空用户白名单
+    // 分配了云桌面的用户都加到特定访问人群名单
+    // 特殊规则组 IP 加上云桌面 IP 及所有公网 IP（过渡期，后续会移除公网 IP）
+    // rewrite 直接重写
+    private fun incUpdateTGitProjectAcl(
+        token: String,
+        tGitProjectId: Long,
+        ips: Set<String>?,
+        specUsers: Set<String>?,
+        rewrite: Boolean = false
+    ): Boolean {
+        if (rewrite) {
+            return doUpdateTGitProjectAcl(token, tGitProjectId.toString(), ips, emptySet(), specUsers)
+        }
+        val lock = updateTGitLock(tGitProjectId)
+        try {
+            lock.lock()
+            val config = offshoreTGitApiClient.getProjectAcl(
+                accessToken = token,
+                projectId = tGitProjectId.toString()
+            ) ?: run {
+                logger.error("updateTGitProjectAcl $tGitProjectId get acl config null")
+                return false
+            }
+            val oldIps = config.allowIps?.split(";")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+            val oldSpecUsers = config.specHitUsers?.split(";")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+            return doUpdateTGitProjectAcl(
+                token = token,
+                tGitProjectId = tGitProjectId.toString(),
+                ips = if (ips != null) {
+                    oldIps.union(ips)
+                } else {
+                    null
+                },
+                users = if (config.allowUsers?.isNotBlank() == true) {
+                    emptySet()
+                } else {
+                    null
+                },
+                specUsers = if (specUsers != null) {
+                    oldSpecUsers.union(specUsers)
+                } else {
+                    null
+                }
+            )
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    private fun doUpdateTGitProjectAcl(
+        token: String,
+        tGitProjectId: String,
+        ips: Set<String>?,
+        users: Set<String>?,
+        specUsers: Set<String>?
+    ): Boolean {
+        var ipOk = true
+        var specIpOk = true
+        if (ips != null) {
+            val okP = doUpdateIps(token, tGitProjectId, ips)
+            ipOk = okP.first
+            specIpOk = okP.second
         }
 
-        if (export != true) {
-            AsyncUtil.pool.execute {
-                projects.forEach { projectId ->
-                    logger.info("OP|refreshTGitAcl|$projectId start")
-                    val users = fetchProjectSpecAclUsers(projectId)
-                    val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
-                    fetchProjectTGit(projectId) { repo, token ->
-                        val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
-                        if (!ok) {
-                            logger.warn("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl false")
-                        } else {
-                            logger.info("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl true")
+        var userOk = true
+        if (users != null) {
+            userOk = offshoreTGitApiClient.updateProjectAclUser(token, tGitProjectId, emptySet())
+        }
+
+        var specUserOk = true
+        if (specUsers != null) {
+            specUserOk = offshoreTGitApiClient.updateProjectAclSpecUser(token, tGitProjectId, specUsers)
+        }
+
+        return ipOk && userOk && specUserOk && specIpOk
+    }
+
+    private fun doUpdateIps(
+        token: String,
+        tGitProjectId: String,
+        ips: Set<String>
+    ): Pair<Boolean, Boolean> {
+        val ipOk = offshoreTGitApiClient.updateProjectAclIp(token, tGitProjectId, ips)
+        val specIpOk = offshoreTGitApiClient.updateProjectAclSpecIps(
+            accessToken = token,
+            projectId = tGitProjectId,
+            ips = ips.plus(
+                publicIpsCache.get(REDIS_REMOTEDEV_PUBLIC_IPS)?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                    ?: emptySet()
+            )
+        )
+        return Pair(ipOk, specIpOk)
+    }
+
+    private fun deleteTGitProjectAcl(
+        token: String,
+        tGitProjectId: String
+    ): Boolean {
+        val ipOk = offshoreTGitApiClient.updateProjectAclIp(token, tGitProjectId, emptySet())
+        val userOk = offshoreTGitApiClient.updateProjectAclUser(token, tGitProjectId, emptySet())
+        val specIpOk = offshoreTGitApiClient.updateProjectAclSpecIps(token, tGitProjectId, emptySet())
+        val specUserOk = offshoreTGitApiClient.updateProjectAclSpecUser(token, tGitProjectId, emptySet())
+        return ipOk && userOk && specUserOk && specIpOk
+    }
+
+    private fun fetchProjectSpecAclUsers(projectIds: Set<String>): Set<String> {
+        return workspaceJoinDao.fetchProjectSharedUser(dslContext, projectIds)
+            .filter { it.endsWith("@tai") }.map { it.removeSuffix("@tai") }.toSet()
+    }
+
+    private fun fetchProjectTGit(
+        projectId: String,
+        needToken: Boolean = true,
+        run: (repo: TProjectTgitIdLinkRecord, token: String) -> Unit
+    ) {
+        val tokenMap = mutableMapOf<String, String>()
+        projectTGitLinkDao.fetch(dslContext, projectId)
+            .filter { it.status == TGitRepoStatus.AVAILABLE.name }
+            .forEach { repo ->
+                val token = if (needToken) {
+                    if (tokenMap[repo.oauthUser] != null) {
+                        tokenMap[repo.oauthUser]
+                    } else {
+                        val newToken = client.get(ServiceOauthResource::class).tGitGet(repo.oauthUser).data
+                        if (newToken == null) {
+                            logger.warn("fetchProjectTGit|get $projectId|${repo.oauthUser} token is null")
+                            return@forEach
                         }
+                        tokenMap[repo.oauthUser] = newToken.accessToken
+                        newToken.accessToken
                     }
+                } else {
+                    ""
+                }
+
+                run(repo, token!!)
+            }
+    }
+
+    /**
+     * 检查关联的TGit仓库的管理员的权限是否过期
+     */
+    @Scheduled(cron = "0 50 9 * * ?")
+    fun dailyUserAuthDoCheck() {
+        logger.info("dailyUserAuthDoCheck start")
+        val res = projectTGitLinkDao.fetchAll(dslContext)
+        val recordData = mutableMapOf<String, MutableList<TProjectTgitIdLinkRecord>>()
+        res.forEach {
+            if (recordData[it.oauthUser] == null) {
+                recordData[it.oauthUser] = mutableListOf(it)
+            } else {
+                recordData[it.oauthUser]?.add(it)
+            }
+        }
+
+        val result = mutableMapOf<String, MutableMap<String, MutableMap<Long, String>>>()
+        recordData.forEach { (userId, records) ->
+            val svnRecords =
+                records.filter { it.gitType == TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
+            val gitRecords =
+                records.filter { it.gitType != TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
+
+            val token = client.get(ServiceOauthResource::class).tGitGet(userId).data
+            if (token == null) {
+                logger.warn("TGitLinkAuthCheck|get $userId token is null")
+                return@forEach
+            }
+
+            filterNoAuthTGitProject(gitRecords, token, result, userId, TGitProjectType.GIT)
+            filterNoAuthTGitProject(svnRecords, token, result, userId, TGitProjectType.SVN)
+        }
+
+        val projectCodes = result.values.flatMap { it.keys }.toSet()
+        val projects = client.get(ServiceProjectResource::class)
+            .listByProjectCode(projectCodes).data?.associateBy { it.projectCode }
+        if (projects.isNullOrEmpty()) {
+            logger.warn("dailyUserAuthDoCheck|$projectCodes listByProjectCode null")
+            return
+        }
+        logger.info("dailyUserAuthDoCheck|$result")
+
+        result.forEach { (userId, projectAndIds) ->
+            projectAndIds.forEach project@{ (projectId, idAndUrls) ->
+                val project = projects[projectId]
+                if (project == null) {
+                    logger.warn("dailyUserAuthDoCheck|$projectId is null")
+                    return@project
+                }
+                projectTGitLinkDao.batchUpdateStatus(dslContext, projectId, idAndUrls.keys, TGitRepoStatus.ABNORMAL)
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                    SendNotifyMessageTemplateRequest(
+                        templateCode = tGitConfig.expiredPermTmpCode,
+                        receivers = mutableSetOf(userId),
+                        notifyType = mutableSetOf(NotifyType.EMAIL.name),
+                        bodyParams = mapOf(
+                            "userId" to userId,
+                            "urls" to idAndUrls.keys.joinToString(separator = "\n"),
+                            "projectId" to projectId,
+                            "projectName" to project.projectName
+                        ),
+                        cc = project.properties?.remotedevManager
+                            ?.split(";")?.filter { it.isNotBlank() }
+                            ?.toMutableSet()
+                    )
+                )
+            }
+        }
+    }
+
+    private fun filterNoAuthTGitProject(
+        records: MutableMap<Long, TProjectTgitIdLinkRecord>,
+        token: GitToken,
+        result: MutableMap<String, MutableMap<String, MutableMap<Long, String>>>,
+        userId: String,
+        type: TGitProjectType
+    ) {
+        if (records.isEmpty()) {
+            return
+        }
+        var page = 1
+        val pageSize = 100
+        while (true) {
+            val projects = offshoreTGitApiClient.getProjectList(
+                accessToken = token.accessToken,
+                page = page,
+                pageSize = pageSize,
+                search = null,
+                minAccessLevel = GitAccessLevelEnum.MASTER,
+                type = type
+            )
+            projects.forEach projects@{ project ->
+                if (project.id in records.keys) {
+                    // url发生变化时更新url
+                    if ((records[project.id] != null) &&
+                        !(project.httpsUrlToRepo ?: project.httpUrlToRepo).isNullOrBlank() &&
+                        (project.httpsUrlToRepo ?: project.httpUrlToRepo) != records[project.id]?.url
+                    ) {
+                        projectTGitLinkDao.updateUrl(
+                            dslContext = dslContext,
+                            projectId = records[project.id]!!.projectId,
+                            tgitId = project.id,
+                            url = (project.httpsUrlToRepo ?: project.httpUrlToRepo)!!.removeHttpPrefix()
+                        )
+                    }
+                    records.remove(project.id)
                 }
             }
-            return null
+
+            if (projects.size < 100) {
+                break
+            }
+            page++
         }
 
-        val workbook = SXSSFWorkbook()
-        val sheet = workbook.createSheet("ACL刷新数据")
-        // 创建标题
-        val titleRow = sheet.createRow(0)
-        titleList.forEachIndexed { index, s ->
-            titleRow.createCell(index).setCellValue(s)
+        val gitResult = if (result[userId] == null) {
+            result[userId] = mutableMapOf()
+            result[userId]!!
+        } else {
+            result[userId]!!
         }
-        // 创建内容
-        var offset = 1
-        projects.forEach { fProjectId ->
-            val users = fetchProjectSpecAclUsers(fProjectId)
-            val ips = workspaceDao.fetchProjectIp(dslContext, fProjectId).map { it.substringAfter(".") }.toSet()
-            fetchProjectTGit(fProjectId, false) { repo, _ ->
-                val row = sheet.createRow(offset)
-                row.createCell(0).setCellValue(repo.tgitId.toString())
-                row.createCell(1).setCellValue(repo.url.toString())
-                row.createCell(2).setCellValue(ips.joinToString(";"))
-                row.createCell(3).setCellValue("")
-                row.createCell(4).setCellValue(users.joinToString(";"))
-                row.createCell(5).setCellValue(
-                    ips.plus(
-                        publicIpsCache.get(REDIS_REMOTEDEV_PUBLIC_IPS)?.split(";")
-                            ?.filter { it.isNotBlank() }?.toSet()
-                            ?: emptySet()
-                    ).joinToString(";")
-                )
-                offset++
+        records.values.forEach { record ->
+            if (gitResult[record.projectId] == null) {
+                gitResult[record.projectId] = mutableMapOf(record.tgitId to record.url)
+            } else {
+                gitResult[record.projectId]?.set(record.tgitId, record.url)
             }
         }
-        // 调整宽度
-        titleList.forEachIndexed { index, _ ->
-            sheet.trackAllColumnsForAutoSizing()
-            sheet.autoSizeColumn(index)
-        }
-
-        return Response.ok(
-            StreamingOutput { output ->
-                workbook.write(output)
-                workbook.dispose()
-            },
-            MediaType.APPLICATION_OCTET_STREAM
-        ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
-            .build()
     }
+
+    private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
+
+    private fun updateTGitLock(tGitId: Long): RedisLock =
+        RedisLock(redisOperation, "$REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL:$tGitId", 90)
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
 
-        //  云桌面公网ip，可能会动态变化所以放redis里
+        // 云桌面公网ip，可能会动态变化所以放redis里
         private const val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
 
-        private val titleList =
-            listOf("项目ID", "项目链接", "IP白名单", "用户白名单", "特定访问人群名单", "特定访问IP名单")
+        // 获取工蜂ACL配置的锁，同一时间对同一个项目的配置只能有一个读写
+        private const val REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL = "remotedev:project:update:tgit:acl"
     }
 }
