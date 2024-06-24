@@ -70,6 +70,19 @@
                 }
             }
         },
+        
+        watch: {
+            paramValues: {
+                handler (value, oldValue) {
+                    if (value.subPip !== oldValue.subPip) {
+                        this.atomValue[this.name] = []
+                        this.getParametersList()
+                        this.initData()
+                    }
+                },
+                deep: true
+            }
+        },
         created () {
             this.getParametersList()
             this.initData()
@@ -118,9 +131,7 @@
                 if (!url) return
 
                 const urlQuery = this.param.urlQuery || {}
-                this.queryKey = []
                 Object.keys(urlQuery).forEach((key, index) => {
-                    this.queryKey.push(key)
                     const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
