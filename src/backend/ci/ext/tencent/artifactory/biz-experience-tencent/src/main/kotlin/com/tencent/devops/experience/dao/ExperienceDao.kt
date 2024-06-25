@@ -148,7 +148,8 @@ class ExperienceDao {
         size: Long,
         scheme: String,
         buildId: String,
-        pipelineId: String
+        pipelineId: String,
+        classify: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -184,7 +185,8 @@ class ExperienceDao {
                 SIZE,
                 SCHEME,
                 BUILD_ID,
-                PIPELINE_ID
+                PIPELINE_ID,
+                CLASSIFY
             ).values(
                 projectId,
                 name,
@@ -216,7 +218,8 @@ class ExperienceDao {
                 size,
                 scheme,
                 buildId,
-                pipelineId
+                pipelineId,
+                classify
             )
                 .returning(ID)
                 .fetchOne()!!
@@ -252,7 +255,8 @@ class ExperienceDao {
         experienceName: String,
         versionTitle: String,
         category: Int,
-        productOwner: String
+        productOwner: String,
+        classify: String
     ) {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -272,6 +276,7 @@ class ExperienceDao {
                 .set(VERSION_TITLE, versionTitle)
                 .set(CATEGORY, category)
                 .set(PRODUCT_OWNER, productOwner)
+                .set(CLASSIFY, classify)
                 .where(ID.eq(id))
                 .execute()
         }
@@ -356,7 +361,7 @@ class ExperienceDao {
                 .where(ID.`in`(ids))
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
-                .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
+                .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM, CLASSIFY)
                 .fetch()
         }
     }
