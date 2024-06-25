@@ -377,7 +377,7 @@ class BuildLogPrinter(
         }
     }
 
-    private fun LogMessage.formatMessage():LogMessage {
+    private fun LogMessage.formatMessage(): LogMessage {
         when (logType) {
             LogType.WARN -> {
                 LOG_WARN_FLAG
