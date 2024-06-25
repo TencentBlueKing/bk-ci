@@ -326,14 +326,20 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name)
                 )
 
-                CodeEventType.CHANGE_COMMIT -> nowExist.push = PushRule(
-                    name = git.name.nullIfDefault(defaultName),
-                    enable = git.enable.nullIfDefault(true),
-                    branches = null,
-                    branchesIgnore = null,
-                    paths = git.includePaths?.disjoin(),
-                    pathsIgnore = git.excludePaths?.disjoin()
-                )
+                in CodeEventType.CODE_P4_EVENTS -> {
+                    buildP4TriggerOn(
+                        codeEventType = git.eventType,
+                        triggerOn = nowExist,
+                        rule = PushRule(
+                            name = git.name.nullIfDefault(defaultName),
+                            enable = git.enable.nullIfDefault(true),
+                            branches = null,
+                            branchesIgnore = null,
+                            paths = git.includePaths?.disjoin(),
+                            pathsIgnore = git.excludePaths?.disjoin()
+                        )
+                    )
+                }
 
                 CodeEventType.PULL_REQUEST -> nowExist.mr = MrRule(
                     name = git.name.nullIfDefault(defaultName),
@@ -654,25 +660,21 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerP4(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
-        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
-            TriggerRepositoryType.SELF
-        } else {
-            TriggerRepositoryType.NAME
-        }
-        triggerOn.push?.let { push ->
-            elementQueue.add(
-                CodeP4WebHookTriggerElement(
-                    name = push.name ?: "P4事件触发",
-                    data = CodeP4WebHookTriggerData(
-                        input = CodeP4WebHookTriggerInput(
-                            includePaths = push.paths.nonEmptyOrNull()?.join(),
-                            excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
-                            eventType = CodeEventType.CHANGE_COMMIT,
-                            repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
-                        )
-                    )
-                ).checkTriggerElementEnable(push.enable).apply { version = "2.*" }
+        with(triggerOn) {
+            val repositoryType = if (repoName.isNullOrBlank()) {
+                TriggerRepositoryType.SELF
+            } else {
+                TriggerRepositoryType.NAME
+            }
+            elementQueue.addAll(
+                listOfNotNull(
+                    buildP4TriggerElement(push, CodeEventType.CHANGE_COMMIT, repositoryType, repoName),
+                    buildP4TriggerElement(changeCommit, CodeEventType.CHANGE_COMMIT, repositoryType, repoName),
+                    buildP4TriggerElement(changeContent, CodeEventType.CHANGE_CONTENT, repositoryType, repoName),
+                    buildP4TriggerElement(changeSubmit, CodeEventType.CHANGE_SUBMIT, repositoryType, repoName),
+                    buildP4TriggerElement(shelveCommit, CodeEventType.SHELVE_COMMIT, repositoryType, repoName),
+                    buildP4TriggerElement(shelveSubmit, CodeEventType.CHANGE_SUBMIT, repositoryType, repoName),
+                )
             )
         }
     }
@@ -813,4 +815,39 @@ class TriggerTransfer @Autowired(required = false) constructor(
     private fun String.disjoin() = this.split(",")
 
     private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
+
+    private fun buildP4TriggerElement(
+        rule: PushRule?,
+        eventType: CodeEventType,
+        repositoryType: TriggerRepositoryType,
+        repoName: String?
+    ): Element? {
+        return rule?.let {
+            CodeP4WebHookTriggerElement(
+                name = rule.name ?: "P4事件触发",
+                data = CodeP4WebHookTriggerData(
+                    input = CodeP4WebHookTriggerInput(
+                        includePaths = rule.paths.nonEmptyOrNull()?.join(),
+                        excludePaths = rule.pathsIgnore.nonEmptyOrNull()?.join(),
+                        eventType = eventType,
+                        repositoryType = repositoryType,
+                        repositoryName = repoName
+                    )
+                )
+            ).checkTriggerElementEnable(rule.enable).apply {
+                // P4触发器(v2)仅支持CHANGE_COMMIT事件
+                version = if (eventType == CodeEventType.CHANGE_COMMIT) "2.*" else "1.*"
+            }
+        }
+    }
+
+    fun buildP4TriggerOn(codeEventType: CodeEventType?, triggerOn: TriggerOn, rule: PushRule) {
+        when (codeEventType) {
+            CodeEventType.CHANGE_COMMIT -> triggerOn.changeCommit = rule
+            CodeEventType.CHANGE_SUBMIT -> triggerOn.changeSubmit = rule
+            CodeEventType.CHANGE_CONTENT -> triggerOn.changeContent = rule
+            CodeEventType.SHELVE_COMMIT -> triggerOn.shelveCommit = rule
+            CodeEventType.SHELVE_SUBMIT -> triggerOn.shelveSubmit = rule
+        }
+    }
 }

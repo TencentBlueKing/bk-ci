@@ -58,7 +58,22 @@ data class TriggerOn(
     val openapi: String? = null,
     @JsonProperty("repo-name")
     @get:Schema(title = "repo-name")
-    var repoName: String? = null
+    var repoName: String? = null,
+    @JsonProperty("change-commit")
+    @get:Schema(title = "change-commit")
+    var changeCommit: PushRule? = null,
+    @JsonProperty("change-content")
+    @get:Schema(title = "change-content")
+    var changeContent: PushRule? = null,
+    @JsonProperty("change-submit")
+    @get:Schema(title = "change-submit")
+    var changeSubmit: PushRule? = null,
+    @JsonProperty("shelve-commit")
+    @get:Schema(title = "shelve-commit")
+    var shelveCommit: PushRule? = null,
+    @JsonProperty("shelve-submit")
+    @get:Schema(title = "shelve-submit")
+    var shelveSubmit: PushRule? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()
