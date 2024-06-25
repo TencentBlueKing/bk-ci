@@ -60,6 +60,7 @@ import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
@@ -208,6 +209,11 @@ class CodeWebhookService @Autowired constructor(
 
             if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name) {
                 logger.warn("Process instance($buildId) is not bs channel")
+                return
+            }
+            // 发布瞬间，重试的构建由process服务处理
+            if (variables[PIPELINE_RETRY_COUNT] != null) {
+                logger.warn("Don't handle retry of build($buildId) tasks")
                 return
             }
 
