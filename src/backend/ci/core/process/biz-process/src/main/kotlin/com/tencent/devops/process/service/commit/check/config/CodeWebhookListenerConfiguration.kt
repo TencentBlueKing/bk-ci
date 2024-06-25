@@ -189,7 +189,8 @@ class CodeWebhookListenerConfiguration {
         @Autowired tgitCommitCheckQueue: Queue,
         @Autowired tgitCommitCheckExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(tgitCommitCheckQueue).to(tgitCommitCheckExchange).with(MQ.ROUTE_GIT_COMMIT_CHECK_EVENT)
+        return BindingBuilder.bind(tgitCommitCheckQueue).to(tgitCommitCheckExchange)
+            .with(MQ.ROUTE_GIT_COMMIT_CHECK_EVENT)
     }
 
     @Bean
