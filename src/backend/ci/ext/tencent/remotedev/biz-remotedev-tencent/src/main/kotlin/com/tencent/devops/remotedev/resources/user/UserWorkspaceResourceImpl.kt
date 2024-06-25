@@ -109,8 +109,19 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
     }
 
-    override fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Result<Boolean> {
-        return Result(workspaceService.modifyWorkspaceProperty(userId, workspaceName, workspaceProperty))
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = workspaceProperty
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.CGS_DELETE)
