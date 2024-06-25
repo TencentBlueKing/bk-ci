@@ -192,10 +192,6 @@ open class MarketAtomTask : ITask() {
                 acrossProjectId = acrossInfo?.targetProjectId
             )
         }.toMap()
-        // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
-        if (asCodeEnabled) {
-            variables = PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
-        }
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -244,7 +240,12 @@ open class MarketAtomTask : ITask() {
 
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
-        val inputVariables = variables.plus(inputParams).toMutableMap<String, Any>()
+        val inputVariables = if (asCodeEnabled) {
+            // 如果开启PAC,插件入参增加旧变量，防止开启PAC后,插件获取参数失败
+            PipelineVarUtil.mixOldVarAndNewVar(variables.toMutableMap())
+        } else {
+            variables
+        }.plus(inputParams).toMutableMap<String, Any>()
         val atomSensitiveConfWriteSwitch = System.getProperty("BK_CI_ATOM_PRIVATE_CONFIG_WRITE_SWITCH")?.toBoolean()
         if (atomSensitiveConfWriteSwitch != false) {
             // 开关关闭则不再写入插件私有配置到input.json中
@@ -513,6 +514,7 @@ open class MarketAtomTask : ITask() {
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
+            LoggerService.addErrorLine("plugin input illegal! ${e.message}")
             throw TaskExecuteException(
                 errorMsg = "plugin input illegal",
                 errorType = ErrorType.SYSTEM,
