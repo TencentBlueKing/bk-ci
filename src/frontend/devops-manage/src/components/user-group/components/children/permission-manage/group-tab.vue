@@ -7,18 +7,19 @@
           <template #header>
             <p class="group-title">
               <i class="permission-icon permission-icon-down-shape"></i>
-              {{ projectTable.groupItem }}
-              <span class="group-num">{{projectTable.groupTotal}}</span>
+              {{ projectTable.resourceTypeName }}
+              <span class="group-num">{{projectTable.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
               :is-show-operation="isShowOperation"
               :data="projectTable.tableData"
-              :group-id="projectTable.id"
-              :group-total="projectTable.groupTotal"
+              :group-type="projectTable.resourceType"
+              :group-total="projectTable.count"
               :pagination="pagination"
               :selected-data="selectedData"
+              :has-next="projectTable.hasNext"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -35,23 +36,24 @@
     </div>
     <div class="manage-content-resource" v-if="sourceTable.length">
       <p class="project-group">资源级用户组</p>
-      <div class="project-group-table" v-for="item in sourceTable" :key="item.id">
-        <bk-collapse-panel v-model="item.activeFlag" :item-click="collapseClick" :name="item.groupItem">
+      <div class="project-group-table" v-for="item in sourceTable" :key="item.resourceType">
+        <bk-collapse-panel v-model="item.activeFlag" :item-click="collapseClick" :name="item.resourceType">
           <template #header>
             <p class="group-title">
               <i class="permission-icon permission-icon-down-shape"></i>
-              {{item.groupItem}}
-              <span class="group-num">{{item.groupTotal}}</span>
+              {{item.resourceTypeName}}
+              <span class="group-num">{{item.count}}</span>
             </p>
           </template>
           <template #content>
             <TabTable
               :is-show-operation="isShowOperation"
               :data="item.tableData"
-              :group-id="item.id"
-              :group-total="item.groupTotal"
+              :group-type="item.resourceType"
+              :group-total="item.count"
               :pagination="pagination"
               :selected-data="selectedData"
+              :has-next="item.hasNext"
               @handle-renewal="handleRenewal"
               @handle-hand-over="handleHandOver"
               @handle-remove="handleRemove"
@@ -70,14 +72,15 @@
 </template>
 
 <script setup name="GroupTab">
-import { ref, defineProps, defineEmits, computed } from 'vue';
+import { ref, defineProps, defineEmits, computed, watch, reactive } from 'vue';
 import userGroupTable from "@/store/userGroupTable";
 import TabTable from './tab-table.vue';
 
 const activeFlag =  ref(true);
 const groupTableStore = userGroupTable();
-const projectTable = computed(() => props.sourceList[0]);
-const sourceTable= computed(() => props.sourceList.slice(1));
+const projectTable = computed(() => props.sourceList.find(item => item.resourceType == 'project'));
+const sourceTable= computed(() => props.sourceList.filter(item => item.resourceType != 'project'));
+
 
 const {
   handleRenewal,
@@ -87,6 +90,8 @@ const {
   handleLoadMore,
   handleSelectAllData,
   handleClear,
+  pageLimitChange,
+  pageValueChange,
 } = groupTableStore;
 
 const props = defineProps({
@@ -98,12 +103,14 @@ const props = defineProps({
     type: Object,
   },
   selectedData: {
-    type: Array,
-    default: () => [],
+    type: Object,
   },
   sourceList: {
     type: Array,
     default: () => [],
+  },
+  asideItem: {
+    type: Object,
   },
 });
 const emit = defineEmits(['collapseClick']);
@@ -112,8 +119,8 @@ const emit = defineEmits(['collapseClick']);
  * 折叠面板点击事件
  * @param id 折叠面板唯一标志
  */
-function collapseClick(id) {
-  emit('collapseClick', id);
+function collapseClick(resourceType) {
+  emit('collapseClick', resourceType.name, props.asideItem);
 }
 </script>
 
@@ -143,6 +150,7 @@ function collapseClick(id) {
     font-weight: 700;
     font-size: 14px;
     color: #63656E;
+    margin-bottom: 16px;
     letter-spacing: 0;
     line-height: 22px;
   }
@@ -164,7 +172,6 @@ function collapseClick(id) {
       width: 100%;
       height: 26px;
       line-height: 26px;
-      margin-top: 16px;
       padding-left: 10px;
       margin-bottom: 4px;
       background: #EAEBF0;

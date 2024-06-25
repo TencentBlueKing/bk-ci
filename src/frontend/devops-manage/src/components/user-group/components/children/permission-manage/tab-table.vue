@@ -7,28 +7,27 @@
     :data="data"
     show-overflow-tooltip
     :pagination="pagination"
-    remote-pagination
     @select-all="handleSelectAll"
     @selection-change="handleSelectionChange"
     @page-limit-change="pageLimitChange"
     @page-value-change="pageValueChange"
   >
     <template #prepend>
-      <div v-if="isShowOperation && selectedData[groupId]" class="prepend">
-        已选择 {{ selectedData[groupId].length }} 条数据，
+      <div v-if="isShowOperation && selectedData[groupType]" class="prepend">
+        已选择 {{ selectedData[groupType].length }} 条数据，
         <span @click="handleSelectAllData"> 选择全量数据 {{ groupTotal }} 条 </span>
         &nbsp; | &nbsp;
         <span @click="handleClear">清除选择</span>
       </div>
     </template>
-    <template #fixedBottom v-if="!pagination">
+    <template #fixedBottom v-if="hasNext">
       <div class="prepend">
         剩余{{ 22 }} 条数据，
         <span @click="handleLoadMore"> 加载更多 </span>
       </div>
     </template>
     <bk-table-column type="selection" :min-width="30" width="30" align="center" v-if="isShowOperation" />
-    <bk-table-column label="用户组" prop="groupName" style="position: relative;">
+    <bk-table-column label="用户组" prop="groupName">
       <template #default="{row}">
         {{ row.groupName }}
         <div v-if="!isShowOperation && row.removeMemberButtonControl !== 'OTHER'"  class="overlay">唯一管理员无法移出</div>
@@ -89,7 +88,7 @@ const fixedBottom = {
   height: 42,
 };
 const refTable = ref(null);
-const groupId = computed(() => props.groupId);
+const groupType = computed(() => props.groupType);
 const groupTotal = computed(() => props.groupTotal);
 
 const props = defineProps({
@@ -104,8 +103,8 @@ const props = defineProps({
   data: {
     type: Array,
   },
-  groupId: {
-    type: Number,
+  groupType: {
+    type: String,
   },
   groupTotal: {
     type: Number,
@@ -113,6 +112,9 @@ const props = defineProps({
   selectedData: {
     type: Object,
   },
+  hasNext: {
+    type: Boolean,
+  }
 });
 const emit = defineEmits([
   'handleRenewal',
@@ -131,15 +133,17 @@ const isCurrentAll = ref(false);
  */
 function handleSelectAll(val) {
   isCurrentAll.value = true;
-  emit('getSelectList', Object.assign(val, {isAll:true}), groupId.value);
+  console.log(val,'全选的数据');
+  emit('getSelectList', Object.assign(val, {isAll:true}), groupType.value);
 }
 /**
  * 多选事件
  * @param val
  */
 function handleSelectionChange(val) {
+  console.log(val,'多选的数据');
   isCurrentAll.value = false;
-  emit('getSelectList', val, groupId.value);
+  emit('getSelectList', val, groupType.value);
 };
 /**
  * 全量数据选择
@@ -149,48 +153,48 @@ function handleSelectAllData() {
   if(!isCurrentAll.value && selectLength != groupTotal.value) {
     refTable.value.toggleAllSelection();
   }
-  emit('handleSelectAllData', groupId.value)
+  emit('handleSelectAllData', groupType.value)
 }
 /**
  * 清除选择
  */
 function handleClear() {
   refTable.value.clearSelection();
-  emit('handleClear', groupId.value);
+  emit('handleClear', groupType.value);
 }
 /**
  * 续期按钮点击
  * @param row 行数据
  */
 function handleRenewal(row) {
-  emit('handleRenewal', row, groupId.value);
+  emit('handleRenewal', row, groupType.value);
 }
 /**
  * 移交按钮点击
  * @param row 行数据
  */
 function handleHandOver(row, index) {
-  emit('handleHandOver', row, groupId.value, index);
+  emit('handleHandOver', row, groupType.value, index);
 }
 /**
  * 移出按钮点击
  * @param row 行数据
  */
 function handleRemove(row, index) {
-  emit('handleRemove', row, groupId.value, index);
+  emit('handleRemove', row, groupType.value, index);
 }
 /**
  * 加载更多
  */
 function handleLoadMore() {
-  emit('handleLoadMore',groupId.value);
+  emit('handleLoadMore',groupType.value);
 }
 
 function pageLimitChange(limit) {
-  emit('pageLimitChange',limit, groupId.value);
+  emit('pageLimitChange',limit, groupType.value);
 }
 function pageValueChange(value) {
-  emit('pageValueChange',value, groupId.value);
+  emit('pageValueChange',value, groupType.value);
 }
 
 </script>

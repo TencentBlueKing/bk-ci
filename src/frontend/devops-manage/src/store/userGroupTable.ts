@@ -1,9 +1,10 @@
 import http from '@/http/api';
 import { defineStore } from 'pinia';
-import { ref, reactive, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { ref, reactive, computed, nextTick } from 'vue';
 
 export interface GroupTableType {
-  groupId: number;
+  groupId: string | number;
   groupName: string;
   groupDesc: string;
   validityPeriod: string;
@@ -13,9 +14,10 @@ export interface GroupTableType {
   removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER';
 };
 interface SourceType {
-  id: string | number;
-  groupTotal: string | number;
-  groupItem?: string;
+  count: string | number;
+  resourceTypeName: string;
+  resourceType: string,
+  hasNext?: boolean,
   activeFlag?: boolean;
   tableData: GroupTableType[];
 }
@@ -30,35 +32,44 @@ interface SelectedDataType {
   [key: string]: GroupTableType[];
 }
 interface CollapseListType {
-  id: string | number;
-  groupItem: string;
-  groupTotal: number;
-  type: string;
+  resourceType: string;
+  resourceTypeName: string;
+  count: number;
 }
 
 export default defineStore('userGroupTable', () => {
+  const route = useRoute();
+
   const isLoading = ref(true);
   const pagination = ref({ limit: 10, current: 1, count: 0 });
+
+  const projectId = computed(() => route.params?.projectCode as string);
+  const sourceGroup = ref({
+    'project': [1, 10],
+    'pipelineGroup': [1, 5]
+  })
 
   const sourceList = ref<SourceType[]>([]);
   const collapseList = ref<CollapseListType[]>([
     {
-      id: 1,
-      groupItem: '项目（project）',
-      groupTotal: 10,
-      type: 'project',
+      resourceType: 'project',
+      resourceTypeName: '项目（project）',
+      count: 10,
     },
     {
-      id: 2,
-      groupItem: '流水线 (Pipiline) - 流水线组',
-      groupTotal: 2,
-      type: 'source',
+      resourceType: 'pipilineGroup',
+      resourceTypeName: '流水线 (Pipiline) - 流水线组',
+      count: 2,
     },
     {
-      id: 3,
-      groupItem: '流水线 (Pipiline)',
-      groupTotal: 3,
-      type: 'source',
+      resourceType: 'pipiline',
+      resourceTypeName: '流水线 (Pipiline)',
+      count: 3,
+    },
+    {
+      resourceType: 'ticket',
+      resourceTypeName: '凭证管理(Ticket)-凭据',
+      count: 0,
     },
   ]);
 
@@ -71,7 +82,7 @@ export default defineStore('userGroupTable', () => {
   const selectSourceList = ref<SourceType[]>([]);
   const selectedRow = ref<GroupTableType | null>(null);
   const rowIndex = ref<number>();
-  const selectedTableGroupId = ref('');
+  const selectedTableGroupType = ref('');
   const selectedLength = computed(() => Object.keys(selectedData).length);
 
   /**
@@ -80,7 +91,7 @@ export default defineStore('userGroupTable', () => {
   function initData() {
     selectedRow.value = null;
     rowIndex.value = undefined;
-    selectedTableGroupId.value = '';
+    selectedTableGroupType.value = '';
     sourceList.value = [];
     selectSourceList.value = [];
     Object.keys(selectedData).forEach(key => {
@@ -88,163 +99,171 @@ export default defineStore('userGroupTable', () => {
     });
   }
   /**
+   * 获取折叠数据
+   */
+  async function getCollapseList({ type, name }) {
+    const res = await http.getMemberGroups(projectId.value, { type, member: name });
+    // collapseList.value = res;
+    // collapseList.value = [
+    //   {
+    //     resourceType: 'project',
+    //     resourceTypeName: '项目（project）',
+    //     count: 10,
+    //   },
+    //   {
+    //     resourceType: 'pipilineGroup',
+    //     resourceTypeName: '流水线 (Pipiline) - 流水线组',
+    //     count: 2,
+    //   },
+    //   {
+    //     resourceType: 'pipiline',
+    //     resourceTypeName: '流水线 (Pipiline)',
+    //     count: 3,
+    //   },
+    //   {
+    //     resourceType: 'ticket',
+    //     resourceTypeName: '凭证管理(Ticket)-凭据',
+    //     count: 0,
+    //   },
+    // ];
+  }
+  async function getGroupList(resourceType, asideItem) {
+    const pathParams = {
+      projectId: projectId.value,
+      resourceType,
+      start: sourceGroup.value[resourceType][0],
+      end: sourceGroup.value[resourceType][1],
+    }
+    return await http.getMemberGroupsWithPermissions(pathParams, asideItem.name);
+  }
+  /**
    * 获取sourceList（需处理数据），collapseList
    */
-  async function fetchUserGroupList(groupId: string) {
+  async function fetchUserGroupList(asideItem) {
     initData();
+    getCollapseList(asideItem);
     try {
       isLoading.value = true;
-      setTimeout(() => {
-        sourceList.value = [
-          {
-            id: 1,
-            groupItem: '项目（project）',
-            groupTotal: 10,
-            activeFlag: true,
-            tableData: [{
-              groupId: 1,
-              groupName: '11',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'UNIQUE_MANAGER',
-            },
-            {
-              groupId: 2,
-              groupName: '22',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            }, {
-              groupId: 3,
-              groupName: '33',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            },
-            {
-              groupId: 4,
-              groupName: '44',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            }, {
-              groupId: 5,
-              groupName: '55',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            },
-            {
-              groupId: 6,
-              groupName: '66',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'TEMPLATE',
-            }, {
-              groupId: 7,
-              groupName: '77',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            },
-            {
-              groupId: 8,
-              groupName: '88',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            }]
-          },
-          {
-            id: 2,
-            groupItem: '流水线 (Pipiline) - 流水线组',
-            groupTotal: 3,
-            activeFlag: true,
-            tableData: [{
-              groupId: 1,
-              groupName: '11',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'TEMPLATE',
-            },
-            {
-              groupId: 2,
-              groupName: '12',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            }],
-          },
-          {
-            id: 3,
-            groupItem: '流水线 (Pipiline)',
-            groupTotal: 3,
-            tableData: [{
-              groupId: 1,
-              groupName: '21',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'UNIQUE_MANAGER',
-            },
-            {
-              groupId: 2,
-              groupName: '22',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            },
-            {
-              groupId: 2,
-              groupName: '23',
-              groupDesc: 'kjkjkjk',
-              validityPeriod: '0505',
-              joinedTime: '08-18',
-              operateSource: '加入组',
-              operator: '张三',
-              removeMemberButtonControl: 'OTHER',
-            }],
-          },
-        ]
+      setTimeout(async () => {
+        const resourceTypes = ['project', 'pipelineGroup'];
+        const results = await Promise.all(
+          resourceTypes.map(resourceType => getGroupList(resourceType, asideItem))
+        );
+        const [projectResult, pipelineGroupResult] = results;
+
+        sourceList.value = collapseList.value.map((item) => ({
+          ...item,
+          tableData: [],
+        }))
+        // sourceList.value[0].tableData = projectResult.records;
+        // sourceList.value[0].hasNext = projectResult.hasNext;
+        // sourceList.value[1].tableData = pipelineGroupResult.records;
+        // sourceList.value[1].hasNext = pipelineGroupResult.hasNext;
+        sourceList.value[1].activeFlag = true;
+
+        // 模拟数据
+        sourceList.value[0].hasNext = true;
+        sourceList.value[0].tableData = [{
+          groupId: 1,
+          groupName: '11',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'UNIQUE_MANAGER',
+        },
+        {
+          groupId: 2,
+          groupName: '22',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'OTHER',
+        }, {
+          groupId: 3,
+          groupName: '33',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'OTHER',
+        },
+        {
+          groupId: 4,
+          groupName: '44',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'OTHER',
+        }, {
+          groupId: 5,
+          groupName: '55',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'OTHER',
+        },
+        {
+          groupId: 6,
+          groupName: '66',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'TEMPLATE',
+        }, {
+          groupId: 7,
+          groupName: '77',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'OTHER',
+        },
+        {
+          groupId: 8,
+          groupName: '88',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'OTHER',
+        }];
+        sourceList.value[1].tableData = [{
+          groupId: 1,
+          groupName: '11',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'TEMPLATE',
+        },
+        {
+          groupId: 2,
+          groupName: '12',
+          groupDesc: 'kjkjkjk',
+          validityPeriod: '0505',
+          joinedTime: '08-18',
+          operateSource: '加入组',
+          operator: '张三',
+          removeMemberButtonControl: 'OTHER',
+        }];
+
+        console.log(sourceList.value, 'sourceList.value???????????');
         isLoading.value = false;
       }, 1000)
-      // const res = await http.getMemberManageList(groupId);
-      // memberManageList.value = res;
     } catch (error: any) {
       console.log(error);
     }
@@ -253,29 +272,29 @@ export default defineStore('userGroupTable', () => {
    * 续期按钮点击
    * @param row 行数据
    */
-  function handleRenewal(row: GroupTableType, groupId: string) {
+  function handleRenewal(row: GroupTableType, groupType: string) {
     selectedRow.value = row;
-    selectedTableGroupId.value = groupId;
+    selectedTableGroupType.value = groupType;
     isShowRenewal.value = true;
   }
   /**
    * 移交按钮点击
    * @param row 行数据
    */
-  function handleHandOver(row: GroupTableType, groupId: string, index) {
+  function handleHandOver(row: GroupTableType, groupType: string, index) {
     selectedRow.value = row;
     rowIndex.value = index;
-    selectedTableGroupId.value = groupId;
+    selectedTableGroupType.value = groupType;
     isShowHandover.value = true;
   }
   /**
    * 移出按钮点击
    * @param row 行数据
    */
-  function handleRemove(row: GroupTableType, groupId: string, index) {
+  function handleRemove(row: GroupTableType, groupType: string, index) {
     selectedRow.value = row;
     rowIndex.value = index;
-    selectedTableGroupId.value = groupId;
+    selectedTableGroupType.value = groupType;
     isShowRemove.value = true;
   }
   /**
@@ -283,7 +302,8 @@ export default defineStore('userGroupTable', () => {
    * @param expiredAt 续期时间
    */
   function handleUpDateRow(expiredAt) {
-    const activeTableRow = sourceList.value.find(group => group.id === selectedTableGroupId.value)?.tableData.find(item => item.groupId === selectedRow.value?.groupId)
+    const activeTable = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
+    const activeTableRow = activeTable?.tableData.find(item => item.groupId === selectedRow.value?.groupId);
     if (activeTableRow) {
       activeTableRow.joinedTime = expiredAt
     }
@@ -292,26 +312,26 @@ export default defineStore('userGroupTable', () => {
    * 删除行数据
    */
   function handleRemoveRow() {
-    const activeTableData = sourceList.value.find(group => group.id === selectedTableGroupId.value);
+    const activeTableData = sourceList.value.find(group => group.resourceType === selectedTableGroupType.value);
     if (activeTableData) {
-      activeTableData.tableData.splice(rowIndex.value, 1);
+      activeTableData.tableData?.splice(rowIndex.value, 1);
       activeTableData.tableData = [...activeTableData.tableData];
     }
   }
   /**
    * 获取表格选择的数据
    */
-  function getSelectList(rowData: SelectRowType, groupId: string) {
+  function getSelectList(rowData: SelectRowType, groupType: string) {
     if (!rowData.isAll) {
       if (rowData.checked) {
-        const newSelectedData = !selectedData[groupId] ? [] : selectedData[groupId]
-        selectedData[groupId] = newSelectedData.concat(rowData.row);
+        const newSelectedData = !selectedData[groupType] ? [] : selectedData[groupType]
+        selectedData[groupType] = newSelectedData.concat(rowData.row);
       } else {
-        selectedData[groupId] = selectedData[groupId].filter(item => item !== rowData.row);
-        !selectedData[groupId].length && handleClear(groupId);
+        selectedData[groupType] = selectedData[groupType].filter(item => item !== rowData.row);
+        !selectedData[groupType].length && handleClear(groupType);
       }
     } else {
-      rowData.checked ? (selectedData[groupId] = rowData.data) : handleClear(groupId);
+      rowData.checked ? (selectedData[groupType] = rowData.data) : handleClear(groupType);
     }
     console.log('表格选择的数据', selectedData);
     unableMoveLength.value = countNonOtherObjects(selectedData);
@@ -331,9 +351,9 @@ export default defineStore('userGroupTable', () => {
   function getSourceList() {
     selectSourceList.value = Object.entries(selectedData)
       .map(([key, tableData]: [string, GroupTableType[]]) => ({
-        id: key,
-        groupTotal: tableData.length,
-        groupItem: collapseList.value.find((item: CollapseListType) => item.id == key)?.groupItem,
+        count: tableData.length,
+        resourceTypeName: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceTypeName,
+        resourceType: sourceList.value.find((item: SourceType) => item.resourceType == key)?.resourceType,
         activeFlag: true,
         tableData,
       }));
@@ -341,37 +361,76 @@ export default defineStore('userGroupTable', () => {
   /**
    * 加载更多
    */
-  function handleLoadMore(groupId: string) {
-    console.log('加载更多', groupId);
+  function handleLoadMore(groupType: string) {
+    console.log('加载更多', groupType);
   }
   /**
    * 全量数据选择
    */
-  function handleSelectAllData(groupId: string) {
-    console.log('全量数据选择', groupId);
-    // 不需调用接口获取selectedData[groupId]数据
+  function handleSelectAllData(groupType: string) {
+    console.log('全量数据选择', groupType);
+    // 不需调用接口获取selectedData[groupType]数据
     pagination.value.count = 20;
 
   }
   /**
    * 清除选择
    */
-  function handleClear(groupId: string) {
-    delete selectedData[groupId];
+  function handleClear(groupType: string) {
+    delete selectedData[groupType];
   }
   /**
    * 折叠面板调用接口获取表格数据
    */
-  function collapseClick(id) {
-    // 折叠面板调用接口获取表格数据
-    console.log('折叠面板', id)
+  async function collapseClick(resourceType, asideItem) {
+    console.log('折叠面板', resourceType, asideItem, projectId.value);
+
+    let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
+    if (item && !item.tableData.length) {
+      sourceGroup.value[resourceType] = [1, 10]
+      const res = await getGroupList(resourceType, asideItem);
+      // item.tableData = res.records;
+      item.tableData = [{
+        groupId: 1,
+        groupName: '21',
+        groupDesc: 'kjkjkjk',
+        validityPeriod: '0505',
+        joinedTime: '08-18',
+        operateSource: '加入组',
+        operator: '张三',
+        removeMemberButtonControl: 'UNIQUE_MANAGER',
+      },
+      {
+        groupId: 2,
+        groupName: '22',
+        groupDesc: 'kjkjkjk',
+        validityPeriod: '0505',
+        joinedTime: '08-18',
+        operateSource: '加入组',
+        operator: '张三',
+        removeMemberButtonControl: 'OTHER',
+      },
+      {
+        groupId: 2,
+        groupName: '23',
+        groupDesc: 'kjkjkjk',
+        validityPeriod: '0505',
+        joinedTime: '08-18',
+        operateSource: '加入组',
+        operator: '张三',
+        removeMemberButtonControl: 'OTHER',
+      }]
+      item.activeFlag = true;
+      item.hasNext = res.hasNext;
+    }
+    console.log(sourceList.value, 'sourceList.value???????????');
   }
 
-  function pageLimitChange(limit, groupId) {
+  function pageLimitChange(limit, groupType) {
     pagination.value.limit = limit;
     // 调用获取表格数据的接口
   }
-  function pageValueChange(value, groupId) {
+  function pageValueChange(value, groupType) {
     pagination.value.current = value;
     // 调用获取表格数据的接口
   }

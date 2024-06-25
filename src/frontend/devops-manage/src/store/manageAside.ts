@@ -32,7 +32,7 @@ export default defineStore('manageAside', () => {
   function handleAsideClick(item) {
     // 调用接口，获取侧边表格数据和折叠面板数
     asideItem.value = item;
-    groupTableStore.fetchUserGroupList(item.id);
+    groupTableStore.fetchUserGroupList(item);
   }
   /**
    * 人员组织侧边栏页码切换

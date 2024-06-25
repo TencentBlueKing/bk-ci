@@ -230,11 +230,16 @@ export default {
     return http.get(`${IAM_PERFIX}/member/${projectId}/listProjectMembers?${query}`);
   },
   /**
+   * 获取项目成员有权限的用户组数量
+   */
+  async getMemberGroups(projectId: string, { type, member }) {
+    return http.get(`${IAM_PERFIX}/group/${projectId}/getMemberGroupCountWithPermissions?type=${type}&member=${member}`);
+  },
+  /**
    * 获取项目成员有权限的用户组
    */
-  async getMemberGroupsWithPermissions(params: any, member?: string) {
-    const { projectId, resourceType, offset, limit } = params;
-    return http.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsWithPermissions/${offset}/${limit}?member=${member}`);
+  async getMemberGroupsWithPermissions({ projectId, resourceType, start, end }: any, member: string) {
+    return http.get(`${IAM_PERFIX}/group/${projectId}/${resourceType}/getMemberGroupsWithPermissions/${start}/${end}?member=${member}`);
   },
   /**
    * 批量续期组成员权限--无需进行审批

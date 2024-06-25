@@ -17,7 +17,7 @@
           :member-list="memberList"
           :person-list="personList"
           :over-table="overTable"
-          @handle-click="handleAsideClick"
+          @handle-click="asideClick"
           @page-change="handleAsidePageChange"
           @get-person-list="handleShowPerson"
           @remove-confirm="asideRemoveConfirm"
@@ -321,7 +321,7 @@ const {
   personList,
   overTable,
 } = storeToRefs(manageAsideStore);
-const { 
+const {
   handleAsideClick,
   handleAsidePageChange,
   handleShowPerson,
@@ -342,6 +342,10 @@ watch(searchValue, (nv) => {
   });
   getProjectMembers(projectId.value);
 });
+
+function asideClick(item){
+  handleAsideClick(item, projectId.value);
+}
 /**
  * 续期弹窗提交事件
  */
