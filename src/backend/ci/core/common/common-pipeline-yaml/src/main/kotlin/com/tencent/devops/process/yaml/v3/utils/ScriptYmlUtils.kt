@@ -970,7 +970,7 @@ object ScriptYmlUtils {
     }
 
     private fun p4EventRule(
-        rule: PushRule?
+        rule: Any?
     ): PushRule? {
         if (rule != null) {
             return try {
@@ -979,7 +979,19 @@ object ScriptYmlUtils {
                     PushRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                null
+                val pushObj = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(rule),
+                    List::class.java
+                ) as ArrayList<String>
+
+                PushRule(
+                    branches = null,
+                    branchesIgnore = null,
+                    paths = pushObj,
+                    pathsIgnore = null,
+                    users = null,
+                    usersIgnore = null
+                )
             }
         }
         return null
