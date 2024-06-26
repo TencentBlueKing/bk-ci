@@ -142,7 +142,7 @@ StrictHostKeyChecking no
 HostName git.woa.com
 Port 22
 EOF
-      chomd 600 ${config_file}
+      chmod 600 ${config_file}
     fi
 }
 
