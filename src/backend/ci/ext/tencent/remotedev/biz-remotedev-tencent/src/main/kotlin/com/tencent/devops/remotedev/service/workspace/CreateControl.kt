@@ -47,7 +47,6 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -90,7 +89,6 @@ import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
-import com.tencent.devops.remotedev.utils.CommonUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -325,7 +323,7 @@ class CreateControl @Autowired constructor(
         }
 
         zoneIds.addAll(
-            createCheckWhenWinNotAlready(
+            workspaceCommon.createCheckWhenWinNotAlready(
                 windowsZone = availableZone,
                 windowsConfig = windowsConfig,
                 newNum = newNum,
@@ -352,73 +350,6 @@ class CreateControl @Autowired constructor(
             )
         }
         return false
-    }
-
-    /**
-     * @return 返回具体的n个区域id
-     */
-    private fun createCheckWhenWinNotAlready(
-        windowsZone: WindowsResourceZoneConfig,
-        windowsConfig: WindowsResourceTypeConfig,
-        newNum: Int,
-        quotaType: QuotaType
-    ): List<String> {
-        val data = kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getResourceVm(
-                ResourceVmReq(
-                    zoneId = windowsZone.zoneShortName,
-                    machineType = windowsConfig.size,
-                    internal = quotaType.getInternal()
-                )
-            ).data
-        }.getOrElse {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-                params = arrayOf(
-                    windowsZone.zone,
-                    windowsConfig.size,
-                    "unkown",
-                    newNum.toString()
-                )
-            )
-        }
-        val spec = lazy { windowsResourceConfigService.getAllSpecZoneShortName() }
-        val free = CommonUtil.parseResourceVmRespData(
-            data = data,
-            zoneConfig = windowsZone,
-            spec = spec,
-            size = windowsConfig.size
-        )
-        if (free.isEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-                params = arrayOf(
-                    windowsZone.zone,
-                    windowsConfig.size,
-                    "0",
-                    newNum.toString()
-                )
-            )
-        }
-        if (free.values.sum() < newNum) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-                params = arrayOf(
-                    windowsZone.zone,
-                    windowsConfig.size,
-                    free.toString(),
-                    newNum.toString()
-                )
-            )
-        }
-        val res = mutableListOf<String>()
-        free.forEach { (k, v) ->
-            val diff = newNum - res.count()
-            if (diff > 0) {
-                res.addAll(Array(minOf(diff, v)) { k })
-            } else return@forEach
-        }
-        return res
     }
 
     private fun doCreateWorkspace(

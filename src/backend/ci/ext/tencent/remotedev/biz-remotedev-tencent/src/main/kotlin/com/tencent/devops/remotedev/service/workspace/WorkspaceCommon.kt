@@ -41,7 +41,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -59,8 +59,8 @@ import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
-import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
@@ -71,6 +71,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -80,9 +81,11 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
+import com.tencent.devops.remotedev.utils.CommonUtil
 import java.time.Duration
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -124,6 +127,7 @@ class WorkspaceCommon @Autowired constructor(
     private val remotedevProjectService: RemotedevProjectService,
     private val projectStartAppLinkDao: ProjectStartAppLinkDao,
     private val config: RemoteDevCommonConfig,
+    private val windowsResourceConfigService: WindowsResourceConfigService,
     private val rabbitTemplate: RabbitTemplate
 ) {
 
@@ -821,5 +825,72 @@ class WorkspaceCommon @Autowired constructor(
             remotedevProjectService.migrateOldData(projectId)
             checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
         }
+    }
+
+    /**
+     * @return 返回具体的n个区域id
+     */
+    fun createCheckWhenWinNotAlready(
+        windowsZone: WindowsResourceZoneConfig,
+        windowsConfig: WindowsResourceTypeConfig,
+        newNum: Int,
+        quotaType: QuotaType
+    ): List<String> {
+        val data = kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class).getResourceVm(
+                ResourceVmReq(
+                    zoneId = windowsZone.zoneShortName,
+                    machineType = windowsConfig.size,
+                    internal = quotaType.getInternal()
+                )
+            ).data
+        }.getOrElse {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "unkown",
+                    newNum.toString()
+                )
+            )
+        }
+        val spec = lazy { windowsResourceConfigService.getAllSpecZoneShortName() }
+        val free = CommonUtil.parseResourceVmRespData(
+            data = data,
+            zoneConfig = windowsZone,
+            spec = spec,
+            size = windowsConfig.size
+        )
+        if (free.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "0",
+                    newNum.toString()
+                )
+            )
+        }
+        if (free.values.sum() < newNum) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    free.toString(),
+                    newNum.toString()
+                )
+            )
+        }
+        val res = mutableListOf<String>()
+        free.forEach { (k, v) ->
+            val diff = newNum - res.count()
+            if (diff > 0) {
+                res.addAll(Array(minOf(diff, v)) { k })
+            } else return@forEach
+        }
+        return res
     }
 }
