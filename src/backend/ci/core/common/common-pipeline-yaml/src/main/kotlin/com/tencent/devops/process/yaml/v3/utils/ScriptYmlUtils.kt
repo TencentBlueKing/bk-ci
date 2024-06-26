@@ -634,7 +634,12 @@ object ScriptYmlUtils {
             note = noteRule(preTriggerOn),
             manual = manualRule(preTriggerOn),
             openapi = openapiRule(preTriggerOn),
-            remote = remoteRule(preTriggerOn)
+            remote = remoteRule(preTriggerOn),
+            changeCommit = p4EventRule(preTriggerOn.changeCommit),
+            changeSubmit = p4EventRule(preTriggerOn.changeSubmit),
+            changeContent = p4EventRule(preTriggerOn.changeContent),
+            shelveCommit = p4EventRule(preTriggerOn.shelveCommit),
+            shelveSubmit = p4EventRule(preTriggerOn.shelveSubmit)
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
@@ -959,6 +964,22 @@ object ScriptYmlUtils {
                 } catch (e: Exception) {
                     null
                 }
+            }
+        }
+        return null
+    }
+
+    private fun p4EventRule(
+        rule: PushRule?
+    ): PushRule? {
+        if (rule != null) {
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(rule),
+                    PushRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                null
             }
         }
         return null
