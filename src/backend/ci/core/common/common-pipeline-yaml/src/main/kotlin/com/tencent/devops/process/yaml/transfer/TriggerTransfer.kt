@@ -104,7 +104,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         TGitPushActionType.NEW_BRANCH.value
                     ),
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    enableThirdFilter = !push.customFilterUrl.isNullOrBlank(),
+                    thirdUrl = push.customFilterUrl,
+                    thirdSecretToken = push.customFilterCredentials
                 ).checkTriggerElementEnable(push.enable).apply {
                     version = "2.*"
                 }
@@ -153,7 +156,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    enableThirdFilter = !mr.customFilterUrl.isNullOrBlank(),
+                    thirdUrl = mr.customFilterUrl,
+                    thirdSecretToken = mr.customFilterCredentials
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
@@ -253,7 +259,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includePushAction
+                    action = git.includePushAction,
+                    customFilterUrl = if (git.enableThirdFilter == true) git.thirdUrl else null,
+                    customFilterCredentials = if (git.enableThirdFilter == true) git.thirdSecretToken else null
                 )
 
                 CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
