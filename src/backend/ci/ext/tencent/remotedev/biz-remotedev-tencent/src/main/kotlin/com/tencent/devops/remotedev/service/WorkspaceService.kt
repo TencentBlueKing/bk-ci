@@ -1025,10 +1025,6 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun getDevfile(): String {
-        return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
-    }
-
     fun getShareWorkspace(workspaceName: String?): List<WorkspaceShared> {
         logger.info("get all shared workspace")
         return workspaceSharedDao.fetchSharedWorkspace(dslContext, workspaceName)?.map {

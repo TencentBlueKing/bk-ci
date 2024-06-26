@@ -716,7 +716,7 @@ class WorkspaceDao {
         }
 
         private fun Record.getOrNull(name: TableField<*, *>): Any? {
-            val index = this.fieldsRow().indexOf(name.name)
+            val index = this.fieldsRow().fields().indexOfFirst { it == name }
             if (index < 0) return null
             return this.get(index)
         }

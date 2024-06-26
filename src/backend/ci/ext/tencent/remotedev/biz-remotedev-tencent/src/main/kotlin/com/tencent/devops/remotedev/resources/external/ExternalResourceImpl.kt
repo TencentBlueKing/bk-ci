@@ -31,36 +31,18 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
-import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
-    private val workspaceService: WorkspaceService,
     private val softwareManageService: SoftwareManageService
 ) : ExternalResource {
 
     /*请求合法性校验时使用的密钥*/
     @Value("\${externalKey:}")
     val externalKey = ""
-
-    override fun getDevfile(): Response {
-        val result = workspaceService.getDevfile()
-        return Response.ok(
-            StreamingOutput { output ->
-                output.write(result.toByteArray())
-                output.flush()
-            },
-            MediaType.APPLICATION_OCTET_STREAM_TYPE
-        )
-            .header("content-disposition", "attachment; filename = devfile")
-            .build()
-    }
 
     override fun softwareInstallCallback(
         type: String,
