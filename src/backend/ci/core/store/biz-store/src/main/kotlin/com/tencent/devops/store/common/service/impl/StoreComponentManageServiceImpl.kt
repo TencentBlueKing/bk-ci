@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_INSTALLED_PKG_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -39,6 +40,8 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
@@ -59,11 +62,13 @@ import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -118,6 +123,12 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     @Autowired
     lateinit var storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao
+
+    @Autowired
+    lateinit var storeBaseEnvQueryDao: StoreBaseEnvQueryDao
+
+    @Autowired
+    lateinit var storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao
 
     @Autowired
     lateinit var client: Client
@@ -413,6 +424,38 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
                 )
             }
         }
+        return Result(true)
+    }
+
+    override fun updateComponentInstalledPkgShaContent(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+    ): Result<Boolean> {
+        val storeId = storeBaseQueryDao.getComponentId(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = storeType
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+            dslContext = dslContext,
+            storeId = storeId,
+            osName = installedPkgShaContentRequest.osName,
+            osArch = installedPkgShaContentRequest.osArch
+        )?.get(0) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        val storeBaseEnvExtDataPO = StoreBaseEnvExtDataPO(
+            id = UUIDUtil.generate(),
+            envId = baseEnvRecord.id,
+            storeId = storeId,
+            fieldName = KEY_INSTALLED_PKG_SHA_CONTENT,
+            fieldValue = installedPkgShaContentRequest.installedPkgShaContent,
+            creator = userId,
+            modifier = userId
+        )
+        storeBaseEnvExtManageDao.batchSave(dslContext, listOf(storeBaseEnvExtDataPO))
         return Result(true)
     }
 

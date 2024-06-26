@@ -112,29 +112,44 @@
                     </header>
 
                     <bk-form-item required :label="$t('versionDesc')" property="description">
-                        <bk-input type="textarea" v-model="releaseParams.description" :placeholder="$t(
-                            releaseParams.enablePac
-                                ? 'commitMsgPlaceholder'
-                                : 'versionDescPlaceholder'
-                        )
-                        " />
+                        <bk-input
+                            type="textarea"
+                            maxlength="512"
+                            v-model="releaseParams.description"
+                            :placeholder="$t(
+                                releaseParams.enablePac
+                                    ? 'commitMsgPlaceholder'
+                                    : 'versionDescPlaceholder'
+                            )
+                            " />
                         <span v-if="releaseParams.enablePac" class="release-pac-version-desc">
                             {{ $t("commitMsgDesc") }}
                         </span>
                     </bk-form-item>
-                    <bk-form-item v-if="releaseParams.enablePac" required :label="$t('targetBranch')"
-                        property="targetAction">
+                    <bk-form-item
+                        v-if="releaseParams.enablePac"
+                        required
+                        :label="$t('targetBranch')"
+                        property="targetAction"
+                    >
                         <bk-radio-group v-model="releaseParams.targetAction">
-                            <bk-radio v-for="option in targetActionOptions" class="pac-pipeline-dest-branch-radio"
-                                :key="option" :value="option">
+                            <bk-radio
+                                v-for="option in targetActionOptions"
+                                class="pac-pipeline-dest-branch-radio"
+                                :key="option"
+                                :value="option"
+                            >
                                 {{ $t(option, [baseVersionBranch]) }}
                             </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                 </div>
             </bk-form>
-            <div v-if="releaseParams.enablePac && !hasOauth" class="pac-oauth-enable"
-                v-bkloading="{ isLoading: refreshing }">
+            <div
+                v-if="releaseParams.enablePac && !hasOauth"
+                class="pac-oauth-enable"
+                v-bkloading="{ isLoading: refreshing }"
+            >
                 <header>
                     <bk-button :loading="oauthing" :disabled="oauthing" theme="primary" size="large"
                         @click="requestOauth">
@@ -229,7 +244,7 @@
                 'pipelineSetting'
             ]),
             ...mapState('pipelines', ['isManage']),
-            ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
+            ...mapGetters('atom', ['pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
             pacDesc () {
                 return {
@@ -282,10 +297,13 @@
                     ]
                 }
             },
+            isDraftBaseBranchVersion () {
+                return this.pipelineInfo?.baseVersionStatus === VERSION_STATUS_ENUM.BRANCH
+            },
             targetActionOptions () {
                 return [
                     'COMMIT_TO_MASTER',
-                    this.isBranchVersion
+                    this.isDraftBaseBranchVersion
                         ? 'PUSH_BRANCH_AND_REQUEST_MERGE'
                         : 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                 ]
@@ -373,6 +391,9 @@
                     if (enablePac) {
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
+                            if (this.isDraftBaseBranchVersion) {
+                                this.releaseParams.targetAction = 'PUSH_BRANCH_AND_REQUEST_MERGE'
+                            }
                         })
                     }
                 } catch (error) {
@@ -478,16 +499,20 @@
                         }
                     })
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                        version,
-                        versionName,
-                        releaseVersion: version,
-                        versionNum,
-                        baseVersion: version,
-                        baseVersionName: versionName,
-                        releaseVersionName: versionName,
+                        ...(!targetAction || targetAction === 'COMMIT_TO_MASTER'
+                            ? {
+                                releaseVersion: version,
+                                releaseVersionName: versionName,
+                                version,
+                                versionName,
+                                versionNum,
+                                baseVersion: version,
+                                baseVersionName: versionName,
+                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
+                            }
+                            : {}),
                         canDebug: false,
                         canRelease: false,
-                        latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
                         pipelineAsCodeSettings: {
                             ...(this.pipelineInfo.pipelineAsCodeSettings ?? {}),
                             enable: rest.enablePac
@@ -501,7 +526,10 @@
                     const tipsArrayLength = this.releaseParams.enablePac ? 2 : 0
                     const isPacMR
                         = this.releaseParams.enablePac
-                            && this.releaseParams.targetAction === 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
+                            && [
+                                'CHECKOUT_BRANCH_AND_REQUEST_MERGE',
+                                'PUSH_BRANCH_AND_REQUEST_MERGE'
+                            ].includes(this.releaseParams.targetAction)
                     const h = this.$createElement
                     const instance = this.$bkInfo({
                         width: 600,
@@ -640,7 +668,7 @@
                                                             projectId,
                                                             pipelineId,
                                                             type: 'pipeline',
-                                                            version
+                                                            version: this.pipelineInfo?.releaseVersion
                                                         }
                                                     })
                                                 }

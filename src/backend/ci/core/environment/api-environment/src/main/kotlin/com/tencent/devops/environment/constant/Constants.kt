@@ -45,3 +45,4 @@ const val T_NODE_OS_TYPE = "osType"
 const val T_ENV_ENV_ID = "envId"
 const val T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID = "nodeId"
 const val T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION = "masterVersion"
+const val BATCH_TOKEN_HEADER = "X-DEVOPS-AGENT-INSTALL-TOKEN" // 批量安装agent token的header

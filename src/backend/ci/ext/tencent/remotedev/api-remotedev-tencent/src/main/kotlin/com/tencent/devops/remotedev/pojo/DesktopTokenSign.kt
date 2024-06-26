@@ -25,34 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.resources
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.BuildBcsResource
-import com.tencent.devops.dispatch.pojo.DeployApp
-import com.tencent.devops.dispatch.service.BcsDeployService
-import com.tencent.devops.dispatch.service.BcsQueryService
-import io.fabric8.kubernetes.api.model.apps.Deployment
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class BuildBcsResourceImpl @Autowired constructor(
-    private val bcsDeployService: BcsDeployService,
-    private val bcsQueryService: BcsQueryService
-) : BuildBcsResource {
-
-    override fun getBcsDeploymentInfo(
-        userId: String,
-        namespaceName: String,
-        deploymentName: String,
-        bcsUrl: String,
-        token: String
-    ): Result<Deployment> {
-        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
-    }
-
-    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
-        return bcsDeployService.deployApp(userId, deployApp)
-    }
-}
+@Schema(title = "云桌面获取token签名")
+data class DesktopTokenSign(
+    @get:Schema(title = "指纹（约定为md5(mac_addr+token)）")
+    val fingerprint: String,
+    @get:Schema(title = "应用id")
+    val appId: String,
+    @get:Schema(title = "原始文件名")
+    val fileName: String,
+    @get:Schema(title = "文件版本")
+    val fileVersion: String,
+    @get:Schema(title = "修改日期")
+    val fileUpdateTime: String,
+    @get:Schema(title = "产品名称")
+    val productName: String,
+    @get:Schema(title = "产品版本")
+    val productVersion: String,
+    @get:Schema(title = "sha1")
+    val sha1: String,
+    @get:Schema(title = "产品名称")
+    val timestamp: Long,
+    @get:Schema(title = "公钥")
+    val publicKey: String,
+    @get:Schema(title = "签名")
+    val sign: String
+)

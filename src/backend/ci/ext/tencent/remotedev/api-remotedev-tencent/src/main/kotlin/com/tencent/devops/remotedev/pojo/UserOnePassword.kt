@@ -34,5 +34,7 @@ data class UserOnePassword(
     @get:Schema(title = "用户名")
     val userId: String,
     @get:Schema(title = "工作空间（审计）")
-    val workspaceName: String
+    val workspaceName: String,
+    @get:Schema(title = "项目id")
+    val projectId: String?
 )
