@@ -342,9 +342,12 @@ class WorkspaceJoinDao {
                                 .where(LABEL.eq(it))
                         )
                     }
-                }
-            return DSL.select(WORKSPACE_NAME)
-                .from(subquery).groupBy(WORKSPACE_NAME).having(DSL.count().eq(labels.count())).asTable()
+                }.asTable()
+            return DSL.select(subquery.field(WORKSPACE_NAME))
+                .from(subquery)
+                .groupBy(subquery.field(WORKSPACE_NAME))
+                .having(DSL.count().eq(labels.count()))
+                .asTable()
         }
 
     }
