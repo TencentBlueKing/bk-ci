@@ -163,19 +163,21 @@
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
-                        <bk-form-item label="通知方式" label-width="190" desc="三种通知方式均不会对公开体验生效" desc-type="icon" desc-icon="icon-info-circle">
-                            <div v-bk-tooltips="overLimitedNotifyTips" v-if="isInerExp" class="bkdevop-checkbox-group notify-group">
+                        <bk-form-item
+                            label="通知方式"
+                            label-width="190"
+                            desc="三种通知方式均不会对公开体验生效，选择体验组包含人数超过了2000人，通知方式会失效。"
+                            desc-type="icon"
+                            desc-icon="icon-info-circle"
+                        >
+                            <div v-if="isInerExp" class="bkdevop-checkbox-group notify-group">
                                 <bk-checkbox
                                     v-for="(col, index) in noticeTypeList"
-                                    :disabled="expUserSum > 2000"
                                     :key="index"
                                     v-model="col.isChecked"
                                 >
                                     {{ col.name }}
-                                    <i v-if="col.placeholder" v-bk-tooltips="{
-                                        content: col.placeholder,
-                                        disabled: expUserSum > 2000
-                                    }" class="bk-icon icon-info-circle" />
+                                    <i v-if="col.placeholder" v-bk-tooltips="col.placeholder" class="bk-icon icon-info-circle" />
                                 </bk-checkbox>
                             </div>
                             <bk-checkbox
@@ -285,7 +287,7 @@
                     {
                         name: '蓝盾App Push消息',
                         value: 'PUSH',
-                        isChecked: false,
+                        isChecked: true,
                         placeholder: '只有安装了蓝盾App的用户，Push消息才能触达。'
                     },
                     { name: '企业微信', value: 'RTX', isChecked: false },
@@ -349,7 +351,6 @@
                     nameError: false,
                     dateError: false
                 },
-                expUserSum: 0,
                 PIPELINE_RESOURCE_ACTION,
                 PIPELINE_RESOURCE_TYPE,
                 EXPERIENCE_TASK_RESOURCE_TYPE,
@@ -397,12 +398,6 @@
                     key: 'outerUsers'
                 }]
             },
-            overLimitedNotifyTips () {
-                return {
-                    disabled: this.expUserSum < 2000,
-                    content: '选择体验组包含人数超过了2000人，当前通知方式不可用。'
-                }
-            },
             isAlphaApk () {
                 return !!this.metaList.find(item => item.key === 'BK-CI-APP-STAGE' && item.value === 'Alpha')
             },
@@ -416,7 +411,7 @@
                 if (!this.isEdit) {
                     this.requestGroupList()
                     this.noticeTypeList.forEach(item => {
-                        item.isChecked = false
+                        item.isChecked = item.value === 'PUSH'
                     })
                     this.metaList = []
                     this.query.initDate = ''
@@ -438,15 +433,7 @@
             },
             projectId (val) {
                 this.toExperienceList()
-            },
-            expUserSum (val) {
-                if (val > 2000) {
-                    this.noticeTypeList.forEach(item => {
-                        item.isChecked = false
-                    })
-                }
             }
-            
         },
         async created () {
             await this.requestGroupList()
