@@ -166,7 +166,7 @@
                         <bk-form-item
                             label="通知方式"
                             label-width="190"
-                            desc="三种通知方式均不会对公开体验生效，选择体验组包含人数超过了2000人，通知方式会失效。"
+                            desc="选择体验组包含人数超过了2000人，通知方式会失效。"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
                         >
