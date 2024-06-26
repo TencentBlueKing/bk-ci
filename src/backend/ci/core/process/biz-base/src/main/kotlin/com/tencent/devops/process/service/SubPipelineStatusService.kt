@@ -108,17 +108,18 @@ class SubPipelineStatusService @Autowired constructor(
                 return
             }
             try {
+                val pipelineStatus = getSubPipelineStatusFromDB(projectId, buildId)
                 updateParentPipelineTaskStatus(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    asyncStatus = getSubPipelineStatusFromDB(projectId, buildId).status
+                    asyncStatus = pipelineStatus.status
                 )
                 // 子流水线是异步启动的，不需要缓存状态
                 if (redisOperation.get(getSubPipelineStatusKey(buildId)) != null) {
                     redisOperation.set(
                         key = getSubPipelineStatusKey(buildId),
-                        value = JsonUtil.toJson(getSubPipelineStatusFromDB(event.projectId, buildId)),
+                        value = JsonUtil.toJson(pipelineStatus),
                         expiredInSecond = SUBPIPELINE_STATUS_FINISH_EXPIRED
                     )
                 }
