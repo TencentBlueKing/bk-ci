@@ -119,11 +119,16 @@ function writeSSHConfig()
             echo "StrictHostKeyChecking no" >> ${config_file}
             echo "Port 22" >> ${config_file}
         fi
+        if [[ $(cat ${config_file}| grep "Host git.code.oa.com"  | wc -l) -lt 1 ]];then
+            echo "" >> ${config_file}
+            echo "Host git.code.oa.com" >> ${config_file}
+            echo "StrictHostKeyChecking no" >> ${config_file}
+            echo "Port 22" >> ${config_file}
+        fi
         if [[ $(cat ${config_file}| grep "Host git.woa.com"  | wc -l) -lt 1 ]];then
             echo "" >> ${config_file}
             echo "Host git.woa.com" >> ${config_file}
             echo "StrictHostKeyChecking no" >> ${config_file}
-            echo "HostName git.woa.com" >> ${config_file}
             echo "Port 22" >> ${config_file}
         fi
     else
@@ -137,9 +142,11 @@ Port 22
 Host *-cd1.tencent.com
 StrictHostKeyChecking no
 Port 22
+Host git.code.oa.com
+StrictHostKeyChecking no
+Port 22
 Host git.woa.com
 StrictHostKeyChecking no
-HostName git.woa.com
 Port 22
 EOF
       chmod 600 ${config_file}
