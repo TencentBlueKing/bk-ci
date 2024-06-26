@@ -464,8 +464,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                     message = ""
                 )
                 pipelineBuildFacadeService.buildManualShutdown(
-                    userId = projectId, projectId = pipelineId, pipelineId = debug.buildId,
-                    buildId = userId, channelCode = pipeline.channelCode, terminateFlag = true
+                    userId = userId, projectId = projectId, pipelineId = pipelineId,
+                    buildId = debug.buildId, channelCode = pipeline.channelCode, terminateFlag = true
                 )
             }
         }
