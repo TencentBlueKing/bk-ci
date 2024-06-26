@@ -216,7 +216,8 @@ class WorkspaceService @Autowired constructor(
             val transactionContext = DSL.using(configuration)
             workspaceDao.modifyWorkspaceProperty(
                 dslContext = transactionContext,
-                workspaceName = workspaceName,
+                projectId = ws.projectId,
+                workspaceName = ws.workspaceName,
                 workspaceProperty = workspaceProperty
             )
         }

@@ -36,6 +36,7 @@ import com.tencent.devops.model.remotedev.tables.TDailyCgsData
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
+import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
@@ -693,23 +694,57 @@ class WorkspaceDao {
 
     fun modifyWorkspaceProperty(
         dslContext: DSLContext,
+        projectId: String,
         workspaceName: String,
         workspaceProperty: WorkspaceProperty
     ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .let { i ->
-                    if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
+        with(workspaceProperty) {
+            if (displayName != null || remark != null) {
+                with(TWorkspace.T_WORKSPACE) {
+                    dslContext.update(this)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                        .let { i ->
+                            if (displayName != null) i.set(DISPLAY_NAME, displayName) else i
+                        }
+                        .let { i ->
+                            if (remark != null) i.set(REMARK, remark) else i
+                        }
+                        .where(NAME.eq(workspaceName))
+                        .execute()
                 }
-                .let { i ->
-                    if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
+            }
+            if (labels != null) {
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    with(TWorkspaceLabels.T_WORKSPACE_LABELS) {
+                        transactionContext.delete(this)
+                            .where(WORKSPACE_NAME.eq(workspaceName))
+                            .execute()
+                        transactionContext.batch(
+                            labels!!.map { label ->
+                                transactionContext.insertInto(
+                                    this,
+                                    PROJECT_ID,
+                                    WORKSPACE_NAME,
+                                    LABEL
+                                ).values(
+                                    projectId,
+                                    workspaceName,
+                                    label
+                                ).onDuplicateKeyIgnore()
+                            }
+                        ).execute()
+                        /*关联更新，查询关键字使用T_WORKSPACE_LABELS,但通过T_WORKSPACE拿到LABELS值*/
+                        with(TWorkspace.T_WORKSPACE) {
+                            transactionContext.update(this)
+                                .set(UPDATE_TIME, LocalDateTime.now())
+                                .set(LABELS, workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) })
+                                .where(NAME.eq(workspaceName))
+                                .execute()
+                        }
+                    }
                 }
-                .let { i ->
-                    if (workspaceProperty.labels != null) i.set(LABELS, workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) }) else i
-                }
-                .where(NAME.eq(workspaceName))
-                .execute()
+            }
         }
     }
 

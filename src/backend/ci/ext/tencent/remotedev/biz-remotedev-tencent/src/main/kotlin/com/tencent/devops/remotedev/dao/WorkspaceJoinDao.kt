@@ -9,6 +9,7 @@ import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
+import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
@@ -22,14 +23,17 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
+import org.jooq.Table
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 针对 workspace 需要连表查询的复杂场景独立出来的 dao 方便整理代码
@@ -65,12 +69,12 @@ class WorkspaceJoinDao {
             // 没有包含其他表的条件
             if (search.onlyNeedCheckWorkspace()) {
                 val dsl = (
-                        genFetchProjectWorkspaceCond(
-                            dslContext = dslContext,
-                            queryType = queryType,
-                            search = search
-                        ) as SelectConditionStep<TWorkspaceRecord>
-                        ).orderBy(CREATE_TIME.desc(), ID.desc())
+                    genFetchProjectWorkspaceCond(
+                        dslContext = dslContext,
+                        queryType = queryType,
+                        search = search
+                    ) as SelectConditionStep<TWorkspaceRecord>
+                    ).orderBy(CREATE_TIME.desc(), ID.desc())
                 if (limit != null) {
                     dsl.limit(limit.limit).offset(limit.offset)
                 }
@@ -200,9 +204,9 @@ class WorkspaceJoinDao {
         search.owner?.ifEmpty { null }?.let { owners ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
-                        )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
+                    )
                     .or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
                             WorkspaceShared.AssignType.OWNER.name
@@ -214,9 +218,9 @@ class WorkspaceJoinDao {
                     )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-                        ).or(
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
+                    ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
                             .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
                     )
@@ -228,9 +232,9 @@ class WorkspaceJoinDao {
         search.viewers?.ifEmpty { null }?.let { viewers ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
-                        ).or(
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
+                    ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
                             .and(
                                 TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
@@ -239,9 +243,9 @@ class WorkspaceJoinDao {
                     )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
-                        ).or(
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
+                    ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
                             .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
                     ).or(
@@ -303,6 +307,12 @@ class WorkspaceJoinDao {
             )
         }
 
+        if (search.needCheckLabels()) {
+            val label = labelsTable(search.labels!!)
+            this.rightJoin(label)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(label.field(TWorkspaceLabels.T_WORKSPACE_LABELS.WORKSPACE_NAME)))
+        }
+
         if (!search.size.isNullOrEmpty()) {
             this.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE).on(
                 TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
@@ -316,6 +326,27 @@ class WorkspaceJoinDao {
             )
         }
         return this
+    }
+
+    /*labels 的交集查询子句*/
+    private fun labelsTable(labels: List<String>): Table<Record1<String>> {
+        with(TWorkspaceLabels.T_WORKSPACE_LABELS) {
+            val subquery = DSL.select(WORKSPACE_NAME)
+                .from(this)
+                .where(LABEL.eq(labels.first()))
+                .also { dsl ->
+                    labels.drop(1).forEach {
+                        dsl.unionAll(
+                            DSL.select(WORKSPACE_NAME)
+                                .from(this)
+                                .where(LABEL.eq(it))
+                        )
+                    }
+                }
+            return DSL.select(WORKSPACE_NAME)
+                .from(subquery).groupBy(WORKSPACE_NAME).having(DSL.count().eq(labels.count())).asTable()
+        }
+
     }
 
     fun fetchProjectFromUser(
