@@ -47,6 +47,7 @@
           </template>
           <template #content>
             <TabTable
+              v-if="item.tableData.length"
               :is-show-operation="isShowOperation"
               :data="item.tableData"
               :group-type="item.resourceType"

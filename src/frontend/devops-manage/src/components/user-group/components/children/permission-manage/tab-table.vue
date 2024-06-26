@@ -13,7 +13,7 @@
     @page-value-change="pageValueChange"
   >
     <template #prepend>
-      <div v-if="isShowOperation && selectedData[groupType]" class="prepend">
+      <div v-if="isShowOperation && selectedData[groupType]?.length" class="prepend">
         已选择 {{ selectedData[groupType].length }} 条数据，
         <span @click="handleSelectAllData"> 选择全量数据 {{ groupTotal }} 条 </span>
         &nbsp; | &nbsp;
@@ -131,19 +131,18 @@ const isCurrentAll = ref(false);
 /**
  * 当前页全选事件
  */
-function handleSelectAll(val) {
-  isCurrentAll.value = true;
-  console.log(val,'全选的数据');
-  emit('getSelectList', Object.assign(val, {isAll:true}), groupType.value);
+function handleSelectAll({ checked, data }) {
+  isCurrentAll.value = checked;
+  emit('getSelectList', refTable.value.getSelection(), groupType.value);
 }
 /**
  * 多选事件
  * @param val
  */
-function handleSelectionChange(val) {
-  console.log(val,'多选的数据');
-  isCurrentAll.value = false;
-  emit('getSelectList', val, groupType.value);
+function handleSelectionChange({data}) {
+  console.log(data, 123)
+  isCurrentAll.value = refTable.value.getSelection() === selectedData[groupType]?.length;
+  emit('getSelectList', refTable.value.getSelection(), groupType.value);
 };
 /**
  * 全量数据选择
@@ -160,7 +159,7 @@ function handleSelectAllData() {
  */
 function handleClear() {
   refTable.value.clearSelection();
-  emit('handleClear', groupType.value);
+  emit('handleClear', refTable.value.getSelection(), groupType.value);
 }
 /**
  * 续期按钮点击

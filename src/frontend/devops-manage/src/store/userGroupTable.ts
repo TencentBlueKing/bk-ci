@@ -21,13 +21,6 @@ interface SourceType {
   activeFlag?: boolean;
   tableData: GroupTableType[];
 }
-interface SelectRowType {
-  row: GroupTableType;
-  index: number;
-  checked: boolean;
-  data: GroupTableType[];
-  isAll?: boolean;
-}
 interface SelectedDataType {
   [key: string]: GroupTableType[];
 }
@@ -261,11 +254,10 @@ export default defineStore('userGroupTable', () => {
           removeMemberButtonControl: 'OTHER',
         }];
 
-        console.log(sourceList.value, 'sourceList.value???????????');
         isLoading.value = false;
       }, 1000)
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
     }
   }
   /**
@@ -321,18 +313,8 @@ export default defineStore('userGroupTable', () => {
   /**
    * 获取表格选择的数据
    */
-  function getSelectList(rowData: SelectRowType, groupType: string) {
-    if (!rowData.isAll) {
-      if (rowData.checked) {
-        const newSelectedData = !selectedData[groupType] ? [] : selectedData[groupType]
-        selectedData[groupType] = newSelectedData.concat(rowData.row);
-      } else {
-        selectedData[groupType] = selectedData[groupType].filter(item => item !== rowData.row);
-        !selectedData[groupType].length && handleClear(groupType);
-      }
-    } else {
-      rowData.checked ? (selectedData[groupType] = rowData.data) : handleClear(groupType);
-    }
+  function getSelectList(selections, groupType: string) {
+    selectedData[groupType] = selections
     console.log('表格选择的数据', selectedData);
     unableMoveLength.value = countNonOtherObjects(selectedData);
   }
@@ -376,17 +358,17 @@ export default defineStore('userGroupTable', () => {
   /**
    * 清除选择
    */
-  function handleClear(groupType: string) {
-    delete selectedData[groupType];
+  function handleClear(selections, groupType: string) {
+    selectedData[groupType] = selections
   }
   /**
    * 折叠面板调用接口获取表格数据
    */
   async function collapseClick(resourceType, asideItem) {
-    console.log('折叠面板', resourceType, asideItem, projectId.value);
-
     let item = sourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-    if (item && !item.tableData.length) {
+
+    if (!item || item.tableData.length) return;
+    try {
       sourceGroup.value[resourceType] = [1, 10]
       const res = await getGroupList(resourceType, asideItem);
       // item.tableData = res.records;
@@ -422,8 +404,9 @@ export default defineStore('userGroupTable', () => {
       }]
       item.activeFlag = true;
       item.hasNext = res.hasNext;
+    } catch (e) {
+      console.error(e)
     }
-    console.log(sourceList.value, 'sourceList.value???????????');
   }
 
   function pageLimitChange(limit, groupType) {

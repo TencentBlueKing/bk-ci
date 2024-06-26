@@ -218,8 +218,7 @@ export default {
         .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
         .then(({ data }) => {
           this.hasLoadEnd = !data.hasNext;
-          // this.groupList.push(...data.records);
-          this.groupList.push({
+          this.groupList.push(...[{
             "managerId": 13034,
             "defaultGroup": true,
             "groupId": 0,
@@ -228,7 +227,8 @@ export default {
             "userCount": 9,
             "departmentCount": 0,
             "allProjectMembersFlag": true
-          });
+          }], ...data.records);
+          this.groupList.push();
           // 首页需要加载
           if (this.page === 1) {
             const chooseGroup = this.groupList.find(group => +group.groupId === +this.$route.query?.groupId) || this.groupList[0];
