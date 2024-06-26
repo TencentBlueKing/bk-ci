@@ -37,10 +37,6 @@ BEGIN
                     AND COLUMN_NAME = 'LOCKED') THEN
     ALTER TABLE T_PIPELINE_INFO
         ADD COLUMN `LOCKED` bit(1) DEFAULT b'0' COMMENT '是否锁定，PAC v3.0新增锁定，取代原来setting表中的LOCK';
-
-    UPDATE T_PIPELINE_SETTING s, T_PIPELINE_INFO t
-        SET LOCKED = true
-        WHERE s.PIPELINE_ID = t.PIPELINE_ID AND s.RUN_LOCK_TYPE = 4;
     END IF;
 
     COMMIT;
