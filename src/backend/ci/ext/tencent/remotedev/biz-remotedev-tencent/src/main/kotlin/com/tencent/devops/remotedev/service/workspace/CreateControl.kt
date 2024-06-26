@@ -323,7 +323,7 @@ class CreateControl @Autowired constructor(
         }
 
         zoneIds.addAll(
-            workspaceCommon.createCheckWhenWinNotAlready(
+            windowsResourceConfigService.createCheckWhenWinNotAlready(
                 windowsZone = availableZone,
                 windowsConfig = windowsConfig,
                 newNum = newNum,

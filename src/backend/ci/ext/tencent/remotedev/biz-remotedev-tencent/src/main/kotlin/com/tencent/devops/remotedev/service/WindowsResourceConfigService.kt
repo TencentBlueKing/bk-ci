@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.constant.HTTP_400
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
@@ -36,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
@@ -46,6 +48,7 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import com.tencent.devops.remotedev.utils.CommonUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -135,6 +138,73 @@ class WindowsResourceConfigService @Autowired constructor(
             }
         }
 
+        return res
+    }
+
+    /**
+     * @return 返回具体的n个区域id
+     */
+    fun createCheckWhenWinNotAlready(
+        windowsZone: WindowsResourceZoneConfig,
+        windowsConfig: WindowsResourceTypeConfig,
+        newNum: Int,
+        quotaType: QuotaType
+    ): List<String> {
+        val data = kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class).getResourceVm(
+                ResourceVmReq(
+                    zoneId = windowsZone.zoneShortName,
+                    machineType = windowsConfig.size,
+                    internal = quotaType.getInternal()
+                )
+            ).data
+        }.getOrElse {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "unkown",
+                    newNum.toString()
+                )
+            )
+        }
+        val spec = lazy { getAllSpecZoneShortName() }
+        val free = CommonUtil.parseResourceVmRespData(
+            data = data,
+            zoneConfig = windowsZone,
+            spec = spec,
+            size = windowsConfig.size
+        )
+        if (free.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "0",
+                    newNum.toString()
+                )
+            )
+        }
+        if (free.values.sum() < newNum) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    free.toString(),
+                    newNum.toString()
+                )
+            )
+        }
+        val res = mutableListOf<String>()
+        free.forEach { (k, v) ->
+            val diff = newNum - res.count()
+            if (diff > 0) {
+                res.addAll(Array(minOf(diff, v)) { k })
+            } else return@forEach
+        }
         return res
     }
 
