@@ -13,7 +13,11 @@
     @page-value-change="pageValueChange"
   >
     <template #prepend>
-      <div v-if="isShowOperation && selectedData[groupType]?.length" class="prepend">
+      <div v-if="isCurrentAll" class="prepend">
+        已选择全量数据 {{ groupTotal }} 条，
+        <span @click="handleClear">清除选择</span>
+      </div>
+      <div v-else-if="isShowOperation && selectedData[groupType]?.length" class="prepend">
         已选择 {{ selectedData[groupType].length }} 条数据，
         <span @click="handleSelectAllData"> 选择全量数据 {{ groupTotal }} 条 </span>
         &nbsp; | &nbsp;
@@ -132,33 +136,33 @@ const isCurrentAll = ref(false);
  * 当前页全选事件
  */
 function handleSelectAll({ checked, data }) {
-  isCurrentAll.value = checked;
   emit('getSelectList', refTable.value.getSelection(), groupType.value);
+  isCurrentAll.value = false;
 }
 /**
  * 多选事件
- * @param val
  */
-function handleSelectionChange({data}) {
-  console.log(data, 123)
-  isCurrentAll.value = refTable.value.getSelection() === selectedData[groupType]?.length;
+function handleSelectionChange({checked}) {
   emit('getSelectList', refTable.value.getSelection(), groupType.value);
+  isCurrentAll.value = props.data.length === refTable.value.getSelection()
 };
 /**
  * 全量数据选择
  */
 function handleSelectAllData() {
   const selectLength = refTable.value.getSelection().length
-  if(!isCurrentAll.value && selectLength != groupTotal.value) {
+  if (selectLength != props.data.length) {
     refTable.value.toggleAllSelection();
   }
   emit('handleSelectAllData', groupType.value)
+  isCurrentAll.value = true;
 }
 /**
  * 清除选择
  */
 function handleClear() {
   refTable.value.clearSelection();
+  isCurrentAll.value = false;
   emit('handleClear', refTable.value.getSelection(), groupType.value);
 }
 /**
