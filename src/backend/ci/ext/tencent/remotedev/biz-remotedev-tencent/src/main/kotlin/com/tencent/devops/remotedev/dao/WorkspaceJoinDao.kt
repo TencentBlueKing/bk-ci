@@ -363,7 +363,6 @@ class WorkspaceJoinDao {
                 .having(DSL.count().eq(labels.count()))
                 .asTable()
         }
-
     }
 
     fun fetchProjectFromUser(

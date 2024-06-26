@@ -45,7 +45,7 @@ data class WindowsResourceZoneConfig(
     val type: WindowsResourceZoneConfigType
 )
 
-enum class WindowsResourceZoneConfigType{
+enum class WindowsResourceZoneConfigType {
     DEFAULT,
     INTERNAL_USE, /*内部使用专区*/
     CSIG_USE; /*csig使用专区*/
