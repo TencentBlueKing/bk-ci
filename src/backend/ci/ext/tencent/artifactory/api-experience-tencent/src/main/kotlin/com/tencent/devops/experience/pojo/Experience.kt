@@ -79,5 +79,7 @@ data class Experience(
     @get:Schema(title = "产品类别", required = true)
     val categoryId: Int,
     @get:Schema(title = "产品负责人", required = true)
-    val productOwner: List<String>
+    val productOwner: List<String>,
+    @get:Schema(title = "分类", required = true)
+    val classify: String
 )

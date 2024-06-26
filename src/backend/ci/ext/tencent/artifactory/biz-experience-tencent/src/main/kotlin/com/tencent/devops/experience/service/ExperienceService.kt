@@ -307,7 +307,8 @@ class ExperienceService @Autowired constructor(
             experienceName = experienceRecord.experienceName,
             versionTitle = experienceRecord.versionTitle,
             categoryId = experienceRecord.category,
-            productOwner = objectMapper.readValue(experienceRecord.productOwner)
+            productOwner = objectMapper.readValue(experienceRecord.productOwner),
+            classify = experienceRecord.classify
         )
     }
 
