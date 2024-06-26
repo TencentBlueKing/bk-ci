@@ -289,7 +289,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includeMrAction
+                    action = git.includeMrAction,
+                    customFilterUrl = if (git.enableThirdFilter == true) git.thirdUrl else null,
+                    customFilterCredentials = if (git.enableThirdFilter == true) git.thirdSecretToken else null
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(
