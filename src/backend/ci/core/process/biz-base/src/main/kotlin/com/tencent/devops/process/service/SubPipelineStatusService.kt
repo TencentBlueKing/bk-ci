@@ -112,7 +112,7 @@ class SubPipelineStatusService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    asyncStatus = event.status
+                    asyncStatus = getSubPipelineStatusFromDB(projectId, buildId).status
                 )
                 // 子流水线是异步启动的，不需要缓存状态
                 if (redisOperation.get(getSubPipelineStatusKey(buildId)) != null) {
@@ -161,7 +161,6 @@ class SubPipelineStatusService @Autowired constructor(
         }
         // 非异步触发不处理
         if (buildVariables[PIPELINE_START_SUB_RUN_MODE] != ASYNC_RUN_MODE) {
-            logger.info("The build is not started asynchronously|$projectId|$pipelineId|$buildId")
             return
         }
         pipelineRuntimeService.getBuildInfo(

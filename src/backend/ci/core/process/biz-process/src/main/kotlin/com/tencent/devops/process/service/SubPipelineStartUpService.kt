@@ -260,13 +260,13 @@ class SubPipelineStartUpService @Autowired constructor(
             params[PIPELINE_START_PIPELINE_USER_ID] =
                 BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = triggerUser ?: userId)
             params[PIPELINE_START_PARENT_PROJECT_ID] =
-                BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId, readOnly = true)
+                BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId)
             params[PIPELINE_START_PARENT_PIPELINE_ID] =
-                BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId, readOnly = true)
+                BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId)
             params[PIPELINE_START_PARENT_PIPELINE_NAME] =
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
-                BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId, readOnly = true)
+                BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
             params[PIPELINE_START_SUB_RUN_MODE] =
                 BuildParameters(key = PIPELINE_START_SUB_RUN_MODE, value = runMode, readOnly = true)
             // 父流水线执行次数
