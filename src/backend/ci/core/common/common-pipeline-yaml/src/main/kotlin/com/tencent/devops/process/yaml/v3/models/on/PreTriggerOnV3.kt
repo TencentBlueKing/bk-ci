@@ -53,7 +53,22 @@ data class PreTriggerOnV3(
     override val repoHook: List<Any>? = null,
     override var manual: Any? = null,
     override val openapi: String? = null,
-    override val remote: Any? = null
+    override val remote: Any? = null,
+    @JsonProperty("change-commit")
+    @get:Schema(title = "change-commit")
+    var changeCommit: PushRule? = null,
+    @JsonProperty("change-content")
+    @get:Schema(title = "change-content")
+    var changeContent: PushRule? = null,
+    @JsonProperty("change-submit")
+    @get:Schema(title = "change-submit")
+    var changeSubmit: PushRule? = null,
+    @JsonProperty("shelve-commit")
+    @get:Schema(title = "shelve-commit")
+    var shelveCommit: PushRule? = null,
+    @JsonProperty("shelve-submit")
+    @get:Schema(title = "shelve-submit")
+    var shelveSubmit: PushRule? = null
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.V3_0
 }
