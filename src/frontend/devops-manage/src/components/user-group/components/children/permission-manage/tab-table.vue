@@ -163,7 +163,7 @@ function handleSelectAllData() {
 function handleClear() {
   refTable.value.clearSelection();
   isCurrentAll.value = false;
-  emit('handleClear', refTable.value.getSelection(), groupType.value);
+  emit('handleClear', groupType.value);
 }
 /**
  * 续期按钮点击

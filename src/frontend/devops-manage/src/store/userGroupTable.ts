@@ -43,28 +43,7 @@ export default defineStore('userGroupTable', () => {
   })
 
   const sourceList = ref<SourceType[]>([]);
-  const collapseList = ref<CollapseListType[]>([
-    {
-      resourceType: 'project',
-      resourceTypeName: '项目（project）',
-      count: 10,
-    },
-    {
-      resourceType: 'pipilineGroup',
-      resourceTypeName: '流水线 (Pipiline) - 流水线组',
-      count: 2,
-    },
-    {
-      resourceType: 'pipiline',
-      resourceTypeName: '流水线 (Pipiline)',
-      count: 3,
-    },
-    {
-      resourceType: 'ticket',
-      resourceTypeName: '凭证管理(Ticket)-凭据',
-      count: 0,
-    },
-  ]);
+  const collapseList = ref<CollapseListType[]>([]);
 
   const isShowRenewal = ref(false);
   const isShowHandover = ref(false);
@@ -97,28 +76,28 @@ export default defineStore('userGroupTable', () => {
   async function getCollapseList({ type, name }) {
     const res = await http.getMemberGroups(projectId.value, { type, member: name });
     // collapseList.value = res;
-    // collapseList.value = [
-    //   {
-    //     resourceType: 'project',
-    //     resourceTypeName: '项目（project）',
-    //     count: 10,
-    //   },
-    //   {
-    //     resourceType: 'pipilineGroup',
-    //     resourceTypeName: '流水线 (Pipiline) - 流水线组',
-    //     count: 2,
-    //   },
-    //   {
-    //     resourceType: 'pipiline',
-    //     resourceTypeName: '流水线 (Pipiline)',
-    //     count: 3,
-    //   },
-    //   {
-    //     resourceType: 'ticket',
-    //     resourceTypeName: '凭证管理(Ticket)-凭据',
-    //     count: 0,
-    //   },
-    // ];
+    collapseList.value = [
+      {
+        resourceType: 'project',
+        resourceTypeName: '项目（project）',
+        count: 10,
+      },
+      {
+        resourceType: 'pipilineGroup',
+        resourceTypeName: '流水线 (Pipiline) - 流水线组',
+        count: 2,
+      },
+      {
+        resourceType: 'pipiline',
+        resourceTypeName: '流水线 (Pipiline)',
+        count: 3,
+      },
+      {
+        resourceType: 'ticket',
+        resourceTypeName: '凭证管理(Ticket)-凭据',
+        count: 0,
+      },
+    ];
   }
   async function getGroupList(resourceType, asideItem) {
     const pathParams = {
@@ -315,6 +294,9 @@ export default defineStore('userGroupTable', () => {
    */
   function getSelectList(selections, groupType: string) {
     selectedData[groupType] = selections
+    if (!selectedData[groupType].length) {
+      delete selectedData[groupType]
+    }
     console.log('表格选择的数据', selectedData);
     unableMoveLength.value = countNonOtherObjects(selectedData);
   }
@@ -358,8 +340,8 @@ export default defineStore('userGroupTable', () => {
   /**
    * 清除选择
    */
-  function handleClear(selections, groupType: string) {
-    selectedData[groupType] = selections
+  function handleClear(groupType: string) {
+    delete selectedData[groupType]
   }
   /**
    * 折叠面板调用接口获取表格数据
