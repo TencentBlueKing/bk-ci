@@ -35,6 +35,6 @@ data class SensitiveApiApplyReq(
     val apiNameList: List<String>,
     @get:Schema(title = "申请说明", required = true)
     val applyDesc: String,
-    @get:Schema(title = "插件使用的语言", required = true)
-    val language: String
+    @get:Schema(title = "开发语言", required = true)
+    val language: String = ""
 )

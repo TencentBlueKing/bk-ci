@@ -39,6 +39,7 @@ import com.tencent.devops.artifactory.pojo.PackageFileInfo
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.artifactory.store.service.ArchiveAtomService
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_SHA_CONTENT
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -214,7 +215,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf("shaContent" to packageFileInfo.shaContent)
+                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.shaContent)
                 )
             }
         }

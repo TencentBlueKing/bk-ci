@@ -166,11 +166,13 @@
         beforeDestroy () {
             this.resetHistoryFilterCondition()
             this.selectPipelineVersion(null)
+            this.resetAtomModalMap()
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             ...mapActions('atom', [
-                'selectPipelineVersion'
+                'selectPipelineVersion',
+                'resetAtomModalMap'
             ]),
             getNavComponent (type) {
                 switch (type) {

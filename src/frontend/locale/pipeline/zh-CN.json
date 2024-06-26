@@ -1016,7 +1016,8 @@
     "codelib": "代码库",
     "branches": "分支",
     "codelibConfigs": "代码库配置",
-    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录"
+    "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
+    "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1110,7 +1111,15 @@
     "afterPreStageSuccess": "前一个Stage成功时运行",
     "manualRunStage": "手动触发运行",
     "autoSkip": "自动跳过",
-    "manualSkip": "手动跳过"
+    "manualSkip": "手动跳过",
+    "timeoutPeriod": "超时时间",
+    "execTimeOut": "执行超时",
+    "queueTimeOut": "排队超时",
+    "singleNodeConcurrency": "单节点上的并发",
+    "singleNodeConcurrencyPlaceholder": "不填则以节点上设置的最大并发数为准",
+    "allNodeConcurrency": "所有节点上的总并发",
+    "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
+    "minutes": "分钟"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1150,7 +1159,10 @@
       "paramId": "选项ID字段名",
       "paramName": "选项NAME字段名",
       "paramIdTips": "选中时将此ID值传递给插件",
-      "paramNameTips": "用户在页面上看到的选项名称"
+      "paramNameTips": "用户在页面上看到的选项名称",
+      "remove": "移除",
+      "removeTitle": "确认移除此变量吗？",
+      "toTop": "移到最前"
     },
     "enableVersions": "开启推荐版本号",
     "editVersions": "编辑版本号",
@@ -1344,7 +1356,7 @@
   "triggerBranch": "触发分支",
   "triggerRepo": "触发代码库",
   "noBuildHistory": "暂无执行历史",
-  "noDebugRecords": "暂无调试记录",
+  "noDebugRecords": "暂无调试记录，可能是当前没有草稿或当前草稿没有进行过调试",
   "buildNow": "立即执行",
   "debugNow": "立即调试",
   "onlyDraftBuildHistoryTips": "流水线尚未发布，请先发布，再启动执行。",
@@ -1355,7 +1367,7 @@
   "eventType": "事件类型",
   "baseInfo": "基础信息",
   "executeConfig": "执行设置",
-  "customBuildNum": "自定义构建号格式：",
+  "customBuildNum": "自定义构建号格式",
   "parallelSetting": "并发设置",
   "triggerName": "触发器",
   "triggerStatus": "启用状态",
@@ -1530,5 +1542,6 @@
   "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式查看和PAC模式发布。",
   "eventID": "事件ID",
   "runningSteps": "正在运行的步骤：",
-  "completeness": "完成度："
+  "completeness": "完成度：",
+  "pacDesc": "Pipeline as Code 模式，简称 PAC 模式。开启并将流水线文件提交到代码库后，可通过维护代码库文件的方式来维护流水线。"
 }

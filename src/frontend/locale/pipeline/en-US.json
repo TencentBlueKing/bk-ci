@@ -1018,7 +1018,8 @@
     "codelib": "Code Repositories",
     "branches": "Branch",
     "codelibConfigs": "Code Repositories Config",
-    "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path."
+    "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
+    "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met."
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1112,7 +1113,15 @@
     "afterPreStageSuccess": "Run when pre-stage done",
     "manualRunStage": "Manual",
     "autoSkip": "Auto",
-    "manualSkip": "Manual"
+    "manualSkip": "Manual",
+    "timeoutPeriod": "Timeout Period",
+    "execTimeOut": "Execution Timeout",
+    "queueTimeOut": "Queue Timeout",
+    "singleNodeConcurrency": "Concurrency limit on a node",
+    "singleNodeConcurrencyPlaceholder": "Default is the maximum concurrency set on the node",
+    "allNodeConcurrency": "Concurrency limit across all nodes",
+    "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
+    "minutes": "Minutes"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",
@@ -1152,7 +1161,10 @@
       "paramId": "Option ID Field Name",
       "paramName": "Option NAME Field Name",
       "paramIdTips": "When selected, this ID value is passed to the plugin",
-      "paramNameTips": "Option name as seen by the user on the page"
+      "paramNameTips": "Option name as seen by the user on the page",
+      "remove": "Remove",
+      "removeTitle": "Confirm to delete this variable?",
+      "toTop": "Move to top"
     },
     "enableVersions": "Enable Versioning",
     "editVersions": "Edit Version",
@@ -1341,7 +1353,7 @@
   "triggerBranch": "Trigger Branch",
   "triggerRepo": "Trigger Repository",
   "noBuildHistory": "No execution history",
-  "noDebugRecords": "No debug records",
+  "noDebugRecords": "There is no debugging record yet. It may be that there is no draft at the moment or the current draft has not been debugged.",
   "buildNow": "Run Now",
   "debugNow": "Debug Now",
   "onlyDraftBuildHistoryTips": "Pipeline has not been released, please release it first and then start execution.",
@@ -1352,7 +1364,7 @@
   "eventType": "Event Type",
   "baseInfo": "Basic Information",
   "executeConfig": "Execute Settings",
-  "customBuildNum": "Custom Build Number Format:",
+  "customBuildNum": "Custom Build Number Format",
   "parallelSetting": "Concurrency Settings",
   "triggerName": "Trigger",
   "triggerStatus": "Enable Status",
@@ -1529,5 +1541,6 @@
   "templateYamlNotSupport": "The constrained mode pipeline (template instance) currently does not support Code mode viewing and PAC mode publishing.",
   "eventID": "Event ID",
   "runningSteps": "Running steps: ",
-  "completeness": "Completeness: "
+  "completeness": "Completeness: ",
+  "pacDesc": "Pipeline as Code mode, referred to as PAC mode. After enabling and submitting the pipeline file to the code base, you can maintain the pipeline by maintaining the code base file."
 }

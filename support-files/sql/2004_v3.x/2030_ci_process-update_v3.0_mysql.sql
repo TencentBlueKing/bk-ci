@@ -22,6 +22,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                     AND INDEX_NAME = 'INX_PIPELINE_UPDATE_TIME') THEN
+    ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
+        ADD INDEX `INX_PIPELINE_UPDATE_TIME`(`PROJECT_ID`,`PIPELINE_ID`,`UPDATE_TIME`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_RECORD_TASK'

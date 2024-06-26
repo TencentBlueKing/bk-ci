@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.client.Client
@@ -48,6 +49,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
@@ -96,7 +99,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
-                    includePushAction = push.action,
+                    includePushAction = push.action ?: listOf(
+                        TGitPushActionType.PUSH_FILE.value,
+                        TGitPushActionType.NEW_BRANCH.value
+                    ),
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable).apply {
@@ -140,7 +146,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    includeMrAction = mr.action,
+                    includeMrAction = mr.action ?: listOf(
+                        TGitMrEventAction.OPEN.value,
+                        TGitMrEventAction.REOPEN.value,
+                        TGitMrEventAction.PUSH_UPDATE.value
+                    ),
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
@@ -236,7 +246,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 CodeEventType.PUSH -> nowExist.push = PushRule(
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
-                    branches = git.branchName?.disjoin() ?: emptyList(),
+                    branches = git.branchName?.disjoin(),
                     branchesIgnore = git.excludeBranchName?.disjoin(),
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin(),
@@ -273,6 +283,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     action = git.includeMrAction
                 )
+                CodeEventType.MERGE_REQUEST_ACCEPT ->
+                    throw PipelineTransferException(
+                        errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER
+                    )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
                     name = git.name.nullIfDefault(defaultName),
@@ -365,7 +379,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
-                            includeMrAction = push.action,
+                            includeMrAction = push.action ?: listOf(
+                                TGitPushActionType.PUSH_FILE.value,
+                                TGitPushActionType.NEW_BRANCH.value
+                            ),
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
@@ -417,7 +434,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             enableCheck = mr.reportCommitCheck,
                             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                                 ?: PathFilterType.NamePrefixFilter,
-                            includeMrAction = mr.action,
+                            includeMrAction = mr.action ?: listOf(
+                                TGitMrEventAction.OPEN.value,
+                                TGitMrEventAction.REOPEN.value,
+                                TGitMrEventAction.PUSH_UPDATE.value
+                            ),
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
@@ -675,12 +696,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
             schedule.forEach { timer ->
                 val repositoryType = when {
                     !timer.repoId.isNullOrBlank() ->
-                        RepositoryType.ID
+                        TriggerRepositoryType.ID
 
                     !timer.repoName.isNullOrBlank() ->
-                        RepositoryType.NAME
+                        TriggerRepositoryType.NAME
 
-                    else -> null
+                    else -> TriggerRepositoryType.SELF
                 }
                 elementQueue.add(
                     TimerTriggerElement(

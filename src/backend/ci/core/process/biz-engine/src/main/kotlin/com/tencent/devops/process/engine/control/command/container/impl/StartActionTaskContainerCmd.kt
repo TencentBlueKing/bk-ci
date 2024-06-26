@@ -424,7 +424,7 @@ class StartActionTaskContainerCmd(
         if (message.isNotBlank()) {
             // #6366 增加日志明确展示跳过的原因
             // 打印构建日志--DEBUG级别日志，平时隐藏
-            buildLogPrinter.addDebugLine(
+            buildLogPrinter.addWarnLine(
                 executeCount = containerContext.executeCount, tag = taskId,
                 buildId = buildId, containerHashId = containerHashId, message = message.toString(),
                 jobId = null, stepId = stepId
@@ -464,8 +464,7 @@ class StartActionTaskContainerCmd(
                 containerFinalStatus = containerContext.buildStatus,
                 variables = contextMap,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message,
-                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                message = message
             )
         }
 
@@ -480,8 +479,7 @@ class StartActionTaskContainerCmd(
                     containerFinalStatus = containerContext.buildStatus,
                     variables = contextMap,
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                    message = message,
-                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+                    message = message
                 )
                 if (LOG.isDebugEnabled) {
                     LOG.debug("ENGINE|$buildId|CHECK_QUICK_SKIP|$stageId|j($containerId)|${it.taskName}|$skip")

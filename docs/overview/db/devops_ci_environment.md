@@ -190,6 +190,7 @@
 |  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境 ID  |
 |  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点 ID  |
 |  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  4   | ENABLE_NODE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否启用节点  |
 
 **表名：** <a>T_ENV_SHARE_PROJECT</a>
 

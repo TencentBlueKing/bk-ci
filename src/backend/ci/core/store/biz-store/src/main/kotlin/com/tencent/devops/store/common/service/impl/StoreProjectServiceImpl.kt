@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -37,15 +38,21 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
+import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
+import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
@@ -69,7 +76,10 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val storeUserService: StoreUserService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val storePipelineRelDao: StorePipelineRelDao,
+    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
+    private val storeCommonService: StoreCommonService
 ) : StoreProjectService {
 
     /**
@@ -357,5 +367,53 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeProjectTypes = storeProjectTypes,
             instanceId = instanceId
         )
+    }
+
+    override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean {
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            // 获取组件当前初始化项目
+            val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                dslContext = context,
+                storeCode = storeProjectInfo.storeCode,
+                storeType = storeProjectInfo.storeType.type.toByte()
+            )!!
+            // 更新组件关联初始化项目
+            storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
+            storeProjectRelDao.addStoreProjectRel(
+                dslContext = context,
+                userId = userId,
+                storeType = storeProjectInfo.storeType.type.toByte(),
+                storeCode = storeProjectInfo.storeCode,
+                projectCode = initProjectCode,
+                type = StoreProjectTypeEnum.TEST.type.toByte()
+            )
+            val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
+                dslContext = context,
+                storeCode = storeProjectInfo.storeCode,
+                storeType = storeProjectInfo.storeType
+            )
+            storePipelineRel?.let {
+                storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
+                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(context, storePipelineRel.pipelineId)
+                client.get(ServicePipelineResource::class).delete(
+                    userId = userId,
+                    pipelineId = it.pipelineId,
+                    channelCode = ChannelCode.AM,
+                    projectId = initProjectCode,
+                    checkFlag = false
+                )
+            }
+            val storeRepoHashId =
+                storeCommonService.getStoreRepoHashIdByCode(storeProjectInfo.storeCode, storeProjectInfo.storeType)
+            storeRepoHashId?.let {
+                client.get(ServiceRepositoryResource::class).updateStoreRepoProject(
+                    userId = storeProjectInfo.userId,
+                    projectId = storeProjectInfo.projectId,
+                    repositoryId = HashUtil.decodeOtherIdToLong(storeRepoHashId)
+                )
+            }
+        }
+        return true
     }
 }

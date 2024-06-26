@@ -11,6 +11,7 @@
                 :error-msg="errors.first(customEnvModel.key)"
             >
                 <key-value-normal
+                    upper-cased
                     :name="customEnvModel.key"
                     :handle-change="handleChange"
                     :value="value"

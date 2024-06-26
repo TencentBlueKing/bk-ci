@@ -28,8 +28,9 @@
 
 package com.tencent.devops.auth.provider.sample.service
 
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
@@ -66,27 +67,8 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return emptyList()
     }
 
-    override fun renewal(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
-    ): Boolean {
-        return true
-    }
-
-    override fun deleteGroupMember(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean {
-        return true
-    }
-
     override fun deleteGroup(
-        userId: String,
+        userId: String?,
         projectId: String,
         resourceType: String,
         groupId: Int
@@ -94,16 +76,12 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return true
     }
 
-    override fun createGroupByGroupCode(
-        userId: String,
+    override fun createGroup(
         projectId: String,
-        resourceType: String,
-        groupCode: String
-    ): Boolean {
-        return true
-    }
+        groupAddDTO: GroupAddDTO
+    ): Int = 0
 
-    override fun rename(
+    override fun renameGroup(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -113,13 +91,12 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return true
     }
 
-    override fun addGroupMember(
-        userId: String,
-        /*user 或 department*/
-        memberType: String,
-        expiredAt: Long,
-        groupId: Int
-    ): Boolean {
-        return true
+    override fun getGroupPermissionDetail(groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
+        return emptyMap()
     }
+
+    override fun createProjectGroupByGroupCode(
+        projectId: String,
+        groupCode: String
+    ) = true
 }

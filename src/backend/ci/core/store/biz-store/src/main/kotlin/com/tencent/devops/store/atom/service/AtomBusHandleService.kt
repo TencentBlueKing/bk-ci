@@ -48,4 +48,9 @@ interface AtomBusHandleService {
      * 处理系统预置指令及用户（task.json.target）设置指令逻辑
      */
     fun handleTarget(reqTarget: String?, target: String): String
+
+    /**
+     * 检查系统预置指令（task.json.target）设置指令逻辑
+     */
+    fun checkTarget(target: String): Boolean
 }

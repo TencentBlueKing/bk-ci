@@ -33,7 +33,6 @@ import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
@@ -47,16 +46,16 @@ class SamplePermissionApplyService : PermissionApplyService {
         return emptyList()
     }
 
-    override fun listGroups(userId: String, projectId: String, searchGroupInfo: SearchGroupInfo): ManagerRoleGroupVO {
+    override fun listGroupsForApply(
+        userId: String,
+        projectId: String,
+        searchGroupInfo: SearchGroupInfo
+    ): ManagerRoleGroupVO {
         return ManagerRoleGroupVO(count = 0, results = emptyList())
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
         return true
-    }
-
-    override fun getGroupPermissionDetail(userId: String, groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
-        return emptyMap()
     }
 
     override fun getRedirectInformation(

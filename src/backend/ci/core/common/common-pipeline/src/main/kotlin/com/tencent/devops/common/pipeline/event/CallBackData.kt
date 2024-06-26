@@ -133,7 +133,8 @@ data class BuildEvent(
     val trigger: String,
     val stageId: String?, // 仅当 BUILD_STAGE_START/BUILD_STAGE_END
     val taskId: String?, // 仅当 BUILD_TASK_START/BUILD_TASK_END
-    val buildNo: Int = 0 // 构建序号
+    val buildNo: Int = 0, // 构建序号
+    val debug: Boolean? // 是否为调试构建
 )
 
 data class SimpleModel(

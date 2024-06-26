@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.engine.interceptor
 
+import com.tencent.devops.common.api.enums.CheckoutRepositoryType
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.CheckoutRepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -102,10 +102,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                                     return@outer
                                 }
                                 // 如果插件配置代码库信息,已在PipelineTimerBuildListener已校验源代码是否有变更
-                                if (!ele.repoHashId.isNullOrBlank() ||
-                                    !ele.repoName.isNullOrBlank() ||
-                                    !ele.branches.isNullOrEmpty()
-                                ) {
+                                if (ele.enableRepoConfig()) {
                                     noScm = false
                                     return@outer
                                 }
