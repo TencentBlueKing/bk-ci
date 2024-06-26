@@ -283,6 +283,18 @@ function handleRemoveConfirm() {
 <style lang="scss" scoped>
 .aside {
   height: calc(100% - 60px);
+  overflow-y: scroll;
+  &::-webkit-scrollbar-thumb {
+    background-color: #c4c6cc !important;
+    border-radius: 5px !important;
+    &:hover {
+      background-color: #979ba5 !important;
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+  }
 }
 .group-item {
   display: flex;
@@ -334,7 +346,7 @@ function handleRemoveConfirm() {
 
 .group-active {
   background-color: #E1ECFF !important;
-  border-right: 1px solid #3A84FF;
+  border-right: 2px solid #3A84FF;
 
   p{
     color: #3A84FF;
