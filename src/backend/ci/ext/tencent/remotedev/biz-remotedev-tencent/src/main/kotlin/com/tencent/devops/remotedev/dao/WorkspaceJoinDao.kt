@@ -31,9 +31,9 @@ import org.jooq.Record1
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
+import org.jooq.SelectSelectStep
 import org.jooq.Table
 import org.jooq.impl.DSL
-import org.jooq.SelectSelectStep
 import org.springframework.stereotype.Repository
 
 /**
@@ -329,8 +329,21 @@ class WorkspaceJoinDao {
         return this
     }
 
-    /*labels 的交集查询子句*/
+    /**
+     * labels 的交集查询子句
+     *
+     * sql示例：
+     * ```sql
+     * select alias_107434951.`WORKSPACE_NAME`
+     * from (select `devops_remotedev`.`T_WORKSPACE_LABELS`.`WORKSPACE_NAME`
+     *      from `devops_remotedev`.`T_WORKSPACE_LABELS`
+     *      where `devops_remotedev`.`T_WORKSPACE_LABELS`.`LABEL` = '2121') as `alias_107434951`
+     * group by alias_107434951.`WORKSPACE_NAME`
+     * having count(*) = 1;
+     * ```
+     **/
     private fun labelsTable(labels: List<String>): Table<Record1<String>> {
+        kotlin.run { }
         with(TWorkspaceLabels.T_WORKSPACE_LABELS) {
             val subquery = DSL.select(WORKSPACE_NAME)
                 .from(this)
@@ -506,7 +519,7 @@ class WorkspaceJoinDao {
         ).addResourceJoin(projectId).groupBy(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE).fetch()
             .map {
                 it.getValue(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE) to
-                        it.get("COUNT").toString().toLong().toInt()
+                    it.get("COUNT").toString().toLong().toInt()
             }.toMap()
     }
 

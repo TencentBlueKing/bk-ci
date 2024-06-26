@@ -10,6 +10,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -87,12 +88,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         apigwType: String?,
         operator: String,
         owner: String?,
+        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         logger.info("assign workspace|operator|$operator|owner|$owner|data|$data")
         return client.get(ServiceRemoteDevResource::class).assignWorkspace(
             operator = operator,
             owner = owner,
+            zoneType = zoneType,
             data = data
         )
     }
@@ -165,9 +168,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
+    override fun createPersonalWorkspace(
+        userId: String,
+        zoneType: WindowsResourceZoneConfigType?,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
         logger.info("createPersonalWorkspace $userId|$data")
-        return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
+        return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, zoneType, data)
     }
 
     override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
@@ -183,10 +190,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun createProjectWorkspace(
         userId: String,
         projectId: String,
+        zoneType: WindowsResourceZoneConfigType?,
         data: WindowsWorkspaceCreate
     ): Result<Boolean> {
         logger.info("createProjectWorkspace $userId|$projectId|$data")
-        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(userId, projectId, data)
+        return client.get(ServiceRemoteDevResource::class).createProjectWorkspace(
+            userId = userId,
+            projectId = projectId,
+            zoneType = zoneType,
+            data = data
+        )
     }
 
     override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {

@@ -43,6 +43,7 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOrganization
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
@@ -70,13 +71,8 @@ class WorkspaceDao {
     fun createWorkspace(
         workspace: Workspace,
         workspaceStatus: WorkspaceStatus,
-        bgName: String?,
-        deptName: String?,
-        centerName: String?,
-        groupName: String?,
-        dslContext: DSLContext,
-        projectName: String,
-        businessLineNmae: String? = ""
+        organization: WorkspaceOrganization,
+        dslContext: DSLContext
     ): Long {
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
@@ -149,15 +145,15 @@ class WorkspaceDao {
                     workspace.yaml,
                     "",
                     workspace.createUserId,
-                    bgName ?: "",
-                    deptName ?: "",
-                    centerName ?: "",
-                    groupName ?: "",
+                    organization.bgName ?: "",
+                    organization.deptName ?: "",
+                    organization.centerName ?: "",
+                    organization.groupName ?: "",
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name,
                     workspace.ownerType.name,
-                    projectName,
-                    businessLineNmae ?: ""
+                    organization.projectName,
+                    organization.businessLineName ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id

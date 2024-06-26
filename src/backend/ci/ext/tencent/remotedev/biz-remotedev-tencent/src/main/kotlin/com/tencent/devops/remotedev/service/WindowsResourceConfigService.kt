@@ -42,6 +42,7 @@ import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -74,9 +75,10 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Map<String, Map<String, Int>> {
         // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
         val res = mutableMapOf<String, MutableMap<String, Int>>()
-
+        val spec = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
         if (searchCustom != true) {
             workspaceCommon.syncStartCloudResourceList().forEach {
+                if (it.zoneId in spec) return@forEach
                 val key = it.zoneId.replace(Regex("\\d+"), "")
                 val map = res.getOrPut(key) { mutableMapOf() }
                 if (it.status == 11 && it.locked != true && it.internal == quotaType.getInternal()) {
@@ -88,6 +90,7 @@ class WindowsResourceConfigService @Autowired constructor(
         client.get(ServiceStartCloudResource::class).getResourceVm(
             ResourceVmReq(null, null, quotaType.getInternal())
         ).data?.forEach { resource ->
+            if (resource.zoneId in spec) return@forEach
             val key = resource.zoneId.replace(Regex("\\d+"), "")
             val map = res.getOrPut(key) { mutableMapOf() }
             resource.machineResources?.forEach { mas ->
@@ -165,6 +168,20 @@ class WindowsResourceConfigService @Autowired constructor(
         logger.info("get windows resource config zone $zone")
         return windowsResourceZoneDao.fetchAny(dslContext, zone)
     }
+
+    fun getAvailableZone(
+        windowsZone: WindowsResourceZoneConfig,
+        type: WindowsResourceZoneConfigType?
+    ): WindowsResourceZoneConfig? {
+        logger.info("get windows resource config zone type $type")
+        return windowsResourceZoneDao.fetchAll(
+            dslContext = dslContext,
+            withUnavailable = true,
+            type = type ?: WindowsResourceZoneConfigType.DEFAULT
+        ).firstOrNull { it.id == windowsZone.id }
+    }
+
+    fun getAllSpecZoneShortName() = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
 
     // 新增windows硬件资源配置
     fun addWindowsResource(windowsResourceConfig: WindowsResourceTypeConfig): Boolean {

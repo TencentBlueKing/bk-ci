@@ -22,9 +22,10 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.config.async.AsyncExecute
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
@@ -51,12 +52,12 @@ import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
-import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -184,6 +185,7 @@ class ServiceRemoteDevResourceImpl(
     override fun assignWorkspace(
         operator: String,
         owner: String?,
+        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         val projectId = checkNotNull(data.projectId)
@@ -227,7 +229,8 @@ class ServiceRemoteDevResourceImpl(
                     baseImageId = 0,
                     count = 1,
                     assignOwners = owner?.let { listOf(owner) } ?: emptyList()
-                )
+                ),
+                zoneType = zoneType
             )
             Thread.sleep(500)
         }
@@ -299,8 +302,19 @@ class ServiceRemoteDevResourceImpl(
         return Result(windowsResourceConfigService.getAllType(true, null))
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
-        return Result(createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = null))
+    override fun createPersonalWorkspace(
+        userId: String,
+        zoneType: WindowsResourceZoneConfigType?,
+        data: WindowsWorkspaceCreate
+    ): Result<Boolean> {
+        return Result(
+            createControl.devcloudCreateWorkspace(
+                userId = userId,
+                workspaceCreate = data,
+                projectId = null,
+                zoneType = zoneType
+            )
+        )
     }
 
     override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
@@ -336,11 +350,17 @@ class ServiceRemoteDevResourceImpl(
     override fun createProjectWorkspace(
         userId: String,
         projectId: String,
+        zoneType: WindowsResourceZoneConfigType?,
         data: WindowsWorkspaceCreate
     ): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
         return Result(
-            createControl.devcloudCreateWorkspace(userId = userId, workspaceCreate = data, projectId = projectId)
+            createControl.devcloudCreateWorkspace(
+                userId = userId,
+                workspaceCreate = data,
+                projectId = projectId,
+                zoneType = zoneType
+            )
         )
     }
 

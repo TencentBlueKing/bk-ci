@@ -29,24 +29,12 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "WINDOWS 地域表")
-data class WindowsResourceZoneConfig(
-    @get:Schema(title = "Id")
-    val id: Long?,
-    @get:Schema(title = "是否可用")
-    val available: Boolean?,
-    @get:Schema(title = "区域，深圳，南京等")
-    val zone: String,
-    @get:Schema(title = "区域简称，SZ,NJ")
-    var zoneShortName: String,
-    @get:Schema(title = "描述")
-    val description: String,
-    @get:Schema(title = "类型")
-    val type: WindowsResourceZoneConfigType
+@Schema(title = "获取指定工作空间详情model")
+data class WorkspaceOrganization(
+    val bgName: String?,
+    val deptName: String?,
+    val centerName: String?,
+    val groupName: String?,
+    val projectName: String,
+    val businessLineName: String? = ""
 )
-
-enum class WindowsResourceZoneConfigType{
-    DEFAULT,
-    INTERNAL_USE, /*内部使用专区*/
-    CSIG_USE; /*csig使用专区*/
-}

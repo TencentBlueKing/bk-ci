@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
@@ -145,6 +146,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -183,6 +187,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>
@@ -221,6 +228,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
+        @Parameter(description = "zoneType", required = false)
+        @QueryParam("zoneType")
+        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
     ): Result<Boolean>

@@ -47,7 +47,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
@@ -115,7 +114,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         // 生产创建start资源的订单号
         val orderId = checkNotNull(event.appName) + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
         val zoneId = if (event.devFile.cgsId.isNullOrBlank()) {
-            checkZoneId(event)
+            event.devFile.zoneId
         } else {
             checkNotNull(event.devFile.cgsId).substringBefore(".")
         }
@@ -142,46 +141,6 @@ class StartCloudRemoteDevService @Autowired constructor(
         startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
 
         return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
-    }
-
-    private fun checkZoneId(event: WorkspaceCreateEvent): String {
-        // 先检查基础镜像在池子中是否有配额，再看有没有可以新生产的显卡
-        var zoneId = ""
-        var createFlag = false
-        if (event.devFile.imageCosFile.isNullOrBlank()) {
-            val random = startCloudInterfaceService.syncStartCloudResourceList().filter {
-                it.status == 11 &&
-                    it.machineType == event.devFile.machineType &&
-                    it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                    it.locked != true && it.internal == event.devFile.quotaType?.getInternal()
-            }.randomOrNull()
-            if (random != null) {
-                logger.info("get random resource to running|$random")
-                createFlag = true
-                zoneId = random.zoneId
-            }
-        }
-        // 说明池子中没有，或者是自定义镜像，需要使用显卡重新创建
-        if (!createFlag) {
-            val random = workspaceBcsClient.startGetResourceVm(
-                ResourceVmReq(
-                    zoneId = event.devFile.zoneId,
-                    machineType = event.devFile.machineType,
-                    internal = event.devFile.quotaType?.getInternal()
-                )
-            )?.filter {
-                (it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId) &&
-                    (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
-            }?.randomOrNull() ?: throw BuildFailureException(
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
-            )
-            logger.info("get random resource to running|$random")
-            zoneId = random.zoneId
-        }
-        return zoneId
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
@@ -333,7 +292,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             type == UpdateEventType.CREATE ||
             type == UpdateEventType.REBUILD ||
             type == UpdateEventType.MAKE_IMAGE
-            ) {
+        ) {
             START_CREATE_TIMEOUT
         } else {
             START_OTHER_TIMEOUT

@@ -11,10 +11,10 @@ enum class ErrorCodeEnum(
     val formatErrorMessage: String
 ) {
 
-    USER_NOT_EXISTS(
+    BASE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132001",
-        formatErrorMessage = "Account [{0}] does not exist, please contact DevOps-helper to register"
+        formatErrorMessage = "error: {0}"
     ),
     OAUTH_ILLEGAL(
         errorType = ErrorType.USER,
