@@ -93,6 +93,18 @@
                     "items" : {
                       "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
                     }
+                  },
+                  "custom-filter" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties": {
+                      "url": {
+                        "type" : "string"
+                      },
+                      "credentials": {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]
@@ -232,6 +244,18 @@
                     "uniqueItems" : true,
                     "items" : {
                       "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                    }
+                  },
+                  "custom-filter" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties": {
+                      "url": {
+                        "type" : "string"
+                      },
+                      "credentials": {
+                        "type" : "string"
+                      }
                     }
                   }
                 }
