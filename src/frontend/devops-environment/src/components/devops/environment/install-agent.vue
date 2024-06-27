@@ -720,6 +720,7 @@
         }
 
         .ace_scrollbar-h {
+            display: none !important;
             margin-bottom: -20px;
 
             &::-webkit-scrollbar {
