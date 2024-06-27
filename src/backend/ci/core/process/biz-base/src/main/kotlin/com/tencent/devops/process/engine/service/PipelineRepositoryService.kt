@@ -1182,12 +1182,11 @@ class PipelineRepositoryService constructor(
                 yamlVersion = releaseResource.yamlVersion,
                 yamlStr = releaseResource.yaml,
                 baseVersion = baseVersion,
-                versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
-                    releaseResource.version, releaseResource.version, 0, 0
-                ) ?: "",
+                versionName = releaseResource.versionName ?: "init",
                 versionNum = releaseResource.versionNum,
-                pipelineVersion = null,
+                pipelineVersion = releaseResource.version,
                 triggerVersion = null,
+                // 不写入版本状态和关联的setting版本，标识是兼容非常老的数据补全
                 settingVersion = null,
                 versionStatus = null,
                 branchAction = null,
