@@ -285,6 +285,7 @@
                     .info-content {
                         flex: 1;
                         color: #63656E;
+                        word-break: break-all;
                     }
                 }
             }
