@@ -329,13 +329,13 @@ class NodeDao {
 
     fun updateNodeStatus(
         dslContext: DSLContext,
-        id: Long,
+        ids: Set<Long>,
         status: NodeStatus
     ) {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, status.name)
-                .where(NODE_ID.eq(id))
+                .where(NODE_ID.`in`(ids))
                 .execute()
         }
     }

@@ -206,9 +206,6 @@ class TencentAgentMetricService @Autowired constructor(
         if (!checkAgentProject(projectId)) {
             return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
         }
-        if (!checkAgentVersion(agentRecord.masterVersion)) {
-            return super.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange)
-        }
 
         return bkMonitorMetricsService.queryCpuUsageMetrics(
             userId = userId,
@@ -230,9 +227,6 @@ class TencentAgentMetricService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
 
         if (!checkAgentProject(projectId)) {
-            return super.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange)
-        }
-        if (!checkAgentVersion(agentRecord.masterVersion)) {
             return super.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange)
         }
 
@@ -258,9 +252,6 @@ class TencentAgentMetricService @Autowired constructor(
         if (!checkAgentProject(projectId)) {
             return super.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange)
         }
-        if (!checkAgentVersion(agentRecord.masterVersion)) {
-            return super.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange)
-        }
 
         return bkMonitorMetricsService.queryDiskioMetrics(
             userId = userId,
@@ -283,9 +274,6 @@ class TencentAgentMetricService @Autowired constructor(
         ) ?: throw NotFoundException("The agent is not exist")
 
         if (!checkAgentProject(projectId)) {
-            return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
-        }
-        if (!checkAgentVersion(agentRecord.masterVersion)) {
             return super.queryNetMetrix(userId, projectId, nodeHashId, timeRange)
         }
 
@@ -315,11 +303,6 @@ class TencentAgentMetricService @Autowired constructor(
             nodeId = id,
             projectId = projectId
         )
-    }
-
-    // agent升级是一批一批的，所以根据agent版本决定使用新的还是旧的环境查询监控数据
-    private fun checkAgentVersion(agentVersion: String): Boolean {
-        return agentVersion == agentPropsScope.getAgentVersion()
     }
 
     // 区分 stream 项目使用模板分割，PAC 上线后删除
