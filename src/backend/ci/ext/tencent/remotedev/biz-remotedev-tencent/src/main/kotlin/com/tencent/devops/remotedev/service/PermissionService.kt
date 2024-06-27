@@ -128,8 +128,16 @@ class PermissionService @Autowired constructor(
     }
 
     fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
-        return kotlin.runCatching {
+        kotlin.runCatching {
             checkOwnerPermission(userId, workspaceName, projectId, WorkspaceOwnerType.PROJECT)
+        }.fold(
+            { return true }, { return false }
+        )
+    }
+
+    fun hasViewerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
+        kotlin.runCatching {
+            checkViewerPermission(userId, workspaceName, projectId)
         }.fold(
             { return true }, { return false }
         )
@@ -175,9 +183,17 @@ class PermissionService @Autowired constructor(
     }
 
     fun hasUserManager(userId: String, projectId: String): Boolean {
-        return kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
+        kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
             { return true }, { return false }
         )
+    }
+
+    fun hasManagerOrOwnerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
+        return hasOwnerPermission(userId, projectId, workspaceName) || hasUserManager(userId, projectId)
+    }
+
+    fun hasManagerOrViewerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
+        return hasViewerPermission(userId, projectId, workspaceName) || hasUserManager(userId, projectId)
     }
 
     // 判断用户是否项目成员
