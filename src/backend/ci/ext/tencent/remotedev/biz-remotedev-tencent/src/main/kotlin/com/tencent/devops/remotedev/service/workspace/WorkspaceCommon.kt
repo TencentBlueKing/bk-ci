@@ -269,6 +269,7 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     fun fixUnexpectedStatus(
         userId: String,
         workspaceName: String,
