@@ -31,6 +31,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -128,65 +129,70 @@ func watch() {
 	workDir := systemutil.GetExecutableDir()
 	var agentPath = systemutil.GetWorkDir() + "/devopsAgent.exe"
 	for {
-		cmd := exec.Command(agentPath)
-		cmd.Dir = workDir
+		func() {
+			cmd := exec.Command(agentPath)
+			cmd.Dir = workDir
 
-		// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
-		stdErr, errstd := cmd.StderrPipe()
-		if errstd != nil {
-			logs.WithError(errstd).Error("get agent stderr pipe error")
-		} else {
-			defer stdErr.Close()
-		}
+			// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
+			stdErr, errstd := cmd.StderrPipe()
+			if errstd != nil {
+				logs.WithError(errstd).Error("get agent stderr pipe error")
+			} else {
+				defer stdErr.Close()
+			}
 
-		logs.Info("start devops agent")
-		if !fileutil.Exists(agentPath) {
-			logs.Errorf("agent file: %s not exists", agentPath)
-			logs.Info("restart after 30 seconds")
-			time.Sleep(30 * time.Second)
-		}
+			logs.Info("start devops agent")
+			if !fileutil.Exists(agentPath) {
+				logs.Errorf("agent file: %s not exists", agentPath)
+				logs.Info("restart after 30 seconds")
+				time.Sleep(30 * time.Second)
+			}
 
-		err := fileutil.SetExecutable(agentPath)
-		if err != nil {
-			logs.WithError(err).Error("chmod failed, err")
-			logs.Info("restart after 30 seconds")
-			time.Sleep(30 * time.Second)
-			continue
-		}
+			err := fileutil.SetExecutable(agentPath)
+			if err != nil {
+				logs.WithError(err).Error("chmod failed, err")
+				logs.Info("restart after 30 seconds")
+				time.Sleep(30 * time.Second)
+				return
+			}
 
-		err = cmd.Start()
-		if err != nil {
-			logs.WithError(err).Error("agent start failed, err")
-			logs.Info("restart after 30 seconds")
-			time.Sleep(30 * time.Second)
-			continue
-		}
+			err = cmd.Start()
+			if err != nil {
+				logs.WithError(err).Error("agent start failed, err")
+				logs.Info("restart after 30 seconds")
+				time.Sleep(30 * time.Second)
+				return
+			}
 
-		GAgentProcess = cmd.Process
-		logs.Info("devops agent started, pid: ", cmd.Process.Pid)
-		_, err = cmd.Process.Wait()
-		if err != nil {
-			if exiterr, ok := err.(*exec.ExitError); ok {
-				if exiterr.ExitCode() == constant.DaemonExitCode {
-					logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
-					systemutil.ExitProcess(constant.DaemonExitCode)
+			GAgentProcess = cmd.Process
+			logs.Info("devops agent started, pid: ", cmd.Process.Pid)
+			_, err = cmd.Process.Wait()
+			if err != nil {
+				var exitErr *exec.ExitError
+				if errors.As(err, &exitErr) {
+					if exitErr.ExitCode() == constant.DaemonExitCode {
+						logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
+						systemutil.ExitProcess(constant.DaemonExitCode)
+					}
+				}
+				logs.WithError(err).Error("agent process error")
+
+				// 读取可能的报错
+				if errstd != nil {
+					return
+				}
+				out, err := io.ReadAll(stdErr)
+				if err != nil {
+					logs.WithError(err).Error("read agent stderr out error")
+				} else {
+					logs.Error("agent process error out", string(out))
 				}
 			}
-			logs.WithError(err).Error("agent process error")
-			if errstd != nil {
-				return
-			}
-			out, err := io.ReadAll(stdErr)
-			if err != nil {
-				logs.WithError(err).Error("read agent stderr out error")
-				return
-			}
-			logs.Error("agent process error out", string(out))
-		}
-		logs.Info("agent process exited")
+			logs.Info("agent process exited")
 
-		logs.Info("restart after 30 seconds")
-		time.Sleep(30 * time.Second)
+			logs.Info("restart after 30 seconds")
+			time.Sleep(30 * time.Second)
+		}()
 	}
 }
 
