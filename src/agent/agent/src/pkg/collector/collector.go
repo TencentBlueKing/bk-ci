@@ -31,14 +31,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
+	"github.com/pkg/errors"
 	"text/template"
 	"time"
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector/telegrafConf"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
-	"github.com/pkg/errors"
-
 	"github.com/influxdata/telegraf/logger"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -54,63 +52,71 @@ import (
 )
 
 const (
-	telegrafConfigFile   = "telegraf.conf"
 	telegrafRelaunchTime = 5 * time.Second
-
-	templateKeyAgentId     = "###{agentId}###"
-	templateKeyAgentSecret = "###{agentSecret}###"
-	templateKeyGateway     = "###{gateway}###"
-	templateKeyTlsCa       = "###{tls_ca}###"
-	templateKeyProjectId   = "###{projectId}###"
-	templateKeyHostName    = "###{hostName}###"
-	templateKeyHostIp      = "###{hostIp}###"
-	templateBuildType      = "###{buildType}###"
+	eBusId               = "Collect"
 )
 
-func DoAgentCollect() {
+func Collect() {
+	logs.Debug("do Collect")
+	ipChan := config.EBus.Subscribe(config.IpEvent, eBusId, 1)
+
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Error("agent collect panic: ", err)
 		}
+		config.EBus.Unsubscribe(config.IpEvent, eBusId)
 	}()
 
+	for {
+		ctx, cancel := context.WithCancel(context.Background())
+		go func() {
+			ipData := <-ipChan.DChan
+			logs.Infof("collect ip change data: %s", ipData.Data)
+			cancel()
+		}()
+		doAgentCollect(ctx)
+	}
+}
+
+func doAgentCollect(ctx context.Context) {
 	if config.GAgentConfig.CollectorOn == false {
 		logs.Info("agent collector off")
 		return
 	}
 
-	if err := writeTelegrafConfig(); err != nil {
-		logs.WithError(err).Error("writeTelegrafConfig error")
+	configContent, err := genTelegrafConfig()
+	if err != nil {
+		logs.WithError(err).Error("genTelegrafConfig error")
 		return
 	}
+
+	logs.Debug("generate telegraf config")
 
 	// 每次重启agent要清理掉无意义的telegraf.log日志，重新记录
 	logFile := fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir())
 	if fileutil.Exists(logFile) {
 		_ = fileutil.TryRemoveFile(logFile)
 	}
-	tAgent, err := getTelegrafAgent(
-		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
-		logFile,
-	)
+
+	tAgent, err := getTelegrafAgent(configContent.Bytes(), logFile)
 	if err != nil {
-		logs.Errorf("init telegraf agent failed: %v", err)
+		logs.WithError(err).Error("init telegraf agent failed")
 		return
 	}
 
 	for {
 		logs.Info("launch telegraf agent")
-		if err = tAgent.Run(context.Background()); err != nil {
-			logs.Errorf("telegraf agent exit: %v", err)
+		if err = tAgent.Run(ctx); err != nil {
+			logs.WithError(err).Error("telegraf agent exit")
 		}
 		time.Sleep(telegrafRelaunchTime)
 	}
 }
 
-func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
+func getTelegrafAgent(configData []byte, logFile string) (*agent.Agent, error) {
 	// get a new config and parse configuration from file.
 	c := telegrafConfig.NewConfig()
-	if err := c.LoadConfig(configFile); err != nil {
+	if err := c.LoadConfigData(configData); err != nil {
 		return nil, err
 	}
 
@@ -120,52 +126,52 @@ func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
 		RotationMaxArchives: -1,
 	}
 
-	logger.SetupLogging(logConfig)
+	if err := logger.SetupLogging(logConfig); err != nil {
+		return nil, err
+	}
 	return agent.NewAgent(c)
 }
 
-func writeTelegrafConfig() error {
+func genTelegrafConfig() (*bytes.Buffer, error) {
 	// 区分 stream 项目使用模板分割，PAC 上线后删除
 	projectType := "ci"
 	if strings.HasPrefix(config.GAgentConfig.ProjectId, "git_") {
 		projectType = "stream"
 	}
-	var content bytes.Buffer
+
+	tlsCa := ""
+	if config.UseCert {
+		tlsCa = `tls_ca = ".cert"`
+	}
+
+	buildGateway := config.GAgentConfig.Gateway
+	if !strings.HasPrefix(buildGateway, "http") {
+		buildGateway = "http://" + buildGateway
+	}
+
+	ip := config.GAgentEnv.GetAgentIp()
+	templateData := map[string]string{
+		"ProjectType": projectType,
+		"AgentId":     config.GAgentConfig.AgentId,
+		"AgentSecret": config.GAgentConfig.SecretKey,
+		"Gateway":     buildGateway,
+		"ProjectId":   config.GAgentConfig.ProjectId,
+		"HostName":    config.GAgentEnv.HostName,
+		"HostIp":      config.GAgentEnv.GetAgentIp(),
+		"BuildType":   config.GAgentConfig.BuildType,
+		"TlsCa":       tlsCa,
+	}
+	logs.Debugf("telegraf agentip %s", ip)
+
+	var content = new(bytes.Buffer)
 	tmpl, err := template.New("tmpl").Parse(telegrafconf.TelegrafConf)
 	if err != nil {
-		return errors.Wrap(err, "parse telegraf config template err")
+		return nil, errors.Wrap(err, "parse telegraf config template err")
 	}
-	err = tmpl.Execute(&content, projectType)
+	err = tmpl.Execute(content, templateData)
 	if err != nil {
-		return errors.Wrap(err, "execute telegraf config template err")
+		return nil, errors.Wrap(err, "execute telegraf config template err")
 	}
 
-	configContent := strings.Replace(content.String(), templateKeyAgentId, config.GAgentConfig.AgentId, 2)
-	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 2)
-	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
-	configContent = strings.Replace(configContent, templateKeyProjectId, config.GAgentConfig.ProjectId, 2)
-	configContent = strings.Replace(configContent, templateKeyHostName, config.GAgentEnv.HostName, 1)
-	configContent = strings.Replace(configContent, templateKeyHostIp, config.GAgentEnv.AgentIp, 1)
-	configContent = strings.Replace(configContent, templateBuildType, config.GAgentConfig.BuildType, 1)
-
-	if config.UseCert {
-		configContent = strings.Replace(configContent, templateKeyTlsCa, `tls_ca = ".cert"`, 1)
-	} else {
-		configContent = strings.Replace(configContent, templateKeyTlsCa, "", 1)
-	}
-
-	err = os.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
-	if err != nil {
-		return errors.Wrap(err, "write telegraf config err")
-	}
-
-	return nil
-}
-
-func buildGateway(gateway string) string {
-	if strings.HasPrefix(gateway, "http") {
-		return gateway
-	} else {
-		return "http://" + gateway
-	}
+	return content, nil
 }

@@ -5,11 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/docker/docker/api/types/registry"
 	"os"
 	"strings"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
@@ -29,7 +29,7 @@ type DockerHostInfo struct {
 
 type ImagePullInfo struct {
 	ImageName string
-	AuthType  types.AuthConfig
+	AuthType  registry.AuthConfig
 }
 
 type ContainerCreateInfo struct {
@@ -40,7 +40,7 @@ type ContainerCreateInfo struct {
 }
 
 func parseApiDockerOptions(o api.DockerOptions) []string {
-	args := []string{}
+	var args []string
 	if o.Volumes != nil && len(o.Volumes) > 0 {
 		for _, v := range o.Volumes {
 			args = append(args, "--volume", strings.TrimSpace(v))
@@ -57,10 +57,14 @@ func parseApiDockerOptions(o api.DockerOptions) []string {
 		args = append(args, "--gpus", strings.TrimSpace(o.Gpus))
 	}
 
+	if o.Privileged != false {
+		args = append(args, "--privileged")
+	}
+
 	return args
 }
 
-func ParseDockeroptions(dockerClient *client.Client, userOptions api.DockerOptions) (*ContainerConfig, error) {
+func ParseDockerOptions(dockerClient *client.Client, userOptions api.DockerOptions) (*ContainerConfig, error) {
 	// 将指定好的options直接换成args
 	argv := parseApiDockerOptions(userOptions)
 	if len(argv) == 0 {
@@ -68,9 +72,9 @@ func ParseDockeroptions(dockerClient *client.Client, userOptions api.DockerOptio
 	}
 
 	// 解析args为flagSet
-	flagset := pflag.NewFlagSet(os.Args[0], pflag.ContinueOnError)
-	copts := addFlags(flagset)
-	err := flagset.Parse(argv)
+	flagSet := pflag.NewFlagSet(os.Args[0], pflag.ContinueOnError)
+	copts := addFlags(flagSet)
+	err := flagSet.Parse(argv)
 	if err != nil {
 		errMsg := fmt.Sprintf("解析用户docker options失败: %s", err.Error())
 		return nil, errors.New(errMsg)
@@ -84,7 +88,7 @@ func ParseDockeroptions(dockerClient *client.Client, userOptions api.DockerOptio
 	}
 
 	// 解析配置为可用docker配置, 目前只有linux支持，所以只使用linux相关配置
-	containerConfig, err := parse(flagset, copts, ping.OSType)
+	containerConfig, err := parse(flagSet, copts, ping.OSType)
 	if err != nil {
 		errMsg := fmt.Sprintf("解析用户docker options 为docker配置 错误: %s", err.Error())
 		return nil, errors.New(errMsg)
@@ -93,9 +97,9 @@ func ParseDockeroptions(dockerClient *client.Client, userOptions api.DockerOptio
 	return containerConfig, nil
 }
 
-// policy 为空，并且容器镜像的标签是 :latest， image-pull-policy 会自动设置为 always
+// IfPullImage policy 为空，并且容器镜像的标签是 :latest， image-pull-policy 会自动设置为 always
 // policy 为空，并且为容器镜像指定了非 :latest 的标签， image-pull-policy 就会自动设置为 if-not-present
-func IfPullImage(localExist, islatest bool, policy string) bool {
+func IfPullImage(localExist, isLatest bool, policy string) bool {
 	// 为空和枚举写错走一套逻辑
 	switch policy {
 	case api.ImagePullPolicyAlways.String():
@@ -107,7 +111,7 @@ func IfPullImage(localExist, islatest bool, policy string) bool {
 			return false
 		}
 	default:
-		if islatest {
+		if isLatest {
 			return true
 		} else {
 			if !localExist {
@@ -125,7 +129,7 @@ func GenerateDockerAuth(user, pass string) (string, error) {
 		return "", nil
 	}
 
-	authConfig := types.AuthConfig{
+	authConfig := registry.AuthConfig{
 		Username: user,
 		Password: pass,
 	}
