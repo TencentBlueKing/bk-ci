@@ -29,16 +29,15 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceSubPipelineResource
 import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserSubPipelineInfoResourceImpl @Autowired constructor (
-    private val client: Client
+    private val subPipeService: SubPipelineStartUpService
 ) : UserSubPipelineInfoResource {
 
     override fun subpipManualStartupInfo(
@@ -51,8 +50,7 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
-        // TODO 权限迁移完后应该删除掉
-        return client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
+        return subPipeService.subPipelineManualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

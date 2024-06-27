@@ -42,10 +42,9 @@ class ServiceSubPipelineResourceImpl constructor(
     override fun subpipManualStartupInfo(
         userId: String,
         projectId: String,
-        pipelineId: String,
-        includeConst: Boolean?
+        pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
-        return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId, includeConst)
+        return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId, true)
     }
 
     override fun callOtherProjectPipelineStartup(

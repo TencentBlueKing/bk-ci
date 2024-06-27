@@ -31,10 +31,8 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceSubPipelineResource
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -44,8 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildSubPipelineResourceImpl @Autowired constructor(
-    private val subPipeService: SubPipelineStartUpService,
-    private val client: Client
+    private val subPipeService: SubPipelineStartUpService
 ) : BuildSubPipelineResource {
 
     @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
@@ -60,32 +57,17 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        return if (projectId != callProjectId) {
-            // TODO 权限迁移完后应该删除掉
-            client.getGateway(ServiceSubPipelineResource::class).callOtherProjectPipelineStartup(
-                callProjectId = callProjectId,
-                callPipelineId = callPipelineId,
-                atomCode = atomCode,
-                parentProjectId = projectId,
-                parentPipelineId = parentPipelineId,
-                buildId = buildId,
-                taskId = taskId,
-                runMode = runMode,
-                values = values
-            )
-        } else {
-            subPipeService.callPipelineStartup(
-                projectId = projectId,
-                parentPipelineId = parentPipelineId,
-                buildId = buildId,
-                callProjectId = callProjectId,
-                callPipelineId = callPipelineId,
-                atomCode = atomCode,
-                taskId = taskId,
-                runMode = runMode,
-                values = values
-            )
-        }
+        return subPipeService.callPipelineStartup(
+            projectId = projectId,
+            parentPipelineId = parentPipelineId,
+            buildId = buildId,
+            callProjectId = callProjectId,
+            callPipelineId = callPipelineId,
+            atomCode = atomCode,
+            taskId = taskId,
+            runMode = runMode,
+            values = values
+        )
     }
 
     override fun callPipelineStartup(
@@ -127,7 +109,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         includeConst: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
-        return client.getGateway(ServiceSubPipelineResource::class).subpipManualStartupInfo(
+        return subPipeService.subPipelineManualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
