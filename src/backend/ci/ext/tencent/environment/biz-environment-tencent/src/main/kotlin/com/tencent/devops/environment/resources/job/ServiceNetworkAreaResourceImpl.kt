@@ -35,14 +35,14 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class ServiceNetworkAreaResourceImpl @Autowired constructor(
     private val networkAreaService: NetworkAreaService
-): ServiceNetworkAreaResource {
+) : ServiceNetworkAreaResource {
     override fun queryAllNetworkArea(userId: String, page: Int, pageSize: Int, keyword: String?): NetworkAreaResult {
         return networkAreaService.queryAllNetworkArea(page = page, pageSize = pageSize, keyword = keyword)
     }
 
     override fun createNewNetworkArea(userId: String, networkInfo: NetworkInfo): NetworkAreaResult {
         return networkAreaService.createNewNetworkArea(
-            netArea = networkInfo.netAreaName, netSegment = networkInfo.netSegment?:""
+            netArea = networkInfo.netAreaName, netSegment = networkInfo.netSegment ?: ""
         )
     }
 
@@ -67,5 +67,4 @@ class ServiceNetworkAreaResourceImpl @Autowired constructor(
     override fun deleteNetworkArea(userId: String, netAreaName: String): NetworkAreaResult {
         return networkAreaService.deleteNetworkArea(netArea = netAreaName)
     }
-
 }

@@ -29,6 +29,7 @@ import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbQueryInfoReq
 import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbConditionValue
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbDataIns
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbResp
+import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbData
 import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbDataIns
 import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbResp
 import com.tencent.devops.environment.service.CmdbNodeService
@@ -173,26 +174,32 @@ class TencentQueryFromCmdbService {
         newCmdbCondition: NewCmdbCondition<T>,
         vararg newReqColumn: String
     ): List<NewCmdbDataIns>? {
-        return queryNewCmdbInfo(newCmdbQueryAllServerByBaseConditionPath, newCmdbCondition, *newReqColumn)
+        return queryNewCmdbInfo(
+            newCmdbQueryAllServerByBaseConditionPath, newCmdbCondition, DEFAULT_SIZE, DEFAULT_SCROLL_ID, *newReqColumn
+        ).list
     }
 
     fun <T> queryNewCmdbInfoByBusiness(
         newCmdbCondition: NewCmdbCondition<T>,
+        size: Int,
+        scrollId: String,
         vararg newReqColumn: String
-    ): List<NewCmdbDataIns>? {
-        return queryNewCmdbInfo(newCmdbQueryAllServerByBusinessPath, newCmdbCondition, *newReqColumn)
+    ): NewCmdbData? {
+        return queryNewCmdbInfo(newCmdbQueryAllServerByBusinessPath, newCmdbCondition, size, scrollId, *newReqColumn)
     }
 
     private fun <T> queryNewCmdbInfo(
         path: String,
         newCmdbCondition: NewCmdbCondition<T>,
+        size: Int,
+        scrollId: String,
         vararg newReqColumn: String
-    ): List<NewCmdbDataIns> {
+    ): NewCmdbData {
         val newCmdbQueryInfoReq = NewCmdbQueryInfoReq(
             resultColumn = newReqColumn.toList(),
             condition = newCmdbCondition,
-            size = DEFAULT_SIZE,
-            scrollId = DEFAULT_SCROLL_ID
+            size = size,
+            scrollId = scrollId
         )
         val responseBody = executePostRequest(
             getQueryNewCmdbInfoHeaders(), newCmdbBaseUrl + path, newCmdbQueryInfoReq
@@ -261,10 +268,10 @@ class TencentQueryFromCmdbService {
         return cmdbData
     }
 
-    private fun getNodeNewCmdbData(responseBody: String?): List<NewCmdbDataIns> {
-        val cmdbData: List<NewCmdbDataIns>?
+    private fun getNodeNewCmdbData(responseBody: String?): NewCmdbData {
+        val cmdbData: NewCmdbData?
         try {
-            cmdbData = mapper.readValue<NewCmdbResp>(responseBody!!).data.list
+            cmdbData = mapper.readValue<NewCmdbResp>(responseBody!!).data
         } catch (e: Exception) {
             logger.error("[getNodeNewCmdbData]readValue error: ", e)
             throw CustomException(
