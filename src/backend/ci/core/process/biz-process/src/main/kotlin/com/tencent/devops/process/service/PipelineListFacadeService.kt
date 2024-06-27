@@ -54,7 +54,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -1491,7 +1490,6 @@ class PipelineListFacadeService @Autowired constructor(
             if (pipelineSettingRecord != null) {
                 val tSetting = TPipelineSetting.T_PIPELINE_SETTING
                 it.pipelineDesc = pipelineSettingRecord.get(tSetting.DESC)
-                it.lock = PipelineRunLockType.checkLock(pipelineSettingRecord.get(tSetting.RUN_LOCK_TYPE))
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
             it.yamlExist = pipelineYamlExistMap[pipelineId] ?: false
@@ -1531,6 +1529,7 @@ class PipelineListFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     pipelineName = it.pipelineName,
                     taskCount = it.taskCount,
+                    lock = it.locked,
                     canManualStartup = it.manualStartup == 1,
                     latestBuildEstimatedExecutionSeconds = latestBuildEstimatedExecutionSeconds,
                     deploymentTime = (it.updateTime)?.timestampmilli() ?: 0,
@@ -1873,7 +1872,8 @@ class PipelineListFacadeService @Autowired constructor(
             createTime = pipelineInfo.createTime,
             updateTime = pipelineInfo.updateTime,
             viewNames = pipelineViewNames,
-            latestVersionStatus = pipelineInfo.latestVersionStatus
+            latestVersionStatus = pipelineInfo.latestVersionStatus,
+            locked = pipelineInfo.locked ?: false
         )
     }
 

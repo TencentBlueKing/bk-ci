@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.web.RestResource
@@ -352,38 +351,21 @@ class UserPipelineResourceImpl @Autowired constructor(
         enable: Boolean
     ): Result<Boolean> {
         checkParam(userId, projectId)
-        val origin = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
-        // 暂时无法回溯关闭前的配置，先采用支持并发的配置
-        val operationLogType: OperationLogType
-        val setting = if (enable) {
-            operationLogType = OperationLogType.ENABLE_PIPELINE
-            origin.copy(runLockType = PipelineRunLockType.MULTIPLE)
-        } else {
-            operationLogType = OperationLogType.DISABLE_PIPELINE
-            origin.copy(runLockType = PipelineRunLockType.LOCK)
-        }
-        val savedSetting = pipelineSettingFacadeService.saveSetting(
+
+        val pipelineInfo = pipelineInfoFacadeService.locked(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            setting = setting,
-            checkPermission = true
-        )
-        pipelineInfoFacadeService.updatePipelineSettingVersion(
-            userId = userId,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            operationLogType = operationLogType,
-            savedSetting = savedSetting
+            locked = !enable
         )
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = pipelineId,
-                resourceName = setting.pipelineName,
+                resourceName = pipelineInfo.pipelineName,
                 userId = userId,
                 action = "edit",
-                actionContent = "Update Setting",
+                actionContent = if (enable) "UnLock Pipeline" else "Locked Pipeline",
                 projectId = projectId
             )
         )
