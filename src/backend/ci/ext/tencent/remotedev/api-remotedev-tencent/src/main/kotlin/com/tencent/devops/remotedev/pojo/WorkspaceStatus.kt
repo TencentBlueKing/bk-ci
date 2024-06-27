@@ -48,11 +48,13 @@ enum class WorkspaceStatus {
     RESTARTING, // 13 重启中
     MAKING_IMAGE, // 14 制作镜像中
     REBUILDING, // 15 重装系统中
-    EXCEPTION_START_FAILED, // 16 异常 开机异常
-    EXCEPTION_STOP_FAILED, // 17 异常 关机异常
-    EXCEPTION_ABNORMAL_AFTER_RUNNING, // 18 异常 运行后异常
-    EXCEPTION_ABNORMAL_AFTER_READY, // 19 异常 准备后异常
-    EXCEPTION_CREATE_FAILED; // 20 异常 创建异常
+    UPGRADING, // 16 升级配置中
+    UNUSED, // 17 未使用，例如升配之后的旧机器
+    EXCEPTION_START_FAILED, // 18 异常 开机异常
+    EXCEPTION_STOP_FAILED, // 19 异常 关机异常
+    EXCEPTION_ABNORMAL_AFTER_RUNNING, // 20 异常 运行后异常
+    EXCEPTION_ABNORMAL_AFTER_READY, // 21 异常 准备后异常
+    EXCEPTION_CREATE_FAILED; // 22 异常 创建异常
 
     enum class Types {
         USING {
@@ -70,7 +72,8 @@ enum class WorkspaceStatus {
                 STOPPING,
                 RESTARTING,
                 MAKING_IMAGE,
-                REBUILDING
+                REBUILDING,
+                UPGRADING
             )
         },
         ERROR {
@@ -105,9 +108,13 @@ enum class WorkspaceStatus {
 
     fun workspaceInitializing() = checkDelivering()
 
+    fun checkUpgrading() = this == UPGRADING
+
+    fun checkUnused() = this == UNUSED
+
     fun checkInUse() = !checkDeleted() && !checkException()
     fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING ||
-        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING
+        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING || this == UPGRADING
 
     /**
      * 当正在做某事时，不能新建任务去执行
@@ -115,7 +122,7 @@ enum class WorkspaceStatus {
     fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
         (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
-            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING
+            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING
 }
 
 @Suppress("ALL")
@@ -137,6 +144,8 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.RESTARTING -> "重启中"
         WorkspaceStatus.MAKING_IMAGE -> "制作镜像中"
         WorkspaceStatus.REBUILDING -> "重装系统中"
+        WorkspaceStatus.UPGRADING -> "升级配置中"
+        WorkspaceStatus.UNUSED -> "未使用"
         WorkspaceStatus.EXCEPTION_START_FAILED -> "开机异常"
         WorkspaceStatus.EXCEPTION_STOP_FAILED -> "关机异常"
         WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_RUNNING -> "运行后异常"
