@@ -59,6 +59,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -317,6 +318,10 @@ class DevCloudRemoteDevService @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun expandDisk(workspaceName: String, userId: String, size: String): ExpandDiskValidateResp {
+        TODO("Not yet implemented")
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

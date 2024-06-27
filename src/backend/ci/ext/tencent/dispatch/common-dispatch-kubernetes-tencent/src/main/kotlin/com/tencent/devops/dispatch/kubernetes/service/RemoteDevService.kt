@@ -43,6 +43,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceCreateFailureException
@@ -451,5 +452,14 @@ class RemoteDevService @Autowired constructor(
                 "errorMessage:$failedMsg"
             )
         }
+    }
+
+    fun expandDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        mountType: WorkspaceMountType
+    ): ExpandDiskValidateResp {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).expandDisk(workspaceName, userId, size)
     }
 }

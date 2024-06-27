@@ -638,4 +638,8 @@ class ServiceRemoteDevResourceImpl(
         logger.warn("$desktopIP get token fail:$failMessage.<$failDetailMessage>")
         throw CustomException(Response.Status.FORBIDDEN, failMessage)
     }
+
+    override fun workspaceExpandDiskCallback(taskId: String, workspaceName: String, operator: String) {
+        expertSupportService.expandDiskCallback(taskId, workspaceName, operator)
+    }
 }
