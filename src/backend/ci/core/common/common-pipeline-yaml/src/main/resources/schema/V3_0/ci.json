@@ -525,7 +525,7 @@
               },
               "additionalItems" : false
             },
-            "changeCommit":{
+            "change-commit":{
               "oneOf" : [ {
                 "type" : "array",
                 "items" : {
@@ -568,7 +568,7 @@
                 }
               } ]
             },
-            "changeSubmit":{
+            "change-submit":{
               "oneOf" : [ {
                 "type" : "array",
                 "items" : {
@@ -611,7 +611,7 @@
                 }
               } ]
             },
-            "changeContent":{
+            "change-content":{
               "oneOf" : [ {
                 "type" : "array",
                 "items" : {
@@ -654,7 +654,7 @@
                 }
               } ]
             },
-            "shelveCommit":{
+            "shelve-commit":{
               "oneOf" : [ {
                 "type" : "array",
                 "items" : {
@@ -697,7 +697,7 @@
                 }
               } ]
             },
-            "shelveSubmit":{
+            "shelve-submit":{
               "oneOf" : [ {
                 "type" : "array",
                 "items" : {
