@@ -91,7 +91,7 @@ interface ServiceLogResource {
         executeCount: Int?,
         @Parameter(description = "指定subTag", required = false)
         @QueryParam("subTag")
-        subTag: String?,
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
