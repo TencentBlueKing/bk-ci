@@ -1043,7 +1043,7 @@ class WorkspaceDao {
     fun fetchWorkspaceByIp(
         dslContext: DSLContext,
         ip: String
-    ): List<TWorkspaceRecord> {
+    ): List<WorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
                 .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
@@ -1055,7 +1055,7 @@ class WorkspaceDao {
                     )
                 )
                 .and(HOST_NAME.like("%.$ip"))
-                .fetch()
+                .fetch(workspaceMapper)
         }
     }
 

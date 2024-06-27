@@ -118,7 +118,12 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        permissionService.checkUserManager(userId, workspace.projectId)
+        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to make $workspaceName image")
+            )
+        }
 
         RedisCallLimit(
             redisOperation,

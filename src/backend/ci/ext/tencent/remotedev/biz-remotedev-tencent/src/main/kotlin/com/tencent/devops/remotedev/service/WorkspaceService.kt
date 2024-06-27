@@ -164,6 +164,7 @@ class WorkspaceService @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_EDIT_CONTENT
     )
+    @Deprecated("不要新增功能，希望废弃该方法")
     // 修改workspace备注名称
     fun editWorkspace(
         userId: String,
@@ -197,27 +198,41 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Boolean {
+    fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        workspaceProperty: WorkspaceProperty
+    ): Boolean {
         logger.info("$userId modify workspace property $workspaceName|$workspaceProperty")
 
-        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
+        val ws = when {
+            workspaceName != null -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ip != null -> workspaceDao.fetchWorkspaceByIp(dslContext, ip).firstOrNull()
+            else -> throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
+                params = arrayOf("null workspaceName and null ip")
             )
+        } ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName ?: ip ?: "unknown")
+        )
         // 审计
         ActionAuditContext.current()
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
-        if (!permissionService.hasUserManager(userId, ws.projectId)) {
-            permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
+        if (!permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to modify $workspaceName property")
+            )
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.modifyWorkspaceProperty(
                 dslContext = transactionContext,
-                workspaceName = workspaceName,
+                workspaceName = ws.workspaceName,
                 workspaceProperty = workspaceProperty
             )
         }
@@ -1542,6 +1557,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    @Deprecated("不要新增功能，希望废弃该接口")
     fun modifyWorkspaceDisplayName(userId: String, ip: String, displayName: String): Boolean {
         logger.info("$userId modifyWorkspaceDisplayName $ip|$displayName")
         val record = workspaceDao.fetchWorkspaceByIp(dslContext, ip).ifEmpty {
@@ -1556,7 +1572,7 @@ class WorkspaceService @Autowired constructor(
         }
         return editWorkspace(
             userId = userId,
-            workspaceName = record.first().name,
+            workspaceName = record.first().workspaceName,
             displayName = displayName,
             checkPermission = false
         )
