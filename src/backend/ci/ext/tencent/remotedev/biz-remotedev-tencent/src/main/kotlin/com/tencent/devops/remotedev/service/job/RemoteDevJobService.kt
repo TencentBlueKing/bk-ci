@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
 import com.tencent.devops.remotedev.pojo.job.JobActionType
 import com.tencent.devops.remotedev.pojo.job.JobBackendActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobCreateData
+import com.tencent.devops.remotedev.pojo.job.JobDetail
 import com.tencent.devops.remotedev.pojo.job.JobPipelineActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
@@ -343,6 +344,21 @@ class RemoteDevJobService @Autowired constructor(
             errMsg = I18nUtil.getCodeLanMessage(REMOTEDEV_PIPELINE_JOB_STATUS_UNKNOWN),
             endTime = LocalDateTime.now()
         )
+    }
+
+    fun fetchJobDetail(jobId: Long): JobDetail? {
+        val record = remoteDevJobExecRecordDao.getRecord(dslContext, jobId) ?: return null
+        return when (val param = objectMapper.readValue<JobSchemaParam>(record.jobSchemaParam.data())) {
+            is PipelineParam -> {
+                val data = remoteDevActionService.fetchPipelineJobDetail(
+                    param = param,
+                    receiptInfo = record.receiptInfo ?: return null
+                )
+                return JobDetail(JobActionType.PIPELINE, data)
+            }
+
+            else -> null
+        }
     }
 
     companion object {

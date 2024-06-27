@@ -33,6 +33,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 
 /**
@@ -100,4 +101,10 @@ interface RemoteDevInterface {
         taskId: String,
         type: UpdateEventType
     ): DispatchBuildTaskStatus
+
+    fun expandDisk(
+        workspaceName: String,
+        userId: String,
+        size: String
+    ): ExpandDiskValidateResp
 }

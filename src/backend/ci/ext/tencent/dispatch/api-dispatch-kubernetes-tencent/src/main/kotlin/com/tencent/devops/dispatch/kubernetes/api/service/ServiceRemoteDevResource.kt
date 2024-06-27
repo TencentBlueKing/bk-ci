@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -41,6 +42,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -97,4 +99,20 @@ interface ServiceRemoteDevResource {
         @PathParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "用户扩容机器数据盘")
+    @POST
+    @Path("/workspaces/{workspaceName}/expandDisk")
+    fun expandDisk(
+        @Parameter(description = "工作空间唯一name", required = false)
+        @PathParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("size")
+        size: String,
+        @QueryParam("mountType")
+        mountType: WorkspaceMountType
+    ): Result<ExpandDiskValidateResp>
 }
