@@ -427,6 +427,9 @@ class PipelineBuildFacadeService(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                         params = arrayOf(buildId)
                     )
+            if (readyToBuildPipelineInfo.locked == true) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+            }
             if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
@@ -623,6 +626,9 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
+        if (readyToBuildPipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
         val startEpoch = System.currentTimeMillis()
         try {
             val (resource, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
@@ -763,6 +769,9 @@ class PipelineBuildFacadeService(
             )
         }
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId = pipelineId) ?: return null
+        if (pipeline.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
         if (pipeline.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )
@@ -833,6 +842,9 @@ class PipelineBuildFacadeService(
         }
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return null
+        if (readyToBuildPipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
         if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )

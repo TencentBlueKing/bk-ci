@@ -1470,6 +1470,34 @@ class PipelineInfoFacadeService @Autowired constructor(
         return failUpdateModels
     }
 
+    fun locked(userId: String, projectId: String, pipelineId: String, locked: Boolean): PipelineInfo {
+        val language = I18nUtil.getLanguage(userId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language = language,
+                params = arrayOf(userId, projectId, permission.getI18n(language), pipelineId)
+            )
+        )
+
+        val info = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
+
+        if (!pipelineRepositoryService.updateLocked(userId, projectId, pipelineId, locked)) { // 可能重复操作，不打扰用户
+            logger.warn("Locked Pipeline|$userId|$projectId|$pipelineId|locked=$locked, may be duplicated")
+        }
+
+        return info
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoFacadeService::class.java)
     }

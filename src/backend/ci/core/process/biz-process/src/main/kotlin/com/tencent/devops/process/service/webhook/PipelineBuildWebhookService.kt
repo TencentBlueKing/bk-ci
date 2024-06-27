@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
@@ -48,6 +49,7 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
@@ -76,6 +78,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -488,7 +491,14 @@ class PipelineBuildWebhookService @Autowired constructor(
         val repoName = webhookCommit.repoName
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(pipelineId)
+            )
+        if (pipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
         // 代码库触发支持仅有分支版本的情况，如果仅有草稿不需要在这里拦截
 //        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
 //            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
