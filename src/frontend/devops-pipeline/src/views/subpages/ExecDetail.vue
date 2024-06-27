@@ -37,7 +37,7 @@
                             </span>
                         </span>
                     </bk-tag>
-                    <span class="exec-detail-summary-header-build-msg">
+                    <span v-bk-overflow-tips class="exec-detail-summary-header-build-msg">
                         {{ execDetail.buildMsg }}
                     </span>
                 </aside>
