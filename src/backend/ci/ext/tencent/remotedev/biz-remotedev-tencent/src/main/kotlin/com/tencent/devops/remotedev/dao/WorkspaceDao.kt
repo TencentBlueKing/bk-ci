@@ -391,6 +391,16 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchErrorWorkspace(
+        dslContext: DSLContext
+    ): List<WorkspaceRecord>? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(STATUS.`in`(WorkspaceStatus.Types.ERROR.status().map { s -> s.ordinal }))
+                .fetch(workspaceMapper)
+        }
+    }
+
     fun getWorkspaceProject(
         dslContext: DSLContext,
         mountType: WorkspaceMountType? = null,
@@ -661,6 +671,7 @@ class WorkspaceDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                     .where(NAME.eq(workspaceName))
+                    .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                     .execute()
             } else {
                 dslContext.update(this)
@@ -669,6 +680,7 @@ class WorkspaceDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                     .where(NAME.eq(workspaceName))
+                    .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                     .execute()
             }
         }

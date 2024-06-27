@@ -224,8 +224,9 @@ class WorkspaceCommon @Autowired constructor(
         mountType: WorkspaceMountType
     ) {
         if (status.checkException()) {
-            when (val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)) {
-                WorkspaceStatus.EXCEPTION -> {
+            val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)
+            when {
+                fix.checkException() -> {
                     logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
@@ -246,9 +247,7 @@ class WorkspaceCommon @Autowired constructor(
     // 尝试修复异常工作空间状态
     fun fixUnexpectedWorkspace() {
         logger.info("fixUnexpectedWorkspace")
-        workspaceDao.fetchWorkspace(
-            dslContext, status = WorkspaceStatus.EXCEPTION
-        )?.parallelStream()?.forEach {
+        workspaceDao.fetchErrorWorkspace(dslContext)?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.workspaceName} is EXCEPTION, try to fix."
@@ -313,14 +312,40 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.RUNNING
             }
 
-            workspaceInfo.status in mutableSetOf(
-                EnvStatusEnum.startFailed,
-                EnvStatusEnum.stopFailed,
-                EnvStatusEnum.abnormalAfterRunning,
-                EnvStatusEnum.abnormalAfterReady,
-                EnvStatusEnum.createFailed,
-                EnvStatusEnum.unknow
-            ) -> {
+            workspaceInfo.status == EnvStatusEnum.startFailed -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_START_FAILED)
+                return WorkspaceStatus.EXCEPTION_START_FAILED
+            }
+
+            workspaceInfo.status == EnvStatusEnum.stopFailed -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_STOP_FAILED)
+                return WorkspaceStatus.EXCEPTION_STOP_FAILED
+            }
+
+            workspaceInfo.status == EnvStatusEnum.abnormalAfterRunning -> {
+                workspaceDao.updateWorkspaceStatus(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    status = WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_RUNNING
+                )
+                return WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_RUNNING
+            }
+
+            workspaceInfo.status == EnvStatusEnum.abnormalAfterReady -> {
+                workspaceDao.updateWorkspaceStatus(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    status = WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY
+                )
+                return WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY
+            }
+
+            workspaceInfo.status == EnvStatusEnum.createFailed -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_CREATE_FAILED)
+                return WorkspaceStatus.EXCEPTION_CREATE_FAILED
+            }
+
+            workspaceInfo.status == EnvStatusEnum.unknow -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
                 return WorkspaceStatus.EXCEPTION
             }
