@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -336,5 +337,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("makeImageByVm $userId|$workspaceName|$makeImageReq")
         return client.get(ServiceRemoteDevResource::class).makeImageByVm(userId, workspaceName, makeImageReq)
+    }
+
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        logger.info("modifyWorkspaceProperty $userId|$workspaceName|$ip|$workspaceProperty")
+        return client.get(ServiceRemoteDevResource::class).modifyWorkspaceProperty(
+            userId = userId,
+            workspaceName = workspaceName,
+            ip = ip,
+            workspaceProperty = workspaceProperty
+        )
     }
 }

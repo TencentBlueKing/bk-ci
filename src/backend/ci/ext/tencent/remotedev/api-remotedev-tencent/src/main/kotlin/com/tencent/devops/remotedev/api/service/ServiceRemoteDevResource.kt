@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.DesktopTokenSign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -19,6 +19,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -360,6 +361,7 @@ interface ServiceRemoteDevResource {
     @Operation(summary = "修改工作空间")
     @POST
     @Path("/modify/display_name")
+    @Deprecated("不要新增功能，希望废弃该接口")
     fun modifyWorkspaceDisplayName(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -445,4 +447,21 @@ interface ServiceRemoteDevResource {
         desktopIP: String,
         sign: DesktopTokenSign
     ): Result<String>
+
+    @Operation(summary = "修改工作空间属性")
+    @POST
+    @Path("/modify_property")
+    fun modifyWorkspaceProperty(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String?,
+        @Parameter(description = "备注名称", required = true)
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean>
 }

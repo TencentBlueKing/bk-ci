@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -334,14 +335,21 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
-        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (record == null || record.ownerType != WorkspaceOwnerType.PERSONAL) {
+        val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (workspace == null || workspace.ownerType != WorkspaceOwnerType.PERSONAL) {
             logger.warn("get personal workspace with invalid workspace type: $userId|$workspaceName")
             return Result(null)
         }
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to get $workspaceName info")
+            )
+        }
         return Result(
             workspaceService.getWorkspaceList4WeSec(
-                workspaceName = workspaceName,
+                workspaceName = workspace.workspaceName,
                 notStatus = null
             ).firstOrNull()
         )
@@ -394,15 +402,21 @@ class ServiceRemoteDevResourceImpl(
         projectId: String,
         workspaceName: String
     ): Result<WeSecProjectWorkspace?> {
-        val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (record == null || record.ownerType != WorkspaceOwnerType.PROJECT || record.projectId != projectId) {
+        val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (workspace == null || workspace.ownerType != WorkspaceOwnerType.PROJECT || workspace.projectId != projectId) {
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(null)
         }
-        permissionService.checkViewerPermission(userId, workspaceName, projectId)
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to get $workspaceName info")
+            )
+        }
         return Result(
             workspaceService.getWorkspaceList4WeSec(
-                workspaceName = workspaceName,
+                workspaceName = workspace.workspaceName,
                 notStatus = null
             ).firstOrNull()
         )
@@ -578,6 +592,22 @@ class ServiceRemoteDevResourceImpl(
         val rsaPublicKey = kotlin.runCatching { RsaUtil.generatePublicKey(Base64.getDecoder().decode(sign.publicKey)) }
             .onFailure { throwTokenFail(desktopIP, "wrong publicKey", sign.publicKey) }.getOrThrow()
         return Result(RsaUtil.rsaEncrypt(dToken, rsaPublicKey))
+    }
+
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = ip,
+                workspaceProperty = workspaceProperty
+            )
+        )
     }
 
     @ActionAuditRecord(

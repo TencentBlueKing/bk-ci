@@ -501,16 +501,24 @@
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         ...(!targetAction || targetAction === 'COMMIT_TO_MASTER'
                             ? {
-                                releaseVersion: version,
-                                releaseVersionName: versionName,
                                 version,
                                 versionName,
+                                releaseVersion: version,
+                                releaseVersionName: versionName,
                                 versionNum,
                                 baseVersion: version,
                                 baseVersionName: versionName,
                                 latestVersionStatus: VERSION_STATUS_ENUM.RELEASED
                             }
                             : {}),
+                        ...(
+                            this.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
+                                ? {
+                                    releaseVersion: version,
+                                    releaseVersionName: versionName
+                                }
+                                : {}
+                        ),
                         canDebug: false,
                         canRelease: false,
                         pipelineAsCodeSettings: {
@@ -537,7 +545,6 @@
                             top: 100,
                             left: 100
                         },
-                        draggable: false,
                         extCls: 'release-info-dialog',
                         showFooter: false,
                         subHeader: h('div', {

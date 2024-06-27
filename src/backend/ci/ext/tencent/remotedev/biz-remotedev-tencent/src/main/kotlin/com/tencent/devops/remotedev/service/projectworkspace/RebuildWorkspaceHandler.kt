@@ -110,12 +110,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        if (!permissionService.hasOwnerPermission(
-                userId = userId,
-                workspaceName = workspaceName,
-                projectId = workspace.projectId
-            ) && !permissionService.hasUserManager(userId, workspace.projectId)
-        ) {
+
+        if (!permissionService.hasManagerOrOwnerPermission(userId, workspace.projectId, workspace.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You do not have permission to rebuild $workspaceName")

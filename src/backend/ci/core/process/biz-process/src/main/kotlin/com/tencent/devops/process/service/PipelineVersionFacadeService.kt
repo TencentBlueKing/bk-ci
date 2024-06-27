@@ -215,7 +215,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             baseVersionName = baseVersionName,
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = yamlInfo != null),
             yamlInfo = yamlInfo,
-            yamlExist = yamlExist
+            yamlExist = yamlExist,
+            locked = detailInfo.locked
         )
     }
 

@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -484,5 +485,22 @@ interface ApigwRemoteDevResource {
         workspaceName: String,
         @Parameter(description = "请求报文", required = true)
         makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean>
+
+    @Operation(summary = "修改工作空间属性", tags = ["v4_app_remotedev_modify_property"])
+    @POST
+    @Path("/modify_property")
+    fun modifyWorkspaceProperty(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String?,
+        @Parameter(description = "备注名称", required = true)
+        workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
 }
