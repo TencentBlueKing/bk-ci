@@ -90,6 +90,6 @@ class JobDao {
 
     private fun timestampSubDay(day: Long): Field<LocalDateTime> {
         val dateTimeWithDaysSubtracted = LocalDateTime.now().minusDays(day)
-        return DSL.field("TIMESTAMP '${dateTimeWithDaysSubtracted}'", LocalDateTime::class.java)
+        return DSL.field("TIMESTAMP '$dateTimeWithDaysSubtracted'", LocalDateTime::class.java)
     }
 }
