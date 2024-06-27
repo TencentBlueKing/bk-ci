@@ -153,7 +153,7 @@ class WindowsResourceConfigService @Autowired constructor(
         val data = kotlin.runCatching {
             client.get(ServiceStartCloudResource::class).getResourceVm(
                 ResourceVmReq(
-                    zoneId = windowsZone.zoneShortName,
+                    zoneId = windowsZone.zoneShortName.replace(Regex("\\d+"), ""),
                     machineType = windowsConfig.size,
                     internal = quotaType.getInternal()
                 )
