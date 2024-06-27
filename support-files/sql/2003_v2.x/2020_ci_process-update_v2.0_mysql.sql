@@ -535,6 +535,23 @@ BEGIN
         ADD COLUMN `NO_SCM` bit(1)  DEFAULT FALSE COMMENT '源代码未更新则不触发构建';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT_PIPELINE_CALLBACK'
+                        AND COLUMN_NAME = 'SECRET_PARAM') THEN
+        ALTER TABLE T_PROJECT_PIPELINE_CALLBACK
+            ADD COLUMN `SECRET_PARAM` text DEFAULT NULL COMMENT '鉴权参数';
+    END IF;
+
+	IF NOT EXISTS(SELECT 1
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                AND COLUMN_NAME = 'UPDATER') THEN
+    ALTER TABLE T_PIPELINE_RESOURCE_VERSION ADD `UPDATER` varchar(64) DEFAULT NULL COMMENT '最近更新人';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -62,10 +63,10 @@ data class PipelineSetting(
     // 通知订阅相关配置
     @Deprecated("被successSubscriptionList取代")
     @get:Schema(title = "订阅成功相关", required = false)
-    var successSubscription: Subscription = Subscription(),
+    var successSubscription: Subscription? = Subscription(),
     @Deprecated("被failSubscriptionList取代")
     @get:Schema(title = "订阅失败相关", required = false)
-    var failSubscription: Subscription = Subscription(),
+    var failSubscription: Subscription? = Subscription(),
     @get:Schema(title = "订阅成功通知组", required = false)
     var successSubscriptionList: List<Subscription>? = null,
     @get:Schema(title = "订阅失败通知组", required = false)
@@ -95,6 +96,36 @@ data class PipelineSetting(
     var pipelineAsCodeSettings: PipelineAsCodeSettings?
 ) {
 
+    companion object {
+
+        fun defaultSetting(
+            projectId: String,
+            pipelineId: String,
+            pipelineName: String,
+            maxPipelineResNum: Int? = null,
+            failSubscription: Subscription? = null
+        ): PipelineSetting {
+            return PipelineSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                version = 1,
+                desc = pipelineName,
+                maxPipelineResNum = maxPipelineResNum ?: PIPELINE_RES_NUM_MIN,
+                waitQueueTimeMinute = DateTimeUtil.minuteToSecond(
+                    PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
+                ),
+                maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+                runLockType = PipelineRunLockType.MULTIPLE,
+                successSubscription = null,
+                failSubscription = null,
+                successSubscriptionList = emptyList(),
+                failSubscriptionList = failSubscription?.let { listOf(it) },
+                pipelineAsCodeSettings = PipelineAsCodeSettings()
+            )
+        }
+    }
+
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
     fun notifySettingIsNull(): Boolean {
         var res = true
@@ -108,10 +139,10 @@ data class PipelineSetting(
         ) {
             res = false
         }
-        if (this.successSubscription.types.isNotEmpty()) {
+        if (this.successSubscription?.types?.isNotEmpty() == true) {
             res = false
         }
-        if (this.failSubscription.types.isNotEmpty()) {
+        if (this.failSubscription?.types?.isNotEmpty() == true) {
             res = false
         }
         return res
@@ -124,13 +155,13 @@ data class PipelineSetting(
 
     fun fixSubscriptions() {
         // 只有旧数据向新数据的更新，取消旧数据的保存
-        if (successSubscriptionList.isNullOrEmpty()) {
-            successSubscriptionList = listOf(this.successSubscription)
+        if (successSubscriptionList == null && this.successSubscription != null) {
+            successSubscriptionList = listOf(this.successSubscription!!)
         }
-        successSubscription = successSubscriptionList!!.first()
-        if (failSubscriptionList.isNullOrEmpty()) {
-            failSubscriptionList = listOf(this.failSubscription)
+        successSubscription = successSubscriptionList!!.firstOrNull()
+        if (failSubscriptionList == null && this.failSubscription != null) {
+            failSubscriptionList = listOf(this.failSubscription!!)
         }
-        failSubscription = failSubscriptionList!!.first()
+        failSubscription = failSubscriptionList!!.firstOrNull()
     }
 }

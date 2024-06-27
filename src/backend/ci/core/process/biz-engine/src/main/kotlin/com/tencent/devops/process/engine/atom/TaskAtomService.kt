@@ -110,8 +110,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atomResponse.errorType = t.errorType
             atomResponse.errorCode = t.errorCode
@@ -124,8 +126,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             atomResponse.errorType = ErrorType.SYSTEM
             atomResponse.errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED
@@ -246,8 +250,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                             buildId = task.buildId,
                             message = updateTaskStatusInfo.message!!,
                             tag = updateTaskStatusInfo.taskId,
-                            jobId = updateTaskStatusInfo.containerHashId,
-                            executeCount = updateTaskStatusInfo.executeCount
+                            containerHashId = updateTaskStatusInfo.containerHashId,
+                            executeCount = updateTaskStatusInfo.executeCount,
+                            jobId = null,
+                            stepId = updateTaskStatusInfo.stepId
                         )
                     }
                 }
@@ -273,8 +279,9 @@ class TaskAtomService @Autowired(required = false) constructor(
         buildLogPrinter.stopLog(
             buildId = task.buildId,
             tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount,
+            stepId = task.stepId
         )
     }
 
@@ -302,8 +309,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("[${task.buildId}]|Fail to execute the task[${task.taskName}]", t)
             atomResponse.errorType = ErrorType.SYSTEM
@@ -313,8 +322,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
             atomResponse.errorType = ErrorType.SYSTEM
@@ -331,8 +342,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
         } else {
             if (stopFlag) {
@@ -340,8 +353,10 @@ class TaskAtomService @Autowired(required = false) constructor(
                     buildId = task.buildId,
                     message = "Try to Stop Task [${task.taskName}]...",
                     tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
             }
         }

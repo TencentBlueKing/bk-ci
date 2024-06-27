@@ -755,7 +755,9 @@ export function getMaterialIconByType (type) {
         CODE_GITLAB: 'CODE_GITLAB',
         GITHUB: 'codeGithubWebHookTrigger',
         CODE_TGIT: 'CODE_GIT',
-        CODE_P4: 'CODE_P4'
+        CODE_P4: 'CODE_P4',
+        CODE_REMOTE: 'remoteTrigger',
+        CODE_SERVICE: 'openApi'
     }
     return materialIconMap[type] ?? 'CODE_GIT'
 }
@@ -841,4 +843,62 @@ export function weekAgo () {
     const start = new Date(oneWeekAgo.setHours(0, 0, 0))
     const end = new Date(now.setHours(23, 59, 59))
     return [start, end]
+}
+
+export function isEmptyObj (obj) {
+    try {
+        return Object.keys(obj).length === 0
+    } catch (error) {
+        console.error(error)
+        return false
+    }
+}
+
+export function flatSearchKey (searchKey) {
+    return searchKey.reduce((searchMap, item) => {
+        if (Array.isArray(item.values)) {
+            if (typeof searchMap[item.id] === 'undefined') {
+                searchMap[item.id] = Array.from(new Set(item.values.map(v => v.id)))
+            } else {
+                searchMap[item.id] = Array.from(new Set([
+                    ...searchMap[item.id],
+                    ...item.values.map(v => v.id)
+                ]))
+            }
+        }
+        return searchMap
+    }, {})
+}
+
+export function parseErrorMsg (msg) {
+    try {
+        return JSON.parse(msg)
+    } catch (e) {
+        return {
+            message: msg
+        }
+    }
+}
+
+export function showPipelineCheckMsg (showTooltips, message, h) {
+    const errorInfo = parseErrorMsg(message)
+    showTooltips({
+        theme: 'error',
+        delay: 0,
+        ellipsisLine: 0,
+        message: h('div', {
+            class: 'pipeline-save-error-list-box'
+        }, errorInfo.errors.map(item => h('div', {
+            class: 'pipeline-save-error-list-item'
+        }, [
+            h('p', {}, item.errorTitle),
+            h('ul', {
+                class: 'pipeline-save-error-list'
+            }, item.errorDetails.map(err => h('li', {
+                domProps: {
+                    innerHTML: err
+                }
+            })))
+        ])))
+    })
 }

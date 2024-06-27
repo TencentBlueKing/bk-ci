@@ -28,7 +28,7 @@ package com.tencent.devops.store.image.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.image.dao.ImageCategoryRelDao
-import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.common.service.CategoryService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

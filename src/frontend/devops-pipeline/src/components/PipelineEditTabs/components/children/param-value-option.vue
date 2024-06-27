@@ -275,15 +275,21 @@
             },
             subPipelineOption () {
                 return SUB_PIPELINE_OPTION
+            },
+            isRemoteSelect () {
+                return this.param?.payload?.type === 'remote'
             }
         },
         created () {
-            if (this.isSelectorParam(this.param.type) && !this.isRemoteSelect) {
-                this.transformOpt(this.param.options || [])
-                this.selectDefautVal = this.param.defaultValue
-                this.setSelectorDefaultVal(this.param)
-            }
             this.setRemoteParamOption(this.param.payload)
+            if (this.isSelectorParam(this.param.type)) {
+                if (!this.isRemoteSelect) {
+                    this.transformOpt(this.param.options || [])
+                    this.setSelectorDefaultVal(this.param)
+                } else {
+                    this.selectDefautVal = isMultipleParam(this.param.type) ? this.param?.defaultValue?.split(',') : this.param?.defaultValue
+                }
+            }
         },
         methods: {
             isTextareaParam,
@@ -404,7 +410,6 @@
                 this.handleUpdateParam(key, value)
             },
             handleUpdateParam (key, value) {
-                console.log(key, value, 'inner')
                 this.handleChange(key, value)
             }
         }

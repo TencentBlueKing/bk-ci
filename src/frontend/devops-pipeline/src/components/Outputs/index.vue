@@ -1,7 +1,12 @@
 <template>
-    <div style="height: 100%;width: 100%;">
-        <bk-resize-layout :collapsible="true" class="pipeline-exec-outputs" :initial-divide="initWidth" :min="260"
-            :max="800">
+    <div style="height: 100%;width: 100%;" v-bkloading="{ isLoading }">
+        <bk-resize-layout
+            :collapsible="true"
+            class="pipeline-exec-outputs"
+            :initial-divide="initWidth"
+            :min="260"
+            :max="800"
+        >
             <aside slot="aside" class="pipeline-exec-outputs-aside">
                 <div class="pipeline-exec-outputs-filter-input">
                     <bk-input clearable right-icon="bk-icon icon-search" :placeholder="filterPlaceholder"
@@ -35,7 +40,7 @@
                 </div>
 
             </aside>
-            <section slot="main" v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
+            <section slot="main" class="pipeline-exec-outputs-section">
                 <iframe-report v-if="isCustomizeReport" ref="iframeReport" :report-name="activeOutput.name"
                     :index-file-url="activeOutput.indexFileUrl" />
                 <third-party-report v-else-if="isActiveThirdReport" :report-list="thirdPartyReportList" />
@@ -430,6 +435,9 @@
             },
             currentTab: function () {
                 this.$nextTick(this.init)
+            },
+            '$route.params.buildNo' () {
+                this.$nextTick(this.init)
             }
         },
         mounted () {
@@ -594,13 +602,14 @@
                         icon: !output.folder ? extForFile(res.name) : 'folder',
                         include: this.getInclude(output)
                     }
-                    this.isLoading = false
                 } catch (err) {
                     this.handleError(err, {
                         projectId,
                         resourceCode: pipelineId,
                         action: this.$permissionResourceAction.EXECUTE
                     })
+                } finally {
+                    this.isLoading = false
                 }
             },
             getFolderSize (payload) {

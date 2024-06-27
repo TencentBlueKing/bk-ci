@@ -28,7 +28,7 @@ function isSkip (status) {
 
 export default {
     isCurPipelineLocked: state => {
-        return state.pipelineInfo?.runLockType === 'LOCK'
+        return state.pipelineInfo?.locked ?? false
     },
     hasDraftPipeline: state => {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
@@ -36,7 +36,7 @@ export default {
     getDraftBaseVersionName: (state, getters) => {
         return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
     },
-    pipelineHistoryViewAble: state => {
+    pipelineHistoryViewable: state => {
         return [
             VERSION_STATUS_ENUM.BRANCH,
             VERSION_STATUS_ENUM.RELEASED

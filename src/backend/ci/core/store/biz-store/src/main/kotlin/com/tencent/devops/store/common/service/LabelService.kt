@@ -28,8 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.LabelRequest
+import com.tencent.devops.store.pojo.common.label.Label
+import com.tencent.devops.store.pojo.common.label.LabelRequest
 import org.jooq.Record
 
 /**

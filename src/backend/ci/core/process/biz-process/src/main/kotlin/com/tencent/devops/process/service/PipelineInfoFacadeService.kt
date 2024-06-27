@@ -80,6 +80,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -87,6 +88,7 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -129,7 +131,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
-    private val yamlFacadeService: PipelineYamlFacadeService
+    private val yamlFacadeService: PipelineYamlFacadeService,
+    private val operationLogService: PipelineOperationLogService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -177,7 +180,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         )
 
-        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)
+        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
@@ -297,7 +300,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
-        description: String? = null
+        description: String? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -432,7 +436,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     templateId = templateId,
                     description = description,
                     yaml = yaml,
-                    baseVersion = null
+                    baseVersion = null,
+                    yamlInfo = yamlInfo
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -549,7 +554,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean,
         description: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null
+        aspects: LinkedList<IPipelineTransferAspect>? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -587,7 +593,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             yaml = yamlWithVersion,
             versionStatus = versionStatus,
             branchName = branchName,
-            description = description
+            description = description,
+            yamlInfo = yamlInfo
         )
     }
 
@@ -600,7 +607,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean,
         description: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null
+        aspects: LinkedList<IPipelineTransferAspect>? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -644,7 +652,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
-            description = description
+            description = description,
+            yamlInfo = yamlInfo
         )
     }
 
@@ -661,7 +670,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (releaseBranch == true || branchVersionAction != BranchVersionAction.INACTIVE) {
                 // 如果是发布分支版本则直接更新
                 pipelineRepositoryService.updatePipelineBranchVersion(
-                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                    userId, projectId, pipelineId, branchName, branchVersionAction, transactionContext
                 )
             } else {
                 // 如果是删除分支版本则判断是否为最后一个版本
@@ -669,7 +678,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     projectId, pipelineId, branchName
                 )
                 pipelineRepositoryService.updatePipelineBranchVersion(
-                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                    userId, projectId, pipelineId, branchName, branchVersionAction, transactionContext
                 )
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                     projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
@@ -708,7 +717,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (setting.pipelineAsCodeSettings?.enable == true && !pipelineAsCodeSettings.enable) {
             // 关闭PAC开关时，将所有分支版本设为
             pipelineRepositoryService.updatePipelineBranchVersion(
-                projectId, pipelineId, null, BranchVersionAction.INACTIVE
+                userId, projectId, pipelineId, null, BranchVersionAction.INACTIVE
             )
         }
 
@@ -971,7 +980,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        baseVersion: Int? = null
+        baseVersion: Int? = null,
+        yamlInfo: PipelineYamlVo? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -1073,7 +1083,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 branchName = branchName,
                 description = description,
                 yaml = yaml,
-                baseVersion = baseVersion
+                baseVersion = baseVersion,
+                yamlInfo = yamlInfo
             )
             // 审计
             ActionAuditContext.current()
@@ -1108,7 +1119,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
+            operationLogType = OperationLogType.UPDATE_PIPELINE_SETTING,
+            savedSetting = savedSetting
         )
     }
 
@@ -1116,14 +1128,27 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        settingVersion: Int
-    ) {
-        pipelineRepositoryService.updateSettingVersion(
+        operationLogType: OperationLogType,
+        savedSetting: PipelineSetting,
+        updateLastModifyUser: Boolean? = true
+    ): DeployPipelineResult {
+        val result = pipelineRepositoryService.updateSettingVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            settingVersion = settingVersion
+            savedSetting = savedSetting,
+            updateLastModifyUser = updateLastModifyUser
         )
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = result.version,
+            operationLogType = operationLogType,
+            params = result.versionName ?: "",
+            description = null
+        )
+        return result
     }
 
     fun saveAll(
@@ -1137,6 +1162,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkTemplate: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED
     ): DeployPipelineResult {
+        // fix 用户端可能不传入pipelineId和projectId的问题，或者传错的问题
+        setting.pipelineId = pipelineId
+        setting.projectId = projectId
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -1160,7 +1188,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (setting.projectId.isBlank()) {
             setting.projectId = projectId
         }
-        setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
 
         return pipelineResult
     }
@@ -1236,7 +1263,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        pipelineInfo: PipelineInfo?
+        pipelineInfo: PipelineInfo
     ): Model {
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -1255,13 +1282,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                 labels.addAll(it.labels)
             }
             model.labels = labels
-            // 如果传空则表示只拿当前版本的配置
-            pipelineInfo?.let {
-                model.name = pipelineInfo.pipelineName
-                model.desc = pipelineInfo.pipelineDesc
-                model.pipelineCreator = pipelineInfo.creator
-                model.latestVersion = pipelineInfo.version
-            }
+            model.name = pipelineInfo.pipelineName
+            model.desc = pipelineInfo.pipelineDesc
+            model.pipelineCreator = pipelineInfo.creator
+            model.latestVersion = pipelineInfo.version
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
@@ -1362,8 +1386,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     )
                 }
                 pipelineSettingFacadeService.saveSetting(
-                    userId, projectId, pipelineId,
-                    setting.copy(
+                    userId = userId, projectId = projectId, pipelineId = pipelineId,
+                    setting = setting.copy(
                         pipelineAsCodeSettings = PipelineAsCodeSettings(false)
                     )
                 )
@@ -1444,6 +1468,34 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
         }
         return failUpdateModels
+    }
+
+    fun locked(userId: String, projectId: String, pipelineId: String, locked: Boolean): PipelineInfo {
+        val language = I18nUtil.getLanguage(userId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language = language,
+                params = arrayOf(userId, projectId, permission.getI18n(language), pipelineId)
+            )
+        )
+
+        val info = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
+
+        if (!pipelineRepositoryService.updateLocked(userId, projectId, pipelineId, locked)) { // 可能重复操作，不打扰用户
+            logger.warn("Locked Pipeline|$userId|$projectId|$pipelineId|locked=$locked, may be duplicated")
+        }
+
+        return info
     }
 
     companion object {

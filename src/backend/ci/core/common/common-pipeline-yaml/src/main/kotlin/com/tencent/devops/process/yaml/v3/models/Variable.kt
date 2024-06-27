@@ -74,13 +74,10 @@ interface IVariable
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
     val value: String?,
-    val name: String? = null,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = false,
+    val allowModifyAtStartup: Boolean? = true,
     val const: Boolean? = null,
-    @JsonProperty("required")
-    val valueNotEmpty: Boolean? = false,
     val props: VariableProps? = null
 ) : IVariable
 
@@ -92,8 +89,7 @@ data class TemplateVariable(private val list: List<Extends>) : List<Extends> by 
  * Variable 属性变量
  * @param label 可选, 预定义下拉可选值的字段
  * @param type 类型
- * @param options 下拉列表可选值，和 datasource 二选一
- * @param datasource 下拉列表数据源，和 values 二选一
+ * @param options 下拉列表可选值
  * @param multiple 是否允许多选，缺省时为 false（type=selector时生效）
  * @param description 可选，描述
  * @param required 可选，是否必填
@@ -101,13 +97,12 @@ data class TemplateVariable(private val list: List<Extends>) : List<Extends> by 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class VariableProps(
-    val label: String? = null,
-    val type: String,
+    var label: String? = null,
+    val type: String? = null,
     val options: List<VariablePropOption>? = null,
-    val datasource: VariableDatasource? = null,
-    val description: String? = null,
+    var description: String? = null,
     val multiple: Boolean? = null,
-    val required: Boolean? = null,
+    var required: Boolean? = null,
     @JsonProperty("repo-id")
     @get:Schema(title = "repo-id")
     val repoHashId: String? = null,

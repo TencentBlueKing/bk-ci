@@ -1,47 +1,45 @@
 <template>
-    <div v-bkloading="{ isLoading: switchingVersion }" :class="['pipeline-detail-entry', {
+    <div :class="['pipeline-detail-entry', {
         'show-pipeline-var': activeChild.showVar
     }]">
-        <template v-show="!switchingVersion">
-            <aside class="pipeline-detail-entry-aside">
-                <ul v-for="item in asideNav" :key="item.title">
-                    <li class="nav-item-title">
-                        {{ item.title }}
-                        <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
-                            <logo :name="item.link.icon" size="16"></logo>
-                            {{ item.link.title }}
-                        </span>
+        <aside class="pipeline-detail-entry-aside">
+            <ul v-for="item in asideNav" :key="item.title">
+                <li class="nav-item-title">
+                    {{ item.title }}
+                    <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
+                        <logo :name="item.link.icon" size="16"></logo>
+                        {{ item.link.title }}
+                    </span>
+                </li>
+                <ul class="nav-child-list">
+                    <li
+                        @click="switchType(child)"
+                        v-for="child in item.children"
+                        :key="child.name"
+                        :class="[
+                            'nav-child-title',
+                            {
+                                active: child.active,
+                                'nav-child-disabled': child.disabled
+                            }
+                        ]"
+                        v-bk-tooltips="child.disableTooltip"
+                    >
+                        {{ child.title }}
                     </li>
-                    <ul class="nav-child-list">
-                        <li
-                            @click="switchType(child)"
-                            v-for="child in item.children"
-                            :key="child.name"
-                            :class="[
-                                'nav-child-title',
-                                {
-                                    active: child.active,
-                                    'nav-child-disabled': child.disabled
-                                }
-                            ]"
-                            v-bk-tooltips="child.disableTooltip"
-                        >
-                            {{ child.title }}
-                        </li>
-    
-                    </ul>
+
                 </ul>
-                <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
-                    {{$t('switchToReleaseVersion')}}
-                    <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('switch') }}</span>
-                </div>
-            </aside>
-    
-            <main class="pipeline-detail-entry-main">
-                <component :is="activeChild.component" v-bind="activeChild.props" />
-            </main>
-            <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
-        </template>
+            </ul>
+            <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
+                {{$t('switchToReleaseVersion')}}
+                <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('switch') }}</span>
+            </div>
+        </aside>
+
+        <main class="pipeline-detail-entry-main">
+            <component :is="activeChild.component" v-bind="activeChild.props" />
+        </main>
+        <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
     </div>
 </template>
 
@@ -54,7 +52,6 @@
         TriggerEvent
     } from '@/components/PipelineDetailTabs'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
-    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -68,7 +65,7 @@
             ShowVariable
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion', 'switchingVersion']),
+            ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
             ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline', 'isBranchVersion']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
@@ -166,57 +163,17 @@
                 ]
             }
         },
-        watch: {
-            pipelineId: {
-                handler () {
-                    this.fetchVersionInfo()
-                },
-                immediate: true
-            }
-        },
         beforeDestroy () {
             this.resetHistoryFilterCondition()
             this.selectPipelineVersion(null)
+            this.resetAtomModalMap()
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             ...mapActions('atom', [
                 'selectPipelineVersion',
-                'getPipelineVersionInfo'
+                'resetAtomModalMap'
             ]),
-
-            async fetchVersionInfo () {
-                try {
-                    if (!this.$route.params.version) return
-                    const { data } = await this.getPipelineVersionInfo(this.$route.params)
-                    const isDraft = data.status === VERSION_STATUS_ENUM.COMMITTING
-                    const isBranchVersion = data.status === VERSION_STATUS_ENUM.BRANCH
-
-                    this.selectPipelineVersion({
-                        ...data,
-                        displayName: isDraft ? this.$t('draft') : data.versionName,
-                        description: isDraft ? this.$t('baseOn', [data.baseVersionName]) : (data.description || '--'),
-                        isBranchVersion,
-                        isDraft,
-                        isRelease: data.status === VERSION_STATUS_ENUM.RELEASED
-                    })
-                    if (isDraft && !this.isReleasePipeline) {
-                        this.$router.replace({
-                            name: 'pipelinesEdit'
-                        })
-                    } else {
-                        this.$router.replace({
-                            ...this.$route,
-                            params: {
-                                ...this.$route.params,
-                                version: this.pipelineInfo?.releaseVersion
-                            }
-                        })
-                    }
-                } catch (error) {
-                    console.log(error)
-                }
-            },
             getNavComponent (type) {
                 switch (type) {
                     case 'triggerEvent':
@@ -252,7 +209,7 @@
                             component: 'BuildHistoryTab',
                             props: {
                                 isDebug: this.isActiveDraftVersion,
-                                pipelineName: this.pipeline?.name
+                                pipelineName: this.pipelineSetting?.pipelineName
                             }
                         }
                 }

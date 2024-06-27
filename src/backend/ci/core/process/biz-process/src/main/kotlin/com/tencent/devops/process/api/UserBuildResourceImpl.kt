@@ -41,10 +41,12 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
+import com.tencent.devops.process.engine.service.PipelineProgressRateService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -63,7 +65,8 @@ class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
-    private val pipelineRecentUseService: PipelineRecentUseService
+    private val pipelineRecentUseService: PipelineRecentUseService,
+    private val pipelineProgressRateService: PipelineProgressRateService
 ) : UserBuildResource {
 
     override fun manualStartupInfo(
@@ -196,7 +199,8 @@ class UserBuildResourceImpl @Autowired constructor(
             elementId = elementId,
             params = params,
             channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS)
+            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS),
+            stepId = null
         )
         return Result(true)
     }
@@ -446,7 +450,7 @@ class UserBuildResourceImpl @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         archiveFlag: Boolean?,
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -475,7 +479,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             archiveFlag = archiveFlag,
-            debugVersion = debugVersion
+            customVersion = customVersion
         )
         if (archiveFlag != true) {
             pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -572,7 +576,8 @@ class UserBuildResourceImpl @Autowired constructor(
                 taskId = taskId,
                 element = element,
                 stageId = stageId,
-                containerId = containerId
+                containerId = containerId,
+                stepId = null
             )
         )
     }
@@ -589,6 +594,23 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildIds = buildIds
+            )
+        )
+    }
+
+    override fun getStageProgressRate(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String
+    ): Result<BuildStageProgressInfo> {
+        return Result(
+            pipelineProgressRateService.calculateStageProgressRate(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId
             )
         )
     }

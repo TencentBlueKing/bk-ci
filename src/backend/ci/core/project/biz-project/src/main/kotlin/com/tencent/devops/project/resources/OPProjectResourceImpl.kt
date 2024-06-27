@@ -104,6 +104,7 @@ class OPProjectResourceImpl @Autowired constructor(
         repoGrayFlag: Boolean,
         remoteDevFlag: Boolean,
         productId: Int?,
+        channelCode: String?,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
         return Result(
@@ -121,7 +122,8 @@ class OPProjectResourceImpl @Autowired constructor(
                 codeCCGrayFlag = codeCCGrayFlag,
                 repoGrayFlag = repoGrayFlag,
                 remoteDevFlag = remoteDevFlag,
-                productId = productId
+                productId = productId,
+                channelCode = channelCode
             )
         )
     }
@@ -170,6 +172,12 @@ class OPProjectResourceImpl @Autowired constructor(
     override fun getOperationalProducts(userId: String): Result<List<OperationalProductVO>> {
         return Result(
             projectService.getOperationalProducts()
+        )
+    }
+
+    override fun setDisableWhenInactiveFlag(projectCodes: List<String>): Result<Boolean> {
+        return Result(
+            projectService.setDisableWhenInactiveFlag(projectCodes)
         )
     }
 }

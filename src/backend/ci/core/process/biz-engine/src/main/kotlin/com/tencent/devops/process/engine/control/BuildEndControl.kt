@@ -229,14 +229,18 @@ class BuildEndControl @Autowired constructor(
 
         // 上报SLA数据
         if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
-            metricsIncrement(SUCCESS_PIPELINE_COUNT)
+            metricsIncrement(SUCCESS_PIPELINE_COUNT, true)
         } else if (buildStatus.isFailure()) {
-            metricsIncrement(FAIL_PIPELINE_COUNT)
+            metricsIncrement(
+                FAIL_PIPELINE_COUNT,
+                // 只要有一个用户错误,则归为用户导致的失败
+                buildInfo.errorInfoList?.map { it.errorType == ErrorType.USER.num }?.isNotEmpty() ?: true
+            )
         }
         buildInfo.endTime = endTime.timestampmilli()
         buildInfo.status = buildStatus
 
-        buildDurationTime(buildInfo.startTime!!)
+        buildDurationTime(buildInfo.startTime ?: 0L)
         callBackParentPipeline(buildInfo)
 
         // 广播结束事件
@@ -500,8 +504,8 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun metricsIncrement(name: String) {
-        Counter.builder(name).register(meterRegistry).increment()
+    private fun metricsIncrement(name: String, isUser: Boolean) {
+        Counter.builder(name).tag("isUser", isUser.toString()).register(meterRegistry).increment()
         Counter.builder(FINISH_PIPELINE_COUNT).register(meterRegistry).increment()
     }
 }

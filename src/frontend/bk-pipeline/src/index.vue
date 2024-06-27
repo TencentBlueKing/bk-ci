@@ -32,7 +32,7 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import { areDeeplyEqual, eventBus, hashID, isTriggerContainer } from './util'
+    import { eventBus, hashID, isTriggerContainer } from './util'
 
     import {
         ADD_STAGE,
@@ -109,6 +109,10 @@
             matchRules: {
                 type: Array,
                 default: () => []
+            },
+            isExpandAllMatrix: {
+                type: Boolean,
+                default: true
             }
         },
         provide () {
@@ -122,7 +126,8 @@
                 'isExecDetail',
                 'isLatestBuild',
                 'canSkipElement',
-                'cancelUserId'
+                'cancelUserId',
+                'isExpandAllMatrix'
             ].forEach((key) => {
                 Object.defineProperty(reactiveData, key, {
                     enumerable: true,
@@ -153,7 +158,6 @@
                         const name = `stage-${index + 1}`
                         const id = `s-${hashID()}`
                         if (!stage.containers) {
-                            // container
                             return {
                                 id,
                                 name,
@@ -186,16 +190,6 @@
                 }
             }
         },
-        watch: {
-            pipeline: {
-                handler: function (newVal, oldVal) {
-                    if (this.editable && !areDeeplyEqual(newVal, oldVal)) {
-                        console.log('pipeline change', newVal, oldVal)
-                        // this.emitPipelineChange(newVal)
-                    }
-                }
-            }
-        },
         mounted () {
             this.registeCustomEvent()
         },
@@ -225,6 +219,7 @@
             },
             updatePipeline (model, params) {
                 Object.assign(model, params)
+                this.emitPipelineChange(model)
             },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
@@ -273,16 +268,29 @@
                     }
                 })
             },
-            expandMatrix (stageId, matrixId, containerId) {
+            expandMatrix (stageId, matrixId, containerId, expand = true) {
                 console.log('expandMatrix', stageId, matrixId, containerId)
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     try {
                         const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
-                        jobInstance?.toggleMatrixOpen?.(true)
+                        jobInstance?.toggleMatrixOpen?.(expand)
                         this.$nextTick(() => {
-                            jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(true)
+                            jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand)
                             resolve(true)
                         })
+                    } catch (error) {
+                        console.error(error)
+                        resolve(false)
+                    }
+                })
+            },
+            expandJob (stageId, containerId, expand = true) {
+                console.log('expandJob', stageId, containerId)
+                return new Promise((resolve) => {
+                    try {
+                        const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+                        jobInstance?.toggleShowAtom(expand)
+                        resolve(true)
                     } catch (error) {
                         console.error(error)
                         resolve(false)

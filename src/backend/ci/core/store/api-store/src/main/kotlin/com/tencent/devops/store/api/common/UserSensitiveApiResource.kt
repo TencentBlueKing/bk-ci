@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
-import com.tencent.devops.store.pojo.common.SensitiveApiInfo
-import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiApplyReq
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveApiNameInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -68,9 +68,9 @@ interface UserSensitiveApiResource {
         @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(description = "开发语言", required = true)
         @QueryParam("language")
-        language: String
+        language: String = ""
     ): Result<List<SensitiveApiNameInfo>>
 
     @Operation(summary = "敏感API申请")

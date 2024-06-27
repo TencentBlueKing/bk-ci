@@ -1,6 +1,6 @@
 <template>
     <div class="pipeline-edit-header">
-        <pipeline-bread-crumb :pipeline-name="pipelineSetting?.pipelineName">
+        <pipeline-bread-crumb :is-loading="!isPipelineNameReady" :pipeline-name="pipelineSetting?.pipelineName">
             <span class="pipeline-edit-header-tag">
                 <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
                 <bk-tag>
@@ -10,7 +10,9 @@
                 </bk-tag>
             </span>
         </pipeline-bread-crumb>
-        <mode-switch :save="saveDraft" />
+        <mode-switch
+            :save="saveDraft"
+        />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus"
@@ -19,6 +21,7 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
+
             <bk-button
                 :disabled="saveStatus || !isEditing"
                 :loading="saveStatus"
@@ -65,6 +68,7 @@
                     />
                 </span>
             </bk-button>
+
             <!-- <more-actions /> -->
             <release-button
                 :can-release="canRelease && !isEditing"
@@ -78,11 +82,12 @@
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
     import PacTag from '@/components/PacTag.vue'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { UI_MODE } from '@/utils/pipelineConst'
+    import { showPipelineCheckMsg } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
@@ -94,8 +99,12 @@
             ModeSwitch,
             PacTag
         },
+        props: {
+            isSwitchPipeline: Boolean
+        },
         data () {
             return {
+                isLoading: false,
                 isReleaseSliderShow: false
             }
         },
@@ -157,9 +166,25 @@
             },
             currentVersion () {
                 return this.pipelineInfo?.version ?? ''
+            },
+            isPipelineNameReady () {
+                return this.pipelineSetting?.pipelineId === this.$route.params.pipelineId
+            }
+        },
+        watch: {
+            isTemplatePipeline: {
+                handler (val) {
+                    if (val) {
+                        this.updatePipelineMode(UI_MODE)
+                    }
+                },
+                immediate: true
             }
         },
         methods: {
+            ...mapActions({
+                updatePipelineMode: 'updatePipelineMode'
+            }),
             ...mapActions('atom', [
                 'setPipelineEditing',
                 'saveDraftPipeline',
@@ -229,7 +254,10 @@
                                 name: pipelineSetting.pipelineName,
                                 desc: pipelineSetting.desc
                             },
-                            setting: pipelineSetting
+                            setting: Object.assign(pipelineSetting, {
+                                failSubscription: undefined,
+                                successSubscription: undefined
+                            })
                         },
                         yaml: pipelineYaml
                     })
@@ -238,8 +266,9 @@
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         canDebug: true,
                         canRelease: true,
-                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion,
-                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName,
+                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion ?? this.pipelineInfo?.version,
+                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName ?? this.pipelineInfo?.versionName,
+                        baseVersionStatus: this.pipelineInfo?.latestVersionStatus,
                         version,
                         versionName
                     })
@@ -253,24 +282,19 @@
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params
 
-                    this.handleError(e, {
-                        projectId,
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }, 10000)
+                    if (e.code === 2101244) {
+                        showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
+                    } else {
+                        this.handleError(e, {
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        })
+                    }
                     return false
                 } finally {
                     this.setSaveStatus(false)
                 }
-            },
-
-            saveSetting () {
-                const pipelineSetting = this.getPipelineSetting()
-                const { projectId, pipelineId } = this.$route.params
-                return this.$ajax.post(
-                    `/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`,
-                    pipelineSetting
-                )
             },
             goDraftDebugRecord () {
                 if (this.canDebug) {
@@ -335,5 +359,26 @@
     align-items: center;
   }
 }
+.pipeline-save-error-list-box {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 10px;
+    .pipeline-save-error-list-item {
 
-  </style>
+        > p {
+            margin-bottom: 12px;
+        }
+        .pipeline-save-error-list {
+            > li {
+                line-height: 26px;
+                a {
+                    color: $primaryColor;
+                    margin-left: 10px;
+                    text-align: right;
+                }
+            }
+        }
+    }
+}
+
+</style>

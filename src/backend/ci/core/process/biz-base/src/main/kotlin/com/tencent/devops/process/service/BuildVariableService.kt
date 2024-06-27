@@ -40,6 +40,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -51,6 +52,10 @@ class BuildVariableService @Autowired constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val redisOperation: RedisOperation
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildVariableService::class.java)
+    }
 
     /**
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
@@ -72,7 +77,9 @@ class BuildVariableService @Autowired constructor(
      */
     fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
         return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
-            val word = PipelineVarUtil.oldVarToNewVar(templateWord) ?: templateWord
+            val word = PipelineVarUtil.oldVarToNewVar(templateWord)
+                ?: PipelineVarUtil.fetchVarName(templateWord)
+                ?: templateWord
             val templateValByType = pipelineBuildVarDao.getVarsWithType(
                 dslContext = commonDslContext,
                 projectId = projectId,
@@ -91,12 +98,19 @@ class BuildVariableService @Autowired constructor(
     fun getAllVariable(
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        keys: Set<String>? = null
     ): Map<String, String> {
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = keys
+        )
         return if (pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, null) == true) {
-            pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId)
+            dataMap
         } else {
-            PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
+            PipelineVarUtil.mixOldVarAndNewVar(dataMap)
         }
     }
 
@@ -186,7 +200,7 @@ class BuildVariableService @Autowired constructor(
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
-            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, name)
+            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, setOf(name))
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
                     dslContext = dslContext,
@@ -268,13 +282,15 @@ class BuildVariableService @Autowired constructor(
             // 加锁防止数据被重复插入
             redisLock.lock()
             watch.start("getVars")
-            val buildVarMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId)
+            val buildVarMap = pipelineBuildVarDao.getBuildVarMap(dslContext, projectId, buildId)
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
             pipelineBuildParameters.forEach {
                 if (!buildVarMap.containsKey(it.key)) {
                     insertBuildParameters.add(it)
                 } else {
+                    // TODO PAC上线后删除, 打印流水线运行时覆盖只读变量,只在第一次运行时输出,重试不输出
+                    printReadOnlyVar(buildVarMap, variables, it, projectId, pipelineId, buildId)
                     updateBuildParameters.add(it)
                 }
             }
@@ -296,6 +312,25 @@ class BuildVariableService @Autowired constructor(
         } finally {
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
+        }
+    }
+
+    private fun printReadOnlyVar(
+        buildVarMap: Map<String, BuildParameters>,
+        variables: Map<String, BuildParameters>,
+        buildParameters: BuildParameters,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        if (buildVarMap[PIPELINE_RETRY_COUNT] == null &&
+            variables[PIPELINE_RETRY_COUNT] == null &&
+            buildVarMap[buildParameters.key]?.readOnly == true
+        ) {
+            logger.warn(
+                "BKSystemErrorMonitor|$projectId|$pipelineId|$buildId|${buildParameters.key}| " +
+                        "build var read-only cannot be modified"
+            )
         }
     }
 

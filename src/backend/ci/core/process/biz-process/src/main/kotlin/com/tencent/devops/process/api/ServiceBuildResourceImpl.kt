@@ -263,21 +263,23 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String,
+        elementId: String?,
         params: ReviewParam,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        stepId: String?
     ): Result<Boolean> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        if (elementId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
+        if (elementId.isNullOrBlank() && stepId.isNullOrBlank()) {
+            throw ParamBlankException("Invalid elementId&stepId")
         }
         pipelineBuildFacadeService.buildManualReview(
-            userId, projectId, pipelineId, buildId, elementId,
-            params, channelCode, ChannelCode.isNeedAuth(channelCode)
+            userId = userId, projectId = projectId, pipelineId = pipelineId, buildId = buildId, elementId = elementId,
+            params = params, channelCode = channelCode, checkPermission = ChannelCode.isNeedAuth(channelCode),
+            stepId = stepId
         )
         return Result(true)
     }
@@ -383,7 +385,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildMsg: String?,
         startUser: List<String>?,
         archiveFlag: Boolean?,
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -417,7 +419,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc,
             archiveFlag = archiveFlag,
-            debugVersion = debugVersion
+            customVersion = customVersion
         )
         return Result(result)
     }
@@ -634,8 +636,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         val history = pipelineBuildFacadeService.getSingleHistoryBuild(
-            projectId, pipelineId,
-            buildNum.toInt(), channelCode ?: ChannelCode.BS
+            projectId = projectId, pipelineId = pipelineId,
+            buildNum = buildNum.toInt(), buildId = null,
+            channelCode = channelCode ?: ChannelCode.BS
         )
         return Result(history)
     }
@@ -734,7 +737,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 taskId = taskPauseExecute.taskId,
                 element = taskPauseExecute.element,
                 stageId = taskPauseExecute.stageId,
-                containerId = taskPauseExecute.containerId
+                containerId = taskPauseExecute.containerId,
+                stepId = taskPauseExecute.stepId
             )
         )
     }

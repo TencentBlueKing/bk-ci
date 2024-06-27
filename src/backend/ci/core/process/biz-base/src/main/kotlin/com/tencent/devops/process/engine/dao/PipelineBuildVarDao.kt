@@ -96,14 +96,14 @@ class PipelineBuildVarDao @Autowired constructor() {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        key: String? = null
+        keys: Set<String>? = null
     ): MutableMap<String, String> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-            if (key != null) {
-                where.and(KEY.eq(key))
+            if (!keys.isNullOrEmpty()) {
+                where.and(KEY.`in`(keys))
             }
             val result = where.fetch()
             val map = mutableMapOf<String, String>()
@@ -111,6 +111,36 @@ class PipelineBuildVarDao @Autowired constructor() {
                 map[it[KEY]] = it[VALUE]
             }
             return map
+        }
+    }
+
+    fun getBuildVarMap(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        keys: Set<String>? = null
+    ): Map<String, BuildParameters> {
+        with(T_PIPELINE_BUILD_VAR) {
+            val where = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+            if (!keys.isNullOrEmpty()) {
+                where.and(KEY.`in`(keys))
+            }
+            return where.fetch().associateBy(
+                { it.key },
+                {
+                    if (it.varType != null) {
+                        BuildParameters(
+                            key = it.key,
+                            value = it.value,
+                            valueType = BuildFormPropertyType.valueOf(it.varType),
+                            readOnly = it.readOnly
+                        )
+                    } else {
+                        BuildParameters(key = it.key, value = it.value, readOnly = it.readOnly)
+                    }
+                }
+            )
         }
     }
 
@@ -132,9 +162,14 @@ class PipelineBuildVarDao @Autowired constructor() {
             val list = mutableListOf<BuildParameters>()
             result.forEach {
                 if (it.varType != null) {
-                    list.add(BuildParameters(it.key, it.value, BuildFormPropertyType.valueOf(it.varType)))
+                    list.add(BuildParameters(
+                        key = it.key,
+                        value = it.value,
+                        valueType = BuildFormPropertyType.valueOf(it.varType),
+                        readOnly = it.readOnly
+                    ))
                 } else {
-                    list.add(BuildParameters(it.key, it.value))
+                    list.add(BuildParameters(key = it.key, value = it.value, readOnly = it.readOnly))
                 }
             }
             return list

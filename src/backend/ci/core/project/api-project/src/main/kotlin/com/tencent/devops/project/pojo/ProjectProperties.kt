@@ -44,8 +44,10 @@ data class ProjectProperties(
     val remotedevManager: String? = null,
     @get:Schema(title = "是否开启流水线模板管理", required = false)
     var enableTemplatePermissionManage: Boolean? = null,
-    @get:Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db", required = false)
+    @get:Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db")
     val dataTag: String? = null,
+    @get:Schema(title = "当项目不活跃时，是否禁用")
+    var disableWhenInactive: Boolean? = null,
     @get:Schema(title = "该项目是否开启流水线可观测数据", required = false)
     val buildMetrics: Boolean? = null
 )

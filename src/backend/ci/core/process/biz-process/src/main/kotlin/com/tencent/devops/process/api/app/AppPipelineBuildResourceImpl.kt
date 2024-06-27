@@ -113,7 +113,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             elementId = elementId,
             params = params,
             channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            stepId = null
         )
         return Result(true)
     }
@@ -197,9 +198,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        debugVersion: Int?
+        customVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
-        checkParam(userId, projectId, pipelineId)
+        checkParam(userId, projectId, pipelineId, pageSize)
         val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -225,7 +226,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            debugVersion = debugVersion
+            customVersion = customVersion
         )
         return Result(result)
     }
@@ -360,7 +361,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         )
     }
 
-    private fun checkParam(userId: String, projectId: String, pipelineId: String) {
+    private fun checkParam(userId: String, projectId: String, pipelineId: String, pageSize: Int? = null) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -369,6 +370,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
+        }
+        if (pageSize != null && pageSize > 1000) {
+            throw ParamBlankException("PageSize could not be greater than 1000")
         }
     }
 }

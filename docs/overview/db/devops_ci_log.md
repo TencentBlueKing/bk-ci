@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_log
 
-**文档版本：** 1.0.1
+**文档版本：** 1.0.2
 
 **文档描述：** devops_ci_log 的数据库文档
 | 表名                  | 说明       |
@@ -42,10 +42,12 @@
 |  3   | TAG |   varchar   | 64 |   0    |    Y     |  N   |       | 标签  |
 |  4   | SUB_TAG |   varchar   | 256 |   0    |    Y     |  N   |       | 子标签  |
 |  5   | JOB_ID |   varchar   | 64 |   0    |    Y     |  N   |       | JOBID  |
-|  6   | MODE |   varchar   | 32 |   0    |    Y     |  N   |       | LogStorageMode  |
-|  7   | EXECUTE_COUNT |   int   | 10 |   0    |    N     |  N   |       | 执行次数  |
-|  8   | FINISHED |   bit   | 1 |   0    |    N     |  N   |   b'0'    | buildisfinishedornot  |
-|  9   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  6   | USER_JOB_ID |   varchar   | 128 |   0    |    Y     |  N   |       | 真正的 jobId，已经存在的 JOB_ID 字段其实是 containerhashid  |
+|  7   | STEP_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 用户填写的插件 id  |
+|  8   | MODE |   varchar   | 32 |   0    |    Y     |  N   |       | LogStorageMode  |
+|  9   | EXECUTE_COUNT |   int   | 10 |   0    |    N     |  N   |       | 执行次数  |
+|  10   | FINISHED |   bit   | 1 |   0    |    N     |  N   |   b'0'    | buildisfinishedornot  |
+|  11   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
 **表名：** <a>T_LOG_SUBTAGS</a>
 

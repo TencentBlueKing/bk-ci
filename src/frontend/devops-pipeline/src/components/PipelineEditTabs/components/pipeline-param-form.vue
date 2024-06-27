@@ -38,10 +38,10 @@
                     <atom-checkbox
                         name="required"
                         :text="$t('editPage.showOnExec')"
+                        :desc="$t('newui.pipelineParam.buildParamTips')"
                         :disabled="disabled"
                         :value="param.required"
                         :handle-change="(name, value) => handleUpdateParam(name, value)" />
-                    <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('newui.pipelineParam.buildParamTips')" />
                     <atom-checkbox
                         name="valueNotEmpty"
                         class="neccessary-checkbox"
@@ -56,9 +56,9 @@
                         name="readOnly"
                         :disabled="disabled"
                         :text="$t('editPage.readOnlyOnRun')"
+                        :desc="$t('newui.pipelineParam.readOnlyTips')"
                         :value="param.readOnly"
                         :handle-change="(name, value) => handleUpdateParam(name, value)" />
-                    <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('newui.pipelineParam.readOnlyTips')" />
                 </div>
             </template>
         </bk-form>
@@ -192,9 +192,6 @@
 </script>
 
 <style lang="scss" scoped>
-    .icon-question-circle-shape {
-        margin-left: 12px;
-    }
     .param-checkbox-row {
         margin-top: 24px;
         line-height: 20px;

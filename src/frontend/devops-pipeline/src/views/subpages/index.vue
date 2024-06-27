@@ -1,18 +1,40 @@
 <template>
-    <div class="biz-container bkdevops-history-subpage pipeline-subpages">
-        <div class="pipeline-subpages-header">
-            <router-view name="header"></router-view>
-        </div>
-        <router-view class="biz-content"></router-view>
+    <div class="biz-container bkdevops-history-subpage pipeline-subpages" v-bkloading="{ isLoading }">
+        <template v-if="isInfoReady">
+            <div class="pipeline-subpages-header">
+                <router-view name="header" :is-switch-pipeline="isLoading"></router-view>
+            </div>
+            <router-view class="biz-content"></router-view>
+        </template>
         <portal-target name="artifactory-popup"></portal-target>
     </div>
 </template>
 
 <script>
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import { mapActions } from 'vuex'
+    import { RESOURCE_ACTION } from '@/utils/permission'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
+        data () {
+            return {
+                isLoading: false
+            }
+        },
+        computed: {
+            ...mapState('atom', ['pipelineInfo']),
+            isInfoReady () {
+                return this.pipelineInfo && this.pipelineInfo.pipelineId === this.$route.params?.pipelineId
+            }
+        },
+        watch: {
+            '$route.params.pipelineId': {
+                handler () {
+                    this.$nextTick(this.fetchPipelineInfo)
+                },
+                immediate: true
+            }
+        },
         created () {
             this.$store.dispatch('requestProjectDetail', {
                 projectId: this.$route.params.projectId
@@ -31,8 +53,28 @@
                 'setPipeline',
                 'setPipelineYaml',
                 'selectPipelineVersion',
-                'setPipelineWithoutTrigger'
-            ])
+                'setPipelineWithoutTrigger',
+                'requestPipelineSummary',
+                'resetAtomModalMap'
+            ]),
+            async fetchPipelineInfo () {
+                try {
+                    this.isLoading = true
+                    await this.requestPipelineSummary(this.$route.params)
+                } catch (error) {
+                    this.handleError(error, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        action: RESOURCE_ACTION.VIEW
+                    })
+                    this.$router.replace({
+                        name: 'PipelineManageList'
+                    })
+                    return false
+                } finally {
+                    this.isLoading = false
+                }
+            }
         }
     }
 </script>

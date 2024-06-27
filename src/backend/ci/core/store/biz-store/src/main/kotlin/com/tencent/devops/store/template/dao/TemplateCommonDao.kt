@@ -32,6 +32,8 @@ import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -64,6 +66,10 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
                 .limit(1)
                 .fetchOne(0, String::class.java)
         }
+    }
+
+    override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
+        return null
     }
 
     override fun getStorePublicFlagByCode(dslContext: DSLContext, storeCode: String): Boolean {
@@ -123,8 +129,13 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
                     storeId = templateRecord.id,
                     storeCode = templateRecord.templateCode,
                     storeName = templateRecord.templateName,
+                    storeType = StoreTypeEnum.TEMPLATE,
                     version = templateRecord.version,
-                    publicFlag = templateRecord.publicFlag
+                    publicFlag = templateRecord.publicFlag,
+                    status = TemplateStatusEnum.getTemplateStatus(templateRecord.templateStatus.toInt()),
+                    logoUrl = templateRecord.logoUrl,
+                    publisher = templateRecord.publisher,
+                    classifyId = templateRecord.classifyId
                 )
             } else {
                 null

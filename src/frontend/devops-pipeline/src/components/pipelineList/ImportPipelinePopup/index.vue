@@ -20,8 +20,8 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
     import { hashID } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
     export default {
         name: 'import-pipeline-popup',
         props: {
@@ -29,6 +29,9 @@
                 type: Boolean
             },
             title: {
+                type: String
+            },
+            pipelineId: {
                 type: String
             },
             pipelineName: {
@@ -49,9 +52,6 @@
             }
         },
         methods: {
-            ...mapActions([
-                'updatePipelineMode'
-            ]),
             ...mapActions('atom', [
                 'setEditFrom',
                 'setPipelineEditing',
@@ -145,11 +145,15 @@
                         oldYaml: ''
                     })
                 } catch (error) {
-                    console.log(error)
+                    this.$showTips({
+                        message: error.message,
+                        theme: 'error'
+                    })
                 }
 
                 this.setPipelineSetting({
                     ...result.setting,
+                    pipelineId: this.pipelineId ?? result.setting.pipelineId,
                     pipelineName: newPipelineName
                 })
                 this.setPipeline(pipeline)

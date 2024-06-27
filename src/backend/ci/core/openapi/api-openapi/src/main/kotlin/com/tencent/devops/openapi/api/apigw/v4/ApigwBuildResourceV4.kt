@@ -95,7 +95,16 @@ interface ApigwBuildResourceV4 {
                     description = "当需要指定启动时流水线变量 var1 为 foobar 时",
                     value = "{\"var1\": \"foobar\"}"
                 ),
-                ExampleObject(description = "若流水线没有设置输入变量，则填空", value = "{}")
+                ExampleObject(description = "若流水线没有设置输入变量，则填空", value = "{}"),
+                ExampleObject(
+                    description = "如需指定自定义触发材料时, 需传入特定参数, " +
+                            "详情请查看: https://github.com/TencentBlueKing/bk-ci/issues/10302",
+                    value = "{" +
+                                "\"BK_CI_MATERIAL_ID\": \"触发材料ID\"," +
+                                "\"BK_CI_MATERIAL_NAME\": \"触发材料名称\"," +
+                                "\"BK_CI_MATERIAL_URL\": \"触发材料链接\"" +
+                            "}"
+                )
             ]
         )
         values: Map<String, String>?,
@@ -153,7 +162,7 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "构建号(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildNumber")
         buildNumber: Int?,
-        @Parameter(description = "要重试或跳过的插件ID，或者StageId", required = false)
+        @Parameter(description = "要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @Parameter(description = "仅重试所有失败Job", required = false)
@@ -494,11 +503,14 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "构建ID（b-开头）", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "步骤Id（e-开头）", required = true)
+        @Parameter(description = "步骤Id（e-开头）", required = false)
         @QueryParam("elementId")
-        elementId: String,
+        elementId: String?,
         @Parameter(description = "审核信息", required = true)
-        params: ReviewParam
+        params: ReviewParam,
+        @Parameter(description = "对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
     @Operation(

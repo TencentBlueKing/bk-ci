@@ -486,7 +486,7 @@ class PipelineContainerService @Autowired constructor(
                 }
                 needUpdateContainer = true
             } else {
-                // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
+                // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过（取消状态除外）
                 if (context.needSkipTaskWhenRetry(stage, container, atomElement.id)) {
                     val target = findLastTimeBuildTask(
                         lastTimeBuildTasks = lastTimeBuildTasks,
@@ -495,8 +495,9 @@ class PipelineContainerService @Autowired constructor(
                     )
                     // 插件任务在历史中找不到，则跳过当前插件
                     // 如果插件任务之前已经是完成状态，则跳过当前插件
+                    // 如果是取消状态的，则不能跳过，取消状态属于要重试再次执行的状态（比如重试的是checkout插件，其post-action如是取消)
                     try {
-                        if (target == null || target.status.isFinish()) {
+                        if (target == null || (target.status.isFinish() && !target.status.isCancel())) {
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
@@ -1054,8 +1055,10 @@ class PipelineContainerService @Autowired constructor(
                     message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
                             " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
                     tag = context.firstTaskId,
-                    jobId = container.id,
-                    executeCount = context.executeCount
+                    containerHashId = container.id,
+                    executeCount = context.executeCount,
+                    jobId = container.jobId,
+                    stepId = atomElement.stepId
                 )
                 return
             }

@@ -24,6 +24,11 @@
                 default: 24
             }
         },
+        provide () {
+            return {
+                updateList: this.updateList
+            }
+        },
         data () {
             return {
                 isLoading: true,

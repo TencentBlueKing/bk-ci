@@ -159,6 +159,7 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'startType',
     'startTime',
     'endTime',
+    'totalTime',
     'executeTime',
     'artifactList',
     'pipelineVersion',
@@ -208,41 +209,48 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         label: 'history.tableMap.endTime',
         width: 120
     },
-    executeTime: {
+    totalTime: {
         index: 7,
+        id: 'totalTime',
+        label: 'details.totalCost',
+        width: localStorage.getItem('totalTimeWidth') ?? 120
+    },
+    executeTime: {
+        index: 8,
         id: 'executeTime',
-        label: 'details.totalCost'
+        label: 'details.executeCost',
+        width: localStorage.getItem('executeTimeWidth') ?? 120
     },
     artifactList: {
-        index: 8,
+        index: 9,
         id: 'artifactList',
         label: 'history.artifactList',
         width: 180
     },
     appVersions: {
-        index: 9,
+        index: 10,
         id: 'appVersions',
         label: 'history.tableMap.appVersions'
     },
     remark: {
-        index: 10,
+        index: 11,
         id: 'remark',
         label: 'history.remark',
         minWidth: 160,
         width: localStorage.getItem('remarkWidth') ?? 200
     },
     recommendVersion: {
-        index: 11,
+        index: 12,
         id: 'recommendVersion',
         label: 'history.tableMap.recommendVersion'
     },
     pipelineVersion: {
-        index: 12,
+        index: 13,
         id: 'pipelineVersion',
         label: 'history.tableMap.pipelineVersion'
     },
     entry: {
-        index: 13,
+        index: 14,
         id: 'entry',
         label: 'history.tableMap.entry',
         width: 120,
@@ -264,7 +272,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         }]
     },
     errorCode: {
-        index: 14,
+        index: 15,
         width: 280,
         id: 'errorCode',
         label: 'history.errorCode'

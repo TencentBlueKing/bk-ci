@@ -53,16 +53,17 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Repository
@@ -179,7 +180,7 @@ class PipelineBuildDao {
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
                         startBuildContext.yamlVersion,
-                        startBuildContext.debugModel?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                        startBuildContext.debugModelStr
                     ).execute()
                 }
             }
@@ -370,6 +371,8 @@ class PipelineBuildDao {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
                 val conditions = mutableListOf<Condition>()
                 conditions.add(BUILD_ID.`in`(buildIds))
+                    // 增加过滤，对前端屏蔽已删除的构建
+                conditions.add(DELETE_TIME.isNull)
                 if (projectId != null) {
                     conditions.add(PROJECT_ID.eq(projectId))
                 }
@@ -411,6 +414,8 @@ class PipelineBuildDao {
                 val select = dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
+                    // 增加过滤，对前端屏蔽已删除的构建
+                    .and(DELETE_TIME.isNull)
                 when (updateTimeDesc) {
                     true -> select.orderBy(UPDATE_TIME.desc(), BUILD_ID)
                     false -> select.orderBy(UPDATE_TIME.asc(), BUILD_ID)
@@ -445,6 +450,8 @@ class PipelineBuildDao {
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
                     .and(VERSION.eq(debugVersion))
+                    // 增加过滤，对前端屏蔽已删除的构建
+                    .and(DELETE_TIME.isNull)
                     .orderBy(BUILD_NUM.desc())
                     .limit(offset, limit)
                     .fetch(0, Int::class.java)
@@ -457,56 +464,67 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         buildNum: Int?,
-        statusSet: Set<BuildStatus>?
+        statusSet: Set<BuildStatus>?,
+        debug: Boolean
     ): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            val select = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+        return if (debug) {
+            with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                val select = dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                if (!statusSet.isNullOrEmpty()) {
+                    select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                }
 
-            if (!statusSet.isNullOrEmpty()) {
-                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                if (buildNum != null && buildNum > 0) {
+                    select.and(BUILD_NUM.eq(buildNum))
+                } else { // 取最新的
+                    select.orderBy(BUILD_NUM.desc()).limit(1)
+                }
+                select.fetchOne(debugMapper)
             }
+        } else {
+            with(T_PIPELINE_BUILD_HISTORY) {
+                val select = dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
 
-            if (buildNum != null && buildNum > 0) {
-                select.and(BUILD_NUM.eq(buildNum))
-            } else { // 取最新的
-                select.orderBy(BUILD_NUM.desc()).limit(1)
-            }
-            select.fetchOne(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            val select = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+                if (!statusSet.isNullOrEmpty()) {
+                    select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                }
 
-            if (!statusSet.isNullOrEmpty()) {
-                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
+                if (buildNum != null && buildNum > 0) {
+                    select.and(BUILD_NUM.eq(buildNum))
+                } else { // 取最新的
+                    select.orderBy(BUILD_NUM.desc()).limit(1)
+                }
+                select.fetchOne(mapper)
             }
-
-            if (buildNum != null && buildNum > 0) {
-                select.and(BUILD_NUM.eq(buildNum))
-            } else { // 取最新的
-                select.orderBy(BUILD_NUM.desc()).limit(1)
-            }
-            select.fetchOne(debugMapper)
         }
     }
 
     fun getOneQueueBuild(dslContext: DSLContext, projectId: String, pipelineId: String): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny(debugMapper)
+        }
+        return when {
+            release == null -> debug
+            debug == null -> release
+            release.queueTime > debug.queueTime -> debug
+            else -> release
         }
     }
 
@@ -516,7 +534,7 @@ class PipelineBuildDao {
         concurrencyGroup: String,
         pipelineId: String? = null
     ): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -526,7 +544,8 @@ class PipelineBuildDao {
             }
             select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -536,6 +555,12 @@ class PipelineBuildDao {
             }
             select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny(debugMapper)
+        }
+        return when {
+            release == null -> debug
+            debug == null -> release
+            release.queueTime > debug.queueTime -> debug
+            else -> release
         }
     }
 
@@ -643,7 +668,9 @@ class PipelineBuildDao {
             val select = dslContext.selectFrom(this)
                 .where(
                     PIPELINE_ID.eq(pipelineId),
-                    PROJECT_ID.eq(projectId)
+                    PROJECT_ID.eq(projectId),
+                    // 增加过滤，对前端屏蔽已删除的构建
+                    DELETE_TIME.isNull
                 )
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny(debugMapper)
@@ -690,7 +717,9 @@ class PipelineBuildDao {
                             BuildStatus.RUNNING.ordinal, // 3 运行中
                             BuildStatus.QUEUE.ordinal // 13 排队（新）
                         )
-                    )
+                    ),
+                    // 增加过滤，对前端屏蔽已删除的构建
+                    DELETE_TIME.isNull
                 )
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny(debugMapper)
@@ -719,7 +748,9 @@ class PipelineBuildDao {
                 .where(
                     PIPELINE_ID.eq(pipelineId),
                     PROJECT_ID.eq(projectId),
-                    STATUS.eq(1)
+                    STATUS.eq(1),
+                    // 增加过滤，对前端屏蔽已删除的构建
+                    DELETE_TIME.isNull
                 )
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny(debugMapper)
@@ -748,7 +779,9 @@ class PipelineBuildDao {
                 .where(
                     PIPELINE_ID.eq(pipelineId),
                     PROJECT_ID.eq(projectId),
-                    STATUS.eq(0)
+                    STATUS.eq(0),
+                    // 增加过滤，对前端屏蔽已删除的构建
+                    DELETE_TIME.isNull
                 )
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny(debugMapper)
@@ -849,6 +882,8 @@ class PipelineBuildDao {
                 if (startTimeEndTime != null && startTimeEndTime > 0) {
                     where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
                 }
+                // 增加过滤，对前端屏蔽已删除的构建
+                where.and(DELETE_TIME.isNull)
                 where.fetchOne(0, Int::class.java)!!
             }
         }
@@ -886,6 +921,8 @@ class PipelineBuildDao {
                 if (startTimeEndTime != null && startTimeEndTime > 0) {
                     where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
                 }
+                // 增加过滤，对前端屏蔽已删除的构建
+                where.and(DELETE_TIME.isNull)
                 where.fetchOne(0, Int::class.java)!!
             }
         }
@@ -1072,8 +1109,6 @@ class PipelineBuildDao {
                     buildNoEnd = buildNoEnd,
                     buildMsg = buildMsg
                 )
-                // 增加过滤，对前端屏蔽已删除的构建
-                where.and(DELETE_TIME.isNull)
                 when (updateTimeDesc) {
                     true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
                     false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
@@ -1229,6 +1264,8 @@ class PipelineBuildDao {
         buildNoEnd: Int?,
         buildMsg: String?
     ) {
+        // 增加过滤，对前端屏蔽已删除的构建
+        where.and(DELETE_TIME.isNull)
         if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
             var conditionsOr: Condition
 
@@ -1522,7 +1559,7 @@ class PipelineBuildDao {
                     .execute() == 1
             }
         }
-        return if (!success) with(T_PIPELINE_BUILD_HISTORY) {
+        return if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
             newBuildStatus?.let { update.set(STATUS, it.ordinal) }
@@ -1659,6 +1696,25 @@ class PipelineBuildDao {
         }
     }
 
+    fun batchCountBuildNumByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: Set<Int>
+    ): List<Record2<Int, Int>> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(VERSION.`in`(versions))
+            dslContext.select(VERSION, DSL.count())
+                .from(this)
+                .where(conditions)
+                .groupBy(VERSION)
+                .fetch()
+        }
+    }
+
     fun getDebugResourceStr(
         dslContext: DSLContext,
         projectId: String,
@@ -1677,14 +1733,14 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): List<BuildInfo> {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
                 .and(DELETE_TIME.isNotNull)
-                .fetch(debugMapper)
+            version?.let { select.and(VERSION.eq(version)) }
+            return select.fetch(debugMapper)
         }
     }
 
@@ -1692,15 +1748,15 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val now = LocalDateTime.now()
-            return dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(DELETE_TIME, now)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .and(VERSION.eq(version))
-                .execute()
+            version?.let { update.and(VERSION.eq(version)) }
+            return update.execute()
         }
     }
 
@@ -1712,7 +1768,7 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
-                    versionName = t.versionName,
+                    versionName = t.versionName ?: "V${t.version}(init)",
                     yamlVersion = t.yamlVersion,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
@@ -1720,7 +1776,7 @@ class PipelineBuildDao {
                     // queueTime在数据库中必定会写值，不为空，以防万一用当前时间兜底
                     queueTime = t.queueTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
                     startUser = t.startUser,
-                    triggerUser = t.triggerUser,
+                    triggerUser = t.triggerUser ?: t.startUser ?: "",
                     startTime = t.startTime?.timestampmilli(),
                     endTime = t.endTime?.timestampmilli(),
                     taskCount = t.taskCount,
@@ -1782,7 +1838,7 @@ class PipelineBuildDao {
                     status = BuildStatus.values()[t.status],
                     queueTime = t.queueTime?.timestampmilli() ?: 0L,
                     startUser = t.startUser,
-                    triggerUser = t.triggerUser,
+                    triggerUser = t.triggerUser ?: t.startUser ?: "",
                     startTime = t.startTime?.timestampmilli() ?: 0L,
                     endTime = t.endTime?.timestampmilli() ?: 0L,
                     taskCount = t.taskCount,

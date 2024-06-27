@@ -35,7 +35,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -47,6 +46,7 @@ import org.jooq.SortField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongParameterList", "LargeClass")
 @Repository
@@ -121,7 +121,8 @@ class PipelineInfoDao {
         taskCount: Int = 0,
         latestVersion: Int = 0,
         updateLastModifyUser: Boolean? = true,
-        latestVersionStatus: VersionStatus? = null
+        latestVersionStatus: VersionStatus? = null,
+        locked: Boolean? = null
     ): Boolean {
         return with(T_PIPELINE_INFO) {
             val update = dslContext.update(this)
@@ -142,6 +143,9 @@ class PipelineInfoDao {
             }
             if (taskCount > 0) {
                 update.set(TASK_COUNT, taskCount)
+            }
+            if (locked != null) {
+                update.set(LOCKED, locked)
             }
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
@@ -338,7 +342,8 @@ class PipelineInfoDao {
         offset: Int? = null,
         limit: Int? = null,
         sortType: PipelineSortType,
-        collation: PipelineCollation
+        collation: PipelineCollation,
+        filterByPipelineName: String?
     ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -349,6 +354,9 @@ class PipelineInfoDao {
             if (days != null) {
                 conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
             }
+            if (filterByPipelineName != null) {
+                conditions.add(PIPELINE_NAME.like("%$filterByPipelineName%"))
+            }
             return dslContext
                 .selectFrom(this)
                 .where(conditions)
@@ -358,10 +366,12 @@ class PipelineInfoDao {
                             UPDATE_TIME,
                             collation
                         )
+
                         PipelineSortType.NAME -> transferOrder(
                             PIPELINE_NAME,
                             collation
                         )
+
                         else -> transferOrder(
                             CREATE_TIME,
                             collation
@@ -391,7 +401,8 @@ class PipelineInfoDao {
         dslContext: DSLContext,
         projectId: String,
         deleteFlag: Boolean? = false,
-        days: Long? = null
+        days: Long? = null,
+        filterByPipelineName: String?
     ): Int {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -401,6 +412,9 @@ class PipelineInfoDao {
             }
             if (days != null) {
                 conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
+            }
+            if (filterByPipelineName != null) {
+                conditions.add(PIPELINE_NAME.like("%$filterByPipelineName%"))
             }
             return dslContext
                 .selectCount().from(this)
@@ -622,7 +636,8 @@ class PipelineInfoDao {
                     id = id,
                     latestVersionStatus = latestVersionStatus?.let {
                         VersionStatus.valueOf(it)
-                    } ?: VersionStatus.RELEASED
+                    } ?: VersionStatus.RELEASED,
+                    locked = t.locked
                 )
             }
         } else {

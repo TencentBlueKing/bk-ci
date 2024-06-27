@@ -564,6 +564,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
+            val now = LocalDateTime.now()
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
             // 刷新运行中stage状态，取出所有stage记录还需用于耗时计算
             val recordStages = recordStageDao.getRecords(
@@ -572,6 +573,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordStages.forEach nextStage@{ stage ->
                 if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
+                if (stage.endTime == null) { stage.endTime = now }
             }
             // 刷新运行中的container状态
             val recordContainers = recordContainerDao.getRecords(
@@ -582,6 +584,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordContainers.forEach nextContainer@{ container ->
                 container.status = buildStatus.name
+                if (container.endTime == null) { container.endTime = now }
                 val containerName = container.containerVar[Container::name.name] as String?
                 if (!containerName.isNullOrBlank()) {
                     container.containerVar[Container::name.name] =
@@ -594,6 +597,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordTasks.forEach nextTask@{ task ->
                 task.status = buildStatus.name
+                if (task.endTime == null) { task.endTime = now }
             }
             recordTaskDao.batchSave(context, recordTasks)
             recordContainerDao.batchSave(context, recordContainers)

@@ -4,7 +4,7 @@
             <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
 
                 <header class="atom-selector-header">
-                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
+                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? 'spin-icon' : ''" /></h3>
                     <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
                 </header>
                 <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
@@ -194,7 +194,7 @@
                             this.$refs.searchStr?.focus?.()
                         }, 0)
                     } else {
-                        this.clearSearch()
+                        this.clearSearch(false)
                     }
                 },
                 immediate: true
@@ -248,11 +248,12 @@
                     this.isThrottled = true
                     this.timer = setTimeout(async () => {
                         this.isThrottled = false
-                        const queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
+                        let queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
 
                         let jobType // job类型 => 触发器插件无需传jobType
                         if (this.category === 'TRIGGER') {
                             jobType = undefined
+                            queryProjectAtomFlag = false
                         } else {
                             jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
                         }
@@ -302,13 +303,14 @@
                 })
                 this.clearAtomData()
             },
-            clearSearch () {
+            clearSearch (refetch = true) {
                 const input = this.$refs.searchStr || {}
                 input.curValue = ''
                 this.searchKey = ''
-                this.setAtomPageOver()
                 this.freshRequestAtomData()
-                this.fetchAtomList()
+                if (refetch) {
+                    this.fetchAtomList()
+                }
             },
             close () {
                 this.beforeClose?.()
@@ -316,7 +318,7 @@
                 this.clearSearch()
             },
 
-            freshAtomList (searchKey) {
+            freshAtomList () {
                 if (this.fetchingAtomList) return
                 if (this.searchKey) {
                     this.$refs.searchResult.scrollTo(0, 0)
@@ -480,6 +482,9 @@
                 line-height: 50px;
                 margin-right: 15px;
                 color: $fontLighterColor;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 .devops-icon {
                     fill: currentColor
                 }

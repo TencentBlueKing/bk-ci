@@ -42,6 +42,7 @@ enum class OperationLogType(val description: String) {
     ADD_PIPELINE_OWNER("添加流水线成员时：「添加 xxx,yyy 为执行者」"),
     ADD_PIPELINE_TO_GROUP("将流水线添加到流水线组时：「添加到流水线组 a」"),
     MOVE_PIPELINE_OUT_OF_GROUP("将流水线移出流水线组时：「从流水线组 a 中移出」"),
+    UPDATE_PIPELINE_SETTING("修改流水线设置：「修改配置新增版本 P2.T1.2」"),
     NORMAL_SAVE_OPERATION("普通保存操作");
 
     fun getI18n(language: String): String {

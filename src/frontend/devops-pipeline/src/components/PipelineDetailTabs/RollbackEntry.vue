@@ -58,6 +58,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -152,7 +153,10 @@
                     })
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         version,
-                        versionName
+                        versionName,
+                        baseVersion: this.version,
+                        baseVersionName: this.versionName,
+                        canDebug: true
                     })
 
                     if (version) {
@@ -174,6 +178,9 @@
                     params: {
                         ...this.$route.params,
                         version
+                    },
+                    query: {
+                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
                     }
                 })
             }

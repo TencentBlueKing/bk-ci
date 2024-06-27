@@ -101,6 +101,16 @@
                     <div
                         class="switcher-item"
                         :class="{ 'disabled-pac': (!repoInfo.enablePac && pacProjectName) || syncStatus === 'SYNC' }"
+                        v-perm="{
+                            hasPermission: curRepo.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: curRepo.repositoryHashId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
                         @click="handleTogglePacStatus">
                     </div>
                    
@@ -112,6 +122,9 @@
                     </bk-switcher>
                     <span class="ml10" v-if="!repoInfo.enablePac && pacProjectName">
                         {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
+                        <i
+                            v-bk-tooltips="$t('codelib.相同代码库只支持在一个蓝盾项目下开启 PAC 模式')"
+                            class="bk-icon bk-dialog-mark bk-dialog-warning icon-exclamation info-icon" />
                     </span>
 
                     <div class="pac-enable">
@@ -121,7 +134,11 @@
                     </div>
 
                     <div v-if="syncStatus === 'SUCCEED'" class="pipeline-count">
-                        {{ $t('codelib.共N条流水线', [pipelineCount]) }}
+                        <i18n
+                            tag="div"
+                            path="codelib.共N条流水线">
+                            <button class="bk-text-button" @click="isShowPipeline = true">{{ pipelineCount }}</button>
+                        </i18n>
                     </div>
                     
                     <!-- 同步中 -->
@@ -231,7 +248,7 @@
                 {{ $t('codelib.关闭 PAC 模式') }}
             </span>
             <span class="close-confirm-tips">
-                <p>{{ $t('codelib.检测到默认分支仍存在ci 文件目录，关闭 PAC 模式后该目录下的文件修改将') }}</p>
+                <p>{{ $t('codelib.检测到默认分支仍存在ci 文件目录。') }}</p>
                 <p>
                     {{ $t('codelib.请先将目录') }}
                     <span>{{ $t('codelib.改名或删除') }}</span>
@@ -338,14 +355,41 @@
             <bk-table
                 :data="syncFailedPipelineList"
             >
-                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath"></bk-table-column>
-                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail">
+                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath" show-overflow-tooltip>
+                    <template slot-scope="{ row }">
+                        <a :href="row.fileUrl" target="_blank">{{ row.filePath }}</a>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail" show-overflow-tooltip>
                 </bk-table-column>
             </bk-table>
             <template slot="footer">
                 <bk-button @click="showSyncFailedDetail = !showSyncFailedDetail">{{ $t('codelib.关闭') }}</bk-button>
             </template>
         </bk-dialog>
+
+        <bk-sideslider
+            :is-show.sync="isShowPipeline"
+            :width="700"
+            quick-close
+            :title="$t('codelib.代码库下管理的流水线')"
+        >
+            <div slot="content" style="padding: 20px;">
+                <bk-table
+                    v-bkloading="{ isLoading: isFetchLoading }"
+                    :data="pipelineList"
+                    :pagination="pipelinePagination"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handleLimitChange"
+                >
+                    <bk-table-column :label="$t('codelib.流水线名称')" prop="pipelineName">
+                        <template slot-scope="{ row }">
+                            <a :href="`/console/pipeline/${projectId}/${row.pipelineId}/history/history`" target="_blank">{{ row.pipelineName }}</a>
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </div>
+        </bk-sideslider>
     </section>
 </template>
 <script>
@@ -422,7 +466,15 @@
                 showSyncFailedDetail: false,
                 syncFailedPipelineList: [],
                 pipelineCount: 0,
-                refreshLoading: false
+                refreshLoading: false,
+                isShowPipeline: false,
+                pipelineList: [],
+                pipelinePagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                isFetchLoading: false
             }
         },
         computed: {
@@ -476,7 +528,6 @@
                             await this.handleTogglePacStatus()
                         } else if (['resetGitOauth', 'resetTGitOauth', 'resetGithubOauth'].includes(resetType)) {
                             this.userId = userId
-                            // await this.handleResetAuth()
                         }
                     }, 200)
                 },
@@ -486,32 +537,7 @@
                 this.time = 1000
                 this.syncStatus = ''
             },
-            codelibTypeConstants (val) {
-                // 校验是否已经授权了OAUTh
-                // switch (val) {
-                //     case 'git':
-                //         this.refreshGitOauth({
-                //             type: 'git',
-                //             resetType: 'checkGitOauth',
-                //             redirectUrl: window.location.href
-                //         })
-                //         break
-                //     case 'github':
-                //         this.refreshGithubOauth({
-                //             projectId: this.projectId,
-                //             resetType: 'checkGithubOauth',
-                //             redirectUrl: window.location.href
-                //         })
-                //         break
-                //     case 'tgit':
-                //         this.refreshGitOauth({
-                //             type: 'tgit',
-                //             resetType: 'checkTGitOauth',
-                //             redirectUrl: window.location.href
-                //         })
-                //         break
-                // }
-            },
+            
             showSyncFailedDetail (val) {
                 if (val) {
                     this.getListYamlSync({
@@ -541,6 +567,14 @@
                 if (val === 'SYNC') {
                     this.fetchYamlSyncStatus()
                 }
+            },
+
+            isShowPipeline (val) {
+                if (val) {
+                    this.fetchYamlPipelines()
+                } else {
+                    this.pipelineList = []
+                }
             }
         },
         created () {
@@ -562,7 +596,8 @@
                 'retrySyncRepository',
                 'getListYamlSync',
                 'getYamlSyncStatus',
-                'getPacPipelineCount'
+                'getPacPipelineCount',
+                'getYamlPipelines'
             ]),
             prettyDateTimeFormat,
 
@@ -605,6 +640,8 @@
                     repositoryHashId: this.repoInfo.repoHashId
                 }).then(res => {
                     this.hasCiFolder = res
+                }).catch(e => {
+                    console.error(e)
                 }).finally(() => {
                     this.refreshLoading = false
                 })
@@ -650,7 +687,16 @@
                     } else {
                         this.$bkInfo({
                             title: this.$t('codelib.确定关闭 PAC 模式？'),
-                            confirmFn: this.handleClosePac
+                            confirmLoading: true,
+                            confirmFn: async () => {
+                                try {
+                                    await this.handleClosePac()
+                                    this.showClosePac = false
+                                    return true
+                                } catch {
+                                    return false
+                                }
+                            }
                         })
                     }
                 } else {
@@ -661,29 +707,46 @@
                     if (this.isOAUTH) {
                         this.$bkInfo({
                             title: this.$t('codelib.确定开启 PAC 模式？'),
-                            confirmFn: this.handleEnablePac
+                            confirmLoading: true,
+                            confirmFn: async () => {
+                                try {
+                                    await this.handleEnablePac()
+                                    return true
+                                } catch {
+                                    return false
+                                }
+                            }
                         })
                     } else {
                         this.$bkInfo({
                             type: 'warning',
                             title: this.$t('codelib.PAC 模式需使用 OAUTH 授权'),
                             subTitle: this.$t('codelib.确定重置授权为 OAUTH，同时开启 PAC 模式吗？'),
+                            confirmLoading: true,
                             confirmFn: async () => {
-                                const newRepoInfo = {
-                                    ...this.repoInfo
+                                try {
+                                    const newRepoInfo = {
+                                        ...this.repoInfo
+                                    }
+                                    if (newRepoInfo.authType === 'SSH' && newRepoInfo['@type'] === 'codeGit') {
+                                        const urlMap = newRepoInfo.url.split(':')
+                                        const hostName = urlMap[0].split('@')[1]
+                                        const repoName = urlMap[1]
+                                        newRepoInfo.url = `https://${hostName}/${repoName}`
+                                    }
+                                    newRepoInfo.authType = 'OAUTH'
+                                    newRepoInfo.enablePac = true
+                                    await this.handleUpdateRepo(newRepoInfo)
+                                    setTimeout(async () => {
+                                        await this.handleEnablePac()
+                                    }, 500)
+                                    return true
+                                } catch (e) {
+                                    this.$bkMessage({
+                                        theme: 'error',
+                                        message: e || e.message
+                                    })
                                 }
-                                if (newRepoInfo.authType === 'SSH' && newRepoInfo['@type'] === 'codeGit') {
-                                    const urlMap = newRepoInfo.url.split(':')
-                                    const hostName = urlMap[0].split('@')[1]
-                                    const repoName = urlMap[1]
-                                    newRepoInfo.url = `https://${hostName}/${repoName}`
-                                }
-                                newRepoInfo.authType = 'OAUTH'
-                                newRepoInfo.enablePac = true
-                                await this.handleUpdateRepo(newRepoInfo)
-                                setTimeout(async () => {
-                                    await this.handleEnablePac()
-                                }, 500)
                             }
                         })
                     }
@@ -721,33 +784,36 @@
             /**
              * 关闭PAC
              */
-            handleClosePac () {
-                this.closePac({
-                    projectId: this.projectId,
-                    repositoryHashId: this.repoInfo.repoHashId
-                }).then(async () => {
+            async handleClosePac () {
+                try {
+                    await this.closePac({
+                        projectId: this.projectId,
+                        repositoryHashId: this.repoInfo.repoHashId
+                    })
+
                     this.$bkMessage({
                         message: this.$t('codelib.关闭成功'),
                         theme: 'success'
                     })
-                    this.showClosePac = false
                     await this.fetchRepoDetail(this.repoInfo.repoHashId)
                     await this.refreshCodelibList()
-                }).catch(e => {
+                } catch (e) {
                     this.$bkMessage({
                         message: e.message || e,
                         theme: 'error'
                     })
-                })
+                }
             },
             /**
              * 开启PAC
              */
-            handleEnablePac () {
-                this.enablePac({
-                    projectId: this.projectId,
-                    repositoryHashId: this.repoInfo.repoHashId
-                }).then(async () => {
+            async handleEnablePac () {
+                try {
+                    await this.enablePac({
+                        projectId: this.projectId,
+                        repositoryHashId: this.repoInfo.repoHashId
+                    })
+
                     this.$bkMessage({
                         message: this.$t('codelib.开启成功'),
                         theme: 'success'
@@ -762,12 +828,12 @@
                     })
                     await this.fetchRepoDetail(this.repoInfo.repoHashId)
                     await this.refreshCodelibList()
-                }).catch((e) => {
+                } catch (e) {
                     this.$bkMessage({
                         message: e.message || e,
                         theme: 'error'
                     })
-                })
+                }
             },
 
             handleToggleShowClosePac (val) {
@@ -848,6 +914,32 @@
                 }).then(res => {
                     this.pipelineCount = res
                 })
+            },
+            fetchYamlPipelines () {
+                this.isFetchLoading = true
+                this.getYamlPipelines({
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoInfo.repoHashId,
+                    page: this.pipelinePagination.current,
+                    pageSize: this.pipelinePagination.limit
+                }).then(res => {
+                    this.pipelineList = res.records
+                    this.isFetchLoading = false
+                    this.pipelinePagination.count = res.count
+                }).catch(e => {
+                    console.error(e)
+                })
+            },
+
+            handlePageChange (page) {
+                this.pipelinePagination.current = page
+                this.fetchYamlPipelines()
+            },
+
+            handleLimitChange (limit) {
+                this.pipelinePagination.current = 1
+                this.pipelinePagination.limit = limit
+                this.fetchYamlPipelines()
             }
         }
     }
@@ -924,6 +1016,17 @@
                 line-height: 16px;
                 color: #fff;
                 border-radius: 50%;
+            }
+            .info-icon {
+                display: inline-block;
+                background-color: #ccc;
+                width: 16px;
+                height: 16px;
+                line-height: 16px;
+                color: #fff;
+                border-radius: 50%;
+                margin-right: 5px;
+                cursor: pointer;
             }
             .help-icon {
                 cursor: pointer;

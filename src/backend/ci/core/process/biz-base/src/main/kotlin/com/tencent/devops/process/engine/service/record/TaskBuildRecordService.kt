@@ -374,6 +374,7 @@ class TaskBuildRecordService(
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
+                val now = LocalDateTime.now()
                 val recordTask = recordTaskDao.getRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -387,6 +388,8 @@ class TaskBuildRecordService(
                     )
                     return@transaction
                 }
+                // 插件存在自动重试，永远更新一次当前时间为结束时间
+                recordTask.endTime = now
                 val taskVar = mutableMapOf<String, Any>()
                 if (atomVersion != null) {
                     // 将插件的执行版本刷新
@@ -407,7 +410,7 @@ class TaskBuildRecordService(
                         recordTask.timestamps,
                         mapOf(
                             BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                                BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                                BuildRecordTimeStamp(null, now.timestampmilli())
                         )
                     )
                 }
@@ -431,7 +434,7 @@ class TaskBuildRecordService(
                     taskVar = recordTask.taskVar.plus(taskVar),
                     buildStatus = buildStatus,
                     startTime = null,
-                    endTime = LocalDateTime.now(),
+                    endTime = now,
                     timestamps = timestamps
                 )
             }

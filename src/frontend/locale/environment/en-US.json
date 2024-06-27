@@ -266,5 +266,9 @@
         "OTHER": "Other",
         "UNKNOWN": "Unknown"
     },
-    "newPool": "New Pool"
+    "newPool": "New Pool",
+    "启用": "Enable",
+    "停用": "Disable",
+    "启用成功": "Enable successful",
+    "停用成功": "Disable successful"
 }

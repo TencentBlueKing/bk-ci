@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
@@ -43,7 +44,6 @@ import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
-import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariableDatasource
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
@@ -72,8 +72,6 @@ object YamlObjects {
     fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
         val va = Variable(
             value = variable["value"]?.toString(),
-            name = variable["name"]?.toString(),
-            valueNotEmpty = getNullValue("required", variable)?.toBoolean(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
@@ -85,9 +83,12 @@ object YamlObjects {
         )
 
         // 只有列表需要判断
-        if ((va.props?.type == VariablePropType.SELECTOR.value && va.props.datasource == null) ||
-            va.props?.type == VariablePropType.CHECKBOX.value
-        ) {
+        if (va.props?.type == VariablePropType.SELECTOR.value || va.props?.type == VariablePropType.CHECKBOX.value) {
+            // 这期暂不对拉取远程接口的参数做校验
+            if (va.props.payload != null) {
+                return va
+            }
+
             if (!va.value.isNullOrBlank() && va.props.options.isNullOrEmpty()) {
                 throw YamlFormatException(
                     "$fromPath variable $key format error: value ${va.value} not in variable options"
@@ -120,7 +121,6 @@ object YamlObjects {
             label = getNullValue("label", propsMap),
             type = getNotNullValue("type", "props", propsMap),
             options = getVarPropOptions(fromPath, propsMap["options"]),
-            datasource = getVarPropDataSource(fromPath, propsMap["datasource"]),
             description = getNullValue("description", propsMap),
             multiple = getNullValue("multiple", propsMap)?.toBoolean(),
             required = getNullValue("required", propsMap)?.toBoolean(),
@@ -134,11 +134,11 @@ object YamlObjects {
                 key = "metadata",
                 map = propsMap
             ),
-            payload = propsMap["glob"]
+            payload = propsMap["payload"]
         )
 
-        if (!po.options.isNullOrEmpty() && po.datasource != null) {
-            throw YamlFormatException("$fromPath variable format error: options and datasource cannot coexist")
+        if (!po.options.isNullOrEmpty() && po.payload != null) {
+            throw YamlFormatException("$fromPath variable format error: options and payload cannot coexist")
         }
 
         return po
@@ -299,7 +299,8 @@ object YamlObjects {
                         null
                     } else {
                         transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
-                    }
+                    },
+                    privileged = getNullValue("privileged", optionsMap)?.toBoolean()
                 )
             },
             imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)

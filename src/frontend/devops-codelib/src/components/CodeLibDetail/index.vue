@@ -21,12 +21,19 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         }"
+                        v-bk-tooltips="{
+                            content: $t('codelib.PAC 模式下不允许修改别名'),
+                            disabled: !curRepo.enablePac
+                        }"
                         @click="handleEditName"
                     >
                         <Icon
                             name="edit-line"
                             size="16"
                             class="edit-icon"
+                            :class="{
+                                'disable-delete-icon': curRepo.enablePac
+                            }"
                         />
                     </span>
                     <span
@@ -40,18 +47,24 @@
                                 action: RESOURCE_ACTION.DELETE
                             }
                         }"
+                        v-bk-tooltips="{
+                            content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
+                            disabled: !curRepo.enablePac
+                        }"
                         @click="handleDeleteCodeLib"
                     >
                         <Icon
                             name="delete"
                             size="14"
                             class="delete-icon"
+                            :class="{
+                                'disable-delete-icon': curRepo.enablePac
+                            }"
                         />
                     </span>
                 </div>
                 <div
                     v-else
-                    v-bk-clickoutside="handleSave"
                     class="edit-input"
                 >
                     <bk-input
@@ -59,13 +72,13 @@
                         ref="aliasNameInput"
                         :maxlength="60"
                         v-model="repoInfo.aliasName"
-                        @enter="handleSave"
+                        @enter="checkPipelines"
                     >
                     </bk-input>
                     <bk-button
                         class="ml5 mr5"
                         text
-                        @click="handleSave"
+                        @click="checkPipelines"
                     >
                         {{ $t('codelib.save') }}
                     </bk-button>
@@ -105,7 +118,7 @@
                     </span>
                 </div>
             </div>
-            <bk-tab :active.sync="active" type="unborder-card">
+            <bk-tab ext-cls="detail-tab" :active.sync="active" type="unborder-card">
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
                     v-bind="panel"
@@ -131,8 +144,10 @@
                 :is-show.sync="pipelinesDialogPayload.isShow"
                 :pipelines-list="pipelinesList"
                 :fetch-pipelines-list="fetchPipelinesList"
-                :is-loadig-more="pipelinesDialogPayload.isLoadingMore"
+                :is-loading-more="pipelinesDialogPayload.isLoadingMore"
                 :has-load-end="pipelinesDialogPayload.hasLoadEnd"
+                :task-repo-type="pipelinesDialogPayload.taskRepoType"
+                @confirm="handleSave"
             />
         </section>
         <empty-tips
@@ -208,7 +223,7 @@
                     { name: 'trigger', label: this.$t('codelib.trigger') },
                     { name: 'triggerEvent', label: this.$t('codelib.triggerEvent') }
                 ],
-                active: 'basic',
+                active: '',
                 repoInfo: {},
                 pipelinesList: [],
                 pipelinesDialogPayload: {
@@ -217,7 +232,8 @@
                     hasLoadEnd: false,
                     page: 1,
                     pageSize: 20,
-                    repositoryHashId: ''
+                    repositoryHashId: '',
+                    taskRepoType: ''
                 },
                 codelibIconMap: {
                     CODE_SVN: 'code-SVN',
@@ -280,6 +296,7 @@
             'pipelinesDialogPayload.isShow' (val) {
                 if (!val) {
                     this.pipelinesList = []
+                    this.pipelinesDialogPayload.taskRepoType = ''
                 }
             },
             scmType: {
@@ -291,17 +308,9 @@
                 immediate: true
             }
         },
-        created () {
+        mounted () {
             const tab = this.$route.query.tab || (this.eventId ? 'triggerEvent' : 'basic')
-            if (tab) {
-                this.active = tab
-                this.$router.push({
-                    query: {
-                        ...this.$route.query,
-                        tab: tab
-                    }
-                })
-            }
+            this.active = tab
         },
         methods: {
             ...mapActions('codelib', [
@@ -369,6 +378,7 @@
              * 开启代码库别名编辑状态
              */
             handleEditName () {
+                if (this.curRepo.enablePac) return
                 this.isEditing = true
                 this.oldAliasName = this.repoInfo.aliasName
                 setTimeout(() => {
@@ -376,14 +386,27 @@
                 })
             },
 
-            /**
-             * 保存代码库别名
-             */
-            handleSave () {
+            async checkPipelines () {
                 if (this.repoInfo.aliasName === this.oldAliasName) {
                     this.isEditing = false
                     return
                 }
+                if (this.curRepo.repositoryHashId !== this.pipelinesDialogPayload.repositoryHashId) {
+                    this.pipelinesDialogPayload.repositoryHashId = this.curRepo.repositoryHashId
+                    this.pipelinesList = []
+                }
+                this.pipelinesDialogPayload.taskRepoType = 'NAME'
+                this.pipelinesDialogPayload.page = 1
+                await this.fetchPipelinesList()
+
+                if (this.pipelinesList.length) return
+                this.handleSave()
+            },
+
+            /**
+             * 保存代码库别名
+             */
+            handleSave () {
                 this.renameAliasName({
                     projectId: this.projectId,
                     repositoryHashId: this.repoInfo.repoHashId,
@@ -405,6 +428,7 @@
                     this.repoInfo.aliasName = this.oldAliasName
                     console.error(e)
                 }).finally(() => {
+                    this.pipelinesDialogPayload.isShow = false
                     this.isEditing = false
                 })
             },
@@ -450,6 +474,7 @@
              * 删除代码库
              */
             async handleDeleteCodeLib () {
+                if (this.curRepo.enablePac) return
                 if (this.curRepo.repositoryHashId !== this.pipelinesDialogPayload.repositoryHashId) {
                     this.pipelinesDialogPayload.repositoryHashId = this.curRepo.repositoryHashId
                     this.pipelinesList = []
@@ -498,6 +523,7 @@
                 await this.fetchUsingPipelinesList({
                     projectId: this.projectId,
                     repositoryHashId: this.pipelinesDialogPayload.repositoryHashId,
+                    taskRepoType: this.pipelinesDialogPayload.taskRepoType,
                     page: this.pipelinesDialogPayload.page,
                     pageSize: this.pipelinesDialogPayload.pageSize
                 }).then(res => {
@@ -622,6 +648,9 @@
             color: #979BA5;
             display: none;
         }
+        .disable-delete-icon {
+            cursor: not-allowed;
+        }
         
         .edit-icon {
             position: relative;
@@ -645,6 +674,13 @@
             opacity: 0;
             margin-left: 10px;
             cursor: pointer;
+        }
+    }
+</style>
+<style lang="scss">
+    .detail-tab {
+        .bk-tab-section {
+            overflow: auto;
         }
     }
 </style>

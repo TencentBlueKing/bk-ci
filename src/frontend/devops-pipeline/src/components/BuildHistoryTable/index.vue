@@ -109,6 +109,7 @@
                         <stage-steps
                             v-if="props.row.stageStatus"
                             :steps="props.row.stageStatus"
+                            :build-id="props.row.id"
                         ></stage-steps>
                         <span v-else>--</span>
                     </template>
@@ -294,7 +295,7 @@
                             size="small"
                             @click.stop="retry(props.row.id)"
                         >
-                            {{ $t(isDebug ? 'reDebug' : 'reExec') }}
+                            {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
                         </bk-button>
                     </template>
                 </bk-table-column>
@@ -336,7 +337,7 @@
                 <li v-for="artifactory in actifactories" :key="artifactory.name">
                     <p class="build-artifact-name">
                         <i :class="['devops-icon', `icon-${artifactory.icon}`]"></i>
-                        <span :title="artifactory.name" class="artifact-name">
+                        <span :title="artifactory.name" class="artifact-name-span">
                             {{artifactory.name}}
                         </span>
                         <span class="artifact-size">
@@ -429,7 +430,7 @@
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, getQueryParamString } from '@/utils/util'
+    import { convertFileSize, convertMStoString, convertTime, flatSearchKey } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -471,9 +472,7 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableColumnKeys: initSortedColumns,
-                pipelineChanged: false,
-                initedVersion: false
+                tableColumnKeys: initSortedColumns
             }
         },
         computed: {
@@ -499,7 +498,7 @@
                 return this.$route.params.pipelineId
             },
             routePipelineVersion () {
-                return this.$route.params.version ? parseInt(this.$route.params.version) : ''
+                return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo?.releaseVersion
             },
             canEdit () {
                 return this.pipelineInfo?.permissions.canEdit ?? true
@@ -610,6 +609,7 @@
                         startTime: item.startTime ? convertTime(item.startTime) : '--',
                         endTime: item.endTime ? convertTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
+                        totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
                         executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
                         visibleMaterial:
                             Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],
@@ -640,40 +640,52 @@
             },
             currentBuildId () {
                 return this.activeBuild.id
+            },
+            historyQuerys () {
+                const { historyPageStatus: { query, searchKey, page, pageSize } } = this
+                return {
+                    query,
+                    searchKey,
+                    page,
+                    pageSize
+                }
             }
         },
         watch: {
-            activePipelineVersion: {
-                deep: true,
-                handler (newVal, oldVal) {
-                    if (this.pipelineChanged || !this.initedVersion || (newVal?.version !== this.routePipelineVersion)) {
-                        this.pipelineChanged = false
-                        this.initedVersion = true
-                        this.handlePageChange(1)
-                    }
+            'activePipelineVersion.version' (newVersion) {
+                if ((newVersion !== this.routePipelineVersion)) {
+                    this.handlePageChange(1)
                 }
             },
-            pipelineId () {
-                this.pipelineChanged = true
+            historyQuerys: {
+                handler (val) {
+                    const { query, searchKey, page, pageSize } = val
+                    const queryMap = new URLSearchParams({
+                        page,
+                        pageSize,
+                        ...query,
+                        ...flatSearchKey(searchKey)
+                    })
+                    this.$router.push({
+                        query: Object.fromEntries(queryMap.entries())
+                    })
+                },
+                deep: true
             }
         },
         created () {
-            if (location.search) { // 路径上带有参数，需要将参数传递给store
+            if (this.$route.query) {
                 this.setHistoryPageStatus({
-                    queryStr: getQueryParamString(this.$route.query),
-                    query: {
-                        ...(this.historyPageStatus?.query ?? {})
-                    }
+                    page: this.$route.query?.page ? parseInt(this.$route.query?.page, 10) : 1,
+                    pageSize: this.$route.query?.pageSize ? parseInt(this.$route.query?.pageSize, 10) : 20
                 })
             }
-        },
-
-        mounted () {
-            webSocketMessage.installWsMessage(this.requestHistory)
             if (this.routePipelineVersion) {
-                this.initedVersion = true
                 this.requestHistory()
             }
+        },
+        mounted () {
+            webSocketMessage.installWsMessage(this.requestHistory)
         },
 
         beforeDestroy () {
@@ -746,6 +758,14 @@
                 this.setHistoryPageStatus({
                     page: 1,
                     pageSize: limit
+                })
+                this.$router.push({
+                    params: this.$route.params,
+                    query: {
+                        ...this.$route.query,
+                        page: 1,
+                        pageSize: limit
+                    }
                 })
                 this.$nextTick(() => {
                     this.requestHistory()
@@ -1290,6 +1310,9 @@
             grid-gap: 6px;
             grid-auto-flow: column;
             align-items: center;
+            .artifact-name-span {
+                @include ellipsis();
+            }
 
         }
         .artifact-size {
@@ -1299,6 +1322,7 @@
             display: grid;
             grid-gap: 10px;
             grid-auto-flow: column;
+            flex-shrink: 0;
         }
     }
 }

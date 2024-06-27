@@ -334,6 +334,8 @@ object OkhttpUtils {
         if (!httpResponse.isSuccessful) {
             logger.error("FAIL|Download file from $url| message=${httpResponse.message}| code=${httpResponse.code}")
             throw RemoteServiceException(httpResponse.message)
+        } else {
+            logger.info("getFileHttpResponse isSuccessful url:$url")
         }
         return httpResponse
     }

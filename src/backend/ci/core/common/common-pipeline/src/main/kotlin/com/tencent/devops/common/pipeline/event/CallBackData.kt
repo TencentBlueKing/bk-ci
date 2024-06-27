@@ -99,7 +99,11 @@ enum class CallBackEvent {
     BUILD_STAGE_END,
     BUILD_JOB_START,
     BUILD_JOB_END,
-    BUILD_TASK_PAUSE
+    BUILD_TASK_PAUSE,
+    PROJECT_CREATE,
+    PROJECT_UPDATE,
+    PROJECT_ENABLE,
+    PROJECT_DISABLE
 }
 
 data class PipelineEvent(
@@ -131,7 +135,8 @@ data class BuildEvent(
     val trigger: String,
     val stageId: String?, // 仅当 BUILD_STAGE_START/BUILD_STAGE_END
     val taskId: String?, // 仅当 BUILD_TASK_START/BUILD_TASK_END
-    val buildNo: Int = 0 // 构建序号
+    val buildNo: Int = 0, // 构建序号
+    val debug: Boolean? // 是否为调试构建
 )
 
 data class SimpleModel(
@@ -163,3 +168,15 @@ data class SimpleTask(
     val startTime: Long = 0,
     val endTime: Long = 0
 )
+
+data class ProjectCallbackEvent(
+    val projectId: String,
+    val projectName: String,
+    val enable: Boolean,
+    val userId: String
+)
+
+object CallbackConstants {
+    // 项目级回调标志位
+    const val DEVOPS_ALL_PROJECT = "DEVOPS_ALL_PROJECT"
+}
