@@ -385,7 +385,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = workspaceName?.let { listOf(it) },
                 workspaceSystemType = systemType?.let { listOf(it) },
                 ips = ips,
-                owner = owner?.let { listOf(it) },
+                owner = owners?.toList() ?: owner?.let { listOf(it) },
                 status = status?.let { listOf(it) },
                 zoneShortName = zoneId?.let { listOf(it) },
                 size = machineType?.let { listOf(it) },
