@@ -123,6 +123,15 @@ enum class WorkspaceStatus {
         (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
             this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING
+
+    companion object {
+        fun load(index: Int): WorkspaceStatus {
+            if (index < 0 || index >= values().size) {
+                return EXCEPTION
+            }
+            return values()[index]
+        }
+    }
 }
 
 @Suppress("ALL")

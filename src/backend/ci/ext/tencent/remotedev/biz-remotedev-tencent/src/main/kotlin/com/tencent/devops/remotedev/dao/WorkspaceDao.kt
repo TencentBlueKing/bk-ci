@@ -961,7 +961,7 @@ class WorkspaceDao {
                     creatorDeptName = creatorDeptName,
                     creatorCenterName = creatorCenterName,
                     creatorGroupName = creatorGroupName,
-                    status = WorkspaceStatus.values()[status],
+                    status = WorkspaceStatus.load(status),
                     createTime = createTime,
                     updateTime = updateTime,
                     lastStatusUpdateTime = lastStatusUpdateTime,

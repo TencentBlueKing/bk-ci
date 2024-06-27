@@ -649,7 +649,7 @@ class WorkspaceService @Autowired constructor(
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
                 owner = owners[name] ?: res["CREATOR"] as String,
                 realOwner = owner,
-                status = WorkspaceStatus.values()[res["STATUS"] as Int],
+                status = WorkspaceStatus.load(res["STATUS"] as Int),
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
