@@ -155,7 +155,8 @@
                         version,
                         versionName,
                         baseVersion: this.version,
-                        baseVersionName: this.versionName
+                        baseVersionName: this.versionName,
+                        canDebug: true
                     })
 
                     if (version) {
