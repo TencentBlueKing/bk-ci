@@ -570,7 +570,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = resource.settingVersion ?: version
+            version = resource.settingVersion ?: 0 // 历史没有关联过setting版本应该取正式版本
         )
         val model = pipelineInfoFacadeService.getFixedModel(
             model = resource.model,
