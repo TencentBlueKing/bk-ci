@@ -1983,11 +1983,8 @@ class PipelineRepositoryService constructor(
                         )
                     ).yamlWithVersion
                 } catch (ignore: Throwable) {
-                    if (ignore is ErrorCodeException) throw ignore
                     logger.warn("TRANSFER_YAML_SETTING|$projectId|$userId|$pipelineId", ignore)
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-                    )
+                    null
                 }
                 watcher.start("updatePipelineInfo")
                 pipelineInfoDao.update(

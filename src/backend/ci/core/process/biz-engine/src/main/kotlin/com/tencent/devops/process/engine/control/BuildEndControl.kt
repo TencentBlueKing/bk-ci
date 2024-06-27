@@ -240,7 +240,7 @@ class BuildEndControl @Autowired constructor(
         buildInfo.endTime = endTime.timestampmilli()
         buildInfo.status = buildStatus
 
-        buildDurationTime(buildInfo.startTime!!)
+        buildDurationTime(buildInfo.startTime ?: 0L)
         callBackParentPipeline(buildInfo)
 
         // 广播结束事件
