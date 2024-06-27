@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -90,7 +91,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             pmUserId = userId,
             projectId = projectId,
             cgsId = null,
-            workspaceCreate = workspace
+            workspaceCreate = workspace,
+            zoneType = WindowsResourceZoneConfigType.DEFAULT
         )
         return Result(true)
     }

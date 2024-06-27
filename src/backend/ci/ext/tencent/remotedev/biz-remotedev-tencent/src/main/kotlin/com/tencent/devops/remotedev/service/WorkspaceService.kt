@@ -232,6 +232,7 @@ class WorkspaceService @Autowired constructor(
             val transactionContext = DSL.using(configuration)
             workspaceDao.modifyWorkspaceProperty(
                 dslContext = transactionContext,
+                projectId = ws.projectId,
                 workspaceName = ws.workspaceName,
                 workspaceProperty = workspaceProperty
             )
@@ -530,7 +531,8 @@ class WorkspaceService @Autowired constructor(
                     currentLoginUsers = detail?.hostIP?.let { ip -> loginUserMap[ip] } ?: emptyList(),
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
-                    remark = it.remark
+                    remark = it.remark,
+                    labels = it.labels
                 )
             )
         }

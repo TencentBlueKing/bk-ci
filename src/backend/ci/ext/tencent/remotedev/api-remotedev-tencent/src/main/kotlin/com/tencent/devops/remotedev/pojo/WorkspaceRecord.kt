@@ -65,6 +65,7 @@ interface WorkspaceRecordInf {
     val workspaceMountType: WorkspaceMountType
     val ownerType: WorkspaceOwnerType
     val remark: String?
+    val labels: List<String>?
 }
 
 @Schema(title = "工作空间信息")
@@ -132,7 +133,9 @@ data class WorkspaceRecord(
     @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
     @get:Schema(title = "工作空间备注")
-    override val remark: String?
+    override val remark: String?,
+    @get:Schema(title = "标签")
+    override var labels: List<String>?
 ) : WorkspaceRecordInf
 
 /**
@@ -204,5 +207,7 @@ data class WorkspaceRecordWithDetail(
     @get:Schema(title = " 工作空间详情")
     val workSpaceDetail: String,
     @get:Schema(title = "工作空间备注")
-    override val remark: String?
+    override val remark: String?,
+    @get:Schema(title = "标签")
+    override var labels: List<String>?
 ) : WorkspaceRecordInf

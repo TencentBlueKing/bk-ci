@@ -27,19 +27,23 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TDailyCgsData
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
+import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOrganization
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
@@ -67,13 +71,8 @@ class WorkspaceDao {
     fun createWorkspace(
         workspace: Workspace,
         workspaceStatus: WorkspaceStatus,
-        bgName: String?,
-        deptName: String?,
-        centerName: String?,
-        groupName: String?,
-        dslContext: DSLContext,
-        projectName: String,
-        businessLineNmae: String? = ""
+        organization: WorkspaceOrganization,
+        dslContext: DSLContext
     ): Long {
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
@@ -146,15 +145,15 @@ class WorkspaceDao {
                     workspace.yaml,
                     "",
                     workspace.createUserId,
-                    bgName ?: "",
-                    deptName ?: "",
-                    centerName ?: "",
-                    groupName ?: "",
+                    organization.bgName ?: "",
+                    organization.deptName ?: "",
+                    organization.centerName ?: "",
+                    organization.groupName ?: "",
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name,
                     workspace.ownerType.name,
-                    projectName,
-                    businessLineNmae ?: ""
+                    organization.projectName,
+                    organization.businessLineName ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -388,6 +387,16 @@ class WorkspaceDao {
 
             return dslContext.selectFrom(this)
                 .where(condition)
+                .fetch(workspaceMapper)
+        }
+    }
+
+    fun fetchErrorWorkspace(
+        dslContext: DSLContext
+    ): List<WorkspaceRecord>? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(STATUS.`in`(WorkspaceStatus.Types.ERROR.status().map { s -> s.ordinal }))
                 .fetch(workspaceMapper)
         }
     }
@@ -662,6 +671,7 @@ class WorkspaceDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                     .where(NAME.eq(workspaceName))
+                    .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                     .execute()
             } else {
                 dslContext.update(this)
@@ -670,6 +680,7 @@ class WorkspaceDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                     .where(NAME.eq(workspaceName))
+                    .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                     .execute()
             }
         }
@@ -691,20 +702,57 @@ class WorkspaceDao {
 
     fun modifyWorkspaceProperty(
         dslContext: DSLContext,
+        projectId: String,
         workspaceName: String,
         workspaceProperty: WorkspaceProperty
     ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .let { i ->
-                    if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
+        with(workspaceProperty) {
+            if (displayName != null || remark != null) {
+                with(TWorkspace.T_WORKSPACE) {
+                    dslContext.update(this)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                        .let { i ->
+                            if (displayName != null) i.set(DISPLAY_NAME, displayName) else i
+                        }
+                        .let { i ->
+                            if (remark != null) i.set(REMARK, remark) else i
+                        }
+                        .where(NAME.eq(workspaceName))
+                        .execute()
                 }
-                .let { i ->
-                    if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
+            }
+            if (labels != null) {
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    with(TWorkspaceLabels.T_WORKSPACE_LABELS) {
+                        transactionContext.delete(this)
+                            .where(WORKSPACE_NAME.eq(workspaceName))
+                            .execute()
+                        transactionContext.batch(
+                            labels!!.map { label ->
+                                transactionContext.insertInto(
+                                    this,
+                                    PROJECT_ID,
+                                    WORKSPACE_NAME,
+                                    LABEL
+                                ).values(
+                                    projectId,
+                                    workspaceName,
+                                    label
+                                ).onDuplicateKeyIgnore()
+                            }
+                        ).execute()
+                        /*关联更新，查询关键字使用T_WORKSPACE_LABELS,但通过T_WORKSPACE拿到LABELS值*/
+                        with(TWorkspace.T_WORKSPACE) {
+                            transactionContext.update(this)
+                                .set(UPDATE_TIME, LocalDateTime.now())
+                                .set(LABELS, workspaceProperty.labels.let { self -> JsonUtil.toJson(self!!, false) })
+                                .where(NAME.eq(workspaceName))
+                                .execute()
+                        }
+                    }
                 }
-                .where(NAME.eq(workspaceName))
-                .execute()
+            }
         }
     }
 
@@ -921,7 +969,10 @@ class WorkspaceDao {
                     workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType),
                     workspaceSystemType = WorkspaceSystemType.valueOf(systemType),
                     ownerType = WorkspaceOwnerType.valueOf(ownerType),
-                    remark = remark
+                    remark = remark,
+                    labels = labels?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<String>
+                    }
                 )
             }
         }

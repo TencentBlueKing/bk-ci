@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `PROJECT_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '项目名称',
     `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
     `REMARK` varchar(255) NULL DEFAULT '' COMMENT '备注',
+    `LABELS` varchar(1024) NULL DEFAULT NULL COMMENT '标签',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -257,6 +258,7 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_ZONE` (
     `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+	`TYPE` varchar(32) default 'DEFAULT' not null comment '区分类型，以满足特殊区域',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`ZONE`,`SHORT_NAME`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='云桌面地域配置';
@@ -623,6 +625,19 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CRON_JOB` (
     PRIMARY KEY (`ID`),
     KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+create table IF NOT EXISTS T_WORKSPACE_LABELS
+(
+    PROJECT_ID     varchar(64)  not null comment '项目ID',
+    WORKSPACE_NAME varchar(128) not null,
+    LABEL         varchar(128) not null comment '标签',
+    constraint ukey
+        unique (PROJECT_ID, LABEL, WORKSPACE_NAME),
+    KEY `IDX_WORKSPACE_NAME` (`WORKSPACE_NAME`),
+    KEY `IDX_PROJECT_ID` (`PROJECT_ID`),
+    KEY `IDX_LABEL` (`LABEL`)
+)
+    comment '工作空间标签表' charset = utf8;
 
 
 SET FOREIGN_KEY_CHECKS = 1;

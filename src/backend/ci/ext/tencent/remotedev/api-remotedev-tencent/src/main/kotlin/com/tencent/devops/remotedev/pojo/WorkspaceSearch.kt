@@ -59,6 +59,8 @@ data class WorkspaceSearch(
     var projectId: List<String>? = null,
     @get:Schema(title = "协助工单，仅op有效")
     var expertSupId: List<Long>? = null,
+    @get:Schema(title = "标签ids")
+    var labels: List<String>? = null,
     @get:Schema(title = "是否模糊匹配，可以关闭，查询会更快。")
     val onFuzzyMatch: Boolean = true,
     @get:Schema(title = "是否匹配owner类型")
@@ -72,6 +74,8 @@ data class WorkspaceSearch(
             size.isNullOrEmpty() &&
             expertSupId.isNullOrEmpty() &&
             macAddress.isNullOrEmpty()
+
+    fun needCheckLabels() = !labels.isNullOrEmpty()
 
     fun needCheckDetail() = !ips.isNullOrEmpty() || !zoneShortName.isNullOrEmpty()
 }

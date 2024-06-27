@@ -25,18 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo.project
+package com.tencent.devops.remotedev.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "工作空间属性")
-data class WorkspaceProperty(
-    @get:Schema(title = "别名")
-    @JsonProperty("display_name")
-    val displayName: String? = null,
-    @get:Schema(title = "备注")
-    val remark: String? = null,
-    @get:Schema(title = "标签")
-    var labels: List<String>? = null
+@Schema(title = "获取指定工作空间详情model")
+data class WorkspaceOrganization(
+    val bgName: String?,
+    val deptName: String?,
+    val centerName: String?,
+    val groupName: String?,
+    val projectName: String,
+    val businessLineName: String? = ""
 )
