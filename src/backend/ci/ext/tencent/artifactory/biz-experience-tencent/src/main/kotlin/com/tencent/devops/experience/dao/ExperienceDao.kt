@@ -83,6 +83,7 @@ class ExperienceDao {
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
+        classify: String?,
         recordIds: Set<Long>? = null,
         offset: Int,
         limit: Int
@@ -91,6 +92,7 @@ class ExperienceDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(CLASSIFY.eq(classify))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
@@ -315,13 +317,15 @@ class ExperienceDao {
         dslContext: DSLContext,
         projectId: String?,
         bundleIdentifier: String?,
-        platform: String?
+        platform: String?,
+        classify: String?
     ): Int {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(PROJECT_ID))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
+                .and(CLASSIFY.eq(classify))
                 .fetchOne()!!.value1()
         }
     }
