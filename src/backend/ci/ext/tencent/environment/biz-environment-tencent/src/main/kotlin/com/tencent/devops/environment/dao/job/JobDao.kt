@@ -81,13 +81,6 @@ class JobDao {
         }
     }
 
-//    private fun timestampSubDay(day: Long): Field<LocalDateTime> {
-//        return DSL.field(
-//            "date_sub(NOW(), interval $day day)",
-//            LocalDateTime::class.java
-//        )
-//    }
-
     private fun timestampSubDay(day: Long): Field<LocalDateTime> {
         val dateTimeWithDaysSubtracted = LocalDateTime.now().minusDays(day)
         return DSL.field("TIMESTAMP '$dateTimeWithDaysSubtracted'", LocalDateTime::class.java)
