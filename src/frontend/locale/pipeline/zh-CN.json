@@ -1561,6 +1561,7 @@
     "resetAuthTips2": "请确认是否可以授权。",
     "reset": "重置",
     "cancel": "取消",
-    "resetSuc": "重置成功"
+    "resetSuc": "重置成功",
+    "authTime": "授权时间：" 
   }
 }

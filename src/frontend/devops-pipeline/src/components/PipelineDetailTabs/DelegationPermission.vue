@@ -30,7 +30,7 @@
         <section class="mt30">
             <div class="form-field">
                 <label class="bk-label">{{ $t('delegation.proxyHolderForExecutionPermissions') }}</label>
-                <span class="bk-form-content">XXXXX</span>
+                <span class="bk-form-content">{{ resourceAuthData.handoverFrom }}</span>
                 <span
                     class="refresh-auth"
                     v-perm="{
@@ -47,6 +47,10 @@
                     <logo class="mr10" name="refresh" size="14" />
                     {{ $t('delegation.resetAuthorization') }}
                 </span>
+            </div>
+            <div class="form-field">
+                <label class="bk-label">{{ $t('delegation.authTime') }}</label>
+                <span class="bk-form-content">{{ convertTime(resourceAuthData.handoverTime) }}</span>
             </div>
         </section>
         
@@ -90,6 +94,7 @@
 <script>
     import Logo from '@/components/Logo'
     import { mapActions, mapState } from 'vuex'
+    import { convertTime } from '@/utils/util'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -100,7 +105,8 @@
         data () {
             return {
                 showResetDialog: false,
-                resetLoading: false
+                resetLoading: false,
+                resourceAuthData: {}
             }
         },
         computed: {
@@ -118,8 +124,14 @@
                 return this.$route.params.projectId
             }
         },
+        created () {
+            this.fetchResourceAuth()
+        },
         methods: {
+            convertTime,
             ...mapActions('pipelines', [
+                'getResourceAuthorization',
+                'resetPipelineAuthorization'
             ]),
             handleShowResetDialog () {
                 this.showResetDialog = true
@@ -130,21 +142,60 @@
                     this.resetLoading = false
                 }
             },
-            handleReset () {
+            async fetchResourceAuth () {
+                try {
+                    this.resourceAuthData = await this.getResourceAuthorization({
+                        projectId: this.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: this.pipelineId
+                    })
+                } catch (e) {
+                    console.error(e)
+                }
+            },
+            async handleReset () {
                 this.resetLoading = true
-                // try {
-                //     this.resetLoading = false
-                //     this.$bkMessage({
-                //         theme: 'success',
-                //         message: this.$t('delegation.resetSuc')
-                //     })
-                // } catch (e) {
-                //     this.resetLoading = false
-                //     this.$bkMessage({
-                //         theme: 'error',
-                //         message: e.message || e
-                //     })
-                // }
+                try {
+                    this.resetLoading = false
+                    const res = await this.resetPipelineAuthorization({
+                        projectId: this.projectId,
+                        params: {
+                            projectCode: this.projectId,
+                            resourceType: 'pipeline',
+                            handoverChannel: 'OTHER',
+                            resourceAuthorizationHandoverList: [
+                                {
+                                    projectCode: this.projectId,
+                                    resourceType: 'pipeline',
+                                    resourceName: this.resourceAuthData.resourceName,
+                                    resourceCode: this.resourceAuthData.resourceCode,
+                                    handoverFrom: this.resourceAuthData.handoverFrom,
+                                    handoverTo: this.$userInfo.username
+                                }
+                            ]
+                        }
+                    })
+                    this.showResetDialog = false
+                    if (res.SUCCESS.length) {
+                        this.fetchResourceAuth()
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('delegation.resetSuc')
+                        })
+                    } else if (res.FAILED.length) {
+                        const message = res.FAILED[0]?.handoverFailedMessage || ''
+                        this.$bkMessage({
+                            theme: 'error',
+                            message
+                        })
+                    }
+                } catch (e) {
+                    this.resetLoading = false
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
+                }
             }
         }
     }
@@ -153,7 +204,7 @@
 <style lang="scss">
     .delegation-permission {
         padding: 24px;
-        font-size: 14px;
+        font-size: 12px;
         .content-warpper {
             border-radius: 2px;
             border: 1px solid #DCDEE5;
@@ -171,7 +222,7 @@
             padding: 20px 16px;
             line-height: 24px;
             color: #63656E;
-            font-size: 14px;
+            font-size: 12px;
         }
         .highlight {
             color: #FF9C01;
@@ -179,7 +230,9 @@
         }
         .form-field {
             display: flex;
+            font-size: 12px;
             padding-left: 5px;
+            margin-bottom: 10px;
         }
         .bk-form-content {
             color: #313238;
@@ -210,7 +263,7 @@
         .close-confirm-tips {
             text-align: left;
             color: #63656E;
-            font-size: 14px;
+            font-size: 12px;
             padding: 10px 20px;
             background: #F5F7FA;
             span {
