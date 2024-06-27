@@ -183,7 +183,7 @@ class PermissionService @Autowired constructor(
     }
 
     fun hasUserManager(userId: String, projectId: String): Boolean {
-        return kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
+        kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
             { return true }, { return false }
         )
     }
