@@ -56,6 +56,7 @@ import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWra
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.v3.models.on.CustomFilter
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.IssueRule
 import com.tencent.devops.process.yaml.v3.models.on.MrRule
@@ -105,9 +106,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ),
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName,
-                    enableThirdFilter = !push.customFilterUrl.isNullOrBlank(),
-                    thirdUrl = push.customFilterUrl,
-                    thirdSecretToken = push.customFilterCredentials
+                    enableThirdFilter = !push.custom?.url.isNullOrBlank(),
+                    thirdUrl = push.custom?.url,
+                    thirdSecretToken = push.custom?.credentials
                 ).checkTriggerElementEnable(push.enable).apply {
                     version = "2.*"
                 }
@@ -157,9 +158,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName,
-                    enableThirdFilter = !mr.customFilterUrl.isNullOrBlank(),
-                    thirdUrl = mr.customFilterUrl,
-                    thirdSecretToken = mr.customFilterCredentials
+                    enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
+                    thirdUrl = mr.custom?.url,
+                    thirdSecretToken = mr.custom?.credentials
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
@@ -260,8 +261,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     action = git.includePushAction,
-                    customFilterUrl = if (git.enableThirdFilter == true) git.thirdUrl else null,
-                    customFilterCredentials = if (git.enableThirdFilter == true) git.thirdSecretToken else null
+                    custom = if (git.enableThirdFilter == true) CustomFilter(
+                        url = git.thirdUrl,
+                        credentials = git.thirdSecretToken
+                    ) else null
                 )
 
                 CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
@@ -290,8 +293,10 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     action = git.includeMrAction,
-                    customFilterUrl = if (git.enableThirdFilter == true) git.thirdUrl else null,
-                    customFilterCredentials = if (git.enableThirdFilter == true) git.thirdSecretToken else null
+                    custom = if (git.enableThirdFilter == true) CustomFilter(
+                        url = git.thirdUrl,
+                        credentials = git.thirdSecretToken
+                    ) else null
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(

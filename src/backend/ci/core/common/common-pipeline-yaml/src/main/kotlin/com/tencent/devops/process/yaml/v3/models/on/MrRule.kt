@@ -86,11 +86,7 @@ data class MrRule(
     @JsonProperty("path-filter-type")
     val pathFilterType: String? = null,
 
-    @get:Schema(title = "custom-filter-url")
-    @JsonProperty("custom-filter.url")
-    val customFilterUrl: String? = null,
-
-    @get:Schema(title = "custom-filter-credentials")
-    @JsonProperty("custom-filter.credentials")
-    val customFilterCredentials: String? = null
+    @get:Schema(title = "custom-filter")
+    @JsonProperty("custom-filter")
+    val custom: CustomFilter? = null
 )
