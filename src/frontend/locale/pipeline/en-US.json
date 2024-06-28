@@ -876,6 +876,8 @@
     "optionSetting": "Options",
     "optionValTips": "Please enter value",
     "optionNameTips": "Please enter name(default as value)",
+    "requiredTips": "{0} cannot be empty",
+    "noRepeatTips": "{0} cannot be repeated",
     "optionsDesc": "Separate options with line breaks <br>There should not be an English comma contained in the options <br>Only one option will be shown if there are serval same options at the same time <br> Similar to the HTML SELECT tag,format \"{value}={name} | {value} \"",
     "chineseName": "ChineseName",
     "chineseNameTips": "Please enter Chinese name",
