@@ -20,7 +20,7 @@ import (
 const (
 	LocalDockerBuildTmpDirName  = "docker_build_tmp"
 	LocalDockerWorkSpaceDirName = "docker_workspace"
-	DockerLogDir                = "/data/logs"
+	DockerLogDir                = "/data/devops/logs"
 )
 
 type DockerHostInfo struct {
