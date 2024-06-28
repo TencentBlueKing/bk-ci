@@ -113,7 +113,7 @@ class SubPipelineStatusService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    asyncStatus = when{
+                    asyncStatus = when {
                         buildSourceStatus.isSuccess() -> BuildStatus.SUCCEED
                         buildSourceStatus.isCancel() -> BuildStatus.CANCELED
                         else -> BuildStatus.FAILED
@@ -201,8 +201,8 @@ class SubPipelineStatusService @Autowired constructor(
         asyncStatus: String
     ) {
         logger.info(
-            "start update parent pipeline asyncStatus[$asyncStatus]|${projectId}|${pipelineId}|" +
-                    "${buildId}|${executeCount}"
+            "start update parent pipeline asyncStatus[$asyncStatus]|$projectId|$pipelineId|" +
+                    "$buildId|$executeCount"
         )
         pipelineRuntimeService.run {
             updateAsyncStatus(
