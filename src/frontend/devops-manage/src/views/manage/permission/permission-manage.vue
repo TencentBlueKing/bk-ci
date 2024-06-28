@@ -22,7 +22,8 @@
           unique-select
           max-height="32"
           class="content-btn-search"
-          placeholder="代码库/授权人/授权时间"
+          :placeholder="filterTips"
+          :key="searchName"
         />
       </div>
       <bk-loading class="content-table" :loading="isLoading">
@@ -36,35 +37,39 @@
           :scroll-loading="isScrollLoading"
           @select-all="handleSelectAll"
           @selection-change="handleSelectionChange"
-          @scroll-bottom="handleScrollBottom"
+          @scroll-bottom="getTableList"
         >
           <template #prepend>
-            <div v-if="selectList.length" class="prepend">
+            <div v-if="isSelectAll" class="prepend">
+              已选择全量数据 {{ totalCount }} 条，
+              <span @click="handleClear">清除选择</span>
+            </div>
+            <div v-else-if="selectList.length" class="prepend">
               已选择 {{ selectList.length }} 条数据，
-              <span @click="handleSelectAllData"> 选择全量数据 {{ total }} 条 </span> 
+              <span @click="handleSelectAllData"> 选择全量数据 {{ totalCount }} 条 </span> 
               &nbsp; | &nbsp;
               <span @click="handleClear">清除选择</span> 
             </div>
           </template>
         </bk-table>
-      </bk-loading>
+      </bk-loading> 
     </div>
   </div>
   <bk-dialog
-    :is-show="isShowDialog"
+    :is-show="showResetDialog"
     :theme="'primary'"
     :width="640"
     :title="t('批量重置')"
     :confirm-text="t('重置')"
     :is-loading="dialogLoading"
     @closed="dialogClose"
-    @confirm="dialogConfirm"
+    @confirm="confirmReset"
   >
     <div class="dialog">
-      <bk-tag radius="20px" class="tag">已选择{{ selectList.length }}个代码库</bk-tag>
+      <bk-tag radius="20px" class="tag">已选择{{ isSelectAll ? totalCount : selectList.length }}个代码库</bk-tag>
       <bk-form
         ref="formRef"
-        :model="formData"
+        :model="resetFormData"
       >
         <bk-form-item
           required
@@ -73,7 +78,7 @@
           labelWidth=""
         >
           <bk-input
-            v-model="formData.name"
+            v-model="resetFormData.name"
             placeholder="请输入"
             clearable
           />
@@ -106,83 +111,97 @@
 </template>
 
 <script setup name="PermissionManage">
+import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, h } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { convertTime } from '@/utils/util'
 import { Message } from 'bkui-vue';
+import { renderType } from 'bkui-vue/lib/shared';
 
 const { t } = useI18n();
+const route = useRoute();
 const router = useRouter();
 
-const total = ref(0);
-const activeNav = ref('');
 const tableData = ref([]);
-const resetTableData = ref([
-  {
-    id: 1,
-    "code": "bkdevops-plugins-test/fayenodejstesa",
-    "reason": "2018-05-25 15:02:0",
-    "percent": "",
-  },
-  {
-    id: 2,
-    "code": "bkdevops-plugins-test/fayenodejstesa",
-    "reason": "2018-05-25 15:02:1",
-    "percent": "",
-  }
-]);
-const activeIndex = ref();
+const resetTableData = ref([]);
+const activeIndex = ref(0);
 const formRef = ref(null);
 const refTable = ref(null);
 const selectList = ref([]);
 const searchValue = ref([]);
 const isLoading = ref(true);
-const isShowDialog = ref(false);
+const showResetDialog = ref(false);
 const dialogLoading = ref(false);
 const isResetFailure = ref(false);
 const isScrollLoading = ref(false);
+const page = ref(1);
+const pageSize = ref(20);
+const projectId = computed(() => route.params?.projectCode);
+const resourceType = ref('repertory');
+const hasNext = ref(true);
+const totalCount = ref(0);
+const isSelectAll = ref(false);  // 选择全量数据
+const searchName = computed(() => {
+  const nameMap = {
+    'pipeline': t('流水线'),
+    'env_node': t('部署节点'),
+    'repertory': t('代码库')
+  }
+  return nameMap[resourceType.value]
+})
+const filterTips = computed(() => {
+  return searchData.value.map(item => item.name).join(' / ')
+})
 
+const resetParams = computed(() => {
+  const resourceAuthorizationHandoverList = selectList.value.map(item => {
+    return {
+      projectCode: projectId.value,
+      resourceType: resourceType.value,
+      resourceName: item.resourceName,
+      resourceCode: item.resourceCode,
+      handoverFrom: item.handoverFrom,
+      handoverTo: resetFormData.value.name
+    }
+  })
+  const params = {
+    projectCode: projectId.value,
+    resourceType: resourceType.value,
+    fullSelection: isSelectAll.value,
+    handoverChannel: 'MANAGER',
+    resourceAuthorizationHandoverList: isSelectAll.value ? [] : resourceAuthorizationHandoverList,
+  }
+  if (isSelectAll.value) {
+    params.handoverTo = resetFormData.value.name
+  }
+  return params
+})
 const permissionList = ref([
   {
     name: 'codeBase',
     label: t('代码库授权'),
+    resourceType: 'repertory'
   },
   {
     name: 'pipeline',
     label: t('流水线执行授权'),
+    resourceType: 'pipeline'
   },
   {
     name: 'deployNode',
     label: t('部署节点授权'),
+    resourceType: 'env_node'
   },
 ]);
 const searchData = ref([
   {
-    name: '实例业务',
-    id: '2',
-    onlyRecommendChildren: true,
-    children: [
-      {
-        name: '王者荣耀',
-        id: '2-1',
-      },
-      {
-        name: '刺激战场',
-        id: '2-2',
-      },
-      {
-        name: '绝地求生',
-        id: '2-3',
-      },
-    ],
+    name: searchName,
+    id: 1, 
   },
   {
-    name: 'IP地址',
-    id: '3',
-  },
-  {
-    name: 'testestset',
-    id: '4',
+    name: t('授权人'),
+    id: 1,
   },
 ]);
 const columns = ref([
@@ -193,88 +212,85 @@ const columns = ref([
   },
   {
     label: "代码库",
-    field: "code",
+    field: "resourceName",
   },
   {
     label: "授权人",
-    field: "percent",
+    field: "handoverFrom",
   },
   {
     label: "授权时间",
-    field: "create_time",
+    field: "handoverTime",
+    render ({ cell, row }) {
+      return h(
+        'span',
+        [
+          convertTime(cell)
+        ]
+      );
+    },
   },
 ])
-const formData = ref({
+const resetFormData = ref({
   name: ''
 })
 
 onMounted(() => {
-  activeNav.value = t('代码库授权');
-  activeIndex.value = 0;
   getTableList();
 });
+
+function init () {
+  page.value = 1;
+  tableData.value = [];
+  hasNext.value = true;
+  searchValue.value = [];
+  isSelectAll.value = false;
+};
 /**
  * 获取列表数据
  */
-function getTableList(){
-  isLoading.value = true
-  setTimeout(()=>{
-   // 调用接口获取表格数据
-   tableData.value =[
-      {
-        id: 1,
-        "code": "bkdevops-plugins-test/fayenodejstesa",
-        "percent": "OAUTH@  daisyhong",
-        "create_time": "2018-05-25 15:02:0"
-      },
-      {
-        id: 2,
-        "code": "bkdevops-plugins-test/fayenodejstesa",
-        "percent": "OAUTH@  daisyhong",
-        "create_time": "2018-05-25 15:02:1"
-      },
-      {
-        id: 3,
-        "code": "bkdevops-plugins-test/fayenodejstesa",
-        "percent": "OAUTH@  daisyhong",
-        "create_time": "2018-05-25 15:02:2"
-      },{
-        id: 1,
-        "code": "bkdevops-plugins-test/fayenodejstesa",
-        "percent": "OAUTH@  daisyhong",
-        "create_time": "2018-05-25 15:02:0"
-      },
-      {
-        id: 2,
-        "code": "bkdevops-plugins-test/fayenodejstesa",
-        "percent": "OAUTH@  daisyhong",
-        "create_time": "2018-05-25 15:02:1"
-      },
-      {
-        id: 3,
-        "code": "bkdevops-plugins-test/fayenodejstesa",
-        "percent": "OAUTH@  daisyhong",
-        "create_time": "2018-05-25 15:02:2"
-      },
-   ]
-   total.value = tableData.value.length;
-   isLoading.value = false
- },1000)
+async function  getTableList () {
+  if (!hasNext.value) return;
+
+  if (page.value === 1) {
+    isLoading.value = true;
+  } else {
+    isScrollLoading.value = true;
+  }
+  try {
+    const res = await http.getResourceAuthList(projectId.value, {
+      page: page.value,
+      pageSize: pageSize.value,
+      projectCode: projectId.value,
+      resourceType: resourceType.value
+    })
+    tableData.value = [...tableData.value, ...res.records]
+    page.value += 1
+    hasNext.value = res.hasNext
+    totalCount.value = res.count
+
+    isLoading.value = false
+    isScrollLoading.value = false
+  } catch (e) {
+    isLoading.value = false
+    isScrollLoading.value = false
+    console.error(e)
+  }
 }
 /**
  * aside点击事件
  */
-function handleAsideClick(params, index) {
+function handleAsideClick(item, index) {
+  if (activeIndex.value === index) return
   activeIndex.value = index;
-  activeNav.value = params.label;
-  // 模拟
+  resourceType.value = item.resourceType;
+  init();
   getTableList();
 };
 /**
  * 批量重置
  */
 function handleReset() {
-console.log(selectList.value.length);
   if(!selectList.value.length) {
     Message({
       theme: 'error',
@@ -282,67 +298,30 @@ console.log(selectList.value.length);
     });
     return;
   }
-  isShowDialog.value = true;
-}
-/**
- * 触底加载
- */
-function handleScrollBottom(arg) {
-  isScrollLoading.value = true;
-  // 模拟
-  setTimeout(() => {
-    isScrollLoading.value = false;
-    tableData.value.push({
-      id: 1,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:0"
-    },
-    {
-      id: 2,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:1"
-    },
-    {
-      id: 3,
-      "code": "bkdevops-plugins-test/fayenodejstesa",
-      "percent": "OAUTH@  daisyhong",
-      "create_time": "2018-05-25 15:02:2"
-    },)
-    total.value = tableData.value.length;
-  }, 1500);
+  showResetDialog.value = true;
 }
 /**
  * 当前页全选事件
  */
 function handleSelectAll(val){
-  selectList.value = [];
-  if (val.checked) {
-    tableData.value.forEach((item) => {
-      selectList.value.push(item.id);
-    });
-  } else {
-    selectList.value = [];
-  }
+  selectList.value = refTable.value.getSelection();
 }
 /**
  * 多选事件
  * @param val
  */
 function handleSelectionChange(val) {
-  if (val.checked) {
-    selectList.value.push(val.row.id);
-  } else {
-    selectList.value = selectList.value.filter((item) => item !== val.row.id);
-  }
+  selectList.value = refTable.value.getSelection();
 };
 /**
  * 全量数据选择
  */
 function handleSelectAllData() {
-  refTable.value.toggleAllSelection()
-  // 调用接口获取全部数据后
+  if (!isSelectAll.value && selectList.value.length !== tableData.value.length) {
+    refTable.value.toggleAllSelection();
+  }
+  isSelectAll.value = true;
+
   selectList.value = tableData.value.map((item) => item.id);
 }
 /**
@@ -350,36 +329,39 @@ function handleSelectAllData() {
  */
 function handleClear() {
   refTable.value.clearSelection();
+  isSelectAll.value = false;
   selectList.value = [];
 }
 /**
  * 弹窗关闭
  */
 function dialogClose() {
-  isShowDialog.value = false;
+  showResetDialog.value = false;
   isResetFailure.value = false;
 }
 /**
  * 弹窗提交
  */
-function dialogConfirm() {
+function confirmReset() {
   dialogLoading.value = true;
-  formRef.value?.validate().then( isValid => {
-    if (isValid) {
-      // 接口判断 是否重置失败
-      setTimeout(()=>{
-        dialogLoading.value = false;
-        if(Math.random() > 0.5){
-          isResetFailure.value = true;
-          console.log(resetTableData.value,'重置授权人表格数据');
-        }else{
-          Message({
-            theme: 'success',
-            message: '代码库授权已成功重置',
-          });
-        }
-      },1000)
+  formRef.value?.validate().then(async () => {
+    try {
+      const res = await http.resetAuthorization(projectId.value, resetParams.value, resourceType.value)
+      console.log(res, 123123)
+    } catch (e) {
+      console.error(e)
     }
+    // setTimeout(()=>{
+    //   dialogLoading.value = false;
+    //   if(Math.random() > 0.5){
+    //     isResetFailure.value = true;
+    //   }else{
+    //     Message({
+    //       theme: 'success',
+    //       message: '代码库授权已成功重置',
+    //     });
+    //   }
+    // },1000)
   }).catch(()=>{
     
   }).finally(()=>{
