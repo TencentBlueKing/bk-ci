@@ -41,6 +41,7 @@ import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
+import com.tencent.devops.remotedev.service.PermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +52,8 @@ class ImageManageService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val imageManageDao: ImageManageDao,
-    private val windowsResourceZoneDao: WindowsResourceZoneDao
+    private val windowsResourceZoneDao: WindowsResourceZoneDao,
+    private val permissionService: PermissionService
 ) {
 
     companion object {
@@ -103,6 +105,7 @@ class ImageManageService @Autowired constructor(
     )
     fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
         logger.info("$userId delete projectImage: $imageId")
+        permissionService.checkUserManager(userId, projectId)
         imageManageDao.updateWorkspaceImageStatus(projectId, imageId, ImageStatus.DELETED, dslContext)
         return true
     }
