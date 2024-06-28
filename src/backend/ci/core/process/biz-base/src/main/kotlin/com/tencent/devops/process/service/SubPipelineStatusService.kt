@@ -108,12 +108,17 @@ class SubPipelineStatusService @Autowired constructor(
                 return
             }
             try {
-                val pipelineStatus = getSubPipelineStatusFromDB(projectId, buildId)
+                val (buildSourceStatus, pipelineStatus) = getSubPipelineStatusFromDB(projectId, buildId)
                 updateParentPipelineTaskStatus(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    asyncStatus = pipelineStatus.status
+                    asyncStatus = when{
+                        buildSourceStatus.isSuccess() -> BuildStatus.SUCCEED
+                        buildSourceStatus.isCancel() -> BuildStatus.CANCELED
+                        buildSourceStatus.isRunning() -> BuildStatus.RUNNING
+                        else -> BuildStatus.FAILED
+                    }.name
                 )
                 // 子流水线是异步启动的，不需要缓存状态
                 if (redisOperation.get(getSubPipelineStatusKey(buildId)) != null) {
@@ -193,7 +198,7 @@ class SubPipelineStatusService @Autowired constructor(
         }
     }
 
-    private fun getSubPipelineStatusFromDB(projectId: String, buildId: String): SubPipelineStatus {
+    private fun getSubPipelineStatusFromDB(projectId: String, buildId: String): Pair<BuildStatus, SubPipelineStatus> {
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         return if (buildInfo != null) {
             val status: BuildStatus = when {
@@ -203,11 +208,11 @@ class SubPipelineStatusService @Autowired constructor(
                 buildInfo.isStageSuccess() -> BuildStatus.RUNNING // stage 特性， 未结束，只是卡在Stage审核中
                 else -> buildInfo.status
             }
-            SubPipelineStatus(
+            buildInfo.status to SubPipelineStatus(
                 status = status.name
             )
         } else {
-            SubPipelineStatus(
+            BuildStatus.FAILED to SubPipelineStatus(
                 status = BuildStatus.FAILED.name,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
@@ -219,7 +224,7 @@ class SubPipelineStatusService @Autowired constructor(
     fun getSubPipelineStatus(projectId: String, buildId: String): SubPipelineStatus {
         val subPipelineStatusStr = redisOperation.get(getSubPipelineStatusKey(buildId))
         return if (subPipelineStatusStr.isNullOrBlank()) {
-            getSubPipelineStatusFromDB(projectId, buildId)
+            getSubPipelineStatusFromDB(projectId, buildId).second
         } else {
             val redisSubPipelineStatus = JsonUtil.to(subPipelineStatusStr, SubPipelineStatus::class.java)
             // 如果状态完成,子流水线插件就不会再调用,从redis中删除key
