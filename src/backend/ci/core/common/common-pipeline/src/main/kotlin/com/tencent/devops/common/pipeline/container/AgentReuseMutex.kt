@@ -49,7 +49,7 @@ data class AgentReuseMutex(
          * @see com.tencent.devops.process.engine.common.Timeout MAX_MINUTES
          * JOB最长过期时间 7 天对应的秒数
          */
-        const val AGENT_LOCK_TIMEOUT = 60 * 60 * 24 * 7
+        const val AGENT_LOCK_TIMEOUT = 60 * 60 * 24 * 7L
         const val CONTEXT_KEY_SUFFIX = ".container.agent_id"
         fun genAgentContextKey(jobId: String) = "jobs.$jobId$CONTEXT_KEY_SUFFIX"
         fun genAgentReuseMutexLockKey(projectId: String, agentId: String) =
