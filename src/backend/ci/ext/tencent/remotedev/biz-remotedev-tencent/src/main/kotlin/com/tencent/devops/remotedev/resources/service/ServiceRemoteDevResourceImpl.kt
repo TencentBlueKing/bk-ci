@@ -664,6 +664,6 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
-        imageManageService.deleteProjectImage(userId, projectId, imageId)
+        return Result(imageManageService.deleteProjectImage(userId, projectId, imageId))
     }
 }
