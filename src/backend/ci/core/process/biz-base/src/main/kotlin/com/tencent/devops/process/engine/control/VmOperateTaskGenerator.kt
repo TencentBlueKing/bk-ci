@@ -37,8 +37,8 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import org.springframework.stereotype.Component
 import javax.xml.bind.Element
+import org.springframework.stereotype.Component
 
 /**
  * 生成运行环境操作的插件任务
@@ -64,10 +64,10 @@ class VmOperateTaskGenerator {
             task.taskAtom == SHUTDOWN_VM_TASK_ATOM || task.taskAtom == SHUTDOWN_NORMAL_TASK_ATOM
 
         fun isStartVM(atomCode: String) =
-            atomCode.startsWith(START_VM_TASK_ATOM)  || atomCode.startsWith(START_NORMAL_TASK_ATOM)
+            atomCode.startsWith(START_VM_TASK_ATOM) || atomCode.startsWith(START_NORMAL_TASK_ATOM)
 
         fun isStopVM(atomCode: String) =
-            atomCode.startsWith(SHUTDOWN_VM_TASK_ATOM)  || atomCode.startsWith(SHUTDOWN_NORMAL_TASK_ATOM)
+            atomCode.startsWith(SHUTDOWN_VM_TASK_ATOM) || atomCode.startsWith(SHUTDOWN_NORMAL_TASK_ATOM)
     }
 
     /**

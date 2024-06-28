@@ -196,7 +196,6 @@ class MetricsUserService @Autowired constructor(
             CallBackEvent.BUILD_END -> {
                 date.endTime = checkNotNull(event.eventTime)
                 metricsCacheService.buildCacheEnd(event.buildId, checkNotNull(event.executeCount), date)
-
             }
 
             CallBackEvent.BUILD_JOB_END -> {
@@ -211,7 +210,6 @@ class MetricsUserService @Autowired constructor(
                     checkNotNull(event.executeCount),
                     date
                 )
-
             }
 
             CallBackEvent.BUILD_TASK_END -> {
@@ -427,7 +425,6 @@ class MetricsUserService @Autowired constructor(
             .description(description)
             .register(registry)
     }
-
 
     private fun registerBuildStepGauge(
         key: String,

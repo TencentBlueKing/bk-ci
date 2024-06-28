@@ -50,7 +50,6 @@ class MetricsUserConfig {
         const val gaugeBuildStepStatusKey = "pipeline_step_status_info"
     }
 
-
     @Value("\${metrics.user.bkBizId:9}")
     val bkBizId = "9"
 
