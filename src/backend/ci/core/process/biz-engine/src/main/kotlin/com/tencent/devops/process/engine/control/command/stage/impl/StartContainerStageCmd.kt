@@ -240,10 +240,10 @@ class StartContainerStageCmd(
                 return
             }
             val lock = RedisLockByValue(
-                redisOperation,
-                AgentReuseMutex.genAgentReuseMutexLockKey(stage.projectId, agent),
-                stage.buildId,
-                AgentReuseMutex.AGENT_LOCK_TIMEOUT
+                redisOperation = redisOperation,
+                lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(stage.projectId, agent),
+                lockValue = stage.buildId,
+                expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
             )
             lock.unlock()
         }
