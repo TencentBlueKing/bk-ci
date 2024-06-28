@@ -309,6 +309,7 @@ class MetricsUserService @Autowired constructor(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     /* 请勿直接调用该方法 */
     private fun metricsUpdate(key: String, oldValue: MetricsUserPO, newValue: MetricsUserPO) {
         val metrics = local[key]
