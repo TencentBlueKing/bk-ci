@@ -279,21 +279,24 @@ class CreateControl @Autowired constructor(
                 workspaceCreate.windowsType, QuotaType.parse(ownerType)
             ).filter {
                 when {
+                    /*指定了cgsId*/
+                    cgsId != null -> it.cgsId == cgsId
+                    /*其余情况不应放开lock==true的情况*/
+                    it.locked == true -> false
                     /*使用普通区域，则应到避免落入特殊区域*/
                     availableZone.type == WindowsResourceZoneConfigType.DEFAULT && it.zoneId in spec.value -> false
+                    /*特殊情况，限制具体的区域id*/
                     availableZone.type != WindowsResourceZoneConfigType.DEFAULT -> {
-                        /*特殊情况，限制具体的区域id*/
                         it.zoneId == availableZone.zoneShortName
                     }
-
+                    /*默认情况使用普通区域，处理逻辑不变*/
                     else -> {
-                        /*默认情况使用普通区域，处理逻辑不变*/
                         it.zoneId.replace(Regex("\\d+"), "") == availableZone.zoneShortName
                     }
                 }
             }
 
-            if (cgsId != null || resource.count() >= workspaceCreate.count) {
+            if (cgsId != null || resource.count() >= generateWorkspaceName.size) {
                 repeat(generateWorkspaceName.size) { i ->
                     val workspaceName = generateWorkspaceName[i]
                     val owner = workspaceCreate.assignOwners.getOrNull(i)
@@ -316,10 +319,10 @@ class CreateControl @Autowired constructor(
                 return true
             }
             zoneIds.addAll(resource.map { it.zoneId })
-            newNum = workspaceCreate.count - resource.count()
+            newNum = generateWorkspaceName.size - resource.count()
         } else {
             // 自定义镜像都是新生产的
-            newNum = workspaceCreate.count
+            newNum = generateWorkspaceName.size
         }
 
         zoneIds.addAll(
@@ -916,7 +919,8 @@ class CreateControl @Autowired constructor(
             it.status == 11 &&
                 it.machineType == type &&
 //                it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                it.locked != true && it.internal == quotaType.getInternal()
+//                it.locked != true &&
+                it.internal == quotaType.getInternal()
         }
 
     private fun generateWorkspaceName(userId: String): String {
