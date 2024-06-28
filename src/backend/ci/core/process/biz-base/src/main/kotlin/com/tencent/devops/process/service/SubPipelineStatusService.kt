@@ -116,7 +116,6 @@ class SubPipelineStatusService @Autowired constructor(
                     asyncStatus = when{
                         buildSourceStatus.isSuccess() -> BuildStatus.SUCCEED
                         buildSourceStatus.isCancel() -> BuildStatus.CANCELED
-                        buildSourceStatus.isRunning() -> BuildStatus.RUNNING
                         else -> BuildStatus.FAILED
                     }.name
                 )
@@ -134,6 +133,9 @@ class SubPipelineStatusService @Autowired constructor(
         }
     }
 
+    /**
+     * 更新父流水线插件异步执行状态
+     */
     private fun updateParentPipelineTaskStatus(
         projectId: String,
         pipelineId: String,
@@ -174,28 +176,55 @@ class SubPipelineStatusService @Autowired constructor(
             pipelineId = buildVariables[PIPELINE_START_PARENT_PIPELINE_ID]!!,
             buildId = buildVariables[PIPELINE_START_PARENT_BUILD_ID]!!
         )?.let {
-            logger.info("start update parent pipeline asyncStatus[$asyncStatus]|${it.projectId}|${it.pipelineId}|" +
-                    "${it.buildId}|${it.executeCount}")
-            pipelineRuntimeService.updateAsyncStatus(
+            updatePipelineTaskStatus(
                 projectId = it.projectId,
                 pipelineId = it.pipelineId,
                 buildId = it.buildId,
                 taskId = buildVariables[PIPELINE_START_PARENT_BUILD_TASK_ID]!!,
                 executeCount = buildVariables[PIPELINE_START_PARENT_EXECUTE_COUNT]!!.toInt(),
+                userId = it.startUser,
                 asyncStatus = asyncStatus
             )
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildWebSocketPushEvent(
-                    source = "updateTaskStatus",
-                    projectId = it.projectId,
-                    pipelineId = it.pipelineId,
-                    userId = it.startUser,
-                    buildId = it.buildId,
-                    refreshTypes = RefreshType.RECORD.binary,
-                    executeCount = it.executeCount ?: 1
-                )
+        }
+    }
+
+    /**
+     * 更新当前流水线插件异步执行状态
+     */
+    fun updatePipelineTaskStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        userId: String,
+        asyncStatus: String
+    ) {
+        logger.info(
+            "start update parent pipeline asyncStatus[$asyncStatus]|${projectId}|${pipelineId}|" +
+                    "${buildId}|${executeCount}"
+        )
+        pipelineRuntimeService.run {
+            updateAsyncStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                executeCount = executeCount,
+                asyncStatus = asyncStatus
             )
         }
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildWebSocketPushEvent(
+                source = "updateTaskStatus",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                refreshTypes = RefreshType.RECORD.binary,
+                executeCount = executeCount
+            )
+        )
     }
 
     private fun getSubPipelineStatusFromDB(projectId: String, buildId: String): Pair<BuildStatus, SubPipelineStatus> {
