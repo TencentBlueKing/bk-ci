@@ -53,8 +53,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+//@Configuration
+//@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class RemoteDevMQConfiguration @Autowired constructor() {
 
     @Value("\${dispatch.agentStartQueue.concurrency:60}")

@@ -28,19 +28,22 @@
 package com.tencent.devops.dispatch.kubernetes.resource.external
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.remotedev.api.external.ExternalDispatchResource
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
-    private val remoteDevService: RemoteDevService
+    private val remoteDevService: RemoteDevService,
+    private val client: Client
 ) : ExternalResource {
 
     override fun workspaceTaskCallback(type: WorkspaceMountType?, taskStatus: TaskStatus): Result<Boolean> {
-        return Result(remoteDevService.workspaceTaskCallback(taskStatus, type ?: WorkspaceMountType.DEVCLOUD))
+        return client.get(ExternalDispatchResource::class).workspaceTaskCallback(type, taskStatus)
     }
 }
