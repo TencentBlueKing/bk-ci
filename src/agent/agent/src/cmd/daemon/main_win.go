@@ -46,7 +46,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
-	"github.com/kardianos/service"
 )
 
 const daemonProcess = "daemon"
@@ -92,38 +91,18 @@ func main() {
 		}
 	}()
 
-	logs.Info("devops daemon start")
-	logs.Info("pid: ", os.Getpid())
-	logs.Info("workDir: ", workDir)
-
-	//服务定义
-	serviceConfig := &service.Config{
-		Name:             "name",
-		DisplayName:      "displayName",
-		Description:      "description",
-		WorkingDirectory: "C:/data/landun",
-	}
-
 	if ok := systemutil.CheckProcess(daemonProcess); !ok {
 		logs.Info("get process lock failed, exit")
 		return
 	}
 
-	daemonProgram := &program{}
-	sys := service.ChosenSystem()
-	daemonService, err := sys.New(daemonProgram, serviceConfig)
-	if err != nil {
-		logs.WithError(err).Error("Init service error")
-		systemutil.ExitProcess(1)
-	}
+	logs.Info("devops daemon start")
+	logs.Info("pid: ", os.Getpid())
+	logs.Info("workDir: ", workDir)
 
-	err = daemonService.Run()
-	if err != nil {
-		logs.WithError(err).Error("run agent program error")
-	}
+	watch()
+	systemutil.KeepProcessAlive()
 }
-
-var GAgentProcess *os.Process = nil
 
 func watch() {
 	workDir := systemutil.GetExecutableDir()
@@ -164,9 +143,8 @@ func watch() {
 				return
 			}
 
-			GAgentProcess = cmd.Process
 			logs.Info("devops agent started, pid: ", cmd.Process.Pid)
-			_, err = cmd.Process.Wait()
+			err = cmd.Wait()
 			if err != nil {
 				var exitErr *exec.ExitError
 				if errors.As(err, &exitErr) {
@@ -193,24 +171,5 @@ func watch() {
 			logs.Info("restart after 30 seconds")
 			time.Sleep(30 * time.Second)
 		}()
-	}
-}
-
-type program struct {
-}
-
-func (p *program) Start(s service.Service) error {
-	go watch()
-	return nil
-}
-
-func (p *program) Stop(s service.Service) error {
-	p.tryStopAgent()
-	return nil
-}
-
-func (p *program) tryStopAgent() {
-	if GAgentProcess != nil {
-		GAgentProcess.Kill()
 	}
 }

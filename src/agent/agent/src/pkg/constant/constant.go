@@ -39,4 +39,7 @@ const (
 
 	// CommonFileModePerm 公共文件权限
 	CommonFileModePerm os.FileMode = 0644
+
+	// WinCommandNewConsole windwos启动进程时打开新的console窗口
+	WinCommandNewConsole = 0x00000010
 )

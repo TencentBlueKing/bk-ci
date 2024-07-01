@@ -31,12 +31,15 @@ package upgrader
 
 import (
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/windows/svc/mgr"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -49,12 +52,20 @@ import (
 
 	"github.com/gofrs/flock"
 
+	"github.com/capnspacehook/taskmaster"
 	"github.com/shirou/gopsutil/v4/process"
 )
+
+type startType string
 
 const (
 	agentProcess  = "agent"
 	daemonProcess = "daemon"
+
+	// 服务，执行计划，手动
+	serviceStart startType = "service"
+	taskStart    startType = "task"
+	manualStart  startType = "manual"
 )
 
 func DoUpgradeAgent() error {
@@ -69,12 +80,23 @@ func DoUpgradeAgent() error {
 	}
 	defer func() { totalLock.Unlock() }()
 
-	// TODO: 通过查询服务和执行计划，判断是否是手动启动的 daemon，如果是手动启动的，只更新 agent
-	manualStart := false
+	startT := manualStart
+	// 先查询服务
+	serviceName := "devops_agent_" + config.GAgentConfig.AgentId
+	service, ok := findService(serviceName)
+	if ok {
+		defer service.Close()
+		startT = serviceStart
+	}
+	if !ok && findTask(serviceName) {
+		startT = taskStart
+	}
+
+	logs.Infof("agent process start %s", startT)
 
 	// daemon 可能存在早期的没有 pid 文件的情况，这里通过是否杀掉 daemon 来判断是否更新 daemon
 	daemonChange := false
-	if !manualStart {
+	if startT != manualStart {
 		daemonChange, err = checkUpgradeFileChange(config.GetClientDaemonFile())
 		if err != nil {
 			logs.WithError(err).Warn("check daemon upgrade file change failed")
@@ -107,7 +129,7 @@ func DoUpgradeAgent() error {
 	// 检查进程是否被杀掉
 	daemonExist := true
 	agentExist := true
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 15; i++ {
 		if daemonExist && daemonKilled {
 			exist, err := process.PidExists(int32(daemonPid))
 			if err != nil {
@@ -124,7 +146,7 @@ func DoUpgradeAgent() error {
 		}
 		if (!daemonKilled || !daemonExist) && !agentExist {
 			break
-		} else if i == 29 {
+		} else if i == 14 {
 			logs.Errorf("upgrade daemon exist %t, agent exist %t, can't upgrade", !daemonKilled || !daemonExist, agentExist)
 			return nil
 		}
@@ -148,15 +170,22 @@ func DoUpgradeAgent() error {
 
 	// 只有 daemon 被杀才启动，没被杀等待被 daemon 拉起来
 	if daemonKilled {
-		cmd := exec.Command(filepath.Join(systemutil.GetWorkDir(), "start.bat"))
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			CreationFlags:    0x00000010,
-			NoInheritHandles: true,
-		}
-		output, err := cmd.Output()
-		if err != nil {
-			logs.WithError(err).Errorf("start script file failed, output: %s", string(output))
-			return nil
+		switch startT {
+		case serviceStart:
+			if err := service.Start(); err != nil {
+				return errors.Wrap(err, "start service failed")
+			}
+		case taskStart:
+			cmd := exec.Command(filepath.Join(systemutil.GetWorkDir(), "start.bat"))
+			cmd.SysProcAttr = &syscall.SysProcAttr{
+				CreationFlags:    constant.WinCommandNewConsole | syscall.CREATE_NEW_PROCESS_GROUP,
+				NoInheritHandles: true,
+			}
+			output, err := cmd.Output()
+			if err != nil {
+				logs.WithError(err).Errorf("start script file failed, output: %s", string(output))
+				return nil
+			}
 		}
 	}
 
@@ -233,26 +262,6 @@ func checkUpgradeFileChange(fileName string) (change bool, err error) {
 	return oldMd5 != newMd5, nil
 }
 
-func StartDaemon() error {
-	logs.Info("starting ", config.GetClientDaemonFile())
-
-	workDir := systemutil.GetWorkDir()
-	startCmd := workDir + "/" + config.GetClientDaemonFile()
-
-	if err := fileutil.SetExecutable(startCmd); err != nil {
-		logs.WithError(err).Warn("chmod daemon file failed")
-		return err
-	}
-
-	pid, err := command.StartProcess(startCmd, nil, workDir, nil, "")
-	logs.Info("pid: ", pid)
-	if err != nil {
-		logs.Error("run start daemon failed: ", err.Error())
-		return err
-	}
-	return nil
-}
-
 func replaceAgentFile(fileName string) error {
 	logs.Info("replace agent file: ", fileName)
 	src := systemutil.GetUpgradeDir() + "/" + fileName
@@ -272,13 +281,42 @@ func replaceAgentFile(fileName string) error {
 		return errors.Wrapf(err, "replaceAgentFile open %s error", src)
 	}
 
-	//if _, err := fileutil.CopyFile(src, dst, true); err != nil {
-	//	logs.WithError(err).Warnf("replaceAgentFile %s stat error", dst)
-	//	return err
-	//}
 	if err := innerFileUtil.AtomicWriteFile(dst, srcFile, perm); err != nil {
 		return errors.Wrapf(err, "replaceAgentFile AtomicWriteFile %s error", dst)
 	}
 
 	return nil
+}
+
+func findService(name string) (*mgr.Service, bool) {
+	m, err := mgr.Connect()
+	if err != nil {
+		logs.WithError(err).Error("connect manager failed")
+		return nil, false
+	}
+	defer m.Disconnect()
+
+	service, err := m.OpenService(name)
+	if err != nil {
+		logs.WithError(err).Error("open manager failed")
+		return nil, false
+	}
+
+	return service, true
+}
+
+func findTask(name string) bool {
+	service, err := taskmaster.Connect()
+	if err != nil {
+		logs.WithError(err).Error("connect taskmaster failed")
+		return false
+	}
+
+	_, err = service.GetRegisteredTask("\\" + name)
+	if err != nil && !strings.Contains(err.Error(), "error parsing registered task") {
+		logs.WithError(err).Error("get registered task failed")
+		return false
+	}
+
+	return true
 }

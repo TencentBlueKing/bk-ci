@@ -10,7 +10,6 @@ require (
 	// 1、ulimit corefile被设置为0 https://github.com/ci-plugins/memguard/blob/master/core/init.go
 	// 2、arm64 linux panic报错 https://github.com/awnumar/memguard/issues/144
 	github.com/influxdata/telegraf v1.24.4
-	github.com/kardianos/service v1.2.2
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
@@ -114,6 +113,8 @@ require (
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
+	github.com/rickb777/date v1.14.2 // indirect
+	github.com/rickb777/plural v1.2.2 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -128,6 +129,7 @@ require (
 )
 
 require (
+	github.com/capnspacehook/taskmaster v0.0.0-20210519235353-1629df7c85e9
 	github.com/docker/cli v23.0.1+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/shirou/gopsutil/v4 v4.24.5
