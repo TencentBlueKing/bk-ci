@@ -132,6 +132,7 @@ require (
 	github.com/capnspacehook/taskmaster v0.0.0-20210519235353-1629df7c85e9
 	github.com/docker/cli v23.0.1+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/kardianos/service v1.2.2
 	github.com/shirou/gopsutil/v4 v4.24.5
 	github.com/spf13/pflag v1.0.5
 )

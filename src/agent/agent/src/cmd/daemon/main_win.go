@@ -46,6 +46,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
+	"github.com/kardianos/service"
 )
 
 const daemonProcess = "daemon"
@@ -68,8 +69,8 @@ func main() {
 	}
 
 	// 初始化日志
-	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
-	err := logs.Init(logFilePath, isDebug, false)
+	workDir := systemutil.GetExecutableDir()
+	err := logs.Init(filepath.Join(workDir, "logs", "devopsDaemon.log"), isDebug, false)
 	if err != nil {
 		fmt.Printf("init daemon log error %v\n", err)
 		systemutil.ExitProcess(1)
@@ -77,7 +78,6 @@ func main() {
 
 	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
@@ -100,9 +100,26 @@ func main() {
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
 
-	watch()
-	systemutil.KeepProcessAlive()
+	//服务定义
+	serviceConfig := &service.Config{
+		Name: "name",
+	}
+
+	daemonProgram := &program{}
+	sys := service.ChosenSystem()
+	daemonService, err := sys.New(daemonProgram, serviceConfig)
+	if err != nil {
+		logs.WithError(err).Error("Init service error")
+		systemutil.ExitProcess(1)
+	}
+
+	err = daemonService.Run()
+	if err != nil {
+		logs.WithError(err).Error("run agent program error")
+	}
 }
+
+var GAgentProcess *os.Process = nil
 
 func watch() {
 	workDir := systemutil.GetExecutableDir()
@@ -143,6 +160,7 @@ func watch() {
 				return
 			}
 
+			GAgentProcess = cmd.Process
 			logs.Info("devops agent started, pid: ", cmd.Process.Pid)
 			err = cmd.Wait()
 			if err != nil {
@@ -171,5 +189,24 @@ func watch() {
 			logs.Info("restart after 30 seconds")
 			time.Sleep(30 * time.Second)
 		}()
+	}
+}
+
+type program struct {
+}
+
+func (p *program) Start(s service.Service) error {
+	go watch()
+	return nil
+}
+
+func (p *program) Stop(s service.Service) error {
+	p.tryStopAgent()
+	return nil
+}
+
+func (p *program) tryStopAgent() {
+	if GAgentProcess != nil {
+		GAgentProcess.Kill()
 	}
 }
