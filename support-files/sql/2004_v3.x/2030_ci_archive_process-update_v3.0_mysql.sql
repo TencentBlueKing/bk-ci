@@ -38,6 +38,25 @@ BEGIN
     ALTER TABLE T_PIPELINE_INFO
         ADD COLUMN `LOCKED` bit(1) DEFAULT b'0' COMMENT '是否锁定，PAC v3.0新增锁定，取代原来setting表中的LOCK';
     END IF;
+		
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                        AND COLUMN_NAME = 'JOB_ID') THEN
+        ALTER TABLE `T_PIPELINE_BUILD_TASK` 
+			ADD COLUMN `JOB_ID` varchar(128) NULL COMMENT 'job id';
+    END IF;
+	
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_CONTAINER'
+                        AND COLUMN_NAME = 'JOB_ID') THEN
+        ALTER TABLE `T_PIPELINE_BUILD_CONTAINER` 
+			ADD COLUMN `JOB_ID` varchar(128) NULL COMMENT 'job id';
+    END IF;
 
     COMMIT;
 END <CI_UBF>
