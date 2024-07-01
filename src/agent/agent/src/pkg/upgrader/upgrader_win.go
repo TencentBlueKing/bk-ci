@@ -34,11 +34,9 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/pkg/errors"
-	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
 	"os"
 	"os/exec"
-	"os/user"
 	"strconv"
 	"strings"
 	"syscall"
@@ -67,33 +65,18 @@ const (
 	serviceStart startType = "service"
 	taskStart    startType = "task"
 	manualStart  startType = "manual"
-
-	// 执行计划启动脚本
-	taskStartScript = "@echo off & cd /d %~dp0 & devopsctl.vbs"
 )
 
+// DoUpgradeAgent 升级agent
+// 1、通过service启动的daemon因为go本身内部注册了daemon导致权限模型有些未知问题，无法更新daemon后启动，只能更新agent
+// 2、通过执行计划启动的daemon因为具有登录态，可以直接执行脚本拉起
+// 3、用户双击启动的daemon和service一样，无法更新daemon，只能更新agent
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 	config.Init(false)
 
-	// 通过当前用户判断是否可以更新daemon
-	currentUser, err := user.Current()
-	if err != nil {
-		logs.WithError(err).Error("get current user failed")
-	} else {
-		logs.Infof("current user is %s", currentUser.Username)
-	}
-
-	adminUser := false
-	if currentUser != nil &&
-		!(strings.Contains(currentUser.Username, "NT AUTHORITY") ||
-			strings.Contains(currentUser.Username, "SYSTEM")) {
-		adminUser = true
-	}
-	logs.Debug(adminUser)
-
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
-	err = totalLock.Lock()
+	err := totalLock.Lock()
 	if err = totalLock.Lock(); err != nil {
 		logs.WithError(err).Error("get total lock failed, exit")
 		return errors.New("get total lock failed")
@@ -103,38 +86,34 @@ func DoUpgradeAgent() error {
 	startT := manualStart
 	// 先查询服务
 	serviceName := "devops_agent_" + config.GAgentConfig.AgentId
-	service, ok := findService(serviceName)
+	ok := findService(serviceName)
 	if ok {
-		defer service.Close()
 		startT = serviceStart
-		if _, err := service.Control(svc.Stop); err != nil {
-			logs.WithError(err).Error("stop service failed")
-		}
 	} else if findTask(serviceName) {
 		startT = taskStart
 	}
 
-	logs.Infof("agent process start %s", startT)
+	logs.Infof("agent process start by %s", startT)
 
-	// daemon 可能存在早期的没有 pid 文件的情况，这里通过是否杀掉 daemon 来判断是否更新 daemon
 	daemonChange := false
-	if startT != manualStart {
+	if startT == taskStart {
 		daemonChange, err = checkUpgradeFileChange(config.GetClientDaemonFile())
 		if err != nil {
 			logs.WithError(err).Warn("check daemon upgrade file change failed")
 		}
 	}
-	daemonKilled := false
 	daemonPid := 0
 	if daemonChange {
 		daemonPid, err = tryKillAgentProcess(daemonProcess)
-		if daemonPid != 0 {
-			daemonKilled = true
+		if err != nil {
+			logs.WithError(err).Error(fmt.Sprintf("try kill daemon process failed"))
 		}
 	}
 
-	// agent 如果都没有杀掉那么久直接返回
-	agentChange, _ := checkUpgradeFileChange(config.GetClienAgentFile())
+	agentChange, err := checkUpgradeFileChange(config.GetClienAgentFile())
+	if err != nil {
+		logs.WithError(err).Warn("check agent upgrade file change failed")
+	}
 	agentPid := 0
 	if agentChange {
 		agentPid, err = tryKillAgentProcess(agentProcess)
@@ -152,7 +131,7 @@ func DoUpgradeAgent() error {
 	daemonExist := true
 	agentExist := true
 	for i := 0; i < 15; i++ {
-		if daemonExist && daemonKilled {
+		if daemonExist && daemonPid != 0 {
 			exist, err := process.PidExists(int32(daemonPid))
 			if err != nil {
 				logs.WithError(err).Errorf("check daemon process exist failed, pid: %d", daemonPid)
@@ -166,10 +145,11 @@ func DoUpgradeAgent() error {
 			}
 			agentExist = exist
 		}
-		if (!daemonKilled || !daemonExist) && !agentExist {
+		if (!daemonChange || !daemonExist) && !agentExist {
+			logs.Infof("wait %d seconds for agent to stop done", i+1)
 			break
 		} else if i == 14 {
-			logs.Errorf("upgrade daemon exist %t, agent exist %t, can't upgrade", !daemonKilled || !daemonExist, agentExist)
+			logs.Errorf("upgrade daemon exist %t, agent exist %t, can't upgrade", !daemonChange || !daemonExist, agentExist)
 			return nil
 		}
 		logs.Infof("wait %d seconds for agent to stop", i+1)
@@ -183,7 +163,7 @@ func DoUpgradeAgent() error {
 			logs.WithError(err).Error("replace agent file failed")
 		}
 	}
-	if daemonKilled {
+	if daemonChange {
 		err = replaceAgentFile(config.GetClientDaemonFile())
 		if err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
@@ -191,14 +171,10 @@ func DoUpgradeAgent() error {
 	}
 
 	// 只有 daemon 被杀才启动，没被杀等待被 daemon 拉起来
-	if daemonKilled {
+	if daemonChange {
 		switch startT {
-		case serviceStart:
-			if err := service.Start("is", "manual-started"); err != nil {
-				return errors.Wrap(err, "start service failed")
-			}
 		case taskStart:
-			cmd := exec.Command("cmd.exe", "/C", taskStartScript)
+			cmd := exec.Command("cmd.exe", "/c", systemutil.GetWorkDir()+"/devopsctl.vbs")
 			cmd.SysProcAttr = &syscall.SysProcAttr{
 				CreationFlags:    constant.WinCommandNewConsole | syscall.CREATE_NEW_PROCESS_GROUP,
 				NoInheritHandles: true,
@@ -312,21 +288,22 @@ func replaceAgentFile(fileName string) error {
 	return nil
 }
 
-func findService(name string) (*mgr.Service, bool) {
+func findService(name string) bool {
 	m, err := mgr.Connect()
 	if err != nil {
 		logs.WithError(err).Error("connect manager failed")
-		return nil, false
+		return false
 	}
 	defer m.Disconnect()
 
 	service, err := m.OpenService(name)
 	if err != nil {
 		logs.WithError(err).Error("open manager failed")
-		return nil, false
+		return false
 	}
+	defer service.Close()
 
-	return service, true
+	return true
 }
 
 func findTask(name string) bool {
