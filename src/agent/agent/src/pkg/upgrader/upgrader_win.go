@@ -34,10 +34,10 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -66,6 +66,14 @@ const (
 	serviceStart startType = "service"
 	taskStart    startType = "task"
 	manualStart  startType = "manual"
+
+	// 执行计划启动脚本
+	taskStartScript = `
+@echo off
+cd /d %~dp0
+devopsctl.vbs
+exit
+`
 )
 
 func DoUpgradeAgent() error {
@@ -87,8 +95,10 @@ func DoUpgradeAgent() error {
 	if ok {
 		defer service.Close()
 		startT = serviceStart
-	}
-	if !ok && findTask(serviceName) {
+		if _, err := service.Control(svc.Stop); err != nil {
+			logs.WithError(err).Error("stop service failed")
+		}
+	} else if findTask(serviceName) {
 		startT = taskStart
 	}
 
@@ -172,11 +182,11 @@ func DoUpgradeAgent() error {
 	if daemonKilled {
 		switch startT {
 		case serviceStart:
-			if err := service.Start(); err != nil {
+			if err := service.Start("is", "manual-started"); err != nil {
 				return errors.Wrap(err, "start service failed")
 			}
 		case taskStart:
-			cmd := exec.Command(filepath.Join(systemutil.GetWorkDir(), "start.bat"))
+			cmd := exec.Command("cmd.exe", "/C", taskStartScript)
 			cmd.SysProcAttr = &syscall.SysProcAttr{
 				CreationFlags:    constant.WinCommandNewConsole | syscall.CREATE_NEW_PROCESS_GROUP,
 				NoInheritHandles: true,
