@@ -38,6 +38,7 @@ import (
 	"golang.org/x/sys/windows/svc/mgr"
 	"os"
 	"os/exec"
+	"os/user"
 	"strconv"
 	"strings"
 	"syscall"
@@ -68,20 +69,31 @@ const (
 	manualStart  startType = "manual"
 
 	// 执行计划启动脚本
-	taskStartScript = `
-@echo off
-cd /d %~dp0
-devopsctl.vbs
-exit
-`
+	taskStartScript = "@echo off & cd /d %~dp0 & devopsctl.vbs"
 )
 
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 	config.Init(false)
 
+	// 通过当前用户判断是否可以更新daemon
+	currentUser, err := user.Current()
+	if err != nil {
+		logs.WithError(err).Error("get current user failed")
+	} else {
+		logs.Infof("current user is %s", currentUser.Username)
+	}
+
+	adminUser := false
+	if currentUser != nil &&
+		!(strings.Contains(currentUser.Username, "NT AUTHORITY") ||
+			strings.Contains(currentUser.Username, "SYSTEM")) {
+		adminUser = true
+	}
+	logs.Debug(adminUser)
+
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
-	err := totalLock.Lock()
+	err = totalLock.Lock()
 	if err = totalLock.Lock(); err != nil {
 		logs.WithError(err).Error("get total lock failed, exit")
 		return errors.New("get total lock failed")
@@ -195,6 +207,8 @@ func DoUpgradeAgent() error {
 			if err != nil {
 				logs.WithError(err).Errorf("start script file failed, output: %s", string(output))
 				return nil
+			} else {
+				logs.Infof("start script file success %s", string(output))
 			}
 		}
 	}

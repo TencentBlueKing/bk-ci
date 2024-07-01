@@ -68,6 +68,8 @@ func main() {
 		}
 	}
 
+	config.Init(isDebug)
+
 	// 初始化日志
 	workDir := systemutil.GetExecutableDir()
 	err := logs.Init(filepath.Join(workDir, "logs", "devopsDaemon.log"), isDebug, false)
@@ -102,7 +104,7 @@ func main() {
 
 	//服务定义
 	serviceConfig := &service.Config{
-		Name: "name",
+		Name: "devops_agent_" + config.GAgentConfig.AgentId,
 	}
 
 	daemonProgram := &program{}
