@@ -32,7 +32,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:websocket:api-websocket"))
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("javax.websocket:javax.websocket-api")
+    api("jakarta.websocket:jakarta.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
 }

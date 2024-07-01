@@ -1,5 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.7"
+    id("com.tencent.devops.boot") version "0.0.10-SNAPSHOT"
     detektCheck
     `task-license-report` // 检查License合规
 }
@@ -29,7 +29,6 @@ allprojects {
         setApplyMavenExclusions(false)
         dependencies {
             dependency("org.json:json:${Versions.orgJson}")
-            dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
             dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
@@ -68,6 +67,8 @@ allprojects {
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("commons-io:commons-io:${Versions.CommonIo}")
             dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
+            dependency("mysql:mysql-connector-java:${Versions.MysqlDriver}")
+            dependency("org.jolokia:jolokia-core:${Versions.jakarta}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
@@ -80,20 +81,20 @@ allprojects {
             dependencySet("org.glassfish.jersey.ext:${Versions.Jersey}") {
                 entry("jersey-bean-validation")
                 entry("jersey-entity-filtering")
-                entry("jersey-spring5")
+                entry("jersey-spring6")
             }
             dependencySet("org.glassfish.jersey.media:${Versions.Jersey}") {
                 entry("jersey-media-multipart")
                 entry("jersey-media-json-jackson")
             }
             dependency("org.glassfish.jersey.inject:jersey-hk2:${Versions.Jersey}")
-            dependencySet("io.swagger:${Versions.Swagger}") {
-                entry("swagger-annotations")
-                entry("swagger-jersey2-jaxrs")
-                entry("swagger-models")
+            dependencySet("io.swagger.core.v3:${Versions.Swagger}") {
+                entry("swagger-annotations-jakarta")
+                entry("swagger-jaxrs2-jakarta")
+                entry("swagger-models-jakarta")
             }
             dependencySet("com.github.docker-java:${Versions.DockerJava}") {
-                entry("docker-java")
+                entry("docker-java-core")
                 entry("docker-java-transport-okhttp")
             }
             dependencySet("com.tencent.bk.repo:${Versions.TencentBkRepo}") {
@@ -110,18 +111,6 @@ allprojects {
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
-            // TODO 修复IPv6单栈环境报错问题, 等后面Okhttp3版本升级上来就可以去掉
-            dependencySet("com.squareup.okhttp3:${Versions.Okhttp}") {
-                entry("logging-interceptor")
-                entry("mockwebserver")
-                entry("okcurl")
-                entry("okhttp")
-                entry("okhttp-dnsoverhttps")
-                entry("okhttp-sse")
-                entry("okhttp-testing-support")
-                entry("okhttp-tls")
-                entry("okhttp-urlconnection")
-            }
             dependencySet("org.eclipse.jgit:${Versions.jgit}") {
                 entry("org.eclipse.jgit")
                 entry("org.eclipse.jgit.ssh.jsch")
@@ -129,18 +118,11 @@ allprojects {
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
             dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
-            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
-            // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
-            dependencySet("io.swagger.core.v3:${Versions.swagger}") {
-                entry("swagger-annotations")
-                entry("swagger-jaxrs2")
-                entry("swagger-core")
-                entry("swagger-models")
-            }
             // worker需要依赖
             dependency("org.jvnet.winp:winp:${Versions.Winp}")
             dependency("net.java.dev.jna:jna:${Versions.Jna}")
             dependency("org.jenkins-ci:version-number:${Versions.JenkinsVersionNumber}")
+            dependency("org.apache.httpcomponents:httpclient:${Versions.HttpClient}") // 兼容IAM-SDK
         }
     }
 
@@ -157,7 +139,8 @@ allprojects {
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
-        it.exclude("io.swagger") // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
+        it.exclude("io.swagger", "swagger-annotations")
+        it.exclude("io.swagger", "swagger-models")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

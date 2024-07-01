@@ -29,7 +29,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:auth:api-auth"))
-    api("org.apache.httpcomponents:httpclient")
+    api("org.apache.httpcomponents.client5:httpclient5")
     api("com.tencent.bk.sdk:iam-java-sdk")
     api("org.json:json")
 }

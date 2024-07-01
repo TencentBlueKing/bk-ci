@@ -5,10 +5,10 @@ LABEL maintainer="Tencent BlueKing Devops"
 ## 安装JDK
 RUN mkdir -p /data && \
     cd /data/ &&\
-    curl -OL https://github.com/Tencent/TencentKona-8/releases/download/8.0.13-GA/TencentKona8.0.13.b1_jdk_linux-x86_64_8u362.tar.gz &&\
-    tar -xzf TencentKona8.0.13.b1_jdk_linux-x86_64_8u362.tar.gz &&\
-    rm -f TencentKona8.0.13.b1_jdk_linux-x86_64_8u362.tar.gz
-ENV JAVA_HOME=/data/TencentKona-8.0.13-362
+    curl -L https://github.com/Tencent/TencentKona-17/releases/download/TencentKona-17.0.8/TencentKona-17.0.8.b1-jdk_linux-x86_64.tar.gz -o kona.tar.gz &&\
+    tar -xzf kona.tar.gz &&\
+    rm -f kona.tar.gz
+ENV JAVA_HOME=/data/TencentKona-17.0.8.b1
 ENV PATH=${JAVA_HOME}/bin:$PATH
 ENV CLASSPATH=.:${JAVA_HOME}/lib
 
