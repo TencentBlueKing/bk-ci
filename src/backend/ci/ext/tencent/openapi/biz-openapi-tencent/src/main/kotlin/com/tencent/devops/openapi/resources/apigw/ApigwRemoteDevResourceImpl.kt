@@ -353,4 +353,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             workspaceProperty = workspaceProperty
         )
     }
+
+    override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
+        logger.info("deleteProjectImage $userId|$projectId|$imageId")
+        return client.get(ServiceRemoteDevResource::class).deleteProjectImage(
+            userId = userId,
+            projectId = projectId,
+            imageId = imageId
+        )
+    }
 }

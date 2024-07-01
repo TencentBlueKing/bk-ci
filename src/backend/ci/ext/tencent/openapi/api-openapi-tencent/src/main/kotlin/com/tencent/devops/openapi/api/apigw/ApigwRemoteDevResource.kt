@@ -503,4 +503,19 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "备注名称", required = true)
         workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
+
+    @Operation(summary = "删除项目的自定义镜像", tags = ["v4_app_remotedev_delete_project_image"])
+    @DELETE
+    @Path("/delete/image")
+    fun deleteProjectImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像ID", required = true)
+        @QueryParam("imageId")
+        imageId: String
+    ): Result<Boolean>
 }
