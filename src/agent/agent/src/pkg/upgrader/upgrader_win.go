@@ -84,7 +84,7 @@ func DoUpgradeAgent() error {
 	daemonPid := 0
 	if daemonChange {
 		daemonPid, err = tryKillAgentProcess(daemonProcess)
-		if err == nil {
+		if daemonPid != 0 {
 			daemonKilled = true
 		}
 	}
@@ -95,7 +95,7 @@ func DoUpgradeAgent() error {
 	if agentChange {
 		agentPid, err = tryKillAgentProcess(agentProcess)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("try kill agent process failed"))
+			logs.WithError(err).Error(fmt.Sprintf("try kill agent process failed"))
 		}
 	}
 
@@ -108,7 +108,7 @@ func DoUpgradeAgent() error {
 	daemonExist := true
 	agentExist := true
 	for i := 0; i < 30; i++ {
-		if daemonExist && daemonKilled && daemonPid != 0 {
+		if daemonExist && daemonKilled {
 			exist, err := process.PidExists(int32(daemonPid))
 			if err != nil {
 				logs.WithError(err).Errorf("check daemon process exist failed, pid: %d", daemonPid)
@@ -177,17 +177,17 @@ func tryKillAgentProcess(processName string) (int, error) {
 		logs.Warn(fmt.Sprintf("parse %s pid: %s failed", processName, agentPid))
 		return intPid, err
 	}
-	p, err := os.FindProcess(intPid)
-	if err != nil || p == nil {
-		logs.Warn(fmt.Sprintf("find %s process pid: %s failed", processName, agentPid))
-		return intPid, err
-	} else {
-		logs.Info(fmt.Sprintf("kill %s process, pid: %s", processName, agentPid))
-		err = p.Kill()
-		if err != nil {
-			logs.Warn(fmt.Sprintf("kill %s pid: %s failed: %s", processName, agentPid, err))
-			return intPid, err
+
+	p, err := process.NewProcess(int32(intPid))
+	if err != nil {
+		if errors.Is(err, process.ErrorProcessNotRunning) {
+			return intPid, nil
 		}
+		return intPid, errors.Wrapf(err, "get process %d failed", intPid)
+	}
+
+	if err := p.Kill(); err != nil {
+		return intPid, errors.Wrapf(err, "kill process %d failed", intPid)
 	}
 
 	return intPid, nil
