@@ -524,6 +524,161 @@
                 "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab" ]
               },
               "additionalItems" : false
+            },
+            "change-commit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "change-content" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "change-submit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "shelve-commit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
+            },
+            "shelve-submit" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              } ]
             }
           }
         }
