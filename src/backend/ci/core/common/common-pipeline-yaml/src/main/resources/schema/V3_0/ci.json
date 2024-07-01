@@ -96,12 +96,11 @@
                   },
                   "custom-filter" : {
                     "type" : "object",
-                    "additionalProperties" : false,
-                    "properties": {
-                      "url": {
+                    "properties" : {
+                      "url" : {
                         "type" : "string"
                       },
-                      "credentials": {
+                      "credentials" : {
                         "type" : "string"
                       }
                     }
@@ -248,12 +247,11 @@
                   },
                   "custom-filter" : {
                     "type" : "object",
-                    "additionalProperties" : false,
-                    "properties": {
-                      "url": {
+                    "properties" : {
+                      "url" : {
                         "type" : "string"
                       },
-                      "credentials": {
+                      "credentials" : {
                         "type" : "string"
                       }
                     }
@@ -622,6 +620,17 @@
                   "items" : {
                     "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
                   }
+                },
+                "custom-filter" : {
+                  "type" : "object",
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "credentials" : {
+                      "type" : "string"
+                    }
+                  }
                 }
               }
             } ]
@@ -761,6 +770,17 @@
                   "uniqueItems" : true,
                   "items" : {
                     "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                  }
+                },
+                "custom-filter" : {
+                  "type" : "object",
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "credentials" : {
+                      "type" : "string"
+                    }
                   }
                 }
               }
