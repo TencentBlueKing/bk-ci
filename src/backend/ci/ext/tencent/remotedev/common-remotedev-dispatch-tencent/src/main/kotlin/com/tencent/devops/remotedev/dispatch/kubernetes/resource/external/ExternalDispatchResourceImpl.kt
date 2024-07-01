@@ -36,7 +36,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ExternalResourceImpl @Autowired constructor(
+class ExternalDispatchResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ExternalDispatchResource {
 
