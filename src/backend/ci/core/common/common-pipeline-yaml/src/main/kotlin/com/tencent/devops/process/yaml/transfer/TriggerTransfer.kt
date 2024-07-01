@@ -673,7 +673,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     buildP4TriggerElement(changeContent, CodeEventType.CHANGE_CONTENT, repositoryType, repoName),
                     buildP4TriggerElement(changeSubmit, CodeEventType.CHANGE_SUBMIT, repositoryType, repoName),
                     buildP4TriggerElement(shelveCommit, CodeEventType.SHELVE_COMMIT, repositoryType, repoName),
-                    buildP4TriggerElement(shelveSubmit, CodeEventType.CHANGE_SUBMIT, repositoryType, repoName),
+                    buildP4TriggerElement(shelveSubmit, CodeEventType.CHANGE_SUBMIT, repositoryType, repoName)
                 )
             )
         }
