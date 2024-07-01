@@ -159,7 +159,8 @@ class StartCloudInterfaceService @Autowired constructor(
                     cpu = it.basic?.cpuCores.toString(),
                     mem = it.basic?.memoryLimit,
                     registerCgsTime = null,
-                    internal = it.basic?.internal
+                    internal = it.basic?.internal,
+                    macAddress = it.basic?.macAddress
                 )
             )
         }
@@ -206,7 +207,8 @@ class StartCloudInterfaceService @Autowired constructor(
                 cpu = it.cpu,
                 mem = it.memory,
                 registerCgsTime = it.registerTime,
-                internal = ByteUtils.byte2Bool(it.internal)
+                internal = ByteUtils.byte2Bool(it.internal),
+                macAddress = it.macAddress
             )
         }
     }
