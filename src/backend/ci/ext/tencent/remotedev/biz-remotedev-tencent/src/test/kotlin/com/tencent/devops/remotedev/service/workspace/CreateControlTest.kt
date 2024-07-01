@@ -2,9 +2,9 @@ package com.tencent.devops.remotedev.service.workspace
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.utils.CommonUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test

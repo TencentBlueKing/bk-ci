@@ -1,8 +1,8 @@
 package com.tencent.devops.remotedev.utils
 
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
 
 object CommonUtil {
     /**

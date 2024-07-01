@@ -36,11 +36,7 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -54,6 +50,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -71,6 +69,9 @@ import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
@@ -176,7 +177,7 @@ class WorkspaceCommon @Autowired constructor(
 
         val gameId = getGameIdAndAppId(projectId, ownerType)
         val cache = if (mountType == WorkspaceMountType.START && event != null) {
-            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+            val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
             WorkSpaceCacheInfo(
                 sshKey = "",
@@ -195,7 +196,7 @@ class WorkspaceCommon @Autowired constructor(
             ).toSet()
             val sshKey = sshService.getSshPublicKeys4Ws(userSet)
             val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class)
+                SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                     .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
             WorkSpaceCacheInfo(
                 sshKey = sshKey,
@@ -277,7 +278,7 @@ class WorkspaceCommon @Autowired constructor(
         mountType: WorkspaceMountType
     ): WorkspaceStatus {
         val workspaceInfo = kotlin.runCatching {
-            client.get(ServiceRemoteDevResource::class)
+            SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .getWorkspaceInfo(userId, workspaceName, mountType).data!!
         }.getOrElse { ignore ->
             logger.warn(
@@ -500,7 +501,7 @@ class WorkspaceCommon @Autowired constructor(
 
     fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .syncStartCloudResourceList().data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
@@ -529,7 +530,7 @@ class WorkspaceCommon @Autowired constructor(
         ips: List<String>?
     ): List<EnvironmentResourceData>? {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .getCgsData(FetchWinPoolData(cgsIds = cgsIds, ips = ips)).data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
@@ -551,7 +552,7 @@ class WorkspaceCommon @Autowired constructor(
     // 获取cgs机型、区域
     fun getCgsConfig(): CgsResourceConfig {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .getCgsConfig().data
         }.onFailure {
             logger.warn("Error get cgs config: ${it.message}")
@@ -612,7 +613,7 @@ class WorkspaceCommon @Autowired constructor(
 
         val resourceId = if (mountType == WorkspaceMountType.START) {
             val gameId = getGameIdAndAppId(projectId, ownerType)
-            client.get(ServiceStartCloudResource::class)
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .shareWorkspace(
                     operator = operator,
                     cgsId = cgsId,
@@ -678,7 +679,7 @@ class WorkspaceCommon @Autowired constructor(
                 val receivers = info.map { it.sharedUser }
                 logger.info("unShareWorkspace|$workspaceName|$operator|$receivers")
                 kotlin.runCatching {
-                    client.get(ServiceStartCloudResource::class)
+                    SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                         .unShareWorkspace(
                             operator = operator, resourceId = resourceId, receivers = receivers
                         ).data!!

@@ -42,11 +42,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -60,6 +56,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -80,6 +78,9 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.remotedev.pojo.remotedev.Devfile
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -639,7 +640,7 @@ class CreateControl @Autowired constructor(
         uid: String
     ): Boolean {
         val taskInfo = kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getTaskInfoByUid(uid).data!!
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getTaskInfoByUid(uid).data!!
         }.onFailure {
             logger.warn("createWinWorkspaceByVm not find uid $uid")
             return false
@@ -649,7 +650,7 @@ class CreateControl @Autowired constructor(
             return false
         }
         val vmInfo = kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getWorkspaceInfoByEid(envId).data!!
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getWorkspaceInfoByEid(envId).data!!
         }.onFailure {
             logger.warn("createWinWorkspaceByVm not find uid $uid")
             return false
@@ -710,7 +711,7 @@ class CreateControl @Autowired constructor(
         if (oldWs != null) {
             // 直接硬删除记录。新的工作空间会复用原先的name
             workspaceDao.deleteWorkspace(oldWs.workspaceName, dslContext)
-            client.get(ServiceRemoteDevResource::class).deleteWorkspace(userId, workspaceName)
+            SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java).deleteWorkspace(userId, workspaceName)
         }
         when (checkOwnerType) {
             WorkspaceOwnerType.PROJECT -> {

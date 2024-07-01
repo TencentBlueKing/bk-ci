@@ -38,15 +38,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -59,6 +58,8 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
@@ -240,7 +241,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             params = arrayOf(event.workspaceName)
         )
 
-        val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+        val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
             .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
 
         val workspaceStatus = if (workspaceInfo.status == EnvStatusEnum.running) {
