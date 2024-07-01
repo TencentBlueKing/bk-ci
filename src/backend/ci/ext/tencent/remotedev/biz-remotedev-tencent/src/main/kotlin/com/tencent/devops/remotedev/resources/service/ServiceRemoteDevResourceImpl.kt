@@ -662,4 +662,8 @@ class ServiceRemoteDevResourceImpl(
     override fun workspaceExpandDiskCallback(taskId: String, workspaceName: String, operator: String) {
         expertSupportService.expandDiskCallback(taskId, workspaceName, operator)
     }
+
+    override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
+        return Result(imageManageService.deleteProjectImage(userId, projectId, imageId))
+    }
 }

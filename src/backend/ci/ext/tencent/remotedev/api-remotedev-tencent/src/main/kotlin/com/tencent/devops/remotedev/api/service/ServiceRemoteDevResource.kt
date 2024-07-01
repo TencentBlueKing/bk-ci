@@ -476,4 +476,19 @@ interface ServiceRemoteDevResource {
         @QueryParam("operator")
         operator: String
     )
+
+    @Operation(summary = "删除工作空间镜像")
+    @DELETE
+    @Path("/delete/image")
+    fun deleteProjectImage(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像ID", required = true)
+        @QueryParam("imageId")
+        imageId: String
+    ): Result<Boolean>
 }
