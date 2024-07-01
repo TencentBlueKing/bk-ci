@@ -20,25 +20,6 @@ BEGIN
         alter table T_AUDIT_RESOURCE ADD INDEX
             IDX_SEARCH_ID (`RESOURCE_TYPE`, `PROJECT_ID`, `RESOURCE_ID`);
     END IF;
-	
-IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
-                        AND COLUMN_NAME = 'JOB_ID') THEN
-        ALTER TABLE `T_PIPELINE_BUILD_TASK` 
-			ADD COLUMN `JOB_ID` varchar(128) NULL COMMENT 'job id';
-    END IF;
-	
-	
-IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_PIPELINE_BUILD_CONTAINER'
-                        AND COLUMN_NAME = 'JOB_ID') THEN
-        ALTER TABLE `T_PIPELINE_BUILD_CONTAINER` 
-			ADD COLUMN `JOB_ID` varchar(128) NULL COMMENT 'job id';
-    END IF;
 
     COMMIT;
 END <CI_UBF>
