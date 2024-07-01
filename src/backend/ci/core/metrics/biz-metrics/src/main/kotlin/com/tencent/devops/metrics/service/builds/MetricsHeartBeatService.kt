@@ -118,6 +118,16 @@ class MetricsHeartBeatService @Autowired constructor(
             }
         }
 
+        /**
+         * 检查失效的更新数据并进行清理。
+         *
+         * 该方法会从Redis中获取更新数据的键列表，并根据更新数据的结束时间判断是否失效。
+         * 如果更新数据的结束时间早于1小时前，则将其标记为失效数据。
+         *
+         * 失效的更新数据将被删除。
+         *
+         * @return 无
+         */
         private fun invalidUpdateCheck() {
             val updateKey = redisOperation.hkeys(MetricsCacheService.updateKey())?.ifEmpty { null } ?: return
             val limit = LocalDateTime.now().plusHours(-1)
@@ -137,6 +147,17 @@ class MetricsHeartBeatService @Autowired constructor(
             }
         }
 
+        /**
+         * 检查心跳状态并处理失效的Pod。
+         *
+         * 该方法会从Redis中获取心跳信息，并根据最后在线时间判断Pod的状态。
+         * 如果Pod的最后在线时间早于1分钟前，则将其标记为失效Pod。
+         * 如果Pod的最后在线时间在1分钟内，则将其标记为正常Pod。
+         *
+         * 失效的Pod将被移除，并且与之相关的指标缓存也会被删除。
+         *
+         * @return 无
+         */
         private fun heartBeatCheck() {
             val heartBeats = redisOperation.hentries(heartBeatKey()) ?: return
             val limit = LocalDateTime.now().plusMinutes(-1).toInstant(ZoneOffset.ofHours(8)).epochSecond
@@ -161,6 +182,22 @@ class MetricsHeartBeatService @Autowired constructor(
             }
         }
 
+        /**
+         * 在失效Pod之后处理相关操作。
+         *
+         * 该方法会根据失效Pod的名称和正常Pod的列表，将失效Pod的指标数据转移给正常Pod。
+         *
+         * 首先，方法会从Redis中获取失效Pod的指标键列表。如果列表为空，则表示失效Pod已被处理，直接返回true。
+         *
+         * 然后，方法会将失效Pod的指标数据按照近似负载均衡的方式分配给正常Pod。分配的方式是将失效Pod的指标键值对
+         * 逐个转移到正常Pod中，并删除失效Pod中对应的键值对。
+         *
+         * 最后，方法会再次校验失效Pod的指标键列表，如果为空，则表示数据转移成功，返回true；否则返回false。
+         *
+         * @param losePod 失效Pod的名称
+         * @param live 正常Pod的列表
+         * @return 数据转移是否成功的布尔值。如果失效Pod的指标键列表为空，则返回true；否则返回false。
+         */
         private fun afterLosePod(losePod: String, live: List<String>): Boolean {
             val losePodKeys = redisOperation.hkeys(MetricsCacheService.podKey(losePod))?.ifEmpty { null } ?: return true
             // 分块处理，优化性能。

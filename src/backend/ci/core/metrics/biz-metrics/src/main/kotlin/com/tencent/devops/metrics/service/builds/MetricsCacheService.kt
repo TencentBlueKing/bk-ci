@@ -191,7 +191,7 @@ class MetricsCacheService @Autowired constructor(
     ) : Runnable {
 
         companion object {
-            const val SLEEP = 5000L
+            const val SLEEP = 10000L
         }
 
         override fun run() {
@@ -210,6 +210,14 @@ class MetricsCacheService @Autowired constructor(
             }
         }
 
+        /**
+         * 执行更新操作。
+         *
+         * 该方法会从Redis中获取更新数据的键列表，并根据键的存在与否进行相应的操作。
+         * 如果键存在于缓存中，则表示状态维护在当前实例，将更新数据应用到缓存中，并从Redis中删除该键。
+         *
+         * @return 无
+         */
         private fun executeUpdate() {
             val update = redisOperation.hkeys(updateKey()) ?: return
             val snapshot = cache.keys.toList()
@@ -223,6 +231,16 @@ class MetricsCacheService @Autowired constructor(
             }
         }
 
+        /**
+         * 执行新增操作。
+         *
+         * 该方法会从Redis中获取新增数据的键列表，并根据键的存在与否进行相应的操作。
+         * 如果键不存在于缓存中，则表示需要新增该数据，将其添加到缓存中。
+         *
+         * 同时，方法会遍历缓存中的键列表，如果某个键不在新增数据的键列表中，则表示该数据已失效，将其从缓存中移除。
+         *
+         * @return 无
+         */
         private fun executeAdd() {
             val add = redisOperation.hkeys(podKey(podHashKey)) ?: return
             val snapshot = cache.keys.toList()
@@ -241,6 +259,13 @@ class MetricsCacheService @Autowired constructor(
             }
         }
 
+        /**
+         * 执行检查操作。
+         *
+         * 该方法会遍历缓存中的数据，对于运行时间超过一个小时的数据，将其加入检查队列。
+         *
+         * @return 无
+         */
         private fun executeCheck() {
             /* 运行超过一个小时的，加入检查队列 */
             val limit = LocalDateTime.now().plusHours(-1)

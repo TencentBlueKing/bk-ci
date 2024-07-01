@@ -83,7 +83,22 @@ class MetricsUserService @Autowired constructor(
             }.getOrNull() ?: false
         }
 
-    /* 每10分钟检测一次执行状态 */
+    /**
+     * 定时任务：检查构建状态。
+     *
+     * 该方法会定时执行: 每10分钟运行一次
+     *
+     * 方法首先生成一个未检查的构建ID列表的快照，并初始化一个待删除的构建ID列表。
+     * 然后，将未检查的构建ID列表按照指定的块大小进行分块处理，每次处理一个块。
+     * 对于每个块，方法会调用接口批量获取构建的基本信息，并获取返回结果中已完成的构建ID列表。
+     * 将这些已完成的构建ID添加到待删除的构建ID列表中。
+     *
+     * 接下来，方法会生成本地缓存的键列表，并遍历每个键。
+     * 对于每个键，方法会获取对应的数据，并检查其构建ID是否在待删除的构建ID列表中。
+     * 如果是，则从缓存中移除该键，并从未检查的构建ID列表中移除该构建ID。
+     *
+     * @return 无
+     */
     @Scheduled(cron = "0 0/10 * * * ?")
     fun checkBuildStatusJob() {
         logger.info("=========>> check build status job start <<=========")
@@ -132,6 +147,15 @@ class MetricsUserService @Autowired constructor(
             }
         }
 
+        /**
+         * 延迟删除操作。
+         *
+         * 该方法会从延迟数组中获取待执行的操作列表，并逐个执行。
+         * 对于每个操作，方法会遍历其指标列表，并从注册表中移除对应的指标。
+         * 同时，方法会从本地缓存中移除对应的键。
+         *
+         * @return 无
+         */
         private fun execute() {
             delayArray.addFirst(mutableListOf())
             val ready = delayArray.removeLast()
