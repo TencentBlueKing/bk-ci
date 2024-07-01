@@ -92,7 +92,9 @@ class ExperienceDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
-                .and(CLASSIFY.eq(classify))
+                .let {
+                    if (null == classify) it else it.and(CLASSIFY.eq(classify))
+                }
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
@@ -324,8 +326,8 @@ class ExperienceDao {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(PROJECT_ID))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
-                .and(PLATFORM.eq(platform))
-                .and(CLASSIFY.eq(classify))
+                .let { if (platform == null) it else it.and(PLATFORM.eq(platform)) }
+                .let { if (classify == null) it else it.and(CLASSIFY.eq(classify)) }
                 .fetchOne()!!.value1()
         }
     }
