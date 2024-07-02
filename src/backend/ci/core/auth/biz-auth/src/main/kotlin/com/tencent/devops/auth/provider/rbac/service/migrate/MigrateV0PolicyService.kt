@@ -46,7 +46,7 @@ import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -69,10 +69,10 @@ class MigrateV0PolicyService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
-    private val groupService: PermissionResourceGroupService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -522,7 +522,7 @@ class MigrateV0PolicyService constructor(
             // 自定义用户组,半年或者一年过期
             V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
         }
-        groupService.addGroupMember(
+        permissionResourceMemberService.addGroupMember(
             userId = member.id,
             memberType = member.type,
             expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay) +

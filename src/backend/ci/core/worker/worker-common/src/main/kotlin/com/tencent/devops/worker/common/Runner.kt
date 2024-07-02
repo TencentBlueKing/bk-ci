@@ -414,13 +414,15 @@ object Runner {
     ) {
         // 如果之前的插件不是在构建机执行, 会缺少环境变量
         val taskBuildVariable = buildTask.buildVariable?.toMutableMap() ?: mutableMapOf()
+        val variablesWithType = jobBuildVariables.variablesWithType
+            .associateBy { it.key }
+        // job 变量能取到真实readonly，保证task 变量readOnly属性不会改变
         val taskBuildParameters = taskBuildVariable.map { (key, value) ->
-            BuildParameters(key, value)
+            BuildParameters(key = key, value = value, readOnly = variablesWithType[key]?.readOnly)
         }.associateBy { it.key }
         jobBuildVariables.variables = jobBuildVariables.variables.plus(taskBuildVariable)
         // 以key去重, 并以buildTask中的为准
-        jobBuildVariables.variablesWithType = jobBuildVariables.variablesWithType
-            .associateBy { it.key }
+        jobBuildVariables.variablesWithType = variablesWithType
             .plus(taskBuildParameters)
             .values.toList()
 

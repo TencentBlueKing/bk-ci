@@ -37,7 +37,7 @@
                             </span>
                         </span>
                     </bk-tag>
-                    <span class="exec-detail-summary-header-build-msg">
+                    <span v-bk-overflow-tips class="exec-detail-summary-header-build-msg">
                         {{ execDetail.buildMsg }}
                     </span>
                 </aside>
@@ -377,7 +377,7 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
-                
+
                 if (val) {
                     this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
@@ -437,6 +437,7 @@
 
         beforeDestroy () {
             this.setPipelineDetail(null)
+            this.resetAtomModalMap()
             this.isLoading = false
             webSocketMessage.unInstallWsMessage()
         },
@@ -450,7 +451,8 @@
                 'setPipelineDetail',
                 'getInitLog',
                 'getAfterLog',
-                'pausePlugin'
+                'pausePlugin',
+                'resetAtomModalMap'
             ]),
             handlerScroll (e) {
                 this.show = e.target.scrollTop > 88

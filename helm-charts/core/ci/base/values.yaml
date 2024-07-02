@@ -174,7 +174,8 @@ elasticsearch:
 rabbitmq:
   enabled: true
   image: 
-    repository: bkci/rabbitmq-with-delay
+    registry: docker.io/bkci
+    repository: rabbitmq-with-delay
     tag: 0.0.1
   persistence:
     size: 10Gi

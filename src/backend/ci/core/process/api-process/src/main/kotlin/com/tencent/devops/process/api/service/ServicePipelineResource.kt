@@ -319,6 +319,7 @@ interface ServicePipelineResource {
         channelCode: ChannelCode,
         @Parameter(description = "是否检查权限", required = false)
         @QueryParam("checkFlag")
+        @DefaultValue("true")
         checkFlag: Boolean? = true
     ): Result<Boolean>
 
