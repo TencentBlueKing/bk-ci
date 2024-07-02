@@ -101,7 +101,7 @@ require (
 	github.com/aws/smithy-go v1.13.4 // indirect
 	github.com/blues/jsonata-go v1.5.4 // indirect
 	github.com/containerd/containerd v1.6.26 // indirect
-	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
