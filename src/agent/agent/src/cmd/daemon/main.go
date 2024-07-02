@@ -103,6 +103,7 @@ func main() {
 
 	logs.Info("devops daemon start")
 	logs.Info("pid: ", os.Getpid())
+	logs.Info("workDir: ", workDir)
 
 	watch(isDebug)
 	systemutil.KeepProcessAlive()
