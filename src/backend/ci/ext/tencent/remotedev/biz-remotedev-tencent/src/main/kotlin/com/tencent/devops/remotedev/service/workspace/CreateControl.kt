@@ -146,7 +146,7 @@ class CreateControl @Autowired constructor(
         workspaceCreate: WindowsWorkspaceCreate,
         zoneType: WindowsResourceZoneConfigType?
     ) {
-        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$workspaceCreate")
+        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$workspaceCreate|$zoneType")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -283,6 +283,8 @@ class CreateControl @Autowired constructor(
                     cgsId != null -> it.cgsId == cgsId
                     /*其余情况不应放开lock==true的情况*/
                     it.locked == true -> false
+                    /*不同云区域的忽略*/
+                    it.internal != QuotaType.parse(ownerType).getInternal() -> false
                     /*使用普通区域，则应到避免落入特殊区域*/
                     availableZone.type == WindowsResourceZoneConfigType.DEFAULT && it.zoneId in spec.value -> false
                     /*特殊情况，限制具体的区域id*/
@@ -296,7 +298,7 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            if (cgsId != null || resource.count() >= generateWorkspaceName.size) {
+            if (resource.count() >= generateWorkspaceName.size) {
                 repeat(generateWorkspaceName.size) { i ->
                     val workspaceName = generateWorkspaceName[i]
                     val owner = workspaceCreate.assignOwners.getOrNull(i)
@@ -317,6 +319,12 @@ class CreateControl @Autowired constructor(
                     )
                 }
                 return true
+            }
+            if (cgsId != null) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                    params = arrayOf("not find $cgsId in listcgs")
+                )
             }
             zoneIds.addAll(resource.map { it.zoneId })
             newNum = generateWorkspaceName.size - resource.count()
@@ -820,6 +828,7 @@ class CreateControl @Autowired constructor(
         zoneType: WindowsResourceZoneConfigType?,
         cgsId: String? = null
     ) {
+        logger.info("loadWorkspaceWithPersonalWindows|$userId|$workspaceCreate|$zoneType|$cgsId")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -917,10 +926,10 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, quotaType: QuotaType) =
         workspaceCommon.syncStartCloudResourceList().filter {
             it.status == 11 &&
-                it.machineType == type &&
+                it.machineType == type
 //                it.zoneId.replace(Regex("\\d+"), "") == zone &&
 //                it.locked != true &&
-                it.internal == quotaType.getInternal()
+//                it.internal == quotaType.getInternal()
         }
 
     private fun generateWorkspaceName(userId: String): String {
