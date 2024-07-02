@@ -430,7 +430,7 @@ class SubPipelineStartUpService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         includeConst: Boolean?,
-        includeRequired: Boolean?
+        includeNotRequired: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
@@ -439,7 +439,7 @@ class SubPipelineStartUpService @Autowired constructor(
         val parameter = ArrayList<SubPipelineStartUpInfo>()
         val prop = result.properties.filter {
             val const = if (includeConst == false) { it.constant != true } else { true }
-            val required = if (includeRequired == false) { !it.required } else { true }
+            val required = if (includeNotRequired == false) { it.required } else { true }
             const && required
         }
 

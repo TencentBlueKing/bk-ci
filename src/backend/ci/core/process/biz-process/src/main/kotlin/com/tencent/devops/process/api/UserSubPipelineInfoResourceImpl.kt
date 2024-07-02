@@ -45,7 +45,7 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         projectId: String,
         pipelineId: String,
         includeConst: Boolean?,
-        includeRequired: Boolean?
+        includeNotRequired: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
         if (pipelineId.isBlank() || projectId.isBlank()) {
@@ -56,7 +56,7 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
             projectId = projectId,
             pipelineId = pipelineId,
             includeConst = includeConst,
-            includeRequired = includeRequired
+            includeNotRequired = includeNotRequired
         )
     }
 
