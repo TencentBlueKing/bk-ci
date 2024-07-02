@@ -5,7 +5,7 @@
         >
             <i v-if="isLoading" class="devops-icon icon-circle-2-1 spin-icon" />
             <i
-                v-else-if="downloadIcon && !isLoading"
+                v-else-if="downloadIcon"
                 :class="['devops-icon icon-download', {
                     'artifactory-download-icon-disabled': btnDisabled
                 }]"
@@ -20,9 +20,7 @@
                 {{ $t("download") }}
             </bk-button>
             <template slot="content">
-                <template>
-                    <p>{{ disabled ? $t('downloadDisabledTips') : $t('details.noDownloadPermTips') }}</p>
-                </template>
+                <p>{{ disabled ? $t('downloadDisabledTips') : $t('details.noDownloadPermTips') }}</p>
             </template>
         </bk-popover>
         <bk-dialog
