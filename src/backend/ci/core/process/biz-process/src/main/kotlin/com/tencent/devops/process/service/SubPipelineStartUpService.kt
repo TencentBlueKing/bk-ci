@@ -429,19 +429,18 @@ class SubPipelineStartUpService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        includeConst: Boolean?
+        includeConst: Boolean?,
+        includeRequired: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
         val result = pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
-        val prop = result.properties.let { list ->
-            if (includeConst == false) {
-                list.filter { it.constant != true }
-            } else {
-                list
-            }
+        val prop = result.properties.filter {
+            val const = if (includeConst == false) { it.constant != true } else { true }
+            val required = if (includeRequired == false) { !it.required } else { true }
+            const && required
         }
 
         for (item in prop) {

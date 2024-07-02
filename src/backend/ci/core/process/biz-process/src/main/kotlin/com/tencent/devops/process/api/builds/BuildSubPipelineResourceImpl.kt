@@ -106,14 +106,16 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        includeConst: Boolean?
+        includeConst: Boolean?,
+        includeRequired: Boolean?
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
         return subPipeService.subPipelineManualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            includeConst = includeConst
+            includeConst = includeConst,
+            includeRequired = includeRequired
         )
     }
 

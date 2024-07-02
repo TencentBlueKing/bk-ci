@@ -151,7 +151,10 @@ interface BuildSubPipelineResource {
         pipelineId: String,
         @Parameter(description = "是否包含常量", required = false, example = "")
         @QueryParam("includeConst")
-        includeConst: Boolean? = true
+        includeConst: Boolean? = true,
+        @Parameter(description = "是否包含非入参", required = false, example = "")
+        @QueryParam("includeRequired")
+        includeRequired: Boolean? = true
     ): Result<List<SubPipelineStartUpInfo>>
 
     @Operation(summary = "根据流水线名称获取流水线ID")
