@@ -1,9 +1,13 @@
 <template>
     <div v-if="artifactoryType !== 'IMAGE'">
         <bk-popover
-            :disabled="!btnDisabled"
+            :disabled="!btnDisabled || isLoading"
         >
-            <i v-if="isLoading" class="devops-icon icon-circle-2-1 spin-icon" />
+            <i
+                v-if="isLoading"
+                class="devops-icon icon-circle-2-1 spin-icon"
+                @click.stop=""
+            />
             <i
                 v-else-if="downloadIcon"
                 :class="['devops-icon icon-download', {
