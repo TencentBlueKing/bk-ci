@@ -38,7 +38,7 @@
                 :percent="atom.progressRate"
             />
             <Logo
-                v-else-if="atom.asyncStatus"
+                v-else-if="atom.asyncStatus && atom.asyncStatus !== 'SUCCEED'"
                 class="atom-progress"
                 :name="`sub_pipeline_${atom.asyncStatus.toLowerCase()}`"
             />
