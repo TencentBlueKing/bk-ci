@@ -84,13 +84,22 @@ func DoUpgradeAgent() error {
 	defer func() { totalLock.Unlock() }()
 
 	startT := manualStart
+	var winTask *taskmaster.RegisteredTask = nil
 	// 先查询服务
 	serviceName := "devops_agent_" + config.GAgentConfig.AgentId
 	ok := findService(serviceName)
 	if ok {
 		startT = serviceStart
-	} else if findTask(serviceName) {
-		startT = taskStart
+	} else {
+		if task, taskOk := findTask(serviceName); taskOk {
+			winTask = task
+			startT = taskStart
+		}
+	}
+	// 理论上不可能，但是作为补充可以为后文提供逻辑依据
+	if startT == taskStart && winTask == nil {
+		logs.Warn("win task not exist update agent")
+		startT = manualStart
 	}
 
 	logs.Infof("agent process start by %s", startT)
@@ -179,12 +188,8 @@ func DoUpgradeAgent() error {
 				CreationFlags:    constant.WinCommandNewConsole | syscall.CREATE_NEW_PROCESS_GROUP,
 				NoInheritHandles: true,
 			}
-			output, err := cmd.Output()
-			if err != nil {
-				logs.WithError(err).Errorf("start script file failed, output: %s", string(output))
-				return nil
-			} else {
-				logs.Infof("start script file success %s", string(output))
+			if _, err = winTask.Run(); err != nil {
+				return errors.Wrapf(err, "start win task failed")
 			}
 		}
 	}
@@ -306,18 +311,18 @@ func findService(name string) bool {
 	return true
 }
 
-func findTask(name string) bool {
+func findTask(name string) (*taskmaster.RegisteredTask, bool) {
 	service, err := taskmaster.Connect()
 	if err != nil {
 		logs.WithError(err).Error("connect taskmaster failed")
-		return false
+		return nil, false
 	}
 
-	_, err = service.GetRegisteredTask("\\" + name)
+	task, err := service.GetRegisteredTask("\\" + name)
 	if err != nil && !strings.Contains(err.Error(), "error parsing registered task") {
 		logs.WithError(err).Error("get registered task failed")
-		return false
+		return nil, false
 	}
 
-	return true
+	return &task, true
 }
