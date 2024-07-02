@@ -217,17 +217,8 @@ func replaceAgentFile(fileName string) error {
 		return errors.Wrapf(err, "replaceAgentFile open %s error", src)
 	}
 
-	//if _, err := fileutil.CopyFile(src, dst, true); err != nil {
-	//	logs.WithError(err).Warnf("replaceAgentFile %s stat error", dst)
-	//	return err
-	//}
 	if err := innerFileUtil.AtomicWriteFile(dst, srcFile, perm); err != nil {
 		return errors.Wrapf(err, "replaceAgentFile AtomicWriteFile %s error", dst)
-	}
-
-	if err := fileutil.SetExecutable(dst); err != nil {
-		logs.WithError(err).Warnf("chmod %s file failed", dst)
-		return err
 	}
 	return nil
 }
