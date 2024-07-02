@@ -27,42 +27,26 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreUserService
 import org.springframework.stereotype.Service
 
-/**
- * store用户通用业务逻辑类
- *
- * since: 2019-03-26
- */
 @Service
-class SampleStoreUserServiceImpl : StoreUserService {
+class SampleStoreCommonServiceImpl : StoreCommonServiceImpl() {
 
-    /**
-     * 获取用户机构ID信息
-     */
-    override fun getUserDeptList(userId: String): List<Int> {
-        return listOf() // 开源版用户暂无机构信息
-    }
-
-    /**
-     * 获取用户机构名称
-     */
-    override fun getUserFullDeptName(userId: String): Result<String?> {
-        return Result(data = "") // 开源版用户暂无机构信息
-    }
-
-    /**
-     * 判断用户是否能安装store组件
-     */
-    override fun isCanInstallStoreComponent(
+    override fun generateInstallFlag(
         defaultFlag: Boolean,
+        members: MutableList<String>?,
         userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
     ): Boolean {
-        return true // 开源版默认都有安装权限
+        return true // 开源版所有用户都有权限安装
+    }
+
+    override fun generateStoreVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): HashMap<String, MutableList<Int>>? {
+        return null // 开源版插件不设置可见范围
     }
 }

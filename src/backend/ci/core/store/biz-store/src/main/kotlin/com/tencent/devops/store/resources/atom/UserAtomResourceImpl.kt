@@ -53,21 +53,33 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         accessToken: String,
         userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
         projectCode: String,
         category: String?,
         classifyId: String?,
-        page: Int?,
-        pageSize: Int?
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
         return atomService.getPipelineAtoms(
             accessToken = accessToken,
             userId = userId,
             serviceScope = serviceScope,
+            jobType = jobType,
             os = os,
             projectCode = projectCode,
             category = category,
             classifyId = classifyId,
+            recommendFlag = recommendFlag,
+            keyword = keyword,
+            queryProjectAtomFlag = queryProjectAtomFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            fitOsFlag = fitOsFlag,
             page = page,
             pageSize = pageSize
         )
@@ -81,10 +93,20 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         userId: String,
         projectCode: String,
         classifyCode: String?,
-        page: Int?,
-        pageSize: Int?
+        name: String?,
+        page: Int,
+        pageSize: Int
     ): Result<Page<InstalledAtom>> {
-        return Result(atomService.getInstalledAtoms(userId, projectCode, classifyCode, page, pageSize))
+        return Result(
+            atomService.getInstalledAtoms(
+                userId = userId,
+                projectCode = projectCode,
+                classifyCode = classifyCode,
+                name = name,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun updateAtomBaseInfo(

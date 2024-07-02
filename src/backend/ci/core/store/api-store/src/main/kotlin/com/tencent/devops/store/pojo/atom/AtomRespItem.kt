@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.store.pojo.common.Label
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -70,6 +71,12 @@ data class AtomRespItem(
     val publisher: String?,
     @ApiModelProperty("创建人", required = true)
     val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("创建时间")
+    val createTime: String,
+    @ApiModelProperty("修改时间")
+    val updateTime: String,
     @ApiModelProperty("是否为默认原子（默认原子默认所有项目可见）true：默认原子 false：普通原子", required = true)
     val defaultFlag: Boolean,
     @ApiModelProperty("是否为最新版本原子 true：最新 false：非最新", required = true)
@@ -81,5 +88,17 @@ data class AtomRespItem(
     @ApiModelProperty("权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
-    val recommendFlag: Boolean?
+    val recommendFlag: Boolean?,
+    @ApiModelProperty("评分", required = false)
+    val score: Double? = null,
+    @ApiModelProperty("最近执行次数", required = false)
+    val recentExecuteNum: Int? = null,
+    @ApiModelProperty("是否能卸载标识", required = false)
+    val uninstallFlag: Boolean? = null,
+    @ApiModelProperty("标签列表", required = false)
+    val labelList: List<Label>? = null,
+    @ApiModelProperty("是否有权限安装标识", required = false)
+    val installFlag: Boolean? = null,
+    @ApiModelProperty("是否已安装", required = false)
+    val installed: Boolean? = null
 )
