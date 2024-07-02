@@ -617,7 +617,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         userId = task.starter, buildId = buildId, taskId = task.taskId, actionType = ActionType.START,
                         containerHashId = task.containerHashId, jobId = task.jobId, stageId = task.stageId,
                         stepId = task.stepId, atomCode = task.atomCode, executeCount = task.executeCount,
-                        buildStatus = task.status.name
+                        buildStatus = BuildStatus.RUNNING.name
                     )
                 )
                 val signToken = UUIDUtil.generate()

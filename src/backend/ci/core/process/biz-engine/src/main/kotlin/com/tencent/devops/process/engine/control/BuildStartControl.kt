@@ -493,7 +493,7 @@ class BuildStartControl @Autowired constructor(
                 buildId = buildId,
                 actionType = ActionType.START,
                 executeCount = executeCount,
-                buildStatus = buildInfo.status.name
+                buildStatus = BuildStatus.RUNNING.name
             )
         )
     }
