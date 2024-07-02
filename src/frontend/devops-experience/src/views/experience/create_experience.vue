@@ -166,9 +166,7 @@
                         <bk-form-item
                             label="通知方式"
                             label-width="190"
-                            desc="选择体验组包含人数超过了2000人，通知方式会失效。"
-                            desc-type="icon"
-                            desc-icon="icon-info-circle"
+                            v-bind="notifyDesc"
                         >
                             <div v-if="isInerExp" class="bkdevop-checkbox-group notify-group">
                                 <bk-checkbox
@@ -404,6 +402,15 @@
             
             createInnerApkExpTips () {
                 return `${this.createReleaseForm.name}${this.isPublicExp ? '为开发测试版本，确定发起公开体验吗' : '为开发测试版本，准备体验包过程需要一段时间，请耐心等待'}`
+            },
+            notifyDesc () {
+                return this.isPublicExp
+                    ? {}
+                    : {
+                        desc: '若选择的体验组人数去重后仍然超过了2000人，通知将会发送失败。',
+                        descType: 'icon',
+                        descIcon: 'icon-info-circle'
+                    }
             }
         },
         watch: {
