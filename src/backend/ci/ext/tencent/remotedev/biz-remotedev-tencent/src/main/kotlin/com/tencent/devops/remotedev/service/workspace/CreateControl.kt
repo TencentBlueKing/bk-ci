@@ -146,7 +146,7 @@ class CreateControl @Autowired constructor(
         workspaceCreate: WindowsWorkspaceCreate,
         zoneType: WindowsResourceZoneConfigType?
     ) {
-        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$workspaceCreate")
+        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$workspaceCreate|$zoneType")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -298,7 +298,7 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            if (cgsId != null || resource.count() >= generateWorkspaceName.size) {
+            if (resource.count() >= generateWorkspaceName.size) {
                 repeat(generateWorkspaceName.size) { i ->
                     val workspaceName = generateWorkspaceName[i]
                     val owner = workspaceCreate.assignOwners.getOrNull(i)
@@ -319,6 +319,12 @@ class CreateControl @Autowired constructor(
                     )
                 }
                 return true
+            }
+            if (cgsId != null) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                    params = arrayOf("not find $cgsId in listcgs")
+                )
             }
             zoneIds.addAll(resource.map { it.zoneId })
             newNum = generateWorkspaceName.size - resource.count()
@@ -822,6 +828,7 @@ class CreateControl @Autowired constructor(
         zoneType: WindowsResourceZoneConfigType?,
         cgsId: String? = null
     ) {
+        logger.info("loadWorkspaceWithPersonalWindows|$userId|$workspaceCreate|$zoneType|$cgsId")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
