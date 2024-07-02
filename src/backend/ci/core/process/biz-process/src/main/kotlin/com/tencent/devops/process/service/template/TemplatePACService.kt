@@ -23,7 +23,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 /**
  * 因为 PAC 的改动较多，所以将pac中的的代码较大专门抽出来，方便排查错误以及不要影响历史接口

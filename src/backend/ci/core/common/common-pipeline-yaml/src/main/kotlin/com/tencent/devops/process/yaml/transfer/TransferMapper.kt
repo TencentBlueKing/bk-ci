@@ -25,10 +25,6 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILT
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import java.io.StringWriter
-import java.io.Writer
-import java.util.function.Supplier
-import java.util.regex.Pattern
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
@@ -52,6 +48,10 @@ import org.yaml.snakeyaml.parser.Parser
 import org.yaml.snakeyaml.representer.Representer
 import org.yaml.snakeyaml.resolver.Resolver
 import org.yaml.snakeyaml.serializer.AnchorGenerator
+import java.io.StringWriter
+import java.io.Writer
+import java.util.function.Supplier
+import java.util.regex.Pattern
 
 @Suppress("ComplexCondition", "ComplexMethod", "NestedBlockDepth")
 object TransferMapper {
@@ -210,6 +210,8 @@ object TransferMapper {
                     anchorNode(value, anchors)
                 }
             }
+
+            else -> {}
         }
     }
 
@@ -254,8 +256,8 @@ object TransferMapper {
                     n.value.forEach value@{ v ->
                         val index = map.find {
                             it.keyNode is ScalarNode &&
-                                v.keyNode is ScalarNode &&
-                                (it.keyNode as ScalarNode).value == (v.keyNode as ScalarNode).value
+                                    v.keyNode is ScalarNode &&
+                                    (it.keyNode as ScalarNode).value == (v.keyNode as ScalarNode).value
                         } ?: return@anchors
 
                         if (exactlyTheSameNode(index.valueNode, v.valueNode)) {
@@ -278,6 +280,8 @@ object TransferMapper {
                     )
                 }
             }
+
+            else -> {}
         }
     }
 
@@ -325,6 +329,8 @@ object TransferMapper {
                     }
                 }
             }
+
+            else -> {}
         }
         return null
     }
@@ -385,6 +391,8 @@ object TransferMapper {
                     return markNode(value, nodeIndex.next)
                 }
             }
+
+            else -> {}
         }
         return null
     }
@@ -605,6 +613,8 @@ object TransferMapper {
                         }
                     }
                 }
+
+                else -> {}
             }
         }
 

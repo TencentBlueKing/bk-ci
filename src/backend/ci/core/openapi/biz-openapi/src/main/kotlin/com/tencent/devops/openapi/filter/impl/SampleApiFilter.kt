@@ -8,10 +8,10 @@ import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.filter.ApiFilter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.PreMatching
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.Provider
 
 @Provider
 @PreMatching

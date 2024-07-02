@@ -28,16 +28,20 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.EncryptException
-import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.common.api.util.AESUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import sun.security.x509.X500Name
 import java.io.ByteArrayInputStream
 import java.security.KeyStore
 import java.security.UnrecoverableKeyException
 import java.security.cert.X509Certificate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import javax.naming.InvalidNameException
+import javax.naming.ldap.LdapName
+import javax.naming.ldap.Rdn
+import javax.security.auth.x500.X500Principal
+
 
 @Component
 class CertHelper {
@@ -67,13 +71,13 @@ class CertHelper {
             ) as KeyStore.PrivateKeyEntry
             val certificate = entry.certificateChain[0] as X509Certificate
 
-            val dn = certificate.issuerDN as X500Name
-            val country = dn.country
-            val state = dn.state
-            val locality = dn.locality
-            val organization = dn.organization
-            val organizationalUnit = dn.organizationalUnit
-            val commonName = dn.commonName
+            val dn = certificate.issuerX500Principal as X500Principal
+            val country = dn.getCountry()
+            val state = dn.getState()
+            val locality = dn.getLocality()
+            val organization = dn.getOrganization()
+            val organizationalUnit = dn.getOrganizationalUnit()
+            val commonName = dn.getCommonName()
             val version = certificate.version
             val issue = LocalDateTime.ofInstant(certificate.notBefore.toInstant(), ZoneId.systemDefault())
             val expire = LocalDateTime.ofInstant(certificate.notAfter.toInstant(), ZoneId.systemDefault())
@@ -134,13 +138,13 @@ class CertHelper {
 
     fun encryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            BkCryptoUtil.encryptSm4ButAes(aesKey, bytes)
+            AESUtil.encrypt(aesKey, bytes)
         } else null
     }
 
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            BkCryptoUtil.decryptSm4OrAes(aesKey, bytes)
+            AESUtil.decrypt(aesKey, bytes)
         } else null
     }
 
@@ -155,4 +159,42 @@ class CertHelper {
         val issueDate: LocalDateTime,
         val expireDate: LocalDateTime
     )
+
+    private fun getAttributes(principal: X500Principal): Map<String, String> {
+        val attributes: MutableMap<String, String> = HashMap()
+        try {
+            val ldapName = LdapName(principal.name)
+            val rdns: List<Rdn> = ldapName.rdns
+            for (rdn in rdns) {
+                attributes[rdn.type] = rdn.value.toString()
+            }
+        } catch (e: InvalidNameException) {
+            e.printStackTrace()
+        }
+        return attributes
+    }
+
+    private fun X500Principal.getCountry(): String? {
+        return getAttributes(this)["C"]
+    }
+
+    private fun X500Principal.getState(): String? {
+        return getAttributes(this)["ST"]
+    }
+
+    private fun X500Principal.getLocality(): String? {
+        return getAttributes(this)["L"]
+    }
+
+    private fun X500Principal.getOrganization(): String? {
+        return getAttributes(this)["O"]
+    }
+
+    private fun X500Principal.getOrganizationalUnit(): String? {
+        return getAttributes(this)["OU"]
+    }
+
+    private fun X500Principal.getCommonName(): String? {
+        return getAttributes(this)["CN"]
+    }
 }

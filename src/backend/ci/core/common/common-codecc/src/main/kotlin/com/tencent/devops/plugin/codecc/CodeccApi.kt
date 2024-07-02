@@ -42,7 +42,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
-import javax.ws.rs.HttpMethod
+import jakarta.ws.rs.HttpMethod
 
 @Suppress("ALL")
 class CodeccApi(

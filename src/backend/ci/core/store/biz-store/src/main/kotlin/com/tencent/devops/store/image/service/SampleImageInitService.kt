@@ -47,7 +47,7 @@ import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageInitRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

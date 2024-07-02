@@ -80,7 +80,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")

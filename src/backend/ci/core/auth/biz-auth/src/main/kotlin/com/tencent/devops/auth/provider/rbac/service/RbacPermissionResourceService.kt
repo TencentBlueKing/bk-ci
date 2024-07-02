@@ -52,7 +52,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.slf4j.LoggerFactory
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(

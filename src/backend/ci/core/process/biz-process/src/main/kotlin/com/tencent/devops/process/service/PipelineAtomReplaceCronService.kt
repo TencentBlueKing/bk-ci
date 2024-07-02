@@ -74,7 +74,7 @@ import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_NAMESPACE
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory

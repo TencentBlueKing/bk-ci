@@ -170,6 +170,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     )
                 }
             }
+
             ManagerScopesEnum.DEPARTMENT -> {
                 val depteInfos = getDeptInfo(deptSearch)
                 depteInfos.results.forEach {
@@ -183,6 +184,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     )
                 }
             }
+
             ManagerScopesEnum.ALL -> {
                 val userInfos = getUserInfo(userSearch)
                 userInfos.results.forEach {
@@ -208,6 +210,8 @@ class AuthDeptServiceImpl @Autowired constructor(
                     )
                 }
             }
+
+            else -> {}
         }
         return userAndDeptInfos
     }
@@ -320,7 +324,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -335,7 +339,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(

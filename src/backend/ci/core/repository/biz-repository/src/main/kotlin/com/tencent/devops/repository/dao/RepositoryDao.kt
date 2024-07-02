@@ -37,7 +37,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUN
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1

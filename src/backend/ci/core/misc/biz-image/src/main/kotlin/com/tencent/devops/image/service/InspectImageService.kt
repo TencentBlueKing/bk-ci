@@ -32,7 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
@@ -64,7 +64,7 @@ class InspectImageService @Autowired constructor(
         .withApiVersion(dockerConfig.apiVersion)
         .build()
 
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
+    private val dockerCli = DockerClientImpl.getInstance(config)
 
     @Value("\${image.checkImageUrl:}")
     var checkImageUrl: String? = null

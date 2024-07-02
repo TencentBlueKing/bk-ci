@@ -9,10 +9,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.constant.REQUEST_IP
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
+import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.servlet.http.HttpServletRequest
 
 class BkAuditRequestProvider : AuditRequestProvider {
     companion object {
@@ -24,7 +24,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
 
     override fun getRequest(): AuditHttpRequest {
         val httpServletRequest: HttpServletRequest = getHttpServletRequest()
-        return AuditHttpRequest(httpServletRequest)
+        return AuditHttpRequest::class.java.newInstance()//TODO 后面需要新的audit的包 (tyleryuwang)
     }
 
     private fun getHttpServletRequest(): HttpServletRequest {
@@ -61,6 +61,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
         return when (requestChannel) {
             RequestChannelTypeEnum.USER.name,
             RequestChannelTypeEnum.OP.name -> AccessTypeEnum.WEB
+
             RequestChannelTypeEnum.API.name -> AccessTypeEnum.API
             else -> AccessTypeEnum.OTHER
         }

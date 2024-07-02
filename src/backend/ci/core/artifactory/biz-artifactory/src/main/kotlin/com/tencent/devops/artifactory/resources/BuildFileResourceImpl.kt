@@ -39,7 +39,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 @RestResource@Suppress("ALL")
 class BuildFileResourceImpl @Autowired constructor(

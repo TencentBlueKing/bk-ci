@@ -71,8 +71,8 @@ import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.text.MessageFormat
 import java.time.LocalDateTime
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory

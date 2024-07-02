@@ -55,7 +55,7 @@ import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import java.sql.Timestamp
 import java.time.LocalDateTime
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart

@@ -1,6 +1,10 @@
 {
   "allowedLicenses": [
     {
+      "moduleName": "javax.ws.rs:javax.ws.rs-api",
+      "desc": "Javax 类库 , 可以直接引用"
+    },
+    {
       "moduleLicense": "GNU GPL v2.0 license with classpath exception",
       "moduleName": "com.tencent.kona:kona-crypto",
       "desc": "Tencent 类库 , 可以直接引用"
@@ -26,7 +30,7 @@
       "desc": "向mysql免费申请MySQL Ready Partner (free) , 可允许绕开GPL协议,可以使用双协议而不冲突"
     },
     {
-      "moduleVersion": "8.0.31",
+      "moduleVersion": "8.0.33",
       "moduleName": "mysql:mysql-connector-java",
       "desc": "上同 com.mysql:mysql-connector-j "
     },
@@ -96,7 +100,7 @@
     {
       "moduleLicense": "CDDL 1.1",
       "moduleVersion": "2.0",
-      "moduleName": "javax.ws.rs:javax.ws.rs-api"
+      "moduleName": "jakarta.ws.rs:jakarta.ws.rs-api"
     },
     {
       "moduleLicense": "EPL 2.0",

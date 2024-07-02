@@ -114,9 +114,9 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
                         mLastToken?.kind == TokenKind.StartParameters || // "(" function call
                         mLastToken?.kind == TokenKind.LogicalOperator
                     ) // "!", "==", etc
-                        {
-                            rToken = readNumberToken()
-                        }
+                    {
+                        rToken = readNumberToken()
+                    }
                     // "."
                     else {
                         rToken = createToken(TokenKind.Dereference, c, mIndex++)
@@ -189,9 +189,9 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
 
             // Function
             if (tempIndex < expression.length && expression[tempIndex] == ExpressionConstants.START_GROUP) // "("
-                {
-                    createToken(TokenKind.Function, str, startIndex)
-                } else {
+            {
+                createToken(TokenKind.Function, str, startIndex)
+            } else {
                 createToken(TokenKind.NamedValue, str, startIndex)
             }
         } else {
@@ -517,6 +517,8 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
                     TokenKind.LogicalOperator
                 )
             }
+
+            else -> {}
         }
 
         if (!legal) {
@@ -568,6 +570,7 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
                     return Token(TokenKind.Unexpected, rawValue, index)
                 }
             }
+            else -> {}
         }
 
         return token

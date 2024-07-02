@@ -52,8 +52,8 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
 import java.net.URLEncoder
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

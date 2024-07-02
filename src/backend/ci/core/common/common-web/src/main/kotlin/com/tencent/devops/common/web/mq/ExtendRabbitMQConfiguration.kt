@@ -77,7 +77,7 @@ class ExtendRabbitMQConfiguration {
     @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
     fun extendConnectionFactory(config: ExtendRabbitMQProperties): ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
-        connectionFactory.host = config.host
+        connectionFactory.setHost(config.host)
         connectionFactory.port = config.port
         connectionFactory.username = username!!
         connectionFactory.setPassword(password!!)

@@ -49,7 +49,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicBoolean
-import javax.annotation.PreDestroy
+import jakarta.annotation.PreDestroy
 
 /**
  * 调度服务框架

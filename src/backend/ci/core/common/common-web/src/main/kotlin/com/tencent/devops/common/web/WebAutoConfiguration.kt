@@ -103,9 +103,6 @@ class WebAutoConfiguration {
     fun versionInfoResource() = VersionInfoResource()
 
     @Bean
-    fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
-
-    @Bean
     fun bkWriterInterceptor(commonConfig: CommonConfig, client: Client) = BkWriterInterceptor(
         commonConfig = commonConfig,
         client = client

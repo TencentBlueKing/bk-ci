@@ -49,7 +49,7 @@ import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before

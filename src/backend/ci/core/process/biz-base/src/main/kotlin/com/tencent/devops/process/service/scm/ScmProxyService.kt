@@ -70,7 +70,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.util.Base64
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service

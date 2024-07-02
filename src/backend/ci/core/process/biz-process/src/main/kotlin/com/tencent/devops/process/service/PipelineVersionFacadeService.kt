@@ -76,7 +76,7 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
