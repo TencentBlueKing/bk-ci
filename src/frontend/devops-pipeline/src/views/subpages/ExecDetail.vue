@@ -25,7 +25,7 @@
                     <bk-tag class="exec-status-tag" type="stroke" :theme="statusTagTheme">
                         <span class="exec-status-label">
                             <i v-if="isRunning" :class="['devops-icon', {
-                                'icon-hourglass': execDetail.status === 'QUEUE',
+                                'icon-hourglass hourglass-queue': execDetail.status === 'QUEUE',
                                 'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
                             }]" />
                             {{ statusLabel }}
@@ -569,12 +569,6 @@
         align-items: center;
         grid-auto-flow: column;
         grid-gap: 6px;
-        .devops-icon.icon-hourglass {
-            animation: hourglassSpin;
-            animation-delay: 0.5s, 0.5s;
-            animation-duration: 1s;
-            animation-iteration-count: infinite;
-        }
       }
 
       .exec-detail-summary-header-build-msg {
