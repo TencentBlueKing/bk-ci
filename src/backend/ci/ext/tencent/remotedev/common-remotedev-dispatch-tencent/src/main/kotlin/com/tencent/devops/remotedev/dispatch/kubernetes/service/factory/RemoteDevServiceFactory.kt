@@ -29,7 +29,6 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.service.factory
 
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.RemoteDevInterface
-import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import org.springframework.stereotype.Service
 
