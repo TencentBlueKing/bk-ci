@@ -69,7 +69,9 @@ const (
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
-	KeyJdkDirPath          = "devops.agent.jdk.dir.path"
+	KeyJdkDirPath = "devops.agent.jdk.dir.path"
+	// KeyJdk17DirPath 最新的 jdk 路径，因为需要一段时间的兼容所以和 KeyJdkDirPath 共存
+	KeyJdk17DirPath        = "devops.agent.jdk17.dir.path"
 	KeyDockerTaskCount     = "devops.docker.parallel.task.count"
 	keyEnableDockerBuild   = "devops.docker.enable"
 	KeyLanguage            = "devops.language"
@@ -95,6 +97,7 @@ type AgentConfig struct {
 	BatchInstallKey         string
 	LogsKeepHours           int
 	JdkDirPath              string
+	Jdk17DirPath            string
 	DockerParallelTaskCount int
 	EnableDockerBuild       bool
 	Language                string
@@ -481,6 +484,9 @@ func LoadAgentConfig() error {
 	GAgentConfig.JdkDirPath = jdkDirPath
 	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
 
+	GAgentConfig.Jdk17DirPath = jdkDirPath
+	logs.Info("jdk17DirPath: ", GAgentConfig.Jdk17DirPath)
+
 	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
 
@@ -525,6 +531,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
 	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
+	content.WriteString(KeyJdk17DirPath + "=" + GAgentConfig.Jdk17DirPath + "\n")
 	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
 	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
