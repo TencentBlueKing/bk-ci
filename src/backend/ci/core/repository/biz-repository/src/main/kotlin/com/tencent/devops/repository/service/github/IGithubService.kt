@@ -31,6 +31,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
+import com.tencent.devops.repository.pojo.github.GithubPullRequestReviews
 import com.tencent.devops.repository.pojo.github.GithubTag
 
 interface IGithubService {
@@ -68,4 +69,11 @@ interface IGithubService {
         refreshToken: Boolean?,
         resetType: String?
     ): AuthorizeResult
+
+    fun createPrReviews(
+        token: String,
+        projectName: String,
+        pullRequestNumber: Int,
+        review: GithubPullRequestReviews
+    )
 }

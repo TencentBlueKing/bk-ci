@@ -45,6 +45,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.GITHUB_PR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
@@ -79,7 +80,6 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -155,7 +155,8 @@ class CodeWebhookService @Autowired constructor(
                                     status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
                                     startedAt = LocalDateTime.now().timestamp(),
                                     conclusion = null,
-                                    completedAt = null
+                                    completedAt = null,
+                                    pullRequestNumber = pullRequestNumber
                                 )
                             )
                         }
@@ -232,11 +233,12 @@ class CodeWebhookService @Autowired constructor(
                                     repositoryConfig = repositoryConfig,
                                     commitId = commitId,
                                     status = status,
-                                    startedAt = null,
+                                    startedAt = event.startTime ?: 0L,
                                     conclusion = conclusion,
                                     completedAt = LocalDateTime.now().timestamp(),
                                     userId = event.userId,
-                                    retryTime = 3
+                                    retryTime = 3,
+                                    pullRequestNumber = pullRequestNumber
                                 )
                             )
                         }
@@ -315,6 +317,7 @@ class CodeWebhookService @Autowired constructor(
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
             val targetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]
             val enableCheck = variables[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK]?.toBoolean() ?: true
+            val pullRequestNumber = variables[GITHUB_PR_NUMBER]?.toInt()
             if (CodeEventType.valueOf(webhookEventTypeStr) == CodeEventType.MERGE_REQUEST && targetBranch == null) {
                 logger.warn(
                     "the webhook info miss targetBranch,commit check may not be added," +
@@ -337,7 +340,8 @@ class CodeWebhookService @Autowired constructor(
                     webhookType = webhookTypeStr,
                     webhookEventType = webhookEventTypeStr,
                     enableCheck = enableCheck,
-                    targetBranch = targetBranch
+                    targetBranch = targetBranch,
+                    pullRequestNumber = pullRequestNumber
                 )
             )
         } catch (ignore: Throwable) {
@@ -555,7 +559,8 @@ class CodeWebhookService @Autowired constructor(
                 status = event.status,
                 startedAt = startedAt,
                 conclusion = event.conclusion,
-                completedAt = completedAt
+                completedAt = completedAt,
+                pullRequestNumber = event.pullRequestNumber
             )
         } catch (t: Throwable) {
             logger.warn("Consume github pr event fail. $event", t)
@@ -580,7 +585,8 @@ class CodeWebhookService @Autowired constructor(
         status: String,
         startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: LocalDateTime?
+        completedAt: LocalDateTime?,
+        pullRequestNumber: Int?
     ) {
         logger.info(
             "Code web hook add pr check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
@@ -637,9 +643,12 @@ class CodeWebhookService @Autowired constructor(
                         detailUrl = detailUrl,
                         externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                         status = status,
-                        startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+                        startedAt = startedAt,
                         conclusion = conclusion,
-                        completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
+                        completedAt = completedAt,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        pullRequestNumber = pullRequestNumber
                     )
                     pluginGithubCheckDao.create(
                         dslContext = dslContext,
@@ -658,25 +667,26 @@ class CodeWebhookService @Autowired constructor(
                         val checkRunId = if (conclusion == null) {
                             val result = scmCheckService.addGithubCheckRuns(
                                 projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
                                 repositoryConfig = repositoryConfig,
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
                                 commitId = commitId,
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt,
+                                pullRequestNumber = pullRequestNumber
                             )
                             result.id
                         } else {
                             scmCheckService.updateGithubCheckRuns(
                                 checkRunId = record.checkRunId,
                                 projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
                                 repositoryConfig = repositoryConfig,
                                 // 兼容历史数据
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
@@ -684,13 +694,10 @@ class CodeWebhookService @Autowired constructor(
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                                 status = status,
-                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                ),
+                                startedAt = startedAt,
                                 conclusion = conclusion,
-                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                    DateTimeFormatter.ISO_INSTANT
-                                )
+                                completedAt = completedAt,
+                                pullRequestNumber = pullRequestNumber
                             )
                             record.checkRunId
                         }

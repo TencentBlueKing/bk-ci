@@ -69,6 +69,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
@@ -674,7 +677,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             status = status,
             startedAt = startedAt,
             conclusion = conclusion,
-            completedAt = completedAt
+            completedAt = completedAt,
+            reportData = Pair(listOf(), mutableMapOf()),
+            pullRequestNumber = null
         )
 
         return client.get(ServiceGithubResource::class).addCheckRuns(
@@ -693,9 +698,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         detailUrl: String,
         externalId: String,
         status: String,
-        startedAt: String?,
+        startedAt: LocalDateTime?,
         conclusion: String?,
-        completedAt: String?
+        completedAt: LocalDateTime?
     ) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
@@ -709,9 +714,11 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             detailsUrl = detailUrl,
             externalId = externalId,
             status = status,
-            startedAt = startedAt,
+            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
             conclusion = conclusion,
-            completedAt = completedAt
+            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+            reportData = Pair(listOf(), mutableMapOf()),
+            pullRequestNumber = null
         )
 
         client.get(ServiceGithubResource::class).updateCheckRuns(

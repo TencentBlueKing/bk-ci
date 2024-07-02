@@ -47,25 +47,28 @@ import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 object QualityUtils {
     fun getQualityGitMrResult(
         client: Client,
-        event: GitCommitCheckEvent
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        eventStatus: String,
+        startTime: Long,
+        triggerType: String
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
-        val projectId = event.projectId
-        val pipelineId = event.pipelineId
-        val buildId = event.buildId
         val pipelineName = client.get(ServicePipelineResource::class)
-                .getPipelineNameByIds(projectId, setOf(pipelineId))
-                .data?.get(pipelineId) ?: ""
+            .getPipelineNameByIds(projectId, setOf(pipelineId))
+            .data?.get(pipelineId) ?: ""
 
-        val titleData = mutableListOf(event.status,
-                DateTimeUtil.formatMilliTime(System.currentTimeMillis() - event.startTime),
-                StartType.toReadableString(
-                    event.triggerType,
-                    null,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ),
-                pipelineName,
-                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId",
-                I18nUtil.getCodeLanMessage(BK_CI_PIPELINE)
+        val titleData = mutableListOf(
+            eventStatus,
+            DateTimeUtil.formatMilliTime(System.currentTimeMillis() - startTime),
+            StartType.toReadableString(
+                triggerType,
+                null,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
+            pipelineName,
+            "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId",
+            I18nUtil.getCodeLanMessage(BK_CI_PIPELINE)
         )
 
         val ruleName = mutableSetOf<String>()
