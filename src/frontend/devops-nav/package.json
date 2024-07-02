@@ -69,7 +69,7 @@
   "dependencies": {
     "@blueking/login-modal": "1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
-    "axios": "^0.27.2",
+    "axios": "0.28.0",
     "@tencent/bk-magic-vue": "2.5.9-beta.6",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
