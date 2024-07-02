@@ -213,6 +213,9 @@ class SubPipelineStartUpService @Autowired constructor(
                 params = arrayOf(pipelineId),
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        if (readyToBuildPipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
         if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
@@ -248,7 +251,10 @@ class SubPipelineStartUpService @Autowired constructor(
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             // #6090 拨乱反正
-            val params = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
+            val params = buildParamCompatibilityTransformer.parseTriggerParam(
+                userId = userId, projectId = projectId, pipelineId = pipelineId,
+                paramProperties = triggerContainer.params, paramValues = parameters
+            )
 
             params[PIPELINE_START_PIPELINE_USER_ID] =
                 BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = triggerUser ?: userId)

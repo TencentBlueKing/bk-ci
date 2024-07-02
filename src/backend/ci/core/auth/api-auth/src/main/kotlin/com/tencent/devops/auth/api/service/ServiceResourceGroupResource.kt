@@ -1,6 +1,8 @@
 package com.tencent.devops.auth.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import io.swagger.v3.oas.annotations.Operation
@@ -8,7 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
-import javax.ws.rs.HeaderParam
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -21,13 +23,23 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceResourceGroupResource {
+    @GET
+    @Path("/{projectCode}/{groupId}/getGroupPermissionDetail")
+    @Operation(summary = "查询用户组权限详情")
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].actionId}"], responseDataCacheFlag = true)
+    fun getGroupPermissionDetail(
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "用户组ID")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<Map<String, List<GroupPermissionDetailVo>>>
+
     @POST
     @Path("/{projectCode}/createGroupByGroupCode/")
     @Operation(summary = "根据groupCode添加用户组")
     fun createGroupByGroupCode(
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @Parameter(description = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -39,13 +51,21 @@ interface ServiceResourceGroupResource {
         groupCode: BkAuthGroup
     ): Result<Boolean>
 
+    @POST
+    @Path("/{projectCode}/createGroup/")
+    @Operation(summary = "创建自定义组(不包含权限，空权限组)")
+    fun createGroup(
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "创建组DTO", required = true)
+        groupAddDTO: GroupAddDTO
+    ): Result<Int>
+
     @DELETE
     @Path("/{projectCode}/deleteGroup/")
     @Operation(summary = "删除用户组")
     fun deleteGroup(
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @Parameter(description = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String,

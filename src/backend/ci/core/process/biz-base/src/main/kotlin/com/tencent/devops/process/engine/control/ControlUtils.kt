@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.expression.EvaluationResult
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -37,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_JOB_RUN_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_TASK_RUN_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CUSTOM_VARIABLES_ARE_ALL_SATISFIED
@@ -331,7 +333,9 @@ object ControlUtils {
                 // 新增的表达式调用需要去掉兼容老流水线变量
                 val variablesWithOutOld = variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
                 val expressionResult = ExpressionParser.evaluateByMap(
-                    customCondition, variablesWithOutOld, false
+                    expression = EnvReplacementParser.parse(customCondition, variables),
+                    contextMap = variablesWithOutOld,
+                    fetchValue = false
                 )
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
@@ -343,23 +347,36 @@ object ControlUtils {
                     expressionResult.toString().toBoolean()
                 }
                 message.append(
-                    "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!resultIsTrue) {
-                            " will be skipped! "
-                        } else {
-                            ""
-                        }
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_RESULT,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(customCondition, resultIsTrue.toString())
+                    ) + if (!resultIsTrue) {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_NOT_MATCH,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    } else {
+                        ""
+                    }
                 )
                 resultIsTrue
             } catch (ignore: Throwable) {
                 // 异常，则任务表达式为false
-                logger.info(
+                logger.warn(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=exception: ${ignore.message}",
                     ignore
                 )
                 message.append(
-                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_WITH_ERROR,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(ignore.message ?: "")
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_PIPELINE_RUN_CONDITION_NOT_MATCH,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
                 false
             }

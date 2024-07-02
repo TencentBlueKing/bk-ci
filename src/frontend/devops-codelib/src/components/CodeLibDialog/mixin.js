@@ -255,6 +255,12 @@ export default {
 
             param.aliasName = alias || this.codelib.aliasName
             this.updateCodelib(param)
+        },
+        
+        showCodelibDialog (val) {
+            if (!val) {
+                this.pacProjectName = ''
+            }
         }
     },
 

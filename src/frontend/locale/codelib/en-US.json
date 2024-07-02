@@ -189,7 +189,6 @@
     "失败详情": "Failure details",
     "检测到代码库中以下流水线 YAML 文件同步失败，请处理后重试": "The following pipeline YAML files failed to synchronize in the code repository. Please handle and retry",
     "重试成功，正在同步": "Retry successful, synchronizing in progress",
-    "检测到默认分支仍存在ci 文件目录，关闭 PAC 模式后该目录下的文件修改将": "Detected that the 'ci' directory still exists in the default branch. After disabling PAC mode, modifications to files in this directory will",
     "避免项目成员从代码库查看时误认为 YAML 文件仍生效": "Avoid project members mistakenly thinking that YAML files are still effective when viewing from the code repository",
     "等待处理": "Waiting for processing",
     "前往代码库": "Go to code repository",

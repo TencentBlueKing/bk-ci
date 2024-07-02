@@ -172,7 +172,6 @@ class PipelineYamlFacadeService @Autowired constructor(
                 val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
                     externalId = externalId, scmType = scmType
                 ).data ?: run {
-                    logger.info("pipeline yaml trigger|repository not enable pac|$externalId|$scmType")
                     return
                 }
                 val setting = PacRepoSetting(repository = repository)

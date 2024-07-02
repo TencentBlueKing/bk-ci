@@ -140,7 +140,8 @@ class BuildArchiveGetTask : ITask() {
             projectId = buildVariables.projectId,
             pipelineId = pipelineId,
             buildNum = buildNo,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            buildId = buildVariables.buildId
         ).data ?: throw TaskExecuteException(
             errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
             errorType = ErrorType.USER,

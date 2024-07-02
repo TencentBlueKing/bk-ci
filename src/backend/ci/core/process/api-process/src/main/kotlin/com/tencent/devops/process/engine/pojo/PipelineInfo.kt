@@ -87,5 +87,7 @@ data class PipelineInfo(
     @get:Schema(title = "最新流水线版本状态（如有任何发布版本则为发布版本）", required = false)
     var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
     @get:Schema(title = "流水线权限", required = false)
-    var permissions: PipelinePermissions? = null
+    var permissions: PipelinePermissions? = null,
+    @get:Schema(title = "流水线被锁定，即禁用", required = false)
+    var locked: Boolean? = false
 )
