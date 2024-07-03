@@ -42,7 +42,6 @@ import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.ProjectNameFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
@@ -126,51 +125,28 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                 ).toJsonStr()
             )
             val projectRelativePath = WebhookUtils.getRelativePath(repository.url)
-            val pathFilter = object : WebhookFilter {
-                override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    return PathFilterFactory.newPathFilter(
-                        PathFilterConfig(
-                            pathFilterType = pathFilterType,
-                            pipelineId = pipelineId,
-                            triggerOnPath = event.files.map { it.file },
-                            excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
-                                WebhookUtils.getFullPath(
-                                    projectRelativePath = projectRelativePath,
-                                    relativeSubPath = path
-                                )
-                            },
-                            includedPaths = getIncludePaths(projectRelativePath),
-                            includedFailedReason = I18Variable(
-                                code = WebhookI18nConstants.PATH_NOT_MATCH,
-                                params = listOf()
-                            ).toJsonStr(),
-                            excludedFailedReason = I18Variable(
-                                code = WebhookI18nConstants.PATH_IGNORED,
-                                params = listOf()
-                            ).toJsonStr()
+            val pathFilter = PathFilterFactory.newPathFilter(
+                PathFilterConfig(
+                    pathFilterType = pathFilterType,
+                    pipelineId = pipelineId,
+                    triggerOnPath = event.getMatchPaths(),
+                    excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
+                        WebhookUtils.getFullPath(
+                            projectRelativePath = projectRelativePath,
+                            relativeSubPath = path
                         )
-                    ).doFilter(response) || event.needMatchPathsField {
-                        PathFilterFactory.newPathFilter(
-                            // 针对超大提交事件的兜底判断
-                            PathFilterConfig(
-                                pathFilterType = pathFilterType,
-                                pipelineId = pipelineId,
-                                triggerOnPath = event.paths,
-                                excludedPaths = emptyList(),
-                                includedPaths = getIncludePaths(projectRelativePath),
-                                includedFailedReason = I18Variable(
-                                    code = WebhookI18nConstants.PATH_NOT_MATCH,
-                                    params = listOf()
-                                ).toJsonStr(),
-                                excludedFailedReason = I18Variable(
-                                    code = WebhookI18nConstants.PATH_IGNORED,
-                                    params = listOf()
-                                ).toJsonStr()
-                            )
-                        ).doFilter(response)
-                    }
-                }
-            }
+                    },
+                    includedPaths = getIncludePaths(projectRelativePath),
+                    includedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.PATH_NOT_MATCH,
+                        params = listOf()
+                    ).toJsonStr(),
+                    excludedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.PATH_IGNORED,
+                        params = listOf()
+                    ).toJsonStr()
+                )
+            )
             return listOf(projectNameFilter, userFilter, pathFilter)
         }
     }
@@ -215,13 +191,12 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         return startParams
     }
 
-    fun SvnCommitEvent.needMatchPathsField(filter: () -> Boolean): Boolean {
-        // 超过上限则存在变更记录丢失
-        if ((totalFilesCount ?: 0) < FILES_COUNT_MAX) {
-            return false
-        }
+    fun SvnCommitEvent.getMatchPaths() = if ((totalFilesCount ?: 0) < FILES_COUNT_MAX) {
+        files.map { it.file }
+    } else {
+        // 超过上限则存在变更记录丢失, 用paths进行匹配
         logger.info("File change information exceeds the limit|$totalFilesCount")
-        return filter.invoke()
+        paths
     }
 
     companion object {
