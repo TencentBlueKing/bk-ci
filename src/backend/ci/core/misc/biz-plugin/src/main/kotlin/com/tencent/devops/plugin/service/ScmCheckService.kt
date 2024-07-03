@@ -177,7 +177,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                startTime = startedAt?.timestampmilli() ?: 0L,
+                startTime = completedAt?.timestampmilli() ?: 0L,
                 eventStatus = status,
                 triggerType = StartType.WEB_HOOK.name
             ),
