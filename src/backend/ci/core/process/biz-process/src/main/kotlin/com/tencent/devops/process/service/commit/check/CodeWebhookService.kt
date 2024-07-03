@@ -588,7 +588,7 @@ class CodeWebhookService @Autowired constructor(
                     repositoryConfig = repositoryConfig,
                     commitId = commitId,
                     context = name,
-                    targetBranch = null
+                    targetBranch = targetBranch
                 )
                 if (record == null) {
                     val result = scmCheckService.addGithubCheckRuns(
