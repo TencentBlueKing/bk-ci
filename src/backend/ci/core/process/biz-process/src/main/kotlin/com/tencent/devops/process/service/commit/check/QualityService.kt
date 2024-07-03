@@ -62,9 +62,9 @@ class QualityService @Autowired constructor(
         val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
-        val pipelineName = pipelineListFacadeService.getPipelineIdByNames(
+        val pipelineName = pipelineListFacadeService.getPipelineNameByIds(
             projectId = projectId,
-            pipelineNames = setOf(pipelineId),
+            pipelineIds = setOf(pipelineId),
             filterDelete = true
         )[pipelineId] ?: ""
 
