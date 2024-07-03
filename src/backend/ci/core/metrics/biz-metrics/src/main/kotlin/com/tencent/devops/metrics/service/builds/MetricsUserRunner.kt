@@ -28,6 +28,7 @@
 
 package com.tencent.devops.metrics.service.builds
 
+import com.tencent.devops.metrics.config.MetricsUserConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
@@ -35,10 +36,13 @@ import org.springframework.stereotype.Component
 
 @Component
 class MetricsUserRunner @Autowired constructor(
-    private val metricsUserService: MetricsUserService
+    private val metricsUserService: MetricsUserService,
+    private val metricsUserConfig: MetricsUserConfig
 ) : ApplicationRunner {
 
     override fun run(args: ApplicationArguments) {
-        metricsUserService.init()
+        if (metricsUserConfig.metricsUserEnabled) {
+            metricsUserService.init()
+        }
     }
 }

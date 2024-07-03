@@ -58,6 +58,7 @@ class MetricsUserService @Autowired constructor(
     @Qualifier("userPrometheusMeterRegistry")
     private val registry: PrometheusMeterRegistry,
     private val metricsCacheService: MetricsCacheService,
+    private val metricsUserConfig: MetricsUserConfig,
     private val client: Client
 ) {
     private val local = MapMaker()
@@ -180,7 +181,7 @@ class MetricsUserService @Autowired constructor(
     }
 
     fun execute(event: PipelineBuildStatusBroadCastEvent) {
-        if (!check(event)) return
+        if (!check(event) || !metricsUserConfig.metricsUserEnabled) return
         val date = MetricsUserPO(event)
         when (date.eventType) {
             CallBackEvent.BUILD_START -> {
