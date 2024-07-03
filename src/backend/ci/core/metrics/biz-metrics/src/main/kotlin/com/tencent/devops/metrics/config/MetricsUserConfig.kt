@@ -32,6 +32,7 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint
 import org.springframework.boot.actuate.metrics.export.prometheus.TextOutputFormat
@@ -48,6 +49,10 @@ class MetricsUserConfig {
         const val gaugeBuildStepKey = "pipeline_step_running_time_seconds"
         const val gaugeBuildStepStatusKey = "pipeline_step_status_info"
     }
+
+    @Value("\${metrics.user.localCacheMaxSize:100000}")
+    val localCacheMaxSize: Long = 100000L
+
 
     /*注册默认的 prometheusMeterRegistry*/
     @Bean

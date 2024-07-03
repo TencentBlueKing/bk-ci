@@ -31,6 +31,7 @@ package com.tencent.devops.metrics.service.builds
 import com.google.common.collect.MapMaker
 import com.google.common.hash.Hashing
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.metrics.config.MetricsUserConfig
 import com.tencent.devops.metrics.pojo.po.MetricsUserPO
 import groovy.util.ObservableMap
 import java.beans.PropertyChangeEvent
@@ -45,7 +46,8 @@ import org.springframework.stereotype.Service
 class MetricsCacheService @Autowired constructor(
     private val metricsHeartBeatService: MetricsHeartBeatService,
     @Qualifier("redisStringHashOperation")
-    private val redisHashOperation: RedisOperation
+    private val redisHashOperation: RedisOperation,
+    private val metricsUserConfig: MetricsUserConfig
 ) {
 
     private val cache = ObservableMap(
@@ -63,6 +65,7 @@ class MetricsCacheService @Autowired constructor(
     companion object {
         fun podKey(key: String) = "build_metrics:pod:$key"
         fun updateKey() = "build_metrics:update"
+        fun bufferKey() = "build_metrics:buffer"
         val logger: Logger = LoggerFactory.getLogger(MetricsCacheService::class.java)
     }
 
@@ -108,8 +111,7 @@ class MetricsCacheService @Autowired constructor(
         data: MetricsUserPO
     ): String {
         val key = hash("$buildId-$executeCount")
-        redisHashOperation.hset(podKey(metricsHeartBeatService.getPodName()), key, data.toString())
-        cache[key] = data
+        cacheStart(key, data)
         return key
     }
 
@@ -130,8 +132,7 @@ class MetricsCacheService @Autowired constructor(
         data: MetricsUserPO
     ): String {
         val key = hash("$buildId-$jobId-$executeCount")
-        redisHashOperation.hset(podKey(metricsHeartBeatService.getPodName()), key, data.toString())
-        cache[key] = data
+        cacheStart(key, data)
         return key
     }
 
@@ -153,8 +154,7 @@ class MetricsCacheService @Autowired constructor(
         data: MetricsUserPO
     ): String {
         val key = hash("$buildId-$stepId-$executeCount")
-        redisHashOperation.hset(podKey(metricsHeartBeatService.getPodName()), key, data.toString())
-        cache[key] = data
+        cacheStart(key, data)
         return key
     }
 
@@ -171,6 +171,22 @@ class MetricsCacheService @Autowired constructor(
 
     private fun hash(input: String): String {
         return Hashing.murmur3_128().hashBytes(input.toByteArray()).toString()
+    }
+
+    private fun cacheStart(key: String, data: MetricsUserPO) {
+        /*如果本地缓存已经达到上限，则推到redis来进行分发*/
+        if (cache.size > metricsUserConfig.localCacheMaxSize) {
+            logger.warn("METRICS_USER_WARN_LOG|local cache size exceeds maximum.")
+            // 避免buffer过大，超过2倍maxLocalCacheSize 丢弃多余数据
+            if (redisHashOperation.hsize(bufferKey()) > 2 * metricsUserConfig.localCacheMaxSize) {
+                logger.error("METRICS_USER_WARN_LOG|buffer is full.")
+                return
+            }
+            redisHashOperation.hset(bufferKey(), key, data.toString())
+            return
+        }
+        redisHashOperation.hset(podKey(metricsHeartBeatService.getPodName()), key, data.toString())
+        cache[key] = data
     }
 
     private fun cacheEnd(key: String, data: MetricsUserPO) {

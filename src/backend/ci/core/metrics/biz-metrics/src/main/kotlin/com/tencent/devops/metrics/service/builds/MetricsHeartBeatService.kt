@@ -30,7 +30,9 @@ package com.tencent.devops.metrics.service.builds
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.metrics.config.MetricsUserConfig
 import com.tencent.devops.metrics.pojo.po.MetricsUserPO
+import com.tencent.devops.metrics.service.builds.MetricsCacheService.Companion.podKey
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -43,7 +45,8 @@ import org.springframework.stereotype.Service
 @Service
 class MetricsHeartBeatService @Autowired constructor(
     @Qualifier("redisStringHashOperation")
-    private val redisHashOperation: RedisOperation
+    private val redisHashOperation: RedisOperation,
+    private val metricsUserConfig: MetricsUserConfig
 ) {
     private val podName: String = System.getenv("POD_NAME") ?: UUID.randomUUID().toString()
 
@@ -54,7 +57,7 @@ class MetricsHeartBeatService @Autowired constructor(
 
     fun init() {
         Thread(HeartBeatProcess(podName, redisHashOperation)).start()
-        Thread(HeartBeatManagerProcess(redisHashOperation)).start()
+        Thread(HeartBeatManagerProcess(redisHashOperation, metricsUserConfig.localCacheMaxSize)).start()
     }
 
     fun getPodName(): String = podName
@@ -65,7 +68,6 @@ class MetricsHeartBeatService @Autowired constructor(
     ) : Runnable {
 
         companion object {
-            private const val EXPIRED_SECOND = 60L
             const val SLEEP = 5000L
         }
 
@@ -89,7 +91,8 @@ class MetricsHeartBeatService @Autowired constructor(
     }
 
     private class HeartBeatManagerProcess(
-        private val redisOperation: RedisOperation
+        private val redisOperation: RedisOperation,
+        private val maxLocalCacheSize: Long
     ) : Runnable {
 
         companion object {
@@ -108,6 +111,7 @@ class MetricsHeartBeatService @Autowired constructor(
                         logger.info("HeartBeatManagerProcess get lock.")
                         heartBeatCheck()
                         invalidUpdateCheck()
+                        bufferCheck()
                     }
                 } catch (e: Throwable) {
                     logger.error("HeartBeatManagerProcess failed ${e.message}", e)
@@ -148,6 +152,55 @@ class MetricsHeartBeatService @Autowired constructor(
         }
 
         /**
+         * 检查缓冲区并将指标数据分配到可用的Pod。
+         *
+         * 判断是否需要检测buffer，如果buffer大小为0，则直接返回。
+         * 获取可用的Pod列表，如果列表为空，则直接返回。
+         * 检测可用空间并计算每个Pod的可用空间大小。
+         * 循环处理直到没有更多可用空间或者buffer大小小于一个单位。
+         * 选择可用空间最大的宿主Pod。
+         * 如果该Pod的可用空间减去一个单位的大小小于等于0，则表示该Pod已无法容纳更多指标，结束循环。
+         * 获取一个单位的指标数据进行处理。
+         * 将指标数据存储到目标Pod中。
+         * 删除buffer中对应的数据。
+         * 如果buffer大小小于一个单位，则结束循环。
+         * 刷新可用空间。
+         */
+        private fun bufferCheck() {
+            // 判断是否需要检测buffer
+            val buffSize = redisOperation.hsize(MetricsCacheService.bufferKey())
+            if (buffSize == 0L) return
+            // 获取可用pod
+            val livePods = redisOperation.hkeys(heartBeatKey()) ?: return
+            // 检测可用空间
+            val availablePodsSizeMap = livePods.associateWith { podKey ->
+                maxLocalCacheSize - redisOperation.hsize(podKey(podKey))
+            }.toMutableMap()
+            while (true) {
+                // 选择最佳宿主Pod
+                val targetPod = availablePodsSizeMap.maxByOrNull { it.value } ?: break
+                if (targetPod.value - CHUNKED <= 0) {
+                    // 目前已没有pod能容纳下更多指标了
+                    break
+                }
+                // 获取一个单位进行处理
+                val cursor = redisOperation.hscan(MetricsCacheService.bufferKey(), count = CHUNKED.toLong())
+                val loadedKeys = mutableListOf<String>()
+                while (cursor.hasNext()) {
+                    val keyValue = cursor.next()
+                    redisOperation.hset(podKey(targetPod.key), keyValue.key, keyValue.value)
+                    loadedKeys.add(keyValue.key)
+                }
+                // 删除buffer对应数据
+                redisOperation.hdelete(MetricsCacheService.bufferKey(), loadedKeys.toTypedArray())
+                // 再次检测buffer大小，如果小于一个单位则break
+                if (redisOperation.hsize(MetricsCacheService.bufferKey()) < CHUNKED) break
+                // 刷新可用空间
+                availablePodsSizeMap[targetPod.key] = redisOperation.hsize(podKey(targetPod.key))
+            }
+        }
+
+        /**
          * 检查心跳状态并处理失效的Pod。
          *
          * 该方法会从Redis中获取心跳信息，并根据最后在线时间判断Pod的状态。
@@ -177,7 +230,7 @@ class MetricsHeartBeatService @Autowired constructor(
             lose.forEach { losePod ->
                 if (afterLosePod(losePod, live)) {
                     redisOperation.hdelete(heartBeatKey(), losePod)
-                    redisOperation.delete(MetricsCacheService.podKey(losePod))
+                    redisOperation.delete(podKey(losePod))
                 }
             }
         }
@@ -199,20 +252,20 @@ class MetricsHeartBeatService @Autowired constructor(
          * @return 数据转移是否成功的布尔值。如果失效Pod的指标键列表为空，则返回true；否则返回false。
          */
         private fun afterLosePod(losePod: String, live: List<String>): Boolean {
-            val losePodKeys = redisOperation.hkeys(MetricsCacheService.podKey(losePod))?.ifEmpty { null } ?: return true
+            val losePodKeys = redisOperation.hkeys(podKey(losePod))?.ifEmpty { null } ?: return true
             // 分块处理，优化性能。
             losePodKeys.chunked(CHUNKED).forEachIndexed { index, keys ->
-                val losePodValues = redisOperation.hmGet(MetricsCacheService.podKey(losePod), keys)
+                val losePodValues = redisOperation.hmGet(podKey(losePod), keys)
                     ?: return@forEachIndexed
                 // 分配近似达到负载均衡的效果
                 redisOperation.hmset(
-                    MetricsCacheService.podKey(live[index % live.size]),
+                    podKey(live[index % live.size]),
                     keys.zip(losePodValues).toMap()
                 )
-                redisOperation.hdelete(MetricsCacheService.podKey(losePod), keys.toTypedArray())
+                redisOperation.hdelete(podKey(losePod), keys.toTypedArray())
             }
             // 双重校验数据一致性
-            val check = redisOperation.hkeys(MetricsCacheService.podKey(losePod))
+            val check = redisOperation.hkeys(podKey(losePod))
             return check.isNullOrEmpty()
         }
     }
