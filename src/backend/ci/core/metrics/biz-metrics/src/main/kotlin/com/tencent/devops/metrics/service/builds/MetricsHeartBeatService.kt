@@ -59,11 +59,13 @@ class MetricsHeartBeatService @Autowired constructor(
     fun podKey(key: String) = "build_metrics:${bkTag.getLocalTag()}:pod:$key"
     fun updateKey() = "build_metrics:${bkTag.getLocalTag()}:update"
     fun bufferKey() = "build_metrics:${bkTag.getLocalTag()}:buffer"
+    fun redisLockKey() = "metrics_heart_beat_manager_process_redis_lock_${bkTag.getLocalTag()}"
 
     fun init() {
         Thread(HeartBeatProcess(heartBeatKey(), podName, redisHashOperation)).start()
         Thread(
             HeartBeatManagerProcess(
+                redisLockKey = redisLockKey(),
                 updateKey = updateKey(),
                 bufferKey = bufferKey(),
                 heartBeatKey = heartBeatKey(),
@@ -106,6 +108,7 @@ class MetricsHeartBeatService @Autowired constructor(
     }
 
     private class HeartBeatManagerProcess(
+        private val redisLockKey: String,
         private val updateKey: String,
         private val bufferKey: String,
         private val heartBeatKey: String,
@@ -115,7 +118,6 @@ class MetricsHeartBeatService @Autowired constructor(
     ) : Runnable {
 
         companion object {
-            private const val REDIS_LOCK_KEY = "metrics_heart_beat_manager_process_redis_lock"
             const val SLEEP = 15000L
             const val CHUNKED = 100
         }
@@ -123,7 +125,7 @@ class MetricsHeartBeatService @Autowired constructor(
         override fun run() {
             logger.info("HeartBeatManagerProcess begin")
             while (true) {
-                val redisLock = RedisLock(redisOperation, REDIS_LOCK_KEY, 60L)
+                val redisLock = RedisLock(redisOperation, redisLockKey, 60L)
                 try {
                     val lockSuccess = redisLock.tryLock()
                     if (lockSuccess) {
