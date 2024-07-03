@@ -52,14 +52,14 @@
           >
             <template #prepend>
               <div v-if="isSelectAll" class="prepend">
-                已选择全量数据 {{ totalCount }} 条，
-                <span @click="handleClear">清除选择</span>
+                {{ t('已选择全量数据X条', [totalCount]) }}
+                <span @click="handleClear">{{ t('清除选择') }}</span>
               </div>
               <div v-else-if="selectList.length" class="prepend">
-                已选择 {{ selectList.length }} 条数据，
-                <span @click="handleSelectAllData"> 选择全量数据 {{ totalCount }} 条 </span> 
+                {{ t('已选择X条数据，', [selectList.length]) }}
+                <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [totalCount]) }}</span> 
                 &nbsp; | &nbsp;
-                <span @click="handleClear">清除选择</span> 
+                <span @click="handleClear">{{ t('清除选择') }}</span> 
               </div>
             </template>
           </bk-table>
@@ -72,56 +72,70 @@
       :theme="'primary'"
       :width="640"
       :title="t('批量重置')"
-      :is-loading="dialogLoading"
       @closed="dialogClose"
     >
       <div class="dialog">
-        <bk-tag radius="20px" class="tag">已选择{{ isSelectAll ? totalCount : selectList.length }}个{{ searchName }}</bk-tag>
+        <bk-tag radius="20px" class="tag">{{ t('已选择X个XX', [isSelectAll ? totalCount : selectList.length, searchName]) }}</bk-tag>
         <bk-form
           ref="formRef"
           :model="resetFormData"
+          class="reset-form"
         >
           <bk-form-item
             required
-            label="重置授权人"
+            :label="t('重置授权人')"
             property="name"
             labelWidth=""
           >
             <bk-input
               v-model="resetFormData.name"
-              placeholder="输入授权人，按回车进行校验"
+              :placeholder="t('输入授权人，按回车进行校验')"
               clearable
+              :disabled="dialogLoading"
               @enter="handleCheckReset()"
             />
           </bk-form-item>
         </bk-form>
   
-        <div v-if="isResetFailure" class="reset-failure">
-          <p>
-            <img src="@/css/svg/close.svg" class="close-icon">
-            以下授权重置失败，请<span>重新指定其他授权人</span>
-          </p>
+        <div v-if="isResetFailure" class="check-failure">
+          <div class="failed-tips">
+            <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
+            <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
+              <span style="color: #ef9b30; padding: 0 5px; font-weight: 700;">{{ failedCount }}</span>
+              <span style="color: #63656E; font-weight: 700;">{{ t('前往处理') }}</span>
+              <span style="color: #63656E; font-weight: 700;">{{ t('继续重置其余') }}</span>
+              <span style="color: #63656E; font-weight: 700;">{{ searchName }}</span>
+              <span style="color: #63656E; font-weight: 700;">{{ t('授权') }}</span>
+            </i18n-t>
+          </div>
           <bk-table
             ref="resetTable"
             :data="resetTableData"
             :border="['outer', 'row']"
             show-overflow-tooltip
           >
-            <bk-table-column label="代码库" prop="resourceName" />
-            <bk-table-column label="失败原因" prop="handoverFailedMessage" />
+            <bk-table-column :label="t('代码库')" prop="resourceName" />
+            <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage" />
           </bk-table>
+        </div>
+
+        <div v-else-if="isResetSuccess" class="check-success">
+          <Success class="check-success-icon"></Success>
+          <span>{{ t('授权校验通过') }}</span>
         </div>
       </div>
       <template #footer>
         <bk-button
           class="mr5"
           theme="primary"
+          :loading="dialogLoading"
           :disabled="disabledResetBtn"
           @click="confirmReset">
             {{ t('重置') }}
         </bk-button>
         <bk-button
-         @click="dialogClose">
+          :loading="dialogLoading"
+          @click="dialogClose">
           {{ t('取消') }}
         </bk-button>
       </template>
@@ -136,6 +150,7 @@ import { ref, onMounted, computed, h, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { convertTime } from '@/utils/util'
 import { Message } from 'bkui-vue';
+import { Success } from 'bkui-vue/lib/icon';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -152,6 +167,7 @@ const isLoading = ref(true);
 const showResetDialog = ref(false);
 const dialogLoading = ref(false);
 const isResetFailure = ref(false);
+const isResetSuccess = ref(false);
 const isScrollLoading = ref(false);
 const page = ref(1);
 const pageSize = ref(20);
@@ -236,15 +252,15 @@ const columns = ref([
     align: 'center'
   },
   {
-    label: "代码库",
+    label: searchName,
     field: "resourceName",
   },
   {
-    label: "授权人",
+    label: t('授权人'),
     field: "handoverFrom",
   },
   {
-    label: "授权时间",
+    label: t('授权时间'),
     field: "handoverTime",
     render ({ cell, row }) {
       return h(
@@ -261,17 +277,16 @@ const resetFormData = ref({
 })
 const filterQuery = computed(() => {
   return searchValue.value.reduce((query, item) => {
-      query[item.id] = item.values.map(value => value.id).join(',')
-      return query
+      query[item.id] = item.values?.map(value => value.id).join(',');
+      return query;
   }, {})
 })
-
 watch(() => searchValue.value, (val, oldVal) => {
   page.value = 1;
   isSelectAll.value = false;
   hasNext.value = true;
   getTableList();
-})
+});
 
 onMounted(() => {
   init();
@@ -289,7 +304,7 @@ function init () {
 /**
  * 获取列表数据
  */
-async function  getTableList () {
+async function getTableList () {
   if (!hasNext.value) return;
 
   if (page.value === 1) {
@@ -309,25 +324,25 @@ async function  getTableList () {
       ...filterQuery.value,
       greaterThanHandoverTime: dateTimeRange.value[0],
       lessThanHandoverTime: dateTimeRange.value[1],
-    })
-    tableData.value = [...tableData.value, ...res.records]
-    page.value += 1
-    hasNext.value = res.hasNext
-    totalCount.value = res.count
+    });
+    tableData.value = [...tableData.value, ...res.records];
+    page.value += 1;
+    hasNext.value = res.count > tableData.value.length;
+    totalCount.value = res.count;
 
-    isLoading.value = false
-    isScrollLoading.value = false
+    isLoading.value = false;
+    isScrollLoading.value = false;
   } catch (e) {
-    isLoading.value = false
-    isScrollLoading.value = false
-    console.error(e)
+    isLoading.value = false;
+    isScrollLoading.value = false;
+    console.error(e);
   }
 }
 /**
  * aside点击事件
  */
 function handleAsideClick(item, index) {
-  if (activeIndex.value === index) return
+  if (activeIndex.value === index) return;
   activeIndex.value = index;
   resourceType.value = item.resourceType;
   init();
@@ -339,11 +354,15 @@ function handleReset() {
   if(!selectList.value.length) {
     Message({
       theme: 'error',
-      message: '请先选择数据',
+      message: t('请先选择数据'),
     });
     return;
   }
   showResetDialog.value = true;
+  resetFormData.value.name = '';
+  setTimeout(() => {
+    formRef.value?.clearValidate();
+  });
 }
 /**
  * 当前页全选事件
@@ -384,6 +403,8 @@ function handleClear() {
 function dialogClose() {
   showResetDialog.value = false;
   isResetFailure.value = false;
+  isResetSuccess.value = false;
+  isSelectAll.value = false;
   resetFormData.value.name = '';
   formRef.value?.clearValidate();
 }
@@ -401,6 +422,7 @@ async function handleCheckReset () {
       resetTableData.value = res['FAILED'].splice(0,6)
     }
     isResetFailure.value = !!failedCount.value;
+    isResetSuccess.value = !failedCount.value;
 
     disabledResetBtn.value = failedCount.value === selectList.value.length;
   } catch (e) {
@@ -421,13 +443,17 @@ function confirmReset() {
 
       Message({
         theme: 'success',
-        message: failedCount.value ? t('授权已成功重置，有个授权重置失败，请重新选择授权人', failedCount.value) : t('授权已成功重置'),
+        message: t('授权已成功重置', [searchName.value]),
       });
 
       page.value = 1;
-      hasNext.value = true;
-      resetFormData.value.name = '';
       getTableList();
+      
+      isSelectAll.value = false;
+      hasNext.value = true;
+      disabledResetBtn.value = true;
+      isResetSuccess.value = false;
+      isResetFailure.value = false;
     } catch (e) {
       console.error(e)
     }
@@ -529,7 +555,6 @@ function handlePickSuccess () {
   }
 }
 .dialog{
-
   .tag{
     padding: 16px;
     font-size: 12px;
@@ -538,7 +563,7 @@ function handlePickSuccess () {
     margin-bottom: 16px;
   }
 
-  .reset-failure{
+  .check-failure{
     border-top: 1px solid #DCDEE5;
     margin-bottom: 25px;
 
@@ -551,12 +576,29 @@ function handlePickSuccess () {
         font-weight: 700;
       }
     }
-    
-    .close-icon{
-      width: 14px;
-      height: 14px;
-      vertical-align: middle;
+    .failed-tips {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
     }
+    .warning-icon {
+      font-size: 18px;
+      color: #ff9c01;
+      margin-right: 5px;
+    }
+  }
+  .check-success {
+    display: flex;
+    align-items: center;
+  }
+}
+.check-success-icon {
+  color: #2DCB56;
+  margin-right: 5px;
+}
+.reset-form {
+  .bk-form-item {
+    margin-bottom: 15px !important;
   }
 }
 </style>
