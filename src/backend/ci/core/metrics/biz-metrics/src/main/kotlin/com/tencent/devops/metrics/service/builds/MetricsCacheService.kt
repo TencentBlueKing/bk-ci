@@ -177,7 +177,9 @@ class MetricsCacheService @Autowired constructor(
         if (cache.size > metricsUserConfig.localCacheMaxSize) {
             logger.warn("METRICS_USER_WARN_LOG|local cache size exceeds maximum.")
             // 避免buffer过大，超过2倍maxLocalCacheSize 丢弃多余数据
-            if (redisHashOperation.hsize(metricsHeartBeatService.bufferKey()) > 2 * metricsUserConfig.localCacheMaxSize) {
+            if (redisHashOperation.hsize(metricsHeartBeatService.bufferKey()) >
+                2 * metricsUserConfig.localCacheMaxSize
+            ) {
                 logger.error("METRICS_USER_WARN_LOG|buffer is full.")
                 return
             }
