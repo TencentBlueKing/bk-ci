@@ -113,6 +113,28 @@ class ExpressionParserTest {
         println(ExpressionParser.evaluateByMap("variables.pipeline_id2", variables, true) ?: "variables.pipeline_id2")
     }
 
+    @DisplayName("测试流水线变量中对象的转换")
+    @Test
+    fun variablesObjectConvert() {
+        val variablesWithError = mapOf(
+            "matrix.power" to "{url=cn.com, project=ca}",
+            "matrix.power.url" to "cn.com",
+            "matrix.power.project" to "p-xxx"
+        )
+        val variables = mapOf(
+            "matrix.power" to "{ \"url\" : \"cn.com\", \"project\": \"ca\" }",
+            "matrix.power.url" to "cn.com",
+            "matrix.power.project" to "p-xxx"
+        )
+        Assertions.assertEquals(
+            "cn.com",
+            ExpressionParser.evaluateByMap("matrix.power.url", variables, true)
+        )
+        assertThrows<ExpressionParseException> {
+            ExpressionParser.evaluateByMap("matrix.power.url=='cn.com'", variablesWithError, true)
+        }
+    }
+
     @DisplayName("测试解析文字")
     @Test
     fun literalsTest() {

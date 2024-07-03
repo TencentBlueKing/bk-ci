@@ -1,5 +1,6 @@
 package com.tencent.devops.common.pipeline.matrix
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import io.swagger.v3.oas.annotations.media.Schema
@@ -62,7 +63,7 @@ data class MatrixConfig(
             // 临时方案：支持解析value中的一级对象访问
             val resultCase = mutableMapOf<String, String>()
             contextCase.forEach { (key, value) ->
-                resultCase["${MATRIX_CONTEXT_KEY_PREFIX}$key"] = value
+                resultCase["${MATRIX_CONTEXT_KEY_PREFIX}$key"] = JsonUtil.toJson(value, false)
                 kotlin.runCatching {
                     YamlUtil.to<Map<String, Any>>(value)
                 }.getOrNull()?.forEach { (pair, _) ->
