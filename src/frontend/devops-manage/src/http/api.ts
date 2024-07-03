@@ -274,4 +274,24 @@ export default {
     }).toString();
     return http.delete(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject?${query}`);
   },
+
+  /**
+   * 获取（代码库、流水线、部署节点）授权列表
+   */
+  getResourceAuthList (projectId: string, params: any) {
+    return http.post(`${USER_PERFIX}/auth/authorization/${projectId}/listResourceAuthorization`, params);
+  },
+
+  /**
+   * 重置授权（代码库、流水线、部署节点） 
+   */
+  resetAuthorization (projectId: string, params: any, resourceType: string) {
+    const serviceUrlMap = {
+      pipeline: `/ms/process/api/user/pipeline/authorization/${projectId}/resetPipelineAuthorization`,
+      env_node: `/ms/environment/api/user/environment/authorization/${projectId}/resetEnvNodeAuthorization`,
+      repertory: `/ms/repository/api/user/repository/authorization/${projectId}/resetRepositoryAuthorization`
+    }
+    const serviceUrl = serviceUrlMap[resourceType]
+    return http.post(`${serviceUrl}`, params)
+  }
 };

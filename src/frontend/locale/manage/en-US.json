@@ -138,5 +138,13 @@
     "重命名": "Rename",
     "项目类型": "Project Type",
     "创建项目申请单已撤回": "Creation of project application has been withdrawn",
-    "全员": "EveryOne"
+    "全员": "EveryOne",
+    "检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权": "The following {0} authorizations cannot be reset. Please {1} or {2} {3} {4}",
+    "前往处理": "navigate to handle them",
+    "继续重置其余": "continue to reset the remaining",
+    "授权": "authorizations",
+    "代码库": "Code Repository",
+    "部署节点": "Deployment Node",
+    "流水线": "Pipeline",
+    "授权已成功重置": "{0} authorization has been successfully reset"
 }
