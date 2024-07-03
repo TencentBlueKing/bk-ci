@@ -53,7 +53,6 @@ class MetricsUserConfig {
     @Value("\${metrics.user.localCacheMaxSize:100000}")
     val localCacheMaxSize: Long = 100000L
 
-
     /*注册默认的 prometheusMeterRegistry*/
     @Bean
     fun prometheusMeterRegistry(

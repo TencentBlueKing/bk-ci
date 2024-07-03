@@ -63,9 +63,6 @@ class MetricsCacheService @Autowired constructor(
     lateinit var updateFunction: (key: String, oldValue: MetricsUserPO, newValue: MetricsUserPO) -> Unit
 
     companion object {
-        fun podKey(key: String) = "build_metrics:pod:$key"
-        fun updateKey() = "build_metrics:update"
-        fun bufferKey() = "build_metrics:buffer"
         val logger: Logger = LoggerFactory.getLogger(MetricsCacheService::class.java)
     }
 
@@ -91,6 +88,8 @@ class MetricsCacheService @Autowired constructor(
         }
         Thread(
             CacheUpdateProcess(
+                updateKey = metricsHeartBeatService.updateKey(),
+                podKey = metricsHeartBeatService::podKey,
                 podHashKey = metricsHeartBeatService.getPodName(),
                 cache = cache,
                 checkStatusSet = checkStatusSet,
@@ -102,7 +101,7 @@ class MetricsCacheService @Autowired constructor(
 
     fun removeCache(key: String) {
         cache.remove(key)
-        redisHashOperation.hdelete(podKey(metricsHeartBeatService.getPodName()), key)
+        redisHashOperation.hdelete(metricsHeartBeatService.podKey(metricsHeartBeatService.getPodName()), key)
     }
 
     fun buildCacheStart(
@@ -178,14 +177,18 @@ class MetricsCacheService @Autowired constructor(
         if (cache.size > metricsUserConfig.localCacheMaxSize) {
             logger.warn("METRICS_USER_WARN_LOG|local cache size exceeds maximum.")
             // 避免buffer过大，超过2倍maxLocalCacheSize 丢弃多余数据
-            if (redisHashOperation.hsize(bufferKey()) > 2 * metricsUserConfig.localCacheMaxSize) {
+            if (redisHashOperation.hsize(metricsHeartBeatService.bufferKey()) > 2 * metricsUserConfig.localCacheMaxSize) {
                 logger.error("METRICS_USER_WARN_LOG|buffer is full.")
                 return
             }
-            redisHashOperation.hset(bufferKey(), key, data.toString())
+            redisHashOperation.hset(metricsHeartBeatService.bufferKey(), key, data.toString())
             return
         }
-        redisHashOperation.hset(podKey(metricsHeartBeatService.getPodName()), key, data.toString())
+        redisHashOperation.hset(
+            key = metricsHeartBeatService.podKey(metricsHeartBeatService.getPodName()),
+            hashKey = key,
+            values = data.toString()
+        )
         cache[key] = data
     }
 
@@ -193,13 +196,19 @@ class MetricsCacheService @Autowired constructor(
         val cacheKey = cache[key] as MetricsUserPO?
         if (cacheKey != null) {
             cache[key] = data.apply { startTime = cacheKey.startTime }
-            redisHashOperation.hset(podKey(metricsHeartBeatService.getPodName()), key, data.toString())
+            redisHashOperation.hset(
+                key = metricsHeartBeatService.podKey(metricsHeartBeatService.getPodName()),
+                hashKey = key,
+                values = data.toString()
+            )
         } else {
-            redisHashOperation.hset(updateKey(), key, data.toString())
+            redisHashOperation.hset(metricsHeartBeatService.updateKey(), key, data.toString())
         }
     }
 
     private class CacheUpdateProcess(
+        private val updateKey: String,
+        private val podKey: (String) -> String,
         private val podHashKey: String,
         private val cache: ObservableMap,
         private val checkStatusSet: MutableSet<String>,
@@ -235,13 +244,13 @@ class MetricsCacheService @Autowired constructor(
          * @return 无
          */
         private fun executeUpdate() {
-            val update = redisOperation.hkeys(updateKey()) ?: return
+            val update = redisOperation.hkeys(updateKey) ?: return
             val snapshot = cache.keys.toList()
             update.parallelStream().forEach { ready ->
                 if (ready in snapshot) {
                     // 如果key存在，说明状态维护在当前实例
-                    val load = MetricsUserPO.load(redisOperation.hget(updateKey(), ready)) ?: return@forEach
-                    redisOperation.hdelete(updateKey(), ready)
+                    val load = MetricsUserPO.load(redisOperation.hget(updateKey, ready)) ?: return@forEach
+                    redisOperation.hdelete(updateKey, ready)
                     cache[ready] = load.apply { startTime = (cache[ready] as MetricsUserPO?)?.startTime ?: startTime }
                 }
             }

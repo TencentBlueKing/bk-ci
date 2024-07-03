@@ -30,9 +30,9 @@ package com.tencent.devops.metrics.service.builds
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.metrics.config.MetricsUserConfig
 import com.tencent.devops.metrics.pojo.po.MetricsUserPO
-import com.tencent.devops.metrics.service.builds.MetricsCacheService.Companion.podKey
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -46,23 +46,38 @@ import org.springframework.stereotype.Service
 class MetricsHeartBeatService @Autowired constructor(
     @Qualifier("redisStringHashOperation")
     private val redisHashOperation: RedisOperation,
-    private val metricsUserConfig: MetricsUserConfig
+    private val metricsUserConfig: MetricsUserConfig,
+    private val bkTag: BkTag
 ) {
     private val podName: String = System.getenv("POD_NAME") ?: UUID.randomUUID().toString()
 
     companion object {
-        private fun heartBeatKey() = "build_metrics:heart_beat"
         private val logger = LoggerFactory.getLogger(MetricsHeartBeatService::class.java)
     }
 
+    fun heartBeatKey() = "build_metrics:${bkTag.getLocalTag()}:heart_beat"
+    fun podKey(key: String) = "build_metrics:${bkTag.getLocalTag()}:pod:$key"
+    fun updateKey() = "build_metrics:${bkTag.getLocalTag()}:update"
+    fun bufferKey() = "build_metrics:${bkTag.getLocalTag()}:buffer"
+
     fun init() {
-        Thread(HeartBeatProcess(podName, redisHashOperation)).start()
-        Thread(HeartBeatManagerProcess(redisHashOperation, metricsUserConfig.localCacheMaxSize)).start()
+        Thread(HeartBeatProcess(heartBeatKey(), podName, redisHashOperation)).start()
+        Thread(
+            HeartBeatManagerProcess(
+                updateKey = updateKey(),
+                bufferKey = bufferKey(),
+                heartBeatKey = heartBeatKey(),
+                podKey = ::podKey,
+                redisOperation = redisHashOperation,
+                maxLocalCacheSize = metricsUserConfig.localCacheMaxSize
+            )
+        ).start()
     }
 
     fun getPodName(): String = podName
 
     private class HeartBeatProcess(
+        private val heartBeatKey: String,
         private val podHashKey: String,
         private val redisOperation: RedisOperation
     ) : Runnable {
@@ -83,7 +98,7 @@ class MetricsHeartBeatService @Autowired constructor(
 
         private fun execute() {
             redisOperation.hset(
-                heartBeatKey(),
+                heartBeatKey,
                 podHashKey,
                 LocalDateTime.now().toInstant(ZoneOffset.ofHours(8)).epochSecond.toString()
             )
@@ -91,6 +106,10 @@ class MetricsHeartBeatService @Autowired constructor(
     }
 
     private class HeartBeatManagerProcess(
+        private val updateKey: String,
+        private val bufferKey: String,
+        private val heartBeatKey: String,
+        private val podKey: (String) -> String,
         private val redisOperation: RedisOperation,
         private val maxLocalCacheSize: Long
     ) : Runnable {
@@ -133,11 +152,11 @@ class MetricsHeartBeatService @Autowired constructor(
          * @return 无
          */
         private fun invalidUpdateCheck() {
-            val updateKey = redisOperation.hkeys(MetricsCacheService.updateKey())?.ifEmpty { null } ?: return
+            val updateKeys = redisOperation.hkeys(updateKey)?.ifEmpty { null } ?: return
             val limit = LocalDateTime.now().plusHours(-1)
             val needDelete = mutableListOf<String>()
-            updateKey.chunked(CHUNKED).forEach { keys ->
-                val updateValues = redisOperation.hmGet(MetricsCacheService.updateKey(), keys)
+            updateKeys.chunked(CHUNKED).forEach { keys ->
+                val updateValues = redisOperation.hmGet(updateKey, keys)
                     ?: return@forEach
                 keys.forEachIndexed { index, key ->
                     val load = MetricsUserPO.load(updateValues[index]) ?: return@forEachIndexed
@@ -147,7 +166,7 @@ class MetricsHeartBeatService @Autowired constructor(
                 }
             }
             if (needDelete.isNotEmpty()) {
-                redisOperation.hdelete(MetricsCacheService.updateKey(), needDelete.toTypedArray())
+                redisOperation.hdelete(updateKey, needDelete.toTypedArray())
             }
         }
 
@@ -168,10 +187,10 @@ class MetricsHeartBeatService @Autowired constructor(
          */
         private fun bufferCheck() {
             // 判断是否需要检测buffer
-            val buffSize = redisOperation.hsize(MetricsCacheService.bufferKey())
+            val buffSize = redisOperation.hsize(bufferKey)
             if (buffSize == 0L) return
             // 获取可用pod
-            val livePods = redisOperation.hkeys(heartBeatKey()) ?: return
+            val livePods = redisOperation.hkeys(heartBeatKey) ?: return
             // 检测可用空间
             val availablePodsSizeMap = livePods.associateWith { podKey ->
                 maxLocalCacheSize - redisOperation.hsize(podKey(podKey))
@@ -184,7 +203,7 @@ class MetricsHeartBeatService @Autowired constructor(
                     break
                 }
                 // 获取一个单位进行处理
-                val cursor = redisOperation.hscan(MetricsCacheService.bufferKey(), count = CHUNKED.toLong())
+                val cursor = redisOperation.hscan(bufferKey, count = CHUNKED.toLong())
                 val loadedKeys = mutableListOf<String>()
                 while (cursor.hasNext()) {
                     val keyValue = cursor.next()
@@ -192,9 +211,9 @@ class MetricsHeartBeatService @Autowired constructor(
                     loadedKeys.add(keyValue.key)
                 }
                 // 删除buffer对应数据
-                redisOperation.hdelete(MetricsCacheService.bufferKey(), loadedKeys.toTypedArray())
+                redisOperation.hdelete(bufferKey, loadedKeys.toTypedArray())
                 // 再次检测buffer大小，如果小于一个单位则break
-                if (redisOperation.hsize(MetricsCacheService.bufferKey()) < CHUNKED) break
+                if (redisOperation.hsize(bufferKey) < CHUNKED) break
                 // 刷新可用空间
                 availablePodsSizeMap[targetPod.key] = redisOperation.hsize(podKey(targetPod.key))
             }
@@ -212,7 +231,7 @@ class MetricsHeartBeatService @Autowired constructor(
          * @return 无
          */
         private fun heartBeatCheck() {
-            val heartBeats = redisOperation.hentries(heartBeatKey()) ?: return
+            val heartBeats = redisOperation.hentries(heartBeatKey) ?: return
             val limit = LocalDateTime.now().plusMinutes(-1).toInstant(ZoneOffset.ofHours(8)).epochSecond
             val lose = mutableListOf<String>()
             val live = mutableListOf<String>()
@@ -229,7 +248,7 @@ class MetricsHeartBeatService @Autowired constructor(
             }
             lose.forEach { losePod ->
                 if (afterLosePod(losePod, live)) {
-                    redisOperation.hdelete(heartBeatKey(), losePod)
+                    redisOperation.hdelete(heartBeatKey, losePod)
                     redisOperation.delete(podKey(losePod))
                 }
             }
