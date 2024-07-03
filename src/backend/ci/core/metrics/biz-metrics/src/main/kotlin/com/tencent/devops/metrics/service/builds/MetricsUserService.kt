@@ -400,8 +400,7 @@ class MetricsUserService @Autowired constructor(
             .tags(
                 "projectId", projectId,
                 "pipeline_id", pipelineId,
-                "build_id", buildId,
-                "bk_biz_id", metricsUserConfig.bkBizId
+                "build_id", buildId
             )
             .description(description)
             .register(registry)
@@ -421,8 +420,7 @@ class MetricsUserService @Autowired constructor(
                 "projectId", projectId,
                 "pipeline_id", pipelineId,
                 "build_id", buildId,
-                "status", status,
-                "bk_biz_id", metricsUserConfig.bkBizId
+                "status", status
             )
             .description(description)
             .register(registry)
@@ -444,8 +442,7 @@ class MetricsUserService @Autowired constructor(
                 "projectId", projectId,
                 "pipeline_id", pipelineId,
                 "build_id", buildId,
-                "job_id", jobId,
-                "bk_biz_id", metricsUserConfig.bkBizId
+                "job_id", jobId
             )
             .description(description)
             .register(registry)
@@ -471,8 +468,7 @@ class MetricsUserService @Autowired constructor(
                 "build_id", buildId,
                 "job_id", jobId,
                 "step_id", stepId,
-                "plugin_id", atomCode,
-                "bk_biz_id", metricsUserConfig.bkBizId
+                "plugin_id", atomCode
             )
             .description(description)
             .register(registry)
@@ -496,8 +492,7 @@ class MetricsUserService @Autowired constructor(
                 "build_id", buildId,
                 "job_id", jobId,
                 "step_id", stepId,
-                "status", status,
-                "bk_biz_id", metricsUserConfig.bkBizId
+                "status", status
             )
             .description(description)
             .register(registry)
