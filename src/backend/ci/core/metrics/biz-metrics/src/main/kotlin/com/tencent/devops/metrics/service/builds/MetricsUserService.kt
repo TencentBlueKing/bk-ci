@@ -58,7 +58,6 @@ class MetricsUserService @Autowired constructor(
     @Qualifier("userPrometheusMeterRegistry")
     private val registry: PrometheusMeterRegistry,
     private val metricsCacheService: MetricsCacheService,
-    private val metricsUserConfig: MetricsUserConfig,
     private val client: Client
 ) {
     private val local = MapMaker()
