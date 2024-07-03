@@ -293,6 +293,5 @@ export default {
     }
     const serviceUrl = serviceUrlMap[resourceType]
     return http.post(`${serviceUrl}`, params)
-      .then(res => res.data)
   }
 };

@@ -1,123 +1,141 @@
 <template>
-  <div class="permission-wrapper">
-    <ul class="aside">
-      <li
-        class="aside-item"
-        :class="activeIndex == index ? 'aside-active' : ''"
-        v-for="(item, index) in permissionList"
-        :key="index"
-        @click="handleAsideClick(item, index)"
-      >
-        <p>
-          {{ item.label }}
-        </p>
-      </li>
-    </ul>
-    <div class="content">
-      <div class="content-btn">
-        <bk-button @click="handleReset">{{ t('批量重置') }}</bk-button>
-        <bk-search-select
-          v-model="searchValue"
-          :data="searchData"
-          unique-select
-          max-height="32"
-          class="content-btn-search"
-          :placeholder="filterTips"
-          :key="searchName"
-        />
-      </div>
-      <bk-loading class="content-table" :loading="isLoading">
-        <bk-table
-          ref="refTable"
-          checked
-          :data="tableData"
-          :columns="columns"
-          height="100%"
-          show-overflow-tooltip
-          :scroll-loading="isScrollLoading"
-          @select-all="handleSelectAll"
-          @selection-change="handleSelectionChange"
-          @scroll-bottom="getTableList"
+  <div>
+    <div class="permission-wrapper">
+      <ul class="aside">
+        <li
+          class="aside-item"
+          :class="activeIndex == index ? 'aside-active' : ''"
+          v-for="(item, index) in permissionList"
+          :key="index"
+          @click="handleAsideClick(item, index)"
         >
-          <template #prepend>
-            <div v-if="isSelectAll" class="prepend">
-              已选择全量数据 {{ totalCount }} 条，
-              <span @click="handleClear">清除选择</span>
-            </div>
-            <div v-else-if="selectList.length" class="prepend">
-              已选择 {{ selectList.length }} 条数据，
-              <span @click="handleSelectAllData"> 选择全量数据 {{ totalCount }} 条 </span> 
-              &nbsp; | &nbsp;
-              <span @click="handleClear">清除选择</span> 
-            </div>
-          </template>
-        </bk-table>
-      </bk-loading> 
-    </div>
-  </div>
-  <bk-dialog
-    :is-show="showResetDialog"
-    :theme="'primary'"
-    :width="640"
-    :title="t('批量重置')"
-    :confirm-text="t('重置')"
-    :is-loading="dialogLoading"
-    @closed="dialogClose"
-    @confirm="confirmReset"
-  >
-    <div class="dialog">
-      <bk-tag radius="20px" class="tag">已选择{{ isSelectAll ? totalCount : selectList.length }}个代码库</bk-tag>
-      <bk-form
-        ref="formRef"
-        :model="resetFormData"
-      >
-        <bk-form-item
-          required
-          label="重置授权人"
-          property="name"
-          labelWidth=""
-        >
-          <bk-input
-            v-model="resetFormData.name"
-            placeholder="请输入"
-            clearable
-          />
-        </bk-form-item>
-      </bk-form>
-
-      <div v-if="isResetFailure" class="reset-failure">
-        <p>
-          <img src="@/css/svg/close.svg" class="close-icon">
-          以下授权重置失败，请<span>重新指定其他授权人</span>
-        </p>
-        <p class="reset-table-item">代码库授权</p>
-        <bk-table
-          ref="resetTable"
-          :data="resetTableData"
-          :border="['outer', 'row']"
-          show-overflow-tooltip
-        >
-          <bk-table-column label="代码库" prop="code" />
-          <bk-table-column label="失败原因" prop="reason" />
-          <bk-table-column label="授权人" prop="percent">
-            <template #default="{ row, index }">
-              <bk-input v-model="row.percent"></bk-input>
+          <p>
+            {{ item.label }}
+          </p>
+        </li>
+      </ul>
+      <div class="content">
+        <div class="content-btn">
+          <bk-button @click="handleReset">{{ t('批量重置') }}</bk-button>
+          <div class="filter-bar">
+            <bk-date-picker
+              v-model="dateTimeRange"
+              type="datetimerange"
+              @clear="handleClearDaterange"
+              @change="handleChangeDaterange"
+              @pick-success="handlePickSuccess"
+            />
+            <bk-search-select
+              v-model="searchValue"
+              :data="searchData"
+              unique-select
+              max-height="32"
+              class="content-btn-search"
+              :placeholder="filterTips"
+              :key="searchName"
+            />
+          </div>
+        </div>
+        <bk-loading class="content-table" :loading="isLoading">
+          <bk-table
+            ref="refTable"
+            checked
+            :data="tableData"
+            :columns="columns"
+            height="100%"
+            show-overflow-tooltip
+            :key="resourceType"
+            :scroll-loading="isScrollLoading"
+            @select-all="handleSelectAll"
+            @selection-change="handleSelectionChange"
+            @scroll-bottom="getTableList"
+          >
+            <template #prepend>
+              <div v-if="isSelectAll" class="prepend">
+                已选择全量数据 {{ totalCount }} 条，
+                <span @click="handleClear">清除选择</span>
+              </div>
+              <div v-else-if="selectList.length" class="prepend">
+                已选择 {{ selectList.length }} 条数据，
+                <span @click="handleSelectAllData"> 选择全量数据 {{ totalCount }} 条 </span> 
+                &nbsp; | &nbsp;
+                <span @click="handleClear">清除选择</span> 
+              </div>
             </template>
-          </bk-table-column>
-        </bk-table>
+          </bk-table>
+        </bk-loading> 
       </div>
     </div>
-  </bk-dialog>
+    <bk-dialog
+      :is-show="showResetDialog"
+      :key="resourceType"
+      :theme="'primary'"
+      :width="640"
+      :title="t('批量重置')"
+      :is-loading="dialogLoading"
+      @closed="dialogClose"
+    >
+      <div class="dialog">
+        <bk-tag radius="20px" class="tag">已选择{{ isSelectAll ? totalCount : selectList.length }}个{{ searchName }}</bk-tag>
+        <bk-form
+          ref="formRef"
+          :model="resetFormData"
+        >
+          <bk-form-item
+            required
+            label="重置授权人"
+            property="name"
+            labelWidth=""
+          >
+            <bk-input
+              v-model="resetFormData.name"
+              placeholder="输入授权人，按回车进行校验"
+              clearable
+              @enter="handleCheckReset()"
+            />
+          </bk-form-item>
+        </bk-form>
+  
+        <div v-if="isResetFailure" class="reset-failure">
+          <p>
+            <img src="@/css/svg/close.svg" class="close-icon">
+            以下授权重置失败，请<span>重新指定其他授权人</span>
+          </p>
+          <bk-table
+            ref="resetTable"
+            :data="resetTableData"
+            :border="['outer', 'row']"
+            show-overflow-tooltip
+          >
+            <bk-table-column label="代码库" prop="resourceName" />
+            <bk-table-column label="失败原因" prop="handoverFailedMessage" />
+          </bk-table>
+        </div>
+      </div>
+      <template #footer>
+        <bk-button
+          class="mr5"
+          theme="primary"
+          :disabled="disabledResetBtn"
+          @click="confirmReset">
+            {{ t('重置') }}
+        </bk-button>
+        <bk-button
+         @click="dialogClose">
+          {{ t('取消') }}
+        </bk-button>
+      </template>
+    </bk-dialog>
+  </div>
 </template>
 
 <script setup name="PermissionManage">
 import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-import { ref, onMounted, computed, h } from 'vue';
+import { ref, onMounted, computed, h, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { convertTime } from '@/utils/util'
 import { Message } from 'bkui-vue';
-import { renderType } from 'bkui-vue/lib/shared';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -142,6 +160,10 @@ const resourceType = ref('repertory');
 const hasNext = ref(true);
 const totalCount = ref(0);
 const isSelectAll = ref(false);  // 选择全量数据
+const dateTimeRange = ref(['', '']);
+const daterangeCache = ref(['', '']);
+const disabledResetBtn = ref(true);
+const failedCount = ref(0);
 const searchName = computed(() => {
   const nameMap = {
     'pipeline': t('流水线'),
@@ -149,20 +171,20 @@ const searchName = computed(() => {
     'repertory': t('代码库')
   }
   return nameMap[resourceType.value]
-})
+});
 const filterTips = computed(() => {
-  return searchData.value.map(item => item.name).join(' / ')
-})
+  return searchData.value.map(item => item.name).join(' / ');
+});
 
 const resetParams = computed(() => {
-  const resourceAuthorizationHandoverList = selectList.value.map(item => {
+  const resourceAuthorizationHandoverList = !isSelectAll.value && selectList.value.map(item => {
     return {
       projectCode: projectId.value,
       resourceType: resourceType.value,
       resourceName: item.resourceName,
       resourceCode: item.resourceCode,
       handoverFrom: item.handoverFrom,
-      handoverTo: resetFormData.value.name
+      handoverTo: resetFormData.value.name,
     }
   })
   const params = {
@@ -173,9 +195,12 @@ const resetParams = computed(() => {
     resourceAuthorizationHandoverList: isSelectAll.value ? [] : resourceAuthorizationHandoverList,
   }
   if (isSelectAll.value) {
-    params.handoverTo = resetFormData.value.name
+    params.handoverTo = resetFormData.value.name;
+    params.greaterThanHandoverTime = dateTimeRange.value[0];
+    params.lessThanHandoverTime = dateTimeRange.value[1];
+    Object.assign(params, filterQuery.value)
   }
-  return params
+  return params;
 })
 const permissionList = ref([
   {
@@ -197,11 +222,11 @@ const permissionList = ref([
 const searchData = ref([
   {
     name: searchName,
-    id: 1, 
+    id: 'resourceName', 
   },
   {
     name: t('授权人'),
-    id: 1,
+    id: 'handoverFrom',
   },
 ]);
 const columns = ref([
@@ -234,9 +259,22 @@ const columns = ref([
 const resetFormData = ref({
   name: ''
 })
+const filterQuery = computed(() => {
+  return searchValue.value.reduce((query, item) => {
+      query[item.id] = item.values.map(value => value.id).join(',')
+      return query
+  }, {})
+})
+
+watch(() => searchValue.value, (val, oldVal) => {
+  page.value = 1;
+  isSelectAll.value = false;
+  hasNext.value = true;
+  getTableList();
+})
 
 onMounted(() => {
-  getTableList();
+  init();
 });
 
 function init () {
@@ -245,6 +283,8 @@ function init () {
   hasNext.value = true;
   searchValue.value = [];
   isSelectAll.value = false;
+  selectList.value = [];
+  dateTimeRange.value = [];
 };
 /**
  * 获取列表数据
@@ -254,6 +294,9 @@ async function  getTableList () {
 
   if (page.value === 1) {
     isLoading.value = true;
+    refTable.value.clearSelection();
+    selectList.value = [];
+    tableData.value = [];
   } else {
     isScrollLoading.value = true;
   }
@@ -262,7 +305,10 @@ async function  getTableList () {
       page: page.value,
       pageSize: pageSize.value,
       projectCode: projectId.value,
-      resourceType: resourceType.value
+      resourceType: resourceType.value,
+      ...filterQuery.value,
+      greaterThanHandoverTime: dateTimeRange.value[0],
+      lessThanHandoverTime: dateTimeRange.value[1],
     })
     tableData.value = [...tableData.value, ...res.records]
     page.value += 1
@@ -285,7 +331,6 @@ function handleAsideClick(item, index) {
   activeIndex.value = index;
   resourceType.value = item.resourceType;
   init();
-  getTableList();
 };
 /**
  * 批量重置
@@ -303,14 +348,15 @@ function handleReset() {
 /**
  * 当前页全选事件
  */
-function handleSelectAll(val){
+function handleSelectAll(){
   selectList.value = refTable.value.getSelection();
 }
 /**
  * 多选事件
  * @param val
  */
-function handleSelectionChange(val) {
+function handleSelectionChange() {
+  isSelectAll.value = false;
   selectList.value = refTable.value.getSelection();
 };
 /**
@@ -338,6 +384,28 @@ function handleClear() {
 function dialogClose() {
   showResetDialog.value = false;
   isResetFailure.value = false;
+  resetFormData.value.name = '';
+  formRef.value?.clearValidate();
+}
+
+async function handleCheckReset () {
+  if (!resetFormData.value.name) return
+  try {
+    const res = await http.resetAuthorization(projectId.value, {
+      ...resetParams.value,
+      preCheck: true
+    }, resourceType.value)
+    
+    failedCount.value = res['FAILED']?.length || 0
+    if (failedCount) {
+      resetTableData.value = res['FAILED'].splice(0,6)
+    }
+    isResetFailure.value = !!failedCount.value;
+
+    disabledResetBtn.value = failedCount.value === selectList.value.length;
+  } catch (e) {
+    console.error(e)
+  }
 }
 /**
  * 弹窗提交
@@ -346,28 +414,42 @@ function confirmReset() {
   dialogLoading.value = true;
   formRef.value?.validate().then(async () => {
     try {
-      const res = await http.resetAuthorization(projectId.value, resetParams.value, resourceType.value)
-      console.log(res, 123123)
+      await http.resetAuthorization(projectId.value, resetParams.value, resourceType.value)
+      
+      dialogLoading.value = false;
+      showResetDialog.value = false;
+
+      Message({
+        theme: 'success',
+        message: failedCount.value ? t('授权已成功重置，有个授权重置失败，请重新选择授权人', failedCount.value) : t('授权已成功重置'),
+      });
+
+      page.value = 1;
+      hasNext.value = true;
+      resetFormData.value.name = '';
+      getTableList();
     } catch (e) {
       console.error(e)
     }
-    // setTimeout(()=>{
-    //   dialogLoading.value = false;
-    //   if(Math.random() > 0.5){
-    //     isResetFailure.value = true;
-    //   }else{
-    //     Message({
-    //       theme: 'success',
-    //       message: '代码库授权已成功重置',
-    //     });
-    //   }
-    // },1000)
-  }).catch(()=>{
-    
-  }).finally(()=>{
-    dialogLoading.value = false;
-    isResetFailure.value = false;
   })
+};
+
+function handleChangeDaterange (date) {
+  const startTime = new Date(date[0]).getTime() || ''
+  const endTime = new Date(date[1]).getTime() || ''
+  daterangeCache.value = [startTime, endTime]
+}
+function handleClearDaterange () {
+  dateTimeRange.value = ['', '']
+  page.value = 1;
+  hasNext.value = true;
+  getTableList();
+}
+function handlePickSuccess () {
+  dateTimeRange.value = daterangeCache.value;
+  page.value = 1;
+  hasNext.value = true;
+  getTableList();
 }
 
 </script>
@@ -414,6 +496,11 @@ function confirmReset() {
 
       &-search {
         width: 500px;
+        margin-left: 10px;
+      }
+      .filter-bar {
+        display: flex;
+        align-items: center;
       }
     }
 
