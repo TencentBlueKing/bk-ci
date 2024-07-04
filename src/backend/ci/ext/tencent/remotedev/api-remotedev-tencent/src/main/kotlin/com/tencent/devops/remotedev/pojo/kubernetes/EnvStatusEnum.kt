@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,8 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch:common-dispatch-kubernetes"))
-    api(project(":ext:tencent:dispatch:api-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
+package com.tencent.devops.remotedev.pojo.kubernetes
+
+/**
+ * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
+ */
+enum class EnvStatusEnum {
+    pending,
+    running,
+    succeeded,
+    failed,
+    stopped,
+    unknow,
+    deleted,
+    readyToRun,
+    creating,
+    error,
+    createFailed,
+    startFailed,
+    starting,
+    stopping,
+    stopFailed,
+    abnormalAfterReady,
+    abnormalAfterRunning,
+    restarting,
+    rebuilding
 }
