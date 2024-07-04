@@ -129,17 +129,28 @@ class PermissionService @Autowired constructor(
 
     fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
         kotlin.runCatching {
-            checkOwnerPermission(userId, workspaceName, projectId, WorkspaceOwnerType.PROJECT)
+            checkOwnerPermission(
+                userId = userId,
+                workspaceName = workspaceName,
+                projectId = projectId,
+                ownerType = WorkspaceOwnerType.PROJECT
+            )
         }.fold(
-            { return true }, { return false }
+            { return true }, {
+                logger.warn("not has Owner Permission|$userId, $workspaceName, $projectId")
+                return false
+            }
         )
     }
 
     fun hasViewerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
         kotlin.runCatching {
-            checkViewerPermission(userId, workspaceName, projectId)
+            checkViewerPermission(userId = userId, workspaceName = workspaceName, projectId = projectId)
         }.fold(
-            { return true }, { return false }
+            { return true }, {
+                logger.warn("not has viewer Permission|$userId, $workspaceName, $projectId")
+                return false
+            }
         )
     }
 
@@ -169,7 +180,7 @@ class PermissionService @Autowired constructor(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = checkTokenService.getSystemToken()!!,
+            token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
@@ -184,16 +195,27 @@ class PermissionService @Autowired constructor(
 
     fun hasUserManager(userId: String, projectId: String): Boolean {
         kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
-            { return true }, { return false }
+            { return true }, {
+                logger.warn("not has manager Permission|$userId, $projectId")
+                return false
+            }
         )
     }
 
     fun hasManagerOrOwnerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
-        return hasOwnerPermission(userId, projectId, workspaceName) || hasUserManager(userId, projectId)
+        return hasOwnerPermission(
+            userId = userId,
+            workspaceName = workspaceName,
+            projectId = projectId
+        ) || hasUserManager(userId, projectId)
     }
 
     fun hasManagerOrViewerPermission(userId: String, projectId: String, workspaceName: String): Boolean {
-        return hasViewerPermission(userId, projectId, workspaceName) || hasUserManager(userId, projectId)
+        return hasViewerPermission(
+            userId = userId,
+            workspaceName = workspaceName,
+            projectId = projectId
+        ) || hasUserManager(userId, projectId)
     }
 
     // 判断用户是否项目成员
