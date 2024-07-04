@@ -679,7 +679,7 @@ class QualityRuleCheckService @Autowired constructor(
             projectId = params["projectId"]!!,
             pipelineId = params["pipelineId"]!!,
             buildId = params["buildId"]!!,
-            keys = elementIdSet
+            keys = elementIdSet.map { CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID + "_" + it }.toSet()
         ).data
         params.putAll(variable ?: mapOf())
         val messageList = interceptRecordList.map {
