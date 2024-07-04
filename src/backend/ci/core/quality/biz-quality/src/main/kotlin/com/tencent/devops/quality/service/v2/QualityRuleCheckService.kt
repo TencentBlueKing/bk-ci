@@ -710,7 +710,8 @@ class QualityRuleCheckService @Autowired constructor(
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""
             val codeccAtomVar = "${CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID}_${record.controlPointElementId}"
-            logger.info("record: ${record.actualValue}, and element id is: ${record.controlPointElementId}, var is : $codeccAtomVar, and param is: ${params[codeccAtomVar]}")
+            logger.info("record: ${record.actualValue}, and element id is: ${record.controlPointElementId}, " +
+                    "var is : $codeccAtomVar, and param is: ${params[codeccAtomVar]}")
             val taskId = params[codeccAtomVar] ?: params[CodeccUtils.BK_CI_CODECC_TASK_ID]
             if (taskId.isNullOrBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
