@@ -325,7 +325,11 @@ class QualityRuleCheckService @Autowired constructor(
                 "buildId" to buildId,
                 CodeccUtils.BK_CI_CODECC_TASK_ID to
                         (runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
-            )
+            ).toMutableMap()
+
+            params.putAll(runtimeVariable?.filterKeys {
+                it.startsWith(CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID)
+            } ?: mapOf())
 
             // 指标详情链接支持占位符
             interceptRecordList.forEach { record ->
