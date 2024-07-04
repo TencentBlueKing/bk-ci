@@ -10,9 +10,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -23,6 +21,8 @@ import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
+import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -384,7 +385,7 @@ class ExpertSupportService @Autowired constructor(
         size: String
     ): ExpandDiskValidateResp? {
         // 暂时定死 mountType
-        val data = client.get(ServiceRemoteDevResource::class).expandDisk(
+        val data = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java).expandDisk(
             workspaceName = workspaceName,
             userId = userId,
             size = size,
@@ -409,7 +410,7 @@ class ExpertSupportService @Autowired constructor(
         operator: String
     ) {
         val taskInfo = kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getTaskInfoByUid(taskId).data!!
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getTaskInfoByUid(taskId).data!!
         }.onFailure {
             logger.warn("expandDiskCallback not find uid $taskId")
             return

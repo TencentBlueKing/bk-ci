@@ -33,8 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -42,11 +41,13 @@ import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.utils.CommonUtil
 import org.jooq.DSLContext
@@ -90,7 +91,7 @@ class WindowsResourceConfigService @Autowired constructor(
             }
         }
 
-        client.get(ServiceStartCloudResource::class).getResourceVm(
+        SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
             ResourceVmReq(null, null, quotaType.getInternal())
         ).data?.forEach { resource ->
             if (resource.zoneId in spec) return@forEach
@@ -151,7 +152,7 @@ class WindowsResourceConfigService @Autowired constructor(
         quotaType: QuotaType
     ): List<String> {
         val data = kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getResourceVm(
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
                 ResourceVmReq(
                     zoneId = windowsZone.zoneShortName.replace(Regex("\\d+"), ""),
                     machineType = windowsConfig.size,

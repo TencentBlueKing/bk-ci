@@ -38,14 +38,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -56,6 +55,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
@@ -321,12 +322,12 @@ class SleepControl @Autowired constructor(
             ) {
                 logger.info(
                     "ready to sleep when not login 7 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 readySleepWorkspace.add(
                     "project=${workspace.projectId}, ip=${workspace.hostName}," +
-                            " 原因=超过7天未登陆(最近登陆时间: ${logins[workspace.hostName]}" +
-                            " 早于检测时间 ${limitDay.format(formatter)})"
+                        " 原因=超过7天未登陆(最近登陆时间: ${logins[workspace.hostName]}" +
+                        " 早于检测时间 ${limitDay.format(formatter)})"
                 )
                 if (onSleep) {
                     workspaceOpHistoryDao.createWorkspaceHistory(
@@ -342,8 +343,8 @@ class SleepControl @Autowired constructor(
                         }.onSuccess {
                             logger.info(
                                 "sleep $it when not login 7 day " +
-                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
-                                        "${workspace.hostName}"
+                                    "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                    "${workspace.hostName}"
                             )
                             if (it) {
                                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
@@ -370,13 +371,13 @@ class SleepControl @Autowired constructor(
     fun afterStopWorkspace(event: RemoteDevUpdateEvent) {
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
-            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+            val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when (workspaceInfo.status) {
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }

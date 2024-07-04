@@ -35,9 +35,10 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
@@ -112,7 +113,7 @@ class ImageManageService @Autowired constructor(
 
     fun getVmStandardImages(): List<StandardVmImage> {
         return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class).getVmStandardImages().data
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getVmStandardImages().data
         }.onFailure {
             logger.warn("Error get vm stanadard image list: ${it.message}")
         }.getOrNull() ?: emptyList()
