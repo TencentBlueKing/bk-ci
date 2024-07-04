@@ -232,7 +232,8 @@ class CreateControl @Autowired constructor(
                 deptName = projectInfo.deptName,
                 centerName = projectInfo.centerName,
                 groupName = null,
-                projectName = projectInfo.projectName
+                projectName = projectInfo.projectName,
+                businessLineName = projectInfo.businessLineName
             ),
             ownerType = WorkspaceOwnerType.PROJECT
         )
