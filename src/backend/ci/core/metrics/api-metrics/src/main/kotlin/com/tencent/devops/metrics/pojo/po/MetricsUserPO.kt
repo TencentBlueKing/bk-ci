@@ -47,7 +47,7 @@ data class MetricsUserPO(
     var endTime: LocalDateTime?
 ) {
     constructor(event: PipelineBuildStatusBroadCastEvent) : this(
-        startTime = LocalDateTime.now(),
+        startTime = event.eventTime ?: LocalDateTime.now(),
         projectId = event.projectId,
         pipelineId = event.pipelineId,
         buildId = event.buildId,

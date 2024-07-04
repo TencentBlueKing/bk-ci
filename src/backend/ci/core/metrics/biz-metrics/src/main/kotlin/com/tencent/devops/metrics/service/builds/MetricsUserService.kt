@@ -185,6 +185,8 @@ class MetricsUserService @Autowired constructor(
     fun execute(event: PipelineBuildStatusBroadCastEvent) {
         if (!check(event) || !metricsUserConfig.metricsUserEnabled) return
         val date = MetricsUserPO(event)
+        /*防止mq队列堆积导致的延迟信息进入处理，如果生产超过5分钟就丢弃*/
+        if (date.startTime < LocalDateTime.now().plusMinutes(-5)) return
         when (date.eventType) {
             CallBackEvent.BUILD_START -> {
                 date.startTime = checkNotNull(event.eventTime)
