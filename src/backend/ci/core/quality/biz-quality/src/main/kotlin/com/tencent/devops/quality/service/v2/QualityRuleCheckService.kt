@@ -502,9 +502,9 @@ class QualityRuleCheckService @Autowired constructor(
 
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
 
-        val (indicatorsCopy, metadataListCopy) = handleWithMultiIndicator(indicators, metadataList)
+        val (indicatorsCopy, metadataListCopy, taskAtomMap) = handleWithMultiIndicator(indicators, metadataList)
 
-        logger.info("QUALITY|indicatorsCopy is:$indicatorsCopy")
+        logger.info("QUALITY|indicatorsCopy is:$indicatorsCopy, task atom map is: $taskAtomMap")
         // 遍历每个指标
         indicatorsCopy.forEach { indicator ->
             val thresholdType = indicator.thresholdType
@@ -656,7 +656,7 @@ class QualityRuleCheckService @Autowired constructor(
                         pass = checkResult,
                         detail = elementDetail,
                         logPrompt = logPrompt,
-                        controlPointElementId = filterMetadataList[0]?.taskId
+                        controlPointElementId = taskAtomMap[indicator.taskName]
                     )
                 )
             }
@@ -956,9 +956,10 @@ class QualityRuleCheckService @Autowired constructor(
     private fun handleWithMultiIndicator(
         indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>
-    ): Pair<List<QualityIndicator>, List<QualityHisMetadata>> {
+    ): Triple<List<QualityIndicator>, List<QualityHisMetadata>, Map<String, String>> {
         val indicatorsCopy = indicators.toMutableList()
         val metadataListCopy = metadataList.map { it.clone() }
+        val taskAtomMap = mutableMapOf<String, String>()
 
         // // CodeCC插件一个指标的元数据对应多条，先对多个CodeCC插件提前做标识
         val codeccMetaList = metadataListCopy.filter {
@@ -966,7 +967,10 @@ class QualityRuleCheckService @Autowired constructor(
         }.groupBy { it.taskId }
         if (codeccMetaList.size > 1) {
             codeccMetaList.values.forEachIndexed { index, codeccMeta ->
-                codeccMeta.map { it.taskName = "${it.taskName}+$index" }
+                codeccMeta.map {
+                    it.taskName = "${it.taskName}+$index"
+                    taskAtomMap.put(it.taskName, it.taskId)
+                }
             }
         }
 
@@ -1014,7 +1018,7 @@ class QualityRuleCheckService @Autowired constructor(
                 }
             }
         }
-        return Pair(indicatorsCopy, metadataListCopy)
+        return Triple(indicatorsCopy, metadataListCopy, taskAtomMap)
     }
 
     private fun handleScriptAndThirdPlugin(
