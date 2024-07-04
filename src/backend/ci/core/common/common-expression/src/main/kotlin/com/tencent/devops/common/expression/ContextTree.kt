@@ -1,5 +1,16 @@
 package com.tencent.devops.common.expression
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.devops.common.expression.context.ContextValueNode
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
+import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import java.util.LinkedList
 import java.util.Queue
 import java.util.Stack
@@ -76,25 +87,38 @@ class ContextTree(
         }
     }
 
+    /**
+     * 将树中节点转换为上下文并添加到输入参数
+     * @param context 被添加的上下文
+     * @param nameValue 被添加的命名
+     */
+    fun toContext(context: DictionaryContextData, nameValue: MutableList<NamedValueInfo>) {
+        nodes.forEach { (key, value) ->
+            context[key] = value.toContext()
+            nameValue.add(NamedValueInfo(key, ContextValueNode()))
+        }
+    }
+
     private fun toTree(tokens: List<String>, value: String): ContextTreeNode {
         if (tokens.size == 1) {
             return ContextTreeNode(tokens[0], value)
         }
-        val node = ContextTreeNode(tokens[0], null)
+        val rNode = ContextTreeNode(tokens[0], null)
         val valueTokens = tokens.subList(1, tokens.size)
+        var node = rNode
         valueTokens.forEachIndexed { idx, t ->
-            node.addChild(
-                ContextTreeNode(
-                    key = t,
-                    value = if (idx == valueTokens.lastIndex) {
-                        value
-                    } else {
-                        null
-                    }
-                )
+            val child = ContextTreeNode(
+                key = t,
+                value = if (idx == valueTokens.lastIndex) {
+                    value
+                } else {
+                    null
+                }
             )
+            node.addChild(child)
+            node = child
         }
-        return node
+        return rNode
     }
 }
 
@@ -132,7 +156,7 @@ open class ContextTreeNode(
             run(node)
 
             // 将子节点逆序入栈，保证先访问左边的子节点
-            for (i in node.children.size - 1 downTo 0) {
+            for (i in node.children.lastIndex downTo 0) {
                 stack.push(node.children[i])
             }
         }
@@ -153,5 +177,80 @@ open class ContextTreeNode(
                 queue.offer(child)
             }
         }
+    }
+
+    fun toContext(): PipelineContextData {
+        if (this.children.isEmpty()) {
+            return StringContextData(this.value ?: "")
+        }
+        if (value != null) {
+            this.checkJson()
+        }
+        val dict = DictionaryContextData()
+        this.children.forEach { child ->
+            dict[child.key] = child.toContext()
+        }
+        return dict
+    }
+
+    // 校验当前节点的值转换的JSON树是否与子节点结构和值相同
+    private fun checkJson() {
+        val jsonTree = try {
+            ObjectMapper().readTree(this.value)
+        } catch (e: Exception) {
+            // TODO: 校验 json 但是自己不是 json 值报错
+            throw RuntimeException()
+        }
+        jsonTree.equals(ObjectNodeComparator(), this.toJson())
+    }
+
+    private fun toJson(): JsonNode {
+        val jsonNodeFactory = JsonNodeFactory.instance
+        val rootObj = jacksonObjectMapper().createObjectNode()
+        if (this.children.isEmpty()) {
+            return jsonNodeFactory.textNode(this.value)
+        }
+        this.children.forEach { child ->
+            rootObj.putIfAbsent(child.key, child.toJson())
+        }
+        return rootObj
+    }
+}
+
+// 存在用户的 json 值为 array 但是翻译成了 map，这里我们认为是等价的
+class ObjectNodeComparator : Comparator<JsonNode> {
+    override fun compare(o1: JsonNode?, o2: JsonNode?): Int {
+        if (o1 == null && o2 == null) {
+            return 0
+        }
+        if (o1 == null || o2 == null) {
+            return 1
+        }
+        if (o1 == o2) {
+            return 0
+        }
+        if (o1 is ArrayNode && o2 is ObjectNode) {
+            if (o1.size() != o2.size()) {
+                return 1
+            }
+            o1.forEachIndexed { index, node ->
+                if (o2[index] == null || node != o2[index]) {
+                    return 1
+                }
+            }
+            return 0
+        }
+        if (o1 is ObjectNode && o2 is ArrayNode) {
+            if (o1.size() != o2.size()) {
+                return 1
+            }
+            o2.forEachIndexed { index, node ->
+                if (o1[index] == null || node != o1[index]) {
+                    return 1
+                }
+            }
+            return 0
+        }
+        return 1
     }
 }
