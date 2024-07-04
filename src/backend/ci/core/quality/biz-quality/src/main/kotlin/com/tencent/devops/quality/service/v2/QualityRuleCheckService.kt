@@ -258,7 +258,6 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun doCheckRules(buildCheckParams: BuildCheckParams, ruleList: List<QualityRule>): RuleCheckResult {
         with(buildCheckParams) {
-            logger.info("QUALITY|doCheckRules buildCheckParams is|$buildCheckParams")
             val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
                 if (buildCheckParams.taskId.isNotBlank() && rule.controlPoint.name != buildCheckParams.taskId) {
@@ -660,7 +659,6 @@ class QualityRuleCheckService @Autowired constructor(
                         controlPointElementId = taskAtomMap[indicator.taskName]
                     )
                 )
-                logger.info("interceptList add: $interceptList")
             }
         }
         return Triple(allCheckResult, interceptList, taskAtomMap.values.toSet())
@@ -675,6 +673,7 @@ class QualityRuleCheckService @Autowired constructor(
         params: MutableMap<String, String>,
         elementIdSet: Set<String>
     ): RuleCheckSingleResult {
+        // 为防止相同插件的并发问题，在生成问题链接时从var表查询taskId
         val variable = client.get(ServiceVarResource::class).getBuildVars(
             projectId = params["projectId"]!!,
             pipelineId = params["pipelineId"]!!,
@@ -682,7 +681,7 @@ class QualityRuleCheckService @Autowired constructor(
             keys = elementIdSet.map { CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID + "_" + it }.toSet()
         ).data
         params.putAll(variable ?: mapOf())
-        logger.info("generate result param is: $params")
+        logger.info("rule check result param is: $params")
         val messageList = interceptRecordList.map {
             val thresholdOperationName = ThresholdOperationUtil.getOperationName(it.operation)
 
@@ -719,10 +718,8 @@ class QualityRuleCheckService @Autowired constructor(
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""
-            val codeccAtomVar = "${CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID}_${record.controlPointElementId}"
-            logger.info("record: ${record.actualValue}, and element id is: ${record.controlPointElementId}, " +
-                    "var is : $codeccAtomVar, and param is: ${params[codeccAtomVar]}")
-            val taskId = params[codeccAtomVar] ?: params[CodeccUtils.BK_CI_CODECC_TASK_ID]
+            val codeccAtomKey = "${CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID}_${record.controlPointElementId}"
+            val taskId = params[codeccAtomKey] ?: params[CodeccUtils.BK_CI_CODECC_TASK_ID]
             if (taskId.isNullOrBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
