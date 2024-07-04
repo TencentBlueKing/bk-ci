@@ -3,26 +3,24 @@ package com.tencent.devops.environment.api.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
-import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
-import com.tencent.devops.environment.pojo.job.agentres.ApResult
-import com.tencent.devops.environment.pojo.job.agentres.CloudResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
-import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
-import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
+import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.jobresp.JobResult
+import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
+import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -266,28 +264,4 @@ interface TencentUserJobResource {
         @QueryParam("hostId")
         hostId: Long
     ): AgentResult<ObtainManualCommandResult>
-
-    @Operation(summary = "查询接入点信息列表")
-    @GET
-    @Path("/{projectId}/get_ap_list")
-    fun getApList(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): AgentResult<ApResult>
-
-    @Operation(summary = "查询管控区域信息列表")
-    @GET
-    @Path("/{projectId}/get_cloud_list")
-    fun getCloudList(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): AgentResult<CloudResult>
 }

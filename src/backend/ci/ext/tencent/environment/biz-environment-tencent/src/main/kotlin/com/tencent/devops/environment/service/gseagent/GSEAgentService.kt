@@ -49,8 +49,6 @@ import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentApInfo
-import com.tencent.devops.environment.pojo.job.agentres.AgentCloudInfo
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentObtainManualCommand
@@ -60,10 +58,6 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatu
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
-import com.tencent.devops.environment.pojo.job.agentres.ApInfo
-import com.tencent.devops.environment.pojo.job.agentres.ApResult
-import com.tencent.devops.environment.pojo.job.agentres.CloudInfo
-import com.tencent.devops.environment.pojo.job.agentres.CloudResult
 import com.tencent.devops.environment.pojo.job.agentres.Content
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
@@ -71,14 +65,11 @@ import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
 import com.tencent.devops.environment.pojo.job.agentres.Meta
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
-import com.tencent.devops.environment.pojo.job.agentres.PortConfig
-import com.tencent.devops.environment.pojo.job.agentres.Proxy
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
-import com.tencent.devops.environment.pojo.job.agentres.ServerInfo
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
@@ -622,7 +613,7 @@ data class GSEAgentService @Autowired constructor(
             data = if (agentObtainManualCommandRes.data?.solutions.isNullOrEmpty()) {
                 ObtainManualCommandResult(
                     status = agentObtainManualCommandRes.data?.status,
-                    networkPolicyDocLink= getNetworkPolicyDocLink()
+                    networkPolicyDocLink = getNetworkPolicyDocLink()
                 )
             } else {
                 agentObtainManualCommandRes.data?.solutions?.get(0)?.let {
@@ -641,7 +632,7 @@ data class GSEAgentService @Autowired constructor(
                                 }
                             )
                         },
-                        networkPolicyDocLink= getNetworkPolicyDocLink()
+                        networkPolicyDocLink = getNetworkPolicyDocLink()
                     )
                 }
             }
@@ -653,110 +644,4 @@ data class GSEAgentService @Autowired constructor(
         return nodeManProperties.networkPolicyDocLink
     }
 
-    fun getApList(): AgentResult<ApResult> {
-        NodeManApi.setNodemanOperationName(::getApList.name)
-        val agentGetApListRes: AgentOriginalResult<Array<AgentApInfo>> =
-            nodeManApi.executeGetRequest(
-                shortGetTag = false,
-                classOfT = Array<AgentApInfo>::class.java,
-                jobId = null,
-                null
-            )
-        val getApListRes: AgentResult<ApResult> = AgentResult(
-            code = agentGetApListRes.code,
-            result = agentGetApListRes.result,
-            message = agentGetApListRes.message,
-            errors = agentGetApListRes.errors,
-            data = ApResult(
-                apList = agentGetApListRes.data?.map {
-                    val apInfo = ApInfo(
-                        id = it.id,
-                        name = it.name,
-                        btFileServer = it.btFileServer.map { btFileServer ->
-                            ServerInfo(
-                                innerIp = btFileServer.innerIp,
-                                outerIp = btFileServer.outerIp,
-                                innerIpv6 = btFileServer.innerIpv6,
-                                outerIpv6 = btFileServer.outerIpv6
-                            )
-                        },
-                        dataServer = it.btFileServer.map { dataServer ->
-                            ServerInfo(
-                                innerIp = dataServer.innerIp,
-                                outerIp = dataServer.outerIp,
-                                innerIpv6 = dataServer.innerIpv6,
-                                outerIpv6 = dataServer.outerIpv6
-                            )
-                        },
-                        taskServer = it.btFileServer.map { taskServer ->
-                            ServerInfo(
-                                innerIp = taskServer.innerIp,
-                                outerIp = taskServer.outerIp,
-                                innerIpv6 = taskServer.innerIpv6,
-                                outerIpv6 = taskServer.outerIpv6
-                            )
-                        },
-                        portConfig = PortConfig(
-                            btPort = it.portConfig.btPort,
-                            ioPort = it.portConfig.ioPort,
-                            dataPort = it.portConfig.dataPort,
-                            procPort = it.portConfig.procPort,
-                            trunkPort = it.portConfig.trunkPort,
-                            btPortEnd = it.portConfig.btPortEnd,
-                            trackerPort = it.portConfig.trackerPort,
-                            btPortStart = it.portConfig.btPortStart,
-                            dbProxyPort = it.portConfig.dbProxyPort,
-                            fileSvrPort = it.portConfig.fileSvrPort,
-                            apiServerPort = it.portConfig.apiServerPort,
-                            agentThriftPort = it.portConfig.agentThriftPort,
-                            btsvrThriftPort = it.portConfig.btsvrThriftPort,
-                            dataPrometheusPort = it.portConfig.dataPrometheusPort
-                        )
-                    )
-                    apInfo
-                }
-            )
-        )
-        return getApListRes
-    }
-
-    fun getCloudList(): AgentResult<CloudResult> {
-        NodeManApi.setNodemanOperationName(::getCloudList.name)
-        val agentGetCloudListRes: AgentOriginalResult<Array<AgentCloudInfo>> =
-            nodeManApi.executeGetRequest(
-                shortGetTag = false,
-                classOfT = Array<AgentCloudInfo>::class.java,
-                jobId = null,
-                null
-            )
-        val getCloudListRes: AgentResult<CloudResult> = AgentResult(
-            code = agentGetCloudListRes.code,
-            result = agentGetCloudListRes.result,
-            message = agentGetCloudListRes.message,
-            errors = agentGetCloudListRes.errors,
-            data = CloudResult(
-                cloudList = agentGetCloudListRes.data?.map {
-                    CloudInfo(
-                        bkCloudId = it.bkCloudId,
-                        bkCloudName = it.bkCloudName,
-                        apId = it.apId,
-                        apName = it.apName,
-                        proxies = it.proxies?.map { proxy ->
-                            Proxy(
-                                bkCloudId = proxy.bkCloudId,
-                                innerIp = proxy.innerIp,
-                                innerIpv6 = proxy.innerIpv6,
-                                outerIp = proxy.outerIp,
-                                outerIpv6 = proxy.outerIpv6,
-                                bkHostId = proxy.bkHostId,
-                                bkAgentId = proxy.bkAgentId
-                            )
-                        }
-
-                    )
-                }
-            )
-        )
-        return getCloudListRes
-    }
 }

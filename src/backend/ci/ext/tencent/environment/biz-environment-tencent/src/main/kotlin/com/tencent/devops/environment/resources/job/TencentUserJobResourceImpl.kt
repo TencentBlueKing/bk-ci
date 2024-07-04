@@ -7,24 +7,22 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentUserJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
-import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
-import com.tencent.devops.environment.pojo.job.agentres.ApResult
-import com.tencent.devops.environment.pojo.job.agentres.CloudResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
-import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.ObtainManualCommandResult
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
-import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
+import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
@@ -169,22 +167,6 @@ class TencentUserJobResourceImpl @Autowired constructor(
     ): AgentResult<ObtainManualCommandResult> {
         checkParamBlank(userId, projectId)
         return GSEAgentService.obtainManualInstallationCommand(jobId, hostId)
-    }
-
-    override fun getApList(
-        userId: String,
-        projectId: String
-    ): AgentResult<ApResult> {
-        checkParamBlank(userId, projectId)
-        return GSEAgentService.getApList()
-    }
-
-    override fun getCloudList(
-        userId: String,
-        projectId: String
-    ): AgentResult<CloudResult> {
-        checkParamBlank(userId, projectId)
-        return GSEAgentService.getCloudList()
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
