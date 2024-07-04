@@ -26,6 +26,7 @@ import {
     PROCESS_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
     SET_CODELIBS_MUTATION,
+    SET_CODELIB_TYPES,
     SET_OAUTH_MUTATION,
     SET_TEMPLATE_CODELIB,
     SET_TICKETS_MUTATION,
@@ -38,6 +39,18 @@ import {
 const vue = new Vue()
 
 const actions = {
+    async fetchCodeTypeList ({
+        commit
+    }) {
+        try {
+            const result = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/config/`)
+            console.log(result)
+            commit(SET_CODELIB_TYPES, result)
+            return result.data
+        } catch (error) {
+            
+        }
+    },
     /**
      * 获取代码库列表
      *

@@ -213,5 +213,7 @@
     "websocketNotice": "websocket连接",
     "websocketInterupt": "检测到 websocket 连接中断，不能自动获取当前流水线运行状态。 是否重连？",
     "reconnect": "重新连接",
-    "启用中": "启用中"
+    "启用中": "启用中",
+    "undeployTitle": "{0}服务尚未部署完成",
+    "turboServiceDesc": "Turbo 编译加速服务基于分布式编译、缓存、容器技术，旨在为业务提供高效、稳定、便捷的加速服务，提升研发效率。如需使用此功能，需要部署加速服务。"
 }
