@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import sun.misc.Unsafe
 import sun.reflect.ReflectionFactory
 import java.lang.reflect.AccessibleObject
@@ -209,8 +211,11 @@ object EnumUtil {
         setEnumFieldValue(obj, "ordinal", ordinal)
 
         // 初始化自定义字段
-        if (additionalValues.isNotEmpty()) {
-            val enumFields = enumType.declaredFields.filter { !it.isSynthetic && !it.isEnumConstant }
+        val enumFields =
+            enumType.declaredFields.filterNot { it.isSynthetic || it.isEnumConstant || it.name == "Companion" }
+        if (additionalValues.size < enumFields.size) {
+            logger.warn("additionalValues size(${additionalValues.size}) less than enumField size(${enumFields.size})")
+        } else {
             enumFields.forEachIndexed { index, field ->
                 field.isAccessible = true
                 field.set(obj, additionalValues[index])
@@ -254,4 +259,5 @@ object EnumUtil {
     }
 
     val reflectionFactory: ReflectionFactory = ReflectionFactory.getReflectionFactory()
+    val logger: Logger = LoggerFactory.getLogger(EnumUtil::class.java)
 }
