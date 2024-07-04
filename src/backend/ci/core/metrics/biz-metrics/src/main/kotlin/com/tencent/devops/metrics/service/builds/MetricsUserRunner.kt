@@ -32,9 +32,11 @@ import com.tencent.devops.metrics.config.MetricsUserConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 @Component
+@ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
 class MetricsUserRunner @Autowired constructor(
     private val metricsUserService: MetricsUserService,
     private val metricsUserConfig: MetricsUserConfig
