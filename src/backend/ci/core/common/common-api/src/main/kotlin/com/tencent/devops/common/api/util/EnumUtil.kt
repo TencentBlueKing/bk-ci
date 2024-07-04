@@ -27,12 +27,10 @@
 
 package com.tencent.devops.common.api.util
 
-import org.apache.commons.lang3.reflect.MethodUtils
+import sun.misc.Unsafe
 import sun.reflect.ReflectionFactory
 import java.lang.reflect.AccessibleObject
-import java.lang.reflect.Constructor
 import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 import kotlin.reflect.full.isSubclassOf
 
 /**
@@ -98,14 +96,17 @@ object EnumUtil {
                 values.add(value)
             }
 
-            // 构建新枚举值
-            val newValue: T = makeEnum(
-                enumClass = enumType,
-                value = enumName,
-                ordinal = ordinal,
-                additionalTypes = additionalTypes.toTypedArray(),
-                additionalValues = additionalValues
-            )
+//            // 构建新枚举值
+//            val newValue: T = makeEnum(
+//                enumClass = enumType,
+//                value = enumName,
+//                ordinal = ordinal,
+//                additionalTypes = additionalTypes.toTypedArray(),
+//                additionalValues = additionalValues
+//            )
+
+            // 构造新的枚举实例
+            val newValue = makeEnum(enumType, enumName, ordinal, additionalValues)
 
             if (ordinal < previousValues.size) {
                 values[ordinal] = newValue
@@ -113,7 +114,7 @@ object EnumUtil {
                 values.add(newValue)
             }
 
-            setFailSafeFieldValue(field = valuesField, target = null, value = values.toTypedArray())
+            setStaticFieldValue(enumType, valuesField, values.toTypedArray())
 
             cleanEnumCache(enumType)
         } catch (e: Exception) {
@@ -124,29 +125,31 @@ object EnumUtil {
     }
 
     @Throws(NoSuchFieldException::class, IllegalAccessException::class)
-    fun setFailSafeFieldValue(field: Field, target: Any?, value: Any?) {
-        field.isAccessible = true
-        val modifiersField: Field = Field::class.java.getDeclaredField("modifiers")
-        modifiersField.isAccessible = true
-        var modifiers: Int = modifiersField.getInt(field)
-        modifiers = modifiers and Modifier.FINAL.inv()
-        modifiersField.setInt(field, modifiers)
+    inline fun <reified T : Any> setStaticFieldValue(
+        enumType: Class<T>,
+        valuesField: Field,
+        newValues: Any?
+    ) {
+        val unsafe = getUnsafe()
+        val arrayBaseOffset = unsafe.staticFieldOffset(valuesField)
+        unsafe.putObjectVolatile(enumType, arrayBaseOffset, newValues)
+    }
 
-        val fieldAccessor = MethodUtils.invokeMethod(field, true, "acquireFieldAccessor", false)
-        MethodUtils.invokeMethod(
-            fieldAccessor,
-            true,
-            "set",
-            arrayOf(target, value),
-            arrayOf<Class<*>>(Object::class.java, Object::class.java)
-        )
+    inline fun <reified T : Any> setObjectFieldValue(
+        enumType: Class<T>,
+        valuesField: Field,
+        newValues: Any?
+    ) {
+        val unsafe = getUnsafe()
+        val arrayBaseOffset = unsafe.objectFieldOffset(valuesField)
+        unsafe.putObjectVolatile(enumType, arrayBaseOffset, newValues)
     }
 
     @Throws(NoSuchFieldException::class, IllegalAccessException::class)
     inline fun <reified T : Any> blankField(enumClass: Class<T>, fieldName: String) {
         for (field in Class::class.java.declaredFields) {
             if (field.name.contains(fieldName)) {
-                setFailSafeFieldValue(field, enumClass, null)
+                setObjectFieldValue(enumClass, field, null)
                 break
             }
         }
@@ -156,31 +159,6 @@ object EnumUtil {
     inline fun <reified T : Any> cleanEnumCache(enumClass: Class<T>) {
         blankField(enumClass, "enumConstantDirectory") // OracleJDK & OpenJDK
         blankField(enumClass, "enumConstants") // IBM JDK
-    }
-
-    @Throws(NoSuchMethodException::class)
-    inline fun <reified T : Any> getConstructor(
-        enumClass: Class<T>,
-        additionalParameterTypes: Array<Class<out Any>>
-    ): Constructor<out Any>? {
-        val parameterTypes = arrayOfNulls<Class<*>?>(additionalParameterTypes.size + 2)
-        parameterTypes[0] = String::class.java // enum class first field: field name
-        parameterTypes[1] = Int::class.javaPrimitiveType // enum class second field: ordinal
-        System.arraycopy(additionalParameterTypes, 0, parameterTypes, 2, additionalParameterTypes.size)
-        enumClass.declaredConstructors.forEach { constructor ->
-            if (compareParameterType(constructor.parameterTypes, parameterTypes)) {
-                try {
-                    constructor.isAccessible = true
-                    return constructor
-                } catch (ignored: IllegalArgumentException) {
-                    // skip illegal argument try next one
-                }
-            }
-        }
-
-        val constructor = enumClass.getDeclaredConstructor(*parameterTypes)
-        constructor.isAccessible = true
-        return constructor
     }
 
     fun compareParameterType(constructorParameterType: Array<Class<*>>, parameterTypes: Array<Class<*>?>): Boolean {
@@ -201,22 +179,76 @@ object EnumUtil {
         return true
     }
 
-    @Throws(Exception::class)
+//    @Throws(Exception::class)
+//    inline fun <reified T : Any> makeEnum(
+//        enumClass: Class<T>,
+//        value: String,
+//        ordinal: Int,
+//        additionalTypes: Array<Class<out Any>>,
+//        additionalValues: Array<out Any>
+//    ): T {
+//        val params = arrayOfNulls<Any>(additionalValues.size + 2)
+//        params[0] = value
+//        params[1] = Integer.valueOf(ordinal)
+//        System.arraycopy(additionalValues, 0, params, 2, additionalValues.size)
+//        return enumClass.cast(getConstructorAccessor(enumClass, additionalTypes)!!.newInstance(params))
+//    }
+
+    // 创建新的枚举实例
     inline fun <reified T : Any> makeEnum(
-        enumClass: Class<T>,
-        value: String,
+        enumType: Class<T>,
+        name: String,
         ordinal: Int,
-        additionalTypes: Array<Class<out Any>>,
         additionalValues: Array<out Any>
     ): T {
-        val params = arrayOfNulls<Any>(additionalValues.size + 2)
-        params[0] = value
-        params[1] = Integer.valueOf(ordinal)
-        System.arraycopy(additionalValues, 0, params, 2, additionalValues.size)
-        val constructor = getConstructor(enumClass, additionalTypes)
-        val constructorAccessor = MethodUtils.invokeMethod(constructor, true, "acquireConstructorAccessor")
-        val instance = MethodUtils.invokeMethod(constructorAccessor, true, "newInstance", params)
-        return enumClass.cast(instance)
+        val unsafe = getUnsafe()
+        val obj = unsafe.allocateInstance(enumType)
+
+        // 使用Unsafe设置name、ordinal字段
+        setEnumFieldValue(obj, "name", name)
+        setEnumFieldValue(obj, "ordinal", ordinal)
+
+        // 初始化自定义字段
+        val enumFields = enumType.declaredFields.filter { !it.isSynthetic && !it.isEnumConstant }
+        enumFields.forEachIndexed { index, field ->
+            field.isAccessible = true
+            field.set(obj, additionalValues[index])
+        }
+
+        return obj as T
+    }
+
+    // 使用Unsafe设置枚举字段值
+    fun setEnumFieldValue(enumInstance: Any, fieldName: String, value: Any) {
+        try {
+            val field = enumInstance.javaClass.superclass.getDeclaredField(fieldName)
+            val unsafe = getUnsafe()
+            val offset = unsafe.objectFieldOffset(field)
+            when (value) {
+                is Int -> unsafe.putInt(enumInstance, offset, value)
+                is Long -> unsafe.putLong(enumInstance, offset, value)
+                is Short -> unsafe.putShort(enumInstance, offset, value)
+                is Byte -> unsafe.putByte(enumInstance, offset, value)
+                is Float -> unsafe.putFloat(enumInstance, offset, value)
+                is Double -> unsafe.putDouble(enumInstance, offset, value)
+                is Boolean -> unsafe.putBoolean(enumInstance, offset, value)
+                is Char -> unsafe.putChar(enumInstance, offset, value)
+                else -> unsafe.putObject(enumInstance, offset, value)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // 从 JVM 获取 Unsafe 实例
+    fun getUnsafe(): Unsafe {
+        return try {
+            val field = Unsafe::class.java.getDeclaredField("theUnsafe")
+            field.isAccessible = true
+            field.get(null) as Unsafe
+        } catch (e: Exception) {
+            throw RuntimeException("Unsafe not found", e)
+        }
     }
 
     val reflectionFactory: ReflectionFactory = ReflectionFactory.getReflectionFactory()
