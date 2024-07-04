@@ -46,6 +46,7 @@ import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -327,16 +328,12 @@ class QualityRuleCheckService @Autowired constructor(
                         (runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
             ).toMutableMap()
 
-            params.putAll(runtimeVariable?.filterKeys {
-                it.startsWith(CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID)
-            } ?: mapOf())
-
             // 指标详情链接支持占位符
             interceptRecordList.forEach { record ->
                 record.logPrompt = runtimeVariable?.let { EnvUtils.parseEnv(record.logPrompt, it) } ?: record.logPrompt
             }
 
-            resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
+            resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params, result.third))
             ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
 
             val status = if (interceptResult) {
@@ -491,7 +488,7 @@ class QualityRuleCheckService @Autowired constructor(
         indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>,
         ruleTaskSteps: List<QualityRule.RuleTask>?
-    ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
+    ): Triple<Boolean, MutableList<QualityRuleInterceptRecord>, Set<String>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
         var ruleTaskStepsCopy = ruleTaskSteps?.toMutableList()
@@ -666,7 +663,7 @@ class QualityRuleCheckService @Autowired constructor(
                 logger.info("interceptList add: $interceptList")
             }
         }
-        return Pair(allCheckResult, interceptList)
+        return Triple(allCheckResult, interceptList, taskAtomMap.values.toSet())
     }
 
     /**
@@ -675,8 +672,16 @@ class QualityRuleCheckService @Autowired constructor(
     private fun getRuleCheckSingleResult(
         ruleName: String,
         interceptRecordList: List<QualityRuleInterceptRecord>,
-        params: Map<String, String>
+        params: MutableMap<String, String>,
+        elementIdSet: Set<String>
     ): RuleCheckSingleResult {
+        val variable = client.get(ServiceVarResource::class).getBuildVars(
+            projectId = params["projectId"]!!,
+            pipelineId = params["pipelineId"]!!,
+            buildId = params["buildId"]!!,
+            keys = elementIdSet
+        ).data
+        params.putAll(variable ?: mapOf())
         val messageList = interceptRecordList.map {
             val thresholdOperationName = ThresholdOperationUtil.getOperationName(it.operation)
 
