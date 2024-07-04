@@ -182,6 +182,7 @@ class MetricsUserService @Autowired constructor(
         return buildMetricsCache.get(event.projectId) ?: false
     }
 
+    @Suppress("ComplexMethod")
     fun execute(event: PipelineBuildStatusBroadCastEvent) {
         if (!check(event) || !metricsUserConfig.metricsUserEnabled) return
         val date = MetricsUserPO(event)
