@@ -209,10 +209,12 @@ object EnumUtil {
         setEnumFieldValue(obj, "ordinal", ordinal)
 
         // 初始化自定义字段
-        val enumFields = enumType.declaredFields.filter { !it.isSynthetic && !it.isEnumConstant }
-        enumFields.forEachIndexed { index, field ->
-            field.isAccessible = true
-            field.set(obj, additionalValues[index])
+        if (additionalValues.isNotEmpty()) {
+            val enumFields = enumType.declaredFields.filter { !it.isSynthetic && !it.isEnumConstant }
+            enumFields.forEachIndexed { index, field ->
+                field.isAccessible = true
+                field.set(obj, additionalValues[index])
+            }
         }
 
         return obj as T
