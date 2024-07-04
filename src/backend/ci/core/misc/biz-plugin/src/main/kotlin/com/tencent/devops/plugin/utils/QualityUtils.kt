@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.plugin.constant.PluginMessageCode.BK_CI_PIPELINE
 import com.tencent.devops.process.api.service.ServicePipelineResource
