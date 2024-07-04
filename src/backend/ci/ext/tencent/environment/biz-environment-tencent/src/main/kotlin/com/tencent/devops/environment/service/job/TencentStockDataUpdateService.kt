@@ -63,6 +63,7 @@ import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbConditionValue
 import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbDataIns
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.environment.service.CmdbNodeService
+import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.utils.ComputeTimeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -466,11 +467,11 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun getNodeStatus(agentInfo: AgentVersion?): String {
-        return if (AgentService.AGENT_NOT_INSTALLED_TAG == agentInfo?.installedTag)
+        return if (GSEAgentService.AGENT_NOT_INSTALLED_TAG == agentInfo?.installedTag)
             NodeStatus.NOT_INSTALLED.name
-        else if (AgentService.AGENT_ABNORMAL_NODE_STATUS == agentInfo?.status)
+        else if (GSEAgentService.AGENT_ABNORMAL_NODE_STATUS == agentInfo?.status)
             NodeStatus.ABNORMAL.name
-        else if (AgentService.AGENT_NORMAL_NODE_STATUS == agentInfo?.status)
+        else if (GSEAgentService.AGENT_NORMAL_NODE_STATUS == agentInfo?.status)
             NodeStatus.NORMAL.name
         else
             NodeStatus.NOT_INSTALLED.name

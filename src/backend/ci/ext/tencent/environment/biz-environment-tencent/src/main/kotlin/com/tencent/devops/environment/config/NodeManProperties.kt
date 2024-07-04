@@ -25,19 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment
+package com.tencent.devops.environment.config
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import com.tencent.devops.environment.config.NodeManProperties
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.ComponentScan
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-@MicroService
-@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.environment")
-@EnableConfigurationProperties(NodeManProperties::class)
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
-}
+@ConfigurationProperties(prefix = "environment.nodeman")
+data class NodeManProperties(
+    /**
+     * 节点管理API根地址
+     */
+    val nodemanApiBaseUrl: String,
+    /**
+     * 节点管理安装Agent相关的网络策略文档链接
+     */
+    val networkPolicyDocLink: String? = null
+)

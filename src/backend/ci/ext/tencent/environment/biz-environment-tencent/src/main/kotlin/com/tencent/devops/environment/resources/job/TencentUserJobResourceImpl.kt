@@ -27,7 +27,7 @@ import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTask
 import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.service.job.AgentService
+import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response
 @RestResource
 class TencentUserJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
-    private val agentService: AgentService,
+    private val GSEAgentService: GSEAgentService,
     private val permissionManageService: PermissionManageService
 ) : TencentUserJobResource {
     override fun queryJobInstanceStatus(
@@ -109,7 +109,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         installAgentReq: String
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return agentService.installAgent(userId, keyFile, installAgentReq)
+        return GSEAgentService.installAgent(userId, keyFile, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(
@@ -119,7 +119,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskStatus(jobId, queryAgentTaskStatusReq)
+        return GSEAgentService.queryAgentTaskStatus(jobId, queryAgentTaskStatusReq)
     }
 
     override fun queryAgentTaskLog(
@@ -129,7 +129,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskLog(jobId, instanceId)
+        return GSEAgentService.queryAgentTaskLog(jobId, instanceId)
     }
 
     override fun terminalAgentInstallTask(
@@ -139,7 +139,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return agentService.terminalAgentInstallTask(jobId, terminateAgentInstallTaskReq)
+        return GSEAgentService.terminalAgentInstallTask(jobId, terminateAgentInstallTaskReq)
     }
 
     override fun retryAgentInstallTask(
@@ -149,7 +149,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return agentService.retryAgentInstallTask(jobId, retryAgentInstallTaskReq)
+        return GSEAgentService.retryAgentInstallTask(jobId, retryAgentInstallTaskReq)
     }
 
     override fun queryAgentInstallChannel(
@@ -158,7 +158,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult> {
         checkParamBlank(userId, projectId)
-        return agentService.queryAgentInstallChannel(withHidden)
+        return GSEAgentService.queryAgentInstallChannel(withHidden)
     }
 
     override fun obtainManualInstallationCommand(
@@ -168,7 +168,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         hostId: Long
     ): AgentResult<ObtainManualCommandResult> {
         checkParamBlank(userId, projectId)
-        return agentService.obtainManualInstallationCommand(jobId, hostId)
+        return GSEAgentService.obtainManualInstallationCommand(jobId, hostId)
     }
 
     override fun getApList(
@@ -176,7 +176,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         projectId: String
     ): AgentResult<ApResult> {
         checkParamBlank(userId, projectId)
-        return agentService.getApList()
+        return GSEAgentService.getApList()
     }
 
     override fun getCloudList(
@@ -184,7 +184,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
         projectId: String
     ): AgentResult<CloudResult> {
         checkParamBlank(userId, projectId)
-        return agentService.getCloudList()
+        return GSEAgentService.getCloudList()
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {

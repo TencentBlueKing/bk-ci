@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service.job
+package com.tencent.devops.environment.service.gseagent
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.config.NodeManProperties
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_AGENT_STATUS_QUERY_EMPTY_JOB_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -81,6 +82,10 @@ import com.tencent.devops.environment.pojo.job.agentres.ServerInfo
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.Step
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.service.job.ChooseAgentInstallChannelIdService
+import com.tencent.devops.environment.service.job.NodeManApi
+import com.tencent.devops.environment.service.job.QueryAgentStatusService
+import com.tencent.devops.environment.service.job.TencentQueryFromCCService
 import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
 import com.tencent.devops.environment.utils.FileUtils
 import org.jooq.DSLContext
@@ -96,8 +101,8 @@ import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 import javax.ws.rs.core.Response
 
-@Service("AgentService")
-data class AgentService @Autowired constructor(
+@Service("GSEAgentService")
+data class GSEAgentService @Autowired constructor(
     private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
     private val dslContext: DSLContext,
@@ -105,7 +110,8 @@ data class AgentService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val tencentQueryFromCCService: TencentQueryFromCCService,
     private val queryAgentStatusService: QueryAgentStatusService,
-    private val agentStatusUpdateThreadMetrics: AgentStatusUpdateThreadMetrics
+    private val agentStatusUpdateThreadMetrics: AgentStatusUpdateThreadMetrics,
+    private val nodeManProperties: NodeManProperties
 ) {
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
@@ -120,7 +126,7 @@ data class AgentService @Autowired constructor(
     final val keepAliveTime: Long = 0L
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AgentService::class.java)
+        private val logger = LoggerFactory.getLogger(GSEAgentService::class.java)
 
         private val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -615,7 +621,8 @@ data class AgentService @Autowired constructor(
             errors = agentObtainManualCommandRes.errors,
             data = if (agentObtainManualCommandRes.data?.solutions.isNullOrEmpty()) {
                 ObtainManualCommandResult(
-                    status = agentObtainManualCommandRes.data?.status
+                    status = agentObtainManualCommandRes.data?.status,
+                    networkPolicyDocLink= getNetworkPolicyDocLink()
                 )
             } else {
                 agentObtainManualCommandRes.data?.solutions?.get(0)?.let {
@@ -633,12 +640,17 @@ data class AgentService @Autowired constructor(
                                     )
                                 }
                             )
-                        }
+                        },
+                        networkPolicyDocLink= getNetworkPolicyDocLink()
                     )
                 }
             }
         )
         return obtainManualCommandRes
+    }
+
+    private fun getNetworkPolicyDocLink(): String? {
+        return nodeManProperties.networkPolicyDocLink
     }
 
     fun getApList(): AgentResult<ApResult> {

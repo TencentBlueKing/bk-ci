@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(title = "Job数据返回包装模型")
+@Schema(title = "节点管理数据返回包装模型")
 data class AgentResult<out T>(
     @get:Schema(title = "状态码", required = true)
     val code: Int,

@@ -37,5 +37,7 @@ data class ObtainManualCommandResult(
     @get:Schema(title = "安装步骤")
     val steps: List<Step>? = null,
     @get:Schema(title = "等待状态", description = "当调用install接口拿到job_id之后，需要等待一定时间才能拿到安装命令")
-    val status: String? = null
+    val status: String? = null,
+    @get:Schema(title = "网络策略文档链接")
+    val networkPolicyDocLink: String? = null
 )
