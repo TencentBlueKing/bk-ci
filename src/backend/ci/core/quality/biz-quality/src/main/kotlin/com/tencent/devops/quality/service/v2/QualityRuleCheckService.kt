@@ -674,12 +674,14 @@ class QualityRuleCheckService @Autowired constructor(
         elementIdSet: Set<String>
     ): RuleCheckSingleResult {
         // 为防止相同插件的并发问题，在生成问题链接时从var表查询taskId
-        val variable = client.get(ServiceVarResource::class).getBuildVars(
-            projectId = params["projectId"]!!,
-            pipelineId = params["pipelineId"]!!,
-            buildId = params["buildId"]!!,
-            keys = elementIdSet.map { CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID + "_" + it }.toSet()
-        ).data
+        val variable = if (elementIdSet.isNotEmpty()) {
+            client.get(ServiceVarResource::class).getBuildVars(
+                projectId = params["projectId"]!!,
+                pipelineId = params["pipelineId"]!!,
+                buildId = params["buildId"]!!,
+                keys = elementIdSet.map { CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID + "_" + it }.toSet()
+            ).data
+        } else null
         params.putAll(variable ?: mapOf())
         logger.info("rule check result param is: $params")
         val messageList = interceptRecordList.map {
