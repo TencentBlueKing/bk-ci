@@ -655,7 +655,8 @@ class QualityRuleCheckService @Autowired constructor(
                         actualValue = result,
                         pass = checkResult,
                         detail = elementDetail,
-                        logPrompt = logPrompt
+                        logPrompt = logPrompt,
+                        controlPointElementId = filterMetadataList[0]?.taskId
                     )
                 )
             }
@@ -707,8 +708,9 @@ class QualityRuleCheckService @Autowired constructor(
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""
-            val taskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID] ?: ""
-            if (taskId.isBlank()) {
+            val codeccAtomVar = "${CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID}_${record.controlPointElementId}"
+            val taskId = params[codeccAtomVar] ?: params[CodeccUtils.BK_CI_CODECC_TASK_ID]
+            if (taskId.isNullOrBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
