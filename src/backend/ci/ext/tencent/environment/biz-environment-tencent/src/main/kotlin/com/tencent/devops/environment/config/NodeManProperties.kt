@@ -28,7 +28,9 @@
 package com.tencent.devops.environment.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
+@ConstructorBinding
 @ConfigurationProperties(prefix = "environment.nodeman")
 data class NodeManProperties(
     /**
