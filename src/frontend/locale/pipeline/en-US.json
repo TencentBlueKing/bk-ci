@@ -1552,7 +1552,7 @@
     "tips5": "The proxy holder defaults to the pipeline creator; if you need to change it, please have the {0} reset it here.",
     "newOperator": "new person in charge",
     "pipelineExecPermission": "Pipeline Execution Permission",
-    "proxyHolderForExecutionPermissions": "Proxy Holder For Execution Permissions:",
+    "proxyHolderForExecutionPermissions": "Proxy Holder For Execution Permissions",
     "resetAuthorization": "Reset Authorization",
     "confirmReset": "Confirm reset authorization?",
     "yourPermission": "your permissions",
@@ -1561,6 +1561,6 @@
     "reset": "Reset",
     "cancel": "Cancel",
     "resetSuc": "Reset successful",
-    "authTime": "Authorization Time:" 
+    "authTime": "Authorization Time" 
 }
 }

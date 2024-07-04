@@ -28,29 +28,33 @@
         </section>
 
         <section class="mt30">
-            <div class="form-field">
-                <label class="bk-label">{{ $t('delegation.proxyHolderForExecutionPermissions') }}</label>
-                <span class="bk-form-content">{{ resourceAuthData.handoverFrom }}</span>
-                <span
-                    class="refresh-auth"
-                    v-perm="{
-                        hasPermission: hasResetPermission,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId,
-                            resourceType: 'pipeline',
-                            resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.MANAGE
-                        }
-                    }"
-                    @click="handleShowResetDialog">
-                    <logo class="mr10" name="refresh" size="14" />
-                    {{ $t('delegation.resetAuthorization') }}
-                </span>
-            </div>
-            <div class="form-field">
-                <label class="bk-label">{{ $t('delegation.authTime') }}</label>
-                <span class="bk-form-content">{{ convertTime(resourceAuthData.handoverTime) }}</span>
+            <div class="panel-content">
+                <p>
+                    <label class="block-row-label">{{ $t('delegation.proxyHolderForExecutionPermissions') }}</label>
+                    <span class="block-row-value">
+                        {{ resourceAuthData.handoverFrom }}
+                        <span
+                            class="refresh-auth"
+                            v-perm="{
+                                hasPermission: hasResetPermission,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipelineId,
+                                    action: RESOURCE_ACTION.MANAGE
+                                }
+                            }"
+                            @click="handleShowResetDialog">
+                            <logo class="mr10" name="refresh" size="14" />
+                            {{ $t('delegation.resetAuthorization') }}
+                        </span>
+                    </span>
+                </p>
+                <p>
+                    <label class="block-row-label">{{ $t('delegation.authTime') }}</label>
+                    <span class="block-row-value">{{ convertTime(resourceAuthData.handoverTime) }}</span>
+                </p>
             </div>
         </section>
         
@@ -228,17 +232,29 @@
             color: #FF9C01;
             font-weight: 700;
         }
-        .form-field {
-            display: flex;
+    }
+    .panel-content {
+        display: grid;
+        grid-gap: 16px;
+        grid-template-rows: minmax(18px, auto);
+        margin-bottom: 32px;
+        p {
+            display: grid;
+            grid-auto-flow: column;
+            grid-template-columns: 120px 1fr;
+            align-items: flex-start;
+            grid-gap: 10px;
             font-size: 12px;
-            padding-left: 5px;
-            margin-bottom: 10px;
-        }
-        .bk-form-content {
-            color: #313238;
+            color: #63656e;
+
+            >label {
+                text-align: right;
+                line-height: 18px;
+                color: #979BA5;
+            }
         }
         .refresh-auth {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             margin-left: 20px;
             cursor: pointer;

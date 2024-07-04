@@ -1553,7 +1553,7 @@
     "tips5": "代持人默认为流水线创建人；若需修改，请{0}在此重置。",
     "newOperator": "新负责人",
     "pipelineExecPermission": "流水线执行权限",
-    "proxyHolderForExecutionPermissions": "执行权限代持人：",
+    "proxyHolderForExecutionPermissions": "执行权限代持人",
     "resetAuthorization": "重置授权",
     "confirmReset": "确认重置授权？",
     "yourPermission": "你的权限",
@@ -1562,6 +1562,6 @@
     "reset": "重置",
     "cancel": "取消",
     "resetSuc": "重置成功",
-    "authTime": "授权时间：" 
+    "authTime": "授权时间" 
   }
 }
