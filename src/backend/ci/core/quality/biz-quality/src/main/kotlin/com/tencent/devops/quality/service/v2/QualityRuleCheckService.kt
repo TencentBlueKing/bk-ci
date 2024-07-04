@@ -659,6 +659,7 @@ class QualityRuleCheckService @Autowired constructor(
                         controlPointElementId = taskAtomMap[indicator.taskName]
                     )
                 )
+                logger.info("interceptList add: $interceptList")
             }
         }
         return Pair(allCheckResult, interceptList)
@@ -708,6 +709,7 @@ class QualityRuleCheckService @Autowired constructor(
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""
+            logger.info("record: ${record.value}, and element id is: ${record.controlPointElementId}")
             val codeccAtomVar = "${CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID}_${record.controlPointElementId}"
             val taskId = params[codeccAtomVar] ?: params[CodeccUtils.BK_CI_CODECC_TASK_ID]
             if (taskId.isNullOrBlank()) {
