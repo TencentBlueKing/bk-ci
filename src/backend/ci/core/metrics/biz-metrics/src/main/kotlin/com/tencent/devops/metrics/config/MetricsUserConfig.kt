@@ -27,17 +27,11 @@
 
 package com.tencent.devops.metrics.config
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.metrics.service.builds.MetricsCacheService
-import com.tencent.devops.metrics.service.builds.MetricsHeartBeatService
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint
