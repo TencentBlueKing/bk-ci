@@ -233,7 +233,7 @@ class CodeWebhookService @Autowired constructor(
                                     repositoryConfig = repositoryConfig,
                                     commitId = commitId,
                                     status = status,
-                                    startedAt = event.startTime ?: 0L,
+                                    startedAt = (event.startTime ?: 0L) / 1000, // 毫秒 -> 秒
                                     conclusion = conclusion,
                                     completedAt = LocalDateTime.now().timestamp(),
                                     userId = event.userId,
