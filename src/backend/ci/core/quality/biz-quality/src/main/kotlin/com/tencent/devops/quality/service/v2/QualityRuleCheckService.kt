@@ -682,6 +682,7 @@ class QualityRuleCheckService @Autowired constructor(
             keys = elementIdSet.map { CodeccUtils.BK_CI_CODECC_ATOM_ID_TO_TASK_ID + "_" + it }.toSet()
         ).data
         params.putAll(variable ?: mapOf())
+        logger.info("generate result param is: $params")
         val messageList = interceptRecordList.map {
             val thresholdOperationName = ThresholdOperationUtil.getOperationName(it.operation)
 
