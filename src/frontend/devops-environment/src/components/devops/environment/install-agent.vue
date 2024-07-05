@@ -10,7 +10,7 @@
             {{ $t('environment.installGseAgent') }}
             <span class="node-title">{{ $t('environment.nodeTitle') }}: {{ ip }}</span>
         </div>
-        <div slot="content" v-show="isEditing">
+        <div slot="content" v-show="isEditing" v-bkloading="{ isLoading, title: $t('environment.正在生成手动安装命令') }">
             <bk-alert type="info" :title="$t('environment.installAgentTips')" closable></bk-alert>
             <bk-form
                 ref="form"
@@ -18,7 +18,6 @@
                 :label-width="labelWidth"
                 :model="formData"
                 :rules="rules"
-                v-bkloading="{ isLoading, title: $t('environment.无法连通网络？') }"
             >
                 <bk-form-item
                     :label="$t('environment.nodeInfo.installMethod')"

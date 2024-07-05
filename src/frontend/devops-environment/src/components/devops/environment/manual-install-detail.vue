@@ -1,7 +1,9 @@
 <template>
     <bk-tab :active.sync="active" ext-cls="manual-install-tab" type="unborder-card" v-bkloading="{ isLoading: !commandStep.type }">
         <bk-tab-panel name="method" :label="$t('environment.安装方式')">
-            <a class="iwiki-link" :href="commandStep.networkPolicyDocLink" target="_blank"></a>
+            <a class="iwiki-link" :href="commandStep.networkPolicyDocLink" target="_blank">
+                {{ $t('environment.无法连通网络？') }}
+            </a>
             <div class="form-item">
                 <label class="label">
                     {{ $t('environment.安装方式：') }}
