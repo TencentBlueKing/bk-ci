@@ -53,7 +53,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.StageQualityRequest
@@ -85,7 +84,6 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildVariableService: BuildVariableService,
-    private val stageBuildDetailService: StageBuildDetailService,
     private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
@@ -472,7 +470,7 @@ class PipelineStageService @Autowired constructor(
                     ),
                     position = ControlPointPosition.BEFORE_POSITION,
                     stageId = stageId,
-                    notifyType = NotifyUtils.checkNotifyType(checkIn?.notifyType) ?: mutableSetOf(),
+                    notifyType = NotifyUtils.checkNotifyType(checkIn?.notifyType),
                     markdownContent = checkIn?.markdownContent
                 )
                 // #3400 FinishEvent会刷新HISTORY列表的Stage状态
@@ -567,6 +565,15 @@ class PipelineStageService @Autowired constructor(
         return pipelineBuildStageDao.getOneByStatus(dslContext, projectId, buildId, pendingStatusSet)
     }
 
+    fun getPendingStages(projectId: String, buildId: String): List<PipelineBuildStage> {
+        return pipelineBuildStageDao.listBuildStages(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            statusSet = pendingStatusSet
+        )
+    }
+
     fun pauseStageNotify(
         userId: String,
         triggerUserId: String,
@@ -608,7 +615,7 @@ class PipelineStageService @Autowired constructor(
                 ),
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageId = stage.stageId,
-                notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType) ?: mutableSetOf(),
+                notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
                 markdownContent = checkIn.markdownContent
             )
         )
