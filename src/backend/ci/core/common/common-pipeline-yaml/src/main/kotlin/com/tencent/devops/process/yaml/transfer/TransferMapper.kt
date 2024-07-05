@@ -130,11 +130,11 @@ object TransferMapper {
 
     private val resolver = object : Resolver() {
 
-        override fun addImplicitResolver(tag: Tag, regexp: Pattern, first: String?) {
+        override fun addImplicitResolver(tag: Tag, regexp: Pattern, first: String?, limit: Int) {
             if (tag == Tag.BOOL) {
-                super.addImplicitResolver(tag, BOOL_PATTERN, first)
+                super.addImplicitResolver(tag, BOOL_PATTERN, first, limit)
             } else {
-                super.addImplicitResolver(tag, regexp, first)
+                super.addImplicitResolver(tag, regexp, first, limit)
             }
         }
     }

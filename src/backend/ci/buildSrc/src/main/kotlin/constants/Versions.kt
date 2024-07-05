@@ -12,7 +12,7 @@ object Versions {
     const val JsonSchema = "2.2.6"
     const val Jasypt = "3.0.3"
     const val Swagger = "2.2.16"
-    const val orgJson = "20210307"
+    const val orgJson = "20240303"
     const val JsonLib = "2.4"
     const val CronUtils = "9.1.6"
     const val Thumbnailator = "0.4.8"
