@@ -30,6 +30,7 @@ package com.tencent.devops.common.expression.expression.tokens
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.sdk.ExpressionUtility
+import org.bouncycastle.asn1.x500.style.RFC4519Style.c
 
 @Suppress("ComplexCondition", "ComplexMethod", "LongMethod")
 class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateInfo: SubNameValueEvaluateInfo? = null) {
@@ -40,7 +41,10 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
     // 当前遍历到的字符
     private var mIndex: Int = 0
 
-    // 上一个便利的 token
+    // 上上一个遍历的 token
+    private var mLastLastToken: Token? = null
+
+    // 上一个遍历的 token
     private var mLastToken: Token? = null
 
     fun tryGetNextToken(): Pair<Token?, Boolean> {
@@ -114,12 +118,12 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
                         mLastToken?.kind == TokenKind.StartParameters || // "(" function call
                         mLastToken?.kind == TokenKind.LogicalOperator
                     ) // "!", "==", etc
-                        {
-                            rToken = readNumberToken()
-                        }
+                    {
+                        rToken = readNumberToken()
+                    }
                     // "."
                     else {
-                        rToken = createToken(TokenKind.Dereference, c, mIndex++)
+                        rToken = readDereferenceToken()
                     }
                 } else if (c == '-' || c == '+' || (c in '0'..'9')) {
                     rToken = readNumberToken()
@@ -132,23 +136,47 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
             }
         }
 
+        mLastLastToken = mLastToken
         mLastToken = rToken
         return Pair(rToken, true)
     }
 
     private fun readNumberToken(): Token {
         val startIndex = mIndex
-        do {
+        var numberIndex = false
+        while (true) {
             mIndex++
-        } while (mIndex < expression.length && (!testTokenBoundary(expression[mIndex]) || expression[mIndex] == '.'))
+            if (mIndex >= expression.length) {
+                if (mLastToken?.kind == TokenKind.Dereference) {
+                    numberIndex = true
+                }
+                break
+            }
+            if (testTokenBoundary(expression[mIndex]) && expression[mIndex] != '.') {
+                break
+            }
+            // 兼容下 xxx.number.xxx, number.xxx 的情况
+            if (mLastToken?.kind == TokenKind.Dereference && expression[mIndex] == '.') {
+                numberIndex = true
+                break
+            }
+        }
         val length = mIndex - startIndex
         val str = expression.substring(startIndex, startIndex + length)
         val d = ExpressionUtility.parseNumber(str)
         return if (d.isNaN()) {
             createToken(TokenKind.Unexpected, str, startIndex)
         } else {
-            createToken(TokenKind.Number, str, startIndex, d)
+            createToken(TokenKind.Number, str, startIndex, d, numberIndex)
         }
+    }
+
+    private fun readDereferenceToken(): Token {
+        // 兼容下 xxx.number.xxx 的情况
+        if (mLastToken?.kind == TokenKind.Number && mLastLastToken?.kind == TokenKind.Dereference) {
+            return createToken(TokenKind.Dereference, expression[mIndex], mIndex++, null, true)
+        }
+        return createToken(TokenKind.Dereference, expression[mIndex], mIndex++)
     }
 
     private fun readKeywordToken(): Token {
@@ -189,9 +217,9 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
 
             // Function
             if (tempIndex < expression.length && expression[tempIndex] == ExpressionConstants.START_GROUP) // "("
-                {
-                    createToken(TokenKind.Function, str, startIndex)
-                } else {
+            {
+                createToken(TokenKind.Function, str, startIndex)
+            } else {
                 createToken(TokenKind.NamedValue, str, startIndex)
             }
         } else {
@@ -314,211 +342,218 @@ class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateIn
         kind: TokenKind,
         rawValue: Char,
         index: Int,
-        parsedValue: Any? = null
+        parsedValue: Any? = null,
+        // 很确定当前生成的 token 是合法跳过校验
+        skipCheck: Boolean = false
     ): Token {
-        return createToken(kind, rawValue.toString(), index, parsedValue)
+        return createToken(kind, rawValue.toString(), index, parsedValue, skipCheck)
     }
 
     private fun createToken(
         kind: TokenKind,
         rawValue: String,
         index: Int,
-        parsedValue: Any? = null
+        parsedValue: Any? = null,
+        // 很确定当前生成的 token 是合法跳过校验
+        skipCheck: Boolean = false
     ): Token {
         // 根据上一个token判断当前token是否合法
         var legal = false
-        when (kind) {
-            // "(" logical grouping
-            TokenKind.StartGroup -> {
-                // 是第一个还是在“，”或“（”或“[”或逻辑运算符之后
-                legal = checkLastToken(
-                    null,
-                    TokenKind.Separator,
-                    TokenKind.StartGroup,
-                    TokenKind.StartParameters,
-                    TokenKind.StartIndex,
-                    TokenKind.LogicalOperator
-                )
-            }
-            // "["
-            TokenKind.StartIndex -> {
-                // Follows ")", "]", "*", a property name, or a named-value
-                legal = checkLastToken(
-                    TokenKind.EndGroup,
-                    TokenKind.EndParameters,
-                    TokenKind.EndIndex,
-                    TokenKind.Wildcard,
-                    TokenKind.PropertyName,
-                    TokenKind.NamedValue
-                )
-            }
-            // "(" function call
-            TokenKind.StartParameters -> {
-                // Follows a function
-                legal = checkLastToken(TokenKind.Function)
-            }
-            // ")" logical grouping
-            TokenKind.EndGroup -> {
-                // Follows ")", "]", "*", a literal, a property name, or a named-value
-                legal = checkLastToken(
-                    TokenKind.EndGroup,
-                    TokenKind.EndParameters,
-                    TokenKind.EndIndex,
-                    TokenKind.Wildcard,
-                    TokenKind.Null,
-                    TokenKind.Boolean,
-                    TokenKind.Number,
-                    TokenKind.String,
-                    TokenKind.PropertyName,
-                    TokenKind.NamedValue
-                )
-            }
-            // "]"
-            TokenKind.EndIndex -> {
-                // Follows ")", "]", "*", a literal, a property name, or a named-value
-                legal = checkLastToken(
-                    TokenKind.EndGroup,
-                    TokenKind.EndParameters,
-                    TokenKind.EndIndex,
-                    TokenKind.Wildcard,
-                    TokenKind.Null,
-                    TokenKind.Boolean,
-                    TokenKind.Number,
-                    TokenKind.String,
-                    TokenKind.PropertyName,
-                    TokenKind.NamedValue
-                )
-            }
-            // ")" function call
-            TokenKind.EndParameters -> {
-                // Follows "(" function call, ")", "]", "*", a literal, a property name, or a named-value
-                legal = checkLastToken(
-                    TokenKind.StartParameters,
-                    TokenKind.EndGroup,
-                    TokenKind.EndParameters,
-                    TokenKind.EndIndex,
-                    TokenKind.Wildcard,
-                    TokenKind.Null,
-                    TokenKind.Boolean,
-                    TokenKind.Number,
-                    TokenKind.String,
-                    TokenKind.PropertyName,
-                    TokenKind.NamedValue
-                )
-            }
-            // ","
-            TokenKind.Separator -> {
-                // Follows ")", "]", "*", a literal, a property name, or a named-value
-                legal = checkLastToken(
-                    TokenKind.EndGroup,
-                    TokenKind.EndParameters,
-                    TokenKind.EndIndex,
-                    TokenKind.Wildcard,
-                    TokenKind.Null,
-                    TokenKind.Boolean,
-                    TokenKind.Number,
-                    TokenKind.String,
-                    TokenKind.PropertyName,
-                    TokenKind.NamedValue
-                )
-            }
-            // "."
-            TokenKind.Dereference -> {
-                // Follows ")", "]", "*", a property name, or a named-value
-                legal = checkLastToken(
-                    TokenKind.EndGroup,
-                    TokenKind.EndParameters,
-                    TokenKind.EndIndex,
-                    TokenKind.Wildcard,
-                    TokenKind.PropertyName,
-                    TokenKind.NamedValue
-                )
-            }
-            // "*"
-            TokenKind.Wildcard -> {
-                // Follows "[" or "."
-                legal = checkLastToken(TokenKind.StartIndex, TokenKind.Dereference)
-            }
-            // "!", "==", etc
-            TokenKind.LogicalOperator -> {
-                when (rawValue) {
-                    ExpressionConstants.NOT -> {
-                        // Is first or follows "," or "(" or "[" or a logical operator
-                        legal = checkLastToken(
-                            null,
-                            TokenKind.Separator,
-                            TokenKind.StartGroup,
-                            TokenKind.StartParameters,
-                            TokenKind.StartIndex,
-                            TokenKind.LogicalOperator
-                        )
-                    }
+        if (skipCheck) {
+            legal = true
+        } else {
+            when (kind) {
+                // "(" logical grouping
+                TokenKind.StartGroup -> {
+                    // 是第一个还是在“，”或“（”或“[”或逻辑运算符之后
+                    legal = checkLastToken(
+                        null,
+                        TokenKind.Separator,
+                        TokenKind.StartGroup,
+                        TokenKind.StartParameters,
+                        TokenKind.StartIndex,
+                        TokenKind.LogicalOperator
+                    )
+                }
+                // "["
+                TokenKind.StartIndex -> {
+                    // Follows ")", "]", "*", a property name, or a named-value
+                    legal = checkLastToken(
+                        TokenKind.EndGroup,
+                        TokenKind.EndParameters,
+                        TokenKind.EndIndex,
+                        TokenKind.Wildcard,
+                        TokenKind.PropertyName,
+                        TokenKind.NamedValue
+                    )
+                }
+                // "(" function call
+                TokenKind.StartParameters -> {
+                    // Follows a function
+                    legal = checkLastToken(TokenKind.Function)
+                }
+                // ")" logical grouping
+                TokenKind.EndGroup -> {
+                    // Follows ")", "]", "*", a literal, a property name, or a named-value
+                    legal = checkLastToken(
+                        TokenKind.EndGroup,
+                        TokenKind.EndParameters,
+                        TokenKind.EndIndex,
+                        TokenKind.Wildcard,
+                        TokenKind.Null,
+                        TokenKind.Boolean,
+                        TokenKind.Number,
+                        TokenKind.String,
+                        TokenKind.PropertyName,
+                        TokenKind.NamedValue
+                    )
+                }
+                // "]"
+                TokenKind.EndIndex -> {
+                    // Follows ")", "]", "*", a literal, a property name, or a named-value
+                    legal = checkLastToken(
+                        TokenKind.EndGroup,
+                        TokenKind.EndParameters,
+                        TokenKind.EndIndex,
+                        TokenKind.Wildcard,
+                        TokenKind.Null,
+                        TokenKind.Boolean,
+                        TokenKind.Number,
+                        TokenKind.String,
+                        TokenKind.PropertyName,
+                        TokenKind.NamedValue
+                    )
+                }
+                // ")" function call
+                TokenKind.EndParameters -> {
+                    // Follows "(" function call, ")", "]", "*", a literal, a property name, or a named-value
+                    legal = checkLastToken(
+                        TokenKind.StartParameters,
+                        TokenKind.EndGroup,
+                        TokenKind.EndParameters,
+                        TokenKind.EndIndex,
+                        TokenKind.Wildcard,
+                        TokenKind.Null,
+                        TokenKind.Boolean,
+                        TokenKind.Number,
+                        TokenKind.String,
+                        TokenKind.PropertyName,
+                        TokenKind.NamedValue
+                    )
+                }
+                // ","
+                TokenKind.Separator -> {
+                    // Follows ")", "]", "*", a literal, a property name, or a named-value
+                    legal = checkLastToken(
+                        TokenKind.EndGroup,
+                        TokenKind.EndParameters,
+                        TokenKind.EndIndex,
+                        TokenKind.Wildcard,
+                        TokenKind.Null,
+                        TokenKind.Boolean,
+                        TokenKind.Number,
+                        TokenKind.String,
+                        TokenKind.PropertyName,
+                        TokenKind.NamedValue
+                    )
+                }
+                // "."
+                TokenKind.Dereference -> {
+                    // Follows ")", "]", "*", a property name, or a named-value
+                    legal = checkLastToken(
+                        TokenKind.EndGroup,
+                        TokenKind.EndParameters,
+                        TokenKind.EndIndex,
+                        TokenKind.Wildcard,
+                        TokenKind.PropertyName,
+                        TokenKind.NamedValue
+                    )
+                }
+                // "*"
+                TokenKind.Wildcard -> {
+                    // Follows "[" or "."
+                    legal = checkLastToken(TokenKind.StartIndex, TokenKind.Dereference)
+                }
+                // "!", "==", etc
+                TokenKind.LogicalOperator -> {
+                    when (rawValue) {
+                        ExpressionConstants.NOT -> {
+                            // Is first or follows "," or "(" or "[" or a logical operator
+                            legal = checkLastToken(
+                                null,
+                                TokenKind.Separator,
+                                TokenKind.StartGroup,
+                                TokenKind.StartParameters,
+                                TokenKind.StartIndex,
+                                TokenKind.LogicalOperator
+                            )
+                        }
 
-                    else -> {
-                        // Follows ")", "]", "*", a literal, a property name, or a named-value
-                        legal = checkLastToken(
-                            TokenKind.EndGroup,
-                            TokenKind.EndParameters,
-                            TokenKind.EndIndex,
-                            TokenKind.Wildcard,
-                            TokenKind.Null,
-                            TokenKind.Boolean,
-                            TokenKind.Number,
-                            TokenKind.String,
-                            TokenKind.PropertyName,
-                            TokenKind.NamedValue
-                        )
+                        else -> {
+                            // Follows ")", "]", "*", a literal, a property name, or a named-value
+                            legal = checkLastToken(
+                                TokenKind.EndGroup,
+                                TokenKind.EndParameters,
+                                TokenKind.EndIndex,
+                                TokenKind.Wildcard,
+                                TokenKind.Null,
+                                TokenKind.Boolean,
+                                TokenKind.Number,
+                                TokenKind.String,
+                                TokenKind.PropertyName,
+                                TokenKind.NamedValue
+                            )
+                        }
                     }
                 }
-            }
 
-            TokenKind.Null, TokenKind.Boolean, TokenKind.Number, TokenKind.String -> {
-                // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
-                legal = checkLastToken(
-                    null,
-                    TokenKind.Separator,
-                    TokenKind.StartIndex,
-                    TokenKind.StartGroup,
-                    TokenKind.StartParameters,
-                    TokenKind.LogicalOperator
-                )
-            }
+                TokenKind.Null, TokenKind.Boolean, TokenKind.Number, TokenKind.String -> {
+                    // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
+                    legal = checkLastToken(
+                        null,
+                        TokenKind.Separator,
+                        TokenKind.StartIndex,
+                        TokenKind.StartGroup,
+                        TokenKind.StartParameters,
+                        TokenKind.LogicalOperator
+                    )
+                }
 
-            // 针对subNameValue特供，在expression后都是合法的
-            TokenKind.Expression -> {
-                legal = true
-            }
+                // 针对subNameValue特供，在expression后都是合法的
+                TokenKind.Expression -> {
+                    legal = true
+                }
 
-            TokenKind.PropertyName -> {
-                // Follows "."
-                legal = checkLastToken(TokenKind.Dereference)
-            }
+                TokenKind.PropertyName -> {
+                    // Follows "."
+                    legal = checkLastToken(TokenKind.Dereference)
+                }
 
-            TokenKind.Function -> {
-                // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
-                legal = checkLastToken(
-                    null,
-                    TokenKind.Separator,
-                    TokenKind.StartIndex,
-                    TokenKind.StartGroup,
-                    TokenKind.StartParameters,
-                    TokenKind.LogicalOperator
-                )
-            }
+                TokenKind.Function -> {
+                    // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
+                    legal = checkLastToken(
+                        null,
+                        TokenKind.Separator,
+                        TokenKind.StartIndex,
+                        TokenKind.StartGroup,
+                        TokenKind.StartParameters,
+                        TokenKind.LogicalOperator
+                    )
+                }
 
-            TokenKind.NamedValue -> {
-                // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
-                legal = checkLastToken(
-                    null,
-                    TokenKind.Separator,
-                    TokenKind.StartIndex,
-                    TokenKind.StartGroup,
-                    TokenKind.StartParameters,
-                    TokenKind.LogicalOperator
-                )
+                TokenKind.NamedValue -> {
+                    // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
+                    legal = checkLastToken(
+                        null,
+                        TokenKind.Separator,
+                        TokenKind.StartIndex,
+                        TokenKind.StartGroup,
+                        TokenKind.StartParameters,
+                        TokenKind.LogicalOperator
+                    )
+                }
             }
         }
-
         if (!legal) {
             return Token(TokenKind.Unexpected, rawValue, index)
         }

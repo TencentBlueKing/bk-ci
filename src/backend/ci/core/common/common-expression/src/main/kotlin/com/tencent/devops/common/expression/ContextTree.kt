@@ -25,19 +25,17 @@ import kotlin.jvm.Throws
 class ContextTree(
     val nodes: MutableMap<String, ContextTreeNode> = mutableMapOf()
 ) {
+    // TODO: 有问题需要改造添加枝干的算法
     fun addNode(key: String, value: String) {
         val tokens = key.split(".")
-        // 不包含 . 计算符
-        if (tokens.size == 1) {
-            nodes[key] = ContextTreeNode(key, value)
-            return
-        }
-
         val rootKey = tokens.first()
         // 如果之前的节点中没有根节点直接添加
         val rootNode = nodes[rootKey]
         if (rootNode == null) {
             nodes[rootKey] = toTree(tokens, value)
+            return
+        } else if (tokens.size == 1) {
+            rootNode.value = value
             return
         }
         // 根节点已经存在了需要加入进去，同时做校验
