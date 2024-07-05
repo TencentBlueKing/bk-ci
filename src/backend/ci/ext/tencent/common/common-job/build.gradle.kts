@@ -30,8 +30,8 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind")
     api("com.fasterxml.jackson.core:jackson-core")
     api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
+    api("com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-json-provider")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
+    api("com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
 }

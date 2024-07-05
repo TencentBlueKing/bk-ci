@@ -49,7 +49,8 @@ dependencies {
     api(project(":ext:tencent:misc:api-prebuild-tencent"))
     api(project(":ext:tencent:misc:model-prebuild-tencent"))
 
-    api("com.github.docker-java:docker-java")
+    api("com.github.docker-java:docker-java-core")
+    api("com.github.docker-java:docker-java-transport-okhttp")
     api("org.apache.httpcomponents:httpclient")
     api("org.glassfish.jersey.core:jersey-client")
     api("org.glassfish.jersey.containers:jersey-container-servlet")
@@ -65,7 +66,7 @@ dependencies {
     api("org.apache.poi:poi")
     api("org.apache.poi:poi-ooxml")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("javax.websocket:javax.websocket-api")
+    api("jakarta.websocket:jakarta.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("org.json:json")
