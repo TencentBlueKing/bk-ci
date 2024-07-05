@@ -36,11 +36,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
-import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbCondition
-import com.tencent.devops.environment.pojo.job.cmdbreq.NewCmdbConditionValue
-import com.tencent.devops.environment.pojo.job.cmdbres.NewCmdbData
-import com.tencent.devops.environment.service.CmdbNodeService
-import com.tencent.devops.environment.service.job.TencentQueryFromCmdbService
 import org.jooq.DSLContext
 
 @Suppress("ALL")
@@ -68,76 +63,6 @@ object ImportServerNodeUtils {
             }
         } else {
             esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
-        }
-    }
-
-    /**
-     * 通过主备负责人，调用新CMDB接口，获取名下机器（此接口不支持根据ip/serverId查询机器）
-     * @param bakOperator false-主负责人，true-备份负责人
-     * @param cmdbColumn 返回的机器信息字段
-     * @return 查询到的机器信息列表
-     */
-    fun getCmdbNodeByMaintainer(
-        tencentQueryFromCmdbService: TencentQueryFromCmdbService,
-        redisOperation: RedisOperation,
-        userId: String,
-        bakOperator: Boolean,
-        page: Int,
-        pageSize: Int,
-        vararg cmdbColumn: String
-    ): NewCmdbData? {
-        val key = "env_node_buffer_cmdb_${userId}_${page}_${pageSize}_$bakOperator"
-        val buffer = redisOperation.get(key)
-        var currentNodePage: NewCmdbData? = NewCmdbData(list = listOf(), scrollId = null, hasNext = null)
-        return if (!buffer.isNullOrEmpty()) {
-            jacksonObjectMapper().readValue(buffer)
-        } else {
-            // 查询后，若缓存没有，则对用户名下机器根据当前分页做缓存(此处CMDB仅支持游标故向后缓存3页的游标，避免用户直接跳转某页时从头查CMDB)
-            // 游标缓存在用户跳转到第一页或3分钟过期后清除
-            var haveNext = true
-            var currentScrollId = "0"
-            var currentPage = 1
-            if (!bakOperator) {
-                while (haveNext) {
-                    val currentKey = "env_node_buffer_cmdb_${userId}_${currentPage}_${pageSize}_false"
-                    currentNodePage = tencentQueryFromCmdbService.queryNewCmdbInfoByBusiness(
-                        newCmdbCondition = NewCmdbCondition(
-                            maintainer = NewCmdbConditionValue(
-                                operator = CmdbNodeService.CMDB_QUERY_OPERATION_IN,
-                                value = userId.toList()
-                            )
-                        ),
-                        size = pageSize,
-                        scrollId = currentScrollId,
-                        newReqColumn = cmdbColumn
-                    )
-                    redisOperation.set(currentKey, jacksonObjectMapper().writeValueAsString(currentNodePage?.scrollId), 360)
-                    haveNext = currentNodePage?.hasNext ?: false
-                    currentScrollId = currentNodePage?.scrollId ?: ""
-                    if (currentPage == page) break
-                    currentPage++
-                }
-                // 异步继续将剩下的3页缓存
-                val remanentTask = object : Runnable {
-                    var count = 0
-                    override fun run() {
-                        // TODO
-                    }
-                }
-            } else {
-                tencentQueryFromCmdbService.queryNewCmdbInfoByBusiness(
-                    newCmdbCondition = NewCmdbCondition(
-                        maintainerBak = NewCmdbConditionValue(
-                            operator = CmdbNodeService.CMDB_QUERY_OPERATION_IN,
-                            value = userId.toList()
-                        )
-                    ),
-                    size = pageSize,
-                    scrollId = currentScrollId,
-                    newReqColumn = cmdbColumn
-                )
-            }
-            currentNodePage
         }
     }
 

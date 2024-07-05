@@ -152,16 +152,6 @@ class CmdbNodeService @Autowired constructor(
                 offset = offset,
                 limit = limit
             )
-        // 新CMDB请求
-        val newCmdbNodePage = ImportServerNodeUtils.getCmdbNodeByMaintainer(
-            tencentQueryFromCmdbService = tencentQueryFromCmdbService,
-            redisOperation = redisOperation,
-            userId = userId,
-            bakOperator = bakOperator,
-            page = page,
-            pageSize = pageSize,
-            NEW_COLUMN_SERVER_ID, NEW_COLUMN_MAINTAINER, NEW_COLUMN_BAK_MAINTAINER, NEW_COLUMN_OS_NAME
-        )
         val pageFromCmdb = Page(
             page = page,
             pageSize = pageSize,
