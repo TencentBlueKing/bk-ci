@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.expression.expression
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionException
 import com.tencent.devops.common.expression.ExpressionParseException
