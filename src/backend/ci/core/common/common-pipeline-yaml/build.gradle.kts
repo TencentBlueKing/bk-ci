@@ -39,7 +39,7 @@ dependencies {
     // https://mvnrepository.com/artifact/io.github.java-diff-utils/java-diff-utils
     implementation("io.github.java-diff-utils:java-diff-utils:4.12")
     // https://mvnrepository.com/artifact/org.json/json
-    implementation("org.json:json:20230618")
+    implementation("org.json:json")
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
 //    implementation("org.yaml:snakeyaml:2.1")
     testImplementation(project(":core:common:common-test"))

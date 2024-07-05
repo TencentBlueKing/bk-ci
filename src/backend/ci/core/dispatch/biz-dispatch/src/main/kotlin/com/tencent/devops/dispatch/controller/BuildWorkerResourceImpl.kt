@@ -31,7 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.BuildWorkerResource
 import com.tencent.devops.dispatch.service.DownloaderService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource@Suppress("ALL")
 class BuildWorkerResourceImpl @Autowired constructor(private val downloaderService: DownloaderService) : BuildWorkerResource {

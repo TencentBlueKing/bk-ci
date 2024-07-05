@@ -60,8 +60,8 @@ import java.io.OutputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.time.LocalDateTime
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.NotFoundException
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

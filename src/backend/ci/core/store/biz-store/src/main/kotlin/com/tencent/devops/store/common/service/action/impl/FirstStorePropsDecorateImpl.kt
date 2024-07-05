@@ -31,7 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import org.springframework.stereotype.Component
-import javax.annotation.Priority
+import jakarta.annotation.Priority
 
 @Component
 @Priority(Int.MAX_VALUE)

@@ -35,10 +35,10 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.QueryParam
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.QueryParam
 
 @Tag(name = "OP_PIPELINE_TEMPLATE", description = "OP-流水线-模板资源")
 @Path("/op/template/pipelines")

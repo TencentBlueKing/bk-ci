@@ -1,6 +1,10 @@
 {
   "allowedLicenses": [
     {
+      "moduleName": "javax.ws.rs:javax.ws.rs-api",
+      "desc": "Javax 类库 , 可以直接引用"
+    },
+    {
       "moduleLicense": "GNU GPL v2.0 license with classpath exception",
       "moduleName": "com.tencent.kona:kona-crypto",
       "desc": "Tencent 类库 , 可以直接引用"
@@ -9,6 +13,11 @@
       "moduleLicense": "GNU GPL v2.0 license with classpath exception",
       "moduleName": "com.tencent.kona:kona-pkix",
       "desc": "Tencent 类库 , 可以直接引用"
+    },
+    {
+      "category": "Apache 2.0",
+      "moduleName": "com.squareup.okio:okio",
+      "desc": "Apache 2.0 类型, 本身没有带License,只能手动添加"
     },
     {
       "moduleLicense": "GNU General Public License (GPL)",
@@ -21,13 +30,13 @@
       "desc": "向mysql免费申请MySQL Ready Partner (free) , 可允许绕开GPL协议,可以使用双协议而不冲突"
     },
     {
-      "moduleVersion": "8.0.31",
+      "moduleVersion": "8.0.33",
       "moduleName": "mysql:mysql-connector-java",
       "desc": "上同 com.mysql:mysql-connector-j "
     },
     {
       "moduleName": "com.h2database:h2",
-      "moduleLicense": "MPL 2.0 or EPL 1.0",
+      "moduleLicense": "MPL 2.0",
       "desc": "https://h2database.com/html/license.html h2 允许集成并分发他们, 使用EPL 1.0 或 MPL 2.0 ,没有传染性"
     },
     {
@@ -91,7 +100,7 @@
     {
       "moduleLicense": "CDDL 1.1",
       "moduleVersion": "2.0",
-      "moduleName": "javax.ws.rs:javax.ws.rs-api"
+      "moduleName": "jakarta.ws.rs:jakarta.ws.rs-api"
     },
     {
       "moduleLicense": "EPL 2.0",
@@ -101,7 +110,7 @@
     {
       "moduleLicense": "\n                Dual license consisting of the CDDL v1.1 and GPL v2\n            ",
       "moduleVersion": "1.1",
-      "moduleName": "javax.websocket:javax.websocket-api",
+      "moduleName": "jakarta.websocket:jakarta.websocket-api",
       "category": "CDDL",
       "desc": "双协议, 选CDDL v1.1"
     },
@@ -179,6 +188,10 @@
     },
     {
       "moduleLicense": "ASL 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "AL 2.0",
       "category": "Apache 2.0"
     },
     {

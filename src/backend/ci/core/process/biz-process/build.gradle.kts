@@ -48,7 +48,7 @@ dependencies {
     api(project(":core:common:common-pipeline-yaml"))
     implementation("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api("javax.websocket:javax.websocket-api")
+    api("jakarta.websocket:jakarta.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("io.github.resilience4j:resilience4j-circuitbreaker")

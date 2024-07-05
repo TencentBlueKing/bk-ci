@@ -52,8 +52,8 @@ import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 import kotlin.math.ceil
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "ReturnCount")

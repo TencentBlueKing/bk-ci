@@ -79,8 +79,8 @@ import java.net.URLEncoder
 import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.NotFoundException
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 
 @Service
 @Suppress("TooManyFunctions", "MagicNumber", "ComplexMethod")

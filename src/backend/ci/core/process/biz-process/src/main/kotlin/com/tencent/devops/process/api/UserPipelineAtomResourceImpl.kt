@@ -35,7 +35,7 @@ import com.tencent.devops.process.pojo.PipelineAtomRel
 import com.tencent.devops.process.service.PipelineAtomService
 import com.tencent.devops.store.pojo.atom.AtomProp
 import org.springframework.beans.factory.annotation.Autowired
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 @RestResource
 class UserPipelineAtomResourceImpl @Autowired constructor(

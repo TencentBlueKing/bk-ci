@@ -32,7 +32,7 @@ import com.tencent.devops.store.common.service.action.impl.FirstStorePropsDecora
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import javax.annotation.Priority
+import jakarta.annotation.Priority
 
 @Suppress("MagicNumber")
 class StoreDecorateFactoryTest {

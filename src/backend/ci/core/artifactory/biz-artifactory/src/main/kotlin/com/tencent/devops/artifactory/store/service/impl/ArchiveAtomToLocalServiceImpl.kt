@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import java.io.File
 import java.io.InputStream
 import java.net.URLDecoder
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory

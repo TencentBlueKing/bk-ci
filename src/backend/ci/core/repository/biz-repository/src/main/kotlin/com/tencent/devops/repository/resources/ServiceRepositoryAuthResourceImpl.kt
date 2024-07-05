@@ -61,6 +61,7 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+            else -> {}
         }
         return null
     }

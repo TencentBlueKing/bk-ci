@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.HttpMethod
+import jakarta.ws.rs.HttpMethod
 
 object MarketBuildUtils {
     private const val INPUT_PARAM = "input"

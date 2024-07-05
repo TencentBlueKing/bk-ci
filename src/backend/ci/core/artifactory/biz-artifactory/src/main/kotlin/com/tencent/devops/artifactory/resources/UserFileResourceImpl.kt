@@ -42,7 +42,7 @@ import com.tencent.devops.common.api.pojo.Result
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 @Suppress("ThrowsCount")
 class UserFileResourceImpl @Autowired constructor(

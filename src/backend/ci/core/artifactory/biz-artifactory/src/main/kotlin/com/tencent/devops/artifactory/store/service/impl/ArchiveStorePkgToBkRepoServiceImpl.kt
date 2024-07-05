@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
 import java.io.InputStream
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl() {
 

@@ -148,7 +148,7 @@ class PipelineOperationLogDao {
             val query = dslContext.selectDistinct(OPERATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-            return query.fetchCount()
+            return query.count()
         }
     }
 

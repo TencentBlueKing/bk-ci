@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.service.action.impl
 
-import javax.annotation.Priority
+import jakarta.annotation.Priority
 import org.springframework.stereotype.Component
 
 @Component

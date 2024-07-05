@@ -454,7 +454,7 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
-            return query.fetchCount()
+            return query.count()
         }
     }
 

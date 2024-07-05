@@ -29,10 +29,8 @@
 package com.tencent.devops.common.auth.rbac
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConfigurationProperties("auth")
-@ConstructorBinding
 data class RbacAuthProperties(
     // auth esb对应的url,rbac中已废弃
     val url: String = "",

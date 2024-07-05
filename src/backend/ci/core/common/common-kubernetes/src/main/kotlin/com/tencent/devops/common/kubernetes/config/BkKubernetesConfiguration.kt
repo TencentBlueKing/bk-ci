@@ -11,9 +11,9 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.kubernetes.client.KubernetesClientAutoConfiguration
-import org.springframework.cloud.kubernetes.client.discovery.ConditionalOnKubernetesDiscoveryEnabled
-import org.springframework.cloud.kubernetes.client.discovery.KubernetesDiscoveryClientAutoConfiguration
+import org.springframework.cloud.kubernetes.client.discovery.KubernetesInformerDiscoveryClientAutoConfiguration
 import org.springframework.cloud.kubernetes.commons.KubernetesNamespaceProvider
+import org.springframework.cloud.kubernetes.commons.discovery.ConditionalOnKubernetesDiscoveryEnabled
 import org.springframework.cloud.kubernetes.commons.discovery.KubernetesDiscoveryProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Primary
 
 @Configuration
 @ConditionalOnKubernetesDiscoveryEnabled
-@AutoConfigureBefore(KubernetesDiscoveryClientAutoConfiguration::class)
+@AutoConfigureBefore(KubernetesInformerDiscoveryClientAutoConfiguration::class)
 @AutoConfigureAfter(KubernetesClientAutoConfiguration::class)
 @EnableConfigurationProperties(KubernetesDiscoveryProperties::class)
 class BkKubernetesConfiguration {
@@ -37,10 +37,8 @@ class BkKubernetesConfiguration {
         endpointsInformer: SharedInformer<V1Endpoints>,
         properties: KubernetesDiscoveryProperties
     ): BkKubernetesDiscoveryClient {
-        logger.debug("properties allNamespaces : ${properties.isAllNamespaces}")
         logger.info("kubernetesInformerDiscoveryClient init success")
         return BkKubernetesDiscoveryClient(
-            kubernetesNamespaceProvider.namespace,
             sharedInformerFactory, serviceLister, endpointsLister, serviceInformer, endpointsInformer,
             properties
         )

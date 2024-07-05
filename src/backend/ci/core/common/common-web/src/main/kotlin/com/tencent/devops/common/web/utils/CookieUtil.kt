@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.web.utils
 
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 object CookieUtil {
 

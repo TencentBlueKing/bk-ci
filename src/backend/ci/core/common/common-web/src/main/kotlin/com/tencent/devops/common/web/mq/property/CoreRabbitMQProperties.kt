@@ -28,9 +28,7 @@
 package com.tencent.devops.common.web.mq.property
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties(prefix = "spring.rabbitmq.core")
 data class CoreRabbitMQProperties(
     val host: String = "localhost",

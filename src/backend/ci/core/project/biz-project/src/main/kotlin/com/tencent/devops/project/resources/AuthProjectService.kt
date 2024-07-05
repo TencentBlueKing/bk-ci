@@ -82,7 +82,7 @@ class AuthProjectService @Autowired constructor(
                 ProjectChannelCode.PREBUILD.name
             )
         )
-        val count = projectRecords?.count
+        val count = projectRecords.count
         val projectInfo = mutableListOf<InstanceInfoDTO>()
         projectRecords?.records?.map {
             val entity = InstanceInfoDTO()

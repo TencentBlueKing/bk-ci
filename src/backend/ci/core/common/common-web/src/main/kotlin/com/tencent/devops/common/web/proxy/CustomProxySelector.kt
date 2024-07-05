@@ -1,16 +1,16 @@
 package com.tencent.devops.common.web.proxy
 
 import org.slf4j.LoggerFactory
-import sun.net.spi.DefaultProxySelector
 import java.io.IOException
 import java.net.Proxy
+import java.net.ProxySelector
 import java.net.SocketAddress
 import java.net.URI
 
 class CustomProxySelector(
     private val proxy: Proxy,
     private val proxyHostsRegex: List<Regex>
-) : DefaultProxySelector() {
+) : ProxySelector() {
 
     override fun select(uri: URI?): MutableList<Proxy> {
         if (uri == null) return mutableListOf(Proxy.NO_PROXY)
@@ -26,7 +26,7 @@ class CustomProxySelector(
             return mutableListOf(proxy)
         }
         // 匹配不上的保留 Java 原有逻辑
-        return super.select(uri)
+        return getDefault().select(uri)
     }
 
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {

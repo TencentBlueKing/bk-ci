@@ -69,7 +69,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 @Service
 @Suppress("ALL")

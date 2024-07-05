@@ -29,7 +29,7 @@ package com.tencent.devops.common.web
 
 import org.glassfish.jersey.server.validation.ValidationConfig
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider
-import javax.ws.rs.ext.ContextResolver
+import jakarta.ws.rs.ext.ContextResolver
 
 class ValidationConfigurationContextResolver : ContextResolver<ValidationConfig> {
 

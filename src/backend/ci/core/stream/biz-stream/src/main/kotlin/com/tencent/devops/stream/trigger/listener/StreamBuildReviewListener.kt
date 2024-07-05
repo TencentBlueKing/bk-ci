@@ -161,6 +161,8 @@ class StreamBuildReviewListener @Autowired constructor(
                             "|event not match|${buildReviewEvent.reviewType}"
                     )
                 }
+
+                else -> {}
             }
         } catch (e: Exception) {
             logger.warn("StreamBuildReviewListener|buildReviewListener|${buildReviewEvent.buildId}|error|${e.message}")

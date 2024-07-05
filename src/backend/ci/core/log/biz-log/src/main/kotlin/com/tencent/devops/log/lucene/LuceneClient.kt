@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
-import javax.ws.rs.core.StreamingOutput
+import jakarta.ws.rs.core.StreamingOutput
 
 @Suppress("LongParameterList", "TooManyFunctions", "MagicNumber")
 class LuceneClient constructor(

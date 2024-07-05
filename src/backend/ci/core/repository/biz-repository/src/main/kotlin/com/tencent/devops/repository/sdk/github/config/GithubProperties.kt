@@ -28,9 +28,7 @@
 package com.tencent.devops.repository.sdk.github.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties(prefix = "scm.external.github")
 data class GithubProperties(
     val serverUrl: String = "",

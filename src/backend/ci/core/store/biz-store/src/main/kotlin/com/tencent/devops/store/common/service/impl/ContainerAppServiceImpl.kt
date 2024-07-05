@@ -46,7 +46,7 @@ import com.tencent.devops.store.pojo.app.ContainerAppVersion
 import com.tencent.devops.store.pojo.app.ContainerAppVersionCreate
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import java.util.Collections
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory

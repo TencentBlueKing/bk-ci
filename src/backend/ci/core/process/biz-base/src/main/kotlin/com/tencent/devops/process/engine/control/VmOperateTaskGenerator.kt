@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import org.springframework.stereotype.Component
-import javax.xml.bind.Element
+import jakarta.xml.bind.Element
 
 /**
  * 生成运行环境操作的插件任务

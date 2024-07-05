@@ -49,7 +49,7 @@ import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamSchedu
 import org.joda.time.DateTime
 import java.text.SimpleDateFormat
 import java.util.Date
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 object GitRequestEventHandle {
 

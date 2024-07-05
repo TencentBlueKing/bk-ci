@@ -123,7 +123,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",

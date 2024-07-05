@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.common.publication
 
 import com.tencent.devops.store.pojo.common.handler.HandlerRequest
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 @Schema(title = "工作台-新增组件请求报文体")
 data class StoreCreateRequest(
